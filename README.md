@@ -1,1 +1,1 @@
-# client-ts
+# Xata.io SDK for TypeScript and JavaScript

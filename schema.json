@@ -1,0 +1,61 @@
+{
+  "formatVersion": "1.0",
+  "tables": [
+    {
+      "name": "teams",
+      "columns": [
+        {
+          "name": "name",
+          "type": "string",
+          "unique": true,
+          "description": "Name of the team"
+        },
+        {
+          "name": "labels",
+          "type": "multiple"
+        },
+        {
+          "name": "owner",
+          "type": "link",
+          "link": {
+            "table": "users"
+          }
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "columns": [
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "full_name",
+          "type": "string"
+        },
+        {
+          "name": "address",
+          "type": "object",
+          "columns": [
+            {
+              "name": "street",
+              "type": "string"
+            },
+            {
+              "name": "zipcode",
+              "type": "int"
+            }
+          ]
+        },
+        {
+          "name": "team",
+          "type": "link",
+          "link": {
+            "table": "teams"
+          }
+        }
+      ]
+    }
+  ]
+}
