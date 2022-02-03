@@ -1,6 +1,6 @@
 # Xata.io SDK for TypeScript and JavaScript
 
-## Usgae
+## Usage
 
 Install the dependencies
 
