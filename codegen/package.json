@@ -2,7 +2,8 @@
   "name": "@xata.io/codegen",
   "version": "1.0.0",
   "description": "Generates types based on a Xata.io database schema. Meant to be used with @xata.io/client",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
