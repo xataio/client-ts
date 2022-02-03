@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/client",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Xata.io SDK for TypesScript and JavaScript",
   "main": "index.js",
   "scripts": {
