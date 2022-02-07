@@ -25,6 +25,27 @@ function generateColumnType(column: Column) {
   return `${column.name}?: ${getTypeScriptType(column)}`;
 }
 
+function generateJSdocType(table: Table) {
+  const { columns } = table;
+  const revLinks: { table: string }[] = []; // table.rev_links || [];
+  const typeName = getTypeName(table.name);
+  return `
+/**
+ * @typedef {Object} ${typeName}
+ * @property {string} _id
+ * @property {number} _version
+ * @property {() => Promise<${typeName}>} read
+ * @property {() => Promise<${typeName}>} update
+ * @property {() => Promise<void>} delete
+ ${columns.map((column) => generateJSDocColumnType(column)).join('\n ')}
+ ${revLinks.map((link) => `${link.table}: Query<${getTypeName(link.table)}>`).join('\n ')}
+ */`;
+}
+
+function generateJSDocColumnType(column: Column) {
+  return `* @property {${getTypeScriptType(column)}=} ${column.name}`;
+}
+
 function getTypeScriptType(column: Column): string {
   if (column.type === 'email') return 'string';
   if (column.type === 'text') return 'string';
@@ -38,9 +59,7 @@ function getTypeScriptType(column: Column): string {
   }
   if (column.type === 'object') {
     const columns = column.columns || [];
-    return `{
-      ${columns.map((column) => generateColumnType(column)).join('\n')}
-    }`;
+    return `{ ${columns.map((column) => generateColumnType(column)).join('; ')} }`;
   }
   return 'unknown';
 }
@@ -71,7 +90,9 @@ function parseSchema(input: string) {
   }
 }
 
-export async function generate(schemaFile: string, output: string) {
+export type Language = 'typescript' | 'javascript';
+
+export async function generate(schemaFile: string, output: string, language: Language) {
   const fullSchemaPath = path.resolve(process.cwd(), schemaFile);
   const fullOutputPath = path.resolve(process.cwd(), output);
   console.log('Using schema file:', fullSchemaPath);
@@ -91,7 +112,8 @@ export async function generate(schemaFile: string, output: string) {
     }
   }
 
-  const code = `
+  if (language === 'typescript') {
+    const code = `
     import {
       BaseClient,
       Query,
@@ -118,7 +140,34 @@ export async function generate(schemaFile: string, output: string) {
     }
   `;
 
-  const pretty = prettier.format(code, { parser: 'typescript' });
+    const pretty = prettier.format(code, { parser: 'typescript' });
+    await fs.writeFile(fullOutputPath, pretty);
+  } else {
+    const code = `
+    /** @typedef { import('@xata.io/client').Repository } Repository */
+    import {
+      BaseClient,
+      Query,
+      RestRespositoryFactory
+    } from '@xata.io/client';
 
-  await fs.writeFile(fullOutputPath, pretty);
+    ${tables.map((table) => generateJSdocType(table)).join('\n')}
+
+    const links = ${JSON.stringify(links)};
+
+    export class XataClient extends BaseClient {
+      constructor(options) {
+        super(options, links);
+        const factory = options.repositoryFactory || new RestRespositoryFactory();
+        /** @type {{ ${tables.map((table) => `"${table.name}": Repository`).join('; ')} }} */
+        this.db = {
+          ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
+        };
+      }
+    }
+  `;
+
+    const pretty = prettier.format(code, { parser: 'babel' });
+    await fs.writeFile(fullOutputPath, pretty);
+  }
 }

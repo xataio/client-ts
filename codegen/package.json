@@ -1,13 +1,14 @@
 {
   "name": "@xata.io/codegen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generates types based on a Xata.io database schema. Meant to be used with @xata.io/client",
   "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "prepack": "npm run build",
-    "example": "npm run build && node dist/index.js -s example/schema.json -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts"
+    "example-ts": "npm run build && node dist/index.js -s example/schema.json -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
+    "example-js": "npm run build && node dist/index.js -s example/schema.json -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js"
   },
   "repository": {
     "type": "git",
