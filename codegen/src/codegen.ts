@@ -22,7 +22,7 @@ function generateTableType(table: Table) {
 }
 
 function generateColumnType(column: Column) {
-  return `${column.name}: ${getTypeScriptType(column)}`;
+  return `${column.name}?: ${getTypeScriptType(column)}`;
 }
 
 function getTypeScriptType(column: Column): string {
