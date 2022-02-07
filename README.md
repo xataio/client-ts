@@ -1,6 +1,6 @@
 # Xata.io SDK for TypeScript and JavaScript
 
-This SDK has zero depenedencies, so it can be used in many JavaScript runtimes including Node.js, Cloudflare workers, Deno, Electron, etc.
+This SDK has zero dependencies, so it can be used in many JavaScript runtimes including Node.js, Cloudflare workers, Deno, Electron, etc.
 
 It also works in browsers for the same reason. But this is strongly discouraged because the API token would be leaked.
 
