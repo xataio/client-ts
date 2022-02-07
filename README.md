@@ -1,5 +1,9 @@
 # Xata.io SDK for TypeScript and JavaScript
 
+This SDK has zero depenedencies, so it can be used in many JavaScript runtimes including Node.js, Cloudflare workers, Deno, Electron, etc.
+
+It also works in browsers for the same reason. But this is strongly discouraged because the API token would be leaked.
+
 ## Installing
 
 Install the dependencies
@@ -34,11 +38,14 @@ import { XataClient } from './xata';
 
 const client = new XataClient({
   url: 'https://myworkspace-123abc.xata.sh/db/databasename:branchname',
-  token: 'xau_1234abcdef'
+  token: 'xau_1234abcdef',
+  fetch: fetchImplememntation // Required if your runtime doesn't provide a global `fetch` function.
 });
 ```
 
 The import above will differ if you chose to genreate the types in a different location.
+
+`fetch` is required only if your runtime doesn't provide a global `fetch` function. However, if your runtime supports CJS, the SDK will try to also require `node-fetch` and `cross-fetch` if a `fetch` implementation is not provided.
 
 ## API
 
