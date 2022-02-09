@@ -34,20 +34,21 @@ export type Include<T> = {
 type SortDirection = 'asc' | 'desc';
 
 type Operator =
-  | '_gt'
-  | '_lt'
-  | '_gte'
-  | '_lte'
-  | '_exists'
-  | '_notExists'
-  | '_endsWith'
-  | '_startsWith'
-  | '_pattern'
-  | '_isNot'
-  | '_includes'
-  | '_includesSubstring'
-  | '_includesPattern'
-  | '_includesAll';
+  | '$gt'
+  | '$lt'
+  | '$ge'
+  | '$le'
+  | '$exists'
+  | '$notExists'
+  | '$endsWith'
+  | '$startsWith'
+  | '$pattern'
+  | '$isNot'
+  | '$contains'
+  | '$includes'
+  | '$includesSubstring'
+  | '$includesPattern'
+  | '$includesAll';
 
 // TODO: restrict constraints depending on type?
 // E.g. startsWith cannot be used with numbers
@@ -55,22 +56,25 @@ type Constraint<T> = Partial<Record<Operator, T>>;
 
 type ComparableType = number | Date;
 
-export const gt = <T extends ComparableType>(value: T): Constraint<T> => ({ _gt: value });
-export const gte = <T extends ComparableType>(value: T): Constraint<T> => ({ _gte: value });
-export const lt = <T extends ComparableType>(value: T): Constraint<T> => ({ _lt: value });
-export const lte = <T extends ComparableType>(value: T): Constraint<T> => ({ _lte: value });
-export const exists = (column: string): Constraint<string> => ({ _exists: column });
-export const notExists = (column: string): Constraint<string> => ({ _notExists: column });
-export const startsWith = (value: string): Constraint<string> => ({ _startsWith: value });
-export const endsWith = (value: string): Constraint<string> => ({ _endsWith: value });
-export const pattern = (value: string): Constraint<string> => ({ _pattern: value });
-export const isNot = <T>(value: T): Constraint<T> => ({ _isNot: value });
+export const gt = <T extends ComparableType>(value: T): Constraint<T> => ({ $gt: value });
+export const ge = <T extends ComparableType>(value: T): Constraint<T> => ({ $ge: value });
+export const gte = <T extends ComparableType>(value: T): Constraint<T> => ({ $ge: value });
+export const lt = <T extends ComparableType>(value: T): Constraint<T> => ({ $lt: value });
+export const lte = <T extends ComparableType>(value: T): Constraint<T> => ({ $le: value });
+export const le = <T extends ComparableType>(value: T): Constraint<T> => ({ $le: value });
+export const exists = (column: string): Constraint<string> => ({ $exists: column });
+export const notExists = (column: string): Constraint<string> => ({ $notExists: column });
+export const startsWith = (value: string): Constraint<string> => ({ $startsWith: value });
+export const endsWith = (value: string): Constraint<string> => ({ $endsWith: value });
+export const pattern = (value: string): Constraint<string> => ({ $pattern: value });
+export const isNot = <T>(value: T): Constraint<T> => ({ $isNot: value });
+export const contains = <T>(value: T): Constraint<T> => ({ $contains: value });
 
 // TODO: these can only be applied to columns of type "multiple"
-export const includes = (value: string): Constraint<string> => ({ _includes: value });
-export const includesSubstring = (value: string): Constraint<string> => ({ _includesSubstring: value });
-export const includesPattern = (value: string): Constraint<string> => ({ _includesPattern: value });
-export const includesAll = (value: string): Constraint<string> => ({ _includesAll: value });
+export const includes = (value: string): Constraint<string> => ({ $includes: value });
+export const includesSubstring = (value: string): Constraint<string> => ({ $includesSubstring: value });
+export const includesPattern = (value: string): Constraint<string> => ({ $includesPattern: value });
+export const includesAll = (value: string): Constraint<string> => ({ $includesAll: value });
 
 type FilterConstraints<T> = {
   [key in keyof T]?: T[key] extends Record<string, any> ? FilterConstraints<T[key]> : T[key] | Constraint<T[key]>;
