@@ -97,7 +97,7 @@ const { filter, any, all, not, sort } = xata.db.users;
 const query = filter('email', 'foo@example.com');
 
 // Single-column operators are imported directly from the package
-import { gt, includes, startsWith } from '@xata/client';
+import { gt, includes, startsWith } from '@xata.io/client';
 filter('email', startsWith('username')).not(filter('created_at', gt(somePastDate)));
 
 // Queries are immutable objects. This is useful to derive queries from other queries
