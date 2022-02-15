@@ -4,8 +4,8 @@ const fetch = jest.fn();
 const client = new BaseClient(
   {
     fetch,
-    token: '1234',
-    url: 'https://my-workspace-5df34do.staging.xatabase.co/db/xata:main'
+    apiKey: '1234',
+    databaseURL: 'https://my-workspace-5df34do.staging.xatabase.co/db/xata:main'
   },
   {}
 );

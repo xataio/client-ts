@@ -304,13 +304,13 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async request(method: string, path: string, body?: unknown) {
-    const { url: xatabaseURL } = this.client.options;
-    const resp: Response = await this.fetch(`${xatabaseURL}${path}`, {
+    const { databaseURL } = this.client.options;
+    const resp: Response = await this.fetch(`${databaseURL}${path}`, {
       method,
       headers: {
         Accept: '*/*',
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.client.options.token}`
+        Authorization: `Bearer ${this.client.options.apiKey}`
       },
       body: JSON.stringify(body)
     });
@@ -378,8 +378,8 @@ export class RestRespositoryFactory implements RepositoryFactory {
 
 export type XataClientOptions = {
   fetch?: unknown;
-  url: string;
-  token: string;
+  databaseURL: string;
+  apiKey: string;
   repositoryFactory?: RepositoryFactory;
 };
 
