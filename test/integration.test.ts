@@ -161,4 +161,18 @@ describe('integration tests', () => {
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
   });
+
+  test('filter on link', async () => {
+    const teams = await client.db.teams
+      .select()
+      .filter({
+        owner: {
+          full_name: 'Owner of team fruits'
+        }
+      })
+      .getMany();
+
+    expect(teams).toHaveLength(1);
+    expect(teams[0].name).toBe('Team fruits');
+  });
 });
