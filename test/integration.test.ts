@@ -1,4 +1,4 @@
-import { contains, includes } from '../client/src';
+import { contains, lt } from '../client/src';
 import { XataClient } from '../codegen/example/xata';
 
 const client = new XataClient({
@@ -19,12 +19,20 @@ beforeAll(async () => {
 
   const ownerFruits = await client.db.users.create({
     full_name: 'Owner of team fruits',
-    email: 'owner.fruits@example.com'
+    email: 'owner.fruits@example.com',
+    address: {
+      street: 'Main Street',
+      zipcode: 100
+    }
   });
 
   const ownerAnimals = await client.db.users.create({
     full_name: 'Owner of team animals',
-    email: 'owner.animals@example.com'
+    email: 'owner.animals@example.com',
+    address: {
+      street: 'Elm Street',
+      zipcode: 200
+    }
   });
 
   await client.db.teams.create({
@@ -124,5 +132,33 @@ describe('integration tests', () => {
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
     expect(teams[1].name).toBe('Team animals');
+  });
+
+  test('filter on object', async () => {
+    const users = await client.db.users
+      .select()
+      .filter({
+        address: {
+          zipcode: 100
+        }
+      })
+      .getMany();
+
+    expect(users).toHaveLength(1);
+    expect(users[0].full_name).toBe('Owner of team fruits');
+  });
+
+  test('filter on object with operator', async () => {
+    const users = await client.db.users
+      .select()
+      .filter({
+        address: {
+          zipcode: lt(150)
+        }
+      })
+      .getMany();
+
+    expect(users).toHaveLength(1);
+    expect(users[0].full_name).toBe('Owner of team fruits');
   });
 });
