@@ -6,44 +6,44 @@ const client = new XataClient({
   apiKey: process.env.XATA_API_KEY
 });
 
-// beforeAll(async () => {
-//   const teams = await client.db.teams.select().getMany()
-//   for (const team of teams) {
-//     await team.delete()
-//   }
+beforeAll(async () => {
+  const teams = await client.db.teams.select().getMany();
+  for (const team of teams) {
+    await team.delete();
+  }
 
-//   const users = await client.db.users.select().getMany()
-//   for (const user of users) {
-//     await user.delete()
-//   }
+  const users = await client.db.users.select().getMany();
+  for (const user of users) {
+    await user.delete();
+  }
 
-//   const ownerFruits = await client.db.users.create({
-//     full_name: 'Owner of team fruits',
-//     email: 'owner.fruits@example.com'
-//   })
+  const ownerFruits = await client.db.users.create({
+    full_name: 'Owner of team fruits',
+    email: 'owner.fruits@example.com'
+  });
 
-//   const ownerAnimals = await client.db.users.create({
-//     full_name: 'Owner of team animals',
-//     email: 'owner.animals@example.com'
-//   })
+  const ownerAnimals = await client.db.users.create({
+    full_name: 'Owner of team animals',
+    email: 'owner.animals@example.com'
+  });
 
-//   await client.db.teams.create({
-//     name: 'Team fruits',
-//     labels: ['apple', 'banana', 'orange'],
-//     owner: ownerFruits
-//   })
+  await client.db.teams.create({
+    name: 'Team fruits',
+    labels: ['apple', 'banana', 'orange'],
+    owner: ownerFruits
+  });
 
-//   await client.db.teams.create({
-//     name: 'Team animals',
-//     labels: ['monkey', 'lion', 'eagle', 'dolphin'],
-//     owner: ownerAnimals
-//   })
+  await client.db.teams.create({
+    name: 'Team animals',
+    labels: ['monkey', 'lion', 'eagle', 'dolphin'],
+    owner: ownerAnimals
+  });
 
-//   await client.db.teams.create({
-//     name: 'Mixed team fruits & animals',
-//     labels: ['monkey', 'banana', 'apple', 'dolphin']
-//   })
-// })
+  await client.db.teams.create({
+    name: 'Mixed team fruits & animals',
+    labels: ['monkey', 'banana', 'apple', 'dolphin']
+  });
+});
 
 describe('integration tests', () => {
   test('equal filter', async () => {
