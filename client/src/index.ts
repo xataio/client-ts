@@ -52,7 +52,7 @@ type Operator =
 
 // TODO: restrict constraints depending on type?
 // E.g. startsWith cannot be used with numbers
-type Constraint<T> = Partial<Record<Operator, T>>;
+type Constraint<T> = Partial<Record<Operator, T>>; // | {$all: Record<'$contains', string>[]};
 
 type ComparableType = number | Date;
 
@@ -68,7 +68,12 @@ export const startsWith = (value: string): Constraint<string> => ({ $startsWith:
 export const endsWith = (value: string): Constraint<string> => ({ $endsWith: value });
 export const pattern = (value: string): Constraint<string> => ({ $pattern: value });
 export const isNot = <T>(value: T): Constraint<T> => ({ $isNot: value });
-export const contains = <T>(value: T): Constraint<T> => ({ $contains: value });
+export const contains = <T>(value: T): Constraint<T> => {
+  // if (Array.isArray(value)) {
+  //   return { $all: value.map(item => ({ $contains: item as string })) }
+  // }
+  return { $contains: value };
+};
 
 // TODO: these can only be applied to columns of type "multiple"
 export const includes = (value: string): Constraint<string> => ({ $includes: value });
@@ -96,11 +101,11 @@ export class Query<T, R = T> {
   table: string;
   repository: Repository<T>;
 
-  readonly _any?: QueryOrConstraint<T, R>[];
-  readonly _all?: QueryOrConstraint<T, R>[];
-  readonly _not?: QueryOrConstraint<T, R>[];
-  readonly _none?: QueryOrConstraint<T, R>[];
-  readonly _sort?: Record<string, SortDirection>;
+  readonly $any?: QueryOrConstraint<T, R>[];
+  readonly $all?: QueryOrConstraint<T, R>[];
+  readonly $not?: QueryOrConstraint<T, R>[];
+  readonly $none?: QueryOrConstraint<T, R>[];
+  readonly $sort?: Record<string, SortDirection>;
 
   constructor(repository: Repository<T> | null, table: string, data: Partial<Query<T, R>>, parent?: Query<T, R>) {
     if (repository) {
@@ -112,11 +117,11 @@ export class Query<T, R = T> {
 
     // For some reason Object.assign(this, parent) didn't work in this case
     // so doing all this manually:
-    this._any = parent?._any;
-    this._all = parent?._all;
-    this._not = parent?._not;
-    this._none = parent?._none;
-    this._sort = parent?._sort;
+    this.$any = parent?.$any;
+    this.$all = parent?.$all;
+    this.$not = parent?.$not;
+    this.$none = parent?.$none;
+    this.$sort = parent?.$sort;
 
     Object.assign(this, data);
     // These bindings are used to support deconstructing
@@ -127,6 +132,9 @@ export class Query<T, R = T> {
     this.filter = this.filter.bind(this);
     this.sort = this.sort.bind(this);
     this.none = this.none.bind(this);
+
+    Object.defineProperty(this, 'table', { enumerable: false });
+    Object.defineProperty(this, 'repository', { enumerable: false });
   }
 
   any(...queries: Query<T, R>[]): Query<T, R> {
@@ -134,7 +142,7 @@ export class Query<T, R = T> {
       this.repository,
       this.table,
       {
-        _any: (this._any || []).concat(queries)
+        $any: (this.$any || []).concat(queries)
       },
       this
     );
@@ -145,7 +153,7 @@ export class Query<T, R = T> {
       this.repository,
       this.table,
       {
-        _all: (this._all || []).concat(queries)
+        $all: (this.$all || []).concat(queries)
       },
       this
     );
@@ -156,7 +164,7 @@ export class Query<T, R = T> {
       this.repository,
       this.table,
       {
-        _not: (this._not || []).concat(queries)
+        $not: (this.$not || []).concat(queries)
       },
       this
     );
@@ -167,7 +175,7 @@ export class Query<T, R = T> {
       this.repository,
       this.table,
       {
-        _none: (this._none || []).concat(queries)
+        $none: (this.$none || []).concat(queries)
       },
       this
     );
@@ -186,7 +194,7 @@ export class Query<T, R = T> {
         this.repository,
         this.table,
         {
-          _any: (this._any || []).concat(queries)
+          $all: (this.$all || []).concat(queries)
         },
         this
       );
@@ -197,7 +205,7 @@ export class Query<T, R = T> {
         this.repository,
         this.table,
         {
-          _any: (this._any || []).concat({ [column]: value })
+          $all: (this.$all || []).concat({ [column]: value })
         },
         this
       );
@@ -205,12 +213,12 @@ export class Query<T, R = T> {
   }
 
   sort<F extends keyof T>(column: F, direction: SortDirection): Query<T, R> {
-    const sort = { ...this._sort, [column]: direction };
+    const sort = { ...this.$sort, [column]: direction };
     const q = new Query<T, R>(
       this.repository,
       this.table,
       {
-        _sort: sort
+        $sort: sort
       },
       this
     );
@@ -239,19 +247,6 @@ export class Query<T, R = T> {
   include(columns: Include<T>) {
     // TODO
     return this;
-  }
-
-  toJSON() {
-    const _filter = {
-      _any: this._any,
-      _all: this._all,
-      _not: this._not,
-      _none: this._none
-    };
-    return {
-      _filter: Object.values(_filter).some(Boolean) ? _filter : undefined,
-      _sort: this._sort
-    };
   }
 }
 
@@ -337,7 +332,14 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async create(object: T): Promise<T> {
-    const obj = await this.request('POST', `/tables/${this.table}/data`, object);
+    const body = { ...object } as Record<string, unknown>;
+    for (const key of Object.keys(body)) {
+      const value = body[key];
+      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>)._id === 'string') {
+        body[key] = (value as XataRecord)._id;
+      }
+    }
+    const obj = await this.request('POST', `/tables/${this.table}/data`, body);
     return this.client.initObject(this.table, obj);
   }
 
@@ -361,7 +363,17 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async query<R>(query: Query<T, R>): Promise<R[]> {
-    const result = await this.request('POST', `/tables/${this.table}/query`, query);
+    const filter = {
+      $any: query.$any,
+      $all: query.$all,
+      $not: query.$not,
+      $none: query.$none
+    };
+    const body = {
+      filter: Object.values(filter).some(Boolean) ? filter : undefined,
+      sort: query.$sort
+    };
+    const result = await this.request('POST', `/tables/${this.table}/query`, body);
     return result.records.map((record: object) => this.client.initObject(this.table, record));
   }
 }

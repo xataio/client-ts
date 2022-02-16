@@ -138,7 +138,7 @@ describe('query', () => {
     });
 
     test('query with one filter', async () => {
-      const expected = { method: 'POST', path: '/tables/users/query', body: { _filter: { _any: [{ name: 'foo' }] } } };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { filter: { $all: [{ name: 'foo' }] } } };
       expectRequest(expected, () => users.filter('name', 'foo').getMany(), { records: [] });
     });
   });

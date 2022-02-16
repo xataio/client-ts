@@ -11,7 +11,7 @@ import { BaseClient, Query, RestRespositoryFactory } from '../../client/src';
  * @property {string=} name
  * @property {string[]=} labels
  * @property {User=} owner
-
+ 
  */
 
 /**
@@ -25,7 +25,7 @@ import { BaseClient, Query, RestRespositoryFactory } from '../../client/src';
  * @property {string=} full_name
  * @property {{ street?: string; zipcode?: number }=} address
  * @property {Team=} team
-
+ 
  */
 
 const links = { teams: [['owner', 'users']], users: [['team', 'teams']] };

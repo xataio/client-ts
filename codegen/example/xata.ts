@@ -9,10 +9,7 @@ export interface Team extends XataRecord {
 export interface User extends XataRecord {
   email?: string;
   full_name?: string;
-  address?: {
-    street?: string;
-    zipcode?: number;
-  };
+  address?: { street?: string; zipcode?: number };
   team?: Team;
 }
 
