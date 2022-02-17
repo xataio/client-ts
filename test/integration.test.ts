@@ -2,8 +2,8 @@ import { contains, lt } from '../client/src';
 import { XataClient } from '../codegen/example/xata';
 
 const client = new XataClient({
-  databaseURL: process.env.XATA_DATABASE_URL,
-  apiKey: process.env.XATA_API_KEY
+  databaseURL: process.env.XATA_DATABASE_URL || '',
+  apiKey: process.env.XATA_API_KEY || ''
 });
 
 beforeAll(async () => {
@@ -70,10 +70,7 @@ describe('integration tests', () => {
   });
 
   test.skip('operator filter on multiple column', async () => {
-    const teams = await client.db.teams
-      .select()
-      .filter('labels', contains(['banana']))
-      .getMany();
+    const teams = await client.db.teams.select().filter('labels', ['banana']).getMany();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -127,7 +124,7 @@ describe('integration tests', () => {
 
   test('negative filter', async () => {
     const q = client.db.teams.select();
-    const teams = await q.not(q.filter('name', 'Team fruits')).getMany();
+    const teams = await q.not(q.filter('name', 'Team fruits')).sort('name', 'asc').getMany();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');

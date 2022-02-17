@@ -43,6 +43,7 @@ type Operator =
   | '$endsWith'
   | '$startsWith'
   | '$pattern'
+  | '$is'
   | '$isNot'
   | '$contains'
   | '$includes'
@@ -52,7 +53,13 @@ type Operator =
 
 // TODO: restrict constraints depending on type?
 // E.g. startsWith cannot be used with numbers
-type Constraint<T> = Partial<Record<Operator, T>>; // | {$all: Record<'$contains', string>[]};
+type Constraint<T> = Partial<Record<Operator, T>>;
+
+type DeepConstraint<T> = T extends Record<string, any>
+  ? {
+      [key in keyof T]?: T[key] | DeepConstraint<T[key]>;
+    }
+  : Constraint<T>;
 
 type ComparableType = number | Date;
 
@@ -67,13 +74,9 @@ export const notExists = (column: string): Constraint<string> => ({ $notExists: 
 export const startsWith = (value: string): Constraint<string> => ({ $startsWith: value });
 export const endsWith = (value: string): Constraint<string> => ({ $endsWith: value });
 export const pattern = (value: string): Constraint<string> => ({ $pattern: value });
+export const is = <T>(value: T): Constraint<T> => ({ $is: value });
 export const isNot = <T>(value: T): Constraint<T> => ({ $isNot: value });
-export const contains = <T>(value: T): Constraint<T> => {
-  // if (Array.isArray(value)) {
-  //   return { $all: value.map(item => ({ $contains: item as string })) }
-  // }
-  return { $contains: value };
-};
+export const contains = <T>(value: T): Constraint<T> => ({ $contains: value });
 
 // TODO: these can only be applied to columns of type "multiple"
 export const includes = (value: string): Constraint<string> => ({ $includes: value });
@@ -82,7 +85,7 @@ export const includesPattern = (value: string): Constraint<string> => ({ $includ
 export const includesAll = (value: string): Constraint<string> => ({ $includesAll: value });
 
 type FilterConstraints<T> = {
-  [key in keyof T]?: T[key] extends Record<string, any> ? FilterConstraints<T[key]> : T[key] | Constraint<T[key]>;
+  [key in keyof T]?: T[key] extends Record<string, any> ? FilterConstraints<T[key]> : T[key] | DeepConstraint<T[key]>;
 };
 
 type BulkQueryOptions<T> = {
@@ -182,7 +185,7 @@ export class Query<T, R = T> {
   }
 
   filter(constraints: FilterConstraints<T>): Query<T, R>;
-  filter<F extends keyof T>(column: F, value: FilterConstraints<T[F]> | Constraint<T[F]>): Query<T, R>;
+  filter<F extends keyof T>(column: F, value: FilterConstraints<T[F]> | DeepConstraint<T[F]>): Query<T, R>;
   filter(a: any, b?: any): Query<T, R> {
     if (arguments.length === 1) {
       const constraints = a as FilterConstraints<T>;
