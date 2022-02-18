@@ -53,7 +53,7 @@ type Operator =
 
 // TODO: restrict constraints depending on type?
 // E.g. startsWith cannot be used with numbers
-type Constraint<T> = Partial<Record<Operator, T>>;
+type Constraint<T> = { [key in Operator]?: T };
 
 type DeepConstraint<T> = T extends Record<string, any>
   ? {
