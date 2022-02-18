@@ -1,6 +1,8 @@
 export interface XataRecord {
-  _id: string;
-  _version: number;
+  id: string;
+  xata: {
+    version: number;
+  };
   read(): Promise<this>;
   update(data: Selectable<this>): Promise<this>;
   delete(): Promise<void>;
@@ -23,7 +25,7 @@ export type OmitMethods<T> = {
   [key in keyof T as T[key] extends Function ? never : key]: T[key];
 };
 
-export type Selectable<T> = Omit<OmitQueries<OmitMethods<T>>, '_id' | '_version'>;
+export type Selectable<T> = Omit<OmitQueries<OmitMethods<T>>, 'id' | 'xata'>;
 
 export type Select<T, K extends keyof T> = Pick<T, K> & Queries<T> & XataRecord;
 
@@ -335,8 +337,8 @@ export class RestRepository<T> extends Repository<T> {
     const body = { ...object } as Record<string, unknown>;
     for (const key of Object.keys(body)) {
       const value = body[key];
-      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>)._id === 'string') {
-        body[key] = (value as XataRecord)._id;
+      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+        body[key] = (value as XataRecord).id;
       }
     }
     const obj = await this.request('POST', `/tables/${this.table}/data`, body);
@@ -415,14 +417,14 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
       const value = o[field];
 
       if (value && typeof value === 'object') {
-        const { _id } = value as any;
-        if (Object.keys(value).find((col) => !col.startsWith('_'))) {
+        const { id } = value as any;
+        if (Object.keys(value).find((col) => col === 'id')) {
           o[field] = this.initObject(linkTable, value);
-        } else if (_id) {
+        } else if (id) {
           o[field] = {
-            _id,
+            id,
             get: () => {
-              this.db[linkTable].read(_id);
+              this.db[linkTable].read(id);
             }
           };
         }
@@ -431,13 +433,13 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
 
     const db = this.db;
     o.read = function () {
-      return db[table].read(o['_id'] as string);
+      return db[table].read(o['id'] as string);
     };
     o.update = function (data: any) {
-      return db[table].update(o['_id'] as string, data);
+      return db[table].update(o['id'] as string, data);
     };
     o.delete = function () {
-      return db[table].delete(o['_id'] as string);
+      return db[table].delete(o['id'] as string);
     };
 
     for (const prop of ['read', 'update', 'delete']) {

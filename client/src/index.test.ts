@@ -145,13 +145,13 @@ describe('query', () => {
 
   describe('getOne', () => {
     test('returns a single object', async () => {
-      const result = { records: [{ _id: '1234' }] };
+      const result = { records: [{ id: '1234' }] };
       const expected = { method: 'POST', path: '/tables/users/query', body: {} };
       expectRequest(
         expected,
         async () => {
           const first = await users.select().getOne();
-          expect(first?._id).toBe(result.records[0]._id);
+          expect(first?.id).toBe(result.records[0].id);
         },
         result
       );
@@ -182,15 +182,15 @@ describe('read', () => {
 
 describe('Repository.update', () => {
   test('updates and object successfully', async () => {
-    const object = { _id: 'rec_1234', _version: 1, name: 'Ada' } as User;
-    const expected = { method: 'PUT', path: `/tables/users/data/${object._id}`, body: object };
+    const object = { id: 'rec_1234', xata: { version: 1 }, name: 'Ada' } as User;
+    const expected = { method: 'PUT', path: `/tables/users/data/${object.id}`, body: object };
     expectRequest(
       expected,
       async () => {
-        const result = await users.update(object._id, object);
-        expect(result._id).toBe(object._id);
+        const result = await users.update(object.id, object);
+        expect(result.id).toBe(object.id);
       },
-      { _id: object._id }
+      { id: object.id }
     );
   });
 });
@@ -207,14 +207,14 @@ describe('Repository.delete', () => {
 
 describe('create', () => {
   test('successful', async () => {
-    const created = { _id: 'rec_1234', _version: 0 };
+    const created = { id: 'rec_1234', _version: 0 };
     const object = { name: 'Ada' } as User;
     const expected = { method: 'POST', path: '/tables/users/data', body: object };
     expectRequest(
       expected,
       async () => {
         const result = await users.create(object);
-        expect(result._id).toBe(created._id);
+        expect(result.id).toBe(created.id);
       },
       created
     );
