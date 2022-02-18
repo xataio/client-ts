@@ -3,8 +3,8 @@ import { BaseClient, Query, RestRespositoryFactory } from '../../client/src';
 
 /**
  * @typedef {Object} Team
- * @property {string} _id
- * @property {number} _version
+ * @property {string} id
+ * @property {Object} xata
  * @property {() => Promise<Team>} read
  * @property {() => Promise<Team>} update
  * @property {() => Promise<void>} delete
@@ -16,8 +16,8 @@ import { BaseClient, Query, RestRespositoryFactory } from '../../client/src';
 
 /**
  * @typedef {Object} User
- * @property {string} _id
- * @property {number} _version
+ * @property {string} id
+ * @property {Object} xata
  * @property {() => Promise<User>} read
  * @property {() => Promise<User>} update
  * @property {() => Promise<void>} delete
