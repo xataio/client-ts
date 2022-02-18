@@ -32,8 +32,8 @@ function generateJSdocType(table: Table) {
   return `
 /**
  * @typedef {Object} ${typeName}
- * @property {string} _id
- * @property {number} _version
+ * @property {string} id
+ * @property {Object} xata
  * @property {() => Promise<${typeName}>} read
  * @property {() => Promise<${typeName}>} update
  * @property {() => Promise<void>} delete
