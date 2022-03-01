@@ -304,13 +304,17 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async request(method: string, path: string, body?: unknown) {
-    const { databaseURL } = this.client.options;
+    const { databaseURL, apiKey } = this.client.options;
+    if (!databaseURL || !apiKey) {
+      throw new Error('Options databaseURL and apiKey are required');
+    }
+
     const resp: Response = await this.fetch(`${databaseURL}${path}`, {
       method,
       headers: {
         Accept: '*/*',
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.client.options.apiKey}`
+        Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify(body)
     });
