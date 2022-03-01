@@ -68,7 +68,9 @@ describe('client', () => {
   });
 
   test('provide branch as an array', async () => {
-    const { fetch, users } = buildClient({ branch: [() => undefined, async () => null, 'branch', 'main'] });
+    const { fetch, users } = buildClient({
+      branch: [process.env.NOT_DEFINED_VARIABLE, async () => null, 'branch', 'main']
+    });
 
     fetch.mockReset().mockImplementation(() => {
       return {
