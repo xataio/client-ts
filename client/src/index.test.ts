@@ -5,7 +5,8 @@ const client = new BaseClient(
   {
     fetch,
     apiKey: '1234',
-    databaseURL: 'https://my-workspace-5df34do.staging.xatabase.co/db/xata:main'
+    databaseURL: 'https://my-workspace-5df34do.staging.xatabase.co/db/xata',
+    branch: 'main'
   },
   {}
 );
@@ -25,7 +26,7 @@ describe('request', () => {
       };
     });
 
-    users.request('GET', '/foo');
+    await users.request('GET', '/foo');
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
@@ -52,7 +53,7 @@ describe('request', () => {
       };
     });
 
-    users.request('POST', '/foo', { a: 1 });
+    await users.request('POST', '/foo', { a: 1 });
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`

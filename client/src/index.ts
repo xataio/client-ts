@@ -304,12 +304,17 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async request(method: string, path: string, body?: unknown) {
-    const { databaseURL, apiKey } = this.client.options;
+    const { databaseURL, apiKey, branch: branchStrategy } = this.client.options;
     if (!databaseURL || !apiKey) {
       throw new Error('Options databaseURL and apiKey are required');
     }
 
-    const resp: Response = await this.fetch(`${databaseURL}${path}`, {
+    const branch = await getBranchFromStrategy(branchStrategy);
+    if (!branch) {
+      throw new Error('Option branch is required');
+    }
+
+    const resp: Response = await this.fetch(`${databaseURL}:${branch}${path}`, {
       method,
       headers: {
         Accept: '*/*',
@@ -397,9 +402,13 @@ export class RestRespositoryFactory implements RepositoryFactory {
   }
 }
 
+type BranchStrategyBuilder = () => Promise<string | undefined | null>;
+type BranchStrategy = string | BranchStrategyBuilder;
+
 export type XataClientOptions = {
   fetch?: unknown;
   databaseURL: string;
+  branch: BranchStrategy | BranchStrategy[];
   apiKey: string;
   repositoryFactory?: RepositoryFactory;
 };
@@ -470,3 +479,30 @@ export class XataError extends Error {
 }
 
 export type Links = Record<string, Array<string[]>>;
+
+const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchStrategyBuilder => {
+  return typeof strategy === 'function';
+};
+
+const isBranchStrategy = (strategy: BranchStrategy): strategy is BranchStrategy => {
+  return isBranchStrategyBuilder(strategy) || typeof strategy === 'string';
+};
+
+const getBranchFromStrategy = async (param: BranchStrategy | BranchStrategy[]): Promise<string | undefined | null> => {
+  const strategies = Array.isArray(param) ? param : [param];
+
+  const getBranch = async (strategy: BranchStrategy) => {
+    if (isBranchStrategyBuilder(strategy)) {
+      return await strategy();
+    } else if (isBranchStrategy(strategy)) {
+      return strategy;
+    } else {
+      throw new Error(`Invalid branch strategy: ${strategy}`);
+    }
+  };
+
+  const strategy = strategies.find((option) => getBranch(option) !== undefined);
+  if (strategy) return await getBranch(strategy);
+
+  return undefined;
+};

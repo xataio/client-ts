@@ -3,6 +3,7 @@ import { XataClient } from '../codegen/example/xata';
 
 const client = new XataClient({
   databaseURL: process.env.XATA_DATABASE_URL || '',
+  branch: process.env.XATA_DATABASE_BRANCH || '',
   apiKey: process.env.XATA_API_KEY || ''
 });
 
