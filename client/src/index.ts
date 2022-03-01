@@ -402,13 +402,15 @@ export class RestRespositoryFactory implements RepositoryFactory {
   }
 }
 
-type BranchStrategyBuilder = () => Promise<string | undefined | null>;
-type BranchStrategy = string | BranchStrategyBuilder;
+type BranchStrategyValue = string | undefined | null;
+type BranchStrategyBuilder = () => BranchStrategyValue | Promise<BranchStrategyValue>;
+type BranchStrategy = BranchStrategyValue | BranchStrategyBuilder;
+type BranchStrategyOption = BranchStrategy | BranchStrategy[];
 
 export type XataClientOptions = {
   fetch?: unknown;
   databaseURL: string;
-  branch: BranchStrategy | BranchStrategy[];
+  branch: BranchStrategyOption;
   apiKey: string;
   repositoryFactory?: RepositoryFactory;
 };
@@ -484,25 +486,17 @@ const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchSt
   return typeof strategy === 'function';
 };
 
-const isBranchStrategy = (strategy: BranchStrategy): strategy is BranchStrategy => {
-  return isBranchStrategyBuilder(strategy) || typeof strategy === 'string';
-};
-
-const getBranchFromStrategy = async (param: BranchStrategy | BranchStrategy[]): Promise<string | undefined | null> => {
-  const strategies = Array.isArray(param) ? param : [param];
+const getBranchFromStrategy = async (param: BranchStrategyOption): Promise<BranchStrategyValue> => {
+  const strategies = Array.isArray(param) ? [...param] : [param];
 
   const getBranch = async (strategy: BranchStrategy) => {
-    if (isBranchStrategyBuilder(strategy)) {
-      return await strategy();
-    } else if (isBranchStrategy(strategy)) {
-      return strategy;
-    } else {
-      throw new Error(`Invalid branch strategy: ${strategy}`);
-    }
+    return isBranchStrategyBuilder(strategy) ? await strategy() : strategy;
   };
 
-  const strategy = strategies.find((option) => getBranch(option) !== undefined);
-  if (strategy) return await getBranch(strategy);
+  for await (const strategy of strategies) {
+    const branch = await getBranch(strategy);
+    if (branch) return branch;
+  }
 
   return undefined;
 };
