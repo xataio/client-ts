@@ -26,12 +26,13 @@ describe('client', () => {
   });
 
   test('throws if mandatory options are missing', () => {
-    // @ts-expect-error Options cannot be null in TypeScript
+    // @ts-expect-error Options are mandatory in TypeScript
     const { users } = buildClient({ apiKey: null, databaseURL: null });
     expect(users.request('GET', '/foo')).rejects.toThrow('Options databaseURL and apiKey are required');
   });
 
   test('throws if branch cannot be resolved', () => {
+    // @ts-expect-error Branch is mandatory in TypeScript
     const { users } = buildClient({ branch: null });
 
     expect(users.request('GET', '/foo')).rejects.toThrow('Option branch is required');
@@ -67,7 +68,7 @@ describe('client', () => {
   });
 
   test('provide branch as an array', async () => {
-    const { fetch, users } = buildClient({ branch: [undefined, null, 'branch', 'main'] });
+    const { fetch, users } = buildClient({ branch: [() => undefined, async () => null, 'branch', 'main'] });
 
     fetch.mockReset().mockImplementation(() => {
       return {

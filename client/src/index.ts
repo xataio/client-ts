@@ -404,7 +404,7 @@ export class RestRespositoryFactory implements RepositoryFactory {
 
 type BranchStrategyValue = string | undefined | null;
 type BranchStrategyBuilder = () => BranchStrategyValue | Promise<BranchStrategyValue>;
-type BranchStrategy = BranchStrategyValue | BranchStrategyBuilder;
+type BranchStrategy = string | BranchStrategyBuilder;
 type BranchStrategyOption = BranchStrategy | BranchStrategy[];
 
 export type XataClientOptions = {
