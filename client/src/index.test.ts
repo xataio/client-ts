@@ -116,7 +116,8 @@ type ExpectedRequest = {
   body: unknown;
 };
 
-async function expectRequest(expectedRequest: ExpectedRequest, callback: () => void, response?: unknown) {
+// TODO: Fix any type
+async function expectRequest(expectedRequest: ExpectedRequest, callback: () => void, response?: any) {
   const request = jest.fn(async () => response);
   users.request = request;
 
@@ -134,18 +135,21 @@ describe('query', () => {
   describe('getMany', () => {
     test('simple query', async () => {
       const expected = { method: 'POST', path: '/tables/users/query', body: {} };
-      expectRequest(expected, () => users.getMany(), { records: [] });
+      expectRequest(expected, () => users.getMany(), { records: [], meta: { page: { cursor: '', more: false } } });
     });
 
     test('query with one filter', async () => {
       const expected = { method: 'POST', path: '/tables/users/query', body: { filter: { $all: [{ name: 'foo' }] } } };
-      expectRequest(expected, () => users.filter('name', 'foo').getMany(), { records: [] });
+      expectRequest(expected, () => users.filter('name', 'foo').getMany(), {
+        records: [],
+        meta: { page: { cursor: '', more: false } }
+      });
     });
   });
 
   describe('getOne', () => {
     test('returns a single object', async () => {
-      const result = { records: [{ id: '1234' }] };
+      const result = { records: [{ id: '1234' }], meta: { page: { cursor: '', more: false } } };
       const expected = { method: 'POST', path: '/tables/users/query', body: {} };
       expectRequest(
         expected,
@@ -158,7 +162,7 @@ describe('query', () => {
     });
 
     test('returns null if no objects are returned', async () => {
-      const result = { records: [] };
+      const result = { records: [], meta: { page: { cursor: '', more: false } } };
       const expected = { method: 'POST', path: '/tables/users/query', body: {} };
       expectRequest(
         expected,

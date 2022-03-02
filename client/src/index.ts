@@ -90,7 +90,12 @@ type FilterConstraints<T> = {
   [key in keyof T]?: T[key] extends Record<string, any> ? FilterConstraints<T[key]> : T[key] | DeepConstraint<T[key]>;
 };
 
+type CursorNavigationOptions = { first?: string } | { last?: string } | { after?: string; before?: string };
+type OffsetNavigationOptions = { size?: number; offset?: number };
+type PaginationOptions = CursorNavigationOptions & OffsetNavigationOptions;
+
 type BulkQueryOptions<T> = {
+  page?: PaginationOptions;
   filter?: FilterConstraints<T>;
   sort?:
     | {
@@ -101,6 +106,40 @@ type BulkQueryOptions<T> = {
 };
 
 type QueryOrConstraint<T, R> = Query<T, R> | Constraint<T>;
+
+type QueryMeta = { page: { cursor: string; more: boolean } };
+
+class Page<T, R> {
+  readonly query: Query<T, R>;
+  readonly meta: QueryMeta;
+  readonly records: R[];
+
+  constructor(query: Query<T, R>, meta: QueryMeta, records: R[] = []) {
+    this.query = query;
+    this.meta = meta;
+    this.records = records;
+  }
+
+  async nextPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
+    const { size, offset } = options;
+    return this.query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
+  }
+
+  async prevPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
+    const { size, offset } = options;
+    return this.query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
+  }
+
+  async firstPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
+    const { size, offset } = options;
+    return this.query.getPaginated({ page: { size, offset, first: this.meta.page.cursor } });
+  }
+
+  async lastPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
+    const { size, offset } = options;
+    return this.query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
+  }
+}
 
 export class Query<T, R = T> {
   table: string;
@@ -231,27 +270,36 @@ export class Query<T, R = T> {
     return q;
   }
 
-  // TODO: pagination. Maybe implement different methods for different type of paginations
-  // and one to simply get the first records returned by the query with no pagination.
-  async getMany(options?: BulkQueryOptions<T>): Promise<R[]> {
-    // TODO: use options
-    return this.repository.query(this);
+  async getPaginated(options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
+    return this.repository.query(this, options);
   }
 
-  async getOne(options?: BulkQueryOptions<T>): Promise<R | null> {
-    // TODO: use options
-    const arr = await this.getMany(); // TODO, limit to 1
-    return arr[0] || null;
+  async getMany(options?: BulkQueryOptions<T>): Promise<R[]> {
+    const { records } = await this.getPaginated(options);
+    return records;
+  }
+
+  async getOne(options: Omit<BulkQueryOptions<T>, 'page'> = {}): Promise<R | null> {
+    const records = await this.getMany({ ...options, page: { size: 1 } });
+    return records[0] || null;
   }
 
   async deleteAll(): Promise<number> {
-    // Return number of affected rows
+    // TODO: Return number of affected rows
     return 0;
   }
 
   include(columns: Include<T>) {
     // TODO
     return this;
+  }
+
+  async firstPage(size?: number): Promise<Page<T, R>> {
+    return this.getPaginated({ page: { size, offset: 0 } });
+  }
+
+  async lastPage(size?: number): Promise<Page<T, R>> {
+    return this.getPaginated({ page: { size, before: 'end' } });
   }
 }
 
@@ -269,7 +317,7 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
   abstract delete(id: string): void;
 
   // Used by the Query object internally
-  abstract query<R>(query: Query<T, R>): Promise<R[]>;
+  abstract query<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
 }
 
 export class RestRepository<T> extends Repository<T> {
@@ -303,8 +351,9 @@ export class RestRepository<T> extends Repository<T> {
     Object.defineProperty(this, 'hostname', { enumerable: false });
   }
 
-  async request(method: string, path: string, body?: unknown) {
+  async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {
     const { databaseURL } = this.client.options;
+
     const resp: Response = await this.fetch(`${databaseURL}${path}`, {
       method,
       headers: {
@@ -314,6 +363,7 @@ export class RestRepository<T> extends Repository<T> {
       },
       body: JSON.stringify(body)
     });
+
     if (!resp.ok) {
       try {
         const json = await resp.json();
@@ -328,7 +378,8 @@ export class RestRepository<T> extends Repository<T> {
       }
       throw new XataError(resp.statusText, resp.status);
     }
-    if (resp.status === 204) return;
+
+    if (resp.status === 204) return undefined;
     return resp.json();
   }
 
@@ -344,14 +395,27 @@ export class RestRepository<T> extends Repository<T> {
         body[key] = (value as XataRecord).id;
       }
     }
-    const obj = await this.request('POST', `/tables/${this.table}/data`, body);
-    return this.client.initObject(this.table, obj);
+
+    const response = await this.request<{
+      id: string;
+      xata: { version: number };
+    }>('POST', `/tables/${this.table}/data`, body);
+    if (!response) {
+      throw new Error("The server didn't return any data for the query");
+    }
+
+    // TODO: Review this, not sure we are properly initializing the object
+    return this.client.initObject(this.table, response);
   }
 
   async read(id: string): Promise<T | null> {
     try {
-      const obj = await this.request('GET', `/tables/${this.table}/data/${id}`);
-      return this.client.initObject(this.table, obj);
+      const response = await this.request<
+        T & { id: string; xata: { version: number; table?: string; warnings?: string[] } }
+      >('GET', `/tables/${this.table}/data/${id}`);
+      if (!response) return null;
+
+      return this.client.initObject(this.table, response);
     } catch (err) {
       if ((err as XataError).status === 404) return null;
       throw err;
@@ -359,27 +423,49 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async update(id: string, object: Partial<T>): Promise<T> {
-    const obj = await this.request('PUT', `/tables/${this.table}/data/${id}`, object);
-    return this.client.initObject(this.table, obj);
+    const response = await this.request<{
+      id: string;
+      xata: { version: number };
+    }>('PUT', `/tables/${this.table}/data/${id}`, object);
+    if (!response) {
+      throw new Error("The server didn't return any data for the query");
+    }
+
+    // TODO: Review this, not sure we are properly initializing the object
+    return this.client.initObject(this.table, response);
   }
 
   async delete(id: string) {
+    // TODO: Return boolean?
     await this.request('DELETE', `/tables/${this.table}/data/${id}`);
   }
 
-  async query<R>(query: Query<T, R>): Promise<R[]> {
+  // TODO: Use options
+  async query<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
     const filter = {
       $any: query.$any,
       $all: query.$all,
       $not: query.$not,
       $none: query.$none
     };
+
     const body = {
       filter: Object.values(filter).some(Boolean) ? filter : undefined,
       sort: query.$sort
     };
-    const result = await this.request('POST', `/tables/${this.table}/query`, body);
-    return result.records.map((record: object) => this.client.initObject(this.table, record));
+
+    const response = await this.request<{
+      records: object[];
+      meta: { page: { cursor: string; more: boolean } };
+    }>('POST', `/tables/${this.table}/query`, body);
+    if (!response) {
+      throw new Error("The server didn't return any data for the query");
+    }
+
+    const { meta, records: objects } = response;
+    const records = objects.map((record) => this.client.initObject<R>(this.table, record));
+
+    return new Page(query, meta, records);
   }
 }
 
