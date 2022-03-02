@@ -96,6 +96,7 @@ type PaginationOptions = CursorNavigationOptions & OffsetNavigationOptions;
 
 type BulkQueryOptions<T> = {
   page?: PaginationOptions;
+  /** TODO: Not implemented yet
   filter?: FilterConstraints<T>;
   sort?:
     | {
@@ -103,6 +104,7 @@ type BulkQueryOptions<T> = {
         direction?: SortDirection;
       }
     | keyof T;
+**/
 };
 
 type QueryOrConstraint<T, R> = Query<T, R> | Constraint<T>;
@@ -440,7 +442,6 @@ export class RestRepository<T> extends Repository<T> {
     await this.request('DELETE', `/tables/${this.table}/data/${id}`);
   }
 
-  // TODO: Use options
   async query<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
     const filter = {
       $any: query.$any,
@@ -451,7 +452,8 @@ export class RestRepository<T> extends Repository<T> {
 
     const body = {
       filter: Object.values(filter).some(Boolean) ? filter : undefined,
-      sort: query.$sort
+      sort: query.$sort,
+      page: options?.page
     };
 
     const response = await this.request<{

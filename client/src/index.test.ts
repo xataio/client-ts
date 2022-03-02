@@ -150,7 +150,7 @@ describe('query', () => {
   describe('getOne', () => {
     test('returns a single object', async () => {
       const result = { records: [{ id: '1234' }], meta: { page: { cursor: '', more: false } } };
-      const expected = { method: 'POST', path: '/tables/users/query', body: {} };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
       expectRequest(
         expected,
         async () => {
@@ -163,7 +163,7 @@ describe('query', () => {
 
     test('returns null if no objects are returned', async () => {
       const result = { records: [], meta: { page: { cursor: '', more: false } } };
-      const expected = { method: 'POST', path: '/tables/users/query', body: {} };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
       expectRequest(
         expected,
         async () => {
