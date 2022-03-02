@@ -304,13 +304,14 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async request(method: string, path: string, body?: unknown) {
-    const { databaseURL } = this.client.options;
+    const { databaseURL, apiKey } = this.client.options;
+
     const resp: Response = await this.fetch(`${databaseURL}${path}`, {
       method,
       headers: {
         Accept: '*/*',
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.client.options.apiKey}`
+        Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify(body)
     });
@@ -406,6 +407,10 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
   db!: D;
 
   constructor(options: XataClientOptions, links: Links) {
+    if (!options.databaseURL || !options.apiKey) {
+      throw new Error('Options databaseURL and apiKey are required');
+    }
+
     this.options = options;
     this.links = links;
   }
