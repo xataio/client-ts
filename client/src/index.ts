@@ -305,9 +305,6 @@ export class RestRepository<T> extends Repository<T> {
 
   async request(method: string, path: string, body?: unknown) {
     const { databaseURL, apiKey } = this.client.options;
-    if (!databaseURL || !apiKey) {
-      throw new Error('Options databaseURL and apiKey are required');
-    }
 
     const resp: Response = await this.fetch(`${databaseURL}${path}`, {
       method,
@@ -410,6 +407,10 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
   db!: D;
 
   constructor(options: XataClientOptions, links: Links) {
+    if (!options.databaseURL || !options.apiKey) {
+      throw new Error('Options databaseURL and apiKey are required');
+    }
+
     this.options = options;
     this.links = links;
   }

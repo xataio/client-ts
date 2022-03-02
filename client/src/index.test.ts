@@ -16,6 +16,21 @@ interface User extends XataRecord {
 
 const users = new RestRepository<User>(client, 'users');
 
+describe('client', () => {
+  test('api key option is set', () => {
+    const client = new BaseClient({ apiKey: 'apiKey', databaseURL: 'url' }, {});
+    expect(client.options.apiKey).toBe('apiKey');
+    expect(client.options.databaseURL).toBe('url');
+  });
+
+  test('throws if mandatory options are missing', () => {
+    // @ts-expect-error Options are mandatory in TypeScript
+    expect(() => new BaseClient({ apiKey: null, databaseURL: null }, {})).toThrow(
+      'Options databaseURL and apiKey are required'
+    );
+  });
+});
+
 describe('request', () => {
   test('builds the right arguments for a GET request', async () => {
     fetch.mockReset().mockImplementation(() => {
