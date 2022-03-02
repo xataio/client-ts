@@ -141,6 +141,11 @@ class Page<T, R> {
     const { size, offset } = options;
     return this.query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
   }
+
+  // TODO: We need to add something on the backend if we want a hasPreviousPage
+  hasNextPage(): boolean {
+    return this.meta.page.more;
+  }
 }
 
 export class Query<T, R = T> {
