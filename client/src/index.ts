@@ -354,14 +354,15 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {
-    const { databaseURL } = this.client.options;
+    const { databaseURL, apiKey } = this.client.options;
+    const branch = await this.client.getBranch();
 
-    const resp: Response = await this.fetch(`${databaseURL}${path}`, {
+    const resp: Response = await this.fetch(`${databaseURL}:${branch}${path}`, {
       method,
       headers: {
         Accept: '*/*',
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.client.options.apiKey}`
+        Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify(body)
     });
@@ -481,9 +482,15 @@ export class RestRespositoryFactory implements RepositoryFactory {
   }
 }
 
+type BranchStrategyValue = string | undefined | null;
+type BranchStrategyBuilder = () => BranchStrategyValue | Promise<BranchStrategyValue>;
+type BranchStrategy = BranchStrategyValue | BranchStrategyBuilder;
+type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
+
 export type XataClientOptions = {
   fetch?: unknown;
   databaseURL: string;
+  branch: BranchStrategyOption;
   apiKey: string;
   repositoryFactory?: RepositoryFactory;
 };
@@ -491,9 +498,14 @@ export type XataClientOptions = {
 export class BaseClient<D extends Record<string, Repository<any>>> {
   options: XataClientOptions;
   private links: Links;
+  private branch: BranchStrategyValue;
   db!: D;
 
   constructor(options: XataClientOptions, links: Links) {
+    if (!options.databaseURL || !options.apiKey || !options.branch) {
+      throw new Error('Options databaseURL, apiKey and branch are required');
+    }
+
     this.options = options;
     this.links = links;
   }
@@ -542,6 +554,27 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     Object.freeze(o);
     return o as T;
   }
+
+  public async getBranch(): Promise<string> {
+    if (this.branch) return this.branch;
+
+    const { branch: param } = this.options;
+    const strategies = Array.isArray(param) ? [...param] : [param];
+
+    const evaluateBranch = async (strategy: BranchStrategy) => {
+      return isBranchStrategyBuilder(strategy) ? await strategy() : strategy;
+    };
+
+    for await (const strategy of strategies) {
+      const branch = await evaluateBranch(strategy);
+      if (branch) {
+        this.branch = branch;
+        return branch;
+      }
+    }
+
+    throw new Error('Unable to resolve branch value');
+  }
 }
 
 export class XataError extends Error {
@@ -554,3 +587,7 @@ export class XataError extends Error {
 }
 
 export type Links = Record<string, Array<string[]>>;
+
+const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchStrategyBuilder => {
+  return typeof strategy === 'function';
+};

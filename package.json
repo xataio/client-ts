@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
+    "test:watch": "jest --watch",
     "prepare": "husky install",
     "build-example": "cd codegen && npm run example-ts && npm run example-js"
   },
