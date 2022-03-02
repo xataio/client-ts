@@ -18,8 +18,8 @@ const buildClient = (options: Partial<XataClientOptions> = {}) => {
   return { fetch, client, users };
 };
 
-describe('client', () => {
-  test('api key option is set', () => {
+describe('client options', () => {
+  test('option parameters are set', () => {
     const { client } = buildClient({ apiKey: 'apiKey', databaseURL: 'url' });
     expect(client.options.apiKey).toBe('apiKey');
     expect(client.options.databaseURL).toBe('url');
@@ -27,15 +27,19 @@ describe('client', () => {
 
   test('throws if mandatory options are missing', () => {
     // @ts-expect-error Options are mandatory in TypeScript
-    const { users } = buildClient({ apiKey: null, databaseURL: null });
-    expect(users.request('GET', '/foo')).rejects.toThrow('Options databaseURL and apiKey are required');
+    expect(() => buildClient({ apiKey: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
+
+    // @ts-expect-error Options are mandatory in TypeScript
+    expect(() => buildClient({ databaseURL: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
+
+    // @ts-expect-error Options are mandatory in TypeScript
+    expect(() => buildClient({ branch: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
   });
 
   test('throws if branch cannot be resolved', () => {
-    // @ts-expect-error Branch is mandatory in TypeScript
-    const { users } = buildClient({ branch: null });
+    const { users } = buildClient({ branch: () => null });
 
-    expect(users.request('GET', '/foo')).rejects.toThrow('Option branch is required');
+    expect(users.request('GET', '/foo')).rejects.toThrow('Unable to resolve branch value');
   });
 
   test('provide branch as a string', async () => {
@@ -125,6 +129,24 @@ describe('client', () => {
         },
       ]
     `);
+  });
+
+  test('ensure branch resolution is memoized', async () => {
+    const branchGetter = jest.fn(() => 'branch');
+
+    const { fetch, users } = buildClient({ branch: branchGetter });
+
+    fetch.mockReset().mockImplementation(() => {
+      return {
+        ok: true,
+        json: async () => ({})
+      };
+    });
+
+    await users.request('GET', '/foo');
+    await users.request('GET', '/foo');
+
+    expect(branchGetter).toHaveBeenCalledTimes(1);
   });
 });
 
