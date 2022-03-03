@@ -1,0 +1,32 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+
+      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+        env:
+          XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
+          XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
+          XATA_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
