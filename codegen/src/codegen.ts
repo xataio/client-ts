@@ -90,14 +90,13 @@ function parseSchema(input: string) {
   }
 }
 
-export type Language = 'typescript' | 'javascript';
+export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
 
 export async function generate(schemaFile: string, output: string, language: Language) {
   const fullSchemaPath = path.resolve(process.cwd(), schemaFile);
-  const fullOutputPath = path.resolve(process.cwd(), output);
+  const fullOutputPath = path.resolve(process.cwd(), `${output}${getExtensionFromLanguage(language)}`);
   console.log('Using schema file:', fullSchemaPath);
   console.log('Using output file:', fullOutputPath);
-  console.log();
   const input = await readSchema(schemaFile);
   const schema = parseSchema(input);
 
@@ -112,7 +111,7 @@ export async function generate(schemaFile: string, output: string, language: Lan
     }
   }
 
-  if (language === 'typescript') {
+  if (['typescript', 'ts'].includes(language)) {
     const code = `
     import {
       BaseClient,
@@ -171,3 +170,17 @@ export async function generate(schemaFile: string, output: string, language: Lan
     await fs.writeFile(fullOutputPath, pretty);
   }
 }
+
+const getExtensionFromLanguage = (language?: Language) => {
+  switch (language) {
+    case 'javascript':
+    case 'js':
+      return '.js';
+    case 'typescript':
+    case 'ts':
+    case undefined:
+      return '.ts';
+    default:
+      throw new Error('Invalid language specified.');
+  }
+};
