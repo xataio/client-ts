@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts#readme",
   "dependencies": {
+    "command-exists": "^1.2.9",
     "commander": "^9.0.0",
     "inquirer": "^8.2.0",
     "ora": "^5.4.1",
@@ -30,6 +31,7 @@
     "zod": "^3.11.6"
   },
   "devDependencies": {
+    "@types/command-exists": "^1.2.0",
     "@types/inquirer": "^8.2.0",
     "@types/pluralize": "^0.0.29",
     "@types/yargs": "^17.0.8"
