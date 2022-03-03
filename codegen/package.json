@@ -34,6 +34,5 @@
   },
   "bin": {
     "xata-codegen": "./dist/index.js"
-  },
-  "gitHead": "810f58f373ed289e9620432421fcb2829b758c40"
+  }
 }
