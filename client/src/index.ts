@@ -111,7 +111,20 @@ type QueryOrConstraint<T, R> = Query<T, R> | Constraint<T>;
 
 type QueryMeta = { page: { cursor: string; more: boolean } };
 
-class Page<T, R> {
+interface BasePage<T, R> {
+  query: Query<T, R>;
+  meta: QueryMeta;
+  records: R[];
+
+  nextPage(options?: OffsetNavigationOptions): Promise<Page<T, R>>;
+  previousPage(options?: OffsetNavigationOptions): Promise<Page<T, R>>;
+  firstPage(options?: OffsetNavigationOptions): Promise<Page<T, R>>;
+  lastPage(options?: OffsetNavigationOptions): Promise<Page<T, R>>;
+
+  hasNextPage(): boolean;
+}
+
+class Page<T, R> implements BasePage<T, R> {
   readonly query: Query<T, R>;
   readonly meta: QueryMeta;
   readonly records: R[];
@@ -127,7 +140,7 @@ class Page<T, R> {
     return this.query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
   }
 
-  async prevPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
+  async previousPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
     const { size, offset } = options;
     return this.query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
   }
@@ -148,7 +161,7 @@ class Page<T, R> {
   }
 }
 
-export class Query<T, R = T> {
+export class Query<T, R = T> implements BasePage<T, R> {
   table: string;
   repository: Repository<T>;
 
@@ -157,6 +170,11 @@ export class Query<T, R = T> {
   readonly $not?: QueryOrConstraint<T, R>[];
   readonly $none?: QueryOrConstraint<T, R>[];
   readonly $sort?: Record<string, SortDirection>;
+
+  // Cursor pagination
+  readonly query: Query<T, R> = this;
+  readonly meta: QueryMeta = { page: { cursor: 'start', more: true } };
+  readonly records: R[] = [];
 
   constructor(repository: Repository<T> | null, table: string, data: Partial<Query<T, R>>, parent?: Query<T, R>) {
     if (repository) {
@@ -278,7 +296,7 @@ export class Query<T, R = T> {
   }
 
   async getPaginated(options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
-    return this.repository.query(this, options);
+    return this.repository.executeQuery(this, options);
   }
 
   async getMany(options?: BulkQueryOptions<T>): Promise<R[]> {
@@ -301,12 +319,26 @@ export class Query<T, R = T> {
     return this;
   }
 
-  async firstPage(size?: number): Promise<Page<T, R>> {
+  async nextPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
+    return this.firstPage(options);
+  }
+
+  async previousPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
+    return this.firstPage(options);
+  }
+
+  async firstPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
+    const { size } = options;
     return this.getPaginated({ page: { size, offset: 0 } });
   }
 
-  async lastPage(size?: number): Promise<Page<T, R>> {
+  async lastPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
+    const { size } = options;
     return this.getPaginated({ page: { size, before: 'end' } });
+  }
+
+  hasNextPage(): boolean {
+    return this.meta.page.more;
   }
 }
 
@@ -324,7 +356,7 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
   abstract delete(id: string): void;
 
   // Used by the Query object internally
-  abstract query<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
+  abstract executeQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
 }
 
 export class RestRepository<T> extends Repository<T> {
@@ -448,7 +480,7 @@ export class RestRepository<T> extends Repository<T> {
     await this.request('DELETE', `/tables/${this.table}/data/${id}`);
   }
 
-  async query<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
+  async executeQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
     const filter = {
       $any: query.$any,
       $all: query.$all,
