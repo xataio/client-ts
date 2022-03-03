@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 import { program } from 'commander';
-import { join } from 'path';
+import { join, relative } from 'path';
 import ora from 'ora';
-import { access as lameCallbackBasedAccess } from 'fs';
-import { promisify } from 'util';
+import { access } from 'fs/promises';
 
 import { generate } from './codegen';
-import { relative } from 'path/posix';
 import { getExtensionFromLanguage } from './getExtensionFromLanguage';
-
-const access = promisify(lameCallbackBasedAccess);
 
 program
   .name('xata-codegen')
