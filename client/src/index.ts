@@ -349,6 +349,8 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
 
   abstract create(object: Selectable<T>): Promise<T>;
 
+  abstract createMany(objects: Selectable<T>[]): Promise<T[]>;
+
   abstract read(id: string): Promise<T | null>;
 
   abstract update(id: string, object: Partial<T>): Promise<T>;
@@ -446,6 +448,20 @@ export class RestRepository<T> extends Repository<T> {
 
     // TODO: Review this, not sure we are properly initializing the object
     return this.client.initObject(this.table, response);
+  }
+
+  async createMany(records: T[]): Promise<T[]> {
+    // TODO: Review the id of the records
+
+    const response = await this.request<{
+      recordIDs: string[];
+    }>('POST', `/tables/${this.table}/bulk`, { records });
+    if (!response) {
+      throw new Error("The server didn't return any data for the query");
+    }
+
+    // TODO: Review this, not sure we are properly initializing the object
+    return response.recordIDs.map((record) => this.client.initObject(this.table, { id: record }));
   }
 
   async read(id: string): Promise<T | null> {
