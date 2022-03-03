@@ -49,5 +49,10 @@
     "*.{css,json,md,yml,yaml}": [
       "prettier --write"
     ]
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "dist"
+    ]
   }
 }
