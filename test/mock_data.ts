@@ -1,97 +1,28 @@
-export const animals = [
-  'Albatross',
-  'Alligator',
+const animals = [
   'Ape',
-  'Armadillo',
-  'Donkey',
-  'Bat',
-  'Bear',
-  'Bee',
-  'Bison',
-  'Boar',
-  'Buffalo',
   'Butterfly',
-  'Camel',
   'Cat',
-  'Cheetah',
-  'Chicken',
-  'Chimpanzee',
-  'Cobra',
-  'Coyote',
   'Crocodile',
-  'Crow',
-  'Deer',
   'Dog',
-  'Dolphin',
-  'Dragonfly',
-  'Duck',
-  'Eagle',
-  'Elephant',
-  'Falcon',
-  'Fish',
-  'Flamingo',
-  'Fox',
-  'Frog',
-  'Giraffe',
-  'Goat',
-  'Gorilla',
-  'Grasshopper',
-  'Hamster',
-  'Hippopotamus',
-  'Horse',
-  'Hyena',
-  'Jaguar',
-  'Jellyfish',
-  'Kangaroo',
   'Koala',
-  'Leopard',
-  'Lion',
-  'Llama',
-  'Manatee',
-  'Mongoose',
   'Monkey',
-  'Mosquito',
-  'Mouse',
-  'Octopus',
-  'Panther',
-  'Parrot',
-  'Pelican',
   'Penguin',
   'Pig',
-  'Pony',
-  'Rabbit',
-  'Raccoon',
-  'Rat',
-  'Raven',
-  'Salamander',
   'Scorpion',
   'Shark',
-  'Sheep',
-  'Snake',
-  'Sparrow',
-  'Spider',
-  'Squirrel',
-  'Tiger',
-  'Turkey',
   'Whale',
-  'Wildcat',
-  'Wolf',
   'Wolverine',
   'Wombat',
   'Zebra'
 ];
 
-export const fruits = [
+const fruits = [
   'Apple',
   'Banana',
   'Cherry',
   'Fig',
   'Grape',
   'Lemon',
-  'Lime',
-  'Mandarine',
-  'Mango',
-  'Nectarine',
   'Orange',
   'Papaya',
   'Peach',
@@ -99,7 +30,43 @@ export const fruits = [
   'Pineapple',
   'Pomelo',
   'Strawberry',
-  'Tangerine',
-  'Tomato',
   'Watermelon'
 ];
+
+const ownerFruits = {
+  full_name: 'Owner of team fruits',
+  email: 'owner.fruits@example.com',
+  address: {
+    street: 'Main Street',
+    zipcode: 100
+  }
+};
+
+const ownerAnimals = {
+  full_name: 'Owner of team animals',
+  email: 'owner.animals@example.com',
+  address: {
+    street: 'Elm Street',
+    zipcode: 200
+  }
+};
+
+const animalUsers = animals.map((animal) => ({
+  full_name: animal,
+  email: `${animal.toLowerCase().replace(' ', '_')}@zoo.example.com`,
+  address: {
+    street: 'Zoo Plaza',
+    zipcode: 200
+  }
+}));
+
+const fruitUsers = fruits.map((fruit) => ({
+  full_name: fruit,
+  email: `${fruit.toLowerCase().replace(' ', '_')}@macedonia.example.com`,
+  address: {
+    street: 'Grocery Street',
+    zipcode: 200
+  }
+}));
+
+export const mockUsers = [ownerFruits, ownerAnimals, ...animalUsers, ...fruitUsers];

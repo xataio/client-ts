@@ -1,6 +1,6 @@
-import { contains, lt } from '../client/src';
-import { XataClient } from '../codegen/example/xata';
-import { animals, fruits } from './mock_data';
+import { contains, lt, Repository } from '../client/src';
+import { User, XataClient } from '../codegen/example/xata';
+import { mockUsers } from './mock_data';
 
 const client = new XataClient({
   databaseURL: process.env.XATA_DATABASE_URL || '',
@@ -22,43 +22,13 @@ beforeAll(async () => {
     await user.delete();
   }
 
-  const ownerFruits = await client.db.users.create({
-    full_name: 'Owner of team fruits',
-    email: 'owner.fruits@example.com',
-    address: {
-      street: 'Main Street',
-      zipcode: 100
-    }
-  });
+  await client.db.users.createMany(mockUsers);
 
-  const ownerAnimals = await client.db.users.create({
-    full_name: 'Owner of team animals',
-    email: 'owner.animals@example.com',
-    address: {
-      street: 'Elm Street',
-      zipcode: 200
-    }
-  });
-
-  const animalUsers = animals.map((animal) => ({
-    full_name: animal,
-    email: `${animal.toLowerCase().replace(' ', '_')}@zoo.example.com`,
-    address: {
-      street: 'Zoo Plaza',
-      zipcode: 200
-    }
-  }));
-
-  const fruitUsers = fruits.map((fruit) => ({
-    full_name: fruit,
-    email: `${fruit.toLowerCase().replace(' ', '_')}@macedonia.example.com`,
-    address: {
-      street: 'Grocery Street',
-      zipcode: 200
-    }
-  }));
-
-  await client.db.users.createMany([...animalUsers, ...fruitUsers]);
+  const ownerAnimals = await client.db.users.select().filter('full_name', 'Owner of team animals').getOne();
+  const ownerFruits = await client.db.users.select().filter('full_name', 'Owner of team fruits').getOne();
+  if (!ownerAnimals || !ownerFruits) {
+    throw new Error('Could not find owner of team animals or owner of team fruits');
+  }
 
   await client.db.teams.create({
     name: 'Team fruits',
@@ -199,7 +169,64 @@ describe('integration tests', () => {
     expect(teams[0].name).toBe('Team fruits');
   });
 
-  test('pagination', async () => {
-    // TODO
+  test('returns single record', async () => {
+    const user = await client.db.users.getOne();
+    expect(user).toBeDefined();
+  });
+
+  test('returns many records with offset/size', async () => {
+    const page1 = await client.db.users.getMany({ page: { size: 10 } });
+    const page2 = await client.db.users.getMany({ page: { size: 10, offset: 10 } });
+
+    expect(page1).not.toEqual(page2);
+    expect(page1).toHaveLength(10);
+    expect(page2).toHaveLength(10);
+  });
+
+  test('returns many records with cursor', async () => {
+    const size = Math.floor(mockUsers.length / 1.5);
+    const lastPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
+
+    const page1 = await client.db.users.getPaginated({ page: { size } });
+    const page2 = await page1.nextPage();
+    const page3 = await page2.nextPage();
+    const firstPage = await page3.firstPage();
+    const lastPage = await page2.lastPage();
+
+    expect(page1.records).toHaveLength(size);
+    expect(page2.records).toHaveLength(lastPageSize);
+    expect(page3.records).toHaveLength(0);
+
+    expect(page1.meta.page.more).toBe(true);
+    expect(page2.meta.page.more).toBe(false);
+    expect(page3.meta.page.more).toBe(false);
+
+    expect(firstPage.records).toEqual(page1.records);
+
+    // In cursor based pagination, the last page is the last N records
+    expect(lastPage.records).toHaveLength(size);
+  });
+
+  test('returns many records with cursor passing a offset/size', async () => {
+    const page1 = await client.db.users.getPaginated({ page: { size: 5 } });
+    const page2 = await page1.nextPage({ size: 10 });
+    const page3 = await page2.nextPage({ size: 10 });
+    const page2And3 = await page1.nextPage({ size: 20 });
+
+    expect(page1.records).toHaveLength(5);
+    expect(page2.records).toHaveLength(10);
+    expect(page3.records).toHaveLength(10);
+    expect(page2And3.records).toHaveLength(20);
+
+    expect(page2And3.records).toEqual([...page2.records, ...page3.records]);
+  });
+
+  test('repository implements pagination', async () => {
+    const loadUsers = async (repository: Repository<User>) => {
+      return repository.getPaginated({ page: { size: 10 } });
+    };
+
+    const users = await loadUsers(client.db.users);
+    expect(users.records).toHaveLength(10);
   });
 });
