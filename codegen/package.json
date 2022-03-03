@@ -23,6 +23,7 @@
   "homepage": "https://github.com/xataio/client-ts#readme",
   "dependencies": {
     "commander": "^9.0.0",
+    "ora": "^5.4.1",
     "pluralize": "^8.0.0",
     "prettier": "^2.5.1",
     "zod": "^3.11.6"

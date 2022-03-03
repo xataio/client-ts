@@ -5,6 +5,7 @@ import { ZodError } from 'zod';
 import { Column, fileSchema, Table } from './schema';
 
 import prettier from 'prettier';
+import { getExtensionFromLanguage } from './getExtensionFromLanguage';
 
 function getTypeName(tableName: string) {
   const snglr = singular(tableName);
@@ -95,8 +96,6 @@ export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
 export async function generate(schemaFile: string, output: string, language: Language) {
   const fullSchemaPath = path.resolve(process.cwd(), schemaFile);
   const fullOutputPath = path.resolve(process.cwd(), `${output}${getExtensionFromLanguage(language)}`);
-  console.log('Using schema file:', fullSchemaPath);
-  console.log('Using output file:', fullOutputPath);
   const input = await readSchema(schemaFile);
   const schema = parseSchema(input);
 
@@ -170,17 +169,3 @@ export async function generate(schemaFile: string, output: string, language: Lan
     await fs.writeFile(fullOutputPath, pretty);
   }
 }
-
-const getExtensionFromLanguage = (language?: Language) => {
-  switch (language) {
-    case 'javascript':
-    case 'js':
-      return '.js';
-    case 'typescript':
-    case 'ts':
-    case undefined:
-      return '.ts';
-    default:
-      throw new Error('Invalid language specified.');
-  }
-};

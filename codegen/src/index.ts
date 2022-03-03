@@ -1,8 +1,15 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 import { join } from 'path';
+import ora from 'ora';
+import { access as lameCallbackBasedAccess } from 'fs';
+import { promisify } from 'util';
 
 import { generate } from './codegen';
+import { relative } from 'path/posix';
+import { getExtensionFromLanguage } from './getExtensionFromLanguage';
+
+const access = promisify(lameCallbackBasedAccess);
 
 program
   .name('xata-codegen')
@@ -25,8 +32,22 @@ program
     "An option to choose the type of code you'd like us to output: TypeScript (ts, preferred) or JavaScript (js)",
     'typescript'
   )
-  .action((schema, { out, lang }) => {
-    generate(schema, out, lang).catch(console.error);
+  .action(async (schema, { out, lang }) => {
+    const spinner = ora();
+    spinner.start('Checking schema...');
+
+    try {
+      await access(schema); // Make sure the schema file exists
+      spinner.text = 'Found schema, generating...';
+
+      await generate(schema, out, lang);
+
+      spinner.succeed(
+        `Your XataClient is generated at ./${relative(process.cwd(), `${out}${getExtensionFromLanguage(lang)}`)}.`
+      );
+    } catch (e: any) {
+      spinner.fail(e.message);
+    }
   });
 
 program.parse();
