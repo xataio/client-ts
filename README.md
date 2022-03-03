@@ -37,7 +37,8 @@ In a TypeScript file start using the generated code:
 import { XataClient } from './xata';
 
 const client = new XataClient({
-  databaseURL: 'https://myworkspace-123abc.xata.sh/db/databasename:branchname',
+  databaseURL: 'https://myworkspace-123abc.xata.sh/db/databasename',
+  branch: 'branchname',
   apiKey: 'xau_1234abcdef',
   fetch: fetchImplememntation // Required if your runtime doesn't provide a global `fetch` function.
 });
