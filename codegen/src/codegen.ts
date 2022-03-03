@@ -94,7 +94,6 @@ function parseSchema(input: string) {
 export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
 
 export async function generate(schemaFile: string, output: string, language: Language) {
-  const fullSchemaPath = path.resolve(process.cwd(), schemaFile);
   const fullOutputPath = path.resolve(process.cwd(), `${output}${getExtensionFromLanguage(language)}`);
   const input = await readSchema(schemaFile);
   const schema = parseSchema(input);
