@@ -51,6 +51,13 @@ program
       );
     };
 
+    const useCli = () => {
+      spinner.info('Delegating to Xata CLI...');
+      spawn('xata', ['init'], { stdio: 'inherit' }).on('close', async () => {
+        await generateWithOutput(defaultSchemaPath, defaultOutputFile, defaultLanguage);
+      });
+    };
+
     try {
       await access(schema); // Make sure the schema file exists
       await generateWithOutput(schema, out, lang);
@@ -87,12 +94,11 @@ program
           const command = getCliInstallCommandsByOs(process.platform);
           spawn('sh', ['-c', command], {}).on('close', async () => {
             spinner.succeed('Xata CLI now available.');
-            spinner.info('Delegating to Xata CLI...');
-            spawn('xata', ['init'], { stdio: 'inherit' }).on('close', async () => {
-              await generateWithOutput(defaultSchemaPath, defaultOutputFile, defaultLanguage);
-            });
+            useCli();
           });
         }
+      } else {
+        useCli();
       }
     }
   });
