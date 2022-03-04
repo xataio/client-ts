@@ -65,8 +65,7 @@ program
       const hasCli = await checkIfCliInstalled();
 
       if (hasCli) {
-        spinner.info('Delegating to Xata CLI...');
-        await useCli();
+        await useCli({ spinner });
         await generateWithOutput({ schema: defaultSchemaPath, out: defaultOutputFile, lang: defaultLanguage, spinner });
         return;
       }
@@ -89,8 +88,7 @@ program
       const command = getCliInstallCommandsByOs(process.platform);
       spawn('sh', ['-c', command], {}).on('close', async () => {
         spinner.succeed('Xata CLI now available.');
-        spinner.info('Delegating to Xata CLI...');
-        await useCli();
+        await useCli({ spinner });
         await generateWithOutput({
           schema: defaultSchemaPath,
           out: defaultOutputFile,
