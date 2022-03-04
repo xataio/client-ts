@@ -27,6 +27,8 @@ export const useCli = ({ spinner }: { spinner: Ora }) =>
 
       spinner.warn('Not logged into Xata CLI.');
       const authProcess = spawn(cliPath, ['auth', 'login'], { stdio: 'inherit' });
-      authProcess.on('close', () => useCli({ spinner }));
+      authProcess.on('exit', (code) => {
+        if (code === 0) useCli({ spinner });
+      });
     });
   });
