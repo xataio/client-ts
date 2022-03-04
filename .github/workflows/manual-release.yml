@@ -48,13 +48,10 @@ jobs:
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
           XATA_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
 
-      - name: Configure npm registry token
-        run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Bump version
-        run: npx lerna version ${{ github.event.inputs.bump }} --no-git-tag-version --no-push --yes
+        run: npx lerna version ${{ github.event.inputs.bump }} --yes
 
-      - name: Publish canary build
+      - name: Publish build
         run: npx lerna publish --no-verify-access --yes
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
