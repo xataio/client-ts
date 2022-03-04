@@ -8,7 +8,7 @@ import { spawn } from 'child_process';
 import inquirer from 'inquirer';
 
 import { checkIfCliInstalled } from './checkIfCliInstalled';
-import { getCliInstallCommandsByOs } from './getInstallCommandByOs';
+import { getCli } from './getCli';
 import { useCli } from './useCli';
 import { generateWithOutput } from './generateWithOutput';
 import { handleXataCliRejection } from './handleXataCliRejection';
@@ -70,31 +70,13 @@ program
         return;
       }
 
-      spinner.warn('Xata CLI not installed');
-      const { shouldDownloadCli } = await inquirer.prompt([
-        {
-          name: 'shouldDownloadCli',
-          message: 'Would you like to install the Xata CLI on your computer?',
-          type: 'confirm'
-        }
-      ]);
-
-      if (!shouldDownloadCli) {
-        handleXataCliRejection(spinner);
-        return;
-      }
-
-      spinner.start('Installing Xata CLI...');
-      const command = getCliInstallCommandsByOs(process.platform);
-      spawn('sh', ['-c', command], {}).on('close', async () => {
-        spinner.succeed('Xata CLI now available.');
-        await useCli({ spinner });
-        await generateWithOutput({
-          schema: defaultSchemaPath,
-          out: defaultOutputFile,
-          lang: defaultLanguage,
-          spinner
-        });
+      await getCli({ spinner });
+      await useCli({ spinner });
+      await generateWithOutput({
+        schema: defaultSchemaPath,
+        out: defaultOutputFile,
+        lang: defaultLanguage,
+        spinner
       });
     }
   });

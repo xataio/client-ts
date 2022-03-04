@@ -1,11 +1,13 @@
 import { spawn } from 'child_process';
 import { Ora } from 'ora';
 
+import { cliPath } from './cliPath';
+
 export const useCli = ({ spinner }: { spinner: Ora }) =>
   new Promise<void>((resolve, reject) => {
     spinner.info('Delegating to Xata CLI...');
 
-    const cli = spawn(`xata`, ['init'], { stdio: ['inherit', 'pipe', 'pipe'] })
+    const cli = spawn(cliPath, ['init'], { stdio: ['inherit', 'pipe', 'pipe'] })
       .on('close', (code) => {
         if (code !== 0) {
           return;
@@ -24,7 +26,7 @@ export const useCli = ({ spinner }: { spinner: Ora }) =>
       }
 
       spinner.warn('Not logged into Xata CLI.');
-      const authProcess = spawn('xata', ['auth', 'login'], { stdio: 'inherit' });
+      const authProcess = spawn(cliPath, ['auth', 'login'], { stdio: 'inherit' });
       authProcess.on('close', () => useCli({ spinner }));
     });
   });
