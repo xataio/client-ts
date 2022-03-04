@@ -64,13 +64,10 @@ program
       spinner.text = 'Checking for Xata CLI...';
       const hasCli = await checkIfCliInstalled();
 
-      if (hasCli) {
-        await useCli({ spinner });
-        await generateWithOutput({ schema: defaultSchemaPath, out: defaultOutputFile, lang: defaultLanguage, spinner });
-        return;
+      if (!hasCli) {
+        await getCli({ spinner });
       }
 
-      await getCli({ spinner });
       await useCli({ spinner });
       await generateWithOutput({
         schema: defaultSchemaPath,
