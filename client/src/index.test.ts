@@ -390,7 +390,7 @@ describe('create', () => {
       expected,
       async () => {
         const result = await users.create(object);
-        expect(result.id).toBe(created.id);
+        expect(result).toBe(created.id);
       },
       created
     );

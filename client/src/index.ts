@@ -347,9 +347,9 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
     return new Query<T, Select<T, K>>(this.repository, this.table, {});
   }
 
-  abstract create(object: Selectable<T>): Promise<T>;
+  abstract create(object: Selectable<T>): Promise<string>;
 
-  abstract createMany(objects: Selectable<T>[]): Promise<T[]>;
+  abstract createMany(objects: Selectable<T>[]): Promise<string[]>;
 
   abstract read(id: string): Promise<T | null>;
 
@@ -429,29 +429,22 @@ export class RestRepository<T> extends Repository<T> {
     return new Query<T, Select<T, K>>(this.repository, this.table, {});
   }
 
-  async create(object: T): Promise<T> {
-    const body = { ...object } as Record<string, unknown>;
-    for (const key of Object.keys(body)) {
-      const value = body[key];
-      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
-        body[key] = (value as XataRecord).id;
-      }
-    }
+  async create(object: T): Promise<string> {
+    const record = transformObjectLinks(object);
 
     const response = await this.request<{
       id: string;
       xata: { version: number };
-    }>('POST', `/tables/${this.table}/data`, body);
+    }>('POST', `/tables/${this.table}/data`, record);
     if (!response) {
       throw new Error("The server didn't return any data for the query");
     }
 
-    // TODO: Review this, not sure we are properly initializing the object
-    return this.client.initObject(this.table, response);
+    return response.id;
   }
 
-  async createMany(records: T[]): Promise<T[]> {
-    // TODO: Review the id of the records
+  async createMany(objects: T[]): Promise<string[]> {
+    const records = objects.map((object) => transformObjectLinks(object));
 
     const response = await this.request<{
       recordIDs: string[];
@@ -460,8 +453,7 @@ export class RestRepository<T> extends Repository<T> {
       throw new Error("The server didn't return any data for the query");
     }
 
-    // TODO: Review this, not sure we are properly initializing the object
-    return response.recordIDs.map((record) => this.client.initObject(this.table, { id: record }));
+    return response.recordIDs;
   }
 
   async read(id: string): Promise<T | null> {
@@ -492,7 +484,6 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async delete(id: string) {
-    // TODO: Return boolean?
     await this.request('DELETE', `/tables/${this.table}/data/${id}`);
   }
 
@@ -643,4 +634,15 @@ export type Links = Record<string, Array<string[]>>;
 
 const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchStrategyBuilder => {
   return typeof strategy === 'function';
+};
+
+// TODO: We can find a better implementation for links
+const transformObjectLinks = (object: any) => {
+  return Object.entries(object).reduce((acc, [key, value]) => {
+    if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+      return { ...acc, [key]: (value as XataRecord).id };
+    }
+
+    return { ...acc, [key]: value };
+  }, {});
 };
