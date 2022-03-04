@@ -17,12 +17,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: greet
-        run: |
-          echo "environment is ${{ github.event.inputs.environment }}"
-          echo "boolean is ${{ github.event.inputs.boolean }}"
-          echo "choice is ${{ github.event.inputs.choice }}"
-
       - uses: actions/checkout@v2
 
       - name: Read .nvmrc
