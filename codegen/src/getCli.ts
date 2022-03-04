@@ -31,7 +31,16 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
     );
 
   if (!fileUrl) {
-    failWithIncompatibleOs({ spinner });
+    spinner.fail(
+      `Could not find an appropriate version of the Xata CLI. This could be because:
+      
+1. No Xata CLI could be found for this platform (${process.platform}). 
+2. A release of the CLI was not correctly generated.
+3. A new release of the CLI is currently being rolled out.
+
+Please open an issue at https://github.com/xataio/cli and we'll address this as soon as we can. We apologize for the inconvenience.
+`
+    );
     return;
   }
 
@@ -56,15 +65,12 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
       entry.pipe(createWriteStream(join(tmpdir(), entry.path)));
     }
   } else {
-    failWithIncompatibleOs({ spinner });
+    spinner.fail(
+      `We are not quite sure how to unpack the CLI we downloaded. Please open an issue at https://github.com/xataio/cli and we'll add this for you immediately. We apologize for the inconvenience.
+`
+    );
     return;
   }
 
   spinner.succeed('Xata CLI now available.');
-};
-
-const failWithIncompatibleOs = ({ spinner }: { spinner: Ora }) => {
-  spinner.fail(
-    `No Xata CLI found for this platform (${process.platform}). Please open an issue at https://github.com/xataio/cli and we'll add this for you immediately. We apologize for the inconvenience.`
-  );
 };
