@@ -1,13 +1,28 @@
-name: Node.js CI
+name: Manual release
 
 on:
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      bump:
+        required: true
+        type: choice
+        description: Version bump
+        options:
+          - major
+          - minor
+          - patch
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      - name: greet
+        run: |
+          echo "environment is ${{ github.event.inputs.environment }}"
+          echo "boolean is ${{ github.event.inputs.boolean }}"
+          echo "choice is ${{ github.event.inputs.choice }}"
+
       - uses: actions/checkout@v2
 
       - name: Read .nvmrc
@@ -38,19 +53,8 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish canary build
-        if: ${{ github.event_name == 'pull_request' }}
-        run: npx lerna publish --canary --no-git-tag-version --no-push --preid alpha.$(git rev-parse --short HEAD) --yes
+      - name: Bump version
+        run: npx lerna version ${{ github.event.inputs.bump }} --no-git-tag-version --no-push --yes
 
-      - name: Comment on PR
-        uses: actions/github-script@v5
-        if: ${{ github.event_name == 'pull_request' }}
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'Published new version tag: alpha.$(git rev-parse --short HEAD)'
-            })
+      - name: Publish canary build
+        run: npx lerna publish --no-verify-access --yes
