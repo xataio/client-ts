@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 import { program } from 'commander';
-import { join, relative } from 'path';
+import { join } from 'path';
 import ora from 'ora';
 import { access } from 'fs/promises';
-import { promisify } from 'util';
-import { spawn } from 'child_process';
 import inquirer from 'inquirer';
+import chalk from 'chalk';
 
 import { checkIfCliInstalled } from './checkIfCliInstalled';
 import { getCli } from './getCli';
@@ -64,17 +63,36 @@ program
       spinner.text = 'Checking for Xata CLI...';
       const hasCli = await checkIfCliInstalled();
 
-      if (!hasCli) {
-        await getCli({ spinner });
-      }
+      try {
+        if (!hasCli) {
+          await getCli({ spinner });
+        }
 
-      await useCli({ spinner });
-      await generateWithOutput({
-        schema: defaultSchemaPath,
-        out: defaultOutputFile,
-        lang: defaultLanguage,
-        spinner
-      });
+        await useCli({ spinner });
+        await generateWithOutput({
+          schema: defaultSchemaPath,
+          out: defaultOutputFile,
+          lang: defaultLanguage,
+          spinner
+        });
+      } catch (e: any) {
+        if (e.message.includes('ENOTFOUND') || e.message.includes('ENOENT')) {
+          spinner.fail(
+            `We tried to download the Xata CLI to clone your database locally, but failed because of internet connectivity issues. 
+
+To try to clone your database locally yourself, visit ${chalk.blueBright(
+              'https://docs.xata.io/cli/getting-started'
+            )}, and then rerun the code generator. We apologize for the inconvenience. 
+            
+If you'd like to open an issue, please do so at ${chalk.blueBright('https://github.com/xataio/client-ts')}.
+`
+          );
+          process.exit(1);
+          return;
+        }
+        spinner.fail(e.message as string);
+        process.exit(1);
+      }
     }
   });
 

@@ -8,12 +8,20 @@ import { Ora } from 'ora';
 import { createReadStream, createWriteStream } from 'fs';
 
 import { cliPath } from './cliPath';
+import chalk from 'chalk';
 
 type GitHubResponse = {
   assets: { browser_download_url: string }[];
 };
 
 export const getCli = async ({ spinner }: { spinner: Ora }) => {
+  spinner.info(
+    `
+You don't have the Xata CLI installed on your system, so we're downloading it. You could make this process faster by installing the CLI locally. More info: ${chalk.blueBright(
+      'https://docs.xata.io/cli/getting-started'
+    )}.
+`
+  );
   spinner.start('Looking up latest Xata CLI...');
   const fileUrl = await fetch('https://api.github.com/repos/xataio/cli/releases/latest')
     .then((r) => r.json())
@@ -46,6 +54,7 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
     }
   } else {
     failWithIncompatibleOs({ spinner });
+    return;
   }
 
   spinner.succeed('Xata CLI now available.');
