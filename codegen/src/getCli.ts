@@ -36,7 +36,7 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
     // Intentional since it'll fail if this file doesn't exist. Let's just swallow the error.
   }
 
-  spinner.text = 'Unzipping...';
+  spinner.text = 'Unpacking...';
   if (bundleName.includes('.tar.gz')) {
     await tar.extract({ cwd: tmpdir(), file: bundlePath });
   } else if (bundleName.includes('.zip')) {
