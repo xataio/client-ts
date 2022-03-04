@@ -19,7 +19,7 @@ export const useCli = ({ spinner }: { spinner: Ora }) =>
     cli.stdout.pipe(process.stdout);
     cli.stdout.on('data', async (c) => {
       const line = c.toString();
-      if (line !== 'Xata CLI is not configured, please run `xata auth login`\n') {
+      if (!/`xata auth login`/gim.test(line)) {
         return;
       }
 
