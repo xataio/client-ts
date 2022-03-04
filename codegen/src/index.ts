@@ -7,10 +7,11 @@ import { promisify } from 'util';
 import { spawn } from 'child_process';
 import inquirer from 'inquirer';
 
-import { generate } from './codegen';
-import { getExtensionFromLanguage } from './getExtensionFromLanguage';
 import { checkIfCliInstalled } from './checkIfCliInstalled';
 import { getCliInstallCommandsByOs } from './getInstallCommandByOs';
+import { useCli } from './useCli';
+import { generateWithOutput } from './generateWithOutput';
+import { handleXataCliRejection } from './handleXataCliRejection';
 
 const defaultSchemaPath = join(process.cwd(), 'xata', 'schema.json');
 const defaultOutputFile = join(process.cwd(), 'XataClient');
@@ -41,26 +42,9 @@ program
     const spinner = ora();
     spinner.start('Checking schema...');
 
-    const generateWithOutput = async (schema: any, out: any, lang: any) => {
-      spinner.text = 'Found schema, generating...';
-
-      await generate(schema, out, lang);
-
-      spinner.succeed(
-        `Your XataClient is generated at ./${relative(process.cwd(), `${out}${getExtensionFromLanguage(lang)}`)}.`
-      );
-    };
-
-    const useCli = () => {
-      spinner.info('Delegating to Xata CLI...');
-      spawn('xata', ['init'], { stdio: 'inherit' }).on('close', async () => {
-        await generateWithOutput(defaultSchemaPath, defaultOutputFile, defaultLanguage);
-      });
-    };
-
     try {
       await access(schema); // Make sure the schema file exists
-      await generateWithOutput(schema, out, lang);
+      await generateWithOutput({ schema, out, lang, spinner });
     } catch (e: any) {
       if (!e.message.includes('ENOENT')) {
         spinner.fail(e.message);
@@ -73,33 +57,47 @@ program
       ]);
 
       if (!shouldUseCli) {
+        handleXataCliRejection(spinner);
         return;
       }
 
       spinner.text = 'Checking for Xata CLI...';
       const hasCli = await checkIfCliInstalled();
 
-      if (!hasCli) {
-        spinner.warn('Xata CLI not installed');
-        const { shouldDownloadCli } = await inquirer.prompt([
-          {
-            name: 'shouldDownloadCli',
-            message: 'Would you like to install the Xata CLI on your computer?',
-            type: 'confirm'
-          }
-        ]);
-
-        if (shouldDownloadCli) {
-          spinner.start('Installing Xata CLI...');
-          const command = getCliInstallCommandsByOs(process.platform);
-          spawn('sh', ['-c', command], {}).on('close', async () => {
-            spinner.succeed('Xata CLI now available.');
-            useCli();
-          });
-        }
-      } else {
-        useCli();
+      if (hasCli) {
+        spinner.info('Delegating to Xata CLI...');
+        await useCli();
+        await generateWithOutput({ schema: defaultSchemaPath, out: defaultOutputFile, lang: defaultLanguage, spinner });
+        return;
       }
+
+      spinner.warn('Xata CLI not installed');
+      const { shouldDownloadCli } = await inquirer.prompt([
+        {
+          name: 'shouldDownloadCli',
+          message: 'Would you like to install the Xata CLI on your computer?',
+          type: 'confirm'
+        }
+      ]);
+
+      if (!shouldDownloadCli) {
+        handleXataCliRejection(spinner);
+        return;
+      }
+
+      spinner.start('Installing Xata CLI...');
+      const command = getCliInstallCommandsByOs(process.platform);
+      spawn('sh', ['-c', command], {}).on('close', async () => {
+        spinner.succeed('Xata CLI now available.');
+        spinner.info('Delegating to Xata CLI...');
+        await useCli();
+        await generateWithOutput({
+          schema: defaultSchemaPath,
+          out: defaultOutputFile,
+          lang: defaultLanguage,
+          spinner
+        });
+      });
     }
   });
 
