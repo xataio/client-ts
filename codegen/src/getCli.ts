@@ -24,9 +24,8 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
     return;
   }
 
-  const bundleName = fileUrl.split('/').slice(-1)[0];
-
   spinner.text = 'Downloading latest Xata CLI...';
+  const bundleName = fileUrl.split('/').slice(-1)[0];
   const bundle = await fetch(fileUrl).then((f) => f.buffer());
   const bundlePath = join(tmpdir(), bundleName);
   await writeFile(bundlePath, bundle);
@@ -34,7 +33,7 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
   try {
     await unlink(cliPath);
   } catch {
-    // Intentional
+    // Intentional since it'll fail if this file doesn't exist. Let's just swallow the error.
   }
 
   spinner.text = 'Unzipping...';
