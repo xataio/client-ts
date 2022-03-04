@@ -1,3 +1,4 @@
 {
-  "packages": ["client", "codegen"]
+  "packages": ["client", "codegen"],
+  "version": "0.0.0"
 }
