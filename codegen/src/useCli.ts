@@ -14,9 +14,7 @@ export const useCli = ({ spinner }: { spinner: Ora }) =>
         }
         resolve();
       })
-      .on('error', (e: unknown) => {
-        reject(e);
-      });
+      .on('error', reject);
 
     cli.stdout.pipe(process.stdout);
     cli.stdout.on('data', async (c) => {
