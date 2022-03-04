@@ -9,6 +9,7 @@ import { createReadStream, createWriteStream } from 'fs';
 
 import { cliPath } from './cliPath';
 import chalk from 'chalk';
+import { getCliPlatformFromNodePlatform } from './getCliPlatformFromNodePlatform';
 
 type GitHubResponse = {
   assets: { browser_download_url: string }[];
@@ -25,7 +26,9 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
   spinner.start('Looking up latest Xata CLI...');
   const fileUrl = await fetch('https://api.github.com/repos/xataio/cli/releases/latest')
     .then((r) => r.json())
-    .then((d: GitHubResponse) => d.assets.map((a) => a.browser_download_url).find((a) => a.includes(process.platform)));
+    .then((d: GitHubResponse) =>
+      d.assets.map((a) => a.browser_download_url).find((a) => a.includes(getCliPlatformFromNodePlatform()))
+    );
 
   if (!fileUrl) {
     failWithIncompatibleOs({ spinner });
