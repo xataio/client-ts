@@ -2,6 +2,9 @@ name: Build PR
 
 on:
   pull_request:
+  push:
+    branches-ignore:
+      - 'main'
 
 jobs:
   build:
@@ -34,7 +37,6 @@ jobs:
           XATA_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
 
       - name: Publish canary build
-        if: ${{ github.event_name == 'pull_request' }}
         run: npx lerna publish --canary --no-git-tag-version --no-push --preid alpha.$(git rev-parse --short HEAD) --no-verify-access --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
