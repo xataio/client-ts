@@ -36,6 +36,10 @@ jobs:
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
           XATA_DATABASE_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
 
+      - name: Set build version
+        run: echo ::set-output name=TAG::0.0.0-beta.$(git rev-parse --short HEAD)
+        id: version
+
       - name: Configure npm registry token
         run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         env:
@@ -43,16 +47,16 @@ jobs:
 
       - name: Publish beta build
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: npx lerna publish 0.0.0-beta.$(git rev-parse --short HEAD) --no-git-tag-version --no-push --dist-tag dev --no-verify-access --yes
+        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag dev --no-verify-access --yes
 
       - name: Publish canary build
         if: ${{ github.event_name == 'pull_request' }}
-        run: npx lerna publish 0.0.0-alpha.$(git rev-parse --short HEAD) --no-git-tag-version --no-push --dist-tag canary --no-verify-access --yes
+        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag canary --no-verify-access --yes
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
         if: ${{ github.event_name == 'pull_request' }}
-        id: fc
+        id: find-comment
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
@@ -64,7 +68,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          comment-id: ${{ steps.fc.outputs.comment-id }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           edit-mode: replace
           body: |
@@ -73,6 +77,6 @@ jobs:
             You can install it by running:
 
             ```
-            npm install @xata/client@0.0.0-alpha.$(git rev-parse --short HEAD)
-            npm install @xata/codegen@0.0.0-alpha.$(git rev-parse --short HEAD)
+            npm install @xata/client@${{ steps.version.outputs.TAG }}
+            npm install @xata/codegen@${{ steps.version.outputs.TAG }}
             ```
