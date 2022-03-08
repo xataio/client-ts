@@ -7,6 +7,9 @@ const client = new XataClient({
   apiKey: process.env.XATA_API_KEY || ''
 });
 
+// Integration tests take longer than unit tests, increasing the timeout
+jest.setTimeout(50000);
+
 beforeAll(async () => {
   const teams = await client.db.teams.select().getMany();
   for (const team of teams) {
