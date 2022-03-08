@@ -24,7 +24,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: lerna bootstrap --ci
+        run: npm ci && npx lerna bootstrap --ci
 
       - name: Lint
         run: npm run lint
