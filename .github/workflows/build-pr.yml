@@ -60,8 +60,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions'
-          body-includes: Your pull request has been published to NPM.
+          comment-author: 'github-actions[bot]'
+          body-includes: Your pull request has been published to NPM
 
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v1
