@@ -54,7 +54,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         id: fc
         with:
-          token: ${{ secrets.ORG_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'xata-bot'
           body-includes: Your pull request has been published to NPM.
@@ -63,7 +63,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         if: ${{ github.event_name == 'pull_request' }}
         with:
-          token: ${{ secrets.ORG_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           edit-mode: replace
