@@ -8,7 +8,7 @@ const client = new XataClient({
   apiKey: process.env.XATA_API_KEY || ''
 });
 
-// TODO: Implement a bulk delete for teardown
+// Integration tests take longer than unit tests, increasing the timeout
 jest.setTimeout(50000);
 
 beforeAll(async () => {
