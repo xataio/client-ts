@@ -299,6 +299,25 @@ export class Query<T, R = T> implements BasePage<T, R> {
     return this.repository.executeQuery(this, options);
   }
 
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<R> {
+    for await (const [record] of this.getIterator(1)) {
+      yield record;
+    }
+  }
+
+  async *getIterator(chunk: number, options: Omit<BulkQueryOptions<T>, 'page'> = {}): AsyncGenerator<R[]> {
+    let offset = 0;
+    let end = false;
+
+    while (!end) {
+      const { records, meta } = await this.getPaginated({ ...options, page: { size: chunk, offset } });
+      yield records;
+
+      offset += chunk;
+      end = !meta.page.more;
+    }
+  }
+
   async getMany(options?: BulkQueryOptions<T>): Promise<R[]> {
     const { records } = await this.getPaginated(options);
     return records;

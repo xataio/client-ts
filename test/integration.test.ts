@@ -229,4 +229,26 @@ describe('integration tests', () => {
     const users = await loadUsers(client.db.users);
     expect(users.records).toHaveLength(10);
   });
+
+  test('query implements iterator', async () => {
+    const owners = [];
+
+    for await (const user of client.db.users.filter('full_name', contains('Owner'))) {
+      owners.push(user);
+    }
+
+    expect(owners).toHaveLength(2);
+    expect(owners.map((user) => user.full_name).sort()).toEqual(['Owner of team animals', 'Owner of team fruits']);
+  });
+
+  test('query implements iterator with chunks', async () => {
+    const owners = [];
+
+    for await (const chunk of client.db.users.filter('full_name', contains('Owner')).getIterator(10)) {
+      owners.push(...chunk);
+    }
+
+    expect(owners).toHaveLength(2);
+    expect(owners.map((user) => user.full_name).sort()).toEqual(['Owner of team animals', 'Owner of team fruits']);
+  });
 });
