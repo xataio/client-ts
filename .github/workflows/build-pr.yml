@@ -37,7 +37,7 @@ jobs:
           XATA_DATABASE_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
 
       - name: Set build version
-        run: echo ::set-output name=TAG::0.0.0-beta.$(git rev-parse --short HEAD)
+        run: echo ::set-output name=TAG::0.0.0-${{ github.event_name == 'pull_request' && 'alpha' || 'beta' }}.$(git rev-parse --short HEAD)
         id: version
 
       - name: Configure npm registry token
@@ -61,7 +61,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: Your pull request has been published to NPM
+          body-includes: Your pull request has been published to npm
 
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v1
@@ -72,7 +72,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           edit-mode: replace
           body: |
-            Your pull request has been published to NPM.
+            Your pull request has been published to npm.
 
             You can install it by running:
 
