@@ -347,9 +347,9 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
     return new Query<T, Select<T, K>>(this.repository, this.table, {});
   }
 
-  abstract create(object: Selectable<T>): Promise<string>;
+  abstract create(object: Selectable<T>): Promise<T>;
 
-  abstract createMany(objects: Selectable<T>[]): Promise<string[]>;
+  abstract createMany(objects: Selectable<T>[]): Promise<T[]>;
 
   abstract read(id: string): Promise<T | null>;
 
@@ -429,7 +429,7 @@ export class RestRepository<T> extends Repository<T> {
     return new Query<T, Select<T, K>>(this.repository, this.table, {});
   }
 
-  async create(object: T): Promise<string> {
+  async create(object: T): Promise<T> {
     const record = transformObjectLinks(object);
 
     const response = await this.request<{
@@ -440,10 +440,15 @@ export class RestRepository<T> extends Repository<T> {
       throw new Error("The server didn't return any data for the query");
     }
 
-    return response.id;
+    const finalObject = await this.read(response.id);
+    if (!finalObject) {
+      throw new Error('The server failed to save the record');
+    }
+
+    return finalObject;
   }
 
-  async createMany(objects: T[]): Promise<string[]> {
+  async createMany(objects: T[]): Promise<T[]> {
     const records = objects.map((object) => transformObjectLinks(object));
 
     const response = await this.request<{
@@ -453,7 +458,13 @@ export class RestRepository<T> extends Repository<T> {
       throw new Error("The server didn't return any data for the query");
     }
 
-    return response.recordIDs;
+    // TODO: Use filer.$any() to get all the records
+    const finalObjects = await Promise.all(response.recordIDs.map((id) => this.read(id)));
+    if (finalObjects.some((object) => !object)) {
+      throw new Error('The server failed to save the record');
+    }
+
+    return finalObjects as T[];
   }
 
   async read(id: string): Promise<T | null> {

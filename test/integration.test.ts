@@ -229,4 +229,21 @@ describe('integration tests', () => {
     const users = await loadUsers(client.db.users);
     expect(users.records).toHaveLength(10);
   });
+
+  test('create single team', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    expect(team.id).toBeDefined();
+    expect(team.name).toBe('Team ships');
+  });
+
+  test('create multiple teams', async () => {
+    const teams = await client.db.teams.createMany([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    expect(teams).toHaveLength(2);
+    expect(teams[0].id).toBeDefined();
+    expect(teams[0].name).toBe('Team cars');
+    expect(teams[1].id).toBeDefined();
+    expect(teams[1].name).toBe('Team planes');
+  });
 });
