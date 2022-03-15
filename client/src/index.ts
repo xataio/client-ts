@@ -292,7 +292,7 @@ export class Query<T, R = T> implements BasePage<T, R> {
   }
 
   async getPaginated(options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
-    return this.repository.executeQuery(this, options);
+    return this.repository._runQuery(this, options);
   }
 
   async *[Symbol.asyncIterator](): AsyncIterableIterator<R> {
@@ -371,7 +371,7 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
   abstract delete(id: string): void;
 
   // Used by the Query object internally
-  abstract executeQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
+  abstract _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
 }
 
 export class RestRepository<T> extends Repository<T> {
@@ -509,7 +509,7 @@ export class RestRepository<T> extends Repository<T> {
     await this.request('DELETE', `/tables/${this.table}/data/${id}`);
   }
 
-  async executeQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
+  async _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
     const filter = {
       $any: query.$any,
       $all: query.$all,
