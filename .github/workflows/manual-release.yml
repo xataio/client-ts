@@ -19,14 +19,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Read .nvmrc
-        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
-        id: nvm
+      - name: Configure
+        run: |
+          git config user.email "system@xata.io"
+          git config user.name "Xata"
+          echo ::set-output name=NVMRC::$(cat .nvmrc)
+          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+        id: config
 
-      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
+      - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version: ${{ steps.config.outputs.NVMRC }}
           cache: 'npm'
 
       - name: Install dependencies
@@ -41,11 +45,6 @@ jobs:
           XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
           XATA_DATABASE_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
-
-      - name: Configure npm registry token
-        run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bump version
         run: npx lerna version ${{ github.event.inputs.bump }} --yes
