@@ -6,7 +6,6 @@ import { access } from 'fs/promises';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 
-import { checkIfCliInstalled } from './checkIfCliInstalled';
 import { getCli } from './getCli';
 import { useCli } from './useCli';
 import { generateWithOutput } from './generateWithOutput';
@@ -61,13 +60,9 @@ program
       }
 
       spinner.text = 'Checking for Xata CLI...';
-      const hasCli = await checkIfCliInstalled();
 
       try {
-        if (!hasCli) {
-          await getCli({ spinner });
-        }
-
+        await getCli({ spinner });
         await useCli({ spinner });
         await generateWithOutput({
           schema: defaultSchemaPath,
