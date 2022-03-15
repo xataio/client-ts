@@ -209,9 +209,9 @@ describe('integration tests', () => {
 
   test('returns many records with cursor passing a offset/size', async () => {
     const page1 = await client.db.users.getPaginated({ page: { size: 5 } });
-    const page2 = await page1.nextPage({ size: 10 });
-    const page3 = await page2.nextPage({ size: 10 });
-    const page2And3 = await page1.nextPage({ size: 20 });
+    const page2 = await page1.nextPage(10);
+    const page3 = await page2.nextPage(10);
+    const page2And3 = await page1.nextPage(20);
 
     expect(page1.records).toHaveLength(5);
     expect(page2.records).toHaveLength(10);
