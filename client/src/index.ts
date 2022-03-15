@@ -1,3 +1,5 @@
+import { getFetch } from './util/getFetch';
+
 export interface XataRecord {
   id: string;
   xata: {
@@ -281,22 +283,7 @@ export class RestRepository<T> extends Repository<T> {
     this.client = client;
 
     const { fetch } = client.options;
-
-    if (fetch) {
-      this.fetch = fetch;
-    } else if (typeof window === 'object') {
-      this.fetch = window.fetch;
-    } else if (typeof require === 'function') {
-      try {
-        this.fetch = require('node-fetch');
-      } catch (err) {
-        try {
-          this.fetch = require('cross-fetch');
-        } catch (err) {
-          throw new Error('No fetch implementation found. Please provide one in the constructor');
-        }
-      }
-    }
+    this.fetch = fetch || getFetch();
 
     Object.defineProperty(this, 'client', { enumerable: false });
     Object.defineProperty(this, 'fetch', { enumerable: false });
