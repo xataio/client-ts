@@ -1,5 +1,10 @@
 import { contains, lt } from '../client/src';
 import { XataClient } from '../codegen/example/xata';
+import dotenv from 'dotenv';
+import { join } from 'path';
+
+// Get environment variables before reading them
+dotenv.config({ path: join(process.cwd(), '.envrc') });
 
 const client = new XataClient({
   databaseURL: process.env.XATA_DATABASE_URL || '',
