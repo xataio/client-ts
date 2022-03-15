@@ -1,0 +1,54 @@
+name: Manual release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        required: true
+        type: choice
+        description: Version bump
+        options:
+          - major
+          - minor
+          - patch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+
+      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci && npx lerna bootstrap --ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+        env:
+          XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
+          XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
+          XATA_DATABASE_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
+
+      - name: Configure npm registry token
+        run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Bump version
+        run: npx lerna version ${{ github.event.inputs.bump }} --yes
+
+      - name: Publish build
+        run: npx lerna publish --no-verify-access --yes

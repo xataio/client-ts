@@ -1,0 +1,82 @@
+name: Build PR
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+
+      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci && npx lerna bootstrap --ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+        env:
+          XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
+          XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
+          XATA_DATABASE_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
+
+      - name: Set build version
+        run: echo ::set-output name=TAG::0.0.0-${{ github.event_name == 'pull_request' && 'alpha' || 'beta' }}.$(git rev-parse --short HEAD)
+        id: version
+
+      - name: Configure npm registry token
+        run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish beta build
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag dev --no-verify-access --yes
+
+      - name: Publish canary build
+        if: ${{ github.event_name == 'pull_request' }}
+        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag canary --no-verify-access --yes
+
+      - name: Find Comment
+        uses: peter-evans/find-comment@v1
+        if: ${{ github.event_name == 'pull_request' }}
+        id: find-comment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Your pull request has been published to npm
+
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v1
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            Your pull request has been published to npm.
+
+            You can install it by running:
+
+            ```
+            npm install @xata/client@${{ steps.version.outputs.TAG }}
+            npm install @xata/codegen@${{ steps.version.outputs.TAG }}
+            ```
