@@ -6,6 +6,8 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "prepare": "husky install",
     "build-example": "cd codegen && npm run example-ts && npm run example-js"
   },
@@ -33,6 +35,7 @@
     "eslint": "^8.8.0",
     "husky": "^7.0.4",
     "jest": "^27.4.7",
+    "lerna": "^4.0.0",
     "lint-staged": "^12.3.3",
     "prettier": "^2.5.1",
     "ts-node": "^10.4.0",
@@ -45,6 +48,11 @@
     ],
     "*.{css,json,md,yml,yaml}": [
       "prettier --write"
+    ]
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "dist"
     ]
   }
 }

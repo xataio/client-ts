@@ -5,6 +5,7 @@ import { ZodError } from 'zod';
 import { Column, fileSchema, Table } from './schema';
 
 import prettier from 'prettier';
+import { getExtensionFromLanguage } from './getExtensionFromLanguage';
 
 function getTypeName(tableName: string) {
   const snglr = singular(tableName);
@@ -90,14 +91,10 @@ function parseSchema(input: string) {
   }
 }
 
-export type Language = 'typescript' | 'javascript';
+export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
 
 export async function generate(schemaFile: string, output: string, language: Language) {
-  const fullSchemaPath = path.resolve(process.cwd(), schemaFile);
-  const fullOutputPath = path.resolve(process.cwd(), output);
-  console.log('Using schema file:', fullSchemaPath);
-  console.log('Using output file:', fullOutputPath);
-  console.log();
+  const fullOutputPath = path.resolve(process.cwd(), `${output}${getExtensionFromLanguage(language)}`);
   const input = await readSchema(schemaFile);
   const schema = parseSchema(input);
 
@@ -112,7 +109,7 @@ export async function generate(schemaFile: string, output: string, language: Lan
     }
   }
 
-  if (language === 'typescript') {
+  if (['typescript', 'ts'].includes(language)) {
     const code = `
     import {
       BaseClient,
