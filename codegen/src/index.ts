@@ -11,6 +11,7 @@ import { getCli } from './getCli';
 import { useCli } from './useCli';
 import { generateWithOutput } from './generateWithOutput';
 import { handleXataCliRejection } from './handleXataCliRejection';
+import { cliPath } from './cliPath';
 
 const defaultSchemaPath = join(process.cwd(), 'xata', 'schema.json');
 const defaultOutputFile = join(process.cwd(), 'XataClient');
@@ -68,7 +69,7 @@ program
           await getCli({ spinner });
         }
 
-        await useCli({ spinner });
+        await useCli({ command: hasCli ? 'xata' : cliPath, spinner });
         await generateWithOutput({
           schema: defaultSchemaPath,
           out: defaultOutputFile,

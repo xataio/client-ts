@@ -3,7 +3,9 @@ import { Ora } from 'ora';
 
 import { cliPath } from './cliPath';
 
-export const useCli = ({ spinner }: { spinner: Ora }) =>
+type Options = { command: 'xata' | typeof cliPath; spinner: Ora };
+
+export const useCli = ({ command, spinner }: Options) =>
   new Promise<void>((resolve, reject) => {
     spinner.info('Delegating to Xata CLI...');
 
@@ -26,7 +28,7 @@ export const useCli = ({ spinner }: { spinner: Ora }) =>
       spinner.warn('Not logged into Xata CLI.');
       const authProcess = spawn(cliPath, ['auth', 'login'], { stdio: 'inherit' });
       authProcess.on('exit', (code) => {
-        if (code === 0) useCli({ spinner });
+        if (code === 0) useCli({ spinner, command });
       });
     });
   });
