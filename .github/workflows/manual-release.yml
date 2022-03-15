@@ -26,6 +26,8 @@ jobs:
           echo ::set-output name=NVMRC::$(cat .nvmrc)
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         id: config
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
         uses: actions/setup-node@v2
