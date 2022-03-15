@@ -16,5 +16,5 @@
     "noEmit": false,
     "outDir": "dist"
   },
-  "include": ["test"]
+  "include": ["test", "./jest/jest.d.ts"]
 }
