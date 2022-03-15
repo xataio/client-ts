@@ -50,4 +50,4 @@ jobs:
         run: npx lerna version ${{ github.event.inputs.bump }} --yes
 
       - name: Publish build
-        run: npx lerna publish --no-verify-access --yes
+        run: npx lerna publish from-package --no-verify-access --yes
