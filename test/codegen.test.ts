@@ -66,7 +66,7 @@ export class XataClient extends BaseClient<{
 `;
 
     const [path, content] = writeFile.mock.calls[0];
-    expect(path).toEqual('/Users/tejas/Sites/client-ts/hahaha.ts');
+    expect(path).toEqual(join(process.cwd(), 'hahaha.ts'));
     expect(content).toMatchWithoutWhitespace(expectedOutput);
   });
 
@@ -146,7 +146,7 @@ export class XataClient extends BaseClient<{
     `;
 
     const [path, content] = writeFile.mock.calls[0];
-    expect(path).toEqual('/Users/tejas/Sites/client-ts/hahaha.js');
+    expect(path).toEqual(join(process.cwd(), 'hahaha.js'));
     expect(content).toMatchWithoutWhitespace(expectedOutput);
   });
 });
