@@ -25,7 +25,7 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
   );
   spinner.start('Looking up latest Xata CLI...');
   const fileUrl = await fetch('https://api.github.com/repos/xataio/cli/releases/skizzy')
-    .then(async (r) => {
+    .then((r) => {
       if (!r.ok) {
         throw errors.noCli;
       }
