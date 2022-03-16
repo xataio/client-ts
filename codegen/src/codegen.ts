@@ -3,12 +3,13 @@ import * as path from 'path';
 import { singular } from 'pluralize';
 import { ZodError } from 'zod';
 import { Column, fileSchema, Table } from './schema';
+import { join } from 'path';
 
 import prettier from 'prettier';
 import { getExtensionFromLanguage } from './getExtensionFromLanguage';
 
 type GenerateOptions = {
-  schemaFilePath: string;
+  xataFolder: string;
   outputFilePath: string;
   language?: Language;
   writeFile?: typeof fs.writeFile;
@@ -102,11 +103,12 @@ export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
 
 export async function generate({
   outputFilePath: output,
-  schemaFilePath: schemaFile,
+  xataFolder,
   language = 'ts',
   writeFile = fs.writeFile
 }: GenerateOptions) {
   const fullOutputPath = path.resolve(process.cwd(), `${output}${getExtensionFromLanguage(language)}`);
+  const schemaFile = join(xataFolder, 'schema.json');
   const input = await readSchema(schemaFile);
   const schema = parseSchema(input);
 
