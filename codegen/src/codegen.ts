@@ -1,14 +1,15 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { singular } from 'pluralize';
-import { ZodError } from 'zod';
-import { Column, fileSchema, Table } from './schema';
+import { Column, Table } from './schema';
 import { join } from 'path';
 
 import prettier from 'prettier';
 import { getLanguageFromExtension } from './getLanguageFromExtension';
 import { isExtensionValid } from './isExtensionValid';
 import { errors } from './errors';
+import { readFile } from './readFile';
+import { parseFile } from './parseFile';
 
 type GenerateOptions = {
   xataDirectory: string;
@@ -74,34 +75,7 @@ function getTypeScriptType(column: Column): string {
   return 'unknown';
 }
 
-async function readSchema(fullPath: string) {
-  try {
-    return await fs.readFile(fullPath, 'utf-8');
-  } catch (err) {
-    console.error('Could not read schema file at', fullPath);
-    process.exit(1);
-  }
-}
-
-function parseSchema(input: string) {
-  try {
-    return fileSchema.parse(JSON.parse(input));
-  } catch (err) {
-    console.error('The content of the schema file is not valid:');
-    if (err instanceof ZodError) {
-      const zodError = err as ZodError;
-      for (const error of zodError.errors) {
-        console.error(`  [${error.code}]`, error.message, 'at', `"${error.path.join('.')}"`);
-      }
-    } else {
-      console.error(' ', err instanceof Error ? err.message : err);
-    }
-    process.exit(1);
-  }
-}
-
-export type Language = 'typescript' | 'javascript';
-
+export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
 export async function generate({ outputFilePath: output, xataDirectory, writeFile = fs.writeFile }: GenerateOptions) {
   const fullOutputPath = path.resolve(process.cwd(), output);
   const [extension] = fullOutputPath.split('.').slice(-1);
@@ -111,8 +85,11 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
   }
 
   const schemaFile = join(xataDirectory, 'schema.json');
-  const input = await readSchema(schemaFile);
-  const schema = parseSchema(input);
+  const configFile = join(xataDirectory, 'config.json');
+  const rawSchema = await readFile({ fullPath: schemaFile, type: 'schema' });
+  const rawConfig = await readFile({ fullPath: configFile, type: 'config' });
+  const schema = parseFile({ type: 'schema', input: rawSchema });
+  const config = parseFile({ type: 'config', input: rawConfig });
 
   const { tables } = schema;
   const links: Record<string, string[][]> = {};
@@ -136,6 +113,9 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
       XataRecord
     } from '@xata.io/client';
 
+    type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+    type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
     ${tables.map((table) => generateTableType(table)).join('\n')}
 
     const links = ${JSON.stringify(links)};
@@ -143,8 +123,8 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
     export class XataClient extends BaseClient<{
       ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
     }> {
-      constructor(options: XataClientOptions) {
-        super(options, links);
+      constructor(options: ${config.dbName ? `PartialBy<XataClientOptions, 'databaseURL'>` : 'XataClientOptions'}) {
+        super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
         const factory = options.repositoryFactory || new RestRespositoryFactory();
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
