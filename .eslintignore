@@ -1,3 +1,5 @@
 node_modules
 .eslintrc.js
 babel.config.js
+
+client/src/api/xatabase*
