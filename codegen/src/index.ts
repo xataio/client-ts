@@ -11,8 +11,9 @@ import { getCli } from './getCli';
 import { useCli } from './useCli';
 import { generateWithOutput } from './generateWithOutput';
 import { handleXataCliRejection } from './handleXataCliRejection';
+import { cliPath } from './cliPath';
 
-const defaultSchemaPath = join(process.cwd(), 'xata', 'schema.json');
+const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'XataClient');
 const defaultLanguage = 'ts';
 
@@ -27,9 +28,9 @@ program
   .command('generate')
   .description('Generate code from a given Xata schema.')
   .argument(
-    '[schema file]',
-    `A path to your local Xata schema. If you don't have this, run the pull command on this CLI first.`,
-    defaultSchemaPath
+    '[xata directory]',
+    `A path to your local Xata directory. If you don't have this, run the pull or \`init\` command on this CLI first.`,
+    defaultXataDirectory
   )
   .option('-o, --out <path>', 'A path to store your generated API client.', defaultOutputFile)
   .option(
@@ -37,13 +38,14 @@ program
     "An option to choose the type of code you'd like us to output: TypeScript (ts, preferred) or JavaScript (js)",
     defaultLanguage
   )
-  .action(async (schema, { out, lang }) => {
+  .action(async (xataDirectory, { out, lang }) => {
     const spinner = ora();
+    const schema = join(xataDirectory, 'schema.json');
     spinner.start('Checking schema...');
 
     try {
       await access(schema); // Make sure the schema file exists
-      await generateWithOutput({ schema, out, lang, spinner });
+      await generateWithOutput({ xataDirectory, out, lang, spinner });
     } catch (e: any) {
       if (!e.message.includes('ENOENT')) {
         spinner.fail(e.message);
@@ -68,9 +70,9 @@ program
           await getCli({ spinner });
         }
 
-        await useCli({ spinner });
+        await useCli({ command: hasCli ? 'xata' : cliPath, spinner });
         await generateWithOutput({
-          schema: defaultSchemaPath,
+          xataDirectory,
           out: defaultOutputFile,
           lang: defaultLanguage,
           spinner

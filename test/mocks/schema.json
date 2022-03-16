@@ -1,0 +1,95 @@
+{
+  "formatVersion": "1.0",
+  "tables": [
+    {
+      "name": "authors",
+      "columns": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "photoUrl",
+          "type": "string"
+        },
+        {
+          "name": "bio",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "posts",
+      "columns": [
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "summary",
+          "type": "text"
+        },
+        {
+          "name": "content",
+          "type": "text"
+        },
+        {
+          "name": "tags",
+          "type": "multiple"
+        },
+        {
+          "name": "likes",
+          "type": "int"
+        },
+        {
+          "name": "author",
+          "type": "link",
+          "link": {
+            "table": "authors"
+          }
+        },
+        {
+          "name": "date",
+          "type": "string"
+        },
+        {
+          "name": "slug",
+          "type": "string"
+        },
+        {
+          "name": "published",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "people",
+      "columns": [
+        {
+          "name": "slug",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "photoUrl",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}

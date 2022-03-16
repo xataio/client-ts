@@ -25,23 +25,18 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
   );
   spinner.start('Looking up latest Xata CLI...');
   const fileUrl = await fetch('https://api.github.com/repos/xataio/cli/releases/latest')
-    .then((r) => r.json())
+    .then((r) => {
+      if (!r.ok) {
+        throw errors.noCli;
+      }
+      return r.json();
+    })
     .then((d: GitHubResponse) =>
       d.assets.map((a) => a.browser_download_url).find((a) => a.includes(getCliPlatformFromNodePlatform()))
     );
 
   if (!fileUrl) {
-    spinner.fail(
-      `Could not find an appropriate version of the Xata CLI. This could be because:
-      
-1. No Xata CLI could be found for this platform (${process.platform}). 
-2. A release of the CLI was not correctly generated.
-3. A new release of the CLI is currently being rolled out.
-
-Please open an issue at https://github.com/xataio/cli and we'll address this as soon as we can. We apologize for the inconvenience.
-`
-    );
-    return;
+    throw errors.noCli;
   }
 
   spinner.text = 'Downloading latest Xata CLI...';
@@ -73,4 +68,15 @@ Please open an issue at https://github.com/xataio/cli and we'll address this as 
   }
 
   spinner.succeed('Xata CLI now available.');
+};
+
+const errors = {
+  noCli: new Error(`Could not find an appropriate version of the Xata CLI. This could be because:
+      
+  1. No Xata CLI could be found for this platform (${process.platform}). 
+  2. A release of the CLI was not correctly generated.
+  3. A new release of the CLI is currently being rolled out.
+  
+  Please open an issue at https://github.com/xataio/cli and we'll address this as soon as we can. We apologize for the inconvenience.
+  `)
 };
