@@ -283,13 +283,14 @@ export class RestRepository<T> extends Repository<T> {
     this.client = client;
 
     const doWeHaveFetch = typeof fetch !== 'undefined';
+    const isInjectedFetchProblematic = !this.client.options.fetch;
 
     if (doWeHaveFetch) {
       this.fetch = fetch;
-    } else if (this.client.options.fetch) {
-      this.fetch = this.client.options.fetch;
+    } else if (isInjectedFetchProblematic) {
+      throw errors.falsyFetchImplementation;
     } else {
-      throw errors.noFetchImplementation;
+      this.fetch = this.client.options.fetch;
     }
 
     Object.defineProperty(this, 'client', { enumerable: false });
