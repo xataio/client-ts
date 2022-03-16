@@ -1,4 +1,4 @@
-import { getFetch } from './util/getFetch';
+import { errors } from './util/errors';
 
 export interface XataRecord {
   id: string;
@@ -282,8 +282,13 @@ export class RestRepository<T> extends Repository<T> {
     super(null, table, {});
     this.client = client;
 
-    const { fetch } = client.options;
-    this.fetch = fetch || getFetch();
+    const doWeHaveFetch = typeof fetch !== 'undefined';
+
+    if (doWeHaveFetch) {
+      this.fetch = fetch;
+    } else {
+      throw errors.noFetchImplementation;
+    }
 
     Object.defineProperty(this, 'client', { enumerable: false });
     Object.defineProperty(this, 'fetch', { enumerable: false });
