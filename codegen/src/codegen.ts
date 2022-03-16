@@ -7,7 +7,8 @@ import { join } from 'path';
 import prettier from 'prettier';
 import { getExtensionFromLanguage } from './getExtensionFromLanguage';
 import { readFile } from './readFile';
-import { parseFile } from './parseFile';
+import { parseConfigFile } from './parseConfigFile';
+import { parseSchemaFile } from './parseSchemaFile';
 
 type GenerateOptions = {
   xataDirectory: string;
@@ -87,8 +88,8 @@ export async function generate({
   const configFile = join(xataDirectory, 'config.json');
   const rawSchema = await readFile({ fullPath: schemaFile, type: 'schema' });
   const rawConfig = await readFile({ fullPath: configFile, type: 'config' });
-  const schema = parseFile({ type: 'schema', input: rawSchema });
-  const config = parseFile({ type: 'config', input: rawConfig });
+  const schema = parseSchemaFile(rawSchema);
+  const config = parseConfigFile(rawConfig);
 
   const { tables } = schema;
   const links: Record<string, string[][]> = {};
