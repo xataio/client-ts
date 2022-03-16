@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "prepack": "npm run build",
-    "example-ts": "npm run build && node dist/index.js -s example/xata/schema.json -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
-    "example-js": "npm run build && node dist/index.js -s example/xata/schema.json -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js"
+    "example-ts": "npm run build && node dist/index.js generate example/xata -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
+    "example-js": "npm run build && node dist/index.js generate example/xata -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js"
   },
   "repository": {
     "type": "git",

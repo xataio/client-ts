@@ -20,12 +20,12 @@ Add an npm script to your package.json file to invoke `xata-codegen`. You can cu
 ```json
 {
   "scripts": {
-    "xata-codegen": "xata-codegen -s xata/schema.json -o xata.ts"
+    "xata-codegen": "xata-codegen xata -o generated/client.ts"
   }
 }
 ```
 
-Run it (this is assuming your schema file is in `xata/schema.json` and it was created by the `xata` cli application)
+Run it (this is assuming your Xata folder is in `./xata` and it was created by the `xata` cli application)
 
 ```bash
 npm run xata-codegen
