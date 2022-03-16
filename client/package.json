@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/client",
-  "version": "0.1.5",
+  "version": "0.2.2",
   "description": "Xata.io SDK for TypeScript and JavaScript",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,5 +19,5 @@
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
-  "homepage": "https://github.com/xataio/client-ts#readme"
+  "homepage": "https://github.com/xataio/client-ts/blob/main/client/README.md"
 }

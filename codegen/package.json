@@ -1,14 +1,14 @@
 {
   "name": "@xata.io/codegen",
-  "version": "0.1.2",
+  "version": "0.2.2",
   "description": "Generates types based on a Xata.io database schema. Meant to be used with @xata.io/client",
   "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "prepack": "npm run build",
-    "example-ts": "npm run build && node dist/index.js -s example/xata/schema.json -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
-    "example-js": "npm run build && node dist/index.js -s example/xata/schema.json -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js"
+    "example-ts": "npm run build && node dist/index.js generate example/xata -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
+    "example-js": "npm run build && node dist/index.js generate example/xata -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js"
   },
   "repository": {
     "type": "git",
@@ -20,15 +20,27 @@
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
-  "homepage": "https://github.com/xataio/client-ts#readme",
+  "homepage": "https://github.com/xataio/client-ts/blob/main/codegen/README.md",
   "dependencies": {
+    "chalk": "^4.1.2",
+    "command-exists": "^1.2.9",
+    "commander": "^9.0.0",
+    "inquirer": "^8.2.0",
+    "node-fetch": "^2.6.7",
+    "ora": "^5.4.1",
     "pluralize": "^8.0.0",
     "prettier": "^2.5.1",
-    "yargs": "^17.3.1",
+    "tar": "^6.1.11",
+    "unzipper": "^0.10.11",
     "zod": "^3.11.6"
   },
   "devDependencies": {
+    "@types/command-exists": "^1.2.0",
+    "@types/inquirer": "^8.2.0",
+    "@types/node-fetch": "^2.6.1",
     "@types/pluralize": "^0.0.29",
+    "@types/tar": "^6.1.1",
+    "@types/unzipper": "^0.10.5",
     "@types/yargs": "^17.0.8"
   },
   "bin": {

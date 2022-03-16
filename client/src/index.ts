@@ -116,10 +116,10 @@ interface BasePage<T, R> {
   meta: QueryMeta;
   records: R[];
 
-  nextPage(options?: OffsetNavigationOptions): Promise<Page<T, R>>;
-  previousPage(options?: OffsetNavigationOptions): Promise<Page<T, R>>;
-  firstPage(options?: OffsetNavigationOptions): Promise<Page<T, R>>;
-  lastPage(options?: OffsetNavigationOptions): Promise<Page<T, R>>;
+  nextPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  previousPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  firstPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  lastPage(size?: number, offset?: number): Promise<Page<T, R>>;
 
   hasNextPage(): boolean;
 }
@@ -135,23 +135,19 @@ class Page<T, R> implements BasePage<T, R> {
     this.records = records;
   }
 
-  async nextPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
-    const { size, offset } = options;
+  async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
   }
 
-  async previousPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
-    const { size, offset } = options;
+  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
   }
 
-  async firstPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
-    const { size, offset } = options;
+  async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.query.getPaginated({ page: { size, offset, first: this.meta.page.cursor } });
   }
 
-  async lastPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
-    const { size, offset } = options;
+  async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
   }
 
@@ -296,7 +292,26 @@ export class Query<T, R = T> implements BasePage<T, R> {
   }
 
   async getPaginated(options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
-    return this.repository.executeQuery(this, options);
+    return this.repository._runQuery(this, options);
+  }
+
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<R> {
+    for await (const [record] of this.getIterator(1)) {
+      yield record;
+    }
+  }
+
+  async *getIterator(chunk: number, options: Omit<BulkQueryOptions<T>, 'page'> = {}): AsyncGenerator<R[]> {
+    let offset = 0;
+    let end = false;
+
+    while (!end) {
+      const { records, meta } = await this.getPaginated({ ...options, page: { size: chunk, offset } });
+      yield records;
+
+      offset += chunk;
+      end = !meta.page.more;
+    }
   }
 
   async getMany(options?: BulkQueryOptions<T>): Promise<R[]> {
@@ -319,22 +334,20 @@ export class Query<T, R = T> implements BasePage<T, R> {
     return this;
   }
 
-  async nextPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
-    return this.firstPage(options);
+  async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.firstPage(size, offset);
   }
 
-  async previousPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
-    return this.firstPage(options);
+  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.firstPage(size, offset);
   }
 
-  async firstPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
-    const { size } = options;
-    return this.getPaginated({ page: { size, offset: 0 } });
+  async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.getPaginated({ page: { size, offset } });
   }
 
-  async lastPage(options: OffsetNavigationOptions = {}): Promise<Page<T, R>> {
-    const { size } = options;
-    return this.getPaginated({ page: { size, before: 'end' } });
+  async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.getPaginated({ page: { size, offset, before: 'end' } });
   }
 
   hasNextPage(): boolean {
@@ -358,7 +371,7 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
   abstract delete(id: string): void;
 
   // Used by the Query object internally
-  abstract executeQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
+  abstract _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
 }
 
 export class RestRepository<T> extends Repository<T> {
@@ -498,7 +511,7 @@ export class RestRepository<T> extends Repository<T> {
     await this.request('DELETE', `/tables/${this.table}/data/${id}`);
   }
 
-  async executeQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
+  async _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
     const filter = {
       $any: query.$any,
       $all: query.$all,

@@ -209,9 +209,9 @@ describe('integration tests', () => {
 
   test('returns many records with cursor passing a offset/size', async () => {
     const page1 = await client.db.users.getPaginated({ page: { size: 5 } });
-    const page2 = await page1.nextPage({ size: 10 });
-    const page3 = await page2.nextPage({ size: 10 });
-    const page2And3 = await page1.nextPage({ size: 20 });
+    const page2 = await page1.nextPage(10);
+    const page3 = await page2.nextPage(10);
+    const page2And3 = await page1.nextPage(20);
 
     expect(page1.records).toHaveLength(5);
     expect(page2.records).toHaveLength(10);
@@ -245,5 +245,27 @@ describe('integration tests', () => {
     expect(teams[0].name).toBe('Team cars');
     expect(teams[1].id).toBeDefined();
     expect(teams[1].name).toBe('Team planes');
+  });
+  
+  test('query implements iterator', async () => {
+    const owners = [];
+
+    for await (const user of client.db.users.filter('full_name', contains('Owner'))) {
+      owners.push(user);
+    }
+
+    expect(owners).toHaveLength(2);
+    expect(owners.map((user) => user.full_name).sort()).toEqual(['Owner of team animals', 'Owner of team fruits']);
+  });
+
+  test('query implements iterator with chunks', async () => {
+    const owners = [];
+
+    for await (const chunk of client.db.users.filter('full_name', contains('Owner')).getIterator(10)) {
+      owners.push(...chunk);
+    }
+
+    expect(owners).toHaveLength(2);
+    expect(owners.map((user) => user.full_name).sort()).toEqual(['Owner of team animals', 'Owner of team fruits']);
   });
 });

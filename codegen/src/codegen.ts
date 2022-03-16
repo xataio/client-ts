@@ -3,8 +3,17 @@ import * as path from 'path';
 import { singular } from 'pluralize';
 import { ZodError } from 'zod';
 import { Column, fileSchema, Table } from './schema';
+import { join } from 'path';
 
 import prettier from 'prettier';
+import { getExtensionFromLanguage } from './getExtensionFromLanguage';
+
+type GenerateOptions = {
+  xataDirectory: string;
+  outputFilePath: string;
+  language?: Language;
+  writeFile?: typeof fs.writeFile;
+};
 
 function getTypeName(tableName: string) {
   const snglr = singular(tableName);
@@ -90,14 +99,16 @@ function parseSchema(input: string) {
   }
 }
 
-export type Language = 'typescript' | 'javascript';
+export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
 
-export async function generate(schemaFile: string, output: string, language: Language) {
-  const fullSchemaPath = path.resolve(process.cwd(), schemaFile);
-  const fullOutputPath = path.resolve(process.cwd(), output);
-  console.log('Using schema file:', fullSchemaPath);
-  console.log('Using output file:', fullOutputPath);
-  console.log();
+export async function generate({
+  outputFilePath: output,
+  xataDirectory,
+  language = 'ts',
+  writeFile = fs.writeFile
+}: GenerateOptions) {
+  const fullOutputPath = path.resolve(process.cwd(), `${output}${getExtensionFromLanguage(language)}`);
+  const schemaFile = join(xataDirectory, 'schema.json');
   const input = await readSchema(schemaFile);
   const schema = parseSchema(input);
 
@@ -112,7 +123,7 @@ export async function generate(schemaFile: string, output: string, language: Lan
     }
   }
 
-  if (language === 'typescript') {
+  if (['typescript', 'ts'].includes(language)) {
     const code = `
     import {
       BaseClient,
@@ -141,9 +152,11 @@ export async function generate(schemaFile: string, output: string, language: Lan
   `;
 
     const pretty = prettier.format(code, { parser: 'typescript' });
-    await fs.writeFile(fullOutputPath, pretty);
-  } else {
-    const code = `
+    await writeFile(fullOutputPath, pretty);
+    return;
+  }
+
+  const code = `
     /** @typedef { import('@xata.io/client').Repository } Repository */
     import {
       BaseClient,
@@ -167,7 +180,6 @@ export async function generate(schemaFile: string, output: string, language: Lan
     }
   `;
 
-    const pretty = prettier.format(code, { parser: 'babel' });
-    await fs.writeFile(fullOutputPath, pretty);
-  }
+  const pretty = prettier.format(code, { parser: 'babel' });
+  await writeFile(fullOutputPath, pretty);
 }
