@@ -286,6 +286,8 @@ export class RestRepository<T> extends Repository<T> {
 
     if (doWeHaveFetch) {
       this.fetch = fetch;
+    } else if (this.client.options.fetch) {
+      this.fetch = this.client.options.fetch;
     } else {
       throw errors.noFetchImplementation;
     }

@@ -2,6 +2,7 @@ import { contains, lt } from '../client/src';
 import { XataClient } from '../codegen/example/xata';
 import dotenv from 'dotenv';
 import { join } from 'path';
+import fetch from 'cross-fetch';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
@@ -10,7 +11,7 @@ const client = new XataClient({
   databaseURL: process.env.XATA_DATABASE_URL || '',
   branch: process.env.XATA_DATABASE_BRANCH || '',
   apiKey: process.env.XATA_API_KEY || '',
-  fetch: require('cross-fetch')
+  fetch
 });
 
 // Integration tests take longer than unit tests, increasing the timeout
