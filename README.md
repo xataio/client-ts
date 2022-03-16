@@ -6,7 +6,7 @@ It also works in browsers for the same reason. But this is strongly discouraged 
 
 ## Installing
 
-Install the dependencies
+Install the dependencies:
 
 ```
 npm install @xata.io/client
