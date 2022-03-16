@@ -9,7 +9,7 @@ import prettier from 'prettier';
 import { getExtensionFromLanguage } from './getExtensionFromLanguage';
 
 type GenerateOptions = {
-  xataFolder: string;
+  xataDirectory: string;
   outputFilePath: string;
   language?: Language;
   writeFile?: typeof fs.writeFile;
@@ -103,12 +103,12 @@ export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
 
 export async function generate({
   outputFilePath: output,
-  xataFolder,
+  xataDirectory,
   language = 'ts',
   writeFile = fs.writeFile
 }: GenerateOptions) {
   const fullOutputPath = path.resolve(process.cwd(), `${output}${getExtensionFromLanguage(language)}`);
-  const schemaFile = join(xataFolder, 'schema.json');
+  const schemaFile = join(xataDirectory, 'schema.json');
   const input = await readSchema(schemaFile);
   const schema = parseSchema(input);
 

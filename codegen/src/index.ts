@@ -13,7 +13,7 @@ import { generateWithOutput } from './generateWithOutput';
 import { handleXataCliRejection } from './handleXataCliRejection';
 import { cliPath } from './cliPath';
 
-const defaultXataFolder = join(process.cwd(), 'xata');
+const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'XataClient');
 const defaultLanguage = 'ts';
 
@@ -28,9 +28,9 @@ program
   .command('generate')
   .description('Generate code from a given Xata schema.')
   .argument(
-    '[xata folder]',
-    `A path to your local Xata folder. If you don't have this, run the pull or \`init\` command on this CLI first.`,
-    defaultXataFolder
+    '[xata directory]',
+    `A path to your local Xata directory. If you don't have this, run the pull or \`init\` command on this CLI first.`,
+    defaultXataDirectory
   )
   .option('-o, --out <path>', 'A path to store your generated API client.', defaultOutputFile)
   .option(
@@ -38,9 +38,9 @@ program
     "An option to choose the type of code you'd like us to output: TypeScript (ts, preferred) or JavaScript (js)",
     defaultLanguage
   )
-  .action(async (xataFolder, { out, lang }) => {
+  .action(async (xataDirectory, { out, lang }) => {
     const spinner = ora();
-    const schema = join(xataFolder, 'schema.json');
+    const schema = join(xataDirectory, 'schema.json');
     spinner.start('Checking schema...');
 
     try {
