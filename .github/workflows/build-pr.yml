@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    concurrency: ci
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +32,6 @@ jobs:
 
       - name: Test
         run: npm test
-        concurrency: ci
         env:
           XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
