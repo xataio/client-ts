@@ -1,3 +1,5 @@
+import { errors } from './util/errors';
+
 export interface XataRecord {
   id: string;
   xata: {
@@ -280,22 +282,15 @@ export class RestRepository<T> extends Repository<T> {
     super(null, table, {});
     this.client = client;
 
-    const { fetch } = client.options;
+    const doWeHaveFetch = typeof fetch !== 'undefined';
+    const isInjectedFetchProblematic = !this.client.options.fetch;
 
-    if (fetch) {
+    if (doWeHaveFetch) {
       this.fetch = fetch;
-    } else if (typeof window === 'object') {
-      this.fetch = window.fetch;
-    } else if (typeof require === 'function') {
-      try {
-        this.fetch = require('node-fetch');
-      } catch (err) {
-        try {
-          this.fetch = require('cross-fetch');
-        } catch (err) {
-          throw new Error('No fetch implementation found. Please provide one in the constructor');
-        }
-      }
+    } else if (isInjectedFetchProblematic) {
+      throw new Error(errors.falsyFetchImplementation);
+    } else {
+      this.fetch = this.client.options.fetch;
     }
 
     Object.defineProperty(this, 'client', { enumerable: false });
