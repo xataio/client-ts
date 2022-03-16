@@ -10,12 +10,14 @@ const resolveUrl = (
   return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]);
 };
 
+// Typed only the subset of the spec we actually use (to be able to build a simple mock)
+type FetchImpl = (
+  url: string,
+  init?: { body?: string; headers?: Record<string, string>; method?: string }
+) => Promise<{ ok: boolean; status: number; json(): Promise<any> }>;
+
 export type XatabaseFetcherExtraProps = {
-  // Typed only the subset of the spec we actually use (to be able to build a simple mock)
-  fetch: (
-    url: string,
-    init?: { body?: string; headers?: Record<string, string>; method?: string }
-  ) => Promise<{ ok: boolean; status: number; json(): Promise<any> }>;
+  fetchImpl: FetchImpl;
 };
 
 export type XatabaseFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
@@ -58,10 +60,11 @@ export async function xatabaseFetch<
   headers,
   pathParams,
   queryParams,
-  workspace
-}: XatabaseFetcherOptions<TBody, THeaders, TQueryParams, TPathParams>): Promise<TData> {
+  workspace,
+  fetchImpl
+}: XatabaseFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & XatabaseFetcherExtraProps): Promise<TData> {
   const baseURL = workspace ? baseURLForWorkspace(workspace) : process.env.MAIN_API_BASE_URL;
-  const response = await fetch(`${baseURL}${resolveUrl(url, queryParams, pathParams)}`, {
+  const response = await fetchImpl(`${baseURL}${resolveUrl(url, queryParams, pathParams)}`, {
     method: method.toUpperCase(),
     body: body ? JSON.stringify(body) : undefined,
     headers: {
