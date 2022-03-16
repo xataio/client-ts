@@ -25,7 +25,7 @@ Add an npm script to your package.json file to invoke `xata-codegen`. You can cu
 }
 ```
 
-Run it (this is assuming your Xata folder is in `./xata` and it was created by the `xata` cli application)
+Run it (this is assuming your Xata directory is in `./xata` and it was created by the `xata` cli application)
 
 ```bash
 npm run xata-codegen
