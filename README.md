@@ -136,3 +136,5 @@ await user.delete();
 // Using an object's id
 await xata.db.users.delete('rec_1234abcdef');
 ```
+
+
