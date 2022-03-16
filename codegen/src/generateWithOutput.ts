@@ -16,7 +16,7 @@ export const generateWithOutput = async ({
 }) => {
   spinner.text = 'Found schema, generating...';
 
-  await generate(schema, out, lang);
+  await generate({ schemaFilePath: schema, outputFilePath: out, language: lang });
 
   spinner.succeed(
     `Your XataClient is generated at ./${relative(process.cwd(), `${out}${getExtensionFromLanguage(lang)}`)}.`
