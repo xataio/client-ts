@@ -9,7 +9,8 @@ dotenv.config({ path: join(process.cwd(), '.envrc') });
 const client = new XataClient({
   databaseURL: process.env.XATA_DATABASE_URL || '',
   branch: process.env.XATA_DATABASE_BRANCH || '',
-  apiKey: process.env.XATA_API_KEY || ''
+  apiKey: process.env.XATA_API_KEY || '',
+  fetch: require('cross-fetch')
 });
 
 // Integration tests take longer than unit tests, increasing the timeout
