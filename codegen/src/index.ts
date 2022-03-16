@@ -45,7 +45,7 @@ program
 
     try {
       await access(schema); // Make sure the schema file exists
-      await generateWithOutput({ schema, out, lang, spinner });
+      await generateWithOutput({ xataDirectory, out, lang, spinner });
     } catch (e: any) {
       if (!e.message.includes('ENOENT')) {
         spinner.fail(e.message);
@@ -72,7 +72,7 @@ program
 
         await useCli({ command: hasCli ? 'xata' : cliPath, spinner });
         await generateWithOutput({
-          schema,
+          xataDirectory,
           out: defaultOutputFile,
           lang: defaultLanguage,
           spinner
