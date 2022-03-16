@@ -79,6 +79,9 @@ exports[`codegen should generate correct TypeScript 1`] = `
   XataRecord,
 } from \\"@xata.io/client\\";
 
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
 export interface Author extends XataRecord {
   name?: string;
   email?: string;
@@ -113,8 +116,14 @@ export class XataClient extends BaseClient<{
   posts: Repository<Post>;
   people: Repository<Person>;
 }> {
-  constructor(options: XataClientOptions) {
-    super(options, links);
+  constructor(options: PartialBy<XataClientOptions, \\"databaseURL\\">) {
+    super(
+      {
+        databaseURL: \\"https://my-workspace-gfdd12.xata.sh/db/hello-xata\\",
+        ...options,
+      },
+      links
+    );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
     this.db = {
       authors: factory.createRepository(this, \\"authors\\"),
