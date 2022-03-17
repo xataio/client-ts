@@ -27,13 +27,13 @@ export class BaseClient<D extends Record<string, Schema<any>> = any> {
   private branch: BranchStrategyValue;
   db!: D;
 
-  constructor(options: XataClientOptions, links: Links) {
+  constructor(options: XataClientOptions, links?: Links) {
     if (!options.workspace || !options.apiKey || !options.branch) {
       throw new Error('Options databaseURL, apiKey and branch are required');
     }
 
     this.options = options;
-    this.links = links;
+    this.links = links ?? {};
   }
 
   public initObject<T>(table: string, object: object) {
