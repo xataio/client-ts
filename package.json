@@ -9,7 +9,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "prepare": "husky install",
-    "build-example": "cd codegen && npm run example-ts && npm run example-js"
+    "build-example": "cd codegen && npm run example-ts && npm run example-js && cd .."
   },
   "repository": {
     "type": "git",
@@ -43,6 +43,10 @@
     "typescript": "^4.5.5"
   },
   "lint-staged": {
+    "codegen/src/*.{js,ts,tsx}": [
+      "npm run build-example",
+      "git add codegen/example"
+    ],
     "*.{js,ts,tsx}": [
       "eslint --cache --fix",
       "prettier --write"

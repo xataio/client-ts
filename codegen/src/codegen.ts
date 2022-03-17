@@ -6,12 +6,13 @@ import { Column, fileSchema, Table } from './schema';
 import { join } from 'path';
 
 import prettier from 'prettier';
-import { getExtensionFromLanguage } from './getExtensionFromLanguage';
+import { getLanguageFromExtension } from './getLanguageFromExtension';
+import { isExtensionValid } from './isExtensionValid';
+import { errors } from './errors';
 
 type GenerateOptions = {
   xataDirectory: string;
   outputFilePath: string;
-  language?: Language;
   writeFile?: typeof fs.writeFile;
 };
 
@@ -99,15 +100,16 @@ function parseSchema(input: string) {
   }
 }
 
-export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
+export type Language = 'typescript' | 'javascript';
 
-export async function generate({
-  outputFilePath: output,
-  xataDirectory,
-  language = 'ts',
-  writeFile = fs.writeFile
-}: GenerateOptions) {
-  const fullOutputPath = path.resolve(process.cwd(), `${output}${getExtensionFromLanguage(language)}`);
+export async function generate({ outputFilePath: output, xataDirectory, writeFile = fs.writeFile }: GenerateOptions) {
+  const fullOutputPath = path.resolve(process.cwd(), output);
+  const [extension] = fullOutputPath.split('.').slice(-1);
+
+  if (!isExtensionValid(extension)) {
+    throw new Error(errors.invalidCodegenOutputExtension);
+  }
+
   const schemaFile = join(xataDirectory, 'schema.json');
   const input = await readSchema(schemaFile);
   const schema = parseSchema(input);
@@ -123,7 +125,7 @@ export async function generate({
     }
   }
 
-  if (['typescript', 'ts'].includes(language)) {
+  if (getLanguageFromExtension(extension) === 'typescript') {
     const code = `
     import {
       BaseClient,
