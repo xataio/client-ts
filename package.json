@@ -9,7 +9,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "prepare": "husky install",
-    "build-example": "cd codegen && npm run example-ts && npm run example-js"
+    "build-example": "cd codegen && npm run example-ts && npm run example-js && cd .."
   },
   "repository": {
     "type": "git",
