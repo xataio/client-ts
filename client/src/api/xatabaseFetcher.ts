@@ -90,18 +90,23 @@ export async function xatabaseFetch<
       return jsonResponse;
     }
 
-    throw jsonResponse;
+    if (jsonResponse.success) {
+      throw withStatus(jsonResponse.data, response.status);
+    } else {
+      throw withStatus(fallbackError, response.status);
+    }
   } catch (e) {
     if (e instanceof Error) {
       const error: SimpleError = {
-        message: e.message,
-        status: 500
+        message: e.message
       };
-      throw error;
+      throw withStatus(error, response.status);
     } else if (typeof e === 'object' && typeof (e as SimpleError).message === 'string') {
-      throw e;
+      throw withStatus(e as SimpleError, response.status);
     } else {
-      throw fallbackError;
+      throw withStatus(fallbackError, response.status);
     }
   }
 }
+
+const withStatus = (error: SimpleError, status: number) => ({ ...error, status });

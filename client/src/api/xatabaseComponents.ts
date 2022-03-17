@@ -233,7 +233,7 @@ export type UpdateWorkspaceMemberRoleVariables = {
 } & XatabaseFetcherExtraProps;
 
 /**
- * Update a workspace member role. Workespaces must always have at least one owner, so this operation will fail if trying to remove owner role from the last owner in the workpsace.
+ * Update a workspace member role. Workspaces must always have at least one owner, so this operation will fail if trying to remove owner role from the last owner in the workspace.
  */
 export const updateWorkspaceMemberRole = (variables: UpdateWorkspaceMemberRoleVariables) =>
   xatabaseFetch<undefined, UpdateWorkspaceMemberRoleRequestBody, {}, {}, UpdateWorkspaceMemberRolePathParams>({
@@ -288,7 +288,7 @@ export type InviteWorkspaceMemberVariables = {
 } & XatabaseFetcherExtraProps;
 
 /**
- * Invite some user to join the workespace with the given role
+ * Invite some user to join the workspace with the given role
  */
 export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables) =>
   xatabaseFetch<Schemas.WorkspaceInvite, InviteWorkspaceMemberRequestBody, {}, {}, InviteWorkspaceMemberPathParams>({
@@ -1042,6 +1042,9 @@ export type InsertRecordWithIDVariables = {
   queryParams?: InsertRecordWithIDQueryParams;
 } & XatabaseFetcherExtraProps;
 
+/**
+ * By default, IDs are auto-generated when data is insterted into Xata. Sending a request to this endpoint allows us to insert a record with a pre-existing ID, bypassing the default automatic ID generation.
+ */
 export const insertRecordWithID = (variables: InsertRecordWithIDVariables) =>
   xatabaseFetch<
     InsertRecordWithIDResponse,
@@ -1180,9 +1183,10 @@ export type QueryTableVariables = {
  *
  * The overall structure of the request looks like this:
  *
- * ```jsx
- * POST /db/<dbname>:<branch>/tables/<table>/query
+ * ```json
+ * // POST /db/<dbname>:<branch>/tables/<table>/query
  * {
+ *   "columns": [...],
  *   "filter": {
  *     "$all": [...]
  *     "$any": [...]
@@ -1191,19 +1195,14 @@ export type QueryTableVariables = {
  *   "sort": {
  *     "multiple": [...]
  *     ...
- *   }
- *   "group": {
- *     ...
- *     "filter": {
- *     }
- *   }
- *   "paging": {
  *   },
- *   "columns": [...],
+ *   "page": {
+ *     ...
+ *   }
  * }
  * ```
  *
- * # Column selection
+ * ### Column selection
  *
  * If the `columns` array is not specified, all columns are included. For link
  * fields, only the ID column of the linked records is included in the response.
@@ -1218,22 +1217,65 @@ export type QueryTableVariables = {
  *
  * By the way of example, assuming two tables like this:
  *
- * ```tsx
- * table users {
- *   name string
- *   email string
- *   address object{
- *     street string
- *     number string
- *     zipcode string
- *   }
- *   team link(team)
- * }
- *
- * table team {
- *   name string
- *   code string
- *   owner link(users)
+ * ```json {"truncate": true}
+ * {
+ *   "formatVersion": "1.0",
+ *   "tables": [
+ *     {
+ *       "name": "teams",
+ *       "columns": [
+ *         {
+ *           "name": "name",
+ *           "type": "string"
+ *         },
+ *         {
+ *           "name": "owner",
+ *           "type": "link",
+ *           "link": {
+ *             "table": "users"
+ *           }
+ *         }
+ *       ]
+ *     },
+ *     {
+ *       "name": "users",
+ *       "columns": [
+ *         {
+ *           "name": "email",
+ *           "type": "email"
+ *         },
+ *         {
+ *           "name": "full_name",
+ *           "type": "string"
+ *         },
+ *         {
+ *           "name": "address",
+ *           "type": "object",
+ *           "columns": [
+ *             {
+ *               "name": "street",
+ *               "type": "string"
+ *             },
+ *             {
+ *               "name": "number",
+ *               "type": "int"
+ *             },
+ *             {
+ *               "name": "zipcode",
+ *               "type": "int"
+ *             }
+ *           ]
+ *         },
+ *         {
+ *           "name": "team",
+ *           "type": "link",
+ *           "link": {
+ *             "table": "teams"
+ *           }
+ *         }
+ *       ]
+ *     }
+ *   ]
  * }
  * ```
  *
@@ -1251,7 +1293,7 @@ export type QueryTableVariables = {
  *
  * returns objects like:
  *
- * ```tsx
+ * ```json
  * {
  *   "name": "Kilian",
  *   "address": {
@@ -1264,7 +1306,7 @@ export type QueryTableVariables = {
  *
  * while a query like this:
  *
- * ```tsx
+ * ```json
  * POST /db/<dbname>:<branch>/tables/<table>/query
  * {
  *   "columns": [
@@ -1276,7 +1318,7 @@ export type QueryTableVariables = {
  *
  * returns objects like:
  *
- * ```tsx
+ * ```json
  * {
  *   "name": "Kilian",
  *   "address": {
@@ -1287,7 +1329,7 @@ export type QueryTableVariables = {
  *
  * If you want to return all columns from the main table and selected columns from the linked table, you can do it like this:
  *
- * ```tsx
+ * ```json
  * {
  *   "columns": [
  *     "*",
@@ -1298,7 +1340,7 @@ export type QueryTableVariables = {
  *
  * The `"*"` in the above means all columns, including columns of objects. This returns data like:
  *
- * ```tsx
+ * ```json
  * {
  *   "name": "Kilian",
  *   "email": "kilian@gmail.com",
@@ -1319,7 +1361,7 @@ export type QueryTableVariables = {
  *
  * If you want all columns of the linked table, you can do:
  *
- * ```tsx
+ * ```json
  * {
  *   "columns": [
  *     "*",
@@ -1330,7 +1372,7 @@ export type QueryTableVariables = {
  *
  * This returns, for example:
  *
- * ```tsx
+ * ```json
  * {
  *   "name": "Kilian",
  *   "email": "kilian@gmail.com",
@@ -1350,7 +1392,7 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * # Filtering
+ * ### Filtering
  *
  * There are two types of operators:
  *
@@ -1362,11 +1404,11 @@ export type QueryTableVariables = {
  * All operators start with an `$` to differentiate them from column names
  * (which are not allowed to start with an underscore).
  *
- * ### Exact matching and control operators
+ * #### Exact matching and control operators
  *
  * Filter by one column:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "<column_name>": "value"
@@ -1376,7 +1418,7 @@ export type QueryTableVariables = {
  *
  * This is equivalent to using the `$is` operator:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "<column_name>": {
@@ -1388,7 +1430,7 @@ export type QueryTableVariables = {
  *
  * For example:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *       "name": "r2",
@@ -1398,7 +1440,7 @@ export type QueryTableVariables = {
  *
  * Or:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "name": {
@@ -1410,7 +1452,7 @@ export type QueryTableVariables = {
  *
  * For objects, both dots and nested versions work:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *       "settings.plan": "free",
@@ -1418,7 +1460,7 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "settings": {
@@ -1430,7 +1472,7 @@ export type QueryTableVariables = {
  *
  * If you want to OR together multiple values, you can use an array of values:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "settings.plan": ["free", "paid"]
@@ -1440,7 +1482,7 @@ export type QueryTableVariables = {
  *
  * Same query with `$is` operator:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "settings.plan": { "$is": ["free", "paid"]}
@@ -1450,7 +1492,7 @@ export type QueryTableVariables = {
  *
  * Specifying multiple columns, ANDs them together:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *       "settings.dark": true,
@@ -1461,7 +1503,7 @@ export type QueryTableVariables = {
  *
  * To be more explicit about it, you can use `$all` or `$any`:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *       "$any": {
@@ -1474,7 +1516,7 @@ export type QueryTableVariables = {
  *
  * `$all` and `$any` can also receive an array of objects, which allows for repeating columns:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "$any": [
@@ -1490,7 +1532,7 @@ export type QueryTableVariables = {
  *
  * You can check for a value being not-null with `$exists`:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "$exists": "settings",
@@ -1500,7 +1542,7 @@ export type QueryTableVariables = {
  *
  * This can be combined with `$all` or `$any` :
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "$all": [
@@ -1517,7 +1559,7 @@ export type QueryTableVariables = {
  *
  * We can also make the negation version, `$notExists` :
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "$notExists": "settings",
@@ -1525,13 +1567,13 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * ### Partial match
+ * #### Partial match
  *
  * `$contains` is the simplest operator for partial matching. We should generally
  * discourage overusing `$contains` because it typically can't make use of
  * indices.
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "<column_name>": {
@@ -1543,7 +1585,7 @@ export type QueryTableVariables = {
  *
  * Wildcards are supported via the `$pattern` operator:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "<column_name>": {
@@ -1555,7 +1597,7 @@ export type QueryTableVariables = {
  *
  * We could also have `$endsWith` and `$startsWith` operators:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "<column_name>": {
@@ -1568,9 +1610,9 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * ### Numeric/date ranges
+ * #### Numeric/date ranges
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *       "<column_name>": {
@@ -1585,7 +1627,7 @@ export type QueryTableVariables = {
  *
  * Date ranges would support the same operators, with the date as string in RFC 3339:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *       "<column_name>": {
@@ -1596,11 +1638,11 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * ### Negations
+ * #### Negations
  *
  * A general `$not` operator can inverse any operation.
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "$not": {
@@ -1616,7 +1658,7 @@ export type QueryTableVariables = {
  *
  * Or more complex:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "$not": {
@@ -1636,7 +1678,7 @@ export type QueryTableVariables = {
  *
  * The `$not: { $any: {}}` can be shorted using the `$none` operator:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "$none": {
@@ -1649,7 +1691,7 @@ export type QueryTableVariables = {
  *
  * In addition, we can add specific operators like `$isNot` to simplify expressions:
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
  *     "<column_name>": {
@@ -1659,14 +1701,14 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * ### Working with arrays
+ * #### Working with arrays
  *
  * To test that an array contains a value, use `$includes`.
  *
- * ```jsx
+ * ```json
  * {
  *   "filter": {
- *     "<array_name": {
+ *     "<array_name>": {
  *       "$includes": "value"
  *     }
  *   }
@@ -1698,11 +1740,11 @@ export type QueryTableVariables = {
  * predicate. The `$includes` operator is a synonym for the `$includesAny`
  * operator.
  *
- * # Sorting
+ * ### Sorting
  *
  * Sorting by one element:
  *
- * ```jsx
+ * ```json
  * POST /db/demo:main/tables/table/query
  * {
  *   "sort": {
@@ -1713,7 +1755,7 @@ export type QueryTableVariables = {
  *
  * or descendently:
  *
- * ```jsx
+ * ```json
  * POST /db/demo:main/tables/table/query
  * {
  *   "sort": {
@@ -1724,7 +1766,7 @@ export type QueryTableVariables = {
  *
  * Sorting by multiple fields:
  *
- * ```jsx
+ * ```json
  * POST /db/demo:main/tables/table/query
  * {
  *   "sort": [
@@ -1741,25 +1783,58 @@ export type QueryTableVariables = {
  *
  * ### Pagination
  *
- * The cursor can be used to select the next or the previous page.
+ * We offer cursor pagination and offset pagination. The offset pagination is limited
+ * in the amount of data it can retrieve, so we recommend the cursor pagination if you have more than 1000 records.
  *
- * The `page` object might contain the follow keys:
+ * Example of size + offset pagination:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "page": {
+ *     "size": 100,
+ *     "offset": 200
+ *   }
+ * }
+ * ```
+ *
+ * The `page.size` parameter represents the maximum number of records returned by this query. It has a default value of 20 and a maximum value of 200.
+ * The `page.offset` parameter represents the number of matching records to skip. It has a default value of 0 and a maximum value of 800.
+ *
+ * Example of cursor pagination:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "page": {
+ *     "after":"fMoxCsIwFIDh3WP8c4amDai5hO5SJCRNfaVSeC9b6d1FD"
+ *   }
+ * }
+ * ```
+ *
+ * In the above example, the value of the `page.after` parameter is the cursor returned by the previous query. A sample response is shown below:
+ *
+ * ```json
+ * {
+ *   "meta": {
+ *     "page": {
+ *       "cursor": "fMoxCsIwFIDh3WP8c4amDai5hO5SJCRNfaVSeC9b6d1FD",
+ *       "more": true
+ *     }
+ *   },
+ *   "records": [...]
+ * }
+ * ```
+ *
+ * The `page` object might contain the follow keys, in addition to `size` and `offset` that were introduced before:
  *
  * - `after`: Return the next page 'after' the current cursor
  * - `before`: Return the previous page 'before' the current cursor.
  * - `first`: Return the first page in the table from a cursor.
- * - `last`: Return the last page in the table from a cursor.
- * - `size`: Number of records the user wants to retrieve
- * - `offset`: Offset allows users to skip the next N entries.
- *
- * The API server should define a default and a maximum page size. The
- * `page.size` parameter is invalid if it is `<=0` or if it exceeds the maximum
- * page size.
- *
- * If `page.size` is missing we use the default page size.
+ * - `last`: Return the last N records in the table from a cursor, where N is the `page.size` parameter.
  *
  * The request will fail if an invalid cursor value is given to `page.before`,
- * `page.after`, `page.first` , or `page.last`. No other cursor setting must be
+ * `page.after`, `page.first` , or `page.last`. No other cursor setting can be
  * used if `page.first` or `page.last` is set in a query.
  *
  * If both `page.before` and `page.after` parameters are present we treat the
@@ -1771,16 +1846,8 @@ export type QueryTableVariables = {
  * can be queried by update `page.after` to the returned cursor while keeping the
  * `page.before` cursor from the first range query.
  *
- * The `page.offset` parameter supports skip N rows. It is possible to skip P
- * pages by setting `page.offset = P * *page.size`.
- * Using offset requires the database to query and throw away rows. Although this
- * approach is still more cheap then querying every single page it comes with a
- * cost for large datasets.
- * Thusly the API will limit the maximum* `page.offset` . Users can only skip a
- * limit number of pages at a time.
- *
  * The `filter` , `columns`,  `sort` , and `page.size` configuration will be
- * encoded with the cursor.  The pagination request request will be invalid if
+ * encoded with the cursor.  The pagination request will be invalid if
  * `filter` or `sort` is set. The columns returned and page size can be changed
  * anytime by passing the `columns` or `page.size` settings to the next query.
  *
@@ -1795,14 +1862,26 @@ export type QueryTableVariables = {
  *   cursor can be convenient at times as user code does not need to remember the
  *   filter, sort, columns or page size configuration. All these information are
  *   read from the cursor.
- * - `page.last=<cursor>`: Go to first page. This is equivalent to querying the
+ * - `page.last=<cursor>`: Go to the end of the table. This is equivalent to querying the
  *   last page with `page.before=end`, `filter`, and `sort` . Yet the
  *   `page.last` cursor can be more convenient at times as user code does not
  *   need to remember the filter, sort, columns or page size configuration. All
  *   these information are read from the cursor.
  *
- * When using special cursors like `page[after]=end` or `page[before]=end`, we
+ * When using special cursors like `page.after="end"` or `page.before="end"`, we
  * still allow `filter` and `sort` to be set.
+ *
+ * Example of getting the last page:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "page": {
+ *     "size": 10,
+ *     "before": "end"
+ *   }
+ * }
+ * ```
  */
 export const queryTable = (variables: QueryTableVariables) =>
   xatabaseFetch<Responses.QueryResponse, QueryTableRequestBody, {}, {}, QueryTablePathParams>({

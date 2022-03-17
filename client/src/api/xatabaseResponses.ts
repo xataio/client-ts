@@ -8,22 +8,19 @@ import type * as Schemas from './xatabaseSchemas';
 export type SimpleError = {
   id?: string;
   message: string;
-  status: number;
 };
 
 export type BadRequestError = {
   id?: string;
   message: string;
-  status: number;
 };
 
 /**
- * @example {"status":401,"message":"invalid API key"}
+ * @example {"message":"invalid API key"}
  */
 export type AuthError = {
   id?: string;
   message: string;
-  status: number;
 };
 
 export type BranchMigrationPlan = {

@@ -93,12 +93,33 @@ export type WorkspaceMembers = {
 export type InviteKey = string;
 
 export type ListDatabasesResponse = {
+  /*
+   * A list of databases in a Xata workspace
+   */
   databases?: {
+    /*
+     * The machine-readable name of a database
+     */
     name: string;
+    /*
+     * The human-readable name of a database
+     */
     displayName: string;
+    /*
+     * The time this database was created
+     */
     createdAt: DateTime;
+    /*
+     * The number of branches the database has
+     */
     numberOfBranches: number;
+    /*
+     * Metadata about the database for display in Xata user interfaces
+     */
     ui?: {
+      /*
+       * The user-selected color for this database across interfaces
+       */
       color?: string;
     };
   }[];
@@ -163,7 +184,6 @@ export type Table = {
   name: TableName;
   columns: Column[];
   revLinks?: RevLink[];
-  columnsOrder?: string[];
 };
 
 /**
@@ -174,8 +194,6 @@ export type Column = {
   type: 'bool' | 'int' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object';
   link?: {
     table: string;
-    tableID?: string;
-    lookupFields?: string[];
   };
   columns?: Column[];
 };
