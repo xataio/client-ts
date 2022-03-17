@@ -9,7 +9,8 @@ import { mockUsers } from './mock_data';
 dotenv.config({ path: join(process.cwd(), '.envrc') });
 
 const client = new XataClient({
-  databaseURL: process.env.XATA_DATABASE_URL || '',
+  workspace: process.env.XATA_WORKSPACE || '',
+  database: process.env.XATA_DATABASE || '',
   branch: process.env.XATA_DATABASE_BRANCH || '',
   apiKey: process.env.XATA_API_KEY || '',
   fetch
@@ -253,7 +254,7 @@ describe('integration tests', () => {
     expect(teams[1].id).toBeDefined();
     expect(teams[1].name).toBe('Team planes');
   });
-  
+
   test('query implements iterator', async () => {
     const owners = [];
 

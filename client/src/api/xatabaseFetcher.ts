@@ -18,6 +18,7 @@ export type FetchImpl = (
 
 export type XatabaseFetcherExtraProps = {
   fetchImpl: FetchImpl;
+  apiKey: string;
 };
 
 export type XatabaseFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
@@ -27,7 +28,7 @@ export type XatabaseFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> =
   headers?: THeaders;
   queryParams?: TQueryParams;
   pathParams?: TPathParams;
-} & { workspace?: string };
+};
 
 const fallbackError: SimpleError = { message: 'Network response was not ok', status: 500 };
 
@@ -60,19 +61,20 @@ export async function xatabaseFetch<
   headers,
   pathParams,
   queryParams,
-  workspace,
-  fetchImpl
+  fetchImpl,
+  apiKey
 }: XatabaseFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & XatabaseFetcherExtraProps): Promise<TData> {
-  const baseURL = workspace ? baseURLForWorkspace(workspace) : process.env.MAIN_API_BASE_URL;
+  const baseURL = pathParams?.workspace ? baseURLForWorkspace(pathParams.workspace) : process.env.MAIN_API_BASE_URL;
   const response = await fetchImpl(`${baseURL}${resolveUrl(url, queryParams, pathParams)}`, {
     method: method.toUpperCase(),
     body: body ? JSON.stringify(body) : undefined,
     headers: {
       'Content-Type': 'application/json',
       ...headers,
+      Authorization: `Bearer ${apiKey}`,
       // The host header is needed by Node.js on localhost.
       // It is ignored by fetch() in the frontend
-      ...(workspace ? { Host: hostHeaderForWorkspace(workspace) } : {})
+      ...(pathParams?.workspace ? { Host: hostHeaderForWorkspace(pathParams.workspace) } : {})
     }
   });
 

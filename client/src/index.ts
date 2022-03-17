@@ -1,8 +1,7 @@
 import { XataApi } from './api';
 import { FetchImpl } from './api/xatabaseFetcher';
-import { errors } from './util/errors';
 
-export interface XataRecord {
+export interface XataObject {
   id: string;
   xata: {
     version: number;
@@ -12,29 +11,29 @@ export interface XataRecord {
   delete(): Promise<void>;
 }
 
-export type Queries<T> = {
+type Queries<T> = {
   [key in keyof T as T[key] extends Query<infer A, infer B> ? key : never]: T[key];
 };
 
-export type OmitQueries<T> = {
+type OmitQueries<T> = {
   [key in keyof T as T[key] extends Query<infer A, infer B> ? never : key]: T[key];
 };
 
-export type OmitLinks<T> = {
-  [key in keyof T as T[key] extends XataRecord ? never : key]: T[key];
+type OmitLinks<T> = {
+  [key in keyof T as T[key] extends XataObject ? never : key]: T[key];
 };
 
-export type OmitMethods<T> = {
+type OmitMethods<T> = {
   // eslint-disable-next-line @typescript-eslint/ban-types
   [key in keyof T as T[key] extends Function ? never : key]: T[key];
 };
 
-export type Selectable<T> = Omit<OmitQueries<OmitMethods<T>>, 'id' | 'xata'>;
+type Selectable<T> = Omit<OmitQueries<OmitMethods<T>>, 'id' | 'xata'>;
 
-export type Select<T, K extends keyof T> = Pick<T, K> & Queries<T> & XataRecord;
+type Select<T, K extends keyof T> = Pick<T, K> & Queries<T> & XataObject;
 
-export type Include<T> = {
-  [key in keyof T as T[key] extends XataRecord ? key : never]?: boolean | Array<keyof Selectable<T[key]>>;
+type Include<T> = {
+  [key in keyof T as T[key] extends XataObject ? key : never]?: boolean | Array<keyof Selectable<T[key]>>;
 };
 
 type SortDirection = 'asc' | 'desc';
@@ -162,6 +161,7 @@ class Page<T, R> implements BasePage<T, R> {
 }
 
 export class Query<T, R = T> implements BasePage<T, R> {
+  client: BaseClient<any>;
   table: string;
   repository: Repository<T>;
 
@@ -183,6 +183,7 @@ export class Query<T, R = T> implements BasePage<T, R> {
       this.repository = this as any;
     }
     this.table = table;
+    this.client = this.repository.client;
 
     // For some reason Object.assign(this, parent) didn't work in this case
     // so doing all this manually:
@@ -296,7 +297,32 @@ export class Query<T, R = T> implements BasePage<T, R> {
   }
 
   async getPaginated(options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
-    return this.repository._runQuery(this, options);
+    const filter = {
+      $any: this.$any,
+      $all: this.$all,
+      $not: this.$not,
+      $none: this.$none
+    };
+
+    const workspace = await this.client.getWorkspaceId();
+    const database = await this.client.getDatabaseId();
+    const branch = await this.client.getBranch();
+    const { meta, records: objects } = await this.client.api.records.queryTable(
+      workspace,
+      database,
+      branch,
+      this.table,
+      {
+        //@ts-ignore TODO: Review
+        filter: compactObject(filter),
+        sort: this.$sort,
+        page: options?.page
+      }
+    );
+
+    const records = objects.map((record) => this.client.initObject<R>(this.table, record));
+
+    return new Page(this, meta, records);
   }
 
   async *[Symbol.asyncIterator](): AsyncIterableIterator<R> {
@@ -358,97 +384,28 @@ export class Query<T, R = T> implements BasePage<T, R> {
     return this.meta.page.more;
   }
 }
-
-export abstract class Repository<T> extends Query<T, Selectable<T>> {
-  select<K extends keyof Selectable<T>>(...columns: K[]) {
-    return new Query<T, Select<T, K>>(this.repository, this.table, {});
-  }
-
-  abstract create(object: Selectable<T>): Promise<T>;
-
-  abstract createMany(objects: Selectable<T>[]): Promise<T[]>;
-
-  abstract read(id: string): Promise<T | null>;
-
-  abstract update(id: string, object: Partial<T>): Promise<T>;
-
-  abstract delete(id: string): void;
-
-  // Used by the Query object internally
-  abstract _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
-}
-
-export class RestRepository<T> extends Repository<T> {
+export class Repository<T> extends Query<T, Selectable<T>> {
   client: BaseClient<any>;
-  fetch: any;
 
   constructor(client: BaseClient<any>, table: string) {
     super(null, table, {});
     this.client = client;
 
-    const doWeHaveFetch = typeof fetch !== 'undefined';
-    const isInjectedFetchProblematic = !this.client.options.fetch;
-
-    if (doWeHaveFetch) {
-      this.fetch = fetch;
-    } else if (isInjectedFetchProblematic) {
-      throw new Error(errors.falsyFetchImplementation);
-    } else {
-      this.fetch = this.client.options.fetch;
-    }
-
     Object.defineProperty(this, 'client', { enumerable: false });
-    Object.defineProperty(this, 'fetch', { enumerable: false });
-    Object.defineProperty(this, 'hostname', { enumerable: false });
-  }
-
-  async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {
-    const { databaseURL, apiKey } = this.client.options;
-    const branch = await this.client.getBranch();
-
-    const resp: Response = await this.fetch(`${databaseURL}:${branch}${path}`, {
-      method,
-      headers: {
-        Accept: '*/*',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!resp.ok) {
-      try {
-        const json = await resp.json();
-        const message = json.message;
-        if (typeof message === 'string') {
-          throw new XataError(message, resp.status);
-        }
-      } catch (err) {
-        if (err instanceof XataError) throw err;
-        // Ignore errors for other reasons.
-        // For example if the response's body cannot be parsed as JSON
-      }
-      throw new XataError(resp.statusText, resp.status);
-    }
-
-    if (resp.status === 204) return undefined;
-    return resp.json();
   }
 
   select<K extends keyof T>(...columns: K[]) {
     return new Query<T, Select<T, K>>(this.repository, this.table, {});
   }
 
-  async create(object: T): Promise<T> {
+  async create(object: T): Promise<T & XataObject> {
+    const workspace = await this.client.getWorkspaceId();
+    const database = await this.client.getDatabaseId();
+    const branch = await this.client.getBranch();
+
     const record = transformObjectLinks(object);
 
-    const response = await this.request<{
-      id: string;
-      xata: { version: number };
-    }>('POST', `/tables/${this.table}/data`, record);
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+    const response = await this.client.api.records.insertRecord(workspace, database, branch, this.table, record);
 
     const finalObject = await this.read(response.id);
     if (!finalObject) {
@@ -458,15 +415,20 @@ export class RestRepository<T> extends Repository<T> {
     return finalObject;
   }
 
-  async createMany(objects: T[]): Promise<T[]> {
+  async createMany(objects: T[]): Promise<(T & XataObject)[]> {
+    const workspace = await this.client.getWorkspaceId();
+    const database = await this.client.getDatabaseId();
+    const branch = await this.client.getBranch();
+
     const records = objects.map((object) => transformObjectLinks(object));
 
-    const response = await this.request<{
-      recordIDs: string[];
-    }>('POST', `/tables/${this.table}/bulk`, { records });
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+    const response = await this.client.api.records.bulkInsertTableRecords(
+      workspace,
+      database,
+      branch,
+      this.table,
+      records
+    );
 
     // TODO: Use filer.$any() to get all the records
     const finalObjects = await Promise.all(response.recordIDs.map((id) => this.read(id)));
@@ -474,67 +436,52 @@ export class RestRepository<T> extends Repository<T> {
       throw new Error('The server failed to save the record');
     }
 
-    return finalObjects as T[];
+    return finalObjects as (T & XataObject)[];
   }
 
-  async read(id: string): Promise<T | null> {
-    try {
-      const response = await this.request<
-        T & { id: string; xata: { version: number; table?: string; warnings?: string[] } }
-      >('GET', `/tables/${this.table}/data/${id}`);
-      if (!response) return null;
+  async read(id: string): Promise<(T & XataObject) | null> {
+    const workspace = await this.client.getWorkspaceId();
+    const database = await this.client.getDatabaseId();
+    const branch = await this.client.getBranch();
 
-      return this.client.initObject(this.table, response);
-    } catch (err) {
-      if ((err as XataError).status === 404) return null;
-      throw err;
-    }
+    const response = await this.client.api.records.getRecord(workspace, database, branch, this.table, id);
+
+    return this.client.initObject(this.table, response);
   }
 
-  async update(id: string, object: Partial<T>): Promise<T> {
-    const response = await this.request<{
-      id: string;
-      xata: { version: number };
-    }>('PUT', `/tables/${this.table}/data/${id}`, object);
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+  async update(id: string, object: Partial<T>): Promise<T & XataObject> {
+    const workspace = await this.client.getWorkspaceId();
+    const database = await this.client.getDatabaseId();
+    const branch = await this.client.getBranch();
+
+    const response = await this.client.api.records.insertRecordWithID(
+      workspace,
+      database,
+      branch,
+      this.table,
+      id,
+      object
+    );
 
     // TODO: Review this, not sure we are properly initializing the object
     return this.client.initObject(this.table, response);
   }
 
   async delete(id: string) {
-    await this.request('DELETE', `/tables/${this.table}/data/${id}`);
+    const workspace = await this.client.getWorkspaceId();
+    const database = await this.client.getDatabaseId();
+    const branch = await this.client.getBranch();
+
+    await this.client.api.records.deleteRecord(workspace, database, branch, this.table, id);
   }
+}
 
-  async _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
-    const filter = {
-      $any: query.$any,
-      $all: query.$all,
-      $not: query.$not,
-      $none: query.$none
-    };
-
-    const body = {
-      filter: Object.values(filter).some(Boolean) ? filter : undefined,
-      sort: query.$sort,
-      page: options?.page
-    };
-
-    const response = await this.request<{
-      records: object[];
-      meta: { page: { cursor: string; more: boolean } };
-    }>('POST', `/tables/${this.table}/query`, body);
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
-
-    const { meta, records: objects } = response;
-    const records = objects.map((record) => this.client.initObject<R>(this.table, record));
-
-    return new Page(query, meta, records);
-  }
+function compactObject<T>(object: T): Partial<T> {
+  return Object.entries(object).reduce((acc, [key, value]) => {
+    // @ts-ignore TODO: Review
+    if (value !== undefined) acc[key] = value;
+    return acc;
+  }, {} as Partial<T>);
 }
 
 interface RepositoryFactory {
@@ -543,7 +490,7 @@ interface RepositoryFactory {
 
 export class RestRespositoryFactory implements RepositoryFactory {
   createRepository<T>(client: BaseClient<any>, table: string): Repository<T> {
-    return new RestRepository<T>(client, table);
+    return new Repository<T>(client, table);
   }
 }
 
@@ -554,7 +501,8 @@ type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
 
 export type XataClientOptions = {
   fetch?: FetchImpl;
-  databaseURL: string;
+  workspace: string;
+  database: string;
   branch: BranchStrategyOption;
   apiKey: string;
   repositoryFactory?: RepositoryFactory;
@@ -567,7 +515,7 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
   db!: D;
 
   constructor(options: XataClientOptions, links: Links) {
-    if (!options.databaseURL || !options.apiKey || !options.branch) {
+    if (!options.workspace || !options.apiKey || !options.branch) {
       throw new Error('Options databaseURL, apiKey and branch are required');
     }
 
@@ -620,6 +568,14 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     return o as T;
   }
 
+  public async getWorkspaceId(): Promise<string> {
+    return this.options.workspace;
+  }
+
+  public async getDatabaseId(): Promise<string> {
+    return this.options.database;
+  }
+
   public async getBranch(): Promise<string> {
     if (this.branch) return this.branch;
 
@@ -665,7 +621,7 @@ const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchSt
 const transformObjectLinks = (object: any) => {
   return Object.entries(object).reduce((acc, [key, value]) => {
     if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
-      return { ...acc, [key]: (value as XataRecord).id };
+      return { ...acc, [key]: (value as XataObject).id };
     }
 
     return { ...acc, [key]: value };
