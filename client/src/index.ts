@@ -1,14 +1,14 @@
 import { XataApi } from './api';
 import { FetchImpl } from './api/xatabaseFetcher';
-import { SchemaRepository } from './schema/schemaRepository';
+import { Schema } from './schema';
 
 interface RepositoryFactory {
-  createRepository<T>(client: BaseClient<any>, table: string): SchemaRepository<T>;
+  createRepository<T>(client: BaseClient<any>, table: string): Schema<T>;
 }
 
 export class SchemaFactory implements RepositoryFactory {
-  createRepository<T>(client: BaseClient<any>, table: string): SchemaRepository<T> {
-    return new SchemaRepository<T>(client, table);
+  createRepository<T>(client: BaseClient<any>, table: string): Schema<T> {
+    return new Schema<T>(client, table);
   }
 }
 
@@ -21,7 +21,7 @@ export type XataClientOptions = {
   repositoryFactory?: RepositoryFactory;
 };
 
-export class BaseClient<D extends Record<string, SchemaRepository<any>>> {
+export class BaseClient<D extends Record<string, Schema<any>> = any> {
   options: XataClientOptions;
   private links: Links;
   private branch: BranchStrategyValue;
@@ -113,7 +113,7 @@ export class BaseClient<D extends Record<string, SchemaRepository<any>>> {
   }
 
   public get api() {
-    return new XataApi<D>(this);
+    return new XataApi(this.options);
   }
 }
 
@@ -136,3 +136,7 @@ type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
 const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchStrategyBuilder => {
   return typeof strategy === 'function';
 };
+
+export * from './schema/operators';
+export type { XataObject } from './schema/xataObject';
+export { Schema };

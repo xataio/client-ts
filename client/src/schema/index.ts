@@ -2,7 +2,7 @@ import { BaseClient } from '..';
 import { Query, Select, Selectable } from './query';
 import { XataObject } from './xataObject';
 
-export class SchemaRepository<T> extends Query<T, Selectable<T>> {
+export class Schema<T> extends Query<T, Selectable<T>> {
   client: BaseClient<any>;
 
   constructor(client: BaseClient<any>, table: string) {

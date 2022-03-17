@@ -1,4 +1,4 @@
-import { BaseClient, SchemaRepository } from '..';
+import { XataClientOptions } from '..';
 import { errors } from '../util/errors';
 import type * as Types from './xatabaseComponents';
 import { operationsByTag } from './xatabaseComponents';
@@ -6,54 +6,54 @@ import type { FetchImpl } from './xatabaseFetcher';
 import type * as Responses from './xatabaseResponses';
 import type * as Schemas from './xatabaseSchemas';
 
-export class XataApi<D extends Record<string, SchemaRepository<any>>> {
+export class XataApi {
   private fetchImpl: FetchImpl;
   private apiKey: string;
 
-  constructor(private client: BaseClient<D>) {
+  constructor(private options: XataClientOptions) {
     const doWeHaveFetch = typeof fetch !== 'undefined';
-    const isInjectedFetchProblematic = !this.client.options.fetch;
+    const isInjectedFetchProblematic = !this.options.fetch;
 
     if (doWeHaveFetch) {
       this.fetchImpl = fetch;
     } else if (isInjectedFetchProblematic) {
       throw new Error(errors.falsyFetchImplementation);
-    } else if (this.client.options.fetch) {
-      this.fetchImpl = this.client.options.fetch;
+    } else if (this.options.fetch) {
+      this.fetchImpl = this.options.fetch;
     } else {
       throw new Error(errors.noFetchImplementation);
     }
 
-    this.apiKey = this.client.options.apiKey;
+    this.apiKey = this.options.apiKey;
   }
 
   public get user() {
-    return new UserApi<D>(this.client, this.fetchImpl, this.apiKey);
+    return new UserApi(this.fetchImpl, this.apiKey);
   }
 
   public get workspace() {
-    return new WorkspaceApi<D>(this.client, this.fetchImpl, this.apiKey);
+    return new WorkspaceApi(this.fetchImpl, this.apiKey);
   }
 
   public get database() {
-    return new DatabaseApi<D>(this.client, this.fetchImpl, this.apiKey);
+    return new DatabaseApi(this.fetchImpl, this.apiKey);
   }
 
   public get branch() {
-    return new BranchApi<D>(this.client, this.fetchImpl, this.apiKey);
+    return new BranchApi(this.fetchImpl, this.apiKey);
   }
 
   public get table() {
-    return new TableApi<D>(this.client, this.fetchImpl, this.apiKey);
+    return new TableApi(this.fetchImpl, this.apiKey);
   }
 
   public get records() {
-    return new RecordsApi<D>(this.client, this.fetchImpl, this.apiKey);
+    return new RecordsApi(this.fetchImpl, this.apiKey);
   }
 }
 
-class UserApi<D extends Record<string, SchemaRepository<any>>> {
-  constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
+class UserApi {
+  constructor(private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public getUser(): Promise<Schemas.UserWithID> {
     return operationsByTag.users.getUser({ fetchImpl: this.fetchImpl, apiKey: this.apiKey });
@@ -88,8 +88,8 @@ class UserApi<D extends Record<string, SchemaRepository<any>>> {
   }
 }
 
-class WorkspaceApi<D extends Record<string, SchemaRepository<any>>> {
-  constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
+class WorkspaceApi {
+  constructor(private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public createWorkspace(workspaceMeta: Schemas.WorkspaceMeta): Promise<Schemas.Workspace> {
     return operationsByTag.workspaces.createWorkspace({
@@ -182,8 +182,8 @@ class WorkspaceApi<D extends Record<string, SchemaRepository<any>>> {
   }
 }
 
-class DatabaseApi<D extends Record<string, SchemaRepository<any>>> {
-  constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
+class DatabaseApi {
+  constructor(private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public getDatabaseList(workspace: Schemas.WorkspaceID): Promise<Schemas.ListDatabasesResponse> {
     return operationsByTag.database.getDatabaseList({
@@ -215,8 +215,8 @@ class DatabaseApi<D extends Record<string, SchemaRepository<any>>> {
   }
 }
 
-class BranchApi<D extends Record<string, SchemaRepository<any>>> {
-  constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
+class BranchApi {
+  constructor(private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public getBranchList(workspace: Schemas.WorkspaceID, dbName: Schemas.DBName): Promise<Schemas.ListBranchesResponse> {
     return operationsByTag.branch.getBranchList({
@@ -332,8 +332,8 @@ class BranchApi<D extends Record<string, SchemaRepository<any>>> {
   }
 }
 
-class TableApi<D extends Record<string, SchemaRepository<any>>> {
-  constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
+class TableApi {
+  constructor(private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public createTable(
     workspace: Schemas.WorkspaceID,
@@ -477,8 +477,8 @@ class TableApi<D extends Record<string, SchemaRepository<any>>> {
   }
 }
 
-class RecordsApi<D extends Record<string, SchemaRepository<any>>> {
-  constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
+class RecordsApi {
+  constructor(private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public insertRecord(
     workspace: Schemas.WorkspaceID,

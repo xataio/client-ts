@@ -108,7 +108,7 @@ export async function generate({
       BaseClient,
       Query,
       Repository,
-      RestRespositoryFactory,
+      SchemaFactory,
       XataClientOptions,
       XataRecord
     } from '@xata.io/client';
@@ -122,7 +122,7 @@ export async function generate({
     }> {
       constructor(options: XataClientOptions) {
         super({ workspace: "${config.workspaceID}", database: "${config.dbName}", ...options}, links);
-        const factory = options.repositoryFactory || new RestRespositoryFactory();
+        const factory = options.repositoryFactory || new SchemaFactory();
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
         };
@@ -140,7 +140,7 @@ export async function generate({
     import {
       BaseClient,
       Query,
-      RestRespositoryFactory
+      SchemaFactory
     } from '@xata.io/client';
 
     ${tables.map((table) => generateJSdocType(table)).join('\n')}
@@ -150,7 +150,7 @@ export async function generate({
     export class XataClient extends BaseClient {
       constructor(options) {
         super(options, links);
-        const factory = options.repositoryFactory || new RestRespositoryFactory();
+        const factory = options.repositoryFactory || new SchemaFactory();
         /** @type {{ ${tables.map((table) => `"${table.name}": Repository`).join('; ')} }} */
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}

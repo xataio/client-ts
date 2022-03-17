@@ -1,11 +1,11 @@
 import { BaseClient } from '..';
-import { SchemaRepository } from './schemaRepository';
+import { Schema } from '.';
 import { XataObject } from './xataObject';
 
 export class Query<T, R = T> implements BasePage<T, R> {
   client: BaseClient<any>;
   table: string;
-  repository: SchemaRepository<T>;
+  repository: Schema<T>;
 
   readonly $any?: QueryOrConstraint<T, R>[];
   readonly $all?: QueryOrConstraint<T, R>[];
@@ -18,7 +18,7 @@ export class Query<T, R = T> implements BasePage<T, R> {
   readonly meta: QueryMeta = { page: { cursor: 'start', more: true } };
   readonly records: R[] = [];
 
-  constructor(repository: SchemaRepository<T> | null, table: string, data: Partial<Query<T, R>>, parent?: Query<T, R>) {
+  constructor(repository: Schema<T> | null, table: string, data: Partial<Query<T, R>>, parent?: Query<T, R>) {
     if (repository) {
       this.repository = repository;
     } else {
@@ -324,7 +324,7 @@ type Operator =
 
 // TODO: restrict constraints depending on type?
 // E.g. startsWith cannot be used with numbers
-type Constraint<T> = { [key in Operator]?: T };
+export type Constraint<T> = { [key in Operator]?: T };
 
 type DeepConstraint<T> = T extends Record<string, any>
   ? {
@@ -332,28 +332,7 @@ type DeepConstraint<T> = T extends Record<string, any>
     }
   : Constraint<T>;
 
-type ComparableType = number | Date;
-
-export const gt = <T extends ComparableType>(value: T): Constraint<T> => ({ $gt: value });
-export const ge = <T extends ComparableType>(value: T): Constraint<T> => ({ $ge: value });
-export const gte = <T extends ComparableType>(value: T): Constraint<T> => ({ $ge: value });
-export const lt = <T extends ComparableType>(value: T): Constraint<T> => ({ $lt: value });
-export const lte = <T extends ComparableType>(value: T): Constraint<T> => ({ $le: value });
-export const le = <T extends ComparableType>(value: T): Constraint<T> => ({ $le: value });
-export const exists = (column: string): Constraint<string> => ({ $exists: column });
-export const notExists = (column: string): Constraint<string> => ({ $notExists: column });
-export const startsWith = (value: string): Constraint<string> => ({ $startsWith: value });
-export const endsWith = (value: string): Constraint<string> => ({ $endsWith: value });
-export const pattern = (value: string): Constraint<string> => ({ $pattern: value });
-export const is = <T>(value: T): Constraint<T> => ({ $is: value });
-export const isNot = <T>(value: T): Constraint<T> => ({ $isNot: value });
-export const contains = <T>(value: T): Constraint<T> => ({ $contains: value });
-
-// TODO: these can only be applied to columns of type "multiple"
-export const includes = (value: string): Constraint<string> => ({ $includes: value });
-export const includesSubstring = (value: string): Constraint<string> => ({ $includesSubstring: value });
-export const includesPattern = (value: string): Constraint<string> => ({ $includesPattern: value });
-export const includesAll = (value: string): Constraint<string> => ({ $includesAll: value });
+export type ComparableType = number | Date;
 
 type FilterConstraints<T> = {
   [key in keyof T]?: T[key] extends Record<string, any> ? FilterConstraints<T[key]> : T[key] | DeepConstraint<T[key]>;

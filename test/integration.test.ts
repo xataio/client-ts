@@ -1,7 +1,8 @@
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { contains, lt, Repository } from '../client/src';
+import { contains, lt } from '../client/src';
+import { SchemaRepository } from '../client/src/schema/schemaRepository';
 import { User, XataClient } from '../codegen/example/xata';
 import { mockUsers } from './mock_data';
 
@@ -230,7 +231,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements pagination', async () => {
-    const loadUsers = async (repository: Repository<User>) => {
+    const loadUsers = async (repository: SchemaRepository<User>) => {
       return repository.getPaginated({ page: { size: 10 } });
     };
 
