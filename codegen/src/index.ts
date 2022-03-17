@@ -15,7 +15,6 @@ import { cliPath } from './cliPath';
 
 const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'XataClient');
-const defaultLanguage = 'ts';
 
 program
   .name('xata-codegen')
@@ -33,11 +32,6 @@ program
     defaultXataDirectory
   )
   .option('-o, --out <path>', 'A path to store your generated API client.', defaultOutputFile)
-  .option(
-    '-l, --lang [js|ts]',
-    "An option to choose the type of code you'd like us to output: TypeScript (ts, preferred) or JavaScript (js)",
-    defaultLanguage
-  )
   .action(async (xataDirectory, { out, lang }) => {
     const spinner = ora();
     const schema = join(xataDirectory, 'schema.json');
@@ -45,7 +39,7 @@ program
 
     try {
       await access(schema); // Make sure the schema file exists
-      await generateWithOutput({ xataDirectory, out, lang, spinner });
+      await generateWithOutput({ xataDirectory, out, spinner });
     } catch (e: any) {
       if (!e.message.includes('ENOENT')) {
         spinner.fail(e.message);
@@ -74,7 +68,6 @@ program
         await generateWithOutput({
           xataDirectory,
           out: defaultOutputFile,
-          lang: defaultLanguage,
           spinner
         });
       } catch (e: any) {

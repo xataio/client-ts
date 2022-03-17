@@ -1,10 +1,8 @@
 import { Ora } from 'ora';
 import { relative } from 'path';
-import { generate, Language } from './codegen';
-import { getExtensionFromLanguage } from './getExtensionFromLanguage';
+import { generate } from './codegen';
 
 export const generateWithOutput = async ({
-  lang,
   out,
   xataDirectory,
   spinner
@@ -12,13 +10,10 @@ export const generateWithOutput = async ({
   spinner: Ora;
   xataDirectory: string;
   out: string;
-  lang: Language;
 }) => {
   spinner.text = 'Found schema, generating...';
 
-  await generate({ xataDirectory, outputFilePath: out, language: lang });
+  await generate({ xataDirectory, outputFilePath: out });
 
-  spinner.succeed(
-    `Your XataClient is generated at ./${relative(process.cwd(), `${out}${getExtensionFromLanguage(lang)}`)}.`
-  );
+  spinner.succeed(`Your XataClient is generated at ./${relative(process.cwd(), out)}.`);
 };

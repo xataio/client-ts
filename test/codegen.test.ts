@@ -4,7 +4,7 @@ import { generate } from '../codegen/src/codegen';
 describe('codegen', () => {
   it('should generate correct TypeScript', async () => {
     const xataDirectory = join(__dirname, 'mocks');
-    const outputFilePath = 'hahaha';
+    const outputFilePath = 'hahaha.ts';
 
     const writeFile = jest.fn();
     await generate({ xataDirectory, outputFilePath, writeFile });
@@ -16,7 +16,7 @@ describe('codegen', () => {
 
   it('should generate correct JavaScript', async () => {
     const xataDirectory = join(__dirname, 'mocks');
-    const outputFilePath = 'hahaha';
+    const outputFilePath = 'hahaha.js';
 
     const writeFile = jest.fn();
     await generate({ xataDirectory, outputFilePath, writeFile: writeFile, language: 'javascript' });
