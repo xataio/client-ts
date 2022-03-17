@@ -1,3 +1,5 @@
+import { XataApi } from './api';
+import { FetchImpl } from './api/xatabaseFetcher';
 import { errors } from './util/errors';
 
 export interface XataRecord {
@@ -551,7 +553,7 @@ type BranchStrategy = BranchStrategyValue | BranchStrategyBuilder;
 type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
 
 export type XataClientOptions = {
-  fetch?: unknown;
+  fetch?: FetchImpl;
   databaseURL: string;
   branch: BranchStrategyOption;
   apiKey: string;
@@ -637,6 +639,10 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     }
 
     throw new Error('Unable to resolve branch value');
+  }
+
+  public get api() {
+    return new XataApi<D>(this);
   }
 }
 

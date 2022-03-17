@@ -1846,3 +1846,53 @@ export const searchBranch = (variables: SearchBranchVariables) =>
     method: 'post',
     ...variables
   });
+
+export const operationsByTag = {
+  users: { getUser, updateUser, deleteUser, getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
+  workspaces: {
+    createWorkspace,
+    getWorkspacesList,
+    getWorkspace,
+    updateWorkspace,
+    deleteWorkspace,
+    getWorkspaceMembersList,
+    updateWorkspaceMemberRole,
+    removeWorkspaceMember,
+    inviteWorkspaceMember,
+    acceptWorkspaceMemberInvite
+  },
+  database: { getDatabaseList, createDatabase, deleteDatabase },
+  branch: {
+    getBranchList,
+    getBranchDetails,
+    createBranch,
+    deleteBranch,
+    updateBranchMetadata,
+    getBranchMetadata,
+    getBranchMigrationHistory,
+    executeBranchMigrationPlan,
+    getBranchMigrationPlan,
+    getBranchStats
+  },
+  table: {
+    createTable,
+    deleteTable,
+    updateTable,
+    getTableSchema,
+    setTableSchema,
+    getTableColumns,
+    addTableColumn,
+    getColumn,
+    deleteColumn,
+    updateColumn
+  },
+  records: {
+    insertRecord,
+    insertRecordWithID,
+    deleteRecord,
+    getRecord,
+    bulkInsertTableRecords,
+    queryTable,
+    searchBranch
+  }
+};
