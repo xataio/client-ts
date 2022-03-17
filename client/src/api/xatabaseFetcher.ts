@@ -30,7 +30,7 @@ export type XatabaseFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> =
   pathParams?: TPathParams;
 };
 
-const fallbackError: SimpleError = { message: 'Network response was not ok', status: 500 };
+const fallbackError: SimpleError = { message: 'Network response was not ok' };
 
 function baseURLForWorkspace(workspace: string) {
   // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
