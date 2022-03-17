@@ -123,7 +123,7 @@ export async function generate({
     export class XataClient extends BaseClient<{
       ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
     }> {
-      constructor(options: ${config.dbName ? `PartialBy<XataClientOptions, 'databaseURL'>` : 'XataClientOptions'}) {
+      constructor(options: PartialBy<XataClientOptions, 'databaseURL'>) {
         super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
         const factory = options.repositoryFactory || new RestRespositoryFactory();
         this.db = {
