@@ -1,4 +1,4 @@
-import { BaseClient, Repository } from '..';
+import { BaseClient, SchemaRepository } from '..';
 import { errors } from '../util/errors';
 import type * as Types from './xatabaseComponents';
 import { operationsByTag } from './xatabaseComponents';
@@ -6,7 +6,7 @@ import type { FetchImpl } from './xatabaseFetcher';
 import type * as Responses from './xatabaseResponses';
 import type * as Schemas from './xatabaseSchemas';
 
-export class XataApi<D extends Record<string, Repository<any>>> {
+export class XataApi<D extends Record<string, SchemaRepository<any>>> {
   private fetchImpl: FetchImpl;
   private apiKey: string;
 
@@ -52,7 +52,7 @@ export class XataApi<D extends Record<string, Repository<any>>> {
   }
 }
 
-class UserApi<D extends Record<string, Repository<any>>> {
+class UserApi<D extends Record<string, SchemaRepository<any>>> {
   constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public getUser(): Promise<Schemas.UserWithID> {
@@ -88,7 +88,7 @@ class UserApi<D extends Record<string, Repository<any>>> {
   }
 }
 
-class WorkspaceApi<D extends Record<string, Repository<any>>> {
+class WorkspaceApi<D extends Record<string, SchemaRepository<any>>> {
   constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public createWorkspace(workspaceMeta: Schemas.WorkspaceMeta): Promise<Schemas.Workspace> {
@@ -182,7 +182,7 @@ class WorkspaceApi<D extends Record<string, Repository<any>>> {
   }
 }
 
-class DatabaseApi<D extends Record<string, Repository<any>>> {
+class DatabaseApi<D extends Record<string, SchemaRepository<any>>> {
   constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public getDatabaseList(workspace: Schemas.WorkspaceID): Promise<Schemas.ListDatabasesResponse> {
@@ -215,7 +215,7 @@ class DatabaseApi<D extends Record<string, Repository<any>>> {
   }
 }
 
-class BranchApi<D extends Record<string, Repository<any>>> {
+class BranchApi<D extends Record<string, SchemaRepository<any>>> {
   constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public getBranchList(workspace: Schemas.WorkspaceID, dbName: Schemas.DBName): Promise<Schemas.ListBranchesResponse> {
@@ -332,7 +332,7 @@ class BranchApi<D extends Record<string, Repository<any>>> {
   }
 }
 
-class TableApi<D extends Record<string, Repository<any>>> {
+class TableApi<D extends Record<string, SchemaRepository<any>>> {
   constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public createTable(
@@ -477,7 +477,7 @@ class TableApi<D extends Record<string, Repository<any>>> {
   }
 }
 
-class RecordsApi<D extends Record<string, Repository<any>>> {
+class RecordsApi<D extends Record<string, SchemaRepository<any>>> {
   constructor(private client: BaseClient<D>, private fetchImpl: FetchImpl, private apiKey: string) {}
 
   public insertRecord(
