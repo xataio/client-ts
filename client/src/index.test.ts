@@ -262,9 +262,9 @@ type ExpectedRequest = {
 
 async function expectRequest(
   users: RestRepository<User>,
-  expectedRequest: ExpectedRequest,
+  expectedRequest: ExpectedRequest[] | ExpectedRequest,
   callback: () => void,
-  response?: unknown
+  response?: any
 ) {
   const request = jest.fn(async () => response);
   users.request = request;
@@ -272,11 +272,17 @@ async function expectRequest(
   await callback();
 
   const { calls } = request.mock;
-  expect(calls.length).toBe(1);
-  const [method, path, body] = calls[0] as any;
-  expect(method).toBe(expectedRequest.method);
-  expect(path).toBe(expectedRequest.path);
-  expect(JSON.stringify(body)).toBe(JSON.stringify(expectedRequest.body));
+
+  const requests = Array.isArray(expectedRequest) ? expectedRequest : [expectedRequest];
+
+  expect(calls.length).toBe(requests.length);
+
+  for (let i = 0; i < calls.length; i++) {
+    const [method, path, body] = calls[i] as any;
+    expect(method).toBe(requests[i].method);
+    expect(path).toBe(requests[i].path);
+    expect(JSON.stringify(body)).toBe(JSON.stringify(requests[i].body));
+  }
 }
 
 describe('query', () => {
@@ -285,14 +291,20 @@ describe('query', () => {
       const { users } = buildClient();
 
       const expected = { method: 'POST', path: '/tables/users/query', body: {} };
-      expectRequest(users, expected, () => users.getMany(), { records: [] });
+      expectRequest(users, expected, () => users.getMany(), {
+        records: [],
+        meta: { page: { cursor: '', more: false } }
+      });
     });
 
     test('query with one filter', async () => {
       const { users } = buildClient();
 
       const expected = { method: 'POST', path: '/tables/users/query', body: { filter: { $all: [{ name: 'foo' }] } } };
-      expectRequest(users, expected, () => users.filter('name', 'foo').getMany(), { records: [] });
+      expectRequest(users, expected, () => users.filter('name', 'foo').getMany(), {
+        records: [],
+        meta: { page: { cursor: '', more: false } }
+      });
     });
   });
 
@@ -300,8 +312,8 @@ describe('query', () => {
     test('returns a single object', async () => {
       const { users } = buildClient();
 
-      const result = { records: [{ id: '1234' }] };
-      const expected = { method: 'POST', path: '/tables/users/query', body: {} };
+      const result = { records: [{ id: '1234' }], meta: { page: { cursor: '', more: false } } };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
       expectRequest(
         users,
         expected,
@@ -316,8 +328,8 @@ describe('query', () => {
     test('returns null if no objects are returned', async () => {
       const { users } = buildClient();
 
-      const result = { records: [] };
-      const expected = { method: 'POST', path: '/tables/users/query', body: {} };
+      const result = { records: [], meta: { page: { cursor: '', more: false } } };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
       expectRequest(
         users,
         expected,
@@ -378,7 +390,15 @@ describe('create', () => {
 
     const created = { id: 'rec_1234', _version: 0 };
     const object = { name: 'Ada' } as User;
-    const expected = { method: 'POST', path: '/tables/users/data', body: object };
+    const expected = [
+      { method: 'POST', path: '/tables/users/data', body: object },
+      {
+        method: 'GET',
+        path: '/tables/users/data/rec_1234',
+        body: undefined
+      }
+    ];
+
     expectRequest(
       users,
       expected,

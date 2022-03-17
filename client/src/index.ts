@@ -92,7 +92,13 @@ type FilterConstraints<T> = {
   [key in keyof T]?: T[key] extends Record<string, any> ? FilterConstraints<T[key]> : T[key] | DeepConstraint<T[key]>;
 };
 
+type CursorNavigationOptions = { first?: string } | { last?: string } | { after?: string; before?: string };
+type OffsetNavigationOptions = { size?: number; offset?: number };
+type PaginationOptions = CursorNavigationOptions & OffsetNavigationOptions;
+
 type BulkQueryOptions<T> = {
+  page?: PaginationOptions;
+  /** TODO: Not implemented yet
   filter?: FilterConstraints<T>;
   sort?:
     | {
@@ -100,11 +106,60 @@ type BulkQueryOptions<T> = {
         direction?: SortDirection;
       }
     | keyof T;
+**/
 };
 
 type QueryOrConstraint<T, R> = Query<T, R> | Constraint<T>;
 
-export class Query<T, R = T> {
+type QueryMeta = { page: { cursor: string; more: boolean } };
+
+interface BasePage<T, R> {
+  query: Query<T, R>;
+  meta: QueryMeta;
+  records: R[];
+
+  nextPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  previousPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  firstPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  lastPage(size?: number, offset?: number): Promise<Page<T, R>>;
+
+  hasNextPage(): boolean;
+}
+
+class Page<T, R> implements BasePage<T, R> {
+  readonly query: Query<T, R>;
+  readonly meta: QueryMeta;
+  readonly records: R[];
+
+  constructor(query: Query<T, R>, meta: QueryMeta, records: R[] = []) {
+    this.query = query;
+    this.meta = meta;
+    this.records = records;
+  }
+
+  async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
+  }
+
+  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
+  }
+
+  async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.query.getPaginated({ page: { size, offset, first: this.meta.page.cursor } });
+  }
+
+  async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
+  }
+
+  // TODO: We need to add something on the backend if we want a hasPreviousPage
+  hasNextPage(): boolean {
+    return this.meta.page.more;
+  }
+}
+
+export class Query<T, R = T> implements BasePage<T, R> {
   table: string;
   repository: Repository<T>;
 
@@ -113,6 +168,11 @@ export class Query<T, R = T> {
   readonly $not?: QueryOrConstraint<T, R>[];
   readonly $none?: QueryOrConstraint<T, R>[];
   readonly $sort?: Record<string, SortDirection>;
+
+  // Cursor pagination
+  readonly query: Query<T, R> = this;
+  readonly meta: QueryMeta = { page: { cursor: 'start', more: true } };
+  readonly records: R[] = [];
 
   constructor(repository: Repository<T> | null, table: string, data: Partial<Query<T, R>>, parent?: Query<T, R>) {
     if (repository) {
@@ -233,27 +293,67 @@ export class Query<T, R = T> {
     return q;
   }
 
-  // TODO: pagination. Maybe implement different methods for different type of paginations
-  // and one to simply get the first records returned by the query with no pagination.
-  async getMany(options?: BulkQueryOptions<T>): Promise<R[]> {
-    // TODO: use options
-    return this.repository.query(this);
+  async getPaginated(options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
+    return this.repository._runQuery(this, options);
   }
 
-  async getOne(options?: BulkQueryOptions<T>): Promise<R | null> {
-    // TODO: use options
-    const arr = await this.getMany(); // TODO, limit to 1
-    return arr[0] || null;
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<R> {
+    for await (const [record] of this.getIterator(1)) {
+      yield record;
+    }
+  }
+
+  async *getIterator(chunk: number, options: Omit<BulkQueryOptions<T>, 'page'> = {}): AsyncGenerator<R[]> {
+    let offset = 0;
+    let end = false;
+
+    while (!end) {
+      const { records, meta } = await this.getPaginated({ ...options, page: { size: chunk, offset } });
+      yield records;
+
+      offset += chunk;
+      end = !meta.page.more;
+    }
+  }
+
+  async getMany(options?: BulkQueryOptions<T>): Promise<R[]> {
+    const { records } = await this.getPaginated(options);
+    return records;
+  }
+
+  async getOne(options: Omit<BulkQueryOptions<T>, 'page'> = {}): Promise<R | null> {
+    const records = await this.getMany({ ...options, page: { size: 1 } });
+    return records[0] || null;
   }
 
   async deleteAll(): Promise<number> {
-    // Return number of affected rows
+    // TODO: Return number of affected rows
     return 0;
   }
 
   include(columns: Include<T>) {
     // TODO
     return this;
+  }
+
+  async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.firstPage(size, offset);
+  }
+
+  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.firstPage(size, offset);
+  }
+
+  async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.getPaginated({ page: { size, offset } });
+  }
+
+  async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.getPaginated({ page: { size, offset, before: 'end' } });
+  }
+
+  hasNextPage(): boolean {
+    return this.meta.page.more;
   }
 }
 
@@ -264,6 +364,8 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
 
   abstract create(object: Selectable<T>): Promise<T>;
 
+  abstract createMany(objects: Selectable<T>[]): Promise<T[]>;
+
   abstract read(id: string): Promise<T | null>;
 
   abstract update(id: string, object: Partial<T>): Promise<T>;
@@ -271,7 +373,7 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
   abstract delete(id: string): void;
 
   // Used by the Query object internally
-  abstract query<R>(query: Query<T, R>): Promise<R[]>;
+  abstract _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
 }
 
 export class RestRepository<T> extends Repository<T> {
@@ -298,7 +400,7 @@ export class RestRepository<T> extends Repository<T> {
     Object.defineProperty(this, 'hostname', { enumerable: false });
   }
 
-  async request(method: string, path: string, body?: unknown) {
+  async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {
     const { databaseURL, apiKey } = this.client.options;
     const branch = await this.client.getBranch();
 
@@ -311,6 +413,7 @@ export class RestRepository<T> extends Repository<T> {
       },
       body: JSON.stringify(body)
     });
+
     if (!resp.ok) {
       try {
         const json = await resp.json();
@@ -325,7 +428,8 @@ export class RestRepository<T> extends Repository<T> {
       }
       throw new XataError(resp.statusText, resp.status);
     }
-    if (resp.status === 204) return;
+
+    if (resp.status === 204) return undefined;
     return resp.json();
   }
 
@@ -334,21 +438,51 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async create(object: T): Promise<T> {
-    const body = { ...object } as Record<string, unknown>;
-    for (const key of Object.keys(body)) {
-      const value = body[key];
-      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
-        body[key] = (value as XataRecord).id;
-      }
+    const record = transformObjectLinks(object);
+
+    const response = await this.request<{
+      id: string;
+      xata: { version: number };
+    }>('POST', `/tables/${this.table}/data`, record);
+    if (!response) {
+      throw new Error("The server didn't return any data for the query");
     }
-    const obj = await this.request('POST', `/tables/${this.table}/data`, body);
-    return this.client.initObject(this.table, obj);
+
+    const finalObject = await this.read(response.id);
+    if (!finalObject) {
+      throw new Error('The server failed to save the record');
+    }
+
+    return finalObject;
+  }
+
+  async createMany(objects: T[]): Promise<T[]> {
+    const records = objects.map((object) => transformObjectLinks(object));
+
+    const response = await this.request<{
+      recordIDs: string[];
+    }>('POST', `/tables/${this.table}/bulk`, { records });
+    if (!response) {
+      throw new Error("The server didn't return any data for the query");
+    }
+
+    // TODO: Use filer.$any() to get all the records
+    const finalObjects = await Promise.all(response.recordIDs.map((id) => this.read(id)));
+    if (finalObjects.some((object) => !object)) {
+      throw new Error('The server failed to save the record');
+    }
+
+    return finalObjects as T[];
   }
 
   async read(id: string): Promise<T | null> {
     try {
-      const obj = await this.request('GET', `/tables/${this.table}/data/${id}`);
-      return this.client.initObject(this.table, obj);
+      const response = await this.request<
+        T & { id: string; xata: { version: number; table?: string; warnings?: string[] } }
+      >('GET', `/tables/${this.table}/data/${id}`);
+      if (!response) return null;
+
+      return this.client.initObject(this.table, response);
     } catch (err) {
       if ((err as XataError).status === 404) return null;
       throw err;
@@ -356,27 +490,48 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async update(id: string, object: Partial<T>): Promise<T> {
-    const obj = await this.request('PUT', `/tables/${this.table}/data/${id}`, object);
-    return this.client.initObject(this.table, obj);
+    const response = await this.request<{
+      id: string;
+      xata: { version: number };
+    }>('PUT', `/tables/${this.table}/data/${id}`, object);
+    if (!response) {
+      throw new Error("The server didn't return any data for the query");
+    }
+
+    // TODO: Review this, not sure we are properly initializing the object
+    return this.client.initObject(this.table, response);
   }
 
   async delete(id: string) {
     await this.request('DELETE', `/tables/${this.table}/data/${id}`);
   }
 
-  async query<R>(query: Query<T, R>): Promise<R[]> {
+  async _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
     const filter = {
       $any: query.$any,
       $all: query.$all,
       $not: query.$not,
       $none: query.$none
     };
+
     const body = {
       filter: Object.values(filter).some(Boolean) ? filter : undefined,
-      sort: query.$sort
+      sort: query.$sort,
+      page: options?.page
     };
-    const result = await this.request('POST', `/tables/${this.table}/query`, body);
-    return result.records.map((record: object) => this.client.initObject(this.table, record));
+
+    const response = await this.request<{
+      records: object[];
+      meta: { page: { cursor: string; more: boolean } };
+    }>('POST', `/tables/${this.table}/query`, body);
+    if (!response) {
+      throw new Error("The server didn't return any data for the query");
+    }
+
+    const { meta, records: objects } = response;
+    const records = objects.map((record) => this.client.initObject<R>(this.table, record));
+
+    return new Page(query, meta, records);
   }
 }
 
@@ -498,4 +653,15 @@ export type Links = Record<string, Array<string[]>>;
 
 const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchStrategyBuilder => {
   return typeof strategy === 'function';
+};
+
+// TODO: We can find a better implementation for links
+const transformObjectLinks = (object: any) => {
+  return Object.entries(object).reduce((acc, [key, value]) => {
+    if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+      return { ...acc, [key]: (value as XataRecord).id };
+    }
+
+    return { ...acc, [key]: value };
+  }, {});
 };
