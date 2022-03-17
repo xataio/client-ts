@@ -501,8 +501,8 @@ type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
 
 export type XataClientOptions = {
   fetch?: FetchImpl;
-  workspace: string;
-  database: string;
+  workspace?: string;
+  database?: string;
   branch: BranchStrategyOption;
   apiKey: string;
   repositoryFactory?: RepositoryFactory;
