@@ -1,7 +1,7 @@
 import type { Language } from './codegen';
 import { errors } from './errors';
 
-export const getLanguageFromExtension = (extension?: 'ts' | 'js') => {
+export const getLanguageFromExtension = (extension?: 'ts' | 'js'): Language => {
   switch (extension) {
     case 'js':
       return 'javascript';

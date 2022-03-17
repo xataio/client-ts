@@ -100,7 +100,7 @@ function parseSchema(input: string) {
   }
 }
 
-export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
+export type Language = 'typescript' | 'javascript';
 
 export async function generate({ outputFilePath: output, xataDirectory, writeFile = fs.writeFile }: GenerateOptions) {
   const fullOutputPath = path.resolve(process.cwd(), output);
@@ -134,7 +134,7 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
       RestRespositoryFactory,
       XataClientOptions,
       XataRecord
-    } from '@xata.io/client';
+    } from '../../client/src';
 
     ${tables.map((table) => generateTableType(table)).join('\n')}
 
@@ -159,12 +159,12 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
   }
 
   const code = `
-    /** @typedef { import('@xata.io/client').Repository } Repository */
+    /** @typedef { import('../../client/src').Repository } Repository */
     import {
       BaseClient,
       Query,
       RestRespositoryFactory
-    } from '@xata.io/client';
+    } from '../../client/src';
 
     ${tables.map((table) => generateJSdocType(table)).join('\n')}
 
