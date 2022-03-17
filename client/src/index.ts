@@ -552,7 +552,7 @@ type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
 
 export type XataClientOptions = {
   fetch?: unknown;
-  databaseURL: string;
+  databaseURL?: string;
   branch: BranchStrategyOption;
   apiKey: string;
   repositoryFactory?: RepositoryFactory;
