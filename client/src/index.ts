@@ -569,10 +569,12 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
   }
 
   public async getWorkspaceId(): Promise<string> {
+    if (!this.options.workspace) throw new Error('Workspace is not defined');
     return this.options.workspace;
   }
 
   public async getDatabaseId(): Promise<string> {
+    if (!this.options.database) throw new Error('Database is not defined');
     return this.options.database;
   }
 

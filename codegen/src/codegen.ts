@@ -121,7 +121,7 @@ export async function generate({
       ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
     }> {
       constructor(options: XataClientOptions) {
-        super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
+        super({ workspace: "${config.workspaceID}", database: "${config.dbName}", ...options}, links);
         const factory = options.repositoryFactory || new RestRespositoryFactory();
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
