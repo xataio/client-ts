@@ -114,9 +114,6 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
       XataRecord
     } from '@xata.io/client';
 
-    type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-    type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
-
     ${tables.map((table) => generateTableType(table)).join('\n')}
 
     const links = ${JSON.stringify(links)};
@@ -124,7 +121,7 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
     export class XataClient extends BaseClient<{
       ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
     }> {
-      constructor(options: PartialBy<XataClientOptions, 'databaseURL'>) {
+      constructor(options: XataClientOptions) {
         super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
         const factory = options.repositoryFactory || new RestRespositoryFactory();
         this.db = {
