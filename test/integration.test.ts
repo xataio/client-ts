@@ -1,17 +1,21 @@
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { contains, lt } from '../client/src';
-import { SchemaRepository } from '../client/src/schema/schemaRepository';
+import { contains, lt, Schema } from '../client/src';
 import { User, XataClient } from '../codegen/example/xata';
 import { mockUsers } from './mock_data';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
 
+// TODO: Remove this when GH actions secrets are updated
+const workspaceAndDatabaseRegex = /^(?:https?:\/\/)?([^.]+).*\/db\/([^/]+)$/;
+const inferredWorkspace = workspaceAndDatabaseRegex.exec(process.env.XATA_DATABASE_URL ?? '')?.[1];
+const inferredDatabase = workspaceAndDatabaseRegex.exec(process.env.XATA_DATABASE_URL ?? '')?.[2];
+
 const client = new XataClient({
-  workspace: process.env.XATA_WORKSPACE || '',
-  database: process.env.XATA_DATABASE || '',
+  workspace: process.env.XATA_WORKSPACE || inferredWorkspace || '',
+  database: process.env.XATA_DATABASE || inferredDatabase || '',
   branch: process.env.XATA_DATABASE_BRANCH || '',
   apiKey: process.env.XATA_API_KEY || '',
   fetch
@@ -231,7 +235,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements pagination', async () => {
-    const loadUsers = async (repository: SchemaRepository<User>) => {
+    const loadUsers = async (repository: Schema<User>) => {
       return repository.getPaginated({ page: { size: 10 } });
     };
 

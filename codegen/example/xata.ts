@@ -1,12 +1,12 @@
-import { BaseClient, Schema, SchemaFactory, XataClientOptions, XataObject } from '../../client/src';
+import { BaseClient, Schema, SchemaFactory, XataClientOptions } from '../../client/src';
 
-export interface Team extends XataObject {
+export interface Team {
   name?: string;
   labels?: string[];
   owner?: User;
 }
 
-export interface User extends XataObject {
+export interface User {
   email?: string;
   full_name?: string;
   address?: { street?: string; zipcode?: number };
