@@ -264,7 +264,7 @@ async function expectRequest(
   users: RestRepository<User>,
   expectedRequest: ExpectedRequest,
   callback: () => void,
-  response?: unknown
+  response?: any
 ) {
   const request = jest.fn(async () => response);
   users.request = request;
@@ -285,14 +285,20 @@ describe('query', () => {
       const { users } = buildClient();
 
       const expected = { method: 'POST', path: '/tables/users/query', body: {} };
-      expectRequest(users, expected, () => users.getMany(), { records: [] });
+      expectRequest(users, expected, () => users.getMany(), {
+        records: [],
+        meta: { page: { cursor: '', more: false } }
+      });
     });
 
     test('query with one filter', async () => {
       const { users } = buildClient();
 
       const expected = { method: 'POST', path: '/tables/users/query', body: { filter: { $all: [{ name: 'foo' }] } } };
-      expectRequest(users, expected, () => users.filter('name', 'foo').getMany(), { records: [] });
+      expectRequest(users, expected, () => users.filter('name', 'foo').getMany(), {
+        records: [],
+        meta: { page: { cursor: '', more: false } }
+      });
     });
   });
 
@@ -300,8 +306,8 @@ describe('query', () => {
     test('returns a single object', async () => {
       const { users } = buildClient();
 
-      const result = { records: [{ id: '1234' }] };
-      const expected = { method: 'POST', path: '/tables/users/query', body: {} };
+      const result = { records: [{ id: '1234' }], meta: { page: { cursor: '', more: false } } };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
       expectRequest(
         users,
         expected,
@@ -316,8 +322,8 @@ describe('query', () => {
     test('returns null if no objects are returned', async () => {
       const { users } = buildClient();
 
-      const result = { records: [] };
-      const expected = { method: 'POST', path: '/tables/users/query', body: {} };
+      const result = { records: [], meta: { page: { cursor: '', more: false } } };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
       expectRequest(
         users,
         expected,
