@@ -96,11 +96,7 @@ export async function xatabaseFetch<
         status: 500
       };
       throw error;
-    } else if (
-      typeof e === 'object' &&
-      typeof (e as SimpleError).message === 'string' &&
-      typeof (e as SimpleError).status === 'number'
-    ) {
+    } else if (typeof e === 'object' && typeof (e as SimpleError).message === 'string') {
       throw e;
     } else {
       throw fallbackError;
