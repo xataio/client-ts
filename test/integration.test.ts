@@ -1,11 +1,18 @@
+import fetch from 'cross-fetch';
+import dotenv from 'dotenv';
+import { join } from 'path';
 import { contains, lt, Repository } from '../client/src';
 import { User, XataClient } from '../codegen/example/xata';
 import { mockUsers } from './mock_data';
 
+// Get environment variables before reading them
+dotenv.config({ path: join(process.cwd(), '.envrc') });
+
 const client = new XataClient({
   databaseURL: process.env.XATA_DATABASE_URL || '',
   branch: process.env.XATA_DATABASE_BRANCH || '',
-  apiKey: process.env.XATA_API_KEY || ''
+  apiKey: process.env.XATA_API_KEY || '',
+  fetch
 });
 
 // Integration tests take longer than unit tests, increasing the timeout
