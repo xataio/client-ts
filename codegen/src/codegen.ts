@@ -134,7 +134,7 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
       RestRespositoryFactory,
       XataClientOptions,
       XataRecord
-    } from '../../client/src';
+    } from '@xata.io/client';
 
     ${tables.map((table) => generateTableType(table)).join('\n')}
 
@@ -159,12 +159,12 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
   }
 
   const code = `
-    /** @typedef { import('../../client/src').Repository } Repository */
+    /** @typedef { import('@xata.io/client').Repository } Repository */
     import {
       BaseClient,
       Query,
       RestRespositoryFactory
-    } from '../../client/src';
+    } from '@xata.io/client';
 
     ${tables.map((table) => generateJSdocType(table)).join('\n')}
 
