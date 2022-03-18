@@ -76,7 +76,8 @@ function getTypeScriptType(column: Column): string {
   return 'unknown';
 }
 
-export type Language = 'typescript' | 'javascript' | 'js' | 'ts';
+export type Language = 'typescript' | 'javascript';
+
 export async function generate({ outputFilePath: output, xataDirectory, writeFile = fs.writeFile }: GenerateOptions) {
   const fullOutputPath = path.resolve(process.cwd(), output);
   const [extension] = fullOutputPath.split('.').slice(-1);
