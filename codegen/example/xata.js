@@ -1,5 +1,5 @@
 /** @typedef { import('../../client/src').Repository } Repository */
-import { BaseClient, Query, RestRespositoryFactory } from '../../client/src';
+import { BaseClient, Query, RestRespositoryFactory } from "../../client/src";
 
 /**
  * @typedef {Object} Team
@@ -28,7 +28,7 @@ import { BaseClient, Query, RestRespositoryFactory } from '../../client/src';
  
  */
 
-const links = { teams: [['owner', 'users']], users: [['team', 'teams']] };
+const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
 
 export class XataClient extends BaseClient {
   constructor(options) {
@@ -36,8 +36,8 @@ export class XataClient extends BaseClient {
     const factory = options.repositoryFactory || new RestRespositoryFactory();
     /** @type {{ "teams": Repository; "users": Repository }} */
     this.db = {
-      teams: factory.createRepository(this, 'teams'),
-      users: factory.createRepository(this, 'users')
+      teams: factory.createRepository(this, "teams"),
+      users: factory.createRepository(this, "users"),
     };
   }
 }

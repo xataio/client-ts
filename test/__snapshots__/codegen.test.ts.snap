@@ -114,7 +114,13 @@ export class XataClient extends BaseClient<{
   people: Repository<Person>;
 }> {
   constructor(options: XataClientOptions) {
-    super(options, links);
+    super(
+      {
+        databaseURL: \\"https://my-workspace-gfdd12.xata.sh/db/hello-xata\\",
+        ...options,
+      },
+      links
+    );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
     this.db = {
       authors: factory.createRepository(this, \\"authors\\"),

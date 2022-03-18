@@ -1,4 +1,11 @@
-import { BaseClient, Query, Repository, RestRespositoryFactory, XataClientOptions, XataRecord } from '../../client/src';
+import {
+  BaseClient,
+  Query,
+  Repository,
+  RestRespositoryFactory,
+  XataClientOptions,
+  XataRecord,
+} from "../../client/src";
 
 export interface Team extends XataRecord {
   name?: string;
@@ -13,18 +20,21 @@ export interface User extends XataRecord {
   team?: Team;
 }
 
-const links = { teams: [['owner', 'users']], users: [['team', 'teams']] };
+const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
 
 export class XataClient extends BaseClient<{
   teams: Repository<Team>;
   users: Repository<User>;
 }> {
   constructor(options: XataClientOptions) {
-    super(options, links);
+    super(
+      { databaseURL: "https://test-r5vcv5.xata.sh/db/test", ...options },
+      links
+    );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
     this.db = {
-      teams: factory.createRepository(this, 'teams'),
-      users: factory.createRepository(this, 'users')
+      teams: factory.createRepository(this, "teams"),
+      users: factory.createRepository(this, "users"),
     };
   }
 }
