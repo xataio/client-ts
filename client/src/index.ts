@@ -11,11 +11,11 @@ export interface XataRecord {
 }
 
 export type Queries<T> = {
-  [key in keyof T as T[key] extends Query<infer A, infer B> ? key : never]: T[key];
+  [key in keyof T as T[key] extends Query<any> ? key : never]: T[key];
 };
 
 export type OmitQueries<T> = {
-  [key in keyof T as T[key] extends Query<infer A, infer B> ? never : key]: T[key];
+  [key in keyof T as T[key] extends Query<any> ? never : key]: T[key];
 };
 
 export type OmitLinks<T> = {
@@ -40,6 +40,12 @@ export type Include<T> = {
 };
 
 type SortDirection = 'asc' | 'desc';
+type SortFilterExtended<T> = {
+  column: keyof T;
+  direction?: SortDirection;
+};
+
+type SortFilter<T> = SortFilterExtended<T> | keyof T;
 
 type Operator =
   | '$gt'
@@ -103,15 +109,8 @@ type PaginationOptions = CursorNavigationOptions & OffsetNavigationOptions;
 type BulkQueryOptions<T> = {
   page?: PaginationOptions;
   columns?: Array<keyof Selectable<T>>;
-  /** TODO: Not implemented yet
-  filter?: FilterConstraints<T>;
-  sort?:
-    | {
-        column: keyof T;
-        direction?: SortDirection;
-      }
-    | keyof T;
-**/
+  //filter?: FilterConstraints<T>;
+  sort?: SortFilter<T> | SortFilter<T>[];
 };
 
 type QueryOrConstraint<T extends XataRecord, R extends XataRecord> = Query<T, R> | Constraint<T>;
@@ -337,11 +336,6 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Ba
     return 0;
   }
 
-  include(columns: Include<T>) {
-    // TODO
-    return this;
-  }
-
   async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.firstPage(size, offset);
   }
@@ -522,7 +516,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
 
     const body = {
       filter: Object.values(filter).some(Boolean) ? filter : undefined,
-      sort: query.$sort,
+      sort: buildSortFilter(options?.sort) ?? query.$sort,
       page: options?.page,
       columns: options?.columns ?? query.columns
     };
@@ -672,3 +666,23 @@ const transformObjectLinks = (object: any) => {
     return { ...acc, [key]: value };
   }, {});
 };
+
+function buildSortFilter<T>(filter?: SortFilter<T> | SortFilter<T>[]): { [key: string]: SortDirection } | undefined {
+  if (!filter) return undefined;
+
+  const filters: SortFilter<T>[] = Array.isArray(filter) ? filter : [filter];
+
+  return filters.reduce((acc, item) => {
+    if (typeof item === 'string') {
+      return { ...acc, [item]: 'asc' };
+    } else if (isObjectSortFilter(item)) {
+      return { ...acc, [item.column]: item.direction };
+    } else {
+      return acc;
+    }
+  }, {});
+}
+
+function isObjectSortFilter<T>(filter: SortFilter<T>): filter is SortFilterExtended<T> {
+  return typeof filter === 'object' && filter.column !== undefined;
+}

@@ -120,6 +120,24 @@ describe('integration tests', () => {
     expect(teams[1].name).toBe('Mixed team fruits & animals');
   });
 
+  test('sort ascending in getMany', async () => {
+    const teams = await client.db.teams.getMany({ sort: 'name' });
+
+    expect(teams).toHaveLength(3);
+    expect(teams[0].name).toBe('Mixed team fruits & animals');
+    expect(teams[1].name).toBe('Team animals');
+    expect(teams[2].name).toBe('Team fruits');
+  });
+
+  test('sort descending in getMany', async () => {
+    const teams = await client.db.teams.getMany({ sort: { column: 'name', direction: 'desc' } });
+
+    expect(teams).toHaveLength(3);
+    expect(teams[0].name).toBe('Team fruits');
+    expect(teams[1].name).toBe('Team animals');
+    expect(teams[2].name).toBe('Mixed team fruits & animals');
+  });
+
   // TODO: This was not failing until now
   test.skip('negative filter', async () => {
     const q = client.db.teams;

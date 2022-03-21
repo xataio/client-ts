@@ -316,7 +316,7 @@ describe('query', () => {
     test('returns a single object', async () => {
       const { users } = buildClient();
 
-      const result = { records: [{ id: '1234' }], meta: { page: { cursor: '', more: false } } };
+      const result = { records: [{ id: '1234', name: 'Name' }], meta: { page: { cursor: '', more: false } } };
       const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 }, columns: ['name'] } };
       expectRequest(
         users,
@@ -324,6 +324,7 @@ describe('query', () => {
         async () => {
           const first = await users.select(['name']).getOne();
           expect(first?.id).toBe(result.records[0].id);
+          expect(first?.name).toBe(result.records[0].name);
         },
         result
       );
