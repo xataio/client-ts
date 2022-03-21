@@ -31,7 +31,7 @@
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-typescript": "^7.16.7",
     "@openapi-codegen/cli": "^1.4.0",
-    "@openapi-codegen/typescript": "^2.2.0",
+    "@openapi-codegen/typescript": "^3.0.0",
     "@size-limit/preset-small-lib": "^7.0.8",
     "@types/jest": "^27.4.0",
     "@types/node": "^17.0.18",

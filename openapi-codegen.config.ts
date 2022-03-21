@@ -1,5 +1,5 @@
 import { defineConfig } from '@openapi-codegen/cli';
-import { generateFetchers, generateSchemaTypes, renameComponent } from '@openapi-codegen/typescript';
+import { addPathParam, generateFetchers, generateSchemaTypes, renameComponent } from '@openapi-codegen/typescript';
 
 export default defineConfig({
   xatabase: {
@@ -32,52 +32,3 @@ export default defineConfig({
     }
   }
 });
-
-const addPathParam = ({
-  openAPIDocument,
-  pathParam,
-  required,
-  condition: filter = () => true
-}: {
-  /**
-   * The openAPI document to transform
-   */
-  openAPIDocument: any;
-  /**
-   * Path param to inject in all requests
-   */
-  pathParam: string;
-  /**
-   * If the path param is required
-   */
-  required: boolean;
-  /**
-   * Condition to include/exclude the path param
-   */
-  condition?: (key: string, pathParam: any) => boolean;
-}): any => {
-  return {
-    ...openAPIDocument,
-    paths: Object.fromEntries(
-      Object.entries(openAPIDocument.paths ?? {}).map(([key, value = {}]: any) =>
-        filter(key, value)
-          ? [
-              key,
-              {
-                ...value,
-                parameters: [
-                  ...(value.parameters ?? []),
-                  {
-                    name: pathParam,
-                    in: 'path',
-                    required,
-                    schema: { type: 'string' }
-                  }
-                ]
-              }
-            ]
-          : [key, value]
-      )
-    )
-  };
-};
