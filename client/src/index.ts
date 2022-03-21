@@ -29,7 +29,11 @@ export type OmitMethods<T> = {
 
 export type Selectable<T> = Omit<OmitQueries<OmitMethods<T>>, 'id' | 'xata'>;
 
-export type Select<T, K extends keyof T> = Pick<T, K> & Queries<T> & XataRecord;
+// TODO: Add inference for links
+export type SelectableColumn<T> = keyof Selectable<T> | '*';
+
+// TODO: Add inference for links
+export type Select<T, K extends SelectableColumn<T>> = (K extends keyof T ? Pick<T, K> : T) & Queries<T> & XataRecord;
 
 export type Include<T> = {
   [key in keyof T as T[key] extends XataRecord ? key : never]?: boolean | Array<keyof Selectable<T[key]>>;
@@ -98,6 +102,7 @@ type PaginationOptions = CursorNavigationOptions & OffsetNavigationOptions;
 
 type BulkQueryOptions<T> = {
   page?: PaginationOptions;
+  columns?: Array<keyof Selectable<T>>;
   /** TODO: Not implemented yet
   filter?: FilterConstraints<T>;
   sort?:
@@ -109,11 +114,11 @@ type BulkQueryOptions<T> = {
 **/
 };
 
-type QueryOrConstraint<T, R> = Query<T, R> | Constraint<T>;
+type QueryOrConstraint<T extends XataRecord, R extends XataRecord> = Query<T, R> | Constraint<T>;
 
 type QueryMeta = { page: { cursor: string; more: boolean } };
 
-interface BasePage<T, R> {
+interface BasePage<T extends XataRecord, R extends XataRecord> {
   query: Query<T, R>;
   meta: QueryMeta;
   records: R[];
@@ -126,7 +131,7 @@ interface BasePage<T, R> {
   hasNextPage(): boolean;
 }
 
-class Page<T, R> implements BasePage<T, R> {
+class Page<T extends XataRecord, R extends XataRecord> implements BasePage<T, R> {
   readonly query: Query<T, R>;
   readonly meta: QueryMeta;
   readonly records: R[];
@@ -159,7 +164,7 @@ class Page<T, R> implements BasePage<T, R> {
   }
 }
 
-export class Query<T, R = T> implements BasePage<T, R> {
+export class Query<T extends XataRecord, R extends XataRecord = T> implements BasePage<T, R> {
   table: string;
   repository: Repository<T>;
 
@@ -168,6 +173,7 @@ export class Query<T, R = T> implements BasePage<T, R> {
   readonly $not?: QueryOrConstraint<T, R>[];
   readonly $none?: QueryOrConstraint<T, R>[];
   readonly $sort?: Record<string, SortDirection>;
+  readonly columns: SelectableColumn<T>[] = ['*'];
 
   // Cursor pagination
   readonly query: Query<T, R> = this;
@@ -357,9 +363,9 @@ export class Query<T, R = T> implements BasePage<T, R> {
   }
 }
 
-export abstract class Repository<T> extends Query<T, Selectable<T>> {
-  select<K extends keyof Selectable<T>>(...columns: K[]) {
-    return new Query<T, Select<T, K>>(this.repository, this.table, {});
+export abstract class Repository<T extends XataRecord> extends Query<T, T> {
+  select<K extends SelectableColumn<T>>(columns: K[]) {
+    return new Query<T, Select<T, K>>(this.repository, this.table, { columns });
   }
 
   abstract create(object: Selectable<T>): Promise<T>;
@@ -373,10 +379,10 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
   abstract delete(id: string): void;
 
   // Used by the Query object internally
-  abstract _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
+  abstract _runQuery<R extends XataRecord>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
 }
 
-export class RestRepository<T> extends Repository<T> {
+export class RestRepository<T extends XataRecord> extends Repository<T> {
   client: BaseClient<any>;
   fetch: any;
 
@@ -433,8 +439,8 @@ export class RestRepository<T> extends Repository<T> {
     return resp.json();
   }
 
-  select<K extends keyof T>(...columns: K[]) {
-    return new Query<T, Select<T, K>>(this.repository, this.table, {});
+  select<K extends SelectableColumn<T>>(columns: K[]) {
+    return new Query<T, Select<T, K>>(this.repository, this.table, { columns });
   }
 
   async create(object: T): Promise<T> {
@@ -506,7 +512,7 @@ export class RestRepository<T> extends Repository<T> {
     await this.request('DELETE', `/tables/${this.table}/data/${id}`);
   }
 
-  async _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
+  async _runQuery<R extends XataRecord>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
     const filter = {
       $any: query.$any,
       $all: query.$all,
@@ -517,7 +523,8 @@ export class RestRepository<T> extends Repository<T> {
     const body = {
       filter: Object.values(filter).some(Boolean) ? filter : undefined,
       sort: query.$sort,
-      page: options?.page
+      page: options?.page,
+      columns: options?.columns ?? query.columns
     };
 
     const response = await this.request<{
@@ -536,11 +543,11 @@ export class RestRepository<T> extends Repository<T> {
 }
 
 interface RepositoryFactory {
-  createRepository<T>(client: BaseClient<any>, table: string): Repository<T>;
+  createRepository<T extends XataRecord>(client: BaseClient<any>, table: string): Repository<T>;
 }
 
 export class RestRespositoryFactory implements RepositoryFactory {
-  createRepository<T>(client: BaseClient<any>, table: string): Repository<T> {
+  createRepository<T extends XataRecord>(client: BaseClient<any>, table: string): Repository<T> {
     return new RestRepository<T>(client, table);
   }
 }

@@ -290,7 +290,7 @@ describe('query', () => {
     test('simple query', async () => {
       const { users } = buildClient();
 
-      const expected = { method: 'POST', path: '/tables/users/query', body: {} };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { columns: ['*'] } };
       expectRequest(users, expected, () => users.getMany(), {
         records: [],
         meta: { page: { cursor: '', more: false } }
@@ -300,7 +300,11 @@ describe('query', () => {
     test('query with one filter', async () => {
       const { users } = buildClient();
 
-      const expected = { method: 'POST', path: '/tables/users/query', body: { filter: { $all: [{ name: 'foo' }] } } };
+      const expected = {
+        method: 'POST',
+        path: '/tables/users/query',
+        body: { filter: { $all: [{ name: 'foo' }] }, columns: ['*'] }
+      };
       expectRequest(users, expected, () => users.filter('name', 'foo').getMany(), {
         records: [],
         meta: { page: { cursor: '', more: false } }
@@ -313,12 +317,12 @@ describe('query', () => {
       const { users } = buildClient();
 
       const result = { records: [{ id: '1234' }], meta: { page: { cursor: '', more: false } } };
-      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 }, columns: ['name'] } };
       expectRequest(
         users,
         expected,
         async () => {
-          const first = await users.select().getOne();
+          const first = await users.select(['name']).getOne();
           expect(first?.id).toBe(result.records[0].id);
         },
         result
@@ -329,7 +333,7 @@ describe('query', () => {
       const { users } = buildClient();
 
       const result = { records: [], meta: { page: { cursor: '', more: false } } };
-      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 }, columns: ['*'] } };
       expectRequest(
         users,
         expected,
