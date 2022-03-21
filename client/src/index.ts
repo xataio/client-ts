@@ -363,7 +363,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Ba
   }
 }
 
-export abstract class Repository<T extends XataRecord> extends Query<T, T> {
+export abstract class Repository<T extends XataRecord> extends Query<T> {
   select<K extends SelectableColumn<T>>(columns: K[]) {
     return new Query<T, Select<T, K>>(this.repository, this.table, { columns });
   }
