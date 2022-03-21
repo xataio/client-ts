@@ -2,14 +2,14 @@ import { errors } from '../util/errors';
 import type * as Types from './components';
 import { operationsByTag } from './components';
 import type { FetcherExtraProps, FetchImpl } from './fetcher';
-import { ApiProviders, getApiUrl } from './providers';
+import { HostProvider, getHostUrl } from './providers';
 import type * as Responses from './responses';
 import type * as Schemas from './schemas';
 
 export interface XataApiClientOptions {
   fetchImpl: FetchImpl;
   apiKey: string;
-  api?: ApiProviders;
+  host?: HostProvider;
 }
 
 export class XataApiClient {
@@ -21,11 +21,11 @@ export class XataApiClient {
       throw new Error(errors.noFetchImplementation);
     }
 
-    const provider = options.api ?? 'production';
+    const provider = options.host ?? 'production';
 
     this.extraProps = {
-      apiUrl: getApiUrl(provider, 'main'),
-      workspacesApiUrl: getApiUrl(provider, 'workspaces'),
+      apiUrl: getHostUrl(provider, 'main'),
+      workspacesApiUrl: getHostUrl(provider, 'workspaces'),
       fetchImpl,
       apiKey: options.apiKey
     };

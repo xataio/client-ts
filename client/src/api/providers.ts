@@ -1,10 +1,10 @@
 import { errors } from '../util/errors';
 
-type AliasedProviders = 'production' | 'staging';
+type HostAliases = 'production' | 'staging';
 type ProviderBuilder = { main: string; workspaces: string };
-export type ApiProviders = AliasedProviders | ProviderBuilder;
+export type HostProvider = HostAliases | ProviderBuilder;
 
-export function getApiUrl(provider: ApiProviders, type: keyof ProviderBuilder): string {
+export function getHostUrl(provider: HostProvider, type: keyof ProviderBuilder): string {
   if (isValidAlias(provider)) {
     return providers[provider][type];
   } else if (isValidBuilder(provider)) {
@@ -14,7 +14,7 @@ export function getApiUrl(provider: ApiProviders, type: keyof ProviderBuilder): 
   throw new Error(errors.invalidApiProvider);
 }
 
-const providers: Record<AliasedProviders, ProviderBuilder> = {
+const providers: Record<HostAliases, ProviderBuilder> = {
   production: {
     main: 'https://api.xata.io',
     workspaces: 'https://{workspaceId}.xata.sh'
@@ -25,10 +25,10 @@ const providers: Record<AliasedProviders, ProviderBuilder> = {
   }
 };
 
-function isValidAlias(alias: ApiProviders): alias is AliasedProviders {
+function isValidAlias(alias: HostProvider): alias is HostAliases {
   return typeof alias === 'string' && Object.keys(providers).includes(alias);
 }
 
-function isValidBuilder(builder: ApiProviders): builder is ProviderBuilder {
+function isValidBuilder(builder: HostProvider): builder is ProviderBuilder {
   return typeof builder === 'object' && typeof builder.main === 'string' && typeof builder.workspaces === 'string';
 }

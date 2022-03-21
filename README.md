@@ -40,7 +40,7 @@ const client = new XataClient({
   databaseURL: 'https://myworkspace-123abc.xata.sh/db/databasename',
   branch: 'branchname',
   apiKey: 'xau_1234abcdef',
-  fetch: fetchImplememntation // Required if your runtime doesn't provide a global `fetch` function.
+  fetch: fetchImplementation // Required if your runtime doesn't provide a global `fetch` function.
 });
 ```
 
