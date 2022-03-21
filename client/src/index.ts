@@ -298,7 +298,11 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Ba
     return q;
   }
 
-  async getPaginated(options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
+  async getPaginated<Options extends BulkQueryOptions<T>>(
+    options: Options = {} as Options
+  ): Promise<
+    Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
+  > {
     return this.repository._runQuery(this, options);
   }
 
@@ -321,12 +325,20 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Ba
     }
   }
 
-  async getMany(options?: BulkQueryOptions<T>): Promise<R[]> {
+  async getMany<Options extends BulkQueryOptions<T>>(
+    options: Options = {} as Options
+  ): Promise<
+    (typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R)[]
+  > {
     const { records } = await this.getPaginated(options);
     return records;
   }
 
-  async getOne(options: Omit<BulkQueryOptions<T>, 'page'> = {}): Promise<R | null> {
+  async getOne<Options extends Omit<BulkQueryOptions<T>, 'page'>>(
+    options: Options = {} as Options
+  ): Promise<
+    (typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R) | null
+  > {
     const records = await this.getMany({ ...options, page: { size: 1 } });
     return records[0] || null;
   }
@@ -373,7 +385,12 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
   abstract delete(id: string): void;
 
   // Used by the Query object internally
-  abstract _runQuery<R extends XataRecord>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
+  abstract _runQuery<R extends XataRecord, Options extends BulkQueryOptions<T>>(
+    query: Query<T, R>,
+    options: Options
+  ): Promise<
+    Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
+  >;
 }
 
 export class RestRepository<T extends XataRecord> extends Repository<T> {
@@ -506,7 +523,12 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     await this.request('DELETE', `/tables/${this.table}/data/${id}`);
   }
 
-  async _runQuery<R extends XataRecord>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
+  async _runQuery<R extends XataRecord, Options extends BulkQueryOptions<T>>(
+    query: Query<T, R>,
+    options: Options
+  ): Promise<
+    Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
+  > {
     const filter = {
       $any: query.$any,
       $all: query.$all,
@@ -530,9 +552,14 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     }
 
     const { meta, records: objects } = response;
-    const records = objects.map((record) => this.client.initObject<R>(this.table, record));
+    const records = objects.map((record) =>
+      this.client.initObject<
+        typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R
+      >(this.table, record)
+    );
 
-    return new Page(query, meta, records);
+    // TODO: We should properly type this any
+    return new Page<T, any>(query, meta, records);
   }
 }
 
