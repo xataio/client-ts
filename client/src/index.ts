@@ -29,11 +29,26 @@ export type OmitMethods<T> = {
 
 export type Selectable<T> = Omit<OmitQueries<OmitMethods<T>>, 'id' | 'xata'>;
 
-// TODO: Add inference for links
-export type SelectableColumn<T> = keyof Selectable<T> | '*';
+type StringKeys<O> = Extract<keyof O, string>;
+type Values<O> = O[keyof O];
 
-// TODO: Add inference for links
-export type Select<T, K extends SelectableColumn<T>> = (K extends keyof T ? Pick<T, K> : T) & Queries<T> & XataRecord;
+export type SelectableColumn<O> =
+  | '*'
+  | (O extends Array<unknown>
+      ? never // TODO: Review with multiple: true
+      : O extends Record<string, any>
+      ?
+          | '*'
+          | Values<{
+              [K in StringKeys<O>]: O[K] extends Record<string, any> ? `${K}.${SelectableColumn<O[K]>}` : K;
+            }>
+      : '');
+
+type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (x: infer R) => any ? R : never;
+
+export type Select<T, K extends SelectableColumn<T>> = UnionToIntersection<K extends keyof T ? Pick<T, K> : T> &
+  Queries<T> &
+  XataRecord;
 
 export type Include<T> = {
   [key in keyof T as T[key] extends XataRecord ? key : never]?: boolean | Array<keyof Selectable<T[key]>>;

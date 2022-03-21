@@ -299,13 +299,14 @@ describe('integration tests', () => {
 
   test('includes selected columns in getOne', async () => {
     const user = await client.db.users.getOne({
-      columns: ['full_name']
+      columns: ['full_name', 'email']
     });
 
     expect(user).toBeDefined();
     expect(user?.id).toBeDefined();
     expect(user?.full_name).toBeDefined();
+    expect(user?.email).toBeDefined();
     //@ts-expect-error
-    expect(user?.email).toBeUndefined();
+    expect(user?.address).toBeUndefined();
   });
 });
