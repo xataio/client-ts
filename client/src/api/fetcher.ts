@@ -2,12 +2,10 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import type { SimpleError } from './responses';
 
-const resolveUrl = (
-  url: string,
-  _queryParams: Record<string, unknown> = {},
-  pathParams: Record<string, string> = {}
-) => {
-  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]);
+const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
+  const query = new URLSearchParams(queryParams);
+  const queryString = query.toString().length > 0 ? `?${query.toString()}` : '';
+  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
 };
 
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
@@ -35,8 +33,6 @@ export type FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
 const fallbackError: SimpleError = { message: 'Network response was not ok' };
 
 function baseURLForWorkspace(workspacesApiUrl: string, workspace: string) {
-  if (!workspacesApiUrl.includes('{workspaceId}')) return workspacesApiUrl;
-
   // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
   // So, instead, we use localhost without subdomains, but will add a Host header
   if (typeof window === 'undefined' && workspacesApiUrl.includes('localhost:')) {
