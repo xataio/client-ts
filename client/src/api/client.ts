@@ -215,41 +215,51 @@ class BranchApi {
     });
   }
 
-  public getBranchDetails(workspace: Schemas.WorkspaceID, dbBranchName: Schemas.BranchName): Promise<Schemas.DBBranch> {
+  public getBranchDetails(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName
+  ): Promise<Schemas.DBBranch> {
     return operationsByTag.branch.getBranchDetails({
-      pathParams: { workspace, dbBranchName },
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
     });
   }
 
   public createBranch(
     workspace: Schemas.WorkspaceID,
-    dbBranchName: Schemas.DBBranchName,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
     from?: string,
     options: Types.CreateBranchRequestBody = {}
   ): Promise<undefined> {
     return operationsByTag.branch.createBranch({
-      pathParams: { workspace, dbBranchName },
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       queryParams: { from },
       body: options,
       ...this.extraProps
     });
   }
 
-  public deleteBranch(workspace: Schemas.WorkspaceID, dbBranchName: Schemas.DBBranchName): Promise<void> {
+  public deleteBranch(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName
+  ): Promise<void> {
     return operationsByTag.branch.deleteBranch({
-      pathParams: { workspace, dbBranchName },
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
     });
   }
 
   public updateBranchMetadata(
     workspace: Schemas.WorkspaceID,
-    dbBranchName: Schemas.DBBranchName,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
     metadata: Schemas.BranchMetadata = {}
   ): Promise<void> {
     return operationsByTag.branch.updateBranchMetadata({
-      pathParams: { workspace, dbBranchName },
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       body: metadata,
       ...this.extraProps
     });
@@ -257,21 +267,23 @@ class BranchApi {
 
   public getBranchMetadata(
     workspace: Schemas.WorkspaceID,
-    dbBranchName: Schemas.DBBranchName
+    database: Schemas.DBName,
+    branch: Schemas.BranchName
   ): Promise<Schemas.BranchMetadata> {
     return operationsByTag.branch.getBranchMetadata({
-      pathParams: { workspace, dbBranchName },
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
     });
   }
 
   public getBranchMigrationHistory(
     workspace: Schemas.WorkspaceID,
-    dbBranchName: Schemas.DBBranchName,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
     options: Types.GetBranchMigrationHistoryRequestBody = {}
   ): Promise<Types.GetBranchMigrationHistoryResponse> {
     return operationsByTag.branch.getBranchMigrationHistory({
-      pathParams: { workspace, dbBranchName },
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       body: options,
       ...this.extraProps
     });
@@ -279,11 +291,12 @@ class BranchApi {
 
   public executeBranchMigrationPlan(
     workspace: Schemas.WorkspaceID,
-    dbBranchName: Schemas.DBBranchName,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
     migrationPlan: Types.ExecuteBranchMigrationPlanRequestBody
   ): Promise<void> {
     return operationsByTag.branch.executeBranchMigrationPlan({
-      pathParams: { workspace, dbBranchName },
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       body: migrationPlan,
       ...this.extraProps
     });
@@ -291,11 +304,12 @@ class BranchApi {
 
   public getBranchMigrationPlan(
     workspace: Schemas.WorkspaceID,
-    dbBranchName: Schemas.DBBranchName,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
     schema: Schemas.Schema
   ): Promise<Responses.BranchMigrationPlan> {
     return operationsByTag.branch.getBranchMigrationPlan({
-      pathParams: { workspace, dbBranchName },
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       body: schema,
       ...this.extraProps
     });
@@ -303,10 +317,11 @@ class BranchApi {
 
   public getBranchStats(
     workspace: Schemas.WorkspaceID,
-    dbBranchName: Schemas.DBBranchName
+    database: Schemas.DBName,
+    branch: Schemas.BranchName
   ): Promise<Types.GetBranchStatsResponse> {
     return operationsByTag.branch.getBranchStats({
-      pathParams: { workspace, dbBranchName },
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
     });
   }
