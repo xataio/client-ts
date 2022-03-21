@@ -3,8 +3,8 @@
 import type { SimpleError } from './responses';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
-  const query = new URLSearchParams(queryParams);
-  const queryString = query.toString().length > 0 ? `?${query.toString()}` : '';
+  const query = new URLSearchParams(queryParams).toString();
+  const queryString = query.length > 0 ? `?${query}` : '';
   return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
 };
 
