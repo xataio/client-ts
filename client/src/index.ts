@@ -1,3 +1,5 @@
+import { bulkInsertTableRecords, deleteRecord, getRecord, insertRecord, insertRecordWithID, queryTable } from './api';
+import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { errors } from './util/errors';
 
 export interface XataRecord {
@@ -294,7 +296,30 @@ export class Query<T, R = T> implements BasePage<T, R> {
   }
 
   async getPaginated(options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
-    return this.repository._runQuery(this, options);
+    const filter = {
+      $any: this.$any,
+      $all: this.$all,
+      $not: this.$not,
+      $none: this.$none
+    };
+
+    const workspace = await this.repository.client.getWorkspaceId();
+    const database = await this.repository.client.getDatabaseId();
+    const branch = await this.repository.client.getBranch();
+    const { meta, records: objects } = await queryTable({
+      pathParams: { workspace, dbBranchName: branch, tableName: this.table },
+      body: {
+        //@ts-ignore TODO: Review
+        filter: compactObject(filter),
+        sort: this.$sort,
+        page: options?.page
+      },
+      ...this.repository.fetchProps
+    });
+
+    const records = objects.map((record) => this.repository.client.initObject<R>(this.table, record));
+
+    return new Page(this, meta, records);
   }
 
   async *[Symbol.asyncIterator](): AsyncIterableIterator<R> {
@@ -358,6 +383,10 @@ export class Query<T, R = T> implements BasePage<T, R> {
 }
 
 export abstract class Repository<T> extends Query<T, Selectable<T>> {
+  abstract client: BaseClient<any>;
+  abstract fetch: FetchImpl;
+  abstract fetchProps: FetcherExtraProps;
+
   select<K extends keyof Selectable<T>>(...columns: K[]) {
     return new Query<T, Select<T, K>>(this.repository, this.table, {});
   }
@@ -371,66 +400,38 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
   abstract update(id: string, object: Partial<T>): Promise<T>;
 
   abstract delete(id: string): void;
-
-  // Used by the Query object internally
-  abstract _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>>;
 }
 
 export class RestRepository<T> extends Repository<T> {
   client: BaseClient<any>;
-  fetch: any;
+  fetch: FetchImpl;
 
   constructor(client: BaseClient<any>, table: string) {
     super(null, table, {});
     this.client = client;
 
-    const doWeHaveFetch = typeof fetch !== 'undefined';
-    const isInjectedFetchProblematic = !this.client.options.fetch;
-
-    if (doWeHaveFetch) {
-      this.fetch = fetch;
-    } else if (isInjectedFetchProblematic) {
-      throw new Error(errors.falsyFetchImplementation);
-    } else {
-      this.fetch = this.client.options.fetch;
-    }
+    const fetchImpl = typeof fetch !== 'undefined' ? fetch : this.client.options.fetch;
+    if (!fetchImpl) throw new Error(errors.noFetchImplementation);
+    this.fetch = fetchImpl;
 
     Object.defineProperty(this, 'client', { enumerable: false });
     Object.defineProperty(this, 'fetch', { enumerable: false });
     Object.defineProperty(this, 'hostname', { enumerable: false });
   }
 
-  async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {
-    const { databaseURL, apiKey } = this.client.options;
-    const branch = await this.client.getBranch();
+  get fetchProps(): FetcherExtraProps {
+    return {
+      fetchImpl: this.fetch,
+      apiKey: this.client.options.apiKey,
+      apiUrl: '',
+      workspacesApiUrl: (path, params) => {
+        const baseUrl = this.client.options.databaseURL ?? '';
+        const branch = params.dbBranchName ?? params.branch;
+        const newPath = path.replace(/^\/db\/[^/]+/, branch ? `:${branch}` : '');
 
-    const resp: Response = await this.fetch(`${databaseURL}:${branch}${path}`, {
-      method,
-      headers: {
-        Accept: '*/*',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!resp.ok) {
-      try {
-        const json = await resp.json();
-        const message = json.message;
-        if (typeof message === 'string') {
-          throw new XataError(message, resp.status);
-        }
-      } catch (err) {
-        if (err instanceof XataError) throw err;
-        // Ignore errors for other reasons.
-        // For example if the response's body cannot be parsed as JSON
+        return baseUrl + newPath;
       }
-      throw new XataError(resp.statusText, resp.status);
-    }
-
-    if (resp.status === 204) return undefined;
-    return resp.json();
+    };
   }
 
   select<K extends keyof T>(...columns: K[]) {
@@ -438,15 +439,16 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async create(object: T): Promise<T> {
+    const workspace = await this.client.getWorkspaceId();
+    const branch = await this.client.getBranch();
+
     const record = transformObjectLinks(object);
 
-    const response = await this.request<{
-      id: string;
-      xata: { version: number };
-    }>('POST', `/tables/${this.table}/data`, record);
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+    const response = await insertRecord({
+      pathParams: { workspace, dbBranchName: branch, tableName: this.table },
+      body: record,
+      ...this.repository.fetchProps
+    });
 
     const finalObject = await this.read(response.id);
     if (!finalObject) {
@@ -457,14 +459,16 @@ export class RestRepository<T> extends Repository<T> {
   }
 
   async createMany(objects: T[]): Promise<T[]> {
+    const workspace = await this.client.getWorkspaceId();
+    const branch = await this.client.getBranch();
+
     const records = objects.map((object) => transformObjectLinks(object));
 
-    const response = await this.request<{
-      recordIDs: string[];
-    }>('POST', `/tables/${this.table}/bulk`, { records });
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+    const response = await bulkInsertTableRecords({
+      pathParams: { workspace, dbBranchName: branch, tableName: this.table },
+      body: { records },
+      ...this.repository.fetchProps
+    });
 
     // TODO: Use filer.$any() to get all the records
     const finalObjects = await Promise.all(response.recordIDs.map((id) => this.read(id)));
@@ -475,63 +479,40 @@ export class RestRepository<T> extends Repository<T> {
     return finalObjects as T[];
   }
 
-  async read(id: string): Promise<T | null> {
-    try {
-      const response = await this.request<
-        T & { id: string; xata: { version: number; table?: string; warnings?: string[] } }
-      >('GET', `/tables/${this.table}/data/${id}`);
-      if (!response) return null;
+  async read(recordId: string): Promise<T | null> {
+    const workspace = await this.client.getWorkspaceId();
+    const branch = await this.client.getBranch();
 
-      return this.client.initObject(this.table, response);
-    } catch (err) {
-      if ((err as XataError).status === 404) return null;
-      throw err;
-    }
+    const response = await getRecord({
+      pathParams: { workspace, dbBranchName: branch, tableName: this.table, recordId },
+      ...this.repository.fetchProps
+    });
+
+    return this.client.initObject(this.table, response);
   }
 
-  async update(id: string, object: Partial<T>): Promise<T> {
-    const response = await this.request<{
-      id: string;
-      xata: { version: number };
-    }>('PUT', `/tables/${this.table}/data/${id}`, object);
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+  async update(recordId: string, object: Partial<T>): Promise<T> {
+    const workspace = await this.client.getWorkspaceId();
+    const branch = await this.client.getBranch();
+
+    const response = await insertRecordWithID({
+      pathParams: { workspace, dbBranchName: branch, tableName: this.table, recordId },
+      body: object,
+      ...this.repository.fetchProps
+    });
 
     // TODO: Review this, not sure we are properly initializing the object
     return this.client.initObject(this.table, response);
   }
 
-  async delete(id: string) {
-    await this.request('DELETE', `/tables/${this.table}/data/${id}`);
-  }
+  async delete(recordId: string) {
+    const workspace = await this.client.getWorkspaceId();
+    const branch = await this.client.getBranch();
 
-  async _runQuery<R>(query: Query<T, R>, options?: BulkQueryOptions<T>): Promise<Page<T, R>> {
-    const filter = {
-      $any: query.$any,
-      $all: query.$all,
-      $not: query.$not,
-      $none: query.$none
-    };
-
-    const body = {
-      filter: Object.values(filter).some(Boolean) ? filter : undefined,
-      sort: query.$sort,
-      page: options?.page
-    };
-
-    const response = await this.request<{
-      records: object[];
-      meta: { page: { cursor: string; more: boolean } };
-    }>('POST', `/tables/${this.table}/query`, body);
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
-
-    const { meta, records: objects } = response;
-    const records = objects.map((record) => this.client.initObject<R>(this.table, record));
-
-    return new Page(query, meta, records);
+    await deleteRecord({
+      pathParams: { workspace, dbBranchName: branch, tableName: this.table, recordId },
+      ...this.repository.fetchProps
+    });
   }
 }
 
@@ -551,7 +532,7 @@ type BranchStrategy = BranchStrategyValue | BranchStrategyBuilder;
 type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
 
 export type XataClientOptions = {
-  fetch?: unknown;
+  fetch?: FetchImpl;
   databaseURL?: string;
   branch: BranchStrategyOption;
   apiKey: string;
@@ -618,6 +599,28 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     return o as T;
   }
 
+  public async getWorkspaceId(): Promise<string> {
+    // TODO: FIXME: How do we handle CNAME use-case? workspaceUrl/db/db:branch. We need to inject branch
+    const workspaceAndDatabaseRegex = /^(?:https?:\/\/)?([^.]+).*\/db\/([^/]+)$/;
+    const workspace = workspaceAndDatabaseRegex.exec(this.options.databaseURL ?? '')?.[1];
+    if (!workspace) {
+      throw new Error('XATA_DATABASE_URL does not have a valid workspace');
+    }
+
+    return workspace;
+  }
+
+  public async getDatabaseId(): Promise<string> {
+    // TODO: FIXME: How do we handle CNAME use-case? workspaceUrl/db/db:branch. We need to inject branch
+    const workspaceAndDatabaseRegex = /^(?:https?:\/\/)?([^.]+).*\/db\/([^/]+)$/;
+    const database = workspaceAndDatabaseRegex.exec(this.options.databaseURL ?? '')?.[2];
+    if (!database) {
+      throw new Error('XATA_DATABASE_URL does not have a valid workspace');
+    }
+
+    return database;
+  }
+
   public async getBranch(): Promise<string> {
     if (this.branch) return this.branch;
 
@@ -665,5 +668,13 @@ const transformObjectLinks = (object: any) => {
     return { ...acc, [key]: value };
   }, {});
 };
+
+function compactObject<T>(object: T): Partial<T> {
+  return Object.entries(object).reduce((acc, [key, value]) => {
+    // @ts-ignore TODO: Review
+    if (value !== undefined) acc[key] = value;
+    return acc;
+  }, {} as Partial<T>);
+}
 
 export * from './api';

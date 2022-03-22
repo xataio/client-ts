@@ -253,7 +253,7 @@ describe('integration tests', () => {
     expect(teams[1].id).toBeDefined();
     expect(teams[1].name).toBe('Team planes');
   });
-  
+
   test('query implements iterator', async () => {
     const owners = [];
 

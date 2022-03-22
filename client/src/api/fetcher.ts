@@ -2,12 +2,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import type { SimpleError } from './responses';
 
-const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
-  const query = new URLSearchParams(queryParams).toString();
-  const queryString = query.length > 0 ? `?${query}` : '';
-  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
-};
-
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
 export type FetchImpl = (
   url: string,
@@ -16,7 +10,7 @@ export type FetchImpl = (
 
 export type FetcherExtraProps = {
   apiUrl: string;
-  workspacesApiUrl: string;
+  workspacesApiUrl: string | ((path: string, pathParams: Record<string, string>) => string);
   fetchImpl: FetchImpl;
   apiKey: string;
 };
@@ -30,22 +24,44 @@ export type FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
   pathParams?: TPathParams;
 };
 
+const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
+  const query = new URLSearchParams(queryParams).toString();
+  const queryString = query.length > 0 ? `?${query}` : '';
+
+  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
+};
+
 const fallbackError: SimpleError = { message: 'Network response was not ok' };
 
-function baseURLForWorkspace(workspacesApiUrl: string, workspace: string) {
+function buildBaseUrl({
+  path,
+  workspacesApiUrl,
+  apiUrl,
+  pathParams
+}: {
+  path: string;
+  workspacesApiUrl: string | ((path: string, pathParams: Record<string, string>) => string);
+  apiUrl: string;
+  pathParams?: Record<string, string>;
+}) {
+  if (!pathParams?.workspace) return `${apiUrl}${path}`;
+
+  const url = typeof workspacesApiUrl === 'string' ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
+
   // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
   // So, instead, we use localhost without subdomains, but will add a Host header
-  if (typeof window === 'undefined' && workspacesApiUrl.includes('localhost:')) {
-    return workspacesApiUrl.replace('{workspaceId}.', '');
+  if (typeof window === 'undefined' && url.includes('localhost:')) {
+    return url.replace('{workspaceId}.', '');
   }
-  return workspacesApiUrl.replace('{workspaceId}', workspace);
+
+  return url.replace('{workspaceId}', pathParams.workspace);
 }
 
-function hostHeaderForWorkspace(workspacesApiUrl: string, workspace: string) {
-  const url = baseURLForWorkspace(workspacesApiUrl, workspace);
-  if (!url) return;
-  const [, hostname] = url.split('://');
-  return hostname;
+function hostHeaderForWorkspace(url: string) {
+  const pattern = /.*:\/\/(?<host>[^/]+).*/;
+  const { groups } = pattern.exec(url) ?? {};
+
+  return groups?.host;
 }
 
 export async function fetch<
@@ -66,8 +82,10 @@ export async function fetch<
   apiUrl,
   workspacesApiUrl
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
-  const baseURL = pathParams?.workspace ? baseURLForWorkspace(workspacesApiUrl, pathParams.workspace) : apiUrl;
-  const response = await fetchImpl(`${baseURL}${resolveUrl(url, queryParams, pathParams)}`, {
+  const baseURL = buildBaseUrl({ path: url, workspacesApiUrl, pathParams, apiUrl });
+  const finalUrl = resolveUrl(baseURL, queryParams, pathParams);
+
+  const response = await fetchImpl(finalUrl, {
     method: method.toUpperCase(),
     body: body ? JSON.stringify(body) : undefined,
     headers: {
@@ -76,7 +94,7 @@ export async function fetch<
       Authorization: `Bearer ${apiKey}`,
       // The host header is needed by Node.js on localhost.
       // It is ignored by fetch() in the frontend
-      ...(pathParams?.workspace ? { Host: hostHeaderForWorkspace(workspacesApiUrl, pathParams.workspace) } : {})
+      ...(pathParams?.workspace ? { Host: hostHeaderForWorkspace(finalUrl) } : {})
     }
   });
 
