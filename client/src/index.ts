@@ -378,7 +378,7 @@ export abstract class Repository<T> extends Query<T, Selectable<T>> {
 
 export class RestRepository<T> extends Repository<T> {
   client: BaseClient<any>;
-  fetchImpl: any;
+  fetch: any;
 
   constructor(client: BaseClient<any>, table: string) {
     super(null, table, {});
@@ -386,18 +386,19 @@ export class RestRepository<T> extends Repository<T> {
 
     const fetchImpl = typeof fetch !== 'undefined' ? fetch : this.client.options.fetch;
     if (!fetchImpl) throw new Error('No fetch implementation provided');
-    this.fetchImpl = fetchImpl;
+    this.fetch = fetchImpl;
 
     Object.defineProperty(this, 'client', { enumerable: false });
-    Object.defineProperty(this, 'fetchImpl', { enumerable: false });
+    Object.defineProperty(this, 'fetch', { enumerable: false });
     Object.defineProperty(this, 'hostname', { enumerable: false });
   }
 
   async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {
     const { databaseURL, apiKey } = this.client.options;
     const branch = await this.client.getBranch();
+    const fetchImpl = this.fetch;
 
-    const resp: Response = await this.fetchImpl(`${databaseURL}:${branch}${path}`, {
+    const resp: Response = await fetchImpl(`${databaseURL}:${branch}${path}`, {
       method,
       headers: {
         Accept: '*/*',
