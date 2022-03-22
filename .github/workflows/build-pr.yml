@@ -78,6 +78,6 @@ jobs:
             You can install it by running:
 
             ```
-            npm install @xata/client@${{ steps.version.outputs.TAG }}
-            npm install @xata/codegen@${{ steps.version.outputs.TAG }}
+            npm install @xata.io/client@${{ steps.version.outputs.TAG }}
+            npm install @xata.io/codegen@${{ steps.version.outputs.TAG }}
             ```
