@@ -39,7 +39,7 @@ import { XataClient } from './xata';
 const client = new XataClient({
   branch: 'branchname',
   apiKey: 'xau_1234abcdef',
-  fetch: fetchImplememntation // Required if your runtime doesn't provide a global `fetch` function.
+  fetch: fetchImplementation // Required if your runtime doesn't provide a global `fetch` function.
 });
 ```
 
