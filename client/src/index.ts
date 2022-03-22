@@ -384,9 +384,16 @@ export class RestRepository<T> extends Repository<T> {
     super(null, table, {});
     this.client = client;
 
-    const fetchImpl = typeof fetch !== 'undefined' ? fetch : this.client.options.fetch;
-    if (!fetchImpl) throw new Error('No fetch implementation provided');
-    this.fetch = fetchImpl;
+    const doWeHaveFetch = typeof fetch !== 'undefined';
+    const isInjectedFetchProblematic = !this.client.options.fetch;
+
+    if (doWeHaveFetch) {
+      this.fetch = fetch;
+    } else if (isInjectedFetchProblematic) {
+      throw new Error(errors.falsyFetchImplementation);
+    } else {
+      this.fetch = this.client.options.fetch;
+    }
 
     Object.defineProperty(this, 'client', { enumerable: false });
     Object.defineProperty(this, 'fetch', { enumerable: false });
