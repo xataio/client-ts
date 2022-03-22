@@ -37,16 +37,15 @@ In a TypeScript file start using the generated code:
 import { XataClient } from './xata';
 
 const client = new XataClient({
-  databaseURL: 'https://myworkspace-123abc.xata.sh/db/databasename',
   branch: 'branchname',
   apiKey: 'xau_1234abcdef',
-  fetch: fetchImplememntation // Required if your runtime doesn't provide a global `fetch` function.
+  fetch: fetchImplementation // Required if your runtime doesn't provide a global `fetch` function.
 });
 ```
 
 The import above will differ if you chose to genreate the types in a different location.
 
-`fetch` is required only if your runtime doesn't provide a global `fetch` function. However, if your runtime supports CJS, the SDK will try to also require `node-fetch` and `cross-fetch` if a `fetch` implementation is not provided.
+`XataClient` only has two required arguments: `branch` and `apiKey`. `fetch` is required only if your runtime doesn't provide a global `fetch` function. There's also a `databaseURL` argument that by default will contain a URL pointing to your database (e.g. `https://myworkspace-123abc.xata.sh/db/databasename`), it can be specified in the constructor to overwrite that value if for whatever reason you need to connect to a different workspace or database.
 
 ## API
 
