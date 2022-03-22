@@ -403,8 +403,9 @@ export class RestRepository<T> extends Repository<T> {
   async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {
     const { databaseURL, apiKey } = this.client.options;
     const branch = await this.client.getBranch();
+    const fetchImpl = this.fetch;
 
-    const resp: Response = await this.fetch(`${databaseURL}:${branch}${path}`, {
+    const resp: Response = await fetchImpl(`${databaseURL}:${branch}${path}`, {
       method,
       headers: {
         Accept: '*/*',
