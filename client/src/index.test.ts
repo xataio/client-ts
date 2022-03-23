@@ -39,7 +39,7 @@ describe('client options', () => {
   test('throws if branch cannot be resolved', () => {
     const { users } = buildClient({ branch: () => null });
 
-    expect(users.getOne()).rejects.toThrow('Unable to resolve branch value');
+    expect(users.request('GET', '/foo')).rejects.toThrow('Unable to resolve branch value');
   });
 
   test('provide branch as a string', async () => {
@@ -48,27 +48,24 @@ describe('client options', () => {
     fetch.mockReset().mockImplementation(() => {
       return {
         ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
+        json: async () => ({})
       };
     });
 
-    await users.getOne();
+    await users.request('GET', '/foo');
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       Array [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/tables/users/query",
+        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/foo",
         Object {
-          "body": "{\\"filter\\":{},\\"page\\":{\\"size\\":1}}",
+          "body": undefined,
           "headers": Object {
+            "Accept": "*/*",
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
           },
-          "method": "POST",
+          "method": "GET",
         },
       ]
     `);
@@ -82,27 +79,24 @@ describe('client options', () => {
     fetch.mockReset().mockImplementation(() => {
       return {
         ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
+        json: async () => ({})
       };
     });
 
-    await users.getOne();
+    await users.request('GET', '/foo');
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       Array [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/tables/users/query",
+        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/foo",
         Object {
-          "body": "{\\"filter\\":{},\\"page\\":{\\"size\\":1}}",
+          "body": undefined,
           "headers": Object {
+            "Accept": "*/*",
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
           },
-          "method": "POST",
+          "method": "GET",
         },
       ]
     `);
@@ -114,27 +108,24 @@ describe('client options', () => {
     fetch.mockReset().mockImplementation(() => {
       return {
         ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
+        json: async () => ({})
       };
     });
 
-    await users.getOne();
+    await users.request('GET', '/foo');
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       Array [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/tables/users/query",
+        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/foo",
         Object {
-          "body": "{\\"filter\\":{},\\"page\\":{\\"size\\":1}}",
+          "body": undefined,
           "headers": Object {
+            "Accept": "*/*",
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
           },
-          "method": "POST",
+          "method": "GET",
         },
       ]
     `);
@@ -148,15 +139,12 @@ describe('client options', () => {
     fetch.mockReset().mockImplementation(() => {
       return {
         ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
+        json: async () => ({})
       };
     });
 
-    await users.getOne();
-    await users.getMany();
+    await users.request('GET', '/foo');
+    await users.request('GET', '/foo');
 
     expect(branchGetter).toHaveBeenCalledTimes(1);
   });
@@ -169,27 +157,24 @@ describe('request', () => {
     fetch.mockReset().mockImplementation(() => {
       return {
         ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
+        json: async () => ({})
       };
     });
 
-    await users.getOne();
+    await users.request('GET', '/foo');
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       Array [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
+        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/foo",
         Object {
-          "body": "{\\"filter\\":{},\\"page\\":{\\"size\\":1}}",
+          "body": undefined,
           "headers": Object {
+            "Accept": "*/*",
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
           },
-          "method": "POST",
+          "method": "GET",
         },
       ]
     `);
@@ -201,25 +186,22 @@ describe('request', () => {
     fetch.mockReset().mockImplementation(() => {
       return {
         ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
+        json: async () => ({})
       };
     });
 
-    await users.getMany({ page: { size: 20 } });
+    await users.request('POST', '/foo', { a: 1 });
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       Array [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
+        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/foo",
         Object {
-          "body": "{\\"filter\\":{},\\"page\\":{\\"size\\":20}}",
+          "body": "{\\"a\\":1}",
           "headers": Object {
+            "Accept": "*/*",
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
           },
           "method": "POST",
         },
@@ -227,7 +209,7 @@ describe('request', () => {
     `);
   });
 
-  test.skip('throws if the response is not ok', async () => {
+  test('throws if the response is not ok', async () => {
     const { fetch, users } = buildClient();
 
     fetch.mockImplementation(() => {
@@ -238,10 +220,10 @@ describe('request', () => {
       };
     });
 
-    expect(users.getOne()).rejects.toThrow(new XataError('Not Found', 404));
+    expect(users.request('GET', '/foo')).rejects.toThrow(new XataError('Not Found', 404));
   });
 
-  test.skip('throws with the error from the server if the response is not ok', async () => {
+  test('throws with the error from the server if the response is not ok', async () => {
     const { fetch, users } = buildClient();
 
     fetch.mockImplementation(() => {
@@ -253,24 +235,21 @@ describe('request', () => {
       };
     });
 
-    expect(users.getOne()).rejects.toThrow(new XataError('Resource not found', 404));
+    expect(users.request('GET', '/foo')).rejects.toThrow(new XataError('Resource not found', 404));
   });
 
   test('returns the json body if the response is ok', async () => {
     const { fetch, users } = buildClient();
 
     const json = { a: 1 };
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockImplementation(() => {
       return {
         ok: true,
-        json: async () => ({
-          records: [json],
-          meta: { page: { cursor: '', more: false } }
-        })
+        json: async () => json
       };
     });
 
-    const result = await users.getOne();
+    const result = await users.request('GET', '/foo');
     expect(result).toEqual(json);
   });
 });
@@ -282,21 +261,17 @@ type ExpectedRequest = {
 };
 
 async function expectRequest(
-  fetch: jest.Mock<any, any>,
+  users: RestRepository<User>,
   expectedRequest: ExpectedRequest[] | ExpectedRequest,
   callback: () => void,
   response?: any
 ) {
-  fetch.mockReset().mockImplementation(() => {
-    return {
-      ok: true,
-      json: async () => response
-    };
-  });
+  const request = jest.fn(async () => response);
+  users.request = request;
 
   await callback();
 
-  const { calls } = fetch.mock;
+  const { calls } = request.mock;
 
   const requests = Array.isArray(expectedRequest) ? expectedRequest : [expectedRequest];
 
@@ -312,21 +287,25 @@ async function expectRequest(
 
 describe('query', () => {
   describe('getMany', () => {
-    test.skip('simple query', async () => {
-      const { fetch, users } = buildClient();
+    test('simple query', async () => {
+      const { users } = buildClient();
 
-      const expected = { method: 'POST', path: '/tables/users/query', body: {} };
-      expectRequest(fetch, expected, () => users.getMany(), {
+      const expected = { method: 'POST', path: '/tables/users/query', body: { columns: ['*'] } };
+      expectRequest(users, expected, () => users.getMany(), {
         records: [],
         meta: { page: { cursor: '', more: false } }
       });
     });
 
-    test.skip('query with one filter', async () => {
-      const { fetch, users } = buildClient();
+    test('query with one filter', async () => {
+      const { users } = buildClient();
 
-      const expected = { method: 'POST', path: '/tables/users/query', body: { filter: { $all: [{ name: 'foo' }] } } };
-      expectRequest(fetch, expected, () => users.filter('name', 'foo').getMany(), {
+      const expected = {
+        method: 'POST',
+        path: '/tables/users/query',
+        body: { filter: { $all: [{ name: 'foo' }] }, columns: ['*'] }
+      };
+      expectRequest(users, expected, () => users.filter('name', 'foo').getMany(), {
         records: [],
         meta: { page: { cursor: '', more: false } }
       });
@@ -334,29 +313,30 @@ describe('query', () => {
   });
 
   describe('getOne', () => {
-    test.skip('returns a single object', async () => {
-      const { fetch, users } = buildClient();
+    test('returns a single object', async () => {
+      const { users } = buildClient();
 
-      const result = { records: [{ id: '1234' }], meta: { page: { cursor: '', more: false } } };
-      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
+      const result = { records: [{ id: '1234', name: 'Name' }], meta: { page: { cursor: '', more: false } } };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 }, columns: ['name'] } };
       expectRequest(
-        fetch,
+        users,
         expected,
         async () => {
-          const first = await users.select().getOne();
+          const first = await users.select(['name']).getOne();
           expect(first?.id).toBe(result.records[0].id);
+          expect(first?.name).toBe(result.records[0].name);
         },
         result
       );
     });
 
-    test.skip('returns null if no objects are returned', async () => {
-      const { fetch, users } = buildClient();
+    test('returns null if no objects are returned', async () => {
+      const { users } = buildClient();
 
       const result = { records: [], meta: { page: { cursor: '', more: false } } };
-      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
+      const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 }, columns: ['*'] } };
       expectRequest(
-        fetch,
+        users,
         expected,
         async () => {
           const first = await users.getOne();
@@ -369,23 +349,23 @@ describe('query', () => {
 });
 
 describe('read', () => {
-  test.skip('reads an object by id successfully', async () => {
-    const { fetch, users } = buildClient();
+  test('reads an object by id successfully', async () => {
+    const { users } = buildClient();
 
     const id = 'rec_1234';
     const expected = { method: 'GET', path: `/tables/users/data/${id}`, body: undefined };
-    expectRequest(fetch, expected, () => users.read(id));
+    expectRequest(users, expected, () => users.read(id));
   });
 });
 
 describe('Repository.update', () => {
-  test.skip('updates and object successfully', async () => {
-    const { fetch, users } = buildClient();
+  test('updates and object successfully', async () => {
+    const { users } = buildClient();
 
     const object = { id: 'rec_1234', xata: { version: 1 }, name: 'Ada' } as User;
     const expected = { method: 'PUT', path: `/tables/users/data/${object.id}`, body: object };
     expectRequest(
-      fetch,
+      users,
       expected,
       async () => {
         const result = await users.update(object.id, object);
@@ -397,12 +377,12 @@ describe('Repository.update', () => {
 });
 
 describe('Repository.delete', () => {
-  test.skip('deletes a record by id successfully', async () => {
-    const { fetch, users } = buildClient();
+  test('deletes a record by id successfully', async () => {
+    const { users } = buildClient();
 
     const id = 'rec_1234';
     const expected = { method: 'DELETE', path: `/tables/users/data/${id}`, body: undefined };
-    expectRequest(fetch, expected, async () => {
+    expectRequest(users, expected, async () => {
       const result = await users.delete(id);
       expect(result).toBe(undefined);
     });
@@ -410,8 +390,8 @@ describe('Repository.delete', () => {
 });
 
 describe('create', () => {
-  test.skip('successful', async () => {
-    const { fetch, users } = buildClient();
+  test('successful', async () => {
+    const { users } = buildClient();
 
     const created = { id: 'rec_1234', _version: 0 };
     const object = { name: 'Ada' } as User;
@@ -425,7 +405,7 @@ describe('create', () => {
     ];
 
     expectRequest(
-      fetch,
+      users,
       expected,
       async () => {
         const result = await users.create(object);

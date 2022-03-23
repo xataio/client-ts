@@ -16,7 +16,7 @@ jest.setTimeout(50000);
 
 describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace', async () => {
-    const workspace = await client.workspace.createWorkspace({
+    const workspace = await client.workspaces.createWorkspace({
       name: 'foo',
       slug: 'foo'
     });
@@ -24,13 +24,13 @@ describe('API Client Integration Tests', () => {
     expect(workspace.id).toBeDefined();
     expect(workspace.name).toBe('foo');
 
-    const foo = await client.workspace.getWorkspace(workspace.id);
+    const foo = await client.workspaces.getWorkspace(workspace.id);
     expect(foo.id).toBe(workspace.id);
     expect(foo.slug).toBe('foo');
 
-    await client.workspace.deleteWorkspace(workspace.id);
+    await client.workspaces.deleteWorkspace(workspace.id);
 
-    await expect(client.workspace.getWorkspace(workspace.id)).rejects.toMatchInlineSnapshot(`
+    await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toMatchInlineSnapshot(`
             Object {
               "message": "no access to the workspace",
               "status": 401,
