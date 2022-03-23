@@ -1,7 +1,6 @@
 import { XataRecord, Repository } from '..';
-import { compact } from '../util/lang';
 import { Constraint, DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
-import { PaginationOptions, Page } from './pagination';
+import { PaginationOptions, BasePage, PaginationQueryMeta, Page } from './pagination';
 import { Selectable, SelectableColumn, Select } from './selection';
 
 export type QueryOptions<T> = {
@@ -11,121 +10,43 @@ export type QueryOptions<T> = {
   sort?: SortFilter<T> | SortFilter<T>[];
 };
 
-export type FilterExpression = {
-  $exists?: string;
-  $existsNot?: string;
-  $any?: FilterList;
-  $all?: FilterList;
-  $none?: FilterList;
-  $not?: FilterList;
-} & {
-  [key: string]: FilterColumn;
-};
+type QueryOrConstraint<T extends XataRecord, R extends XataRecord> = Query<T, R> | Constraint<T>;
 
-export type FilterList = FilterExpression | FilterExpression[];
-export type FilterColumn = FilterColumnIncludes | FilterPredicate | FilterList;
+export class Query<T extends XataRecord, R extends XataRecord = T> implements BasePage<T, R> {
+  table: string;
+  repository: Repository<T>;
 
-/**
- * @maxProperties 1
- * @minProperties 1
- */
-export type FilterColumnIncludes = {
-  $includes?: FilterPredicate;
-  $includesAny?: FilterPredicate;
-  $includesAll?: FilterPredicate;
-  $includesNone?: FilterPredicate;
-};
+  readonly $any?: QueryOrConstraint<T, R>[];
+  readonly $all?: QueryOrConstraint<T, R>[];
+  readonly $not?: QueryOrConstraint<T, R>[];
+  readonly $none?: QueryOrConstraint<T, R>[];
+  readonly $sort?: Record<string, SortDirection>;
+  readonly columns: SelectableColumn<T>[] = ['*'];
 
-export type FilterPredicate = FilterValue | FilterPredicate[] | FilterPredicateOp | FilterPredicateRangeOp;
+  // Cursor pagination
+  readonly query: Query<T, R> = this;
+  readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true } };
+  readonly records: R[] = [];
 
-/**
- * @maxProperties 1
- * @minProperties 1
- */
-export type FilterPredicateOp = {
-  $any?: FilterPredicate[];
-  $all?: FilterPredicate[];
-  $none?: FilterPredicate | FilterPredicate[];
-  $not?: FilterPredicate | FilterPredicate[];
-  $is?: FilterValue | FilterValue[];
-  $isNot?: FilterValue | FilterValue[];
-  $lt?: FilterRangeValue;
-  $le?: FilterRangeValue;
-  $gt?: FilterRangeValue;
-  $ge?: FilterRangeValue;
-  $contains?: string;
-  $startsWith?: string;
-  $endsWith?: string;
-  $pattern?: string;
-};
-
-export type FilterPredicateRangeOp = {
-  $lt?: FilterRangeValue;
-  $le?: FilterRangeValue;
-  $gt?: FilterRangeValue;
-  $ge?: FilterRangeValue;
-};
-
-export type FilterRangeValue = number | string;
-
-export type FilterValue = number | string | boolean;
-
-export type SortExpression =
-  | string[]
-  | {
-      [key: string]: SortOrder;
-    }
-  | {
-      [key: string]: SortOrder;
-    }[];
-
-export type SortOrder = 'asc' | 'desc';
-
-export type PageConfig = {
-  after?: string;
-  before?: string;
-  first?: string;
-  last?: string;
-  size?: number;
-  offset?: number;
-};
-
-export type ColumnsFilter = string[];
-
-// TODO: Remove all these types with API Schemas PR
-export type QueryTableData = {
-  filter: FilterExpression;
-  sort?: SortExpression;
-  page?: PageConfig;
-  columns?: ColumnsFilter;
-};
-
-export class Query<T extends XataRecord, R extends XataRecord = T> {
-  #table: string;
-  #repository: Repository<T>;
-  #data: QueryTableData = { filter: {} };
-
-  constructor(
-    repository: Repository<T> | null,
-    table: string,
-    data: Partial<QueryTableData>,
-    parent?: Partial<QueryTableData>
-  ) {
-    this.#table = table;
-
+  constructor(repository: Repository<T> | null, table: string, data: Partial<Query<T, R>>, parent?: Query<T, R>) {
     if (repository) {
-      this.#repository = repository;
+      this.repository = repository;
     } else {
-      this.#repository = this as any;
+      this.repository = this as any;
     }
+    this.table = table;
 
-    this.#data.filter.$any = data.filter?.$any ?? parent?.filter?.$any;
-    this.#data.filter.$all = data.filter?.$all ?? parent?.filter?.$all;
-    this.#data.filter.$not = data.filter?.$not ?? parent?.filter?.$not;
-    this.#data.filter.$none = data.filter?.$none ?? parent?.filter?.$none;
-    this.#data.sort = data.sort ?? parent?.sort;
-    this.#data.columns = data.columns ?? parent?.columns ?? ['*'];
+    // For some reason Object.assign(this, parent) didn't work in this case
+    // so doing all this manually:
+    this.$any = parent?.$any;
+    this.$all = parent?.$all;
+    this.$not = parent?.$not;
+    this.$none = parent?.$none;
+    this.$sort = parent?.$sort;
 
+    Object.assign(this, data);
+    // These bindings are used to support deconstructing
+    // const { any, not, filter, sort } = xata.users.query()
     this.any = this.any.bind(this);
     this.all = this.all.bind(this);
     this.not = this.not.bind(this);
@@ -137,54 +58,93 @@ export class Query<T extends XataRecord, R extends XataRecord = T> {
     Object.defineProperty(this, 'repository', { enumerable: false });
   }
 
-  getData(): QueryTableData {
-    return this.#data;
-  }
-
   any(...queries: Query<T, R>[]): Query<T, R> {
-    const $any = compact(queries.map((query) => query.getData().filter.$any)).flat();
-    return new Query<T, R>(this.#repository, this.#table, { filter: { $any } }, this.#data);
+    return new Query<T, R>(
+      this.repository,
+      this.table,
+      {
+        $any: (this.$any || []).concat(queries)
+      },
+      this
+    );
   }
 
   all(...queries: Query<T, R>[]): Query<T, R> {
-    const $all = compact(queries.map((query) => query.getData().filter.$all)).flat();
-    return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
+    return new Query<T, R>(
+      this.repository,
+      this.table,
+      {
+        $all: (this.$all || []).concat(queries)
+      },
+      this
+    );
   }
 
   not(...queries: Query<T, R>[]): Query<T, R> {
-    const $not = compact(queries.map((query) => query.getData().filter.$not)).flat();
-    return new Query<T, R>(this.#repository, this.#table, { filter: { $not } }, this.#data);
+    return new Query<T, R>(
+      this.repository,
+      this.table,
+      {
+        $not: (this.$not || []).concat(queries)
+      },
+      this
+    );
   }
 
   none(...queries: Query<T, R>[]): Query<T, R> {
-    const $none = compact(queries.map((query) => query.getData().filter.$none)).flat();
-    return new Query<T, R>(this.#repository, this.#table, { filter: { $none } }, this.#data);
+    return new Query<T, R>(
+      this.repository,
+      this.table,
+      {
+        $none: (this.$none || []).concat(queries)
+      },
+      this
+    );
   }
 
   filter(constraints: FilterConstraints<T>): Query<T, R>;
   filter<F extends keyof T>(column: F, value: FilterConstraints<T[F]> | DeepConstraint<T[F]>): Query<T, R>;
   filter(a: any, b?: any): Query<T, R> {
     if (arguments.length === 1) {
-      const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));
-      const $all = compact([this.#data.filter.$all].flat().concat(constraints));
-
-      return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
+      const constraints = a as FilterConstraints<T>;
+      const queries: QueryOrConstraint<T, R>[] = [];
+      for (const [column, constraint] of Object.entries(constraints)) {
+        queries.push({ [column]: constraint });
+      }
+      return new Query<T, R>(
+        this.repository,
+        this.table,
+        {
+          $all: (this.$all || []).concat(queries)
+        },
+        this
+      );
     } else {
       const column = a as keyof T;
       const value = b as Partial<T[keyof T]> | Constraint<T[keyof T]>;
-      const $all = compact([this.#data.filter.$all].flat().concat({ [column]: value }));
-
-      return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
+      return new Query<T, R>(
+        this.repository,
+        this.table,
+        {
+          $all: (this.$all || []).concat({ [column]: value })
+        },
+        this
+      );
     }
   }
 
   sort<F extends keyof T>(column: F, direction: SortDirection): Query<T, R> {
-    const sort = { ...this.#data.sort, [column]: direction };
-    return new Query<T, R>(this.#repository, this.#table, { sort }, this.#data);
-  }
+    const sort = { ...this.$sort, [column]: direction };
+    const q = new Query<T, R>(
+      this.repository,
+      this.table,
+      {
+        $sort: sort
+      },
+      this
+    );
 
-  select<K extends SelectableColumn<T>>(columns: K[]) {
-    return new Query<T, Select<T, K>>(this.#repository, this.#table, { columns }, this.#data);
+    return q;
   }
 
   async getPaginated<Options extends QueryOptions<T>>(
@@ -192,7 +152,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> {
   ): Promise<
     Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
   > {
-    return this.#repository.query(this, options);
+    return this.repository._runQuery(this, options);
   }
 
   async *[Symbol.asyncIterator](): AsyncIterableIterator<R> {
@@ -232,12 +192,16 @@ export class Query<T extends XataRecord, R extends XataRecord = T> {
     return records[0] || null;
   }
 
-  /**async deleteAll(): Promise<number> {
+  async deleteAll(): Promise<number> {
     // TODO: Return number of affected rows
     return 0;
-  }**/
+  }
 
   async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.firstPage(size, offset);
+  }
+
+  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.firstPage(size, offset);
   }
 
@@ -247,5 +211,9 @@ export class Query<T extends XataRecord, R extends XataRecord = T> {
 
   async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.getPaginated({ page: { size, offset, before: 'end' } });
+  }
+
+  hasNextPage(): boolean {
+    return this.meta.page.more;
   }
 }
