@@ -325,4 +325,4 @@ const transformObjectLinks = (object: any) => {
 };
 
 export * from './api';
-export * from './schema/operators';
+export * from './schema';
