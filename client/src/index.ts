@@ -324,4 +324,4 @@ const transformObjectLinks = (object: any) => {
   }, {});
 };
 
-export * from './schema/operators';
+export * from './schema';
