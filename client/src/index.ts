@@ -15,10 +15,6 @@ export interface XataRecord {
 }
 
 export abstract class Repository<T extends XataRecord> extends Query<T> {
-  select<K extends SelectableColumn<T>>(columns: K[]) {
-    return new Query<T, Select<T, K>>(this.repository, this.table, { columns });
-  }
-
   abstract create(object: Selectable<T>): Promise<T>;
 
   abstract createMany(objects: Selectable<T>[]): Promise<T[]>;
@@ -29,8 +25,7 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
 
   abstract delete(id: string): void;
 
-  // Used by the Query object internally
-  abstract _runQuery<R extends XataRecord, Options extends QueryOptions<T>>(
+  abstract query<R extends XataRecord, Options extends QueryOptions<T>>(
     query: Query<T, R>,
     options: Options
   ): Promise<
@@ -39,33 +34,31 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
 }
 
 export class RestRepository<T extends XataRecord> extends Repository<T> {
-  client: BaseClient<any>;
-  fetch: any;
+  #client: BaseClient<any>;
+  #fetch: any;
+  #table: string;
 
   constructor(client: BaseClient<any>, table: string) {
     super(null, table, {});
-    this.client = client;
+    this.#client = client;
+    this.#table = table;
 
     const doWeHaveFetch = typeof fetch !== 'undefined';
-    const isInjectedFetchProblematic = !this.client.options.fetch;
+    const isInjectedFetchProblematic = !this.#client.options.fetch;
 
     if (doWeHaveFetch) {
-      this.fetch = fetch;
+      this.#fetch = fetch;
     } else if (isInjectedFetchProblematic) {
       throw new Error(errors.falsyFetchImplementation);
     } else {
-      this.fetch = this.client.options.fetch;
+      this.#fetch = this.#client.options.fetch;
     }
-
-    Object.defineProperty(this, 'client', { enumerable: false });
-    Object.defineProperty(this, 'fetch', { enumerable: false });
-    Object.defineProperty(this, 'hostname', { enumerable: false });
   }
 
   async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {
-    const { databaseURL, apiKey } = this.client.options;
-    const branch = await this.client.getBranch();
-    const fetchImpl = this.fetch;
+    const { databaseURL, apiKey } = this.#client.options;
+    const branch = await this.#client.getBranch();
+    const fetchImpl = this.#fetch;
 
     const resp: Response = await fetchImpl(`${databaseURL}:${branch}${path}`, {
       method,
@@ -96,17 +89,13 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return resp.json();
   }
 
-  select<K extends SelectableColumn<T>>(columns: K[]) {
-    return new Query<T, Select<T, K>>(this.repository, this.table, { columns });
-  }
-
   async create(object: T): Promise<T> {
     const record = transformObjectLinks(object);
 
     const response = await this.request<{
       id: string;
       xata: { version: number };
-    }>('POST', `/tables/${this.table}/data`, record);
+    }>('POST', `/tables/${this.#table}/data`, record);
     if (!response) {
       throw new Error("The server didn't return any data for the query");
     }
@@ -124,7 +113,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
 
     const response = await this.request<{
       recordIDs: string[];
-    }>('POST', `/tables/${this.table}/bulk`, { records });
+    }>('POST', `/tables/${this.#table}/bulk`, { records });
     if (!response) {
       throw new Error("The server didn't return any data for the query");
     }
@@ -142,10 +131,10 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     try {
       const response = await this.request<
         T & { id: string; xata: { version: number; table?: string; warnings?: string[] } }
-      >('GET', `/tables/${this.table}/data/${id}`);
+      >('GET', `/tables/${this.#table}/data/${id}`);
       if (!response) return null;
 
-      return this.client.initObject(this.table, response);
+      return this.#client.initObject(this.#table, response);
     } catch (err) {
       if ((err as XataError).status === 404) return null;
       throw err;
@@ -156,52 +145,47 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     const response = await this.request<{
       id: string;
       xata: { version: number };
-    }>('PUT', `/tables/${this.table}/data/${id}`, object);
+    }>('PUT', `/tables/${this.#table}/data/${id}`, object);
     if (!response) {
       throw new Error("The server didn't return any data for the query");
     }
 
     // TODO: Review this, not sure we are properly initializing the object
-    return this.client.initObject(this.table, response);
+    return this.#client.initObject(this.#table, response);
   }
 
   async delete(id: string) {
-    await this.request('DELETE', `/tables/${this.table}/data/${id}`);
+    await this.request('DELETE', `/tables/${this.#table}/data/${id}`);
   }
 
-  async _runQuery<R extends XataRecord, Options extends QueryOptions<T>>(
+  async query<R extends XataRecord, Options extends QueryOptions<T>>(
     query: Query<T, R>,
     options: Options
   ): Promise<
     Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
   > {
-    const filter = {
-      $any: query.$any,
-      $all: query.$all,
-      $not: query.$not,
-      $none: query.$none
-    };
+    const data = query.getData();
 
     const body = {
-      filter: Object.values(filter).some(Boolean) ? filter : undefined,
-      sort: buildSortFilter(options?.sort) ?? query.$sort,
-      page: options?.page,
-      columns: options?.columns ?? query.columns
+      filter: Object.values(data.filter).some(Boolean) ? data.filter : undefined,
+      sort: buildSortFilter(options?.sort) ?? data.sort,
+      page: options?.page ?? data.page,
+      columns: options?.columns ?? data.columns
     };
 
     const response = await this.request<{
       records: object[];
       meta: { page: { cursor: string; more: boolean } };
-    }>('POST', `/tables/${this.table}/query`, body);
+    }>('POST', `/tables/${this.#table}/query`, body);
     if (!response) {
       throw new Error("The server didn't return any data for the query");
     }
 
     const { meta, records: objects } = response;
     const records = objects.map((record) =>
-      this.client.initObject<
+      this.#client.initObject<
         typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R
-      >(this.table, record)
+      >(this.#table, record)
     );
 
     // TODO: We should properly type this any
@@ -339,3 +323,5 @@ const transformObjectLinks = (object: any) => {
     return { ...acc, [key]: value };
   }, {});
 };
+
+export * from './schema/operators';
