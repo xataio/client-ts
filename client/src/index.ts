@@ -54,29 +54,32 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     this.#fetch = fetchImpl;
   }
 
-  get #fetchProps(): FetcherExtraProps {
+  async #getFetchProps(): Promise<FetcherExtraProps> {
+    const branch = await this.#client.getBranch();
+
     return {
       fetchImpl: this.#fetch,
       apiKey: this.#client.options.apiKey,
       apiUrl: '',
+      // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
       workspacesApiUrl: (path, params) => {
         const baseUrl = this.#client.options.databaseURL ?? '';
-        const branch = params.dbBranchName ?? params.branch;
-        const newPath = path.replace(/^\/db\/[^/]+/, branch ? `:${branch}` : '');
+        const hasBranch = params.dbBranchName ?? params.branch;
+        const newPath = path.replace(/^\/db\/[^/]+/, hasBranch ? `:${branch}` : '');
         return baseUrl + newPath;
       }
     };
   }
 
   async create(object: T): Promise<T> {
-    const branch = await this.#client.getBranch();
+    const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
 
     const response = await insertRecord({
-      pathParams: { workspace: '', dbBranchName: branch, tableName: this.#table },
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
       body: record,
-      ...this.#fetchProps
+      ...fetchProps
     });
 
     const finalObject = await this.read(response.id);
@@ -88,14 +91,14 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
   }
 
   async createMany(objects: T[]): Promise<T[]> {
-    const branch = await this.#client.getBranch();
+    const fetchProps = await this.#getFetchProps();
 
     const records = objects.map((object) => transformObjectLinks(object));
 
     const response = await bulkInsertTableRecords({
-      pathParams: { workspace: '', dbBranchName: branch, tableName: this.#table },
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
       body: { records },
-      ...this.#fetchProps
+      ...fetchProps
     });
 
     // TODO: Use filer.$any() to get all the records
@@ -108,23 +111,23 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
   }
 
   async read(recordId: string): Promise<T | null> {
-    const branch = await this.#client.getBranch();
+    const fetchProps = await this.#getFetchProps();
 
     const response = await getRecord({
-      pathParams: { workspace: '', dbBranchName: branch, tableName: this.#table, recordId },
-      ...this.#fetchProps
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+      ...fetchProps
     });
 
     return this.#client.initObject(this.#table, response);
   }
 
   async update(recordId: string, object: Partial<T>): Promise<T> {
-    const branch = await this.#client.getBranch();
+    const fetchProps = await this.#getFetchProps();
 
     const response = await insertRecordWithID({
-      pathParams: { workspace: '', dbBranchName: branch, tableName: this.#table, recordId },
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
       body: object,
-      ...this.#fetchProps
+      ...fetchProps
     });
 
     // TODO: Review this, not sure we are properly initializing the object
@@ -132,11 +135,11 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
   }
 
   async delete(recordId: string) {
-    const branch = await this.#client.getBranch();
+    const fetchProps = await this.#getFetchProps();
 
     await deleteRecord({
-      pathParams: { workspace: '', dbBranchName: branch, tableName: this.#table, recordId },
-      ...this.#fetchProps
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+      ...fetchProps
     });
   }
 
@@ -155,11 +158,11 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
       columns: options?.columns ?? data.columns
     };
 
-    const branch = await this.#client.getBranch();
+    const fetchProps = await this.#getFetchProps();
     const { meta, records: objects } = await queryTable({
-      pathParams: { workspace: '', dbBranchName: branch, tableName: this.#table },
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
       body,
-      ...this.#fetchProps
+      ...fetchProps
     });
 
     const records = objects.map((record) =>
@@ -197,9 +200,10 @@ export type XataClientOptions = {
 };
 
 export class BaseClient<D extends Record<string, Repository<any>>> {
+  #links: Links;
+  #branch: BranchStrategyValue;
+
   options: XataClientOptions;
-  private links: Links;
-  private branch: BranchStrategyValue;
   db!: D;
 
   constructor(options: XataClientOptions, links: Links) {
@@ -208,14 +212,14 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     }
 
     this.options = options;
-    this.links = links;
+    this.#links = links;
   }
 
   public initObject<T>(table: string, object: object) {
     const o: Record<string, unknown> = {};
     Object.assign(o, object);
 
-    const tableLinks = this.links[table] || [];
+    const tableLinks = this.#links[table] || [];
     for (const link of tableLinks) {
       const [field, linkTable] = link;
       const value = o[field];
@@ -257,7 +261,7 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
   }
 
   public async getBranch(): Promise<string> {
-    if (this.branch) return this.branch;
+    if (this.#branch) return this.#branch;
 
     const { branch: param } = this.options;
     const strategies = Array.isArray(param) ? [...param] : [param];
@@ -269,7 +273,7 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     for await (const strategy of strategies) {
       const branch = await evaluateBranch(strategy);
       if (branch) {
-        this.branch = branch;
+        this.#branch = branch;
         return branch;
       }
     }

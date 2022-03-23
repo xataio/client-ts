@@ -2,15 +2,23 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import type { SimpleError } from './responses';
 
+const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
+  const query = new URLSearchParams(queryParams).toString();
+  const queryString = query.length > 0 ? `?${query}` : '';
+  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
+};
+
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
 export type FetchImpl = (
   url: string,
   init?: { body?: string; headers?: Record<string, string>; method?: string }
 ) => Promise<{ ok: boolean; status: number; json(): Promise<any> }>;
 
+export type WorkspaceApiUrlBuilder = (path: string, pathParams: Record<string, string>) => string;
+
 export type FetcherExtraProps = {
   apiUrl: string;
-  workspacesApiUrl: string | ((path: string, pathParams: Record<string, string>) => string);
+  workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   fetchImpl: FetchImpl;
   apiKey: string;
 };
@@ -24,13 +32,6 @@ export type FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
   pathParams?: TPathParams;
 };
 
-const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
-  const query = new URLSearchParams(queryParams).toString();
-  const queryString = query.length > 0 ? `?${query}` : '';
-
-  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
-};
-
 const fallbackError: SimpleError = { message: 'Network response was not ok' };
 
 function buildBaseUrl({
@@ -40,7 +41,7 @@ function buildBaseUrl({
   pathParams
 }: {
   path: string;
-  workspacesApiUrl: string | ((path: string, pathParams: Record<string, string>) => string);
+  workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   apiUrl: string;
   pathParams?: Record<string, string>;
 }) {
@@ -71,7 +72,7 @@ export async function fetch<
   TQueryParams extends Record<string, unknown>,
   TPathParams extends Record<string, string>
 >({
-  url,
+  url: path,
   method,
   body,
   headers,
@@ -82,10 +83,10 @@ export async function fetch<
   apiUrl,
   workspacesApiUrl
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
-  const baseURL = buildBaseUrl({ path: url, workspacesApiUrl, pathParams, apiUrl });
-  const finalUrl = resolveUrl(baseURL, queryParams, pathParams);
+  const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
+  const url = resolveUrl(baseUrl, queryParams, pathParams);
 
-  const response = await fetchImpl(finalUrl, {
+  const response = await fetchImpl(url, {
     method: method.toUpperCase(),
     body: body ? JSON.stringify(body) : undefined,
     headers: {
@@ -94,7 +95,7 @@ export async function fetch<
       Authorization: `Bearer ${apiKey}`,
       // The host header is needed by Node.js on localhost.
       // It is ignored by fetch() in the frontend
-      ...(pathParams?.workspace ? { Host: hostHeaderForWorkspace(finalUrl) } : {})
+      ...(pathParams?.workspace ? { Host: hostHeaderForWorkspace(url) } : {})
     }
   });
 

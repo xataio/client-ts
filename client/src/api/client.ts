@@ -12,7 +12,7 @@ export interface XataApiClientOptions {
 }
 
 export class XataApiClient {
-  private extraProps: FetcherExtraProps;
+  #extraProps: FetcherExtraProps;
 
   constructor(options: XataApiClientOptions) {
     const fetchImpl = typeof fetch !== 'undefined' ? fetch : options.fetchImpl;
@@ -25,7 +25,7 @@ export class XataApiClient {
 
     const provider = options.host ?? 'production';
 
-    this.extraProps = {
+    this.#extraProps = {
       apiUrl: getHostUrl(provider, 'main'),
       workspacesApiUrl: getHostUrl(provider, 'workspaces'),
       fetchImpl,
@@ -34,27 +34,27 @@ export class XataApiClient {
   }
 
   public get user() {
-    return new UserApi(this.extraProps);
+    return new UserApi(this.#extraProps);
   }
 
   public get workspaces() {
-    return new WorkspaceApi(this.extraProps);
+    return new WorkspaceApi(this.#extraProps);
   }
 
   public get databases() {
-    return new DatabaseApi(this.extraProps);
+    return new DatabaseApi(this.#extraProps);
   }
 
   public get branches() {
-    return new BranchApi(this.extraProps);
+    return new BranchApi(this.#extraProps);
   }
 
   public get tables() {
-    return new TableApi(this.extraProps);
+    return new TableApi(this.#extraProps);
   }
 
   public get records() {
-    return new RecordsApi(this.extraProps);
+    return new RecordsApi(this.#extraProps);
   }
 }
 
