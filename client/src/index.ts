@@ -2,7 +2,6 @@ import { buildSortFilter } from './schema/filters';
 import { Page } from './schema/pagination';
 import { Query, QueryOptions } from './schema/query';
 import { Selectable, SelectableColumn, Select } from './schema/selection';
-import { errors } from './util/errors';
 
 export interface XataRecord {
   id: string;
@@ -43,16 +42,14 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     this.#client = client;
     this.#table = table;
 
-    const doWeHaveFetch = typeof fetch !== 'undefined';
-    const isInjectedFetchProblematic = !this.#client.options.fetch;
-
-    if (doWeHaveFetch) {
-      this.#fetch = fetch;
-    } else if (isInjectedFetchProblematic) {
-      throw new Error(errors.falsyFetchImplementation);
-    } else {
-      this.#fetch = this.#client.options.fetch;
+    // TODO: Remove when integrating with API client
+    const fetchImpl = typeof fetch !== 'undefined' ? fetch : this.#client.options.fetch;
+    if (!fetchImpl) {
+      throw new Error(
+        `The \`fetch\` option passed to the Xata client is resolving to a falsy value and may not be correctly imported.`
+      );
     }
+    this.#fetch = fetchImpl;
   }
 
   async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {

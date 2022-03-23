@@ -1,4 +1,3 @@
-import { errors } from '../util/errors';
 import type * as Types from './components';
 import { operationsByTag } from './components';
 import type { FetcherExtraProps, FetchImpl } from './fetcher';
@@ -18,7 +17,10 @@ export class XataApiClient {
   constructor(options: XataApiClientOptions) {
     const fetchImpl = typeof fetch !== 'undefined' ? fetch : options.fetchImpl;
     if (!fetchImpl) {
-      throw new Error(errors.noFetchImplementation);
+      /** @todo add a link after docs exist */
+      throw new Error(
+        `The \`fetch\` option passed to the Xata client is resolving to a falsy value and may not be correctly imported.`
+      );
     }
 
     const provider = options.host ?? 'production';
@@ -35,19 +37,19 @@ export class XataApiClient {
     return new UserApi(this.extraProps);
   }
 
-  public get workspace() {
+  public get workspaces() {
     return new WorkspaceApi(this.extraProps);
   }
 
-  public get database() {
+  public get databases() {
     return new DatabaseApi(this.extraProps);
   }
 
-  public get branch() {
+  public get branches() {
     return new BranchApi(this.extraProps);
   }
 
-  public get table() {
+  public get tables() {
     return new TableApi(this.extraProps);
   }
 

@@ -1,5 +1,3 @@
-import { errors } from '../util/errors';
-
 type HostAliases = 'production' | 'staging';
 type ProviderBuilder = { main: string; workspaces: string };
 export type HostProvider = HostAliases | ProviderBuilder;
@@ -11,7 +9,7 @@ export function getHostUrl(provider: HostProvider, type: keyof ProviderBuilder):
     return provider[type];
   }
 
-  throw new Error(errors.invalidApiProvider);
+  throw new Error('Invalid API provider');
 }
 
 const providers: Record<HostAliases, ProviderBuilder> = {

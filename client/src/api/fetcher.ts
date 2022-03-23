@@ -92,9 +92,7 @@ export async function fetch<
       return jsonResponse;
     }
 
-    if (jsonResponse.success) {
-      throw withStatus(jsonResponse.data, response.status);
-    } else if (jsonResponse.message) {
+    if (jsonResponse.message) {
       throw withStatus({ message: jsonResponse.message }, response.status);
     } else {
       throw withStatus(fallbackError, response.status);
