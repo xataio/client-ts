@@ -1,3 +1,5 @@
+import { bulkInsertTableRecords, deleteRecord, getRecord, insertRecord, insertRecordWithID, queryTable } from './api';
+import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { buildSortFilter } from './schema/filters';
 import { Page } from './schema/pagination';
 import { Query, QueryOptions } from './schema/query';
@@ -52,50 +54,33 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     this.#fetch = fetchImpl;
   }
 
-  async request<T>(method: string, path: string, body?: unknown): Promise<T | undefined> {
-    const { databaseURL, apiKey } = this.#client.options;
+  async #getFetchProps(): Promise<FetcherExtraProps> {
     const branch = await this.#client.getBranch();
-    const fetchImpl = this.#fetch;
 
-    const resp: Response = await fetchImpl(`${databaseURL}:${branch}${path}`, {
-      method,
-      headers: {
-        Accept: '*/*',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!resp.ok) {
-      try {
-        const json = await resp.json();
-        const message = json.message;
-        if (typeof message === 'string') {
-          throw new XataError(message, resp.status);
-        }
-      } catch (err) {
-        if (err instanceof XataError) throw err;
-        // Ignore errors for other reasons.
-        // For example if the response's body cannot be parsed as JSON
+    return {
+      fetchImpl: this.#fetch,
+      apiKey: this.#client.options.apiKey,
+      apiUrl: '',
+      // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
+      workspacesApiUrl: (path, params) => {
+        const baseUrl = this.#client.options.databaseURL ?? '';
+        const hasBranch = params.dbBranchName ?? params.branch;
+        const newPath = path.replace(/^\/db\/[^/]+/, hasBranch ? `:${branch}` : '');
+        return baseUrl + newPath;
       }
-      throw new XataError(resp.statusText, resp.status);
-    }
-
-    if (resp.status === 204) return undefined;
-    return resp.json();
+    };
   }
 
   async create(object: T): Promise<T> {
+    const fetchProps = await this.#getFetchProps();
+
     const record = transformObjectLinks(object);
 
-    const response = await this.request<{
-      id: string;
-      xata: { version: number };
-    }>('POST', `/tables/${this.#table}/data`, record);
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+    const response = await insertRecord({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+      body: record,
+      ...fetchProps
+    });
 
     const finalObject = await this.read(response.id);
     if (!finalObject) {
@@ -106,14 +91,15 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
   }
 
   async createMany(objects: T[]): Promise<T[]> {
+    const fetchProps = await this.#getFetchProps();
+
     const records = objects.map((object) => transformObjectLinks(object));
 
-    const response = await this.request<{
-      recordIDs: string[];
-    }>('POST', `/tables/${this.#table}/bulk`, { records });
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+    const response = await bulkInsertTableRecords({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+      body: { records },
+      ...fetchProps
+    });
 
     // TODO: Use filer.$any() to get all the records
     const finalObjects = await Promise.all(response.recordIDs.map((id) => this.read(id)));
@@ -124,35 +110,37 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return finalObjects as T[];
   }
 
-  async read(id: string): Promise<T | null> {
-    try {
-      const response = await this.request<
-        T & { id: string; xata: { version: number; table?: string; warnings?: string[] } }
-      >('GET', `/tables/${this.#table}/data/${id}`);
-      if (!response) return null;
+  async read(recordId: string): Promise<T | null> {
+    const fetchProps = await this.#getFetchProps();
 
-      return this.#client.initObject(this.#table, response);
-    } catch (err) {
-      if ((err as XataError).status === 404) return null;
-      throw err;
-    }
+    const response = await getRecord({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+      ...fetchProps
+    });
+
+    return this.#client.initObject(this.#table, response);
   }
 
-  async update(id: string, object: Partial<T>): Promise<T> {
-    const response = await this.request<{
-      id: string;
-      xata: { version: number };
-    }>('PUT', `/tables/${this.#table}/data/${id}`, object);
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+  async update(recordId: string, object: Partial<T>): Promise<T> {
+    const fetchProps = await this.#getFetchProps();
+
+    const response = await insertRecordWithID({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+      body: object,
+      ...fetchProps
+    });
 
     // TODO: Review this, not sure we are properly initializing the object
     return this.#client.initObject(this.#table, response);
   }
 
-  async delete(id: string) {
-    await this.request('DELETE', `/tables/${this.#table}/data/${id}`);
+  async delete(recordId: string) {
+    const fetchProps = await this.#getFetchProps();
+
+    await deleteRecord({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+      ...fetchProps
+    });
   }
 
   async query<R extends XataRecord, Options extends QueryOptions<T>>(
@@ -170,15 +158,13 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
       columns: options?.columns ?? data.columns
     };
 
-    const response = await this.request<{
-      records: object[];
-      meta: { page: { cursor: string; more: boolean } };
-    }>('POST', `/tables/${this.#table}/query`, body);
-    if (!response) {
-      throw new Error("The server didn't return any data for the query");
-    }
+    const fetchProps = await this.#getFetchProps();
+    const { meta, records: objects } = await queryTable({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+      body,
+      ...fetchProps
+    });
 
-    const { meta, records: objects } = response;
     const records = objects.map((record) =>
       this.#client.initObject<
         typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R
@@ -206,7 +192,7 @@ type BranchStrategy = BranchStrategyValue | BranchStrategyBuilder;
 type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
 
 export type XataClientOptions = {
-  fetch?: unknown;
+  fetch?: FetchImpl;
   databaseURL?: string;
   branch: BranchStrategyOption;
   apiKey: string;
@@ -214,9 +200,10 @@ export type XataClientOptions = {
 };
 
 export class BaseClient<D extends Record<string, Repository<any>>> {
+  #links: Links;
+  #branch: BranchStrategyValue;
+
   options: XataClientOptions;
-  private links: Links;
-  private branch: BranchStrategyValue;
   db!: D;
 
   constructor(options: XataClientOptions, links: Links) {
@@ -225,14 +212,14 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     }
 
     this.options = options;
-    this.links = links;
+    this.#links = links;
   }
 
   public initObject<T>(table: string, object: object) {
     const o: Record<string, unknown> = {};
     Object.assign(o, object);
 
-    const tableLinks = this.links[table] || [];
+    const tableLinks = this.#links[table] || [];
     for (const link of tableLinks) {
       const [field, linkTable] = link;
       const value = o[field];
@@ -274,7 +261,7 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
   }
 
   public async getBranch(): Promise<string> {
-    if (this.branch) return this.branch;
+    if (this.#branch) return this.#branch;
 
     const { branch: param } = this.options;
     const strategies = Array.isArray(param) ? [...param] : [param];
@@ -286,7 +273,7 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     for await (const strategy of strategies) {
       const branch = await evaluateBranch(strategy);
       if (branch) {
-        this.branch = branch;
+        this.#branch = branch;
         return branch;
       }
     }

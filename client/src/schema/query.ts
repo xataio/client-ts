@@ -1,4 +1,5 @@
 import { XataRecord, Repository } from '..';
+import { FilterExpression, SortExpression, PageConfig, ColumnsFilter } from '../api/schemas';
 import { compact } from '../util/lang';
 import { Constraint, DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
 import { PaginationOptions, Page, Paginable, PaginationQueryMeta } from './pagination';
@@ -6,93 +7,11 @@ import { Selectable, SelectableColumn, Select } from './selection';
 
 export type QueryOptions<T> = {
   page?: PaginationOptions;
-  columns?: Array<keyof Selectable<T>>;
+  columns?: Extract<keyof Selectable<T>, string>[];
   //filter?: FilterConstraints<T>;
   sort?: SortFilter<T> | SortFilter<T>[];
 };
 
-export type FilterExpression = {
-  $exists?: string;
-  $existsNot?: string;
-  $any?: FilterList;
-  $all?: FilterList;
-  $none?: FilterList;
-  $not?: FilterList;
-} & {
-  [key: string]: FilterColumn;
-};
-
-export type FilterList = FilterExpression | FilterExpression[];
-export type FilterColumn = FilterColumnIncludes | FilterPredicate | FilterList;
-
-/**
- * @maxProperties 1
- * @minProperties 1
- */
-export type FilterColumnIncludes = {
-  $includes?: FilterPredicate;
-  $includesAny?: FilterPredicate;
-  $includesAll?: FilterPredicate;
-  $includesNone?: FilterPredicate;
-};
-
-export type FilterPredicate = FilterValue | FilterPredicate[] | FilterPredicateOp | FilterPredicateRangeOp;
-
-/**
- * @maxProperties 1
- * @minProperties 1
- */
-export type FilterPredicateOp = {
-  $any?: FilterPredicate[];
-  $all?: FilterPredicate[];
-  $none?: FilterPredicate | FilterPredicate[];
-  $not?: FilterPredicate | FilterPredicate[];
-  $is?: FilterValue | FilterValue[];
-  $isNot?: FilterValue | FilterValue[];
-  $lt?: FilterRangeValue;
-  $le?: FilterRangeValue;
-  $gt?: FilterRangeValue;
-  $ge?: FilterRangeValue;
-  $contains?: string;
-  $startsWith?: string;
-  $endsWith?: string;
-  $pattern?: string;
-};
-
-export type FilterPredicateRangeOp = {
-  $lt?: FilterRangeValue;
-  $le?: FilterRangeValue;
-  $gt?: FilterRangeValue;
-  $ge?: FilterRangeValue;
-};
-
-export type FilterRangeValue = number | string;
-
-export type FilterValue = number | string | boolean;
-
-export type SortExpression =
-  | string[]
-  | {
-      [key: string]: SortOrder;
-    }
-  | {
-      [key: string]: SortOrder;
-    }[];
-
-export type SortOrder = 'asc' | 'desc';
-
-export type PageConfig = {
-  after?: string;
-  before?: string;
-  first?: string;
-  last?: string;
-  size?: number;
-  offset?: number;
-};
-
-export type ColumnsFilter = string[];
-
-// TODO: Remove all these types with API Schemas PR
 export type QueryTableOptions = {
   filter: FilterExpression;
   sort?: SortExpression;
