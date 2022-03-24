@@ -3,7 +3,7 @@ import { Query } from './query';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
-export interface Paginable<T extends XataRecord, R extends XataRecord> {
+export interface Paginable<T extends XataRecord, R extends XataRecord = T> {
   meta: PaginationQueryMeta;
   records: R[];
 
