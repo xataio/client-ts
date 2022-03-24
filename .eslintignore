@@ -1,3 +1,6 @@
 node_modules
 .eslintrc.js
 babel.config.js
+
+# Generated files
+client/src/api/components.ts

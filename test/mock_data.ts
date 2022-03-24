@@ -1,3 +1,5 @@
+import { Column } from '../client/src/api/schemas';
+
 const animals = [
   'Ape',
   'Butterfly',
@@ -70,3 +72,53 @@ const fruitUsers = fruits.map((fruit) => ({
 }));
 
 export const mockUsers = [ownerFruits, ownerAnimals, ...animalUsers, ...fruitUsers];
+
+export const userColumns: Column[] = [
+  {
+    name: 'email',
+    type: 'email'
+  },
+  {
+    name: 'full_name',
+    type: 'string'
+  },
+  {
+    name: 'address',
+    type: 'object',
+    columns: [
+      {
+        name: 'street',
+        type: 'string'
+      },
+      {
+        name: 'zipcode',
+        type: 'int'
+      }
+    ]
+  },
+  {
+    name: 'team',
+    type: 'link',
+    link: {
+      table: 'teams'
+    }
+  }
+];
+
+export const teamColumns: Column[] = [
+  {
+    name: 'name',
+    type: 'string'
+  },
+  {
+    name: 'labels',
+    type: 'multiple'
+  },
+  {
+    name: 'owner',
+    type: 'link',
+    link: {
+      table: 'users'
+    }
+  }
+];
