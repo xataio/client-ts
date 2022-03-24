@@ -7,7 +7,7 @@ import { XataApiClient } from '../client/src';
 dotenv.config({ path: join(process.cwd(), '.envrc') });
 
 const client = new XataApiClient({
-  fetchImpl: fetch,
+  fetch,
   apiKey: process.env.XATA_API_KEY || ''
 });
 

@@ -149,7 +149,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
   ): Promise<
     Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
   > {
-    const data = query.getData();
+    const data = query.getQueryOptions();
 
     const body = {
       filter: Object.values(data.filter).some(Boolean) ? data.filter : undefined,

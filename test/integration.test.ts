@@ -1,16 +1,21 @@
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { contains, lt, Repository } from '../client/src';
+import { Paginable } from '../client/src/schema/pagination';
+import { contains, lt, Repository, XataApiClient } from '../client/src';
 import { User, XataClient } from '../codegen/example/xata';
-import { mockUsers } from './mock_data';
+import { mockUsers, teamColumns, userColumns } from './mock_data';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
 
-const client = new XataClient({
-  databaseURL: process.env.XATA_DATABASE_URL || '',
-  branch: process.env.XATA_DATABASE_BRANCH || '',
+let client: XataClient;
+let databaseName: string;
+
+const workspace = process.env.XATA_WORKSPACE ?? '';
+if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
+
+const api = new XataApiClient({
   apiKey: process.env.XATA_API_KEY || '',
   fetch
 });
@@ -19,6 +24,23 @@ const client = new XataClient({
 jest.setTimeout(50000);
 
 beforeAll(async () => {
+  const id = Math.round(Math.random() * 100000);
+
+  const database = await api.databases.createDatabase(workspace, `sdk-integration-test-${id}`);
+  databaseName = database.databaseName;
+
+  client = new XataClient({
+    databaseURL: `https://${workspace}.xata.sh/db/${database.databaseName}`,
+    branch: 'main',
+    apiKey: process.env.XATA_API_KEY || '',
+    fetch
+  });
+
+  await api.tables.createTable(workspace, databaseName, 'main', 'teams');
+  await api.tables.createTable(workspace, databaseName, 'main', 'users');
+  await api.tables.setTableSchema(workspace, databaseName, 'main', 'teams', { columns: teamColumns });
+  await api.tables.setTableSchema(workspace, databaseName, 'main', 'users', { columns: userColumns });
+
   const teams = await client.db.teams.getMany();
   for (const team of teams) {
     await team.delete();
@@ -53,6 +75,10 @@ beforeAll(async () => {
     name: 'Mixed team fruits & animals',
     labels: ['monkey', 'banana', 'apple', 'dolphin']
   });
+});
+
+afterAll(async () => {
+  await api.databases.deleteDatabase(workspace, databaseName);
 });
 
 describe('integration tests', () => {
@@ -246,6 +272,16 @@ describe('integration tests', () => {
 
     const users = await loadUsers(client.db.users);
     expect(users.records).toHaveLength(10);
+  });
+
+  test('repository implements paginable', async () => {
+    async function foo(page: Paginable<User>): Promise<User[]> {
+      const nextPage = page.hasNextPage() ? await foo(await page.nextPage()) : [];
+      return [...page.records, ...nextPage];
+    }
+
+    const users = await foo(client.db.users);
+    expect(users).toHaveLength(mockUsers.length);
   });
 
   test('create single team', async () => {
