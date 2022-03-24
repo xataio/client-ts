@@ -489,8 +489,42 @@ class RecordsApi {
     recordId: Schemas.RecordID,
     record: Record<string, any>,
     options: Types.InsertRecordWithIDQueryParams = {}
-  ): Promise<Types.InsertRecordWithIDResponse> {
+  ): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.insertRecordWithID({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName, recordId },
+      queryParams: options,
+      body: record,
+      ...this.extraProps
+    });
+  }
+
+  public updateRecordWithID(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    tableName: Schemas.TableName,
+    recordId: Schemas.RecordID,
+    record: Record<string, any>,
+    options: Types.UpdateRecordWithIDQueryParams = {}
+  ): Promise<Responses.RecordUpdateResponse> {
+    return operationsByTag.records.updateRecordWithID({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName, recordId },
+      queryParams: options,
+      body: record,
+      ...this.extraProps
+    });
+  }
+
+  public upsertRecordWithID(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    tableName: Schemas.TableName,
+    recordId: Schemas.RecordID,
+    record: Record<string, any>,
+    options: Types.UpsertRecordWithIDQueryParams = {}
+  ): Promise<Responses.RecordUpdateResponse> {
+    return operationsByTag.records.upsertRecordWithID({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName, recordId },
       queryParams: options,
       body: record,
@@ -550,6 +584,19 @@ class RecordsApi {
   ): Promise<Responses.QueryResponse> {
     return operationsByTag.records.queryTable({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
+      body: query,
+      ...this.extraProps
+    });
+  }
+
+  public searchBranch(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    query: Types.SearchBranchRequestBody
+  ): Promise<Responses.SearchResponse> {
+    return operationsByTag.records.searchBranch({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       body: query,
       ...this.extraProps
     });
