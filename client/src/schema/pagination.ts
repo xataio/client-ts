@@ -3,7 +3,19 @@ import { Query } from './query';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
-export class Page<T extends XataRecord, R extends XataRecord> {
+export interface Paginable<T extends XataRecord, R extends XataRecord> {
+  meta: PaginationQueryMeta;
+  records: R[];
+
+  nextPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  previousPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  firstPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  lastPage(size?: number, offset?: number): Promise<Page<T, R>>;
+
+  hasNextPage(): boolean;
+}
+
+export class Page<T extends XataRecord, R extends XataRecord> implements Paginable<T, R> {
   #query: Query<T, R>;
   readonly meta: PaginationQueryMeta;
   readonly records: R[];

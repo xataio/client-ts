@@ -1,7 +1,7 @@
 import { XataRecord, Repository } from '..';
 import { compact } from '../util/lang';
 import { Constraint, DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
-import { PaginationOptions, Page } from './pagination';
+import { PaginationOptions, Page, Paginable, PaginationQueryMeta } from './pagination';
 import { Selectable, SelectableColumn, Select } from './selection';
 
 export type QueryOptions<T> = {
@@ -100,10 +100,14 @@ export type QueryTableData = {
   columns?: ColumnsFilter;
 };
 
-export class Query<T extends XataRecord, R extends XataRecord = T> {
+export class Query<T extends XataRecord, R extends XataRecord = T> implements Paginable<T, R> {
   #table: string;
   #repository: Repository<T>;
   #data: QueryTableData = { filter: {} };
+
+  // Implements pagination
+  readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true } };
+  readonly records: R[] = [];
 
   constructor(
     repository: Repository<T> | null,
@@ -241,11 +245,19 @@ export class Query<T extends XataRecord, R extends XataRecord = T> {
     return this.firstPage(size, offset);
   }
 
+  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.firstPage(size, offset);
+  }
+
   async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.getPaginated({ page: { size, offset } });
   }
 
   async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.getPaginated({ page: { size, offset, before: 'end' } });
+  }
+
+  hasNextPage(): boolean {
+    return this.meta.page.more;
   }
 }
