@@ -1,4 +1,13 @@
-import { bulkInsertTableRecords, deleteRecord, getRecord, insertRecord, insertRecordWithID, queryTable } from './api';
+import {
+  bulkInsertTableRecords,
+  deleteRecord,
+  getRecord,
+  insertRecord,
+  insertRecordWithID,
+  queryTable,
+  updateRecordWithID,
+  upsertRecordWithID
+} from './api';
 import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { buildSortFilter } from './schema/filters';
 import { Page } from './schema/pagination';
@@ -12,6 +21,7 @@ export interface XataRecord {
   };
   read(): Promise<this>;
   update(data: Selectable<this>): Promise<this>;
+  upsert(data: Selectable<this>): Promise<this>;
   delete(): Promise<void>;
 }
 
@@ -23,6 +33,8 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
   abstract read(id: string): Promise<T | null>;
 
   abstract update(id: string, object: Partial<T>): Promise<T>;
+
+  abstract upsert(id: string, object: Partial<T>): Promise<T>;
 
   abstract delete(id: string): void;
 
@@ -71,16 +83,31 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     };
   }
 
-  async create(object: T): Promise<T> {
+  async create(object: Selectable<T>): Promise<T> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
 
-    const response = await insertRecord({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
-      body: record,
-      ...fetchProps
-    });
+    const response = object.id
+      ? await insertRecordWithID({
+          pathParams: {
+            workspace: '{workspaceId}',
+            dbBranchName: '{dbBranch}',
+            tableName: this.#table,
+            recordId: object.id
+          },
+          body: record,
+          ...fetchProps
+        })
+      : await insertRecord({
+          pathParams: {
+            workspace: '{workspaceId}',
+            dbBranchName: '{dbBranch}',
+            tableName: this.#table
+          },
+          body: record,
+          ...fetchProps
+        });
 
     const finalObject = await this.read(response.id);
     if (!finalObject) {
@@ -124,7 +151,20 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
   async update(recordId: string, object: Partial<T>): Promise<T> {
     const fetchProps = await this.#getFetchProps();
 
-    const response = await insertRecordWithID({
+    const response = await updateRecordWithID({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+      body: object,
+      ...fetchProps
+    });
+
+    // TODO: Review this, not sure we are properly initializing the object
+    return this.#client.initObject(this.#table, response);
+  }
+
+  async upsert(recordId: string, object: Partial<T>): Promise<T> {
+    const fetchProps = await this.#getFetchProps();
+
+    const response = await upsertRecordWithID({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
       body: object,
       ...fetchProps
@@ -246,11 +286,14 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     o.update = function (data: any) {
       return db[table].update(o['id'] as string, data);
     };
+    o.upsert = function (data: any) {
+      return db[table].upsert(o['id'] as string, data);
+    };
     o.delete = function () {
       return db[table].delete(o['id'] as string);
     };
 
-    for (const prop of ['read', 'update', 'delete']) {
+    for (const prop of ['read', 'update', 'upsert', 'delete']) {
       Object.defineProperty(o, prop, { enumerable: false });
     }
 

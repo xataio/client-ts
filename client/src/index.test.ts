@@ -469,7 +469,7 @@ describe('Repository.update', () => {
               "Content-Type": "application/json",
               "Host": "my-workspace-5df34do.staging.xatabase.co",
             },
-            "method": "PUT",
+            "method": "PATCH",
           },
         ],
       ]
