@@ -3,8 +3,7 @@ import { Query } from './query';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
-export interface BasePage<T extends XataRecord, R extends XataRecord> {
-  query: Query<T, R>;
+export interface Paginable<T extends XataRecord, R extends XataRecord = T> {
   meta: PaginationQueryMeta;
   records: R[];
 
@@ -16,31 +15,31 @@ export interface BasePage<T extends XataRecord, R extends XataRecord> {
   hasNextPage(): boolean;
 }
 
-export class Page<T extends XataRecord, R extends XataRecord> implements BasePage<T, R> {
-  readonly query: Query<T, R>;
+export class Page<T extends XataRecord, R extends XataRecord> implements Paginable<T, R> {
+  #query: Query<T, R>;
   readonly meta: PaginationQueryMeta;
   readonly records: R[];
 
   constructor(query: Query<T, R>, meta: PaginationQueryMeta, records: R[] = []) {
-    this.query = query;
+    this.#query = query;
     this.meta = meta;
     this.records = records;
   }
 
   async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
-    return this.query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
+    return this.#query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
   }
 
   async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
-    return this.query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
+    return this.#query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
   }
 
   async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
-    return this.query.getPaginated({ page: { size, offset, first: this.meta.page.cursor } });
+    return this.#query.getPaginated({ page: { size, offset, first: this.meta.page.cursor } });
   }
 
   async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
-    return this.query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
+    return this.#query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
   }
 
   // TODO: We need to add something on the backend if we want a hasPreviousPage

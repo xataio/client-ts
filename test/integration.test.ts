@@ -2,6 +2,7 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { contains, lt, Repository } from '../client/src';
+import { Paginable } from '../client/src/schema/pagination';
 import { User, XataClient } from '../codegen/example/xata';
 import { mockUsers } from './mock_data';
 
@@ -246,6 +247,16 @@ describe('integration tests', () => {
 
     const users = await loadUsers(client.db.users);
     expect(users.records).toHaveLength(10);
+  });
+
+  test('repository implements paginable', async () => {
+    async function foo(page: Paginable<User>): Promise<User[]> {
+      const nextPage = page.hasNextPage() ? await foo(await page.nextPage()) : [];
+      return [...page.records, ...nextPage];
+    }
+
+    const users = await foo(client.db.users);
+    expect(users).toHaveLength(mockUsers.length);
   });
 
   test('create single team', async () => {
