@@ -1,23 +1,21 @@
-name: Manual release
+name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      bump:
-        required: true
-        type: choice
-        description: Version bump
-        options:
-          - major
-          - minor
-          - patch
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  build:
+  release:
+    name: Release
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
+        with:
+          # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+          fetch-depth: 0
 
       - name: Configure
         run: |
@@ -41,6 +39,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Compile
+        run: npm run build
+
       - name: Test
         run: npm test
         env:
@@ -48,8 +49,11 @@ jobs:
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
           XATA_DATABASE_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
 
-      - name: Bump version
-        run: npx lerna version ${{ github.event.inputs.bump }} --yes
-
-      - name: Publish build
-        run: npx lerna publish from-package --no-verify-access --yes
+      - name: Create Release Pull Request or Publish to npm
+        uses: changesets/action@master
+        with:
+          title: Release tracking
+          publish: npx lerna publish from-package --no-verify-access --yes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
