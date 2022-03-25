@@ -164,10 +164,9 @@ describe('integration tests', () => {
     expect(teams[2].name).toBe('Mixed team fruits & animals');
   });
 
-  // TODO: This was not failing until now
-  test.skip('negative filter', async () => {
-    const q = client.db.teams;
-    const teams = await q.not(q.filter('name', 'Team fruits')).sort('name', 'asc').getMany();
+  test('negative filter', async () => {
+    const repository = client.db.teams;
+    const teams = await repository.not(repository.filter('name', 'Team fruits')).sort('name', 'asc').getMany();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
