@@ -293,92 +293,13 @@ export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables)
     ...variables
   });
 
-export type UpdateWorkspaceMemberInvitePathParams = {
-  /*
-   * Workspace name
-   */
-  workspaceId: Schemas.WorkspaceID;
-  /*
-   * Invite identifier
-   */
-  inviteId: Schemas.InviteID;
-};
-
-export type UpdateWorkspaceMemberInviteRequestBody = {
-  role: Schemas.Role;
-};
-
-export type UpdateWorkspaceMemberInviteVariables = {
-  body: UpdateWorkspaceMemberInviteRequestBody;
-  pathParams: UpdateWorkspaceMemberInvitePathParams;
-} & FetcherExtraProps;
-
-/**
- * This operation provides a way to update an invite.
- * The role can be updated while the email cannot.
- */
-export const updateWorkspaceMemberInvite = (variables: UpdateWorkspaceMemberInviteVariables) =>
-  fetch<Schemas.WorkspaceInvite, UpdateWorkspaceMemberInviteRequestBody, {}, {}, UpdateWorkspaceMemberInvitePathParams>(
-    { url: '/workspaces/{workspaceId}/invites/{inviteId}', method: 'patch', ...variables }
-  );
-
-export type CancelWorkspaceMemberInvitePathParams = {
-  /*
-   * Workspace name
-   */
-  workspaceId: Schemas.WorkspaceID;
-  /*
-   * Invite identifier
-   */
-  inviteId: Schemas.InviteID;
-};
-
-export type CancelWorkspaceMemberInviteVariables = {
-  pathParams: CancelWorkspaceMemberInvitePathParams;
-} & FetcherExtraProps;
-
-/**
- * This operation provides a way to cancel invites by deleting them. Already accepted invites cannot be deleted.
- */
-export const cancelWorkspaceMemberInvite = (variables: CancelWorkspaceMemberInviteVariables) =>
-  fetch<undefined, undefined, {}, {}, CancelWorkspaceMemberInvitePathParams>({
-    url: '/workspaces/{workspaceId}/invites/{inviteId}',
-    method: 'delete',
-    ...variables
-  });
-
-export type ResendWorkspaceMemberInvitePathParams = {
-  /*
-   * Workspace name
-   */
-  workspaceId: Schemas.WorkspaceID;
-  /*
-   * Invite identifier
-   */
-  inviteId: Schemas.InviteID;
-};
-
-export type ResendWorkspaceMemberInviteVariables = {
-  pathParams: ResendWorkspaceMemberInvitePathParams;
-} & FetcherExtraProps;
-
-/**
- * This operation provides a way to resend an Invite notification. Invite notifications can only be sent for Invites not yet accepted.
- */
-export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInviteVariables) =>
-  fetch<undefined, undefined, {}, {}, ResendWorkspaceMemberInvitePathParams>({
-    url: '/workspaces/{workspaceId}/invites/{inviteId}/resend',
-    method: 'post',
-    ...variables
-  });
-
 export type AcceptWorkspaceMemberInvitePathParams = {
   /*
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
   /*
-   * Invite Key (secret) for the invited user
+   * Invite ID
    */
   inviteKey: Schemas.InviteKey;
 };
@@ -1104,13 +1025,6 @@ export type InsertRecordWithIDQueryParams = {
   ifVersion?: number;
 };
 
-export type InsertRecordWithIDResponse = {
-  id: string;
-  xata: {
-    version: number;
-  };
-};
-
 export type InsertRecordWithIDVariables = {
   body?: Record<string, any>;
   pathParams: InsertRecordWithIDPathParams;
@@ -1122,12 +1036,82 @@ export type InsertRecordWithIDVariables = {
  */
 export const insertRecordWithID = (variables: InsertRecordWithIDVariables) =>
   fetch<
-    InsertRecordWithIDResponse,
+    Responses.RecordUpdateResponse,
     Record<string, any>,
     {},
     InsertRecordWithIDQueryParams,
     InsertRecordWithIDPathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'put', ...variables });
+
+export type UpdateRecordWithIDPathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /*
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /*
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  workspace: string;
+};
+
+export type UpdateRecordWithIDQueryParams = {
+  ifVersion?: number;
+};
+
+export type UpdateRecordWithIDVariables = {
+  body?: Record<string, any>;
+  pathParams: UpdateRecordWithIDPathParams;
+  queryParams?: UpdateRecordWithIDQueryParams;
+} & FetcherExtraProps;
+
+export const updateRecordWithID = (variables: UpdateRecordWithIDVariables) =>
+  fetch<
+    Responses.RecordUpdateResponse,
+    Record<string, any>,
+    {},
+    UpdateRecordWithIDQueryParams,
+    UpdateRecordWithIDPathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'patch', ...variables });
+
+export type UpsertRecordWithIDPathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /*
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /*
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  workspace: string;
+};
+
+export type UpsertRecordWithIDQueryParams = {
+  ifVersion?: number;
+};
+
+export type UpsertRecordWithIDVariables = {
+  body?: Record<string, any>;
+  pathParams: UpsertRecordWithIDPathParams;
+  queryParams?: UpsertRecordWithIDQueryParams;
+} & FetcherExtraProps;
+
+export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables) =>
+  fetch<
+    Responses.RecordUpdateResponse,
+    Record<string, any>,
+    {},
+    UpsertRecordWithIDQueryParams,
+    UpsertRecordWithIDPathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'post', ...variables });
 
 export type DeleteRecordPathParams = {
   /*
@@ -1973,7 +1957,7 @@ export type SearchBranchPathParams = {
 
 export type SearchBranchRequestBody = {
   /*
-   * An array with the tables in which to search. By default, all tables are searched.
+   * An array with the tables in which to search. By default, all tables are included.
    */
   tables?: string[];
   /*
@@ -1982,6 +1966,17 @@ export type SearchBranchRequestBody = {
    * @minLength 1
    */
   query: string;
+  /*
+   * Maximum [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) for the search terms. The Levenshtein
+   * distance is the number of one charcter changes needed to make two strings equal. The default is 1, meaning that single
+   * character typos per word are tollerated by search. You can set it to 0 to remove the typo tollerance or set it to 2
+   * to allow two typos in a word.
+   *
+   * @default 1
+   * @maximum 2
+   * @minimum 0
+   */
+  fuzziness?: number;
 };
 
 export type SearchBranchVariables = {
@@ -1990,7 +1985,7 @@ export type SearchBranchVariables = {
 } & FetcherExtraProps;
 
 /**
- * Run a free text search operation across the Database.
+ * Run a free text search operation across the database branch.
  */
 export const searchBranch = (variables: SearchBranchVariables) =>
   fetch<Responses.SearchResponse, SearchBranchRequestBody, {}, {}, SearchBranchPathParams>({
@@ -2011,9 +2006,6 @@ export const operationsByTag = {
     updateWorkspaceMemberRole,
     removeWorkspaceMember,
     inviteWorkspaceMember,
-    updateWorkspaceMemberInvite,
-    cancelWorkspaceMemberInvite,
-    resendWorkspaceMemberInvite,
     acceptWorkspaceMemberInvite
   },
   database: { getDatabaseList, createDatabase, deleteDatabase },
@@ -2044,6 +2036,8 @@ export const operationsByTag = {
   records: {
     insertRecord,
     insertRecordWithID,
+    updateRecordWithID,
+    upsertRecordWithID,
     deleteRecord,
     getRecord,
     bulkInsertTableRecords,
