@@ -4,8 +4,11 @@ import { addPathParam, generateFetchers, generateSchemaTypes, renameComponent } 
 export default defineConfig({
   xatabase: {
     from: {
-      source: 'file',
-      relativePath: '../openapi/bundled/openapi.yaml'
+      source: 'github',
+      owner: 'xataio',
+      ref: 'main',
+      repository: 'openapi',
+      specPath: 'bundled/openapi.yaml'
     },
     outputDir: 'client/src/api',
     to: async (context) => {
