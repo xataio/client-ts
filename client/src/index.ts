@@ -19,9 +19,9 @@ export interface XataRecord {
   xata: {
     version: number;
   };
+
   read(): Promise<this>;
   update(data: Selectable<this>): Promise<this>;
-  upsert(data: Selectable<this>): Promise<this>;
   delete(): Promise<void>;
 }
 
@@ -157,8 +157,10 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
       ...fetchProps
     });
 
-    // TODO: Review this, not sure we are properly initializing the object
-    return this.#client.initObject(this.#table, response);
+    const item = await this.read(response.id);
+    if (!item) throw new Error('The server failed to save the record');
+
+    return item;
   }
 
   async upsert(recordId: string, object: Partial<T>): Promise<T> {
@@ -170,8 +172,10 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
       ...fetchProps
     });
 
-    // TODO: Review this, not sure we are properly initializing the object
-    return this.#client.initObject(this.#table, response);
+    const item = await this.read(response.id);
+    if (!item) throw new Error('The server failed to save the record');
+
+    return item;
   }
 
   async delete(recordId: string) {
@@ -286,14 +290,11 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
     o.update = function (data: any) {
       return db[table].update(o['id'] as string, data);
     };
-    o.upsert = function (data: any) {
-      return db[table].upsert(o['id'] as string, data);
-    };
     o.delete = function () {
       return db[table].delete(o['id'] as string);
     };
 
-    for (const prop of ['read', 'update', 'upsert', 'delete']) {
+    for (const prop of ['read', 'update', 'delete']) {
       Object.defineProperty(o, prop, { enumerable: false });
     }
 
