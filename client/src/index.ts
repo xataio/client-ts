@@ -21,7 +21,7 @@ export interface XataRecord {
   };
 
   read(): Promise<this>;
-  update(data: Selectable<this>): Promise<this>;
+  update(data: Partial<Selectable<this>>): Promise<this>;
   delete(): Promise<void>;
 }
 
@@ -32,9 +32,9 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
 
   abstract read(id: string): Promise<T | null>;
 
-  abstract update(id: string, object: Partial<T>): Promise<T>;
+  abstract update(id: string, object: Partial<Selectable<T>>): Promise<T>;
 
-  abstract upsert(id: string, object: Partial<T>): Promise<T>;
+  abstract upsert(id: string, object: Selectable<T>): Promise<T>;
 
   abstract delete(id: string): void;
 
@@ -148,7 +148,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return this.#client.initObject(this.#table, response);
   }
 
-  async update(recordId: string, object: Partial<T>): Promise<T> {
+  async update(recordId: string, object: Partial<Selectable<T>>): Promise<T> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await updateRecordWithID({
@@ -163,7 +163,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return item;
   }
 
-  async upsert(recordId: string, object: Partial<T>): Promise<T> {
+  async upsert(recordId: string, object: Selectable<T>): Promise<T> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
