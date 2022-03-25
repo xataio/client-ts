@@ -1,0 +1,33 @@
+name: OpenAPI generator update
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        required: false
+        type: string
+        description: PR to build
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure
+        run: |
+          git config user.email "system@xata.io"
+          git config user.name "Xata"
+        id: config
+
+      - name: Install dependencies
+        run: npm ci && npx lerna bootstrap --ci
+
+      - name: Build OpenAPI spec from main
+        if: ${{ github.event.inputs.pr == '' }}
+        run: npm run openapi-gen
+
+      - name: Build OpenAPI spec from PR
+        if: ${{ github.event.inputs.pr != '' }}
+        run: npm run openapi-gen --pr=${{ github.event.inputs.pr }}
