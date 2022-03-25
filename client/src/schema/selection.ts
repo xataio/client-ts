@@ -20,7 +20,7 @@ type OmitMethods<T> = {
   [key in keyof T as T[key] extends Function ? never : key]: T[key];
 };
 
-type InternalProperties = 'xata' | 'read' | 'update' | 'delete';
+type InternalProperties = keyof Omit<XataRecord, 'id'>;
 export type Selectable<T extends XataRecord> = Omit<PartialBy<T, 'id'>, InternalProperties>;
 
 export type SelectableColumn<O> =
