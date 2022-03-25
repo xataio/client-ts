@@ -2,7 +2,7 @@ import { XataRecord, Repository } from '..';
 import { FilterExpression, SortExpression, PageConfig, ColumnsFilter } from '../api/schemas';
 import { compact } from '../util/lang';
 import { Constraint, DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
-import { PaginationOptions, Page } from './pagination';
+import { PaginationOptions, Page, Paginable, PaginationQueryMeta } from './pagination';
 import { Selectable, SelectableColumn, Select } from './selection';
 
 export type QueryOptions<T extends XataRecord> = {
@@ -12,23 +12,27 @@ export type QueryOptions<T extends XataRecord> = {
   sort?: SortFilter<T> | SortFilter<T>[];
 };
 
-export type QueryTableData = {
+export type QueryTableOptions = {
   filter: FilterExpression;
   sort?: SortExpression;
   page?: PageConfig;
   columns?: ColumnsFilter;
 };
 
-export class Query<T extends XataRecord, R extends XataRecord = T> {
+export class Query<T extends XataRecord, R extends XataRecord = T> implements Paginable<T, R> {
   #table: string;
   #repository: Repository<T>;
-  #data: QueryTableData = { filter: {} };
+  #data: QueryTableOptions = { filter: {} };
+
+  // Implements pagination
+  readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true } };
+  readonly records: R[] = [];
 
   constructor(
     repository: Repository<T> | null,
     table: string,
-    data: Partial<QueryTableData>,
-    parent?: Partial<QueryTableData>
+    data: Partial<QueryTableOptions>,
+    parent?: Partial<QueryTableOptions>
   ) {
     this.#table = table;
 
@@ -56,27 +60,27 @@ export class Query<T extends XataRecord, R extends XataRecord = T> {
     Object.defineProperty(this, 'repository', { enumerable: false });
   }
 
-  getData(): QueryTableData {
+  getQueryOptions(): QueryTableOptions {
     return this.#data;
   }
 
   any(...queries: Query<T, R>[]): Query<T, R> {
-    const $any = compact(queries.map((query) => query.getData().filter.$any)).flat();
+    const $any = compact(queries.map((query) => query.getQueryOptions().filter.$any)).flat();
     return new Query<T, R>(this.#repository, this.#table, { filter: { $any } }, this.#data);
   }
 
   all(...queries: Query<T, R>[]): Query<T, R> {
-    const $all = compact(queries.map((query) => query.getData().filter.$all)).flat();
+    const $all = compact(queries.map((query) => query.getQueryOptions().filter.$all)).flat();
     return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
   }
 
   not(...queries: Query<T, R>[]): Query<T, R> {
-    const $not = compact(queries.map((query) => query.getData().filter.$not)).flat();
+    const $not = compact(queries.map((query) => query.getQueryOptions().filter.$not)).flat();
     return new Query<T, R>(this.#repository, this.#table, { filter: { $not } }, this.#data);
   }
 
   none(...queries: Query<T, R>[]): Query<T, R> {
-    const $none = compact(queries.map((query) => query.getData().filter.$none)).flat();
+    const $none = compact(queries.map((query) => query.getQueryOptions().filter.$none)).flat();
     return new Query<T, R>(this.#repository, this.#table, { filter: { $none } }, this.#data);
   }
 
@@ -160,11 +164,19 @@ export class Query<T extends XataRecord, R extends XataRecord = T> {
     return this.firstPage(size, offset);
   }
 
+  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
+    return this.firstPage(size, offset);
+  }
+
   async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.getPaginated({ page: { size, offset } });
   }
 
   async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.getPaginated({ page: { size, offset, before: 'end' } });
+  }
+
+  hasNextPage(): boolean {
+    return this.meta.page.more;
   }
 }

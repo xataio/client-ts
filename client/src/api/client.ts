@@ -6,7 +6,7 @@ import type * as Responses from './responses';
 import type * as Schemas from './schemas';
 
 export interface XataApiClientOptions {
-  fetchImpl: FetchImpl;
+  fetch: FetchImpl;
   apiKey: string;
   host?: HostProvider;
 }
@@ -15,7 +15,7 @@ export class XataApiClient {
   #extraProps: FetcherExtraProps;
 
   constructor(options: XataApiClientOptions) {
-    const fetchImpl = typeof fetch !== 'undefined' ? fetch : options.fetchImpl;
+    const fetchImpl = typeof fetch !== 'undefined' ? fetch : options.fetch;
     if (!fetchImpl) {
       /** @todo add a link after docs exist */
       throw new Error(
@@ -234,7 +234,7 @@ class BranchApi {
     branch: Schemas.BranchName,
     from?: string,
     options: Types.CreateBranchRequestBody = {}
-  ): Promise<undefined> {
+  ): Promise<void> {
     return operationsByTag.branch.createBranch({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       queryParams: { from },
