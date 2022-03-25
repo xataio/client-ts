@@ -44,25 +44,20 @@ function buildBaseUrl({
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   apiUrl: string;
   pathParams?: Record<string, string>;
-}) {
+}): string {
   if (!pathParams?.workspace) return `${apiUrl}${path}`;
 
   const url = typeof workspacesApiUrl === 'string' ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
-
-  // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
-  // So, instead, we use localhost without subdomains, but will add a Host header
-  if (typeof window === 'undefined' && url.includes('localhost:')) {
-    return url.replace('{workspaceId}.', '');
-  }
-
   return url.replace('{workspaceId}', pathParams.workspace);
 }
 
-function hostHeaderForWorkspace(url: string) {
+// The host header is needed by Node.js on localhost.
+// It is ignored by fetch() in the frontend
+function hostHeader(url: string): { Host?: string } {
   const pattern = /.*:\/\/(?<host>[^/]+).*/;
   const { groups } = pattern.exec(url) ?? {};
 
-  return groups?.host;
+  return groups?.host ? { Host: groups.host } : {};
 }
 
 export async function fetch<
@@ -84,7 +79,11 @@ export async function fetch<
   workspacesApiUrl
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
-  const url = resolveUrl(baseUrl, queryParams, pathParams);
+  const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
+
+  // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
+  // So, instead, we use localhost without subdomains, but will add a Host header
+  const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\./, 'http://') : fullUrl;
 
   const response = await fetchImpl(url, {
     method: method.toUpperCase(),
@@ -92,10 +91,8 @@ export async function fetch<
     headers: {
       'Content-Type': 'application/json',
       ...headers,
-      Authorization: `Bearer ${apiKey}`,
-      // The host header is needed by Node.js on localhost.
-      // It is ignored by fetch() in the frontend
-      ...(pathParams?.workspace ? { Host: hostHeaderForWorkspace(url) } : {})
+      ...hostHeader(fullUrl),
+      Authorization: `Bearer ${apiKey}`
     }
   });
 
