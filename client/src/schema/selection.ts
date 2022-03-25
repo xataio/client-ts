@@ -1,4 +1,5 @@
 import { XataRecord } from '..';
+import { PartialBy } from '../util/lang';
 import { StringKeys, UnionToIntersection, Values } from '../util/types';
 import { Query } from './query';
 
@@ -19,7 +20,8 @@ type OmitMethods<T> = {
   [key in keyof T as T[key] extends Function ? never : key]: T[key];
 };
 
-export type Selectable<T> = Omit<OmitQueries<OmitMethods<T>>, 'id' | 'xata'>;
+type InternalProperties = keyof Omit<XataRecord, 'id'>;
+export type Selectable<T extends XataRecord> = Omit<PartialBy<T, 'id'>, InternalProperties>;
 
 export type SelectableColumn<O> =
   | '*'
