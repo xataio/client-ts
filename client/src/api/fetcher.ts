@@ -81,6 +81,8 @@ export async function fetch<
   const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
   const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
+  // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
+  // So, instead, we use localhost without subdomains, but will add a Host header
   const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\./, 'http://') : fullUrl;
 
   const response = await fetchImpl(url, {
