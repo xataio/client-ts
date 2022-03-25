@@ -5,7 +5,7 @@ import { Constraint, DeepConstraint, FilterConstraints, SortDirection, SortFilte
 import { PaginationOptions, Page, Paginable, PaginationQueryMeta } from './pagination';
 import { Selectable, SelectableColumn, Select } from './selection';
 
-export type QueryOptions<T> = {
+export type QueryOptions<T extends XataRecord> = {
   page?: PaginationOptions;
   columns?: Extract<keyof Selectable<T>, string>[];
   //filter?: FilterConstraints<T>;

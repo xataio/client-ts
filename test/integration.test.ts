@@ -345,4 +345,83 @@ describe('integration tests', () => {
     //@ts-expect-error
     expect(user?.address).toBeUndefined();
   });
+
+  test('Partial update of a user', async () => {
+    const user = await client.db.users.create({
+      full_name: 'John Doe',
+      email: 'john@doe.com',
+      address: {
+        street: '123 Main St'
+      }
+    });
+
+    const updatedUserResponse = await client.db.users.update(user.id, {
+      address: { street: 'New street', zipcode: 11 }
+    });
+
+    const updatedUser = await client.db.users.filter({ id: user.id }).getOne();
+    if (!updatedUser) throw new Error('No user found');
+
+    await user.delete();
+
+    expect(user.id).toBe(updatedUser.id);
+    expect(user.address?.street).toBe('123 Main St');
+    expect(user.address?.zipcode).toBeUndefined();
+
+    expect(updatedUserResponse.address?.street).toBe('New street');
+    expect(updatedUserResponse.address?.zipcode).toBe(11);
+    expect(updatedUserResponse.full_name).toBe(user.full_name);
+
+    expect(updatedUser.address?.street).toBe('New street');
+    expect(updatedUser.address?.zipcode).toBe(11);
+    expect(updatedUser.full_name).toBe(user.full_name);
+  });
+
+  test('Partial update from itself', async () => {
+    const user = await client.db.users.create({
+      full_name: 'John Doe 2',
+      email: 'john2@doe.com',
+      address: {
+        street: '456 Main St'
+      }
+    });
+
+    const updatedUserResponse = await user.update({
+      address: { street: 'New street 2', zipcode: 22 }
+    });
+
+    const updatedUser = await client.db.users.filter({ id: user.id }).getOne();
+    if (!updatedUser) throw new Error('No user found');
+
+    await user.delete();
+
+    expect(user.address?.street).not.toBe('New street 2');
+
+    expect(updatedUserResponse.address?.street).toBe('New street 2');
+    expect(updatedUserResponse.address?.zipcode).toBe(22);
+    expect(updatedUserResponse.full_name).toBe(user.full_name);
+
+    expect(updatedUser.address?.street).toBe('New street 2');
+    expect(updatedUser.address?.zipcode).toBe(22);
+    expect(updatedUser.full_name).toBe(user.full_name);
+  });
+
+  test('Upsert of a user', async () => {
+    const user = await client.db.users.upsert('my-good-old-john', {
+      full_name: 'John Doe 3',
+      email: 'john3@doe.com'
+    });
+
+    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
+    if (!apiUser) throw new Error('No user found');
+
+    await user.delete();
+
+    expect(user.id).toBe('my-good-old-john');
+    expect(user.full_name).toBe('John Doe 3');
+
+    expect(user.id).toBe(apiUser.id);
+    expect(user.full_name).toBe(apiUser.full_name);
+    expect(user.email).toBe(apiUser.email);
+  });
 });
