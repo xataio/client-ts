@@ -29,10 +29,10 @@ jobs:
         if: ${{ github.event.inputs.pr == '' }}
         run: npm run openapi-gen
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ORG_TOKEN }}
 
       - name: Build OpenAPI spec from PR
         if: ${{ github.event.inputs.pr != '' }}
         run: npm run openapi-gen --pr=${{ github.event.inputs.pr }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ORG_TOKEN }}
