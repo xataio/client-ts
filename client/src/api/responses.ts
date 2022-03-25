@@ -28,6 +28,13 @@ export type BranchMigrationPlan = {
   migration: Schemas.BranchMigration;
 };
 
+export type RecordUpdateResponse = {
+  id: string;
+  xata: {
+    version: number;
+  };
+};
+
 export type QueryResponse = {
   records: Schemas.XataRecord[];
   meta: Schemas.RecordsMetadata;
