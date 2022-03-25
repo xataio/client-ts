@@ -1,6 +1,7 @@
 name: OpenAPI generator update
 
 on:
+  push:
   workflow_dispatch:
     inputs:
       pr:
