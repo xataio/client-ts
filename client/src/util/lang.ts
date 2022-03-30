@@ -5,3 +5,5 @@ function notEmpty<T>(value: T | null | undefined): value is T {
 export function compact<T>(arr: Array<T | null | undefined>): T[] {
   return arr.filter(notEmpty);
 }
+
+export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

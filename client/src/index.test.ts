@@ -263,7 +263,7 @@ describe('request', () => {
 type ExpectedRequest = {
   method: string;
   path: string;
-  body: unknown;
+  body?: unknown;
 };
 
 async function expectRequest(
@@ -443,11 +443,14 @@ describe('read', () => {
 });
 
 describe('Repository.update', () => {
-  test('updates and object successfully', async () => {
+  test('updates an object successfully', async () => {
     const { fetch, users } = buildClient();
 
     const object = { id: 'rec_1234', xata: { version: 1 }, name: 'Ada' } as User;
-    const expected = { method: 'PUT', path: `/tables/users/data/${object.id}`, body: object };
+    const expected = [
+      { method: 'PUT', path: `/tables/users/data/${object.id}`, body: object },
+      { method: 'GET', path: `/tables/users/data/${object.id}` }
+    ];
     const result = await expectRequest(
       fetch,
       expected,
@@ -469,7 +472,19 @@ describe('Repository.update', () => {
               "Content-Type": "application/json",
               "Host": "my-workspace-5df34do.staging.xatabase.co",
             },
-            "method": "PUT",
+            "method": "PATCH",
+          },
+        ],
+        Array [
+          "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
+          Object {
+            "body": undefined,
+            "headers": Object {
+              "Authorization": "Bearer 1234",
+              "Content-Type": "application/json",
+              "Host": "my-workspace-5df34do.staging.xatabase.co",
+            },
+            "method": "GET",
           },
         ],
       ]

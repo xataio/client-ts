@@ -5,7 +5,7 @@ import { Constraint, DeepConstraint, FilterConstraints, SortDirection, SortFilte
 import { PaginationOptions, Page, Paginable, PaginationQueryMeta } from './pagination';
 import { Selectable, SelectableColumn, Select } from './selection';
 
-export type QueryOptions<T> = {
+export type QueryOptions<T extends XataRecord> = {
   page?: PaginationOptions;
   columns?: Extract<keyof Selectable<T>, string>[];
   //filter?: FilterConstraints<T>;
@@ -65,22 +65,22 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
   }
 
   any(...queries: Query<T, R>[]): Query<T, R> {
-    const $any = compact(queries.map((query) => query.getQueryOptions().filter.$any)).flat();
+    const $any = queries.map((query) => query.getQueryOptions().filter);
     return new Query<T, R>(this.#repository, this.#table, { filter: { $any } }, this.#data);
   }
 
   all(...queries: Query<T, R>[]): Query<T, R> {
-    const $all = compact(queries.map((query) => query.getQueryOptions().filter.$all)).flat();
+    const $all = queries.map((query) => query.getQueryOptions().filter);
     return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
   }
 
   not(...queries: Query<T, R>[]): Query<T, R> {
-    const $not = compact(queries.map((query) => query.getQueryOptions().filter.$not)).flat();
+    const $not = queries.map((query) => query.getQueryOptions().filter);
     return new Query<T, R>(this.#repository, this.#table, { filter: { $not } }, this.#data);
   }
 
   none(...queries: Query<T, R>[]): Query<T, R> {
-    const $none = compact(queries.map((query) => query.getQueryOptions().filter.$none)).flat();
+    const $none = queries.map((query) => query.getQueryOptions().filter);
     return new Query<T, R>(this.#repository, this.#table, { filter: { $none } }, this.#data);
   }
 
