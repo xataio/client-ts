@@ -8,16 +8,16 @@ import {
 } from "../../client/src";
 
 export interface Team extends XataRecord {
-  name?: string;
-  labels?: string[];
-  owner?: User;
+  name?: string | null;
+  labels?: string[] | null;
+  owner?: User | null;
 }
 
 export interface User extends XataRecord {
-  email?: string;
-  full_name?: string;
-  address?: { street?: string; zipcode?: number };
-  team?: Team;
+  email?: string | null;
+  full_name?: string | null;
+  address?: { street?: string | null; zipcode?: number | null } | null;
+  team?: Team | null;
 }
 
 const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };

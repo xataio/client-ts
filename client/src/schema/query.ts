@@ -85,7 +85,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
   }
 
   filter(constraints: FilterConstraints<T>): Query<T, R>;
-  filter<F extends keyof T>(column: F, value: FilterConstraints<T[F]> | DeepConstraint<T[F]>): Query<T, R>;
+  filter<F extends keyof Selectable<T>>(column: F, value: FilterConstraints<T[F]> | DeepConstraint<T[F]>): Query<T, R>;
   filter(a: any, b?: any): Query<T, R> {
     if (arguments.length === 1) {
       const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));
@@ -93,8 +93,8 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
 
       return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     } else {
-      const column = a as keyof T;
-      const value = b as Partial<T[keyof T]> | Constraint<T[keyof T]>;
+      const column = a as keyof Selectable<T>;
+      const value = b as FilterConstraints<T[typeof a]> | DeepConstraint<T[typeof a]>;
       const $all = compact([this.#data.filter.$all].flat().concat({ [column]: value }));
 
       return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
