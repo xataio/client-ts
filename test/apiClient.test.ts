@@ -32,8 +32,8 @@ describe('API Client Integration Tests', () => {
 
     await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toMatchInlineSnapshot(`
             Object {
-              "message": "no access to the workspace",
-              "status": 401,
+              "message": "invalid workspace not found",
+              "status": 404,
             }
           `);
   });
