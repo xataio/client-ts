@@ -110,10 +110,13 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
     return new Query<T, Select<T, K>>(this.#repository, this.#table, { columns }, this.#data);
   }
 
-  async getPaginated<Options extends QueryOptions<T>>(
-    options: Options = {} as Options
+  getPaginated<Options extends QueryOptions<T>>(
+    options?: Options
   ): Promise<
-    Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
+    Page<
+      T,
+      typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R
+    >
   > {
     return this.#repository.query(this, options);
   }
@@ -138,18 +141,19 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
   }
 
   async getMany<Options extends QueryOptions<T>>(
-    options: Options = {} as Options
+    options?: Options
   ): Promise<
-    (typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R)[]
+    (typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R)[]
   > {
     const { records } = await this.getPaginated(options);
     return records;
   }
 
   async getOne<Options extends Omit<QueryOptions<T>, 'page'>>(
-    options: Options = {} as Options
+    options?: Options
   ): Promise<
-    (typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R) | null
+    | (typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R)
+    | null
   > {
     const records = await this.getMany({ ...options, page: { size: 1 } });
     return records[0] || null;
@@ -160,19 +164,19 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
     return 0;
   }**/
 
-  async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.firstPage(size, offset);
   }
 
-  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.firstPage(size, offset);
   }
 
-  async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.getPaginated({ page: { size, offset } });
   }
 
-  async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.getPaginated({ page: { size, offset, before: 'end' } });
   }
 
