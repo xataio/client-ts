@@ -111,7 +111,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
   }
 
   getPaginated<Options extends QueryOptions<T>>(
-    options?: Options
+    options: Options = {} as Options
   ): Promise<
     Page<
       T,
@@ -141,7 +141,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
   }
 
   async getMany<Options extends QueryOptions<T>>(
-    options?: Options
+    options: Options = {} as Options
   ): Promise<
     (typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R)[]
   > {
@@ -150,7 +150,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
   }
 
   async getOne<Options extends Omit<QueryOptions<T>, 'page'>>(
-    options?: Options
+    options: Options = {} as Options
   ): Promise<
     | (typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R)
     | null

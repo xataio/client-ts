@@ -184,9 +184,12 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
 
   async query<R extends XataRecord, Options extends QueryOptions<T>>(
     query: Query<T, R>,
-    options: Options
+    options: Options = {} as Options
   ): Promise<
-    Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
+    Page<
+      T,
+      typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R
+    >
   > {
     const data = query.getQueryOptions();
 
