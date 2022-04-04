@@ -37,9 +37,9 @@ jobs:
           comment-author: 'github-actions[bot]'
           body-includes: Your pull request has been published to npm
 
-      - name: Create comment
+      - name: Update existing comment with stale state of npm release
         uses: peter-evans/create-or-update-comment@v1
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && steps.find-comment.outputs.comment-id != '' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
@@ -86,7 +86,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag canary --no-verify-access --yes
 
-      - name: Create comment
+      - name: Create or update comment of npm release
         uses: peter-evans/create-or-update-comment@v1
         if: ${{ github.event_name == 'pull_request' }}
         with:
