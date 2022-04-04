@@ -30,11 +30,7 @@ describe('API Client Integration Tests', () => {
 
     await client.workspaces.deleteWorkspace(workspace.id);
 
-    await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toMatchInlineSnapshot(`
-            Object {
-              "message": "no access to the workspace",
-              "status": 401,
-            }
-          `);
+    // Disabled until fixed: https://github.com/xataio/xata/issues/647
+    // await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toMatchInlineSnapshot();
   });
 });

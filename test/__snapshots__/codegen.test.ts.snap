@@ -80,30 +80,30 @@ exports[`codegen should generate correct TypeScript 1`] = `
 } from \\"@xata.io/client\\";
 
 export interface Author extends XataRecord {
-  name?: string;
-  email?: string;
-  photoUrl?: string;
-  bio?: string;
-  title?: string;
+  name?: string | null;
+  email?: string | null;
+  photoUrl?: string | null;
+  bio?: string | null;
+  title?: string | null;
 }
 
 export interface Post extends XataRecord {
-  title?: string;
-  summary?: string;
-  content?: string;
-  tags?: string[];
-  likes?: number;
-  author?: Author;
-  date?: string;
-  slug?: string;
-  published?: boolean;
+  title?: string | null;
+  summary?: string | null;
+  content?: string | null;
+  tags?: string[] | null;
+  likes?: number | null;
+  author?: Author | null;
+  date?: string | null;
+  slug?: string | null;
+  published?: boolean | null;
 }
 
 export interface Person extends XataRecord {
-  slug?: string;
-  name?: string;
-  title?: string;
-  photoUrl?: string;
+  slug?: string | null;
+  name?: string | null;
+  title?: string | null;
+  photoUrl?: string | null;
 }
 
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };

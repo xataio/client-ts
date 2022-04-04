@@ -23,7 +23,7 @@ import { BaseClient, Query, RestRespositoryFactory } from "../../client/src";
  * @property {() => Promise<void>} delete
  * @property {string=} email
  * @property {string=} full_name
- * @property {{ street?: string; zipcode?: number }=} address
+ * @property {{ street?: string | null; zipcode?: number | null }=} address
  * @property {Team=} team
  
  */

@@ -34,7 +34,10 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
     query: Query<T, R>,
     options: Options
   ): Promise<
-    Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
+    Page<
+      T,
+      typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R
+    >
   >;
 }
 
@@ -181,9 +184,12 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
 
   async query<R extends XataRecord, Options extends QueryOptions<T>>(
     query: Query<T, R>,
-    options: Options
+    options: Options = {} as Options
   ): Promise<
-    Page<T, typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R>
+    Page<
+      T,
+      typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R
+    >
   > {
     const data = query.getQueryOptions();
 
@@ -240,9 +246,9 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
   #branch: BranchStrategyValue;
 
   options: XataClientOptions;
-  db!: D;
+  public db!: D;
 
-  constructor(options: XataClientOptions, links: Links) {
+  constructor(options: XataClientOptions, links: Links = {}) {
     if (!options.databaseURL || !options.apiKey || !options.branch) {
       throw new Error('Options databaseURL, apiKey and branch are required');
     }

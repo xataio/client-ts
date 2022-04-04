@@ -135,3 +135,20 @@ await user.delete();
 // Using an object's id
 await xata.db.users.delete('rec_1234abcdef');
 ```
+
+## Deno support
+
+Right now we are still not publishing the client on deno.land or have support for deno in the codegen.
+
+However you can already use it with your preferred node CDN with the following import in the auto-generated `xata.ts` file:
+
+```ts
+import {
+  BaseClient,
+  Query,
+  Repository,
+  RestRespositoryFactory,
+  XataClientOptions,
+  XataRecord,
+} from 'https://esm.sh/@xata.io/client@<version>/dist/schema?target=deno';
+```
