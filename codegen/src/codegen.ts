@@ -34,7 +34,7 @@ function generateTableType(table: Table) {
 }
 
 function generateColumnType(column: Column) {
-  return `${column.name}?: ${getTypeScriptType(column)}`;
+  return `${column.name}?: ${getTypeScriptType(column)} | null`;
 }
 
 function generateJSdocType(table: Table) {
