@@ -246,7 +246,7 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
   #branch: BranchStrategyValue;
 
   options: XataClientOptions;
-  db!: D;
+  public db!: D;
 
   constructor(options: XataClientOptions, links: Links = {}) {
     if (!options.databaseURL || !options.apiKey || !options.branch) {
