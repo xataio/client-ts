@@ -1,4 +1,5 @@
-import { BaseClient, RestRepository, XataClientOptions, XataError, XataRecord } from './';
+import { XataRecord } from './record';
+import { XataClientOptions, BaseClient, RestRepository } from './repository';
 
 interface User extends XataRecord {
   name: string;
