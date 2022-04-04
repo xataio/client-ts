@@ -30,6 +30,7 @@ describe('API Client Integration Tests', () => {
 
     await client.workspaces.deleteWorkspace(workspace.id);
 
+    // Disabled until fixed: https://github.com/xataio/xata/issues/647
     // await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toMatchInlineSnapshot();
   });
 });
