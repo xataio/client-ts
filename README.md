@@ -136,7 +136,7 @@ await user.delete();
 await xata.db.users.delete('rec_1234abcdef');
 ```
 
-## Deno support
+## Deno support
 
 Right now we are still not publishing the client on deno.land or have support for deno in the codegen.
 
