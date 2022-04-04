@@ -15,9 +15,19 @@ export interface Paginable<T extends XataRecord, R extends XataRecord = T> {
   hasNextPage(): boolean;
 }
 
+/**
+ * A Page contains a set of results from a query plus metadata about the retrieved
+ * set of values such as the cursor, required to retrieve additional records.
+ */
 export class Page<T extends XataRecord, R extends XataRecord> implements Paginable<T, R> {
   #query: Query<T, R>;
+  /**
+   * Page metadata, required to retrieve additional records.
+   */
   readonly meta: PaginationQueryMeta;
+  /**
+   * The set of results for this page.
+   */
   readonly records: R[];
 
   constructor(query: Query<T, R>, meta: PaginationQueryMeta, records: R[] = []) {
@@ -26,23 +36,51 @@ export class Page<T extends XataRecord, R extends XataRecord> implements Paginab
     this.records = records;
   }
 
+  /**
+   * Retrieves the next page of results.
+   * @param size Maximum number of results to be retrieved.
+   * @param offset Number of results to skip when retrieving the results.
+   * @returns The next page or results.
+   */
   async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.#query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
   }
 
+  /**
+   * Retrieves the previous page of results.
+   * @param size Maximum number of results to be retrieved.
+   * @param offset Number of results to skip when retrieving the results.
+   * @returns The previous page or results.
+   */
   async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.#query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
   }
 
+  /**
+   * Retrieves the first page of results.
+   * @param size Maximum number of results to be retrieved.
+   * @param offset Number of results to skip when retrieving the results.
+   * @returns The first page or results.
+   */
   async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.#query.getPaginated({ page: { size, offset, first: this.meta.page.cursor } });
   }
 
+  /**
+   * Retrieves the last page of results.
+   * @param size Maximum number of results to be retrieved.
+   * @param offset Number of results to skip when retrieving the results.
+   * @returns The last page or results.
+   */
   async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
     return this.#query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
   }
 
   // TODO: We need to add something on the backend if we want a hasPreviousPage
+  /**
+   * Shortcut method to check if there will be additional results if the next page of results is retrieved.
+   * @returns Whether or not there will be additional results in the next page of results.
+   */
   hasNextPage(): boolean {
     return this.meta.page.more;
   }

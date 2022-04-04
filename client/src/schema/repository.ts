@@ -17,17 +17,53 @@ import { Selectable, SelectableColumn, Select } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
 
+/**
+ * Common interface for performing operations on a table.
+ */
 export abstract class Repository<T extends XataRecord> extends Query<T> {
+  /**
+   * Creates a record in the table.
+   * @param object Object containing the column names with their values to be stored in the table.
+   * @returns The full persisted record.
+   */
   abstract create(object: Selectable<T>): Promise<T>;
 
+  /**
+   * Creates multiple records in the table.
+   * @param objects Array of objects with the column names and the values to be stored in the table.
+   * @returns Array of the persisted records.
+   */
   abstract createMany(objects: Selectable<T>[]): Promise<T[]>;
 
+  /**
+   * Queries a single record from the table given its unique id.
+   * @param id The unique id.
+   * @returns The persisted record for the given id or null if the record could not be found.
+   */
   abstract read(id: string): Promise<T | null>;
 
+  /**
+   * Partially update a single record given its unique id.
+   * @param id The unique id.
+   * @param object The column names and their values that have to be updatd.
+   * @returns The full persisted record.
+   */
   abstract update(id: string, object: Partial<Selectable<T>>): Promise<T>;
 
+  /**
+   * Updates or creates a single record. If a record exists with the given id,
+   * it will be update, otherwise a new record will be created.
+   * @param id A unique id.
+   * @param object The column names and the values to be persisted.
+   * @returns The full persisted record.
+   */
   abstract upsert(id: string, object: Selectable<T>): Promise<T>;
 
+  /**
+   * Deletes a record given its unique id.
+   * @param id The unique id.
+   * @throws If the record could not be found or there was an error while performing the deletion.
+   */
   abstract delete(id: string): void;
 
   abstract query<R extends XataRecord, Options extends QueryOptions<T>>(
@@ -234,9 +270,18 @@ type BranchStrategy = BranchStrategyValue | BranchStrategyBuilder;
 type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
 
 export type XataClientOptions = {
+  /**
+   * Fetch implementation. This option is only required if the runtime does not include a fetch implementation
+   * available in the global scope. If you are running your code on Deno or Cloudflare workers for example,
+   * you won't need to provide a specific fetch implementation. But for most versions of Node.js you'll need
+   * to provide one. Such as cross-fetch, node-fetch or isomorphic-fetch.
+   */
   fetch?: FetchImpl;
   databaseURL?: string;
   branch: BranchStrategyOption;
+  /**
+   * API key to be used. You can create one in your account settings at https://app.xata.io/settings.
+   */
   apiKey: string;
   repositoryFactory?: RepositoryFactory;
 };

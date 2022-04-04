@@ -1,3 +1,4 @@
+import { off } from 'process';
 import { XataRecord, Repository } from '..';
 import { FilterExpression, SortExpression, PageConfig, ColumnsFilter } from '../api/schemas';
 import { compact } from '../util/lang';
@@ -19,6 +20,12 @@ export type QueryTableOptions = {
   columns?: ColumnsFilter;
 };
 
+/**
+ * Query objects contain the information of all filters, sorting, etc. to be included in the database query.
+ *
+ * Query objects are immutable. Any method that adds more constraints or options to the query will return
+ * a new Query object containing the both the previous and the new constraints and options.
+ */
 export class Query<T extends XataRecord, R extends XataRecord = T> implements Paginable<T, R> {
   #table: string;
   #repository: Repository<T>;
@@ -64,26 +71,62 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
     return this.#data;
   }
 
+  /**
+   * Builds a new query object representing a logical OR between the given subqueries.
+   * @param queries An array of subqueries.
+   * @returns A new Query object.
+   */
   any(...queries: Query<T, R>[]): Query<T, R> {
     const $any = queries.map((query) => query.getQueryOptions().filter);
     return new Query<T, R>(this.#repository, this.#table, { filter: { $any } }, this.#data);
   }
 
+  /**
+   * Builds a new query object representing a logical AND between the given subqueries.
+   * @param queries An array of subqueries.
+   * @returns A new Query object.
+   */
   all(...queries: Query<T, R>[]): Query<T, R> {
     const $all = queries.map((query) => query.getQueryOptions().filter);
     return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
   }
 
+  /**
+   * Builds a new query object representing a logical OR negating each subquery. In pseudo-code: !q1 OR !q2
+   * @param queries An array of subqueries.
+   * @returns A new Query object.
+   */
   not(...queries: Query<T, R>[]): Query<T, R> {
     const $not = queries.map((query) => query.getQueryOptions().filter);
     return new Query<T, R>(this.#repository, this.#table, { filter: { $not } }, this.#data);
   }
 
+  /**
+   * Builds a new query object representing a logical AND negating each subquery. In pseudo-code: !q1 AND !q2
+   * @param queries An array of subqueries.
+   * @returns A new Query object.
+   */
   none(...queries: Query<T, R>[]): Query<T, R> {
     const $none = queries.map((query) => query.getQueryOptions().filter);
     return new Query<T, R>(this.#repository, this.#table, { filter: { $none } }, this.#data);
   }
 
+  /**
+   * Builds a new query object adding one or more constraints. Examples:
+   *
+   * ```
+   * query.filter("columnName", columnValue)
+   * query.filter({
+   *   "columnName": columnValue
+   * })
+   * query.filter({
+   *   "columnName": operator(columnValue) // Use gt, gte, lt, lte, startsWith,...
+   * })
+   * ```
+   *
+   * @param constraints
+   * @returns A new Query object.
+   */
   filter(constraints: FilterConstraints<T>): Query<T, R>;
   filter<F extends keyof Selectable<T>>(column: F, value: FilterConstraints<T[F]> | DeepConstraint<T[F]>): Query<T, R>;
   filter(a: any, b?: any): Query<T, R> {
@@ -101,11 +144,22 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
     }
   }
 
+  /**
+   * Builds a new query with a new sort option.
+   * @param column The column name.
+   * @param direction The direction. Either ascending or descending.
+   * @returns A new Query object.
+   */
   sort<F extends keyof T>(column: F, direction: SortDirection): Query<T, R> {
     const sort = { ...this.#data.sort, [column]: direction };
     return new Query<T, R>(this.#repository, this.#table, { sort }, this.#data);
   }
 
+  /**
+   * Builds a new query specifying the set of columns to be returned in the query response.
+   * @param columns Array of column names to be returned by the query.
+   * @returns A new Query object.
+   */
   select<K extends SelectableColumn<T>>(columns: K[]) {
     return new Query<T, Select<T, K>>(this.#repository, this.#table, { columns }, this.#data);
   }
@@ -140,6 +194,11 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
     }
   }
 
+  /**
+   * Performs the query in the database and returns a set of results.
+   * @param options Additional options to be used when performing the query.
+   * @returns An array of records from the database.
+   */
   async getMany<Options extends QueryOptions<T>>(
     options: Options = {} as Options
   ): Promise<
@@ -149,6 +208,11 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
     return records;
   }
 
+  /**
+   * Performs the query in the database and returns the first result.
+   * @param options Additional options to be used when performing the query.
+   * @returns The first record that matches the query, or null if no record matched the query.
+   */
   async getOne<Options extends Omit<QueryOptions<T>, 'page'>>(
     options: Options = {} as Options
   ): Promise<
