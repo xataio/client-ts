@@ -2,6 +2,7 @@
   "name": "@xata.io/client",
   "version": "0.2.2",
   "description": "Xata.io SDK for TypeScript and JavaScript",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
