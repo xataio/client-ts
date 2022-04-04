@@ -140,7 +140,7 @@ await xata.db.users.delete('rec_1234abcdef');
 
 Right now we are still not publishing the client on deno.land or have support for deno in the codegen.
 
-However you can already use it with your preferred node CDN with the following import in the auto-generated ``:
+However you can already use it with your preferred node CDN with the following import in the auto-generated ``xata.ts`` file:
 
 ```ts
 import {
