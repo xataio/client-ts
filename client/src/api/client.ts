@@ -169,6 +169,20 @@ class WorkspaceApi {
     });
   }
 
+  public cancelWorkspaceMemberInvite(workspaceId: Schemas.WorkspaceID, inviteId: Schemas.InviteID): Promise<void> {
+    return operationsByTag.workspaces.cancelWorkspaceMemberInvite({
+      pathParams: { workspaceId, inviteId },
+      ...this.extraProps
+    });
+  }
+
+  public resendWorkspaceMemberInvite(workspaceId: Schemas.WorkspaceID, inviteId: Schemas.InviteID): Promise<void> {
+    return operationsByTag.workspaces.resendWorkspaceMemberInvite({
+      pathParams: { workspaceId, inviteId },
+      ...this.extraProps
+    });
+  }
+
   public acceptWorkspaceMemberInvite(workspaceId: Schemas.WorkspaceID, inviteKey: Schemas.InviteKey): Promise<void> {
     return operationsByTag.workspaces.acceptWorkspaceMemberInvite({
       pathParams: { workspaceId, inviteKey },
