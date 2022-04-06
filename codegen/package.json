@@ -2,14 +2,14 @@
   "name": "@xata.io/codegen",
   "version": "0.2.2",
   "description": "Generates types based on a Xata.io database schema. Meant to be used with @xata.io/client",
-  "main": "./dist/index.js",
+  "main": "./dist/src/index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "prepack": "npm run build",
-    "example-ts": "npm run build && node --es-module-specifier-resolution=node dist/index.js generate example/xata -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
-    "example-js": "npm run build && node --es-module-specifier-resolution=node dist/index.js generate example/xata -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js"
+    "example-ts": "npm run build && node --es-module-specifier-resolution=node dist/src generate example/xata -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
+    "example-js": "npm run build && node --es-module-specifier-resolution=node dist/src generate example/xata -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js"
   },
   "repository": {
     "type": "git",

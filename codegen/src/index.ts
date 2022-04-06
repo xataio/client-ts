@@ -12,13 +12,15 @@ import { useCli } from './useCli';
 import { generateWithOutput } from './generateWithOutput';
 import { handleXataCliRejection } from './handleXataCliRejection';
 import { cliPath } from './cliPath';
+import pkg from '../package.json';
 
 const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'XataClient');
 
 program
   .name('xata-codegen')
-  .description('The Xata SDK CLI is used to generate type-safe and predictable clients used to interact with Xata.');
+  .description('The Xata SDK CLI is used to generate type-safe and predictable clients used to interact with Xata.')
+  .version(pkg.version);
 
 program
   .command('generate')
