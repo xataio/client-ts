@@ -18,10 +18,7 @@ const defaultOutputFile = join(process.cwd(), 'XataClient');
 
 program
   .name('xata-codegen')
-  .description('The Xata SDK CLI is used to generate type-safe and predictable clients used to interact with Xata.')
-  // There's nothing unsafe here, so disabling this rule in this case...
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  .version(require('../package.json').version);
+  .description('The Xata SDK CLI is used to generate type-safe and predictable clients used to interact with Xata.');
 
 program
   .command('generate')
@@ -83,7 +80,6 @@ If you'd like to open an issue, please do so at ${chalk.blueBright('https://gith
 `
           );
           process.exit(1);
-          return;
         }
         spinner.fail(e.message as string);
         process.exit(1);
