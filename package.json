@@ -71,7 +71,7 @@
   ],
   "jest": {
     "testPathIgnorePatterns": [
-      "dist"
+      "<rootDir>/dist/"
     ]
   }
 }
