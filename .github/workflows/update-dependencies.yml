@@ -1,0 +1,66 @@
+name: Update dependencies
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 15 * * 1' # once every monday
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          cache: 'npm'
+      - name: Check for updates
+        run: |
+          echo 'Checking for updates'
+          npx npm-check-updates -u -t latest --deep
+
+          echo 'Install new versions'
+          npm ci && npx lerna bootstrap --ci
+          if $(git diff-index --quiet HEAD); then
+            echo 'No dependencies needed to be updated!'
+            exit 0
+          fi
+
+          echo "BRANCH=update-dependencies-${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Publish new branch
+        if: ${{ env.BRANCH }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+          echo 'Creating new branch'
+          git checkout -b ${{ env.BRANCH }}
+
+          echo 'Committing changes'
+          git commit -am "Update dependencies"
+
+          echo 'Publishing new branch'
+          git push --set-upstream origin ${{ env.BRANCH }}
+
+      - name: Open Pull Request
+        if: ${{ env.BRANCH }}
+        uses: actions/github-script@0.4.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const {repo, owner} = context.repo;
+            const {data:pr} = await github.pulls.create({
+              owner,
+              repo,
+              title: "Update dependencies",
+              base: "main",
+              head: "${{ env.BRANCH }}",
+              body: "Update the dependencies!"
+            });
+            console.log('Created PR', pr.html_url);
