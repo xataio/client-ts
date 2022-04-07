@@ -293,13 +293,63 @@ export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables)
     ...variables
   });
 
+export type CancelWorkspaceMemberInvitePathParams = {
+  /*
+   * Workspace name
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /*
+   * Invite identifier
+   */
+  inviteId: Schemas.InviteID;
+};
+
+export type CancelWorkspaceMemberInviteVariables = {
+  pathParams: CancelWorkspaceMemberInvitePathParams;
+} & FetcherExtraProps;
+
+/**
+ * This operation provides a way to cancel invites by deleting them. Already accepted invites cannot be deleted.
+ */
+export const cancelWorkspaceMemberInvite = (variables: CancelWorkspaceMemberInviteVariables) =>
+  fetch<undefined, undefined, {}, {}, CancelWorkspaceMemberInvitePathParams>({
+    url: '/workspaces/{workspaceId}/invites/{inviteId}',
+    method: 'delete',
+    ...variables
+  });
+
+export type ResendWorkspaceMemberInvitePathParams = {
+  /*
+   * Workspace name
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /*
+   * Invite identifier
+   */
+  inviteId: Schemas.InviteID;
+};
+
+export type ResendWorkspaceMemberInviteVariables = {
+  pathParams: ResendWorkspaceMemberInvitePathParams;
+} & FetcherExtraProps;
+
+/**
+ * This operation provides a way to resend an Invite notification. Invite notifications can only be sent for Invites not yet accepted.
+ */
+export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInviteVariables) =>
+  fetch<undefined, undefined, {}, {}, ResendWorkspaceMemberInvitePathParams>({
+    url: '/workspaces/{workspaceId}/invites/{inviteId}/resend',
+    method: 'post',
+    ...variables
+  });
+
 export type AcceptWorkspaceMemberInvitePathParams = {
   /*
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
   /*
-   * Invite ID
+   * Invite Key (secret) for the invited user
    */
   inviteKey: Schemas.InviteKey;
 };
@@ -2006,6 +2056,8 @@ export const operationsByTag = {
     updateWorkspaceMemberRole,
     removeWorkspaceMember,
     inviteWorkspaceMember,
+    cancelWorkspaceMemberInvite,
+    resendWorkspaceMemberInvite,
     acceptWorkspaceMemberInvite
   },
   database: { getDatabaseList, createDatabase, deleteDatabase },

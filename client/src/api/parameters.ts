@@ -7,6 +7,8 @@ import type * as Schemas from './schemas';
 
 export type APIKeyNameParam = Schemas.APIKeyName;
 
+export type InviteIDParam = Schemas.InviteID;
+
 export type InviteKeyParam = Schemas.InviteKey;
 
 export type UserIDParam = Schemas.UserID;
