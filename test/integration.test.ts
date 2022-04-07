@@ -405,8 +405,21 @@ describe('integration tests', () => {
     expect(updatedUser.full_name).toBe(user.full_name);
   });
 
-  test('Upsert of a user', async () => {
-    const user = await client.db.users.upsert('my-good-old-john', {
+  test('Insert user without id', async () => {
+    expect(
+      client.db.users.insert('', {
+        full_name: 'John Doe 3',
+        email: 'john3@doe.com'
+      })
+    ).rejects.toMatchInlineSnapshot(`
+      Object {
+        "message": "Not Found",
+        "status": 404,
+      }
+    `);
+
+    // @ts-expect-error
+    const user = await client.db.users.insert(undefined, {
       full_name: 'John Doe 3',
       email: 'john3@doe.com'
     });
@@ -414,10 +427,52 @@ describe('integration tests', () => {
     const apiUser = await client.db.users.filter({ id: user.id }).getOne();
     if (!apiUser) throw new Error('No user found');
 
+    expect(user.id).toBeDefined();
+    expect(user.full_name).toBe('John Doe 3');
+
+    expect(user.id).toBe(apiUser.id);
+    expect(user.full_name).toBe(apiUser.full_name);
+    expect(user.email).toBe(apiUser.email);
+  });
+
+  test('Insert a user with id', async () => {
+    const user = await client.db.users.insert('a-unique-record-john-4', {
+      full_name: 'John Doe 4',
+      email: 'john4@doe.com'
+    });
+
+    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
+    if (!apiUser) throw new Error('No user found');
+
+    expect(user.id).toBe('a-unique-record-john-4');
+    expect(user.full_name).toBe('John Doe 4');
+
+    expect(user.id).toBe(apiUser.id);
+    expect(user.full_name).toBe(apiUser.full_name);
+    expect(user.email).toBe(apiUser.email);
+
+    /** https://github.com/xataio/xata/issues/660
+    expect(
+      client.db.users.insert('a-unique-record-john-4', {
+        full_name: 'John Doe 5',
+        email: 'john5@doe.com'
+      })
+    ).rejects.toMatchInlineSnapshot();**/
+  });
+
+  test('Upsert of a user', async () => {
+    const user = await client.db.users.updateOrInsert('my-good-old-john-6', {
+      full_name: 'John Doe 6',
+      email: 'john6@doe.com'
+    });
+
+    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
+    if (!apiUser) throw new Error('No user found');
+
     await user.delete();
 
-    expect(user.id).toBe('my-good-old-john');
-    expect(user.full_name).toBe('John Doe 3');
+    expect(user.id).toBe('my-good-old-john-6');
+    expect(user.full_name).toBe('John Doe 6');
 
     expect(user.id).toBe(apiUser.id);
     expect(user.full_name).toBe(apiUser.full_name);
