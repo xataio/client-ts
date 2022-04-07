@@ -4,4 +4,4 @@
 
 ### Patch Changes
 
-- 1c0a454: Make codegen fields nullable
+- 1c0a454: Make schema fields nullable
