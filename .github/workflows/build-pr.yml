@@ -92,7 +92,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          comment-id: ${{ steps.find-comment.outputs.comment-id || steps.update-existing.outputs.comment-id  }}
+          comment-id: ${{ steps.update-existing.outputs.comment-id || steps.find-comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           edit-mode: replace
           body: |
