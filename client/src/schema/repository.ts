@@ -119,26 +119,15 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
 
     const record = transformObjectLinks(object);
 
-    const response = object.id
-      ? await insertRecordWithID({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            tableName: this.#table,
-            recordId: object.id
-          },
-          body: record,
-          ...fetchProps
-        })
-      : await insertRecord({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            tableName: this.#table
-          },
-          body: record,
-          ...fetchProps
-        });
+    const response = await insertRecord({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        tableName: this.#table
+      },
+      body: record,
+      ...fetchProps
+    });
 
     const finalObject = await this.read(response.id);
     if (!finalObject) {
@@ -192,6 +181,30 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     if (!item) throw new Error('The server failed to save the record');
 
     return item;
+  }
+
+  async insert(recordId: string, object: Selectable<T>): Promise<T> {
+    const fetchProps = await this.#getFetchProps();
+
+    const record = transformObjectLinks(object);
+
+    const response = await insertRecordWithID({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        tableName: this.#table,
+        recordId
+      },
+      body: record,
+      ...fetchProps
+    });
+
+    const finalObject = await this.read(response.id);
+    if (!finalObject) {
+      throw new Error('The server failed to save the record');
+    }
+
+    return finalObject;
   }
 
   async upsert(recordId: string, object: Selectable<T>): Promise<T> {
