@@ -31,8 +31,10 @@ export const getCli = async ({ spinner }: { spinner: Ora }) => {
       }
       return r.json();
     })
-    .then((d: GitHubResponse) =>
-      d.assets.map((a) => a.browser_download_url).find((a) => a.includes(getCliPlatformFromNodePlatform()))
+    .then((d) =>
+      (d as GitHubResponse).assets
+        .map((a) => a.browser_download_url)
+        .find((a) => a.includes(getCliPlatformFromNodePlatform()))
     );
 
   if (!fileUrl) {

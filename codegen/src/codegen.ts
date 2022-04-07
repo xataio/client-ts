@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { singular } from 'pluralize';
+import pluralize from 'pluralize';
 import { Column, Table } from './schema';
 import { join } from 'path';
 
@@ -19,7 +19,7 @@ type GenerateOptions = {
 };
 
 function getTypeName(tableName: string) {
-  const snglr = singular(tableName);
+  const snglr = pluralize.singular(tableName);
   return snglr.substring(0, 1).toUpperCase() + snglr.substring(1);
 }
 
