@@ -23,6 +23,40 @@ jobs:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
           cache: 'npm'
 
+      - name: Set build version
+        run: echo ::set-output name=TAG::0.0.0-${{ github.event_name == 'pull_request' && 'alpha' || 'beta' }}.$(git rev-parse --short HEAD)
+        id: version
+
+      - name: Find Comment
+        uses: peter-evans/find-comment@v1
+        if: ${{ github.event_name == 'pull_request' }}
+        id: find-comment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Your pull request has been published to npm
+
+      - name: Update existing comment with stale state of npm release
+        uses: peter-evans/create-or-update-comment@v1
+        if: ${{ github.event_name == 'pull_request' && steps.find-comment.outputs.comment-id != '' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            Your pull request has been published to npm.
+
+            You can install it by running:
+
+            ```
+            npm install @xata.io/client@${{ steps.version.outputs.TAG }}
+            npm install @xata.io/codegen@${{ steps.version.outputs.TAG }}
+            ```
+
+            [Pull request has been updated, please wait for latest changes to be pushed to npm...]
+
       - name: Install dependencies
         run: npm ci && npx lerna bootstrap --ci
 
@@ -39,10 +73,6 @@ jobs:
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
           XATA_DATABASE_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
 
-      - name: Set build version
-        run: echo ::set-output name=TAG::0.0.0-${{ github.event_name == 'pull_request' && 'alpha' || 'beta' }}.$(git rev-parse --short HEAD)
-        id: version
-
       - name: Configure npm registry token
         run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         env:
@@ -56,17 +86,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag canary --no-verify-access --yes
 
-      - name: Find Comment
-        uses: peter-evans/find-comment@v1
-        if: ${{ github.event_name == 'pull_request' }}
-        id: find-comment
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Your pull request has been published to npm
-
-      - name: Create comment
+      - name: Create or update comment of npm release
         uses: peter-evans/create-or-update-comment@v1
         if: ${{ github.event_name == 'pull_request' }}
         with:
