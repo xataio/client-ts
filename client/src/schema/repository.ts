@@ -43,6 +43,14 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
   abstract read(id: string): Promise<T | null>;
 
   /**
+   * Insert a single record with a unique id.
+   * @param id The unique id.
+   * @param object Object containing the column names with their values to be stored in the table.
+   * @returns The full persisted record.
+   */
+  abstract insert(id: string, object: Selectable<T>): Promise<T>;
+
+  /**
    * Partially update a single record given its unique id.
    * @param id The unique id.
    * @param object The column names and their values that have to be updatd.
@@ -51,13 +59,13 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
   abstract update(id: string, object: Partial<Selectable<T>>): Promise<T>;
 
   /**
-   * Updates or creates a single record. If a record exists with the given id,
+   * Updates or inserts a single record. If a record exists with the given id,
    * it will be update, otherwise a new record will be created.
    * @param id A unique id.
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
-  abstract upsert(id: string, object: Selectable<T>): Promise<T>;
+  abstract updateOrInsert(id: string, object: Selectable<T>): Promise<T>;
 
   /**
    * Deletes a record given its unique id.
@@ -119,26 +127,15 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
 
     const record = transformObjectLinks(object);
 
-    const response = object.id
-      ? await insertRecordWithID({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            tableName: this.#table,
-            recordId: object.id
-          },
-          body: record,
-          ...fetchProps
-        })
-      : await insertRecord({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            tableName: this.#table
-          },
-          body: record,
-          ...fetchProps
-        });
+    const response = await insertRecord({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        tableName: this.#table
+      },
+      body: record,
+      ...fetchProps
+    });
 
     const finalObject = await this.read(response.id);
     if (!finalObject) {
@@ -194,7 +191,31 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return item;
   }
 
-  async upsert(recordId: string, object: Selectable<T>): Promise<T> {
+  async insert(recordId: string, object: Selectable<T>): Promise<T> {
+    const fetchProps = await this.#getFetchProps();
+
+    const record = transformObjectLinks(object);
+
+    const response = await insertRecordWithID({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        tableName: this.#table,
+        recordId
+      },
+      body: record,
+      ...fetchProps
+    });
+
+    const finalObject = await this.read(response.id);
+    if (!finalObject) {
+      throw new Error('The server failed to save the record');
+    }
+
+    return finalObject;
+  }
+
+  async updateOrInsert(recordId: string, object: Selectable<T>): Promise<T> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({

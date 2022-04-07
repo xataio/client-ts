@@ -98,7 +98,7 @@ export async function fetch<
 
   // No content
   if (response.status === 204) {
-    return {} as TData;
+    return {} as unknown as TData;
   }
 
   try {
