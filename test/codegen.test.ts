@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { generate } from '../codegen/src/codegen';
+import { generateWithOutput } from '../codegen/src/generateWithOutput';
 
 describe('codegen', () => {
   it('should generate correct TypeScript', async () => {
@@ -7,7 +7,7 @@ describe('codegen', () => {
     const outputFilePath = 'hahaha.ts';
 
     const writeFile = jest.fn();
-    await generate({ xataDirectory, outputFilePath, writeFile });
+    await generateWithOutput({ xataDirectory, outputFilePath, writeFile });
 
     const [path, content] = writeFile.mock.calls[0];
     expect(path).toEqual(join(process.cwd(), 'hahaha.ts'));
@@ -19,7 +19,7 @@ describe('codegen', () => {
     const outputFilePath = 'hahaha.js';
 
     const writeFile = jest.fn();
-    await generate({ xataDirectory, outputFilePath, writeFile: writeFile, language: 'javascript' });
+    await generateWithOutput({ xataDirectory, outputFilePath, writeFile: writeFile });
 
     const [path, content] = writeFile.mock.calls[0];
     expect(path).toEqual(join(process.cwd(), 'hahaha.js'));

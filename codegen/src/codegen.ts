@@ -1,21 +1,14 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
 import pluralize from 'pluralize';
-import { Column, Table } from './schema';
-import { join } from 'path';
+import { Column, Table, XataDatabaseSchema } from './schema';
+import * as ts from 'typescript';
+import prettier, { BuiltInParserName } from 'prettier';
+import { XataConfigSchema } from './config';
 
-import prettier from 'prettier';
-import { getLanguageFromExtension } from './getLanguageFromExtension';
-import { isExtensionValid } from './isExtensionValid';
-import { errors } from './errors';
-import { readFile } from './readFile';
-import { parseConfigFile } from './parseConfigFile';
-import { parseSchemaFile } from './parseSchemaFile';
-
-type GenerateOptions = {
-  xataDirectory: string;
-  outputFilePath: string;
-  writeFile?: typeof fs.writeFile;
+export type GenerateOptions = {
+  schema: XataDatabaseSchema;
+  config: XataConfigSchema;
+  language: Language;
+  javascriptTarget?: JavascriptTarget;
 };
 
 function getTypeName(tableName: string) {
@@ -77,22 +70,9 @@ function getTypeScriptType(column: Column): string {
 }
 
 export type Language = 'typescript' | 'javascript';
+export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
-export async function generate({ outputFilePath: output, xataDirectory, writeFile = fs.writeFile }: GenerateOptions) {
-  const fullOutputPath = path.resolve(process.cwd(), output);
-  const [extension] = fullOutputPath.split('.').slice(-1);
-
-  if (!isExtensionValid(extension)) {
-    throw new Error(errors.invalidCodegenOutputExtension);
-  }
-
-  const schemaFile = join(xataDirectory, 'schema.json');
-  const configFile = join(xataDirectory, 'config.json');
-  const rawSchema = await readFile({ fullPath: schemaFile, type: 'schema' });
-  const rawConfig = await readFile({ fullPath: configFile, type: 'config' });
-  const schema = parseSchemaFile(rawSchema);
-  const config = parseConfigFile(rawConfig);
-
+export async function generate({ schema, config, language, javascriptTarget }: GenerateOptions) {
   const { tables } = schema;
   const links: Record<string, string[][]> = {};
   for (const table of tables) {
@@ -104,11 +84,12 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
     }
   }
 
-  if (getLanguageFromExtension(extension) === 'typescript') {
-    const code = `
+  const parser = prettierParsers[language];
+
+  const code = `
+  ${language === 'javascript' ? `    /** @typedef { import('@xata.io/client').Repository } Repository */` : ''}
     import {
       BaseClient,
-      Query,
       Repository,
       RestRespositoryFactory,
       XataClientOptions,
@@ -116,6 +97,8 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
     } from '@xata.io/client';
 
     ${tables.map((table) => generateTableType(table)).join('\n')}
+
+    ${language === 'javascript' ? tables.map((table) => generateJSdocType(table)).join('\n') : ''}
 
     const links = ${JSON.stringify(links)};
 
@@ -125,6 +108,11 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
       constructor(options: XataClientOptions) {
         super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
         const factory = options.repositoryFactory || new RestRespositoryFactory();
+        ${
+          language === 'javascript'
+            ? `/** @type {{ ${tables.map((table) => `"${table.name}": Repository`).join('; ')} }} */`
+            : ''
+        }
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
         };
@@ -132,35 +120,21 @@ export async function generate({ outputFilePath: output, xataDirectory, writeFil
     }
   `;
 
-    const pretty = prettier.format(code, { parser: 'typescript' });
-    await writeFile(fullOutputPath, pretty);
-    return;
+  const transpiled = transpile(code, language, javascriptTarget);
+
+  return prettier.format(transpiled, { parser });
+}
+
+const prettierParsers: Record<Language, BuiltInParserName> = {
+  typescript: 'typescript',
+  javascript: 'babel'
+};
+
+function transpile(code: string, language: Language, javascriptTarget: JavascriptTarget = 'ES2020') {
+  switch (language) {
+    case 'typescript':
+      return code;
+    case 'javascript':
+      return ts.transpile(code, { target: ts.ScriptTarget[javascriptTarget] });
   }
-
-  const code = `
-    /** @typedef { import('@xata.io/client').Repository } Repository */
-    import {
-      BaseClient,
-      Query,
-      RestRespositoryFactory
-    } from '@xata.io/client';
-
-    ${tables.map((table) => generateJSdocType(table)).join('\n')}
-
-    const links = ${JSON.stringify(links)};
-
-    export class XataClient extends BaseClient {
-      constructor(options) {
-        super(options, links);
-        const factory = options.repositoryFactory || new RestRespositoryFactory();
-        /** @type {{ ${tables.map((table) => `"${table.name}": Repository`).join('; ')} }} */
-        this.db = {
-          ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
-        };
-      }
-    }
-  `;
-
-  const pretty = prettier.format(code, { parser: 'babel' });
-  await writeFile(fullOutputPath, pretty);
 }

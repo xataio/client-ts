@@ -5,7 +5,7 @@ import path from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const pathName = path.join(__dirname, '../dist/index.js');
+const pathName = path.join(__dirname, '../dist/cli.js');
 const original = fs.readFileSync(pathName, 'utf8');
 
 const contents = `#!/bin/sh
