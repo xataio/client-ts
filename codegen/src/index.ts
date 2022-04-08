@@ -1,6 +1,3 @@
-#!/bin/sh
-':'; //# Xata Codegen; exec /usr/bin/env node --es-module-specifier-resolution=node "$0" "$@"
-
 import { program } from 'commander';
 import { join } from 'path';
 import ora from 'ora';
