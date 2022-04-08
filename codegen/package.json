@@ -47,6 +47,6 @@
     "@types/yargs": "^17.0.10"
   },
   "bin": {
-    "xata-codegen": "./dist/index.js"
+    "xata-codegen": "./dist/cli.js"
   }
 }
