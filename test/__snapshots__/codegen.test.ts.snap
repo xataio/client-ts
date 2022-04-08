@@ -2,8 +2,7 @@
 
 exports[`codegen should generate correct JavaScript 1`] = `
 "/** @typedef { import('@xata.io/client').Repository } Repository */
-import { BaseClient, Query, RestRespositoryFactory } from \\"@xata.io/client\\";
-
+import { BaseClient, RestRespositoryFactory } from \\"@xata.io/client\\";
 /**
  * @typedef {Object} Author
  * @property {string} id
@@ -18,7 +17,6 @@ import { BaseClient, Query, RestRespositoryFactory } from \\"@xata.io/client\\";
  * @property {string=} title
  
  */
-
 /**
  * @typedef {Object} Post
  * @property {string} id
@@ -37,7 +35,6 @@ import { BaseClient, Query, RestRespositoryFactory } from \\"@xata.io/client\\";
  * @property {boolean=} published
  
  */
-
 /**
  * @typedef {Object} Person
  * @property {string} id
@@ -51,12 +48,16 @@ import { BaseClient, Query, RestRespositoryFactory } from \\"@xata.io/client\\";
  * @property {string=} photoUrl
  
  */
-
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
-
 export class XataClient extends BaseClient {
   constructor(options) {
-    super(options, links);
+    super(
+      {
+        databaseURL: \\"https://my-workspace-gfdd12.xata.sh/db/hello-xata\\",
+        ...options,
+      },
+      links
+    );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
     /** @type {{ \\"authors\\": Repository; \\"posts\\": Repository; \\"people\\": Repository }} */
     this.db = {
@@ -72,7 +73,6 @@ export class XataClient extends BaseClient {
 exports[`codegen should generate correct TypeScript 1`] = `
 "import {
   BaseClient,
-  Query,
   Repository,
   RestRespositoryFactory,
   XataClientOptions,
@@ -122,6 +122,7 @@ export class XataClient extends BaseClient<{
       links
     );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
+
     this.db = {
       authors: factory.createRepository(this, \\"authors\\"),
       posts: factory.createRepository(this, \\"posts\\"),
