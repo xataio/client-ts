@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build": "tsc && ncc build src/index.ts -m -o dist/cli",
     "prepack": "npm run build",
     "prebuild": "node -p \"'export const CODEGEN_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "example-ts": "npm run build && node --es-module-specifier-resolution=node dist generate example/xata -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/codegen/README.md",
   "dependencies": {
+    "@vercel/ncc": "^0.33.3",
     "chalk": "5.0.1",
     "command-exists": "^1.2.9",
     "commander": "^9.1.0",
@@ -46,6 +47,6 @@
     "@types/yargs": "^17.0.10"
   },
   "bin": {
-    "xata-codegen": "./dist/index.js"
+    "xata-codegen": "./dist/cli/index.js"
   }
 }
