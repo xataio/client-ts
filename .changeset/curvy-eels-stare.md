@@ -2,4 +2,4 @@
 '@xata.io/codegen': patch
 ---
 
-Move version generation to prebuild
+Fix binary compilation of codegen
