@@ -46,6 +46,6 @@
     "@types/yargs": "^17.0.10"
   },
   "bin": {
-    "xata-codegen": "./xata-codegen.sh"
+    "xata-codegen": "./dist/index.js"
   }
 }
