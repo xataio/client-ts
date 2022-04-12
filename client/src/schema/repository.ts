@@ -156,13 +156,12 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
       ...fetchProps
     });
 
-    // TODO: Use filer.$any() to get all the records
-    const finalObjects = await Promise.all(response.recordIDs.map((id) => this.read(id)));
-    if (finalObjects.some((object) => !object)) {
-      throw new Error('The server failed to save the record');
+    const finalObjects = await this.any(...response.recordIDs.map((id) => this.filter('id', id))).getMany();
+    if (finalObjects.length !== objects.length) {
+      throw new Error('The server failed to save some records');
     }
 
-    return finalObjects as T[];
+    return finalObjects;
   }
 
   async read(recordId: string): Promise<T | null> {
