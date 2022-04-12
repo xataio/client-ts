@@ -1,8 +1,7 @@
 import pluralize from 'pluralize';
-import type { BuiltInParserName } from 'prettier';
-import parserTypeScript from 'prettier/parser-typescript';
-import parserJavascript from 'prettier/parser-babel';
-import prettier from 'prettier/standalone';
+import prettier, { BuiltInParserName } from 'prettier';
+import parserJavascript from 'prettier/parser-babel.js';
+import parserTypeScript from 'prettier/parser-typescript.js';
 import ts from 'typescript';
 import { XataConfigSchema } from './config.js';
 import { Column, Table, XataDatabaseSchema } from './schema.js';
