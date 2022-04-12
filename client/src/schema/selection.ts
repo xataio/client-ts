@@ -35,6 +35,18 @@ export type SelectableColumn<O> =
             }>
       : '');
 
+export type ValueOfSelectableColumn<O, P extends SelectableColumn<O>> = P extends '*'
+  ? Values<O>
+  : P extends keyof O
+  ? O[P]
+  : P extends `${infer K}.${infer V}`
+  ? K extends keyof O
+    ? V extends SelectableColumn<O[K]>
+      ? ValueOfSelectableColumn<O[K], V>
+      : never
+    : never
+  : never;
+
 export type Select<T, K extends SelectableColumn<T>> = UnionToIntersection<K extends keyof T ? Pick<T, K> : T> &
   Queries<T> &
   XataRecord;

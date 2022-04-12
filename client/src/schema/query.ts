@@ -1,10 +1,9 @@
-import { off } from 'process';
-import { XataRecord, Repository } from '..';
-import { FilterExpression, SortExpression, PageConfig, ColumnsFilter } from '../api/schemas';
+import { Repository, XataRecord } from '..';
+import { ColumnsFilter, FilterExpression, PageConfig, SortExpression } from '../api/schemas';
 import { compact } from '../util/lang';
-import { Constraint, DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
-import { PaginationOptions, Page, Paginable, PaginationQueryMeta } from './pagination';
-import { Selectable, SelectableColumn, Select } from './selection';
+import { DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
+import { Page, Paginable, PaginationOptions, PaginationQueryMeta } from './pagination';
+import { Select, Selectable, SelectableColumn, ValueOfSelectableColumn } from './selection';
 
 export type QueryOptions<T extends XataRecord> = {
   page?: PaginationOptions;
@@ -128,7 +127,12 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    * @returns A new Query object.
    */
   filter(constraints: FilterConstraints<T>): Query<T, R>;
-  filter<F extends keyof Selectable<T>>(column: F, value: FilterConstraints<T[F]> | DeepConstraint<T[F]>): Query<T, R>;
+  filter<F extends SelectableColumn<T>>(
+    column: F,
+    value:
+      | FilterConstraints<ValueOfSelectableColumn<T, typeof column>>
+      | DeepConstraint<ValueOfSelectableColumn<T, typeof column>>
+  ): Query<T, R>;
   filter(a: any, b?: any): Query<T, R> {
     if (arguments.length === 1) {
       const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));
@@ -136,8 +140,11 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
 
       return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     } else {
-      const column = a as keyof Selectable<T>;
-      const value = b as FilterConstraints<T[typeof a]> | DeepConstraint<T[typeof a]>;
+      const column = a as SelectableColumn<T>;
+      const value = b as
+        | FilterConstraints<ValueOfSelectableColumn<T, typeof a>>
+        | DeepConstraint<ValueOfSelectableColumn<T, typeof a>>;
+      // @ts-ignore FIXME Review typings here
       const $all = compact([this.#data.filter.$all].flat().concat({ [column]: value }));
 
       return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);

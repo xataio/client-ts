@@ -1,3 +1,5 @@
+import { SelectableColumn, ValueOfSelectableColumn } from './selection';
+
 export type SortDirection = 'asc' | 'desc';
 export type SortFilterExtended<T> = {
   column: keyof T;
@@ -57,5 +59,7 @@ export type DeepConstraint<T> = T extends Record<string, any>
   : Constraint<T>;
 
 export type FilterConstraints<T> = {
-  [key in keyof T]?: T[key] extends Record<string, any> ? FilterConstraints<T[key]> : T[key] | DeepConstraint<T[key]>;
+  [key in SelectableColumn<T>]?: ValueOfSelectableColumn<T, key> extends Record<string, any>
+    ? FilterConstraints<ValueOfSelectableColumn<T, key>>
+    : ValueOfSelectableColumn<T, key> | DeepConstraint<ValueOfSelectableColumn<T, key>>;
 };
