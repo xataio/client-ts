@@ -1,6 +1,6 @@
 import pluralize from 'pluralize';
 import { Column, Table, XataDatabaseSchema } from './schema';
-import * as ts from 'typescript';
+import ts from 'typescript';
 import prettier, { BuiltInParserName } from 'prettier';
 import { XataConfigSchema } from './config';
 
@@ -19,10 +19,12 @@ function getTypeName(tableName: string) {
 function generateTableType(table: Table) {
   const { columns } = table;
   const revLinks: { table: string }[] = []; // table.rev_links || [];
-  return `export interface ${getTypeName(table.name)} extends XataRecord {
+  return `export interface ${getTypeName(table.name)} extends Identifiable {
     ${columns.map((column) => generateColumnType(column)).join('\n')}
     ${revLinks.map((link) => `${link.table}: Query<${getTypeName(link.table)}>`).join('\n')}
   };
+
+  export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;
   `;
 }
 
@@ -91,6 +93,7 @@ export async function generate({ schema, config, language, javascriptTarget }: G
     import {
       BaseClient,
       Repository,
+      Identifiable,
       RestRespositoryFactory,
       XataClientOptions,
       XataRecord
@@ -103,16 +106,18 @@ export async function generate({ schema, config, language, javascriptTarget }: G
     const links = ${JSON.stringify(links)};
 
     export class XataClient extends BaseClient<{
-      ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
+      ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}Record>;`).join('\n')}
     }> {
       constructor(options: XataClientOptions) {
         super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
+        
         const factory = options.repositoryFactory || new RestRespositoryFactory();
         ${
           language === 'javascript'
             ? `/** @type {{ ${tables.map((table) => `"${table.name}": Repository`).join('; ')} }} */`
             : ''
         }
+        
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
         };

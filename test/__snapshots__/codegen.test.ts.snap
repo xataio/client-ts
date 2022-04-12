@@ -74,12 +74,13 @@ exports[`codegen should generate correct TypeScript 1`] = `
 "import {
   BaseClient,
   Repository,
+  Identifiable,
   RestRespositoryFactory,
   XataClientOptions,
   XataRecord,
 } from \\"@xata.io/client\\";
 
-export interface Author extends XataRecord {
+export interface Author extends Identifiable {
   name?: string | null;
   email?: string | null;
   photoUrl?: string | null;
@@ -87,7 +88,9 @@ export interface Author extends XataRecord {
   title?: string | null;
 }
 
-export interface Post extends XataRecord {
+export type AuthorRecord = Author & XataRecord;
+
+export interface Post extends Identifiable {
   title?: string | null;
   summary?: string | null;
   content?: string | null;
@@ -99,19 +102,23 @@ export interface Post extends XataRecord {
   published?: boolean | null;
 }
 
-export interface Person extends XataRecord {
+export type PostRecord = Post & XataRecord;
+
+export interface Person extends Identifiable {
   slug?: string | null;
   name?: string | null;
   title?: string | null;
   photoUrl?: string | null;
 }
 
+export type PersonRecord = Person & XataRecord;
+
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
 
 export class XataClient extends BaseClient<{
-  authors: Repository<Author>;
-  posts: Repository<Post>;
-  people: Repository<Person>;
+  authors: Repository<AuthorRecord>;
+  posts: Repository<PostRecord>;
+  people: Repository<PersonRecord>;
 }> {
   constructor(options: XataClientOptions) {
     super(
@@ -121,6 +128,7 @@ export class XataClient extends BaseClient<{
       },
       links
     );
+
     const factory = options.repositoryFactory || new RestRespositoryFactory();
 
     this.db = {
