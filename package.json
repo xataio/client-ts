@@ -70,10 +70,5 @@
     {
       "path": "client/dist/*"
     }
-  ],
-  "jest": {
-    "testPathIgnorePatterns": [
-      "<rootDir>/dist/"
-    ]
-  }
+  ]
 }
