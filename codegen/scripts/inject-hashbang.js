@@ -8,9 +8,7 @@ const __dirname = path.dirname(__filename);
 const pathName = path.join(__dirname, '../dist/cli.js');
 const original = fs.readFileSync(pathName, 'utf8');
 
-const contents = `#!/bin/sh
-':' //; exec /usr/bin/env node --es-module-specifier-resolution=node "$0" "$@"
-
+const contents = `#!/usr/bin/env node
 `;
 
 fs.writeFileSync(pathName, contents + original);
