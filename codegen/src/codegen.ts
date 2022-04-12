@@ -1,6 +1,8 @@
 import pluralize from 'pluralize';
-import prettier, { BuiltInParserName } from 'prettier';
-import * as ts from 'typescript';
+import type { BuiltInParserName } from 'prettier';
+import parserTypeScript from 'prettier/parser-typescript';
+import prettier from 'prettier/standalone';
+import ts from 'typescript';
 import { XataConfigSchema } from './config.js';
 import { Column, Table, XataDatabaseSchema } from './schema.js';
 
@@ -122,7 +124,7 @@ export async function generate({ schema, config, language, javascriptTarget }: G
 
   const transpiled = transpile(code, language, javascriptTarget);
 
-  return prettier.format(transpiled, { parser });
+  return prettier.format(transpiled, { parser, plugins: [parserTypeScript] });
 }
 
 const prettierParsers: Record<Language, BuiltInParserName> = {
