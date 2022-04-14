@@ -1,6 +1,7 @@
 import { XataRecord } from '..';
 import { StringKeys, UnionToIntersection, Values } from '../util/types';
 import { Query } from './query';
+import { Identifiable } from './record';
 
 type Queries<T> = {
   [key in keyof T as T[key] extends Query<any> ? key : never]: T[key];
@@ -20,7 +21,7 @@ type OmitMethods<T> = {
 };
 
 type InternalProperties = keyof XataRecord;
-export type Selectable<T extends XataRecord> = Omit<T, InternalProperties>;
+export type Selectable<T extends XataRecord> = Omit<T, InternalProperties> & Identifiable;
 
 export type SelectableColumn<O> =
   | '*'
