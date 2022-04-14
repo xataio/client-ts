@@ -1,5 +1,5 @@
-import { xataConfigSchema } from './config';
-import { handleParsingError } from './handleParsingError';
+import { xataConfigSchema } from './config.js';
+import { handleParsingError } from './handleParsingError.js';
 
 export const parseConfigFile = (input: string) => {
   try {

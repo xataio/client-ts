@@ -1,8 +1,8 @@
 import pluralize from 'pluralize';
-import { Column, Table, XataDatabaseSchema } from './schema';
-import * as ts from 'typescript';
 import prettier, { BuiltInParserName } from 'prettier';
-import { XataConfigSchema } from './config';
+import * as ts from 'typescript';
+import { XataConfigSchema } from './config.js';
+import { Column, Table, XataDatabaseSchema } from './schema.js';
 
 export type GenerateOptions = {
   schema: XataDatabaseSchema;
