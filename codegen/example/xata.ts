@@ -1,6 +1,5 @@
 import {
   BaseClient,
-  Query,
   Repository,
   RestRespositoryFactory,
   XataClientOptions,
@@ -32,6 +31,7 @@ export class XataClient extends BaseClient<{
       links
     );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
+
     this.db = {
       teams: factory.createRepository(this, "teams"),
       users: factory.createRepository(this, "users"),

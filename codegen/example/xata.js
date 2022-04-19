@@ -1,6 +1,5 @@
 /** @typedef { import('../../client/src').Repository } Repository */
-import { BaseClient, Query, RestRespositoryFactory } from "../../client/src";
-
+import { BaseClient, RestRespositoryFactory } from "../../client/src";
 /**
  * @typedef {Object} Team
  * @property {string} id
@@ -13,7 +12,6 @@ import { BaseClient, Query, RestRespositoryFactory } from "../../client/src";
  * @property {User=} owner
  
  */
-
 /**
  * @typedef {Object} User
  * @property {string} id
@@ -27,12 +25,13 @@ import { BaseClient, Query, RestRespositoryFactory } from "../../client/src";
  * @property {Team=} team
  
  */
-
 const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
-
 export class XataClient extends BaseClient {
   constructor(options) {
-    super(options, links);
+    super(
+      { databaseURL: "https://test-r5vcv5.xata.sh/db/test", ...options },
+      links
+    );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
     /** @type {{ "teams": Repository; "users": Repository }} */
     this.db = {

@@ -10,8 +10,8 @@
     "prebuild": "node scripts/add-version-file.js",
     "postbuild": "node scripts/inject-hashbang.js",
     "build": "tsc",
-    "example-ts": "npm run build && node --es-module-specifier-resolution=node dist generate example/xata -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
-    "example-js": "npm run build && node --es-module-specifier-resolution=node dist generate example/xata -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js"
+    "example-ts": "npm run build && node --es-module-specifier-resolution=node dist/cli.js generate example/xata -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
+    "example-js": "npm run build && node --es-module-specifier-resolution=node dist/cli.js generate example/xata -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js"
   },
   "repository": {
     "type": "git",

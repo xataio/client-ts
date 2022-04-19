@@ -4,3 +4,6 @@ babel.config.js
 
 # Generated files
 client/src/api/components.ts
+
+codegen/example/xata.ts
+codegen/example/xata.js
