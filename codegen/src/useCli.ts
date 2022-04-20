@@ -1,7 +1,6 @@
 import { spawn } from 'child_process';
 import { Ora } from 'ora';
-
-import { cliPath } from './cliPath';
+import { cliPath } from './cliPath.js';
 
 type Options = { command: 'xata' | typeof cliPath; spinner: Ora };
 

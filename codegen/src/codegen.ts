@@ -1,8 +1,10 @@
 import pluralize from 'pluralize';
-import { Column, Table, XataDatabaseSchema } from './schema';
 import ts from 'typescript';
 import prettier, { BuiltInParserName } from 'prettier';
-import { XataConfigSchema } from './config';
+import parserJavascript from 'prettier/parser-babel.js';
+import parserTypeScript from 'prettier/parser-typescript.js';
+import { XataConfigSchema } from './config.js';
+import { Column, Table, XataDatabaseSchema } from './schema.js';
 
 export type GenerateOptions = {
   schema: XataDatabaseSchema;
@@ -60,6 +62,7 @@ function getTypeScriptType(column: Column): string {
   if (column.type === 'multiple') return 'string[]';
   if (column.type === 'bool') return 'boolean';
   if (column.type === 'int') return 'number';
+  if (column.type === 'float') return 'number';
   if (column.type === 'link') {
     if (!column.link?.table) return 'object';
     return getTypeName(column.link.table);
@@ -127,7 +130,7 @@ export async function generate({ schema, config, language, javascriptTarget }: G
 
   const transpiled = transpile(code, language, javascriptTarget);
 
-  return prettier.format(transpiled, { parser });
+  return prettier.format(transpiled, { parser, plugins: [parserTypeScript, parserJavascript] });
 }
 
 const prettierParsers: Record<Language, BuiltInParserName> = {
