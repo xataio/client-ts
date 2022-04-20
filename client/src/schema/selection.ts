@@ -25,6 +25,7 @@ export type Selectable<T extends XataRecord> = Omit<T, InternalProperties> & Ide
 
 export type SelectableColumn<O> =
   | '*'
+  | 'id'
   | (O extends Array<unknown>
       ? never // TODO: Review when we support multiple: true
       : O extends Record<string, any>
@@ -37,6 +38,8 @@ export type SelectableColumn<O> =
 
 export type ValueOfSelectableColumn<O, P extends SelectableColumn<O>> = P extends '*'
   ? Values<O>
+  : P extends 'id'
+  ? string
   : P extends keyof O
   ? O[P]
   : P extends `${infer K}.${infer V}`

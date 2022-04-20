@@ -126,13 +126,8 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    * @param constraints
    * @returns A new Query object.
    */
-  filter(constraints: FilterConstraints<T>): Query<T, R>;
-  filter<F extends SelectableColumn<T>>(
-    column: F,
-    value:
-      | FilterConstraints<ValueOfSelectableColumn<T, typeof column>>
-      | DeepConstraint<ValueOfSelectableColumn<T, typeof column>>
-  ): Query<T, R>;
+  filter(constraints: FilterConstraints<T> | DeepConstraint<T>): Query<T, R>;
+  filter<F extends SelectableColumn<T>>(column: F, value: ValueOfSelectableColumn<T, typeof column>): Query<T, R>;
   filter(a: any, b?: any): Query<T, R> {
     if (arguments.length === 1) {
       const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));
@@ -140,12 +135,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
 
       return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     } else {
-      const column = a as SelectableColumn<T>;
-      const value = b as
-        | FilterConstraints<ValueOfSelectableColumn<T, typeof a>>
-        | DeepConstraint<ValueOfSelectableColumn<T, typeof a>>;
-      // @ts-ignore FIXME Review typings here
-      const $all = compact([this.#data.filter.$all].flat().concat({ [column]: value }));
+      const $all = compact([this.#data.filter.$all].flat().concat([{ [a]: b }]));
 
       return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     }
