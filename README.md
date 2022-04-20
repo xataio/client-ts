@@ -13,9 +13,49 @@ npm install @xata.io/client
 npm install @xata.io/codegen -D
 ```
 
-## Code generation
+## Usage
 
-Add an npm script to your package.json file to invoke `xata-codegen`. You can customize the location of the schema file and the generated output file. For example:
+There are three ways to use the SDK:
+
+- **API Client**: SDK to interact with the whole Xata API and all its endpoints.
+- **Schema-generated Client**: SDK to create/read/update/delete records in a given database following a schema file (with type-safety).
+- **Schema-less Client**: SDK to create/read/update/delete records in any database without schema validation (with partial type-safety).
+
+### API Client
+
+One of the main features of the SDK is the ability to interact with the whole Xata API and perform administrative operations such as creating/reading/updating/deleting workspaces, databases, tables, branches...
+
+To communicate with the SDK we provide a constructor called `XataApiClient` that accepts an API token and an optional fetch implementation method.
+
+```ts
+const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY });
+```
+
+Once you have initialized the API client, the operations are organized following the same hiearchy as in the [official documentation](https://docs.xata.io). You have different namespaces for each entity (ie. `workspaces`, `databases`, `tables`, `branches`, `users`, `records`...).
+
+```ts
+const { id: workspace } = await client.workspaces.createWorkspace({ name: 'example', slug: 'example' });
+
+const { databaseName } = await client.databases.createDatabase(workspace, 'database');
+
+await client.branches.createBranch(workspace, databaseName, 'branch');
+await client.tables.createTable(workspace, databaseName, 'branch', 'table');
+await client.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
+  columns: [{ name: 'email', type: 'string' }]
+});
+
+const { id: recordId } = await client.records.insertRecord(workspace, databaseName, 'branch', 'table', {
+  email: 'example@foo.bar'
+});
+
+const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
+
+await client.workspaces.deleteWorkspace(workspace);
+```
+
+### Schema-generated Client
+
+First of all, add an npm script to your package.json file to invoke `xata-codegen`. You can customize the location of the schema file and the generated output file. For example:
 
 ```json
 {
@@ -36,7 +76,7 @@ In a TypeScript file start using the generated code:
 ```ts
 import { XataClient } from './xata';
 
-const client = new XataClient({
+const xata = new XataClient({
   branch: 'branchname',
   apiKey: 'xau_1234abcdef',
   fetch: fetchImplementation // Required if your runtime doesn't provide a global `fetch` function.
@@ -47,9 +87,49 @@ The import above will differ if you chose to genreate the types in a different l
 
 `XataClient` only has two required arguments: `branch` and `apiKey`. `fetch` is required only if your runtime doesn't provide a global `fetch` function. There's also a `databaseURL` argument that by default will contain a URL pointing to your database (e.g. `https://myworkspace-123abc.xata.sh/db/databasename`), it can be specified in the constructor to overwrite that value if for whatever reason you need to connect to a different workspace or database.
 
-## API
+The code generator will create two TypeScript types for each schema entity. The base one will be an `Identifiable` entity with the internal properties your entity has and the `Record` one will extend it with a set of operations (update, delete, etc...) and some schema metadata (xata version).
 
-The Xata SDK follows the repository pattern. Each table will have a repository object available at `xata.db.[table-name]`. For example if you have a `users` table there'll be a repository at `xata.db.users`.
+```ts
+interface User extends Identifiable {
+  email?: string | null;
+}
+
+type UserRecord = User & XataRecord;
+
+async function initializeDatabase(admin: User): Promise<UserRecord> {
+  return xata.db.users.create(admin);
+}
+
+const admin = await initializeDatabase({ email: 'admin@example.com' });
+await admin.update({ email: 'admin@foo.bar' });
+await admin.delete();
+```
+
+You will learn more about the available operations below, under the `API Design` section.
+
+### Schema-less Client
+
+If you don't have a schema file, or you are building a generic way to interact with Xata, you can use the `BaseClient` class without schema validation.
+
+```ts
+import { BaseClient } from '@xata/client';
+
+const xata = new BaseClient({
+  branch: 'branchname',
+  apiKey: 'xau_1234abcdef',
+  fetch: fetchImplementation // Required if your runtime doesn't provide a global `fetch` function.
+});
+```
+
+It works the same way as the code-generated `XataClient` but doesn't provide type-safety for your model.
+
+You can read more on the methods available below, under the `API Design` section.
+
+## API Design
+
+The Xata SDK to create/read/update/delete records follows the repository pattern. Each table will have a repository object available at `xata.db.[table-name]`.
+
+For example if you have a `users` table there'll be a repository at `xata.db.users`. If you're using the schema-less client, you can also use the `xata.db.[table-name]` syntax to access the repository but without TypeScript auto-completion.
 
 **Creating objects**
 
@@ -58,6 +138,22 @@ Invoke the `create()` method in the repository. Example:
 ```ts
 const user = await xata.db.users.create({
   full_name: 'John Smith'
+});
+```
+
+If you want to create a record with a specific ID, you can invoke `insert()`.
+
+```ts
+const user = await xata.db.users.insert('user_admin', {
+  fullName: 'John Smith'
+});
+```
+
+And if you want to create or insert a record with a specific ID, you can invoke `updateOrInsert()`.
+
+```ts
+const user = await client.db.users.updateOrInsert('user_admin', {
+  fullName: 'John Smith'
 });
 ```
 

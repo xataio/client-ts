@@ -1,5 +1,6 @@
 export * from './operators';
-export type { XataRecord } from './record';
-export { Repository, RestRepository, RestRespositoryFactory, BaseClient } from './repository';
-export type { XataClientOptions } from './repository';
+export * from './pagination';
 export { Query } from './query';
+export type { Identifiable, XataRecord } from './record';
+export { BaseClient, Repository, RestRepository, RestRespositoryFactory } from './repository';
+export type { XataClientOptions } from './repository';
