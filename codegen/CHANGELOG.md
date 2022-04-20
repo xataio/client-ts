@@ -1,4 +1,4 @@
-# @xata.io/codegen
+# @xata.io/xata-codegen
 
 ## 0.3.1
 

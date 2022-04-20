@@ -1,5 +1,5 @@
 ---
-"@xata.io/codegen": patch
+'@xata.io/xata-codegen': patch
 ---
 
 Split entity from record

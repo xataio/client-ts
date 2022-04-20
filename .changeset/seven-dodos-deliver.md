@@ -1,5 +1,5 @@
 ---
-'@xata.io/codegen': minor
+'@xata.io/xata-codegen': minor
 ---
 
-Rename codegen executable to be executed from npx
+Rename codegen package to match executable and be able to execute from npx
