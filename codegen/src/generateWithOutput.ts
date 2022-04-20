@@ -1,14 +1,13 @@
+import * as fs from 'fs/promises';
 import { Ora } from 'ora';
 import * as path from 'path';
 import { join, relative } from 'path';
-import { generate } from './codegen';
-import { errors } from './errors';
-import { getLanguageFromExtension } from './getLanguageFromExtension';
-import { isExtensionValid } from './isExtensionValid';
-import { parseConfigFile } from './parseConfigFile';
-import { parseSchemaFile } from './parseSchemaFile';
-import { readFile } from './readFile';
-import * as fs from 'fs/promises';
+import { generate } from './codegen.js';
+import { errors } from './errors.js';
+import { getLanguageFromExtension } from './getLanguageFromExtension.js';
+import { parseConfigFile } from './parseConfigFile.js';
+import { parseSchemaFile } from './parseSchemaFile.js';
+import { readFile } from './readFile.js';
 
 export interface GenerateWithOutputOptions {
   spinner?: Ora;
@@ -45,3 +44,5 @@ export const generateWithOutput = async ({
 
   spinner?.succeed(`Your XataClient is generated at ./${relative(process.cwd(), outputFilePath)}.`);
 };
+
+export const isExtensionValid = (extension: string): extension is 'js' | 'ts' => ['ts', 'js'].includes(extension);

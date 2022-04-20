@@ -2,7 +2,7 @@ import { Repository, XataRecord } from '..';
 import { ColumnsFilter, FilterExpression, PageConfig, SortExpression } from '../api/schemas';
 import { compact } from '../util/lang';
 import { DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
-import { Page, Paginable, PaginationOptions, PaginationQueryMeta } from './pagination';
+import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
 import { Select, Selectable, SelectableColumn, ValueOfSelectableColumn } from './selection';
 
 export type QueryOptions<T extends XataRecord> = {
@@ -173,12 +173,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
 
   getPaginated<Options extends QueryOptions<T>>(
     options: Options = {} as Options
-  ): Promise<
-    Page<
-      T,
-      typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R
-    >
-  > {
+  ): Promise<Page<T, GetWithColumnOptions<T, R, typeof options>>> {
     return this.#repository.query(this, options);
   }
 
@@ -188,7 +183,10 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
     }
   }
 
-  async *getIterator(chunk: number, options: Omit<QueryOptions<T>, 'page'> = {}): AsyncGenerator<R[]> {
+  async *getIterator<Options extends QueryOptions<T>>(
+    chunk: number,
+    options: Omit<Options, 'page'> = {} as Options
+  ): AsyncGenerator<GetWithColumnOptions<T, R, typeof options>[]> {
     let offset = 0;
     let end = false;
 
@@ -208,11 +206,28 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    */
   async getMany<Options extends QueryOptions<T>>(
     options: Options = {} as Options
-  ): Promise<
-    (typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R)[]
-  > {
+  ): Promise<GetWithColumnOptions<T, R, typeof options>[]> {
     const { records } = await this.getPaginated(options);
     return records;
+  }
+
+  /**
+   * Performs the query in the database and returns all the results.
+   * Warning: If there are a large number of results, this method can have performance implications.
+   * @param options Additional options to be used when performing the query.
+   * @returns An array of records from the database.
+   */
+  async getAll<Options extends QueryOptions<T>>(
+    chunk = PAGINATION_MAX_SIZE,
+    options: Omit<Options, 'page'> = {} as Options
+  ): Promise<GetWithColumnOptions<T, R, typeof options>[]> {
+    const results = [];
+
+    for await (const page of this.getIterator(chunk, options)) {
+      results.push(...page);
+    }
+
+    return results;
   }
 
   /**
@@ -222,10 +237,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    */
   async getOne<Options extends Omit<QueryOptions<T>, 'page'>>(
     options: Options = {} as Options
-  ): Promise<
-    | (typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R)
-    | null
-  > {
+  ): Promise<GetWithColumnOptions<T, R, typeof options> | null> {
     const records = await this.getMany({ ...options, page: { size: 1 } });
     return records[0] || null;
   }
@@ -255,3 +267,16 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
     return this.meta.page.more;
   }
 }
+
+/**
+ * Helper type to read options and compute the correct type for the result values
+ * T: Original type
+ * R: Default destination type
+ * Options: QueryOptions
+ *
+ * If the columns are overriden in the options, the result type is the pick of the original type and the columns
+ * If the columns are not overriden, the result type is the default destination type
+ */
+type GetWithColumnOptions<T, R, Options> = Options extends { columns: SelectableColumn<T>[] }
+  ? Select<T, Options['columns'][number]>
+  : R;
