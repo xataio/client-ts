@@ -246,7 +246,7 @@ class BranchApi {
     workspace: Schemas.WorkspaceID,
     database: Schemas.DBName,
     branch: Schemas.BranchName,
-    from?: string,
+    from = '',
     options: Types.CreateBranchRequestBody = {}
   ): Promise<void> {
     return operationsByTag.branch.createBranch({
