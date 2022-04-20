@@ -1,5 +1,5 @@
-import type { Language } from './codegen';
-import { errors } from './errors';
+import type { Language } from './codegen.js';
+import { errors } from './errors.js';
 
 export const getLanguageFromExtension = (extension?: 'ts' | 'js'): Language => {
   switch (extension) {
