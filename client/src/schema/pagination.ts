@@ -19,7 +19,7 @@ export interface Paginable<T extends XataRecord, R extends XataRecord = T> {
  * A Page contains a set of results from a query plus metadata about the retrieved
  * set of values such as the cursor, required to retrieve additional records.
  */
-export class Page<T extends XataRecord, R extends XataRecord> implements Paginable<T, R> {
+export class Page<T extends XataRecord, R extends XataRecord = T> implements Paginable<T, R> {
   #query: Query<T, R>;
   /**
    * Page metadata, required to retrieve additional records.
@@ -89,3 +89,8 @@ export class Page<T extends XataRecord, R extends XataRecord> implements Paginab
 export type CursorNavigationOptions = { first?: string } | { last?: string } | { after?: string; before?: string };
 export type OffsetNavigationOptions = { size?: number; offset?: number };
 export type PaginationOptions = CursorNavigationOptions & OffsetNavigationOptions;
+
+export const PAGINATION_MAX_SIZE = 200;
+export const PAGINATION_DEFAULT_SIZE = 200;
+export const PAGINATION_MAX_OFFSET = 800;
+export const PAGINATION_DEFAULT_OFFSET = 0;

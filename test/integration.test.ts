@@ -1,8 +1,13 @@
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { Paginable } from '../client/src/schema/pagination';
-import { contains, lt, Repository, XataApiClient } from '../client/src';
+import { BaseClient, contains, lt, Repository, XataApiClient } from '../client/src';
+import {
+  Paginable,
+  PAGINATION_DEFAULT_SIZE,
+  PAGINATION_MAX_OFFSET,
+  PAGINATION_MAX_SIZE
+} from '../client/src/schema/pagination';
 import { User, XataClient } from '../codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from './mock_data';
 
@@ -10,6 +15,7 @@ import { mockUsers, teamColumns, userColumns } from './mock_data';
 dotenv.config({ path: join(process.cwd(), '.envrc') });
 
 let client: XataClient;
+let schemaLessclient: BaseClient;
 let databaseName: string;
 
 const workspace = process.env.XATA_WORKSPACE ?? '';
@@ -21,7 +27,7 @@ const api = new XataApiClient({
 });
 
 // Integration tests take longer than unit tests, increasing the timeout
-jest.setTimeout(50000);
+jest.setTimeout(500000);
 
 beforeAll(async () => {
   const id = Math.round(Math.random() * 100000);
@@ -30,6 +36,13 @@ beforeAll(async () => {
   databaseName = database.databaseName;
 
   client = new XataClient({
+    databaseURL: `https://${workspace}.xata.sh/db/${database.databaseName}`,
+    branch: 'main',
+    apiKey: process.env.XATA_API_KEY || '',
+    fetch
+  });
+
+  schemaLessclient = new BaseClient({
     databaseURL: `https://${workspace}.xata.sh/db/${database.databaseName}`,
     branch: 'main',
     apiKey: process.env.XATA_API_KEY || '',
@@ -483,5 +496,39 @@ describe('integration tests', () => {
     expect(user.id).toBe(apiUser.id);
     expect(user.full_name).toBe(apiUser.full_name);
     expect(user.email).toBe(apiUser.email);
+  });
+
+  test('Pagination size limit', async () => {
+    expect(client.db.users.getPaginated({ page: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toMatchInlineSnapshot(`
+      Object {
+        "message": "page size exceeds max limit of 200",
+        "status": 400,
+      }
+    `);
+  });
+
+  test('Pagination offset limit', async () => {
+    expect(client.db.users.getPaginated({ page: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects
+      .toMatchInlineSnapshot(`
+      Object {
+        "message": "page offset must not exceed 800",
+        "status": 400,
+      }
+    `);
+  });
+
+  test('Pagination default value', async () => {
+    await api.tables.createTable(workspace, databaseName, 'main', 'planes');
+    await api.tables.setTableSchema(workspace, databaseName, 'main', 'planes', {
+      columns: [{ name: 'name', type: 'string' }]
+    });
+
+    const planes = Array(250).map((_, index) => ({ name: `Plane ${index}` }));
+
+    const createdPlanes = await schemaLessclient.db.planes.createMany(planes);
+    const queriedPlanes = await schemaLessclient.db.planes.getPaginated();
+
+    expect(createdPlanes).toHaveLength(250);
+    expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
   });
 });
