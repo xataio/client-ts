@@ -1,13 +1,19 @@
 import { Selectable } from './selection';
 
 /**
- * Represents a persisted record from the database.
+ * Represents an identifiable record from the database.
  */
-export interface XataRecord {
+export interface Identifiable {
   /**
    * Unique id of this record.
    */
   id: string;
+}
+
+/**
+ * Represents a persisted record from the database.
+ */
+export interface XataRecord extends Identifiable {
   /**
    * Metadata of this record.
    */

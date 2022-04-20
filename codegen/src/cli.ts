@@ -1,17 +1,16 @@
+import chalk from 'chalk';
 import { program } from 'commander';
-import { join } from 'path';
-import ora from 'ora';
 import { access } from 'fs/promises';
 import inquirer from 'inquirer';
-import chalk from 'chalk';
-
-import { checkIfCliInstalled } from './checkIfCliInstalled';
-import { getCli } from './getCli';
-import { useCli } from './useCli';
-import { generateWithOutput } from './generateWithOutput';
-import { handleXataCliRejection } from './handleXataCliRejection';
-import { cliPath } from './cliPath';
-import { CODEGEN_VERSION } from './version';
+import ora from 'ora';
+import { join } from 'path';
+import { checkIfCliInstalled } from './checkIfCliInstalled.js';
+import { cliPath } from './cliPath.js';
+import { generateWithOutput } from './generateWithOutput.js';
+import { getCli } from './getCli.js';
+import { handleXataCliRejection } from './handleXataCliRejection.js';
+import { useCli } from './useCli.js';
+import { CODEGEN_VERSION } from './version.js';
 
 const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'XataClient');

@@ -1,5 +1,5 @@
-import { xataDatabaseSchema } from './schema';
-import { handleParsingError } from './handleParsingError';
+import { xataDatabaseSchema } from './schema.js';
+import { handleParsingError } from './handleParsingError.js';
 
 export const parseSchemaFile = (input: string) => {
   try {
