@@ -51,7 +51,11 @@ program.parse();
 async function pullSchema() {
   spinner.warn('No local Xata schema found.');
   const { shouldUseCli } = await inquirer.prompt([
-    { name: 'shouldUseCli', message: 'Would you like to use the Xata CLI and clone a database?', type: 'confirm' }
+    {
+      name: 'shouldUseCli',
+      message: 'Would you like to use the Xata CLI to pull an existing database schema?',
+      type: 'confirm'
+    }
   ]);
 
   if (!shouldUseCli) {
