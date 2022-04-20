@@ -283,6 +283,12 @@ describe('integration tests', () => {
     expect(users).toHaveLength(mockUsers.length);
   });
 
+  test('get all users', async () => {
+    const users = await client.db.users.getAll();
+    expect(users).toHaveLength(mockUsers.length);
+    expect(users[0].id).toBeDefined();
+  });
+
   test('create single team', async () => {
     const team = await client.db.teams.create({ name: 'Team ships' });
 

@@ -1,15 +1,14 @@
+import chalk from 'chalk';
+import { createReadStream, createWriteStream } from 'fs';
 import { unlink, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
+import { Ora } from 'ora';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import tar from 'tar';
 import unzipper from 'unzipper';
-import { Ora } from 'ora';
-import { createReadStream, createWriteStream } from 'fs';
-
-import { cliPath } from './cliPath';
-import chalk from 'chalk';
-import { getCliPlatformFromNodePlatform } from './getCliPlatformFromNodePlatform';
+import { cliPath } from './cliPath.js';
+import { getCliPlatformFromNodePlatform } from './getCliPlatformFromNodePlatform.js';
 
 type GitHubResponse = {
   assets: { browser_download_url: string }[];
