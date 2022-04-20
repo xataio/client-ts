@@ -20,7 +20,7 @@ Add an npm script to your package.json file to invoke `xata-codegen`. You can cu
 ```json
 {
   "scripts": {
-    "xata-codegen": "xata-codegen generate xata -o generated/client.ts"
+    "xata-codegen": "xata-codegen generate xata -o src/xata.ts"
   }
 }
 ```
@@ -149,6 +149,6 @@ import {
   Repository,
   RestRespositoryFactory,
   XataClientOptions,
-  XataRecord,
+  XataRecord
 } from 'https://esm.sh/@xata.io/client@<version>/dist/schema?target=deno';
 ```
