@@ -1,10 +1,9 @@
-import { off } from 'process';
-import { XataRecord, Repository } from '..';
-import { FilterExpression, SortExpression, PageConfig, ColumnsFilter } from '../api/schemas';
+import { Repository, XataRecord } from '..';
+import { ColumnsFilter, FilterExpression, PageConfig, SortExpression } from '../api/schemas';
 import { compact } from '../util/lang';
-import { Constraint, DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
-import { PaginationOptions, Page, Paginable, PaginationQueryMeta } from './pagination';
-import { Selectable, SelectableColumn, Select } from './selection';
+import { DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
+import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
+import { Select, Selectable, SelectableColumn } from './selection';
 
 export type QueryOptions<T extends XataRecord> = {
   page?: PaginationOptions;
@@ -211,11 +210,12 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    * @returns An array of records from the database.
    */
   async getAll<Options extends QueryOptions<T>>(
+    chunk = PAGINATION_MAX_SIZE,
     options: Omit<Options, 'page'> = {} as Options
   ): Promise<GetWithColumnOptions<T, R, typeof options>[]> {
     const results = [];
 
-    for await (const page of this.getIterator(100, options)) {
+    for await (const page of this.getIterator(chunk, options)) {
       results.push(...page);
     }
 

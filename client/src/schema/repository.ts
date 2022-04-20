@@ -1,19 +1,19 @@
 import {
-  insertRecordWithID,
-  insertRecord,
   bulkInsertTableRecords,
-  getRecord,
-  updateRecordWithID,
-  upsertRecordWithID,
   deleteRecord,
-  queryTable
+  getRecord,
+  insertRecord,
+  insertRecordWithID,
+  queryTable,
+  updateRecordWithID,
+  upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query, QueryOptions } from './query';
 import { XataRecord } from './record';
-import { Selectable, SelectableColumn, Select } from './selection';
+import { Select, Selectable, SelectableColumn } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
 
@@ -307,7 +307,7 @@ export type XataClientOptions = {
   repositoryFactory?: RepositoryFactory;
 };
 
-export class BaseClient<D extends Record<string, Repository<any>>> {
+export class BaseClient<D extends Record<string, Repository<any>> = Record<string, Repository<any>>> {
   #links: Links;
   #branch: BranchStrategyValue;
 
@@ -321,6 +321,15 @@ export class BaseClient<D extends Record<string, Repository<any>>> {
 
     this.options = options;
     this.#links = links;
+
+    const factory = options.repositoryFactory || new RestRespositoryFactory();
+
+    this.db = new Proxy({} as D, {
+      get: (_target, prop) => {
+        if (typeof prop !== 'string') throw new Error('Invalid table name');
+        return factory.createRepository(this, prop);
+      }
+    });
   }
 
   public initObject<T>(table: string, object: object) {
