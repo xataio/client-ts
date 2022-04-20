@@ -121,7 +121,7 @@ const xata = new BaseClient({
 });
 ```
 
-It works the same way as the code-generated `XataClient` but lacks the type-safety of your model.
+It works the same way as the code-generated `XataClient` but doesn't provide type-safety for your model.
 
 You can read more on the methods available below, under the `API Design` section.
 
@@ -129,7 +129,7 @@ You can read more on the methods available below, under the `API Design` section
 
 The Xata SDK to create/read/update/delete records follows the repository pattern. Each table will have a repository object available at `xata.db.[table-name]`.
 
-For example if you have a `users` table there'll be a repository at `xata.db.users`. If you're using the schema-less client, you can also use the `xata.db.[table-name]` syntax to access the repository but without typescript auto-completion.
+For example if you have a `users` table there'll be a repository at `xata.db.users`. If you're using the schema-less client, you can also use the `xata.db.[table-name]` syntax to access the repository but without TypeScript auto-completion.
 
 **Creating objects**
 
@@ -145,7 +145,7 @@ If you want to create a record with a specific ID, you can invoke `insert()`.
 
 ```ts
 const user = await xata.db.users.insert('user_admin', {
-  full_name: 'John Smith'
+  fullName: 'John Smith'
 });
 ```
 
@@ -153,7 +153,7 @@ And if you want to create or insert a record with a specific ID, you can invoke 
 
 ```ts
 const user = await client.db.users.updateOrInsert('user_admin', {
-  full_name: 'John Smith'
+  fullName: 'John Smith'
 });
 ```
 
