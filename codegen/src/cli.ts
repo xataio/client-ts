@@ -22,7 +22,7 @@ program
   .version(CODEGEN_VERSION)
   .argument(
     '[xata directory]',
-    `A path to your local Xata directory. If you don't have this, run the pull or \`init\` command on this CLI first.`,
+    `A path to your local Xata directory. If you don't have one, run 'xata init' or 'xata pull' first with the xata CLI https://github.com/xataio/cli`,
     defaultXataDirectory
   )
   .option('-o, --out <path>', 'A path to store your generated API client.', defaultOutputFile)
