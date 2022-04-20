@@ -60,7 +60,7 @@ First of all, add an npm script to your package.json file to invoke `xata-codege
 ```json
 {
   "scripts": {
-    "xata-codegen": "xata-codegen generate xata -o src/xata.ts"
+    "xata-codegen": "xata-codegen xata -o src/xata.ts"
   }
 }
 ```

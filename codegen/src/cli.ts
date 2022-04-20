@@ -19,11 +19,7 @@ const spinner = ora();
 program
   .name('xata-codegen')
   .description('The Xata SDK CLI is used to generate type-safe and predictable clients used to interact with Xata.')
-  .version(CODEGEN_VERSION);
-
-program
-  .command('generate')
-  .description('Generate code from a given Xata schema.')
+  .version(CODEGEN_VERSION)
   .argument(
     '[xata directory]',
     `A path to your local Xata directory. If you don't have this, run the pull or \`init\` command on this CLI first.`,
