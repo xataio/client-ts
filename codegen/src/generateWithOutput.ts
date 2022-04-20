@@ -5,7 +5,6 @@ import { join, relative } from 'path';
 import { generate } from './codegen.js';
 import { errors } from './errors.js';
 import { getLanguageFromExtension } from './getLanguageFromExtension.js';
-import { isExtensionValid } from './isExtensionValid.js';
 import { parseConfigFile } from './parseConfigFile.js';
 import { parseSchemaFile } from './parseSchemaFile.js';
 import { readFile } from './readFile.js';
@@ -45,3 +44,5 @@ export const generateWithOutput = async ({
 
   spinner?.succeed(`Your XataClient is generated at ./${relative(process.cwd(), outputFilePath)}.`);
 };
+
+export const isExtensionValid = (extension: string): extension is 'js' | 'ts' => ['ts', 'js'].includes(extension);

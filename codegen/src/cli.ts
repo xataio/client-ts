@@ -13,7 +13,7 @@ import { useCli } from './useCli.js';
 import { CODEGEN_VERSION } from './version.js';
 
 const defaultXataDirectory = join(process.cwd(), 'xata');
-const defaultOutputFile = join(process.cwd(), 'XataClient');
+const defaultOutputFile = join(process.cwd(), 'src', 'xata.ts');
 const spinner = ora();
 
 program
@@ -38,7 +38,7 @@ program
       await access(schema); // Make sure the schema file exists
     } catch (e: any) {
       if (e.code !== 'ENOENT') exitWithError(e);
-      await pullSchema(xataDirectory);
+      await pullSchema();
     }
 
     try {
@@ -52,7 +52,7 @@ program
 
 program.parse();
 
-async function pullSchema(xataDirectory: string) {
+async function pullSchema() {
   spinner.warn('No local Xata schema found.');
   const { shouldUseCli } = await inquirer.prompt([
     { name: 'shouldUseCli', message: 'Would you like to use the Xata CLI and clone a database?', type: 'confirm' }
@@ -72,11 +72,6 @@ async function pullSchema(xataDirectory: string) {
     }
 
     await useCli({ command: hasCli ? 'xata' : cliPath, spinner });
-    await generateWithOutput({
-      xataDirectory,
-      outputFilePath: defaultOutputFile,
-      spinner
-    });
   } catch (e: any) {
     if (e.message.includes('ENOTFOUND') || e.message.includes('ENOENT')) {
       exitWithError(
