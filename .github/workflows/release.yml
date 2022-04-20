@@ -55,5 +55,5 @@ jobs:
           title: Release tracking
           publish: npx lerna publish from-package --no-verify-access --yes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
