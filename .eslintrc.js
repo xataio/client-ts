@@ -4,7 +4,14 @@ module.exports = {
   plugins: ['@typescript-eslint', 'import'],
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   rules: {
-    '@typescript-eslint/ban-ts-comment': 'off',
-    'import/extensions': ['error', 'always', { ignorePackages: true }]
-  }
+    '@typescript-eslint/ban-ts-comment': 'off'
+  },
+  overrides: [
+    {
+      files: ['codegen/src/*.js'],
+      rules: {
+        'import/extensions': ['error', 'always', { ignorePackages: true }]
+      }
+    }
+  ]
 };

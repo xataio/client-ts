@@ -27,7 +27,7 @@ const api = new XataApiClient({
 });
 
 // Integration tests take longer than unit tests, increasing the timeout
-jest.setTimeout(50000);
+jest.setTimeout(500000);
 
 beforeAll(async () => {
   const id = Math.round(Math.random() * 100000);
