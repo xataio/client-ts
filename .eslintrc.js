@@ -8,7 +8,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['codegen/src/*.js'],
+      files: ['codegen/src/**/*.ts'],
       rules: {
         'import/extensions': ['error', 'always', { ignorePackages: true }]
       }
