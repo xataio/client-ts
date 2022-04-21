@@ -22,7 +22,7 @@ program
   .version(CODEGEN_VERSION)
   .argument(
     '[xata directory]',
-    `A path to your local Xata directory. If you don't have this, run the pull or \`init\` command on this CLI first.`,
+    `A path to your local Xata directory. If you don't have one, run 'xata init' or 'xata pull' first with the xata CLI https://github.com/xataio/cli`,
     defaultXataDirectory
   )
   .option('-o, --out <path>', 'A path to store your generated API client.', defaultOutputFile)
@@ -51,7 +51,11 @@ program.parse();
 async function pullSchema() {
   spinner.warn('No local Xata schema found.');
   const { shouldUseCli } = await inquirer.prompt([
-    { name: 'shouldUseCli', message: 'Would you like to use the Xata CLI and clone a database?', type: 'confirm' }
+    {
+      name: 'shouldUseCli',
+      message: 'Would you like to use the Xata CLI to pull an existing database schema?',
+      type: 'confirm'
+    }
   ]);
 
   if (!shouldUseCli) {
