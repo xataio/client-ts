@@ -3,7 +3,6 @@
   "version": "0.3.1",
   "description": "Generates types based on a Xata.io database schema. Meant to be used with @xata.io/client",
   "main": "./dist/index.js",
-  "bin": "./dist/cli.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -47,5 +46,9 @@
     "@types/tar": "^6.1.1",
     "@types/unzipper": "^0.10.5",
     "@types/yargs": "^17.0.10"
+  },
+  "bin": {
+    "codegen": "./dist/cli.js",
+    "xata-codegen": "./dist/cli.js"
   }
 }
