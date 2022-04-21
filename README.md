@@ -10,7 +10,7 @@ Install the dependencies
 
 ```
 npm install @xata.io/client
-npm install @xata.io/xata-codegen -D
+npm install @xata.io/codegen -D
 ```
 
 ## Usage

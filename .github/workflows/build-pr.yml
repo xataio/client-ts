@@ -53,7 +53,7 @@ jobs:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/xata-codegen@${{ steps.version.outputs.TAG }}
+            npm install @xata.io/codegen@${{ steps.version.outputs.TAG }}
             ```
 
             [Pull request has been updated, please wait for latest changes to be pushed to npm...]
@@ -112,5 +112,5 @@ jobs:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/xata-codegen@${{ steps.version.outputs.TAG }}
+            npm install @xata.io/codegen@${{ steps.version.outputs.TAG }}
             ```

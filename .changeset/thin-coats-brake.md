@@ -1,5 +1,5 @@
 ---
-'@xata.io/xata-codegen': patch
+"@xata.io/codegen": patch
 ---
 
 Update imports to ESM format
