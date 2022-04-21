@@ -21,20 +21,24 @@ type OmitMethods<T> = {
 };
 
 type InternalProperties = keyof XataRecord;
-export type Selectable<T extends XataRecord> = Omit<T, InternalProperties> & Identifiable;
+export type Selectable<T extends XataRecord> = Omit<T, InternalProperties> & Partial<Identifiable>;
 
-export type SelectableColumn<O> =
-  | '*'
-  | 'id'
-  | (O extends Array<unknown>
-      ? never // TODO: Review when we support multiple: true
-      : O extends Record<string, any>
-      ?
-          | '*'
-          | Values<{
-              [K in StringKeys<O>]: O[K] extends Record<string, any> ? `${K}.${SelectableColumn<O[K]>}` : K;
-            }>
-      : '');
+export type SelectableColumn<O> = O extends Array<unknown>
+  ? never // For now we only support string arrays
+  :
+      | '*'
+      | 'id'
+      | (O extends Record<string, any>
+          ?
+              | '*'
+              | Values<{
+                  [K in StringKeys<O>]: O[K] extends Record<string, any>
+                    ? SelectableColumn<O[K]> extends ''
+                      ? `${K}`
+                      : `${K}.${SelectableColumn<O[K]>}`
+                    : K;
+                }>
+          : '');
 
 export type ValueOfSelectableColumn<O, P extends SelectableColumn<O>> = P extends '*'
   ? Values<O>

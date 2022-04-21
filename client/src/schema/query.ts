@@ -1,7 +1,7 @@
 import { Repository, XataRecord } from '..';
 import { ColumnsFilter, FilterExpression, PageConfig, SortExpression } from '../api/schemas';
 import { compact } from '../util/lang';
-import { DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
+import { Constraint, DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
 import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
 import { Select, Selectable, SelectableColumn, ValueOfSelectableColumn } from './selection';
 
@@ -127,7 +127,10 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    * @returns A new Query object.
    */
   filter(constraints: FilterConstraints<T> | DeepConstraint<T>): Query<T, R>;
-  filter<F extends SelectableColumn<T>>(column: F, value: ValueOfSelectableColumn<T, typeof column>): Query<T, R>;
+  filter<F extends SelectableColumn<T>>(
+    column: F,
+    value: ValueOfSelectableColumn<T, typeof column> | DeepConstraint<ValueOfSelectableColumn<T, typeof column>>
+  ): Query<T, R>;
   filter(a: any, b?: any): Query<T, R> {
     if (arguments.length === 1) {
       const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));
