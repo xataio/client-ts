@@ -70,5 +70,6 @@
     {
       "path": "client/dist/*"
     }
-  ]
+  ],
+  "dependencies": {}
 }

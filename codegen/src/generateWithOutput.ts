@@ -5,8 +5,8 @@ import { join, relative } from 'path';
 import { generate } from './codegen.js';
 import { errors } from './errors.js';
 import { getLanguageFromExtension } from './getLanguageFromExtension.js';
-import { parseConfigFile } from './parseConfigFile.js';
-import { parseSchemaFile } from './parseSchemaFile.js';
+import { parseConfigFile } from './config.js';
+import { parseSchemaFile } from './schema.js';
 import { readFile } from './readFile.js';
 
 export interface GenerateWithOutputOptions {
