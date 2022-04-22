@@ -1,5 +1,16 @@
 # @xata.io/client
 
+## 0.4.0
+
+### Patch Changes
+
+- b951331: Add support for new float column
+- d470610: Add new getAll() method
+- eaf92a8: Expose pagination constants (size and offset limits)
+- 57fde77: Reduce subrequests for createMany
+- eaf92a8: Implement schema-less client
+- 97a3caa: Make createBranch from optional with empty branch
+
 ## 0.3.0
 
 ### Minor Changes

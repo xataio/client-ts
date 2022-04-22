@@ -1,5 +1,20 @@
 # @xata.io/codegen
 
+## 0.4.0
+
+### Minor Changes
+
+- d9edb42: Removed the `generate` subcommand. Now the CLI needs to be invoked without it.
+- 7fdd319: Better error handling. Codegen will now try to create the parent directory of the output file if it doesn't exist
+- d73def1: Allow codegen to be executed from npx
+
+### Patch Changes
+
+- d13185a: Emit TS declaration files in codegen
+- b951331: Add support for new float column
+- a49b336: Split entity from record
+- db3293a: Update imports to ESM format
+
 ## 0.3.1
 
 ### Patch Changes
