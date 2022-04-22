@@ -156,7 +156,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
       ...fetchProps
     });
 
-    const finalObjects = await this.any(...response.recordIDs.map((id) => this.filter('id', id))).getAll();
+    const finalObjects = await this.any(...response.recordIDs.map((id) => this.filter('id' as any, id))).getAll();
     if (finalObjects.length !== objects.length) {
       throw new Error('The server failed to save some records');
     }

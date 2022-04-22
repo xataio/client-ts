@@ -8,7 +8,7 @@ import {
   PAGINATION_MAX_OFFSET,
   PAGINATION_MAX_SIZE
 } from '../client/src/schema/pagination';
-import { User, XataClient } from '../codegen/example/xata';
+import { User, UserRecord, XataClient } from '../codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from './mock_data';
 
 // Get environment variables before reading them
@@ -278,7 +278,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements pagination', async () => {
-    const loadUsers = async (repository: Repository<User>) => {
+    const loadUsers = async (repository: Repository<UserRecord>) => {
       return repository.getPaginated({ page: { size: 10 } });
     };
 
@@ -287,7 +287,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements paginable', async () => {
-    async function foo(page: Paginable<User>): Promise<User[]> {
+    async function foo(page: Paginable<UserRecord>): Promise<User[]> {
       const nextPage = page.hasNextPage() ? await foo(await page.nextPage()) : [];
       return [...page.records, ...nextPage];
     }
