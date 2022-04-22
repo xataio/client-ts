@@ -52,7 +52,7 @@ jobs:
         if: ${{ env.BRANCH }}
         uses: actions/github-script@0.4.0
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GIT_TOKEN }}
           script: |
             const {repo, owner} = context.repo;
             const {data:pr} = await github.pulls.create({
