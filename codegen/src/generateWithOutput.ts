@@ -8,6 +8,7 @@ import { getLanguageFromExtension } from './getLanguageFromExtension.js';
 import { parseConfigFile } from './config.js';
 import { parseSchemaFile } from './schema.js';
 import { readFile } from './readFile.js';
+import { ZodError } from 'zod';
 
 export interface GenerateWithOutputOptions {
   spinner?: Ora;
@@ -35,8 +36,22 @@ export const generateWithOutput = async ({
   const configFile = join(xataDirectory, 'config.json');
   const rawSchema = await readFile({ fullPath: schemaFile, type: 'schema' });
   const rawConfig = await readFile({ fullPath: configFile, type: 'config' });
-  const schema = parseSchemaFile(rawSchema);
-  const config = parseConfigFile(rawConfig);
+
+  let schema: ReturnType<typeof parseSchemaFile>;
+  let config: ReturnType<typeof parseConfigFile>;
+  try {
+    schema = parseSchemaFile(rawSchema);
+  } catch (err) {
+    handleParsingError('The content of the schema file is not valid:', err);
+    return;
+  }
+  try {
+    config = parseConfigFile(rawConfig);
+  } catch (err) {
+    handleParsingError('The content of the config file is not valid:', err);
+    return;
+  }
+
   const language = getLanguageFromExtension(extension);
 
   const code = await generate({ schema, config, language });
@@ -46,3 +61,16 @@ export const generateWithOutput = async ({
 };
 
 export const isExtensionValid = (extension: string): extension is 'js' | 'ts' => ['ts', 'js'].includes(extension);
+
+export const handleParsingError = (message: string, err: unknown) => {
+  console.error(message);
+
+  if (err instanceof Error) {
+    console.error(err);
+  } else if (err instanceof ZodError) {
+    for (const error of err.errors) {
+      console.error(`  [${error.code}]`, error.message, 'at', `"${error.path.join('.')}"`);
+    }
+  }
+  process.exit(1);
+};
