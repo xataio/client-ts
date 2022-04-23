@@ -5,7 +5,6 @@ import { join, relative } from 'path';
 import { ZodError } from 'zod';
 import { generate, Language } from './codegen.js';
 import { parseConfigFile } from './config.js';
-import { errors } from './errors.js';
 import { parseSchemaFile } from './schema.js';
 
 export interface GenerateWithOutputOptions {
@@ -26,15 +25,13 @@ export const generateWithOutput = async ({
   const fullOutputPath = path.resolve(process.cwd(), outputFilePath);
   const [extension] = fullOutputPath.split('.').slice(-1);
 
-  if (!isExtensionValid(extension)) {
-    throw new Error(errors.invalidCodegenOutputExtension);
-  }
+  const language = getLanguageFromExtension(extension);
 
   let schema: ReturnType<typeof parseSchemaFile>;
   let config: ReturnType<typeof parseConfigFile>;
   try {
     const schemaFile = join(xataDirectory, 'schema.json');
-    const rawSchema = await readFileOrExit(schemaFile, 'schema');
+    const rawSchema = await readFile(schemaFile, 'schema');
     schema = parseSchemaFile(rawSchema);
   } catch (err) {
     handleParsingError('The content of the schema file is not valid:', err);
@@ -43,14 +40,12 @@ export const generateWithOutput = async ({
 
   try {
     const configFile = join(xataDirectory, 'config.json');
-    const rawConfig = await readFileOrExit(configFile, 'config');
+    const rawConfig = await readFile(configFile, 'config');
     config = parseConfigFile(rawConfig);
   } catch (err) {
     handleParsingError('The content of the config file is not valid:', err);
     return;
   }
-
-  const language = getLanguageFromExtension(extension);
 
   const code = await generate({ schema, config, language });
   await writeFile(fullOutputPath, code);
@@ -58,22 +53,19 @@ export const generateWithOutput = async ({
   spinner?.succeed(`Your XataClient is generated at ./${relative(process.cwd(), outputFilePath)}.`);
 };
 
-const isExtensionValid = (extension: string): extension is 'js' | 'ts' => ['ts', 'js'].includes(extension);
-
 const handleParsingError = (message: string, err: unknown) => {
   console.error(message);
 
-  if (err instanceof Error) {
-    console.error(err);
-  } else if (err instanceof ZodError) {
+  if (err instanceof ZodError) {
     for (const error of err.errors) {
       console.error(`  [${error.code}]`, error.message, 'at', `"${error.path.join('.')}"`);
     }
+    process.exit(1);
   }
-  process.exit(1);
+  throw err;
 };
 
-const getLanguageFromExtension = (extension?: 'ts' | 'js'): Language => {
+const getLanguageFromExtension = (extension?: string): Language => {
   switch (extension) {
     case 'js':
       return 'javascript';
@@ -81,15 +73,17 @@ const getLanguageFromExtension = (extension?: 'ts' | 'js'): Language => {
     case undefined:
       return 'typescript';
     default:
-      throw new Error(errors.invalidCodegenOutputExtension);
+      throw new Error(`You've specified an invalid extension in your output parameter. We can generate code for files in JavaScript (ending with .js), or TypeScript (ending with .ts). Please adjust your output argument.
+
+      More in the docs: https://github.com/xataio/client-ts#readme
+      `);
   }
 };
 
-const readFileOrExit = async (fullPath: string, type: string) => {
+const readFile = async (fullPath: string, type: string) => {
   try {
     return await fs.readFile(fullPath, 'utf-8');
   } catch (err) {
-    console.error(`Could not read ${type} file at`, fullPath);
-    process.exit(1);
+    throw new Error(`Could not read ${type} file at ${fullPath}`);
   }
 };
