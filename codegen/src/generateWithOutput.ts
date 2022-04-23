@@ -2,13 +2,11 @@ import * as fs from 'fs/promises';
 import { Ora } from 'ora';
 import * as path from 'path';
 import { join, relative } from 'path';
-import { generate } from './codegen.js';
-import { errors } from './errors.js';
-import { getLanguageFromExtension } from './getLanguageFromExtension.js';
-import { parseConfigFile } from './config.js';
-import { parseSchemaFile } from './schema.js';
-import { readFile } from './readFile.js';
 import { ZodError } from 'zod';
+import { generate, Language } from './codegen.js';
+import { parseConfigFile } from './config.js';
+import { errors } from './errors.js';
+import { parseSchemaFile } from './schema.js';
 
 export interface GenerateWithOutputOptions {
   spinner?: Ora;
@@ -32,20 +30,20 @@ export const generateWithOutput = async ({
     throw new Error(errors.invalidCodegenOutputExtension);
   }
 
-  const schemaFile = join(xataDirectory, 'schema.json');
-  const configFile = join(xataDirectory, 'config.json');
-  const rawSchema = await readFile({ fullPath: schemaFile, type: 'schema' });
-  const rawConfig = await readFile({ fullPath: configFile, type: 'config' });
-
   let schema: ReturnType<typeof parseSchemaFile>;
   let config: ReturnType<typeof parseConfigFile>;
   try {
+    const schemaFile = join(xataDirectory, 'schema.json');
+    const rawSchema = await readFileOrExit(schemaFile, 'schema');
     schema = parseSchemaFile(rawSchema);
   } catch (err) {
     handleParsingError('The content of the schema file is not valid:', err);
     return;
   }
+
   try {
+    const configFile = join(xataDirectory, 'config.json');
+    const rawConfig = await readFileOrExit(configFile, 'config');
     config = parseConfigFile(rawConfig);
   } catch (err) {
     handleParsingError('The content of the config file is not valid:', err);
@@ -60,9 +58,9 @@ export const generateWithOutput = async ({
   spinner?.succeed(`Your XataClient is generated at ./${relative(process.cwd(), outputFilePath)}.`);
 };
 
-export const isExtensionValid = (extension: string): extension is 'js' | 'ts' => ['ts', 'js'].includes(extension);
+const isExtensionValid = (extension: string): extension is 'js' | 'ts' => ['ts', 'js'].includes(extension);
 
-export const handleParsingError = (message: string, err: unknown) => {
+const handleParsingError = (message: string, err: unknown) => {
   console.error(message);
 
   if (err instanceof Error) {
@@ -73,4 +71,25 @@ export const handleParsingError = (message: string, err: unknown) => {
     }
   }
   process.exit(1);
+};
+
+const getLanguageFromExtension = (extension?: 'ts' | 'js'): Language => {
+  switch (extension) {
+    case 'js':
+      return 'javascript';
+    case 'ts':
+    case undefined:
+      return 'typescript';
+    default:
+      throw new Error(errors.invalidCodegenOutputExtension);
+  }
+};
+
+const readFileOrExit = async (fullPath: string, type: string) => {
+  try {
+    return await fs.readFile(fullPath, 'utf-8');
+  } catch (err) {
+    console.error(`Could not read ${type} file at`, fullPath);
+    process.exit(1);
+  }
 };
