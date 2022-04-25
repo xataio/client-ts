@@ -21,7 +21,7 @@ function getTypeName(tableName: string) {
 function generateTableType(table: Table) {
   const { columns } = table;
   const revLinks: { table: string }[] = []; // table.rev_links || [];
-  return `export interface ${getTypeName(table.name)} extends Identifiable {
+  return `export interface ${getTypeName(table.name)} {
     ${columns.map((column) => generateColumnType(column)).join('\n')}
     ${revLinks.map((link) => `${link.table}: Query<${getTypeName(link.table)}>`).join('\n')}
   };
@@ -109,7 +109,7 @@ export async function generate({ schema, config, language, javascriptTarget }: G
     const links = ${JSON.stringify(links)};
 
     export class XataClient extends BaseClient<{
-      ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}Record>;`).join('\n')}
+      ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
     }> {
       constructor(options: XataClientOptions) {
         super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);

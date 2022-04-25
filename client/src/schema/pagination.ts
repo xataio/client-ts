@@ -1,5 +1,5 @@
-import { XataRecord } from '..';
 import { Query } from './query';
+import { XataRecord } from './record';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
