@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.5.0
+
+### Patch Changes
+
+- 14ec7d1: Fix in Selectable type
+
 ## 0.4.0
 
 ### Patch Changes
