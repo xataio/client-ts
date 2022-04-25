@@ -40,3 +40,7 @@ export const xataDatabaseSchema = z.object({
 });
 
 export type XataDatabaseSchema = z.infer<typeof xataDatabaseSchema>;
+
+export const parseSchemaFile = (input: string) => {
+  return xataDatabaseSchema.parse(JSON.parse(input));
+};
