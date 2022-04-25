@@ -1,7 +1,6 @@
 import {
   BaseClient,
   Repository,
-  Identifiable,
   RestRespositoryFactory,
   XataClientOptions,
   XataRecord,

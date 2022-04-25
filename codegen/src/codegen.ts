@@ -96,7 +96,6 @@ export async function generate({ schema, config, language, javascriptTarget }: G
     import {
       BaseClient,
       Repository,
-      Identifiable,
       RestRespositoryFactory,
       XataClientOptions,
       XataRecord
