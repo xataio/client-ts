@@ -278,7 +278,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements pagination', async () => {
-    const loadUsers = async (repository: Repository<UserRecord>) => {
+    const loadUsers = async (repository: Repository<User>) => {
       return repository.getPaginated({ page: { size: 10 } });
     };
 
