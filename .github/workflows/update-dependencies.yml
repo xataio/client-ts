@@ -25,7 +25,7 @@ jobs:
           npx npm-check-updates -u -t latest --deep
 
           echo 'Install new versions'
-          npm ci && npx lerna bootstrap --ci
+          npm install
           if $(git diff-index --quiet HEAD); then
             echo 'No dependencies needed to be updated!'
             exit 0
