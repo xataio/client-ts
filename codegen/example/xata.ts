@@ -1,13 +1,12 @@
 import {
   BaseClient,
   Repository,
-  Identifiable,
   RestRespositoryFactory,
   XataClientOptions,
   XataRecord,
 } from "../../client/src";
 
-export interface Team extends Identifiable {
+export interface Team {
   name?: string | null;
   labels?: string[] | null;
   owner?: User | null;
@@ -15,7 +14,7 @@ export interface Team extends Identifiable {
 
 export type TeamRecord = Team & XataRecord;
 
-export interface User extends Identifiable {
+export interface User {
   email?: string | null;
   full_name?: string | null;
   address?: { street?: string | null; zipcode?: number | null } | null;
@@ -27,8 +26,8 @@ export type UserRecord = User & XataRecord;
 const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
 
 export class XataClient extends BaseClient<{
-  teams: Repository<TeamRecord>;
-  users: Repository<UserRecord>;
+  teams: Repository<Team>;
+  users: Repository<User>;
 }> {
   constructor(options: XataClientOptions) {
     super(

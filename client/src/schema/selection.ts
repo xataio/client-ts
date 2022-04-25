@@ -1,27 +1,12 @@
-import { XataRecord } from '..';
 import { StringKeys, UnionToIntersection, Values } from '../util/types';
 import { Query } from './query';
-import { Identifiable } from './record';
+import { BaseData, Identifiable, XataRecord } from './record';
 
 type Queries<T> = {
-  [key in keyof T as T[key] extends Query<any> ? key : never]: T[key];
+  [key in keyof T as T[key] extends Query<any, any> ? key : never]: T[key];
 };
 
-type OmitQueries<T> = {
-  [key in keyof T as T[key] extends Query<any> ? never : key]: T[key];
-};
-
-type OmitLinks<T> = {
-  [key in keyof T as T[key] extends XataRecord ? never : key]: T[key];
-};
-
-type OmitMethods<T> = {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  [key in keyof T as T[key] extends Function ? never : key]: T[key];
-};
-
-type InternalProperties = keyof XataRecord;
-export type Selectable<T extends XataRecord> = Omit<T, InternalProperties> & Partial<Identifiable>;
+export type Selectable<T extends BaseData> = T & Partial<Identifiable>;
 
 export type SelectableColumn<O> = O extends Array<unknown>
   ? never // For now we only support string arrays

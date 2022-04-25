@@ -287,7 +287,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements paginable', async () => {
-    async function foo(page: Paginable<UserRecord>): Promise<User[]> {
+    async function foo(page: Paginable<UserRecord>): Promise<UserRecord[]> {
       const nextPage = page.hasNextPage() ? await foo(await page.nextPage()) : [];
       return [...page.records, ...nextPage];
     }
