@@ -1,5 +1,15 @@
 # @xata.io/codegen
 
+## 0.5.0
+
+### Minor Changes
+
+- bc9567d: Codegen will no longer download the Xata CLI now that the CLI supports hooks
+
+### Patch Changes
+
+- 14ec7d1: Fix in Selectable type
+
 ## 0.4.0
 
 ### Minor Changes
