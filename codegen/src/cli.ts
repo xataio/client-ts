@@ -1,15 +1,9 @@
 import chalk from 'chalk';
 import { program } from 'commander';
 import { access, mkdir } from 'fs/promises';
-import inquirer from 'inquirer';
 import ora from 'ora';
-import { join, dirname } from 'path';
-import { checkIfCliInstalled } from './checkIfCliInstalled.js';
-import { cliPath } from './cliPath.js';
+import { dirname, join } from 'path';
 import { generateWithOutput } from './generateWithOutput.js';
-import { getCli } from './getCli.js';
-import { handleXataCliRejection } from './handleXataCliRejection.js';
-import { useCli } from './useCli.js';
 import { CODEGEN_VERSION } from './version.js';
 
 const defaultXataDirectory = join(process.cwd(), 'xata');
@@ -34,7 +28,14 @@ program
       await access(schema); // Make sure the schema file exists
     } catch (e: any) {
       if (e.code !== 'ENOENT') exitWithError(e);
-      await pullSchema();
+      spinner.info(
+        `You need to first install the Xata CLI and create a new database or pull the schema of an existing one. To learn more, visit ${chalk.blueBright(
+          'https://docs.xata.io/cli/getting-started'
+        )}.
+    `
+      );
+      exitWithError('No local Xata schema found.');
+      return;
     }
 
     try {
@@ -47,47 +48,6 @@ program
   });
 
 program.parse();
-
-async function pullSchema() {
-  spinner.warn('No local Xata schema found.');
-  const { shouldUseCli } = await inquirer.prompt([
-    {
-      name: 'shouldUseCli',
-      message: 'Would you like to use the Xata CLI to pull an existing database schema?',
-      type: 'confirm'
-    }
-  ]);
-
-  if (!shouldUseCli) {
-    handleXataCliRejection(spinner);
-    return;
-  }
-
-  spinner.text = 'Checking for Xata CLI...';
-  const hasCli = await checkIfCliInstalled();
-
-  try {
-    if (!hasCli) {
-      await getCli({ spinner });
-    }
-
-    await useCli({ command: hasCli ? 'xata' : cliPath, spinner });
-  } catch (e: any) {
-    if (e.message.includes('ENOTFOUND') || e.message.includes('ENOENT')) {
-      exitWithError(
-        `We tried to download the Xata CLI to clone your database locally, but failed because of internet connectivity issues.
-
-To try to clone your database locally yourself, visit ${chalk.blueBright(
-          'https://docs.xata.io/cli/getting-started'
-        )}, and then rerun the code generator. We apologize for the inconvenience.
-
-If you'd like to open an issue, please do so at ${chalk.blueBright('https://github.com/xataio/client-ts')}.
-`
-      );
-    }
-    exitWithError(e);
-  }
-}
 
 function exitWithError(err: unknown) {
   spinner.fail(err instanceof Error ? err.message : String(err));

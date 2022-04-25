@@ -7,3 +7,7 @@ export const xataConfigSchema = z.object({
 });
 
 export type XataConfigSchema = z.infer<typeof xataConfigSchema>;
+
+export const parseConfigFile = (input: string) => {
+  return xataConfigSchema.parse(JSON.parse(input));
+};
