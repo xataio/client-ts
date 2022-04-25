@@ -10,6 +10,10 @@ export interface Identifiable {
   id: string;
 }
 
+export interface BaseData {
+  [key: string]: any;
+}
+
 /**
  * Represents a persisted record from the database.
  */

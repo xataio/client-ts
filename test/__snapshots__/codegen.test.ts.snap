@@ -74,13 +74,12 @@ exports[`codegen should generate correct TypeScript 1`] = `
 "import {
   BaseClient,
   Repository,
-  Identifiable,
   RestRespositoryFactory,
   XataClientOptions,
   XataRecord,
 } from \\"@xata.io/client\\";
 
-export interface Author extends Identifiable {
+export interface Author {
   name?: string | null;
   email?: string | null;
   photoUrl?: string | null;
@@ -90,7 +89,7 @@ export interface Author extends Identifiable {
 
 export type AuthorRecord = Author & XataRecord;
 
-export interface Post extends Identifiable {
+export interface Post {
   title?: string | null;
   summary?: string | null;
   content?: string | null;
@@ -104,7 +103,7 @@ export interface Post extends Identifiable {
 
 export type PostRecord = Post & XataRecord;
 
-export interface Person extends Identifiable {
+export interface Person {
   slug?: string | null;
   name?: string | null;
   title?: string | null;
@@ -116,9 +115,9 @@ export type PersonRecord = Person & XataRecord;
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
 
 export class XataClient extends BaseClient<{
-  authors: Repository<AuthorRecord>;
-  posts: Repository<PostRecord>;
-  people: Repository<PersonRecord>;
+  authors: Repository<Author>;
+  posts: Repository<Post>;
+  people: Repository<Person>;
 }> {
   constructor(options: XataClientOptions) {
     super(

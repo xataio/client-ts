@@ -12,35 +12,38 @@ import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query, QueryOptions } from './query';
-import { XataRecord } from './record';
-import { Select, Selectable, SelectableColumn } from './selection';
+import { BaseData, XataRecord } from './record';
+import { Select, SelectableColumn } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
 
 /**
  * Common interface for performing operations on a table.
  */
-export abstract class Repository<T extends XataRecord> extends Query<T> {
-  /**
+export abstract class Repository<
+  Data extends BaseData,
+  Record extends XataRecord = Data & XataRecord
+> extends Query<Record> {
+  /*
    * Creates a record in the table.
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(object: Selectable<T>): Promise<T>;
+  abstract create(object: Data): Promise<Record>;
 
   /**
    * Creates multiple records in the table.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @returns Array of the persisted records.
    */
-  abstract createMany(objects: Selectable<T>[]): Promise<T[]>;
+  abstract createMany(objects: Data[]): Promise<Record[]>;
 
   /**
    * Queries a single record from the table given its unique id.
    * @param id The unique id.
    * @returns The persisted record for the given id or null if the record could not be found.
    */
-  abstract read(id: string): Promise<T | null>;
+  abstract read(id: string): Promise<Record | null>;
 
   /**
    * Insert a single record with a unique id.
@@ -48,7 +51,7 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract insert(id: string, object: Selectable<T>): Promise<T>;
+  abstract insert(id: string, object: Data): Promise<Record>;
 
   /**
    * Partially update a single record given its unique id.
@@ -56,7 +59,7 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
    * @param object The column names and their values that have to be updatd.
    * @returns The full persisted record.
    */
-  abstract update(id: string, object: Partial<Selectable<T>>): Promise<T>;
+  abstract update(id: string, object: Partial<Data>): Promise<Record>;
 
   /**
    * Updates or inserts a single record. If a record exists with the given id,
@@ -65,7 +68,7 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
-  abstract updateOrInsert(id: string, object: Selectable<T>): Promise<T>;
+  abstract updateOrInsert(id: string, object: Data): Promise<Record>;
 
   /**
    * Deletes a record given its unique id.
@@ -74,18 +77,23 @@ export abstract class Repository<T extends XataRecord> extends Query<T> {
    */
   abstract delete(id: string): void;
 
-  abstract query<R extends XataRecord, Options extends QueryOptions<T>>(
-    query: Query<T, R>,
+  abstract query<Result extends XataRecord, Options extends QueryOptions<Record>>(
+    query: Query<Record, Result>,
     options: Options
   ): Promise<
     Page<
-      T,
-      typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R
+      Record,
+      typeof options extends { columns: SelectableColumn<Data>[] }
+        ? Select<Data, typeof options['columns'][number]>
+        : Result
     >
   >;
 }
 
-export class RestRepository<T extends XataRecord> extends Repository<T> {
+export class RestRepository<Data extends BaseData, Record extends XataRecord = Data & XataRecord> extends Repository<
+  Data,
+  Record
+> {
   #client: BaseClient<any>;
   #fetch: any;
   #table: string;
@@ -122,7 +130,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     };
   }
 
-  async create(object: Selectable<T>): Promise<T> {
+  async create(object: Data): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -145,7 +153,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return finalObject;
   }
 
-  async createMany(objects: T[]): Promise<T[]> {
+  async createMany(objects: Data[]): Promise<Record[]> {
     const fetchProps = await this.#getFetchProps();
 
     const records = objects.map((object) => transformObjectLinks(object));
@@ -164,7 +172,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return finalObjects;
   }
 
-  async read(recordId: string): Promise<T | null> {
+  async read(recordId: string): Promise<Record | null> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await getRecord({
@@ -175,7 +183,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return this.#client.initObject(this.#table, response);
   }
 
-  async update(recordId: string, object: Partial<Selectable<T>>): Promise<T> {
+  async update(recordId: string, object: Partial<Data>): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await updateRecordWithID({
@@ -190,7 +198,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return item;
   }
 
-  async insert(recordId: string, object: Selectable<T>): Promise<T> {
+  async insert(recordId: string, object: Data): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -214,7 +222,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return finalObject;
   }
 
-  async updateOrInsert(recordId: string, object: Selectable<T>): Promise<T> {
+  async updateOrInsert(recordId: string, object: Data): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
@@ -229,7 +237,7 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     return item;
   }
 
-  async delete(recordId: string) {
+  async delete(recordId: string): Promise<void> {
     const fetchProps = await this.#getFetchProps();
 
     await deleteRecord({
@@ -238,13 +246,15 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
     });
   }
 
-  async query<R extends XataRecord, Options extends QueryOptions<T>>(
-    query: Query<T, R>,
+  async query<Result extends XataRecord, Options extends QueryOptions<Record>>(
+    query: Query<Record, Result>,
     options: Options = {} as Options
   ): Promise<
     Page<
-      T,
-      typeof options extends { columns: SelectableColumn<T>[] } ? Select<T, typeof options['columns'][number]> : R
+      Record,
+      typeof options extends { columns: SelectableColumn<Data>[] }
+        ? Select<Data, typeof options['columns'][number]>
+        : Result
     >
   > {
     const data = query.getQueryOptions();
@@ -265,22 +275,24 @@ export class RestRepository<T extends XataRecord> extends Repository<T> {
 
     const records = objects.map((record) =>
       this.#client.initObject<
-        typeof options['columns'] extends SelectableColumn<T>[] ? Select<T, typeof options['columns'][number]> : R
+        typeof options['columns'] extends SelectableColumn<Data>[]
+          ? Select<Data, typeof options['columns'][number]>
+          : Result
       >(this.#table, record)
     );
 
     // TODO: We should properly type this any
-    return new Page<T, any>(query, meta, records);
+    return new Page<Record, any>(query, meta, records);
   }
 }
 
 interface RepositoryFactory {
-  createRepository<T extends XataRecord>(client: BaseClient<any>, table: string): Repository<T>;
+  createRepository<Data extends BaseData>(client: BaseClient<any>, table: string): Repository<Data>;
 }
 
 export class RestRespositoryFactory implements RepositoryFactory {
-  createRepository<T extends XataRecord>(client: BaseClient<any>, table: string): Repository<T> {
-    return new RestRepository<T>(client, table);
+  createRepository<Data extends BaseData>(client: BaseClient<any>, table: string): Repository<Data> {
+    return new RestRepository<Data>(client, table);
   }
 }
 

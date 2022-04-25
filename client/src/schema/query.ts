@@ -1,8 +1,9 @@
-import { Repository, XataRecord } from '..';
 import { ColumnsFilter, FilterExpression, PageConfig, SortExpression } from '../api/schemas';
 import { compact } from '../util/lang';
 import { DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
 import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
+import { XataRecord } from './record';
+import { Repository } from './repository';
 import { Select, Selectable, SelectableColumn } from './selection';
 
 export type QueryOptions<T extends XataRecord> = {
