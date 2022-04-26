@@ -10,6 +10,7 @@ export interface Team {
   name?: string | null;
   labels?: string[] | null;
   owner?: User | null;
+  [key: string]: unknown;
 }
 
 export type TeamRecord = Team & XataRecord;
@@ -19,6 +20,7 @@ export interface User {
   full_name?: string | null;
   address?: { street?: string | null; zipcode?: number | null } | null;
   team?: Team | null;
+  [key: string]: unknown;
 }
 
 export type UserRecord = User & XataRecord;

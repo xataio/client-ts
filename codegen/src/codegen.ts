@@ -20,10 +20,16 @@ function getTypeName(tableName: string) {
 
 function generateTableType(table: Table) {
   const { columns } = table;
-  const revLinks: { table: string }[] = []; // table.rev_links || [];
+  const revLinks: { table: string }[] = [];
+
+  const properties = [
+    ...columns.map((column) => generateColumnType(column)),
+    ...revLinks.map((link) => `${link.table}: Query<${getTypeName(link.table)}>`)
+  ];
+
   return `export interface ${getTypeName(table.name)} {
-    ${columns.map((column) => generateColumnType(column)).join('\n')}
-    ${revLinks.map((link) => `${link.table}: Query<${getTypeName(link.table)}>`).join('\n')}
+    ${properties.join('\n')}
+    [key: string]: unknown;
   };
 
   export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;
