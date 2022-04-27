@@ -9,7 +9,7 @@ import { BaseClient, RestRespositoryFactory } from "../../client/src";
  * @property {() => Promise<void>} delete
  * @property {string=} name
  * @property {string[]=} labels
- * @property {User=} owner
+ * @property {UserRecord=} owner
  
  */
 /**
@@ -22,7 +22,7 @@ import { BaseClient, RestRespositoryFactory } from "../../client/src";
  * @property {string=} email
  * @property {string=} full_name
  * @property {{ street?: string | null; zipcode?: number | null }=} address
- * @property {Team=} team
+ * @property {TeamRecord=} team
  
  */
 const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };

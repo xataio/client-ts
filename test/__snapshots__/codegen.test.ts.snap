@@ -29,7 +29,7 @@ import { BaseClient, RestRespositoryFactory } from \\"@xata.io/client\\";
  * @property {string=} content
  * @property {string[]=} tags
  * @property {number=} likes
- * @property {Author=} author
+ * @property {AuthorRecord=} author
  * @property {string=} date
  * @property {string=} slug
  * @property {boolean=} published
@@ -95,7 +95,7 @@ export interface Post {
   content?: string | null;
   tags?: string[] | null;
   likes?: number | null;
-  author?: Author | null;
+  author?: AuthorRecord | null;
   date?: string | null;
   slug?: string | null;
   published?: boolean | null;
