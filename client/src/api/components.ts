@@ -1509,7 +1509,7 @@ export type QueryTableVariables = {
  *   `$none`, etc.
  *
  * All operators start with an `$` to differentiate them from column names
- * (which are not allowed to start with an underscore).
+ * (which are not allowed to start with an dollar sign).
  *
  * #### Exact matching and control operators
  *
@@ -1577,27 +1577,17 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * If you want to OR together multiple values, you can use an array of values:
+ * If you want to OR together multiple values, you can use the `$any` operator with an array of values:
  *
  * ```json
  * {
  *   "filter": {
- *     "settings.plan": ["free", "paid"]
+ *     "settings.plan": {"$any": ["free", "paid"]}
  *   },
  * }
  * ```
  *
- * Same query with `$is` operator:
- *
- * ```json
- * {
- *   "filter": {
- *     "settings.plan": { "$is": ["free", "paid"]}
- *   },
- * }
- * ```
- *
- * Specifying multiple columns, ANDs them together:
+ * If you specify multiple columns in the same filter, they are logically AND'ed together:
  *
  * ```json
  * {
@@ -1608,6 +1598,8 @@ export type QueryTableVariables = {
  * }
  * ```
  *
+ * The above matches if both conditions are met.
+ *
  * To be more explicit about it, you can use `$all` or `$any`:
  *
  * ```json
@@ -1615,13 +1607,13 @@ export type QueryTableVariables = {
  *   "filter": {
  *       "$any": {
  *         "settings.dark": true,
- *         "settings.plan": "free",
+ *         "settings.plan": "free"
  *       }
  *   },
  * }
  * ```
  *
- * `$all` and `$any` can also receive an array of objects, which allows for repeating columns:
+ * The `$all` and `$any` operators can also receive an array of objects, which allows for repeating column names:
  *
  * ```json
  * {
@@ -1664,7 +1656,7 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * We can also make the negation version, `$notExists` :
+ * Or you can use the inverse operator `$notExists`:
  *
  * ```json
  * {
@@ -1717,7 +1709,7 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * #### Numeric/date ranges
+ * #### Numeric ranges
  *
  * ```json
  * {
@@ -1732,18 +1724,6 @@ export type QueryTableVariables = {
  *
  * The supported operators are `$gt`, `$lt`, `$ge`, `$le`.
  *
- * Date ranges would support the same operators, with the date as string in RFC 3339:
- *
- * ```json
- * {
- *   "filter": {
- *       "<column_name>": {
- *         "$gt": "2019-10-12T07:20:50.52Z",
- *         "$lt": "2021-10-12T07:20:50.52Z"
- *       }
- *   }
- * }
- * ```
  *
  * #### Negations
  *
@@ -1796,7 +1776,7 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * In addition, we can add specific operators like `$isNot` to simplify expressions:
+ * In addition, you can use operators like `$isNot` or `$notExists` to simplify expressions:
  *
  * ```json
  * {
@@ -1846,6 +1826,22 @@ export type QueryTableVariables = {
  * predicate. The `$includesNone` operator succeeds if no array item matches the
  * predicate. The `$includes` operator is a synonym for the `$includesAny`
  * operator.
+ *
+ * Here is an example of using the `$includesAll` operator:
+ *
+ * ```json
+ * {
+ *   "filter": {
+ *     "settings.labels": {
+ *       "$includesAll": [
+ *         {"$contains": "label"},
+ *       ]
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * The above matches if all label values contain the string "labels".
  *
  * ### Sorting
  *
