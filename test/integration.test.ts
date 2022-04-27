@@ -561,7 +561,7 @@ describe('integration tests', () => {
 
     // @ts-expect-error Max limit of 10 nested links (circular dependency)
     // This is XataRecord now, not a user
-    nested.team;
+    nested?.team?.id;
 
     expect(isXataRecord(nested)).toBe(true);
     expect(nested?.team).toBeUndefined();
