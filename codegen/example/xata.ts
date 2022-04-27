@@ -1,5 +1,6 @@
 import {
   BaseClient,
+  Link,
   Repository,
   RestRespositoryFactory,
   XataClientOptions,
@@ -9,7 +10,7 @@ import {
 export interface Team {
   name?: string | null;
   labels?: string[] | null;
-  owner?: UserRecord | null;
+  owner?: Link<UserRecord> | null;
 }
 
 export type TeamRecord = Team & XataRecord;
@@ -18,7 +19,7 @@ export interface User {
   email?: string | null;
   full_name?: string | null;
   address?: { street?: string | null; zipcode?: number | null } | null;
-  team?: TeamRecord | null;
+  team?: Link<TeamRecord> | null;
 }
 
 export type UserRecord = User & XataRecord;

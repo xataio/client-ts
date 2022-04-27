@@ -1,6 +1,6 @@
 import { StringKeys, UnionToIntersection, Values } from '../util/types';
 import { Query } from './query';
-import { BaseData, Identifiable, XataRecord } from './record';
+import { BaseData, Identifiable, MAX_LINK_RECURSION, XataRecord } from './record';
 
 type Queries<T> = {
   [key in keyof T as T[key] extends Query<any, any> ? key : never]: T[key];
@@ -8,10 +8,7 @@ type Queries<T> = {
 
 export type Selectable<T extends BaseData> = T & Partial<Identifiable>;
 
-// Used to avoid infinite circular dependendencies in type instantiation
-type MAX_RECURSION = 10;
-
-export type SelectableColumn<O, RecursivePath extends any[] = []> = RecursivePath['length'] extends MAX_RECURSION
+export type SelectableColumn<O, RecursivePath extends any[] = []> = RecursivePath['length'] extends MAX_LINK_RECURSION
   ? never
   :
       | '*'

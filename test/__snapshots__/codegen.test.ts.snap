@@ -29,7 +29,7 @@ import { BaseClient, RestRespositoryFactory } from \\"@xata.io/client\\";
  * @property {string=} content
  * @property {string[]=} tags
  * @property {number=} likes
- * @property {AuthorRecord=} author
+ * @property {Link<AuthorRecord>=} author
  * @property {string=} date
  * @property {string=} slug
  * @property {boolean=} published
@@ -73,6 +73,7 @@ export class XataClient extends BaseClient {
 exports[`codegen should generate correct TypeScript 1`] = `
 "import {
   BaseClient,
+  Link,
   Repository,
   RestRespositoryFactory,
   XataClientOptions,
@@ -95,7 +96,7 @@ export interface Post {
   content?: string | null;
   tags?: string[] | null;
   likes?: number | null;
-  author?: AuthorRecord | null;
+  author?: Link<AuthorRecord> | null;
   date?: string | null;
   slug?: string | null;
   published?: boolean | null;
