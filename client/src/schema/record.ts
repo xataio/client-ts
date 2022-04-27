@@ -52,7 +52,21 @@ export interface XataRecord extends Identifiable {
 // Used to avoid infinite circular dependendencies in type instantiation
 export type MAX_LINK_RECURSION = 10;
 export type Link<T, RecursivePath extends any[] = []> = RecursivePath['length'] extends MAX_LINK_RECURSION
-  ? XataRecord
+  ? LinkTooDeep<T>
   : {
       [K in keyof T]: NonNullable<T[K]> extends XataRecord ? Link<T[K], [...RecursivePath, T[K]]> : T[K];
     };
+
+type LinkTooDeep<T> = {
+  [K in keyof T]: K extends keyof XataRecord ? T[K] : never;
+};
+
+export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
+  return typeof x === 'object' && typeof x?.id === 'string';
+}
+
+export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> {
+  return (
+    isIdentifiable(x) && typeof x?.xata === 'object' && typeof (x?.xata as XataRecord['xata'])?.version === 'number'
+  );
+}

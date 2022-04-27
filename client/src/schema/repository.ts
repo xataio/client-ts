@@ -12,7 +12,7 @@ import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query, QueryOptions } from './query';
-import { BaseData, XataRecord } from './record';
+import { BaseData, isIdentifiable, XataRecord } from './record';
 import { Select, SelectableColumn } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
@@ -43,7 +43,7 @@ export abstract class Repository<
    * @param id The unique id.
    * @returns The persisted record for the given id or null if the record could not be found.
    */
-  abstract read(id: string): Promise<Record | null>;
+  abstract read(id: string, options?: { ignoreLinks?: boolean }): Promise<Record | null>;
 
   /**
    * Insert a single record with a unique id.
@@ -133,7 +133,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async create(object: Data): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
-    const record = transformObjectLinks(object);
+    const record = removeObjectLinks(object);
 
     const response = await insertRecord({
       pathParams: {
@@ -156,7 +156,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async createMany(objects: Data[]): Promise<Record[]> {
     const fetchProps = await this.#getFetchProps();
 
-    const records = objects.map((object) => transformObjectLinks(object));
+    const records = objects.map((object) => removeObjectLinks(object));
 
     const response = await bulkInsertTableRecords({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
@@ -172,7 +172,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return finalObjects;
   }
 
-  async read(recordId: string): Promise<Record | null> {
+  async read(recordId: string, options: { ignoreLinks?: boolean } = {}): Promise<Record | null> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await getRecord({
@@ -180,15 +180,17 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    return this.#client.initObject(this.#table, response);
+    return this.#client.initObject(this.#table, response, options?.ignoreLinks ? -1 : 0);
   }
 
   async update(recordId: string, object: Partial<Data>): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
+    const record = removeObjectLinks(object);
+
     const response = await updateRecordWithID({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-      body: object,
+      body: record,
       ...fetchProps
     });
 
@@ -201,7 +203,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async insert(recordId: string, object: Data): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
-    const record = transformObjectLinks(object);
+    const record = removeObjectLinks(object);
 
     const response = await insertRecordWithID({
       pathParams: {
@@ -273,12 +275,14 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const records = objects.map((record) =>
-      this.#client.initObject<
-        typeof options['columns'] extends SelectableColumn<Data>[]
-          ? Select<Data, typeof options['columns'][number]>
-          : Result
-      >(this.#table, record)
+    const records = await Promise.all(
+      objects.map((record) =>
+        this.#client.initObject<
+          typeof options['columns'] extends SelectableColumn<Data>[]
+            ? Select<Data, typeof options['columns'][number]>
+            : Result
+        >(this.#table, record)
+      )
     );
 
     // TODO: We should properly type this any
@@ -343,7 +347,7 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
     });
   }
 
-  public initObject<T>(table: string, object: object) {
+  public async initObject<T>(table: string, object: object, depth = 0): Promise<T> {
     const o: Record<string, unknown> = {};
     Object.assign(o, object);
 
@@ -352,17 +356,26 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
       const [field, linkTable] = link;
       const value = o[field];
 
-      if (value && typeof value === 'object') {
-        const { id } = value as any;
-        if (Object.keys(value).find((col) => col === 'id')) {
-          o[field] = this.initObject(linkTable, value);
-        } else if (id) {
+      if (isIdentifiable(value)) {
+        const { id } = value;
+
+        if (depth === -1 || depth >= 10) {
           o[field] = {
             id,
-            get: () => {
-              this.db[linkTable].read(id);
+            xata: { version: 1 },
+            read: () => {
+              return this.db[linkTable].read(id);
+            },
+            update: (data: any) => {
+              return this.db[linkTable].update(id, data);
+            },
+            delete: () => {
+              return this.db[linkTable].delete(id);
             }
           };
+        } else if (id) {
+          const item = await this.db[linkTable].read(id, { ignoreLinks: true });
+          o[field] = await this.initObject(linkTable, item, depth + 1);
         }
       }
     }
@@ -415,12 +428,8 @@ const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchSt
 };
 
 // TODO: We can find a better implementation for links
-const transformObjectLinks = (object: any) => {
+const removeObjectLinks = (object: any) => {
   return Object.entries(object).reduce((acc, [key, value]) => {
-    if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
-      return { ...acc, [key]: (value as XataRecord).id };
-    }
-
-    return { ...acc, [key]: value };
+    return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
   }, {});
 };

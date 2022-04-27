@@ -8,6 +8,7 @@ import {
   PAGINATION_MAX_OFFSET,
   PAGINATION_MAX_SIZE
 } from '../client/src/schema/pagination';
+import { isXataRecord } from '../client/src/schema/record';
 import { User, UserRecord, XataClient } from '../codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from './mock_data';
 
@@ -533,19 +534,41 @@ describe('integration tests', () => {
   });
 
   test('Link is a record object', async () => {
-    const team = await client.db.teams.getOne();
-    const owner = await team?.owner?.read();
+    const user = await client.db.users.create({
+      full_name: 'Base User'
+    });
 
-    expect(team?.owner?.id).toBeDefined();
-    expect(team?.owner?.full_name).toBeDefined();
+    const team = await client.db.teams.create({
+      name: 'Base team',
+      owner: user
+    });
+
+    await user.update({ team });
+
+    const response = await client.db.teams.read(team.id);
+    const owner = await response?.owner?.read();
+
+    expect(response?.owner?.id).toBeDefined();
+    expect(response?.owner?.full_name).toBeDefined();
 
     expect(owner?.id).toBeDefined();
     expect(owner?.full_name).toBeDefined();
 
-    expect(team?.owner?.id).toBe(owner?.id);
-    expect(team?.owner?.full_name).toBe(owner?.full_name);
+    expect(response?.owner?.id).toBe(owner?.id);
+    expect(response?.owner?.full_name).toBe(owner?.full_name);
+
+    const nested = response?.owner?.team?.owner?.team?.owner?.team?.owner?.team?.owner?.team?.owner;
 
     // @ts-expect-error Max limit of 10 nested links (circular dependency)
-    team?.owner?.team?.owner?.team?.owner?.team?.owner?.team?.owner?.team?.owner?.team;
+    // This is XataRecord now, not a user
+    nested.team;
+
+    expect(isXataRecord(nested)).toBe(true);
+    expect(nested?.team).toBeUndefined();
+
+    const nestedRead = await nested?.read();
+
+    expect(nestedRead?.id).toBeDefined();
+    expect(nestedRead?.full_name).toBeDefined();
   });
 });
