@@ -29,7 +29,6 @@ function generateTableType(table: Table) {
 
   return `export interface ${getTypeName(table.name)} {
     ${properties.join('\n')}
-    [key: string]: unknown;
   };
 
   export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;

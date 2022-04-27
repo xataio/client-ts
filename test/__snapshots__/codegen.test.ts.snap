@@ -85,7 +85,6 @@ export interface Author {
   photoUrl?: string | null;
   bio?: string | null;
   title?: string | null;
-  [key: string]: unknown;
 }
 
 export type AuthorRecord = Author & XataRecord;
@@ -100,7 +99,6 @@ export interface Post {
   date?: string | null;
   slug?: string | null;
   published?: boolean | null;
-  [key: string]: unknown;
 }
 
 export type PostRecord = Post & XataRecord;
@@ -110,7 +108,6 @@ export interface Person {
   name?: string | null;
   title?: string | null;
   photoUrl?: string | null;
-  [key: string]: unknown;
 }
 
 export type PersonRecord = Person & XataRecord;
