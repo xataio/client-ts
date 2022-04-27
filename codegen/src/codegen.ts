@@ -69,9 +69,8 @@ function getTypeScriptType(column: Column): string {
   if (column.type === 'int') return 'number';
   if (column.type === 'float') return 'number';
   if (column.type === 'link') {
-    if (!column.link?.table) return 'object';
-    // Links extend XataRecord
-    return `${getTypeName(column.link.table)}Record`;
+    if (!column.link?.table) return 'unknown';
+    return `Link<${getTypeName(column.link.table)}Record>`;
   }
   if (column.type === 'object') {
     const columns = column.columns || [];
@@ -101,6 +100,7 @@ export async function generate({ schema, config, language, javascriptTarget }: G
   ${language === 'javascript' ? `    /** @typedef { import('@xata.io/client').Repository } Repository */` : ''}
     import {
       BaseClient,
+      Link,
       Repository,
       RestRespositoryFactory,
       XataClientOptions,

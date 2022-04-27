@@ -48,3 +48,11 @@ export interface XataRecord extends Identifiable {
    */
   delete(): Promise<void>;
 }
+
+// Used to avoid infinite circular dependendencies in type instantiation
+export type MAX_LINK_RECURSION = 10;
+export type Link<T, RecursivePath extends any[] = []> = RecursivePath['length'] extends MAX_LINK_RECURSION
+  ? XataRecord
+  : {
+      [K in keyof T]: NonNullable<T[K]> extends XataRecord ? Link<T[K], [...RecursivePath, T[K]]> : T[K];
+    };

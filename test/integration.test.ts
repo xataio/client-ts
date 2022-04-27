@@ -544,5 +544,8 @@ describe('integration tests', () => {
 
     expect(team?.owner?.id).toBe(owner?.id);
     expect(team?.owner?.full_name).toBe(owner?.full_name);
+
+    // @ts-expect-error Max limit of 10 nested links (circular dependency)
+    team?.owner?.team?.owner?.team?.owner?.team?.owner?.team?.owner?.team?.owner?.team;
   });
 });
