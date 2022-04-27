@@ -531,4 +531,10 @@ describe('integration tests', () => {
     expect(createdPlanes).toHaveLength(250);
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
   });
+
+  test('Link is a record object', async () => {
+    const team = await client.db.teams.getOne();
+
+    expect(team?.owner?.id).toBeDefined();
+  });
 });

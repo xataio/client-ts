@@ -9,7 +9,7 @@ import {
 export interface Team {
   name?: string | null;
   labels?: string[] | null;
-  owner?: User | null;
+  owner?: UserRecord | null;
 }
 
 export type TeamRecord = Team & XataRecord;
@@ -18,7 +18,7 @@ export interface User {
   email?: string | null;
   full_name?: string | null;
   address?: { street?: string | null; zipcode?: number | null } | null;
-  team?: Team | null;
+  team?: TeamRecord | null;
 }
 
 export type UserRecord = User & XataRecord;
