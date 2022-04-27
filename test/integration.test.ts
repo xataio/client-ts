@@ -534,7 +534,15 @@ describe('integration tests', () => {
 
   test('Link is a record object', async () => {
     const team = await client.db.teams.getOne();
+    const owner = await team?.owner?.read();
 
     expect(team?.owner?.id).toBeDefined();
+    expect(team?.owner?.full_name).toBeDefined();
+
+    expect(owner?.id).toBeDefined();
+    expect(owner?.full_name).toBeDefined();
+
+    expect(team?.owner?.id).toBe(owner?.id);
+    expect(team?.owner?.full_name).toBe(owner?.full_name);
   });
 });
