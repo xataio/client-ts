@@ -1,10 +1,12 @@
+import { SelectableColumn } from './selection';
+
 export type SortDirection = 'asc' | 'desc';
 export type SortFilterExtended<T> = {
-  column: keyof T;
+  column: SelectableColumn<T>;
   direction?: SortDirection;
 };
 
-export type SortFilter<T> = SortFilterExtended<T> | keyof T;
+export type SortFilter<T> = SelectableColumn<T> | SortFilterExtended<T>;
 
 export function isSortFilterObject<T>(filter: SortFilter<T>): filter is SortFilterExtended<T> {
   return typeof filter === 'object' && filter.column !== undefined;

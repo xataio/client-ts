@@ -11,9 +11,9 @@ import {
 import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { buildSortFilter } from './filters';
 import { Page } from './pagination';
-import { Query, QueryOptions } from './query';
+import { Query } from './query';
 import { BaseData, isIdentifiable, XataRecord } from './record';
-import { Select, SelectableColumn } from './selection';
+import { SelectableColumn, SelectedRecordPick } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
 
@@ -22,8 +22,9 @@ export type Links = Record<string, Array<string[]>>;
  */
 export abstract class Repository<
   Data extends BaseData,
-  Record extends XataRecord = Data & XataRecord
-> extends Query<Record> {
+  Record extends XataRecord = Data & XataRecord,
+  Columns extends SelectableColumn<Record>[] = ['*']
+> extends Query<Record, Columns> {
   /*
    * Creates a record in the table.
    * @param object Object containing the column names with their values to be stored in the table.
@@ -77,23 +78,16 @@ export abstract class Repository<
    */
   abstract delete(id: string): void;
 
-  abstract query<Result extends XataRecord, Options extends QueryOptions<Record>>(
-    query: Query<Record, Result>,
-    options: Options
-  ): Promise<
-    Page<
-      Record,
-      typeof options extends { columns: SelectableColumn<Data>[] }
-        ? Select<Data, typeof options['columns'][number]>
-        : Result
-    >
-  >;
+  abstract query<Columns extends SelectableColumn<Record>[]>(
+    query: Query<Record, Columns>
+  ): Promise<Page<Record, Columns>>;
 }
 
-export class RestRepository<Data extends BaseData, Record extends XataRecord = Data & XataRecord> extends Repository<
-  Data,
-  Record
-> {
+export class RestRepository<
+  Data extends BaseData,
+  Record extends XataRecord = Data & XataRecord,
+  Columns extends SelectableColumn<Record>[] = ['*']
+> extends Query<Record, Columns> {
   #client: BaseClient<any>;
   #fetch: any;
   #table: string;
@@ -169,6 +163,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       throw new Error('The server failed to save some records');
     }
 
+    // @ts-ignore TODO: FIXME: This is a hack to get the correct type
     return finalObjects;
   }
 
@@ -248,24 +243,16 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
   }
 
-  async query<Result extends XataRecord, Options extends QueryOptions<Record>>(
-    query: Query<Record, Result>,
-    options: Options = {} as Options
-  ): Promise<
-    Page<
-      Record,
-      typeof options extends { columns: SelectableColumn<Data>[] }
-        ? Select<Data, typeof options['columns'][number]>
-        : Result
-    >
-  > {
+  async query<Columns extends SelectableColumn<Record>[]>(
+    query: Query<Record, Columns>
+  ): Promise<Page<Record, Columns>> {
     const data = query.getQueryOptions();
 
     const body = {
-      filter: Object.values(data.filter).some(Boolean) ? data.filter : undefined,
-      sort: buildSortFilter(options?.sort) ?? data.sort,
-      page: options?.page ?? data.page,
-      columns: options?.columns ?? data.columns
+      filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
+      sort: buildSortFilter(data.sort),
+      page: data.page,
+      columns: data.columns
     };
 
     const fetchProps = await this.#getFetchProps();
@@ -276,15 +263,10 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
 
     const records = objects.map((record) =>
-      this.#client.initObject<
-        typeof options['columns'] extends SelectableColumn<Data>[]
-          ? Select<Data, typeof options['columns'][number]>
-          : Result
-      >(this.#table, record)
+      this.#client.initObject<SelectedRecordPick<Record, Columns>>(this.#table, record)
     );
 
-    // TODO: We should properly type this any
-    return new Page<Record, any>(query, meta, records);
+    return new Page<Record, Columns>(query, meta, records);
   }
 }
 

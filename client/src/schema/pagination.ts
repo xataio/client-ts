@@ -1,16 +1,17 @@
 import { Query } from './query';
 import { XataRecord } from './record';
+import { SelectableColumn, SelectedRecordPick } from './selection';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
-export interface Paginable<T extends XataRecord, R extends XataRecord = T> {
+export interface Paginable<T extends XataRecord, Columns extends SelectableColumn<T>[] = ['*']> {
   meta: PaginationQueryMeta;
-  records: R[];
+  records: SelectedRecordPick<T, Columns>[];
 
-  nextPage(size?: number, offset?: number): Promise<Page<T, R>>;
-  previousPage(size?: number, offset?: number): Promise<Page<T, R>>;
-  firstPage(size?: number, offset?: number): Promise<Page<T, R>>;
-  lastPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  nextPage(size?: number, offset?: number): Promise<Page<T, Columns>>;
+  previousPage(size?: number, offset?: number): Promise<Page<T, Columns>>;
+  firstPage(size?: number, offset?: number): Promise<Page<T, Columns>>;
+  lastPage(size?: number, offset?: number): Promise<Page<T, Columns>>;
 
   hasNextPage(): boolean;
 }
@@ -19,8 +20,10 @@ export interface Paginable<T extends XataRecord, R extends XataRecord = T> {
  * A Page contains a set of results from a query plus metadata about the retrieved
  * set of values such as the cursor, required to retrieve additional records.
  */
-export class Page<T extends XataRecord, R extends XataRecord = T> implements Paginable<T, R> {
-  #query: Query<T, R>;
+export class Page<T extends XataRecord, Columns extends SelectableColumn<T>[] = ['*']>
+  implements Paginable<T, Columns>
+{
+  #query: Query<T, Columns>;
   /**
    * Page metadata, required to retrieve additional records.
    */
@@ -28,9 +31,9 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
   /**
    * The set of results for this page.
    */
-  readonly records: R[];
+  readonly records: SelectedRecordPick<T, Columns>[];
 
-  constructor(query: Query<T, R>, meta: PaginationQueryMeta, records: R[] = []) {
+  constructor(query: Query<T, Columns>, meta: PaginationQueryMeta, records: SelectedRecordPick<T, Columns>[] = []) {
     this.#query = query;
     this.meta = meta;
     this.records = records;
@@ -42,7 +45,7 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
    * @param offset Number of results to skip when retrieving the results.
    * @returns The next page or results.
    */
-  async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  async nextPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
     return this.#query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
   }
 
@@ -52,7 +55,7 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
    * @param offset Number of results to skip when retrieving the results.
    * @returns The previous page or results.
    */
-  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  async previousPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
     return this.#query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
   }
 
@@ -62,7 +65,7 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
    * @param offset Number of results to skip when retrieving the results.
    * @returns The first page or results.
    */
-  async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  async firstPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
     return this.#query.getPaginated({ page: { size, offset, first: this.meta.page.cursor } });
   }
 
@@ -72,7 +75,7 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
    * @param offset Number of results to skip when retrieving the results.
    * @returns The last page or results.
    */
-  async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  async lastPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
     return this.#query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
   }
 

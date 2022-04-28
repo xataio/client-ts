@@ -20,26 +20,25 @@ type NestedColumns<O> = O extends Record<string, any>
 export type SelectedDataPick<O, Key extends SelectableColumn<O>[]> = InternalSelectedPick<O, Key, false>;
 export type SelectedRecordPick<O, Key extends SelectableColumn<O>[]> = InternalSelectedPick<O, Key, true>;
 
-type InternalSelectedPick<O, Key extends SelectableColumn<O>[], IncludeXataRecord> = Pick<
-  O,
-  Extract<Key[number], keyof O>
-> &
-  (IncludeXataRecord extends true ? XataRecord : {}) &
-  UnionToIntersection<
-    Values<{
-      [K in Exclude<Key[number], keyof O>]: K extends `${infer N}.${infer M}`
-        ? N extends keyof O
-          ? {
-              [key in N]: M extends '*'
-                ? O[N]
-                : M extends SelectableColumn<O[N]>
-                ? InternalSelectedPick<O[N], [M], IncludeXataRecord>
-                : never;
-            }
-          : never
-        : never;
-    }>
-  >;
+type InternalSelectedPick<O, Key extends SelectableColumn<O>[], IncludeXataRecord> = Key[number] extends '*'
+  ? O
+  : Pick<O, Extract<Key[number], keyof O>> &
+      (IncludeXataRecord extends true ? XataRecord : unknown) &
+      UnionToIntersection<
+        Values<{
+          [K in Exclude<Key[number], keyof O>]: K extends `${infer N}.${infer M}`
+            ? N extends keyof O
+              ? {
+                  [key in N]: M extends '*'
+                    ? O[N]
+                    : M extends SelectableColumn<O[N]>
+                    ? InternalSelectedPick<O[N], [M], IncludeXataRecord>
+                    : never;
+                }
+              : never
+            : never;
+        }>
+      >;
 
 export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
   ? Values<O>
