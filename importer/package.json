@@ -1,0 +1,37 @@
+{
+  "name": "@xata.io/importer",
+  "version": "0.0.0",
+  "description": "Importer for xata.io",
+  "main": "./dist/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xataio/client-ts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xataio/client-ts/issues"
+  },
+  "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
+  "dependencies": {
+    "camelcase": "^6.3.0",
+    "commander": "^9.2.0",
+    "csvtojson": "^2.0.10",
+    "ora": "^6.1.0",
+    "transliteration": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/csvtojson": "^2.0.0"
+  },
+  "bin": {
+    "importer": "./dist/cli.js",
+    "xata-importer": "./dist/cli.js"
+  }
+}
