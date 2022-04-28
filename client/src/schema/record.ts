@@ -48,3 +48,13 @@ export interface XataRecord extends Identifiable {
    */
   delete(): Promise<void>;
 }
+
+export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
+  return typeof x === 'object' && typeof x?.id === 'string';
+}
+
+export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> {
+  return (
+    isIdentifiable(x) && typeof x?.xata === 'object' && typeof (x?.xata as XataRecord['xata'])?.version === 'number'
+  );
+}

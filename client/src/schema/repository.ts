@@ -12,7 +12,7 @@ import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query, QueryOptions } from './query';
-import { BaseData, XataRecord } from './record';
+import { BaseData, isIdentifiable, XataRecord } from './record';
 import { Select, SelectableColumn } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
@@ -186,9 +186,11 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async update(recordId: string, object: Partial<Data>): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
+    const record = transformObjectLinks(object);
+
     const response = await updateRecordWithID({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-      body: object,
+      body: record,
       ...fetchProps
     });
 
@@ -417,10 +419,6 @@ const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchSt
 // TODO: We can find a better implementation for links
 const transformObjectLinks = (object: any) => {
   return Object.entries(object).reduce((acc, [key, value]) => {
-    if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
-      return { ...acc, [key]: (value as XataRecord).id };
-    }
-
-    return { ...acc, [key]: value };
+    return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
   }, {});
 };
