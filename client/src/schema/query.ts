@@ -14,7 +14,7 @@ export type QueryOptions<T extends XataRecord> = {
 };
 
 export type QueryTableOptions = {
-  filter: FilterExpression;
+  filter?: FilterExpression;
   sort?: SortExpression;
   page?: PageConfig;
   columns?: ColumnsFilter;
@@ -49,6 +49,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
       this.#repository = this as any;
     }
 
+    this.#data.filter = {};
     this.#data.filter.$any = data.filter?.$any ?? parent?.filter?.$any;
     this.#data.filter.$all = data.filter?.$all ?? parent?.filter?.$all;
     this.#data.filter.$not = data.filter?.$not ?? parent?.filter?.$not;
@@ -77,7 +78,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    * @returns A new Query object.
    */
   any(...queries: Query<T, R>[]): Query<T, R> {
-    const $any = queries.map((query) => query.getQueryOptions().filter);
+    const $any = queries.map((query) => query.getQueryOptions().filter ?? {});
     return new Query<T, R>(this.#repository, this.#table, { filter: { $any } }, this.#data);
   }
 
@@ -87,7 +88,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    * @returns A new Query object.
    */
   all(...queries: Query<T, R>[]): Query<T, R> {
-    const $all = queries.map((query) => query.getQueryOptions().filter);
+    const $all = queries.map((query) => query.getQueryOptions().filter ?? {});
     return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
   }
 
@@ -97,7 +98,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    * @returns A new Query object.
    */
   not(...queries: Query<T, R>[]): Query<T, R> {
-    const $not = queries.map((query) => query.getQueryOptions().filter);
+    const $not = queries.map((query) => query.getQueryOptions().filter ?? {});
     return new Query<T, R>(this.#repository, this.#table, { filter: { $not } }, this.#data);
   }
 
@@ -107,7 +108,7 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
    * @returns A new Query object.
    */
   none(...queries: Query<T, R>[]): Query<T, R> {
-    const $none = queries.map((query) => query.getQueryOptions().filter);
+    const $none = queries.map((query) => query.getQueryOptions().filter ?? {});
     return new Query<T, R>(this.#repository, this.#table, { filter: { $none } }, this.#data);
   }
 
@@ -132,13 +133,13 @@ export class Query<T extends XataRecord, R extends XataRecord = T> implements Pa
   filter(a: any, b?: any): Query<T, R> {
     if (arguments.length === 1) {
       const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));
-      const $all = compact([this.#data.filter.$all].flat().concat(constraints));
+      const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
       return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     } else {
       const column = a as keyof Selectable<T>;
       const value = b as FilterConstraints<T[typeof a]> | DeepConstraint<T[typeof a]>;
-      const $all = compact([this.#data.filter.$all].flat().concat({ [column]: value }));
+      const $all = compact([this.#data.filter?.$all].flat().concat([{ [column]: value }]));
 
       return new Query<T, R>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     }

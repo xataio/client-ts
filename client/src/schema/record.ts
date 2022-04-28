@@ -1,5 +1,3 @@
-import { Selectable } from './selection';
-
 /**
  * Represents an identifiable record from the database.
  */
@@ -39,7 +37,7 @@ export interface XataRecord extends Identifiable {
    * @param data The columns and their values that have to be updated.
    * @returns A new record containing the latest values for all the columns of the current record.
    */
-  update(data: Partial<Selectable<this>>): Promise<this>;
+  update(data: Partial<this>): Promise<this>;
 
   /**
    * Performs a deletion of the current record in the database.
