@@ -11,6 +11,8 @@ program
   .option('--types <types>', 'List of column names.')
   .option('--noheader', 'Specify that the CSV file has no header.')
   .option('--format', 'The format of the input source.', 'csv')
+  .option('--create', "Whether the table or columns should be created if they don't exist.", false)
+  .option('--force', 'Whather confirmation should be asked when creating the table or columns.', false)
   .action(run);
 
 program.parse();

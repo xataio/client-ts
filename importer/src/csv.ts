@@ -19,9 +19,10 @@ function initConverter({ noheader }: ParseOptions) {
   return csv({ output: 'csv', noheader });
 }
 
-function process(converter: Converter, { callback, batchSize = 100, columns }: ParseOptions) {
+function process(converter: Converter, { callback, batchSize = 100, columns, maxRows }: ParseOptions) {
+  let rows = 0;
   return new Promise((resolve, reject) => {
-    let lines: Record<string, unknown>[] = [];
+    let lines: string[][] = [];
     converter.on('header', (header) => {
       if (!columns) columns = header;
     });
@@ -31,7 +32,13 @@ function process(converter: Converter, { callback, batchSize = 100, columns }: P
         if (lines.length >= batchSize) {
           const p = callback(lines, columns);
           lines = [];
-          return p;
+          return p.then((stop) => {
+            if (stop) converter.end();
+          });
+        }
+        rows++;
+        if (maxRows && rows > maxRows) {
+          converter.end();
         }
       },
       reject,

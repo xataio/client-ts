@@ -1,30 +1,45 @@
-import ora from 'ora';
-import { ParseOptions } from './index.js';
-import { parseFile, parseStream } from './csv.js';
 import { readFile } from 'fs/promises';
-import path from 'path';
+import ora from 'ora';
 import { homedir } from 'os';
-import { transliterate } from 'transliteration';
-import camelcase from 'camelcase';
+import path from 'path';
+import { parseFile, parseStream } from './csv.js';
+import { CompareSchemaResult, createProcessor, TableInfo } from './processor.js';
+import { splitCommas } from './utils.js';
+import { XataApiClient } from '@xata.io/client';
+import fetch from 'cross-fetch';
+import prompts from 'prompts';
 
-const spinner = ora();
+// const spinner = ora();
 
-export async function run(file: string, { table, columns, types, noheader, format }: Record<string, unknown>) {
-  // const key = await readKey()
-
+export async function run(
+  file: string,
+  { table, columns, types, noheader, format, create, force }: Record<string, unknown>
+) {
+  if (typeof table !== 'string') {
+    return exitWithError('The table name is a required flag');
+  }
   if (format !== 'csv') {
     return exitWithError('The only supported format right now is csv');
   }
 
-  const options: ParseOptions = {
-    columns: split(columns),
-    noheader: Boolean(noheader),
-    callback: async (lines, columns) => {
-      console.log('lines:', lines, columns);
-    }
+  const apiKey = await readKey();
+  const xata = new XataApiClient({ apiKey, fetch });
+
+  const tableInfo: TableInfo = {
+    workspaceID: 'test-r5vcv5',
+    database: 'todo',
+    branch: 'main',
+    name: table
   };
 
-  console.log({ file, table, columns, types, noheader });
+  const options = createProcessor(xata, tableInfo, {
+    types: splitCommas(types),
+    columns: splitCommas(columns),
+    noheader: Boolean(noheader),
+    async shouldContinue(compare) {
+      return Boolean(await shouldContinue(compare, table, create, force));
+    }
+  });
 
   try {
     if (file === '-') {
@@ -35,18 +50,6 @@ export async function run(file: string, { table, columns, types, noheader, forma
   } catch (err) {
     exitWithError(err);
   }
-}
-
-function split(value: unknown): string[] | undefined {
-  if (!value) return;
-  return String(value)
-    .split(',')
-    .map((s) => s.trim());
-}
-
-function normalizeColumnName(value: string) {
-  const parts = value.split('.');
-  return parts.map((s) => camelcase(transliterate(s)).replace(/\W/g, '')).join('.');
 }
 
 async function readKey() {
@@ -63,8 +66,58 @@ async function readKey() {
 }
 
 function exitWithError(err: unknown) {
-  spinner.fail(err instanceof Error ? err.message : String(err));
+  console.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 }
 
-console.log(normalizeColumnName('你好. world!'));
+export async function shouldContinue(
+  compare: CompareSchemaResult,
+  table: string,
+  create: unknown,
+  force: unknown
+): Promise<boolean | void> {
+  const errorMessages: string[] = [];
+  compare.columnTypes.forEach((type) => {
+    if (type.error) {
+      errorMessages.push(
+        `Column ${type.columnName} exists with type ${type.schemaType} but a type of ${type.castedType} would be needed.`
+      );
+    }
+  });
+  if (errorMessages.length > 0) {
+    return exitWithError(errorMessages.join('\n'));
+  }
+
+  if (!create) {
+    if (compare.missingTable) {
+      return exitWithError(`Table ${table} does not exist. Use --create to create it`);
+    }
+    if (compare.missingColumns.length > 0) {
+      const missing = compare.missingColumns.map((col) => col.column);
+      return exitWithError(`These columns are missing: ${missing.join(', ')}. Use --create to create them`);
+    }
+  } else {
+    if (compare.missingTable) {
+      if (!force) {
+        const response = await prompts({
+          type: 'confirm',
+          name: 'confirm',
+          message: `Table ${table} does not exist. Do you want to create it?`
+        });
+        if (!response.confirm) return false;
+      }
+    } else if (compare.missingColumns.length > 0) {
+      if (!force) {
+        const missing = compare.missingColumns.map((col) => col.column);
+        const response = await prompts({
+          type: 'confirm',
+          name: 'confirm',
+          message: `These columns are missing: ${missing.join(', ')}. Do you want to create them?`
+        });
+        if (!response.confirm) return false;
+      }
+    }
+  }
+
+  return true;
+}
