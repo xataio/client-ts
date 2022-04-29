@@ -1,4 +1,4 @@
-import { FilterExpression, PageConfig, SortExpression } from '../api/schemas';
+import { FilterExpression } from '../api/schemas';
 import { compact } from '../util/lang';
 import { DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
 import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
@@ -227,11 +227,6 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[] =
     const records = await this.getMany({ ...options, page: { size: 1 } });
     return records[0] || null;
   }
-
-  /**async deleteAll(): Promise<numbeColumns> {
-    // TODO: Return number of affected rows
-    return 0;
-  }**/
 
   nextPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
     return this.firstPage(size, offset);

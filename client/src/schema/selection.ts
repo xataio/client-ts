@@ -7,7 +7,7 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   | Exclude<StringKeys<O>, StringKeys<XataRecord>>
   | NestedColumns<O, RecursivePath>;
 
-type MAX_RECURSION = 10;
+type MAX_RECURSION = 5;
 type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] extends MAX_RECURSION
   ? never
   : O extends Record<string, any>
@@ -51,7 +51,7 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>, IncludeRecord> = Ke
   ? N extends StringKeys<O>
     ? M extends SelectableColumn<O[N]>
       ? {
-          // @ts-ignore: I can't get to type it properly...
+          // @ts-ignore: I can't get to type M properly, this should be correct...
           [key in N]: NestedValueAtColumn<NonNullable<O[N]>, M, IncludeRecord> &
             ExtraProperties<XataRecord, IncludeRecord>;
         }
