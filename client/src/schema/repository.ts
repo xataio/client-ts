@@ -104,8 +104,10 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     this.#table = table;
 
     // TODO: Remove when integrating with API client
-    const fetchImpl = typeof fetch !== 'undefined' ? fetch : this.#client.options.fetch;
+    const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
+    const fetchImpl = this.#client.options.fetch ?? globalFetch;
     if (!fetchImpl) {
+      /** @todo add a link after docs exist */
       throw new Error(
         `The \`fetch\` option passed to the Xata client is resolving to a falsy value and may not be correctly imported.`
       );
