@@ -1,5 +1,6 @@
-import { compareSquema } from './processor.js';
+import { XataApiClient } from '@xata.io/client';
 import { Table } from '@xata.io/client/dist/api/schemas';
+import { compareSquema, createProcessor, TableInfo } from './processor.js';
 
 describe('compareSquema', () => {
   test('returns a missing table', () => {
@@ -139,5 +140,150 @@ describe('compareSquema', () => {
         "missingTable": false,
       }
     `);
+  });
+});
+
+const dumbTableInfo: TableInfo = {
+  branch: 'main',
+  database: 'test',
+  tableName: 'foo',
+  workspaceID: 'test-1234'
+};
+
+describe('createProcessor', () => {
+  test('fails when the number of types and columns does not match', () => {
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const shouldContinue = jest.fn();
+
+    expect(() => createProcessor(xata, dumbTableInfo, { shouldContinue, types: [], columns: ['a'] })).toThrowError(
+      'Different number of column names and column types'
+    );
+    expect(shouldContinue).not.toHaveBeenCalled();
+  });
+
+  test('needs to receive a header or receive specific column names', async () => {
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const shouldContinue = jest.fn();
+
+    const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue });
+    await expect(callback([[]])).rejects.toEqual(
+      new Error(
+        'Cannot calculate column names. A file header was not specified and no custom columns were specified either'
+      )
+    );
+  });
+
+  test('calls shuldContinue and stops the parsing if it returns false', async () => {
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const shouldContinue = jest.fn().mockImplementation(() => false);
+
+    Object.defineProperty(xata, 'branches', {
+      get() {
+        return {
+          getBranchDetails: async () => {
+            return { schema: { tables: [] } };
+          }
+        };
+      }
+    });
+
+    const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue, columns: ['a'] });
+    await callback([['foo']]);
+
+    expect(shouldContinue).toHaveBeenCalled();
+  });
+
+  test('calls shuldContinue, continues, creates a table and inserts the records', async () => {
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const shouldContinue = jest.fn().mockImplementation(() => true);
+
+    // Mock branches API
+    Object.defineProperty(xata, 'branches', {
+      get() {
+        return {
+          getBranchDetails: async () => {
+            return { schema: { tables: [] } };
+          }
+        };
+      }
+    });
+
+    // Mock tables API
+    const createTable = jest.fn();
+    const addTableColumn = jest.fn();
+    Object.defineProperty(xata, 'tables', {
+      get() {
+        return {
+          createTable,
+          addTableColumn
+        };
+      }
+    });
+
+    // Mock records API
+    const bulkInsertTableRecords = jest.fn();
+    Object.defineProperty(xata, 'records', {
+      get() {
+        return {
+          bulkInsertTableRecords
+        };
+      }
+    });
+
+    const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue, columns: ['a'] });
+    await callback([['foo']]);
+
+    expect(shouldContinue).toHaveBeenCalled();
+    expect(createTable).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo');
+    expect(addTableColumn).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', { name: 'a', type: 'string' });
+
+    expect(bulkInsertTableRecords).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', [{ a: 'foo' }]);
+  });
+
+  test('calls shuldContinue, continues, updates a table and inserts the records', async () => {
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const shouldContinue = jest.fn().mockImplementation(() => true);
+
+    // Mock branches API
+    Object.defineProperty(xata, 'branches', {
+      get() {
+        return {
+          getBranchDetails: async () => {
+            return { schema: { tables: [{ name: 'foo', columns: [] }] } };
+          }
+        };
+      }
+    });
+
+    // Mock tables API
+    const createTable = jest.fn();
+    const addTableColumn = jest.fn();
+    Object.defineProperty(xata, 'tables', {
+      get() {
+        return {
+          createTable,
+          addTableColumn
+        };
+      }
+    });
+
+    // Mock records API
+    const bulkInsertTableRecords = jest.fn();
+    Object.defineProperty(xata, 'records', {
+      get() {
+        return {
+          bulkInsertTableRecords
+        };
+      }
+    });
+
+    const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue, columns: ['a'] });
+    await callback([['1']]);
+
+    expect(shouldContinue).toHaveBeenCalled();
+    expect(createTable).not.toHaveBeenCalled();
+    expect(addTableColumn).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', { name: 'a', type: 'int' });
+
+    expect(bulkInsertTableRecords).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', [{ a: 1 }]);
   });
 });

@@ -1,5 +1,5 @@
 import { XataApiClient } from '@xata.io/client';
-import { Table } from '@xata.io/client/dist/api/schemas';
+import { Table, Column } from '@xata.io/client/dist/api/schemas';
 import { ParseOptions } from './index.js';
 import { castType, guessTypes, parseRow } from './utils.js';
 
@@ -22,7 +22,7 @@ export type TableInfo = {
   workspaceID: string;
   database: string;
   branch: string;
-  name: string;
+  tableName: string;
 };
 
 type ProcessorOptions = Omit<ParseOptions, 'callback'> & {
@@ -30,7 +30,8 @@ type ProcessorOptions = Omit<ParseOptions, 'callback'> & {
 };
 
 export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, options: ProcessorOptions): ParseOptions {
-  const { types, columns } = options;
+  let { types } = options;
+  const { columns } = options;
   let first = true;
 
   if (types && columns && types.length !== columns.length) {
@@ -52,20 +53,23 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
       const compare = compareSquema(columnNames, columnTypes, table);
       const cont = await options.shouldContinue(compare);
 
-      if (!cont) return true; // Stops the parsing
+      if (cont === false) return true; // Stops the parsing
 
       await updateSchema(xata, tableInfo, compare);
+
+      types = columnTypes;
     }
 
+    // TODO: values that do not match the type are transformed to null values. We should should allow the user to have control on that
     const parsed = lines.map((row) => parseRow(row, types || []));
 
-    await batchUpsnsert(xata, tableInfo, columnNames, parsed);
+    await batchUpsert(xata, tableInfo, columnNames, parsed);
   };
   return { ...options, callback };
 }
 
-async function findTable(xata: XataApiClient, tableInfo: TableInfo) {
-  const { workspaceID, database, branch, name } = tableInfo;
+export async function findTable(xata: XataApiClient, tableInfo: TableInfo) {
+  const { workspaceID, database, branch, tableName: name } = tableInfo;
   const branchDetails = await xata.branches.getBranchDetails(workspaceID, database, branch);
   const { schema } = branchDetails;
   const { tables } = schema;
@@ -115,14 +119,35 @@ export function compareSquema(columns: string[], types: string[], table: Table |
 }
 
 export async function updateSchema(xata: XataApiClient, tableInfo: TableInfo, changes: CompareSchemaResult) {
-  console.log('update table', tableInfo, changes);
+  const { workspaceID, database, branch, tableName } = tableInfo;
+
+  if (changes.missingTable) {
+    await xata.tables.createTable(workspaceID, database, branch, tableName);
+  }
+
+  for (const column of changes.missingColumns) {
+    await xata.tables.addTableColumn(workspaceID, database, branch, tableName, {
+      name: column.column,
+      type: column.type as Column['type']
+    });
+  }
 }
 
-export async function batchUpsnsert(
+export async function batchUpsert(
   xata: XataApiClient,
   tableInfo: TableInfo,
   columns: string[],
   values: Array<ReturnType<typeof parseRow>>
 ) {
-  console.log('insert', columns, values);
+  const { workspaceID, database, branch, tableName } = tableInfo;
+
+  const records = values.map((row) => {
+    const record: Record<string, unknown> = {};
+    columns.forEach((column, i) => {
+      record[column] = row[i];
+    });
+    return record;
+  });
+
+  await xata.records.bulkInsertTableRecords(workspaceID, database, branch, tableName, records);
 }

@@ -27,6 +27,11 @@ export function guessTypes(lines: string[][], columns: string[]): string[] {
   const types: string[] = new Array(columns.length).fill(undefined);
   for (const line of lines) {
     for (let index = 0; index < columns.length; index++) {
+      if (columns[index] === 'id') {
+        types[index] = 'string';
+        continue;
+      }
+
       const type = types[index];
       const value = line[index];
 

@@ -112,6 +112,10 @@ describe('guessTypes', () => {
       )
     ).toEqual(['string', 'string', 'string']);
   });
+
+  test('treats ids always as strings', () => {
+    expect(guessTypes([['1', 'a', 'b']], ['id', 'y', 'z'])).toEqual(['string', 'string', 'string']);
+  });
 });
 
 describe('parseRow', () => {
