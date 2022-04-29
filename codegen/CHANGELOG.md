@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 77ba3c2: Allow table names to start with a number
+- 77ba3c2: Allow table name to start with a number
 
 ## 0.5.0
 
