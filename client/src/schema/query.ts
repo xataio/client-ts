@@ -51,6 +51,7 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[] =
     this.#data.filter.$none = data.filter?.$none ?? parent?.filter?.$none;
     this.#data.sort = data.sort ?? parent?.sort;
     this.#data.columns = data.columns ?? parent?.columns ?? ['*'];
+    this.#data.page = data.page ?? parent?.page;
 
     this.any = this.any.bind(this);
     this.all = this.all.bind(this);
