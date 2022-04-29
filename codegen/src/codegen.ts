@@ -65,7 +65,7 @@ function getTypeScriptType(column: Column): string {
   if (column.type === 'float') return 'number';
   if (column.type === 'link') {
     if (!column.link?.table) return 'object';
-    return getTypeName(column.link.table);
+    return `${getTypeName(column.link.table)}Record`;
   }
   if (column.type === 'object') {
     const columns = column.columns || [];
