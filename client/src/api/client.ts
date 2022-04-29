@@ -6,7 +6,7 @@ import type * as Responses from './responses';
 import type * as Schemas from './schemas';
 
 export interface XataApiClientOptions {
-  fetch: FetchImpl;
+  fetch?: FetchImpl;
   apiKey: string;
   host?: HostProvider;
 }
@@ -15,7 +15,8 @@ export class XataApiClient {
   #extraProps: FetcherExtraProps;
 
   constructor(options: XataApiClientOptions) {
-    const fetchImpl = typeof fetch !== 'undefined' ? fetch : options.fetch;
+    const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
+    const fetchImpl = options.fetch ?? globalFetch;
     if (!fetchImpl) {
       /** @todo add a link after docs exist */
       throw new Error(
