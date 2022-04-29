@@ -9,7 +9,7 @@ import { XataApiClient } from '@xata.io/client';
 import fetch from 'cross-fetch';
 import prompts from 'prompts';
 
-// const spinner = ora();
+const spinner = ora();
 
 export async function run(
   file: string,
@@ -29,7 +29,7 @@ export async function run(
     workspaceID: 'test-r5vcv5',
     database: 'todo',
     branch: 'main',
-    name: table
+    tableName: table
   };
 
   const options = createProcessor(xata, tableInfo, {
@@ -66,7 +66,7 @@ async function readKey() {
 }
 
 function exitWithError(err: unknown) {
-  console.error(err instanceof Error ? err.message : String(err));
+  spinner.fail(err instanceof Error ? err.message : String(err));
   process.exit(1);
 }
 
