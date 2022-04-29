@@ -8,12 +8,13 @@ import { splitCommas } from './utils.js';
 import { XataApiClient } from '@xata.io/client';
 import fetch from 'cross-fetch';
 import prompts from 'prompts';
+import { parseConfigFile } from './config.js';
 
 const spinner = ora();
 
 export async function run(
   file: string,
-  { table, columns, types, noheader, format, create, force }: Record<string, unknown>
+  { table, columns, types, noheader, format, create, force, branch, xatadir }: Record<string, unknown>
 ) {
   if (typeof table !== 'string') {
     return exitWithError('The table name is a required flag');
@@ -23,12 +24,13 @@ export async function run(
   }
 
   const apiKey = await readKey();
+  const config = await readConfigFile(String(xatadir));
   const xata = new XataApiClient({ apiKey, fetch });
 
   const tableInfo: TableInfo = {
-    workspaceID: 'test-r5vcv5',
-    database: 'todo',
-    branch: 'main',
+    workspaceID: config.workspaceID,
+    database: config.dbName,
+    branch: String(branch),
     tableName: table
   };
 
@@ -61,6 +63,23 @@ async function readKey() {
     exitWithError(
       `Could not read API Key at ${keyPath}. Please install the Xata CLI and run xata login. More information at https://github.com/xataio/cli`
     );
+    throw err;
+  }
+}
+
+async function readConfigFile(xatadir: string) {
+  const configPath = path.join(xatadir, 'config.json');
+  let input: string;
+  try {
+    input = await readFile(configPath, 'utf-8');
+  } catch (err) {
+    exitWithError(`Could not read config file at ${configPath}`);
+    throw err;
+  }
+  try {
+    return await parseConfigFile(input);
+  } catch (err) {
+    exitWithError(`Configuration file at ${input} seems to have a wrong format`);
     throw err;
   }
 }
