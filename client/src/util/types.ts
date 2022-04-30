@@ -9,3 +9,8 @@ type IfEquals<T, U, Y = unknown, N = never> = (<G>() => G extends T ? 1 : 2) ext
   : N;
 
 export declare const exactType: <T, U>(draft: T & IfEquals<T, U>, expected: U & IfEquals<T, U>) => IfEquals<T, U>;
+
+export type If<Condition, Then, Else> = Condition extends true ? Then : Else;
+
+export type IsObject<T> = T extends Record<string, any> ? true : false;
+export type IsArray<T> = T extends Array<any> ? true : false;

@@ -4,7 +4,7 @@ import { SelectableColumn, SelectedRecordPick } from './selection';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
-export interface Paginable<T extends XataRecord, Columns extends SelectableColumn<T>[] = ['*']> {
+export interface Paginable<T extends XataRecord, Columns extends SelectableColumn<T>[]> {
   meta: PaginationQueryMeta;
   records: SelectedRecordPick<T, Columns>[];
 

@@ -20,11 +20,10 @@ export type Links = Record<string, Array<string[]>>;
 /**
  * Common interface for performing operations on a table.
  */
-export abstract class Repository<
-  Data extends BaseData,
-  Record extends XataRecord = Data & XataRecord,
-  Columns extends SelectableColumn<Record>[] = ['*']
-> extends Query<Record, Columns> {
+export abstract class Repository<Data extends BaseData, Record extends XataRecord = Data & XataRecord> extends Query<
+  Record,
+  ['*']
+> {
   /*
    * Creates a record in the table.
    * @param object Object containing the column names with their values to be stored in the table.

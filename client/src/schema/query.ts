@@ -19,9 +19,7 @@ export type QueryOptions<T extends XataRecord> = {
  * Query objects are immutable. Any method that adds more constraints or options to the query will return
  * a new Query object containing the both the previous and the new constraints and options.
  */
-export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[] = ['*']>
-  implements Paginable<T, Columns>
-{
+export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> implements Paginable<T, Columns> {
   #table: string;
   #repository: Repository<T>;
   #data: QueryOptions<T> = { filter: {} };
