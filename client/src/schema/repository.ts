@@ -32,6 +32,14 @@ export abstract class Repository<
   abstract create(object: Data): Promise<Record>;
 
   /**
+   * Insert a single record with a unique id.
+   * @param id The unique id.
+   * @param object Object containing the column names with their values to be stored in the table.
+   * @returns The full persisted record.
+   */
+  abstract create(id: string, object: Data): Promise<Record>;
+
+  /**
    * Creates multiple records in the table.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @returns Array of the persisted records.
@@ -46,14 +54,6 @@ export abstract class Repository<
   abstract read(id: string): Promise<Record | null>;
 
   /**
-   * Insert a single record with a unique id.
-   * @param id The unique id.
-   * @param object Object containing the column names with their values to be stored in the table.
-   * @returns The full persisted record.
-   */
-  abstract insert(id: string, object: Data): Promise<Record>;
-
-  /**
    * Partially update a single record given its unique id.
    * @param id The unique id.
    * @param object The column names and their values that have to be updatd.
@@ -62,13 +62,13 @@ export abstract class Repository<
   abstract update(id: string, object: Partial<Data>): Promise<Record>;
 
   /**
-   * Updates or inserts a single record. If a record exists with the given id,
+   * Creates or updates a single record. If a record exists with the given id,
    * it will be update, otherwise a new record will be created.
    * @param id A unique id.
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
-  abstract updateOrInsert(id: string, object: Data): Promise<Record>;
+  abstract createOrUpdate(id: string, object: Data): Promise<Record>;
 
   /**
    * Deletes a record given its unique id.
@@ -132,7 +132,21 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     };
   }
 
-  async create(object: Data): Promise<Record> {
+  async create(object: Data): Promise<Record>;
+  async create(recordId: string, object: Data): Promise<Record>;
+  async create(a: string | Data, b?: Data): Promise<Record> {
+    if (typeof a === 'string' && typeof b === 'object') {
+      return this.#insertRecordWithId(a, b);
+    } else if (typeof a === 'object' && typeof a.id === 'string' && a.id !== '') {
+      return this.#insertRecordWithId(a.id, { ...a, id: undefined });
+    } else if (typeof a === 'object') {
+      return this.#insertRecordWithoutId(a);
+    } else {
+      throw new Error('Invalid arguments for create method');
+    }
+  }
+
+  async #insertRecordWithoutId(object: Data): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -144,6 +158,31 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         tableName: this.#table
       },
       body: record,
+      ...fetchProps
+    });
+
+    const finalObject = await this.read(response.id);
+    if (!finalObject) {
+      throw new Error('The server failed to save the record');
+    }
+
+    return finalObject;
+  }
+
+  async #insertRecordWithId(recordId: string, object: Data): Promise<Record> {
+    const fetchProps = await this.#getFetchProps();
+
+    const record = transformObjectLinks(object);
+
+    const response = await insertRecordWithID({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        tableName: this.#table,
+        recordId
+      },
+      body: record,
+      queryParams: { createOnly: true },
       ...fetchProps
     });
 
@@ -200,31 +239,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return item;
   }
 
-  async insert(recordId: string, object: Data): Promise<Record> {
-    const fetchProps = await this.#getFetchProps();
-
-    const record = transformObjectLinks(object);
-
-    const response = await insertRecordWithID({
-      pathParams: {
-        workspace: '{workspaceId}',
-        dbBranchName: '{dbBranch}',
-        tableName: this.#table,
-        recordId
-      },
-      body: record,
-      ...fetchProps
-    });
-
-    const finalObject = await this.read(response.id);
-    if (!finalObject) {
-      throw new Error('The server failed to save the record');
-    }
-
-    return finalObject;
-  }
-
-  async updateOrInsert(recordId: string, object: Data): Promise<Record> {
+  async createOrUpdate(recordId: string, object: Data): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
@@ -418,7 +433,7 @@ const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchSt
 
 // TODO: We can find a better implementation for links
 const transformObjectLinks = (object: any) => {
-  return Object.entries(object).reduce((acc, [key, value]) => {
+  return Object.entries(object ?? {}).reduce((acc, [key, value]) => {
     if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
       return { ...acc, [key]: (value as XataRecord).id };
     }

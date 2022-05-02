@@ -424,9 +424,9 @@ describe('integration tests', () => {
     expect(updatedUser.full_name).toBe(user.full_name);
   });
 
-  test('Insert user without id', async () => {
+  test('Insert user without id is not allowed', async () => {
     expect(
-      client.db.users.insert('', {
+      client.db.users.create('', {
         full_name: 'John Doe 3',
         email: 'john3@doe.com'
       })
@@ -436,26 +436,10 @@ describe('integration tests', () => {
         "status": 404,
       }
     `);
-
-    // @ts-expect-error
-    const user = await client.db.users.insert(undefined, {
-      full_name: 'John Doe 3',
-      email: 'john3@doe.com'
-    });
-
-    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
-    if (!apiUser) throw new Error('No user found');
-
-    expect(user.id).toBeDefined();
-    expect(user.full_name).toBe('John Doe 3');
-
-    expect(user.id).toBe(apiUser.id);
-    expect(user.full_name).toBe(apiUser.full_name);
-    expect(user.email).toBe(apiUser.email);
   });
 
   test('Insert a user with id', async () => {
-    const user = await client.db.users.insert('a-unique-record-john-4', {
+    const user = await client.db.users.create('a-unique-record-john-4', {
       full_name: 'John Doe 4',
       email: 'john4@doe.com'
     });
@@ -480,7 +464,7 @@ describe('integration tests', () => {
   });
 
   test('Upsert of a user', async () => {
-    const user = await client.db.users.updateOrInsert('my-good-old-john-6', {
+    const user = await client.db.users.createOrUpdate('my-good-old-john-6', {
       full_name: 'John Doe 6',
       email: 'john6@doe.com'
     });
