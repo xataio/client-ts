@@ -55,7 +55,7 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
               ? SelectableColumn<NonNullable<O[K]>, [...RecursivePath, O[K]]> extends string
                 ? K | `${K}.${SelectableColumn<NonNullable<O[K]>, [...RecursivePath, O[K]]>}`
                 : never
-              : `${K}.${StringKeys<NonNullable<O[K]>> | '*'}`,
+              : `${K}.${StringKeys<NonNullable<O[K]>> | '*'}`, // This allows usage of objects that are not links
             K
           >
         >;
