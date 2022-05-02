@@ -85,7 +85,8 @@ async function readConfigFile(xatadir: string) {
 }
 
 function exitWithError(err: unknown) {
-  spinner.fail(err instanceof Error ? err.message : String(err));
+  const message = (err as any).message || err;
+  spinner.fail(typeof message === 'string' ? message : JSON.stringify(message));
   process.exit(1);
 }
 

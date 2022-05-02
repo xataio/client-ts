@@ -57,10 +57,10 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
 
       await updateSchema(xata, tableInfo, compare);
 
-      types = columnTypes;
+      types = compare.columnTypes.map((type) => type.schemaType);
     }
 
-    // TODO: values that do not match the type are transformed to null values. We should should allow the user to have control on that
+    // TODO: values that do not match the type are transformed to null values. We should allow users to have control on that
     const parsed = lines.map((row) => parseRow(row, types || []));
 
     await batchUpsert(xata, tableInfo, columnNames, parsed);

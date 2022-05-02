@@ -32,9 +32,14 @@ function process(converter: Converter, { callback, batchSize = 100, columns, max
         if (lines.length >= batchSize) {
           const p = callback(lines, columns);
           lines = [];
-          return p.then((stop) => {
-            if (stop) converter.end();
-          });
+          return p
+            .then((stop) => {
+              if (stop) converter.end();
+            })
+            .catch((err) => {
+              converter.end();
+              reject(err);
+            });
         }
         rows++;
         if (maxRows && rows > maxRows) {
@@ -44,7 +49,7 @@ function process(converter: Converter, { callback, batchSize = 100, columns, max
       reject,
       () => {
         const p = lines.length > 0 ? callback(lines, columns) : Promise.resolve();
-        p.then(resolve);
+        p.then(resolve).catch(reject);
       }
     );
   });
