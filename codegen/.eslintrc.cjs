@@ -8,5 +8,6 @@ module.exports = {
   rules: {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-floating-promises': 'error',
+    'import/extensions': ['error', 'always', { ignorePackages: true }]
   }
 };
