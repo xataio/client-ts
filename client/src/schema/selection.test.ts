@@ -1,6 +1,6 @@
 import { exactType } from '../util/types';
 import { XataRecord } from './record';
-import { SelectableColumn, BuildDate, SelectedPick, ValueAtColumn } from './selection';
+import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
 
 interface Team {
   name?: string | null;
@@ -35,9 +35,16 @@ type C = Links<typeof links>;
 //                              SelectableColumn<O>                            //
 // --------------------------------------------------------------------------- //
 
-type A = SelectableColumn<Team>;
-declare const teamColumns: SelectableColumn<Team>[];
-const validTeamColumns: SelectableColumn<Team>[] = ['*', 'id', 'name', 'owner.*', 'owner.address.*', 'owner.address'];
+declare const teamColumns: SelectableColumn<TeamRecord>[];
+const validTeamColumns: SelectableColumn<TeamRecord>[] = [
+  '*',
+  'id',
+  'name',
+  'owner.*',
+  'owner.address.*',
+  'owner.address',
+  'owner.address.street'
+];
 
 // @ts-expect-error
 const invalidFullNameTeamColumn: SelectableColumn<Team> = 'full_name';
@@ -51,7 +58,7 @@ const invalidReadTeamColumn: SelectableColumn<Team> = 'owner.read.*';
 //                              ValueAtColumn<O, P>                            //
 // --------------------------------------------------------------------------- //
 
-declare const labelsValue: ValueAtColumn<Team, 'labels'>;
+declare const labelsValue: ValueAtColumn<TeamRecord, 'labels'>;
 declare const validLabelsValue: string[] | null | undefined;
 declare const invalidLabelsValue: number;
 
@@ -67,10 +74,12 @@ declare const selectedUserBaseRecord: SelectedPick<UserRecord, ['*']>;
 selectedUserBaseRecord.id;
 selectedUserBaseRecord.read();
 selectedUserBaseRecord.full_name;
+selectedUserBaseRecord.address?.street;
 selectedUserBaseRecord.team?.id;
 selectedUserBaseRecord.team?.read();
 // @ts-expect-error
 selectedUserBaseRecord.team?.name;
+selectedUserBaseRecord;
 
 declare const selectedUserFullRecord: SelectedPick<UserRecord, ['*', 'team.*']>;
 
@@ -102,17 +111,4 @@ selectedUserNestedRecord.team?.owner?.full_name;
 
 declare const selectedUserNestedRecord2: SelectedPick<UserRecord, ['team.owner.address']>;
 
-//                            SelectedDataPick<O, Key>                         //
-// ---------------------------------------------------------------------------- //
-
-declare const selectedUserBaseData: BuildDate<UserRecord, ['*']>;
-
-selectedUserBaseData.id;
-// @ts-expect-error
-selectedUserBaseData.read();
-selectedUserBaseData.full_name;
-selectedUserBaseData.team?.id;
-// @ts-expect-error
-selectedUserBaseData.team?.read();
-// @ts-expect-error
-selectedUserBaseData.team?.name;
+selectedUserNestedRecord2.team?.owner?.address;

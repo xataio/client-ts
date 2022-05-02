@@ -22,7 +22,7 @@ export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]
   >;
 
 // Public: Utility type to get the value of a column at a given path
-export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
+export type ValueAtColumn<O extends XataRecord, P extends SelectableColumn<O>> = P extends '*'
   ? Values<O> // Alias for any property
   : P extends 'id'
   ? string // Alias for id (not in schema)
@@ -30,7 +30,9 @@ export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
   ? O[P] // Properties of the current level
   : P extends `${infer K}.${infer V}`
   ? K extends keyof O
-    ? Values<V extends SelectableColumn<O[K]> ? { V: ValueAtColumn<O[K], V> } : never>
+    ? Values<
+        O[K] extends XataRecord ? (V extends SelectableColumn<O[K]> ? { V: ValueAtColumn<O[K], V> } : never) : O[K]
+      >
     : never
   : never;
 
@@ -46,12 +48,14 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
       Values<{
         [K in DataProps<O>]: If<
           IsArray<NonNullable<O[K]>>,
-          `${K}`, // If the property is an array, we stop recursion. We don't support object arrays yet
+          K, // If the property is an array, we stop recursion. We don't support object arrays yet
           If<
             IsObject<NonNullable<O[K]>>,
-            SelectableColumn<NonNullable<O[K]>, [...RecursivePath, O[K]]> extends string
-              ? `${K}` | `${K}.${SelectableColumn<O[K], [...RecursivePath, O[K]]>}`
-              : never,
+            NonNullable<O[K]> extends XataRecord
+              ? SelectableColumn<NonNullable<O[K]>, [...RecursivePath, O[K]]> extends string
+                ? K | `${K}.${SelectableColumn<NonNullable<O[K]>, [...RecursivePath, O[K]]>}`
+                : never
+              : `${K}.${StringKeys<NonNullable<O[K]>> | '*'}`,
             K
           >
         >;
@@ -69,10 +73,9 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
   Key extends `${infer N}.${infer M}`
     ? N extends DataProps<O>
       ? {
-          [K in N]: M extends SelectableColumn<O[K]>
-            ? // @ts-ignore: M does not infer the correct type, probably a TS bug...
-              NestedValueAtColumn<NonNullable<O[K]>, M> & XataRecord
-            : unknown; //`Property ${M} is not selectable on type ${K}`;
+          [K in N]: M extends SelectableColumn<NonNullable<O[K]>>
+            ? NestedValueAtColumn<NonNullable<O[K]>, M> & XataRecord
+            : unknown; //`Property ${M} is not selectable on type ${K}`
         }
       : unknown //`Property ${M} does not exist on type ${N}`
     : Key extends DataProps<O>
