@@ -159,7 +159,6 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       throw new Error('The server failed to save some records');
     }
 
-    // @ts-ignore TODO: FIXME: This is a hack to get the correct type
     return finalObjects;
   }
 

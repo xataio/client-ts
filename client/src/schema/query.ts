@@ -177,22 +177,29 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     return this.#repository.query(query);
   }
 
-  async *[Symbol.asyncIterator]() {
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<Result> {
     for await (const [record] of this.getIterator(1)) {
       yield record;
     }
   }
 
-  async *getIterator<Options extends QueryOptions<Record>>(
+  getIterator(chunk: number): AsyncGenerator<Result[]>;
+  getIterator(chunk: number, options: Omit<QueryOptions<Record>, 'columns' | 'page'>): AsyncGenerator<Result[]>;
+  getIterator<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
     chunk: number,
-    options: Omit<Options, 'page'> = {} as Options
-  ) {
+    options: Options
+  ): AsyncGenerator<SelectedPick<Record, typeof options['columns']>[]>;
+  async *getIterator<Result extends XataRecord>(
+    chunk: number,
+    options: QueryOptions<Record> = {}
+  ): AsyncGenerator<Result[]> {
     let offset = 0;
     let end = false;
 
     while (!end) {
       const { records, meta } = await this.getPaginated({ ...options, page: { size: chunk, offset } });
-      yield records;
+      // Method overloading does not provide type inference for the return type.
+      yield records as unknown as Result[];
 
       offset += chunk;
       end = !meta.page.more;
@@ -211,8 +218,8 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
   async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result[]> {
     const { records } = await this.getPaginated(options);
-    // @ts-ignore
-    return records;
+    // Method overloading does not provide type inference for the return type.
+    return records as unknown as Result[];
   }
 
   /**
@@ -221,17 +228,24 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  async getAll<Options extends QueryOptions<Record>>(
+  getAll(chunk?: number): Promise<Result[]>;
+  getAll(chunk: number | undefined, options: Omit<QueryOptions<Record>, 'columns' | 'page'>): Promise<Result[]>;
+  getAll<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
+    chunk: number | undefined,
+    options: Options
+  ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
+  async getAll<Result extends XataRecord>(
     chunk = PAGINATION_MAX_SIZE,
-    options: Omit<Options, 'page'> = {} as Options
-  ) {
+    options: QueryOptions<Record> = {}
+  ): Promise<Result[]> {
     const results = [];
 
     for await (const page of this.getIterator(chunk, options)) {
       results.push(...page);
     }
 
-    return results;
+    // Method overloading does not provide type inference for the return type.
+    return results as unknown as Result[];
   }
 
   /**
@@ -240,14 +254,14 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns The first record that matches the query, or null if no record matched the query.
    */
   getOne(): Promise<Result | null>;
-  getOne(options: Omit<QueryOptions<Record>, 'columns'>): Promise<Result | null>;
-  getOne<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
+  getOne(options: Omit<QueryOptions<Record>, 'columns' | 'page'>): Promise<Result | null>;
+  getOne<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
     options: Options
   ): Promise<SelectedPick<Record, typeof options['columns']> | null>;
   async getOne<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
     const records = await this.getMany({ ...options, page: { size: 1 } });
-    // @ts-ignore
-    return records[0] || null;
+    // Method overloading does not provide type inference for the return type.
+    return (records[0] as unknown as Result) || null;
   }
 
   nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
@@ -270,9 +284,3 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     return this.meta.page.more;
   }
 }
-
-type SafeColumns<
-  T extends XataRecord,
-  Options extends { columns?: SelectableColumn<T>[] },
-  DefaultColumns extends SelectableColumn<T>[]
-> = Options['columns'] extends SelectableColumn<T>[] ? Options['columns'] : DefaultColumns;
