@@ -30,7 +30,7 @@ function process(converter: Converter, { callback, batchSize = 100, columns, max
       (line) => {
         lines.push(line);
         if (lines.length >= batchSize) {
-          const p = callback(lines, columns);
+          const p = callback(lines, columns, rows);
           lines = [];
           return p
             .then((stop) => {
@@ -48,7 +48,7 @@ function process(converter: Converter, { callback, batchSize = 100, columns, max
       },
       reject,
       () => {
-        const p = lines.length > 0 ? callback(lines, columns) : Promise.resolve();
+        const p = lines.length > 0 ? callback(lines, columns, rows) : Promise.resolve();
         p.then(resolve).catch(reject);
       }
     );

@@ -6,5 +6,5 @@ export type ParseOptions = {
   batchSize?: number;
   maxRows?: number;
   noheader?: boolean;
-  callback: (lines: string[][], columns?: string[]) => Promise<boolean | void>;
+  callback: (lines: string[][], columns: string[] | undefined, count: number) => Promise<boolean | void>;
 };

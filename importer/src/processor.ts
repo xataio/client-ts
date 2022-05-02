@@ -27,18 +27,23 @@ export type TableInfo = {
 
 type ProcessorOptions = Omit<ParseOptions, 'callback'> & {
   shouldContinue(compareSchemaResult: CompareSchemaResult): Promise<boolean>;
+  onBatchProcessed?: (rows: number) => void;
 };
 
 export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, options: ProcessorOptions): ParseOptions {
   let { types } = options;
-  const { columns } = options;
+  const { columns, onBatchProcessed } = options;
   let first = true;
 
   if (types && columns && types.length !== columns.length) {
     throw new Error('Different number of column names and column types');
   }
 
-  const callback: ParseOptions['callback'] = async (lines: string[][], columns?: string[]) => {
+  const callback: ParseOptions['callback'] = async (
+    lines: string[][],
+    columns: string[] | undefined,
+    count: number
+  ) => {
     const columnNames = options.columns || columns;
     if (!columnNames) {
       throw new Error(
@@ -64,6 +69,8 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
     const parsed = lines.map((row) => parseRow(row, types || []));
 
     await batchUpsert(xata, tableInfo, columnNames, parsed);
+
+    if (onBatchProcessed) onBatchProcessed(count);
   };
   return { ...options, callback };
 }

@@ -40,6 +40,9 @@ export async function run(
     noheader: Boolean(noheader),
     async shouldContinue(compare) {
       return Boolean(await shouldContinue(compare, table, create, force));
+    },
+    onBatchProcessed(rows) {
+      spinner.info(`${rows} rows processed`);
     }
   });
 
@@ -52,6 +55,7 @@ export async function run(
   } catch (err) {
     exitWithError(err);
   }
+  spinner.succeed('Finished');
 }
 
 async function readKey() {
