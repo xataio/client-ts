@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-floating-promises */
+
 import { XataRecord } from './record';
 import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
 
@@ -17,19 +19,6 @@ interface User {
 }
 
 type UserRecord = User & XataRecord;
-
-const links = {
-  teams: [['owner', 'users']],
-  users: [['team', 'teams']]
-} as const;
-
-type LinkList = { [key: string]: readonly (readonly [string, string])[] };
-
-type Links<List extends LinkList> = {
-  [key in keyof List]: List[key][number][0];
-};
-
-type C = Links<typeof links>;
 
 //                              SelectableColumn<O>                            //
 // --------------------------------------------------------------------------- //
