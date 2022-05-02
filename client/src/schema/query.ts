@@ -1,5 +1,6 @@
 import { FilterExpression } from '../api/schemas';
 import { compact } from '../util/lang';
+import { NonEmptyArray, RequiredBy } from '../util/types';
 import { DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
 import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
 import { XataRecord } from './record';
@@ -8,9 +9,9 @@ import { SelectableColumn, SelectedRecordPick, ValueAtColumn } from './selection
 
 export type QueryOptions<T extends XataRecord> = {
   page?: PaginationOptions;
-  columns?: SelectableColumn<T>[];
+  columns?: NonEmptyArray<SelectableColumn<T>>;
   filter?: FilterExpression;
-  sort?: SortFilter<T> | SortFilter<T>[];
+  sort?: SortFilter<T> | NonEmptyArray<SortFilter<T>>;
 };
 
 /**
@@ -19,20 +20,20 @@ export type QueryOptions<T extends XataRecord> = {
  * Query objects are immutable. Any method that adds more constraints or options to the query will return
  * a new Query object containing the both the previous and the new constraints and options.
  */
-export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> implements Paginable<T, Columns> {
+export class Query<Record extends XataRecord, Result extends XataRecord> implements Paginable<Record, Result> {
   #table: string;
-  #repository: Repository<T>;
-  #data: QueryOptions<T> = { filter: {} };
+  #repository: Repository<Record>;
+  #data: QueryOptions<Record> = { filter: {} };
 
   // Implements pagination
   readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true } };
-  readonly records: SelectedRecordPick<T, Columns>[] = [];
+  readonly records: Result[] = [];
 
   constructor(
-    repository: Repository<T> | null,
+    repository: Repository<Record> | null,
     table: string,
-    data: Partial<QueryOptions<T>>,
-    parent?: Partial<QueryOptions<T>>
+    data: Partial<QueryOptions<Record>>,
+    parent?: Partial<QueryOptions<Record>>
   ) {
     this.#table = table;
 
@@ -62,7 +63,7 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
     Object.defineProperty(this, 'repository', { enumerable: false });
   }
 
-  getQueryOptions(): QueryOptions<T> {
+  getQueryOptions(): QueryOptions<Record> {
     return this.#data;
   }
 
@@ -71,9 +72,9 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param queries An array of subqueries.
    * @returns A new Query object.
    */
-  any(...queries: Query<T, Columns>[]): Query<T, Columns> {
+  any(...queries: Query<Record, Result>[]): Query<Record, Result> {
     const $any = queries.map((query) => query.getQueryOptions().filter ?? {});
-    return new Query<T, Columns>(this.#repository, this.#table, { filter: { $any } }, this.#data);
+    return new Query<Record, Result>(this.#repository, this.#table, { filter: { $any } }, this.#data);
   }
 
   /**
@@ -81,9 +82,9 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param queries An array of subqueries.
    * @returns A new Query object.
    */
-  all(...queries: Query<T, Columns>[]): Query<T, Columns> {
+  all(...queries: Query<Record, Result>[]): Query<Record, Result> {
     const $all = queries.map((query) => query.getQueryOptions().filter ?? {});
-    return new Query<T, Columns>(this.#repository, this.#table, { filter: { $all } }, this.#data);
+    return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
   }
 
   /**
@@ -91,9 +92,9 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param queries An array of subqueries.
    * @returns A new Query object.
    */
-  not(...queries: Query<T, Columns>[]): Query<T, Columns> {
+  not(...queries: Query<Record, Result>[]): Query<Record, Result> {
     const $not = queries.map((query) => query.getQueryOptions().filter ?? {});
-    return new Query<T, Columns>(this.#repository, this.#table, { filter: { $not } }, this.#data);
+    return new Query<Record, Result>(this.#repository, this.#table, { filter: { $not } }, this.#data);
   }
 
   /**
@@ -101,9 +102,9 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param queries An array of subqueries.
    * @returns A new Query object.
    */
-  none(...queries: Query<T, Columns>[]): Query<T, Columns> {
+  none(...queries: Query<Record, Result>[]): Query<Record, Result> {
     const $none = queries.map((query) => query.getQueryOptions().filter ?? {});
-    return new Query<T, Columns>(this.#repository, this.#table, { filter: { $none } }, this.#data);
+    return new Query<Record, Result>(this.#repository, this.#table, { filter: { $none } }, this.#data);
   }
 
   /**
@@ -122,21 +123,21 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param constraints
    * @returns A new Query object.
    */
-  filter(constraints: FilterConstraints<T>): Query<T, Columns>;
-  filter<F extends SelectableColumn<T>>(
+  filter(constraints: FilterConstraints<Record>): Query<Record, Result>;
+  filter<F extends SelectableColumn<Record>>(
     column: F,
-    value: FilterConstraints<ValueAtColumn<T, F>> | DeepConstraint<ValueAtColumn<T, F>>
-  ): Query<T, Columns>;
-  filter(a: any, b?: any): Query<T, Columns> {
+    value: FilterConstraints<ValueAtColumn<Record, F>> | DeepConstraint<ValueAtColumn<Record, F>>
+  ): Query<Record, Result>;
+  filter(a: any, b?: any): Query<Record, Result> {
     if (arguments.length === 1) {
       const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));
       const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
-      return new Query<T, Columns>(this.#repository, this.#table, { filter: { $all } }, this.#data);
+      return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     } else {
       const $all = compact([this.#data.filter?.$all].flat().concat([{ [a]: b }]));
 
-      return new Query<T, Columns>(this.#repository, this.#table, { filter: { $all } }, this.#data);
+      return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     }
   }
 
@@ -146,10 +147,11 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param direction The direction. Either ascending or descending.
    * @returns A new Query object.
    */
-  sort<F extends SelectableColumn<T>>(column: F, direction: SortDirection): Query<T, Columns> {
-    const originalSort = [this.#data.sort ?? []].flat() as SortFilter<T>[];
+  sort<F extends SelectableColumn<Record>>(column: F, direction: SortDirection): Query<Record, Result> {
+    const originalSort = [this.#data.sort ?? []].flat() as SortFilter<Record>[];
     const sort = [...originalSort, { column, direction }];
-    return new Query<T, Columns>(this.#repository, this.#table, { sort }, this.#data);
+    // @ts-ignore
+    return new Query<Record, Result>(this.#repository, this.#table, { sort }, this.#data);
   }
 
   /**
@@ -157,24 +159,36 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param columns Array of column names to be returned by the query.
    * @returns A new Query object.
    */
-  select<K extends SelectableColumn<T>>(columns: K[]) {
-    return new Query<T, typeof columns>(this.#repository, this.#table, { columns }, this.#data);
+  select<K extends SelectableColumn<Record>>(columns: NonEmptyArray<K>) {
+    return new Query<Record, SelectedRecordPick<Record, typeof columns>>(
+      this.#repository,
+      this.#table,
+      { columns },
+      this.#data
+    );
   }
 
-  getPaginated<Options extends QueryOptions<T>>(
-    options: Options = {} as Options
-  ): Promise<Page<T, SafeColumns<T, Options, Columns>>> {
-    const query = new Query<T, SafeColumns<T, Options, Columns>>(this.#repository, this.#table, options, this.#data);
+  getPaginated(): Promise<Page<Record, Result>>;
+  getPaginated(options: Omit<QueryOptions<Record>, 'columns'>): Promise<Page<Record, Result>>;
+  getPaginated<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
+    options: Options
+  ): Promise<Page<Record, SelectedRecordPick<Record, typeof options['columns']>>>;
+  getPaginated<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Page<Record, Result>> {
+    const query = new Query<Record, Result>(this.#repository, this.#table, options, this.#data);
+    // @ts-ignore
     return this.#repository.query(query);
   }
 
-  async *[Symbol.asyncIterator](): AsyncIterableIterator<SelectedRecordPick<T, Columns>> {
+  async *[Symbol.asyncIterator]() {
     for await (const [record] of this.getIterator(1)) {
       yield record;
     }
   }
 
-  async *getIterator<Options extends QueryOptions<T>>(chunk: number, options: Omit<Options, 'page'> = {} as Options) {
+  async *getIterator<Options extends QueryOptions<Record>>(
+    chunk: number,
+    options: Omit<Options, 'page'> = {} as Options
+  ) {
     let offset = 0;
     let end = false;
 
@@ -192,8 +206,14 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  async getMany<Options extends QueryOptions<T>>(options: Options = {} as Options) {
+  getMany(): Promise<Result[]>;
+  getMany(options: Omit<QueryOptions<Record>, 'columns'>): Promise<Result[]>;
+  getMany<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
+    options: Options
+  ): Promise<SelectedRecordPick<Record, typeof options['columns']>[]>;
+  async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result[]> {
     const { records } = await this.getPaginated(options);
+    // @ts-ignore
     return records;
   }
 
@@ -203,7 +223,7 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  async getAll<Options extends QueryOptions<T>>(
+  async getAll<Options extends QueryOptions<Record>>(
     chunk = PAGINATION_MAX_SIZE,
     options: Omit<Options, 'page'> = {} as Options
   ) {
@@ -221,24 +241,30 @@ export class Query<T extends XataRecord, Columns extends SelectableColumn<T>[]> 
    * @param options Additional options to be used when performing the query.
    * @returns The first record that matches the query, or null if no record matched the query.
    */
-  async getOne<Options extends Omit<QueryOptions<T>, 'page'>>(options: Options = {} as Options) {
+  getOne(): Promise<Result | null>;
+  getOne(options: Omit<QueryOptions<Record>, 'columns'>): Promise<Result | null>;
+  getOne<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
+    options: Options
+  ): Promise<SelectedRecordPick<Record, typeof options['columns']> | null>;
+  async getOne<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
     const records = await this.getMany({ ...options, page: { size: 1 } });
+    // @ts-ignore
     return records[0] || null;
   }
 
-  nextPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
+  nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.firstPage(size, offset);
   }
 
-  previousPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
+  previousPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.firstPage(size, offset);
   }
 
-  firstPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
+  firstPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.getPaginated({ page: { size, offset } });
   }
 
-  lastPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
+  lastPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.getPaginated({ page: { size, offset, before: 'end' } });
   }
 

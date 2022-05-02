@@ -1,5 +1,5 @@
 import { If, IsArray, IsObject, StringKeys, UnionToIntersection, Values } from '../util/types';
-import { XataRecord } from './record';
+import { BaseData, XataRecord } from './record';
 
 // Public: Utility type to get a union with the selectable columns of an object
 export type SelectableColumn<O, RecursivePath extends any[] = []> =
@@ -12,19 +12,14 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   // Nested properties of the lower levels
   | NestedColumns<O, RecursivePath>;
 
-// Public: Utility type to get the data built from a list of selected columns (excludes XataRecord)
-export type SelectedDataPick<O extends XataRecord, Key extends SelectableColumn<O>[]> = InternalSelectedPick<
-  O,
-  Key,
-  false
->;
-
 // Public: Utility type to get the XataRecord built from a list of selected columns (includes XataRecord)
 export type SelectedRecordPick<O extends XataRecord, Key extends SelectableColumn<O>[]> = InternalSelectedPick<
   O,
   Key,
   true
->;
+> extends XataRecord
+  ? InternalSelectedPick<O, Key, true>
+  : XataRecord;
 
 // Public: Utility type to get the value of a column at a given path
 export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
@@ -84,7 +79,7 @@ type ExtraProperties<O, IncludeRecord> = O extends XataRecord
   ? IncludeRecord extends true
     ? XataRecord
     : { id?: string }
-  : unknown;
+  : never;
 
 // Private: Utility type to get the value of a column at a given path (nested object value)
 // For "foo.bar.baz" we return { foo: { bar: { baz: type } } }

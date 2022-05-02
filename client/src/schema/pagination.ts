@@ -1,17 +1,16 @@
 import { Query } from './query';
 import { XataRecord } from './record';
-import { SelectableColumn, SelectedRecordPick } from './selection';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
-export interface Paginable<T extends XataRecord, Columns extends SelectableColumn<T>[]> {
+export interface Paginable<Record extends XataRecord, Result extends XataRecord = Record> {
   meta: PaginationQueryMeta;
-  records: SelectedRecordPick<T, Columns>[];
+  records: Result[];
 
-  nextPage(size?: number, offset?: number): Promise<Page<T, Columns>>;
-  previousPage(size?: number, offset?: number): Promise<Page<T, Columns>>;
-  firstPage(size?: number, offset?: number): Promise<Page<T, Columns>>;
-  lastPage(size?: number, offset?: number): Promise<Page<T, Columns>>;
+  nextPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
+  previousPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
+  firstPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
+  lastPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
 
   hasNextPage(): boolean;
 }
@@ -20,10 +19,8 @@ export interface Paginable<T extends XataRecord, Columns extends SelectableColum
  * A Page contains a set of results from a query plus metadata about the retrieved
  * set of values such as the cursor, required to retrieve additional records.
  */
-export class Page<T extends XataRecord, Columns extends SelectableColumn<T>[] = ['*']>
-  implements Paginable<T, Columns>
-{
-  #query: Query<T, Columns>;
+export class Page<Record extends XataRecord, Result extends XataRecord = Record> implements Paginable<Record, Result> {
+  #query: Query<Record, Result>;
   /**
    * Page metadata, required to retrieve additional records.
    */
@@ -31,9 +28,9 @@ export class Page<T extends XataRecord, Columns extends SelectableColumn<T>[] = 
   /**
    * The set of results for this page.
    */
-  readonly records: SelectedRecordPick<T, Columns>[];
+  readonly records: Result[];
 
-  constructor(query: Query<T, Columns>, meta: PaginationQueryMeta, records: SelectedRecordPick<T, Columns>[] = []) {
+  constructor(query: Query<Record, Result>, meta: PaginationQueryMeta, records: Result[] = []) {
     this.#query = query;
     this.meta = meta;
     this.records = records;
@@ -45,7 +42,7 @@ export class Page<T extends XataRecord, Columns extends SelectableColumn<T>[] = 
    * @param offset Number of results to skip when retrieving the results.
    * @returns The next page or results.
    */
-  async nextPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
+  async nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.#query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
   }
 
@@ -55,7 +52,7 @@ export class Page<T extends XataRecord, Columns extends SelectableColumn<T>[] = 
    * @param offset Number of results to skip when retrieving the results.
    * @returns The previous page or results.
    */
-  async previousPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
+  async previousPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.#query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
   }
 
@@ -65,7 +62,7 @@ export class Page<T extends XataRecord, Columns extends SelectableColumn<T>[] = 
    * @param offset Number of results to skip when retrieving the results.
    * @returns The first page or results.
    */
-  async firstPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
+  async firstPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.#query.getPaginated({ page: { size, offset, first: this.meta.page.cursor } });
   }
 
@@ -75,7 +72,7 @@ export class Page<T extends XataRecord, Columns extends SelectableColumn<T>[] = 
    * @param offset Number of results to skip when retrieving the results.
    * @returns The last page or results.
    */
-  async lastPage(size?: number, offset?: number): Promise<Page<T, Columns>> {
+  async lastPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.#query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
   }
 

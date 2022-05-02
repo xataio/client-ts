@@ -14,3 +14,9 @@ export type If<Condition, Then, Else> = Condition extends true ? Then : Else;
 
 export type IsObject<T> = T extends Record<string, any> ? true : false;
 export type IsArray<T> = T extends Array<any> ? true : false;
+
+export type NonEmptyArray<T> = T[] & { 0: T };
+
+export type RequiredBy<T, K extends keyof T> = T & {
+  [P in K]-?: NonNullable<T[P]>;
+};

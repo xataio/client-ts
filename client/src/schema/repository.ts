@@ -13,7 +13,7 @@ import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, isIdentifiable, XataRecord } from './record';
-import { SelectableColumn, SelectedRecordPick } from './selection';
+import { SelectedRecordPick } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
 
@@ -22,28 +22,28 @@ export type Links = Record<string, Array<string[]>>;
  */
 export abstract class Repository<Data extends BaseData, Record extends XataRecord = Data & XataRecord> extends Query<
   Record,
-  ['*']
+  SelectedRecordPick<Record, ['*']>
 > {
   /*
    * Creates a record in the table.
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(object: Data): Promise<Record>;
+  abstract create(object: BuildData<Data>): Promise<SelectedRecordPick<Record, ['*']>>;
 
   /**
    * Creates multiple records in the table.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @returns Array of the persisted records.
    */
-  abstract createMany(objects: Data[]): Promise<Record[]>;
+  abstract createMany(objects: BuildData<Data>[]): Promise<SelectedRecordPick<Record, ['*']>[]>;
 
   /**
    * Queries a single record from the table given its unique id.
    * @param id The unique id.
    * @returns The persisted record for the given id or null if the record could not be found.
    */
-  abstract read(id: string): Promise<Record | null>;
+  abstract read(id: string): Promise<SelectedRecordPick<Record, ['*']> | null>;
 
   /**
    * Insert a single record with a unique id.
@@ -51,7 +51,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract insert(id: string, object: Data): Promise<Record>;
+  abstract insert(id: string, object: BuildData<Data>): Promise<SelectedRecordPick<Record, ['*']>>;
 
   /**
    * Partially update a single record given its unique id.
@@ -59,7 +59,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object The column names and their values that have to be updatd.
    * @returns The full persisted record.
    */
-  abstract update(id: string, object: Partial<Data>): Promise<Record>;
+  abstract update(id: string, object: Partial<BuildData<Data>>): Promise<SelectedRecordPick<Record, ['*']>>;
 
   /**
    * Updates or inserts a single record. If a record exists with the given id,
@@ -68,7 +68,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
-  abstract updateOrInsert(id: string, object: Data): Promise<Record>;
+  abstract updateOrInsert(id: string, object: BuildData<Data>): Promise<SelectedRecordPick<Record, ['*']>>;
 
   /**
    * Deletes a record given its unique id.
@@ -77,16 +77,15 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    */
   abstract delete(id: string): void;
 
-  abstract query<Columns extends SelectableColumn<Record>[]>(
-    query: Query<Record, Columns>
-  ): Promise<Page<Record, Columns>>;
+  abstract query(
+    query: Query<Record, SelectedRecordPick<Record, ['*']>>
+  ): Promise<Page<Record, SelectedRecordPick<Record, ['*']>>>;
 }
 
-export class RestRepository<
-  Data extends BaseData,
-  Record extends XataRecord = Data & XataRecord,
-  Columns extends SelectableColumn<Record>[] = ['*']
-> extends Query<Record, Columns> {
+export class RestRepository<Data extends BaseData, Record extends XataRecord = Data & XataRecord> extends Query<
+  Record,
+  SelectedRecordPick<Record, ['*']>
+> {
   #client: BaseClient<any>;
   #fetch: any;
   #table: string;
@@ -123,7 +122,7 @@ export class RestRepository<
     };
   }
 
-  async create(object: Data): Promise<Record> {
+  async create(object: BuildData<Data>): Promise<SelectedRecordPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -146,7 +145,7 @@ export class RestRepository<
     return finalObject;
   }
 
-  async createMany(objects: Data[]): Promise<Record[]> {
+  async createMany(objects: BuildData<Data>[]): Promise<SelectedRecordPick<Record, ['*']>[]> {
     const fetchProps = await this.#getFetchProps();
 
     const records = objects.map((object) => transformObjectLinks(object));
@@ -166,7 +165,7 @@ export class RestRepository<
     return finalObjects;
   }
 
-  async read(recordId: string): Promise<Record | null> {
+  async read(recordId: string): Promise<SelectedRecordPick<Record, ['*']> | null> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await getRecord({
@@ -177,7 +176,7 @@ export class RestRepository<
     return this.#client.initObject(this.#table, response);
   }
 
-  async update(recordId: string, object: Partial<Data>): Promise<Record> {
+  async update(recordId: string, object: Partial<BuildData<Data>>): Promise<SelectedRecordPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -194,7 +193,7 @@ export class RestRepository<
     return item;
   }
 
-  async insert(recordId: string, object: Data): Promise<Record> {
+  async insert(recordId: string, object: BuildData<Data>): Promise<SelectedRecordPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -218,12 +217,12 @@ export class RestRepository<
     return finalObject;
   }
 
-  async updateOrInsert(recordId: string, object: Data): Promise<Record> {
+  async updateOrInsert(recordId: string, object: BuildData<Data>): Promise<SelectedRecordPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-      body: object,
+      body: object as any, // TODO
       ...fetchProps
     });
 
@@ -242,9 +241,9 @@ export class RestRepository<
     });
   }
 
-  async query<Columns extends SelectableColumn<Record>[]>(
-    query: Query<Record, Columns>
-  ): Promise<Page<Record, Columns>> {
+  async query(
+    query: Query<Record, SelectedRecordPick<Record, ['*']>>
+  ): Promise<Page<Record, SelectedRecordPick<Record, ['*']>>> {
     const data = query.getQueryOptions();
 
     const body = {
@@ -262,20 +261,20 @@ export class RestRepository<
     });
 
     const records = objects.map((record) =>
-      this.#client.initObject<SelectedRecordPick<Record, Columns>>(this.#table, record)
+      this.#client.initObject<SelectedRecordPick<Record, ['*']>>(this.#table, record)
     );
 
-    return new Page<Record, Columns>(query, meta, records);
+    return new Page<Record, SelectedRecordPick<Record, ['*']>>(query, meta, records);
   }
 }
 
 interface RepositoryFactory {
-  createRepository<Data extends BaseData>(client: BaseClient<any>, table: string): Repository<Data>;
+  createRepository<Data extends BaseData>(client: BaseClient<any>, table: string): Repository<Data & XataRecord>;
 }
 
 export class RestRespositoryFactory implements RepositoryFactory {
-  createRepository<Data extends BaseData>(client: BaseClient<any>, table: string): Repository<Data> {
-    return new RestRepository<Data>(client, table);
+  createRepository<Data extends BaseData>(client: BaseClient<any>, table: string): Repository<Data & XataRecord> {
+    return new RestRepository<Data & XataRecord>(client, table);
   }
 }
 
@@ -402,4 +401,12 @@ const transformObjectLinks = (object: any) => {
   return Object.entries(object).reduce((acc, [key, value]) => {
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
   }, {});
+};
+
+type BuildData<O extends BaseData> = {
+  [K in keyof O]: O[K] extends XataRecord
+    ? { id: string }
+    : NonNullable<O[K]> extends XataRecord
+    ? { id: string } | undefined
+    : O[K];
 };

@@ -1,6 +1,6 @@
 import { exactType } from '../util/types';
 import { XataRecord } from './record';
-import { SelectableColumn, SelectedDataPick, SelectedRecordPick, ValueAtColumn } from './selection';
+import { SelectableColumn, BuildDate, SelectedRecordPick, ValueAtColumn } from './selection';
 
 interface Team {
   name?: string | null;
@@ -105,7 +105,7 @@ declare const selectedUserNestedRecord2: SelectedRecordPick<UserRecord, ['team.o
 //                            SelectedDataPick<O, Key>                         //
 // ---------------------------------------------------------------------------- //
 
-declare const selectedUserBaseData: SelectedDataPick<UserRecord, ['*']>;
+declare const selectedUserBaseData: BuildDate<UserRecord, ['*']>;
 
 selectedUserBaseData.id;
 // @ts-expect-error
