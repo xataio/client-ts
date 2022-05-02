@@ -77,9 +77,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    */
   abstract delete(id: string): void;
 
-  abstract query(
-    query: Query<Record, SelectedRecordPick<Record, ['*']>>
-  ): Promise<Page<Record, SelectedRecordPick<Record, ['*']>>>;
+  abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
 
 export class RestRepository<Data extends BaseData, Record extends XataRecord = Data & XataRecord> extends Query<
@@ -241,9 +239,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
   }
 
-  async query(
-    query: Query<Record, SelectedRecordPick<Record, ['*']>>
-  ): Promise<Page<Record, SelectedRecordPick<Record, ['*']>>> {
+  async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
     const data = query.getQueryOptions();
 
     const body = {
@@ -260,11 +256,9 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const records = objects.map((record) =>
-      this.#client.initObject<SelectedRecordPick<Record, ['*']>>(this.#table, record)
-    );
+    const records = objects.map((record) => this.#client.initObject<Result>(this.#table, record));
 
-    return new Page<Record, SelectedRecordPick<Record, ['*']>>(query, meta, records);
+    return new Page<Record, Result>(query, meta, records);
   }
 }
 

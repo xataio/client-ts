@@ -11,7 +11,7 @@ export type QueryOptions<T extends XataRecord> = {
   page?: PaginationOptions;
   columns?: NonEmptyArray<SelectableColumn<T>>;
   filter?: FilterExpression;
-  sort?: SortFilter<T> | NonEmptyArray<SortFilter<T>>;
+  sort?: SortFilter<T> | SortFilter<T>[];
 };
 
 /**
@@ -20,7 +20,7 @@ export type QueryOptions<T extends XataRecord> = {
  * Query objects are immutable. Any method that adds more constraints or options to the query will return
  * a new Query object containing the both the previous and the new constraints and options.
  */
-export class Query<Record extends XataRecord, Result extends XataRecord> implements Paginable<Record, Result> {
+export class Query<Record extends XataRecord, Result extends XataRecord = Record> implements Paginable<Record, Result> {
   #table: string;
   #repository: Repository<Record>;
   #data: QueryOptions<Record> = { filter: {} };
@@ -150,7 +150,6 @@ export class Query<Record extends XataRecord, Result extends XataRecord> impleme
   sort<F extends SelectableColumn<Record>>(column: F, direction: SortDirection): Query<Record, Result> {
     const originalSort = [this.#data.sort ?? []].flat() as SortFilter<Record>[];
     const sort = [...originalSort, { column, direction }];
-    // @ts-ignore
     return new Query<Record, Result>(this.#repository, this.#table, { sort }, this.#data);
   }
 
@@ -175,7 +174,6 @@ export class Query<Record extends XataRecord, Result extends XataRecord> impleme
   ): Promise<Page<Record, SelectedRecordPick<Record, typeof options['columns']>>>;
   getPaginated<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Page<Record, Result>> {
     const query = new Query<Record, Result>(this.#repository, this.#table, options, this.#data);
-    // @ts-ignore
     return this.#repository.query(query);
   }
 
