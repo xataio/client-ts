@@ -76,7 +76,6 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
     return this.#query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
   }
 
-  // TODO: We need to add something on the backend if we want a hasPreviousPage
   /**
    * Shortcut method to check if there will be additional results if the next page of results is retrieved.
    * @returns Whether or not there will be additional results in the next page of results.

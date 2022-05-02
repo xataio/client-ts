@@ -219,7 +219,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     const response = await upsertRecordWithID({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-      body: object as any, // TODO
+      body: object,
       ...fetchProps
     });
 
@@ -357,8 +357,6 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
       Object.defineProperty(o, prop, { enumerable: false });
     }
 
-    // TODO: links and rev links
-
     Object.freeze(o);
     return o as T;
   }
@@ -389,7 +387,6 @@ const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchSt
   return typeof strategy === 'function';
 };
 
-// TODO: We can find a better implementation for links
 const transformObjectLinks = (object: any) => {
   return Object.entries(object).reduce((acc, [key, value]) => {
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
