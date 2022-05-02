@@ -37,10 +37,10 @@ describe('client options', () => {
     expect(() => buildClient({ branch: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
   });
 
-  test('throws if branch cannot be resolved', () => {
+  test('throws if branch cannot be resolved', async () => {
     const { users } = buildClient({ branch: () => null });
 
-    expect(users.getOne()).rejects.toThrow('Unable to resolve branch value');
+    await expect(users.getOne()).rejects.toThrow('Unable to resolve branch value');
   });
 
   test('provide branch as a string', async () => {
@@ -239,7 +239,7 @@ describe('request', () => {
       };
     });
 
-    expect(users.getOne()).rejects.toThrowErrorMatchingInlineSnapshot(`"Not Found"`);
+    await expect(users.getOne()).rejects.toThrowErrorMatchingInlineSnapshot(`"Not Found"`);
   });
 
   test('returns the json body if the response is ok', async () => {

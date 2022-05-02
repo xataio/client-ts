@@ -362,7 +362,7 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
           o[field] = {
             id,
             get: () => {
-              this.db[linkTable].read(id);
+              return this.db[linkTable].read(id);
             }
           };
         }
