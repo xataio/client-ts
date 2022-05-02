@@ -15,6 +15,10 @@ export type GenerateOptions = {
 
 function getTypeName(tableName: string) {
   const snglr = pluralize.singular(tableName);
+
+  // If table starts with a number, prepend a $ sign
+  if (snglr.match(/^\d/)) return `$${snglr}`;
+
   return snglr.substring(0, 1).toUpperCase() + snglr.substring(1);
 }
 

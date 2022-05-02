@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.5.1
+
+### Patch Changes
+
+- 12729ab: Make API client fetch implementation optional
+
 ## 0.5.0
 
 ### Patch Changes
