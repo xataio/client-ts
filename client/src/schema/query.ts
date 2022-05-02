@@ -5,7 +5,7 @@ import { DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './
 import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
 import { XataRecord } from './record';
 import { Repository } from './repository';
-import { SelectableColumn, SelectedRecordPick, ValueAtColumn } from './selection';
+import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
 
 export type QueryOptions<T extends XataRecord> = {
   page?: PaginationOptions;
@@ -159,7 +159,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns A new Query object.
    */
   select<K extends SelectableColumn<Record>>(columns: NonEmptyArray<K>) {
-    return new Query<Record, SelectedRecordPick<Record, typeof columns>>(
+    return new Query<Record, SelectedPick<Record, typeof columns>>(
       this.#repository,
       this.#table,
       { columns },
@@ -171,7 +171,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   getPaginated(options: Omit<QueryOptions<Record>, 'columns'>): Promise<Page<Record, Result>>;
   getPaginated<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
-  ): Promise<Page<Record, SelectedRecordPick<Record, typeof options['columns']>>>;
+  ): Promise<Page<Record, SelectedPick<Record, typeof options['columns']>>>;
   getPaginated<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Page<Record, Result>> {
     const query = new Query<Record, Result>(this.#repository, this.#table, options, this.#data);
     return this.#repository.query(query);
@@ -208,7 +208,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   getMany(options: Omit<QueryOptions<Record>, 'columns'>): Promise<Result[]>;
   getMany<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
-  ): Promise<SelectedRecordPick<Record, typeof options['columns']>[]>;
+  ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
   async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result[]> {
     const { records } = await this.getPaginated(options);
     // @ts-ignore
@@ -243,7 +243,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   getOne(options: Omit<QueryOptions<Record>, 'columns'>): Promise<Result | null>;
   getOne<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
-  ): Promise<SelectedRecordPick<Record, typeof options['columns']> | null>;
+  ): Promise<SelectedPick<Record, typeof options['columns']> | null>;
   async getOne<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
     const records = await this.getMany({ ...options, page: { size: 1 } });
     // @ts-ignore

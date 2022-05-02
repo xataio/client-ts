@@ -1,6 +1,6 @@
 import { exactType } from '../util/types';
 import { XataRecord } from './record';
-import { SelectableColumn, BuildDate, SelectedRecordPick, ValueAtColumn } from './selection';
+import { SelectableColumn, BuildDate, SelectedPick, ValueAtColumn } from './selection';
 
 interface Team {
   name?: string | null;
@@ -62,7 +62,7 @@ exactType(labelsValue, invalidLabelsValue);
 //                            SelectedRecordPick<O, Key>                        //
 // ---------------------------------------------------------------------------- //
 
-declare const selectedUserBaseRecord: SelectedRecordPick<UserRecord, ['*']>;
+declare const selectedUserBaseRecord: SelectedPick<UserRecord, ['*']>;
 
 selectedUserBaseRecord.id;
 selectedUserBaseRecord.read();
@@ -72,7 +72,7 @@ selectedUserBaseRecord.team?.read();
 // @ts-expect-error
 selectedUserBaseRecord.team?.name;
 
-declare const selectedUserFullRecord: SelectedRecordPick<UserRecord, ['*', 'team.*']>;
+declare const selectedUserFullRecord: SelectedPick<UserRecord, ['*', 'team.*']>;
 
 selectedUserFullRecord.id;
 selectedUserFullRecord.read();
@@ -86,7 +86,7 @@ selectedUserFullRecord.team?.owner?.read();
 // @ts-expect-error
 selectedUserFullRecord.team?.owner?.full_name;
 
-declare const selectedUserNestedRecord: SelectedRecordPick<UserRecord, ['team.owner.*']>;
+declare const selectedUserNestedRecord: SelectedPick<UserRecord, ['team.owner.*']>;
 
 selectedUserNestedRecord.id;
 selectedUserNestedRecord.read();
@@ -100,7 +100,7 @@ selectedUserNestedRecord.team?.owner?.id;
 selectedUserNestedRecord.team?.owner?.read();
 selectedUserNestedRecord.team?.owner?.full_name;
 
-declare const selectedUserNestedRecord2: SelectedRecordPick<UserRecord, ['team.owner.address']>;
+declare const selectedUserNestedRecord2: SelectedPick<UserRecord, ['team.owner.address']>;
 
 //                            SelectedDataPick<O, Key>                         //
 // ---------------------------------------------------------------------------- //
