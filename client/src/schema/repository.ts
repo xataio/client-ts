@@ -12,7 +12,7 @@ import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
-import { BaseData, isIdentifiable, XataRecord } from './record';
+import { BaseData, EditableData, isIdentifiable, XataRecord } from './record';
 import { SelectedPick } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
@@ -29,14 +29,14 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(object: BuildData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  abstract create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
 
   /**
    * Creates multiple records in the table.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @returns Array of the persisted records.
    */
-  abstract createMany(objects: BuildData<Data>[]): Promise<SelectedPick<Record, ['*']>[]>;
+  abstract createMany(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]>;
 
   /**
    * Queries a single record from the table given its unique id.
@@ -51,7 +51,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract insert(id: string, object: BuildData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  abstract insert(id: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
 
   /**
    * Partially update a single record given its unique id.
@@ -59,7 +59,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object The column names and their values that have to be updatd.
    * @returns The full persisted record.
    */
-  abstract update(id: string, object: Partial<BuildData<Data>>): Promise<SelectedPick<Record, ['*']>>;
+  abstract update(id: string, object: Partial<EditableData<Data>>): Promise<SelectedPick<Record, ['*']>>;
 
   /**
    * Updates or inserts a single record. If a record exists with the given id,
@@ -68,7 +68,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
-  abstract updateOrInsert(id: string, object: BuildData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  abstract updateOrInsert(id: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
 
   /**
    * Deletes a record given its unique id.
@@ -120,7 +120,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     };
   }
 
-  async create(object: BuildData<Data>): Promise<SelectedPick<Record, ['*']>> {
+  async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -143,7 +143,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return finalObject;
   }
 
-  async createMany(objects: BuildData<Data>[]): Promise<SelectedPick<Record, ['*']>[]> {
+  async createMany(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]> {
     const fetchProps = await this.#getFetchProps();
 
     const records = objects.map((object) => transformObjectLinks(object));
@@ -173,7 +173,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return this.#client.initObject(this.#table, response);
   }
 
-  async update(recordId: string, object: Partial<BuildData<Data>>): Promise<SelectedPick<Record, ['*']>> {
+  async update(recordId: string, object: Partial<EditableData<Data>>): Promise<SelectedPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -190,7 +190,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return item;
   }
 
-  async insert(recordId: string, object: BuildData<Data>): Promise<SelectedPick<Record, ['*']>> {
+  async insert(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -214,7 +214,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return finalObject;
   }
 
-  async updateOrInsert(recordId: string, object: BuildData<Data>): Promise<SelectedPick<Record, ['*']>> {
+  async updateOrInsert(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
@@ -394,12 +394,4 @@ const transformObjectLinks = (object: any) => {
   return Object.entries(object).reduce((acc, [key, value]) => {
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
   }, {});
-};
-
-type BuildData<O extends BaseData> = {
-  [K in keyof O]: O[K] extends XataRecord
-    ? { id: string }
-    : NonNullable<O[K]> extends XataRecord
-    ? { id: string } | undefined
-    : O[K];
 };

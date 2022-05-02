@@ -37,7 +37,7 @@ export interface XataRecord extends Identifiable {
    * @param data The columns and their values that have to be updated.
    * @returns A new record containing the latest values for all the columns of the current record.
    */
-  update(data: Partial<this>): Promise<this>;
+  update(data: Partial<EditableData<Omit<this, keyof XataRecord>>>): Promise<this>;
 
   /**
    * Performs a deletion of the current record in the database.
@@ -56,3 +56,11 @@ export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> 
     isIdentifiable(x) && typeof x?.xata === 'object' && typeof (x?.xata as XataRecord['xata'])?.version === 'number'
   );
 }
+
+export type EditableData<O extends BaseData> = {
+  [K in keyof O]: O[K] extends XataRecord
+    ? { id: string }
+    : NonNullable<O[K]> extends XataRecord
+    ? { id: string } | undefined
+    : O[K];
+};
