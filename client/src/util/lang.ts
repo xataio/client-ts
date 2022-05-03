@@ -6,4 +6,8 @@ export function compact<T>(arr: Array<T | null | undefined>): T[] {
   return arr.filter(notEmpty);
 }
 
+export function compactObject<T>(obj: Record<string, T | null | undefined>): Record<string, T> {
+  return Object.fromEntries(Object.entries(obj).filter(([, value]) => notEmpty(value))) as Record<string, T>;
+}
+
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
