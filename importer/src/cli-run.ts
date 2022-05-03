@@ -7,7 +7,7 @@ import { CompareSchemaResult, createProcessor, TableInfo } from './processor.js'
 import { splitCommas } from './utils.js';
 import { XataApiClient } from '@xata.io/client';
 import fetch from 'cross-fetch';
-import prompts from 'prompts';
+import inquirer from 'inquirer';
 import { parseConfigFile } from './config.js';
 
 const spinner = ora();
@@ -123,20 +123,22 @@ export async function shouldContinue(
   } else {
     if (compare.missingTable) {
       if (!force) {
-        const response = await prompts({
+        const response = await inquirer.prompt({
           type: 'confirm',
           name: 'confirm',
-          message: `Table ${table} does not exist. Do you want to create it?`
+          message: `Table ${table} does not exist. Do you want to create it?`,
+          default: false
         });
         if (!response.confirm) return false;
       }
     } else if (compare.missingColumns.length > 0) {
       if (!force) {
         const missing = compare.missingColumns.map((col) => col.column);
-        const response = await prompts({
+        const response = await inquirer.prompt({
           type: 'confirm',
           name: 'confirm',
-          message: `These columns are missing: ${missing.join(', ')}. Do you want to create them?`
+          message: `These columns are missing: ${missing.join(', ')}. Do you want to create them?`,
+          default: false
         });
         if (!response.confirm) return false;
       }
