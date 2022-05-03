@@ -23,6 +23,13 @@ export type AuthError = {
   message: string;
 };
 
+export type BulkError = {
+  errors: {
+    message?: string;
+    status?: number;
+  }[];
+};
+
 export type BranchMigrationPlan = {
   version: number;
   migration: Schemas.BranchMigration;

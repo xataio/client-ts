@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-throw-literal */
 /* eslint-disable @typescript-eslint/ban-types */
 import { compactObject } from '../util/lang';
-import type { SimpleError } from './responses';
+import type { BulkError, SimpleError } from './responses';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
   const query = new URLSearchParams(queryParams).toString();
@@ -125,4 +125,4 @@ const isError = (error: any): error is { message: string } => {
 
 const withStatus = (error: ApiError, status: number) => compactObject({ ...error, status });
 
-type ApiError = SimpleError & { errors?: { message: string; status: number }[] };
+type ApiError = SimpleError & Partial<BulkError>;
