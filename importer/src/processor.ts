@@ -1,7 +1,7 @@
 import { XataApiClient } from '@xata.io/client';
 import { Table, Column } from '@xata.io/client/dist/api/schemas';
 import { ParseOptions } from './index.js';
-import { castType, guessTypes, parseRow } from './utils.js';
+import { castType, guessTypes, normalizeColumnName, parseRow } from './utils.js';
 
 export type CompareSchemaResult = {
   missingTable: boolean;
@@ -44,8 +44,8 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
     columns: string[] | undefined,
     count: number
   ) => {
-    const columnNames = options.columns || columns;
-    if (!columnNames) {
+    const columnNames = (options.columns || columns || []).map(normalizeColumnName);
+    if (columnNames.length === 0) {
       throw new Error(
         'Cannot calculate column names. A file header was not specified and no custom columns were specified either'
       );

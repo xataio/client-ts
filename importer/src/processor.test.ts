@@ -166,7 +166,7 @@ describe('createProcessor', () => {
     const shouldContinue = jest.fn();
 
     const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue });
-    await expect(callback([[]])).rejects.toEqual(
+    await expect(callback([[]], [], 1)).rejects.toEqual(
       new Error(
         'Cannot calculate column names. A file header was not specified and no custom columns were specified either'
       )
@@ -188,7 +188,7 @@ describe('createProcessor', () => {
     });
 
     const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue, columns: ['a'] });
-    await callback([['foo']]);
+    await callback([['foo']], ['a'], 1);
 
     expect(shouldContinue).toHaveBeenCalled();
   });
@@ -231,7 +231,7 @@ describe('createProcessor', () => {
     });
 
     const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue, columns: ['a'] });
-    await callback([['foo']]);
+    await callback([['foo']], ['a'], 1);
 
     expect(shouldContinue).toHaveBeenCalled();
     expect(createTable).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo');
@@ -278,7 +278,7 @@ describe('createProcessor', () => {
     });
 
     const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue, columns: ['a'] });
-    await callback([['1']]);
+    await callback([['1']], ['a'], 1);
 
     expect(shouldContinue).toHaveBeenCalled();
     expect(createTable).not.toHaveBeenCalled();
