@@ -230,14 +230,21 @@ describe('createProcessor', () => {
       }
     });
 
-    const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue, columns: ['a'] });
-    await callback([['foo']], ['a'], 1);
+    const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue });
+
+    // We also test here that column names are normalized
+    await callback([['foo']], [' 你好. buenos días '], 1);
 
     expect(shouldContinue).toHaveBeenCalled();
     expect(createTable).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo');
-    expect(addTableColumn).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', { name: 'a', type: 'string' });
+    expect(addTableColumn).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', {
+      name: 'niHao.buenosDias',
+      type: 'string'
+    });
 
-    expect(bulkInsertTableRecords).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', [{ a: 'foo' }]);
+    expect(bulkInsertTableRecords).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', [
+      { ['niHao.buenosDias']: 'foo' }
+    ]);
   });
 
   test('calls shuldContinue, continues, updates a table and inserts the records', async () => {
