@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-throw-literal */
 /* eslint-disable @typescript-eslint/ban-types */
+import { isObject, isString } from '../util/lang';
 import type { SimpleError } from './responses';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
@@ -119,7 +120,7 @@ export async function fetch<
         message: e.message
       };
       throw withStatus(error, response.status);
-    } else if (typeof e === 'object' && typeof (e as SimpleError).message === 'string') {
+    } else if (isObject(e) && isString((e as SimpleError).message)) {
       throw withStatus(e as SimpleError, response.status);
     } else {
       throw withStatus(fallbackError, response.status);
