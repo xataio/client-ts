@@ -100,16 +100,17 @@ export async function shouldContinue(
   create: unknown,
   force: unknown
 ): Promise<boolean | void> {
-  const errorMessages: string[] = [];
+  let error = false;
   compare.columnTypes.forEach((type) => {
     if (type.error) {
-      errorMessages.push(
+      error = true;
+      spinner.fail(
         `Column ${type.columnName} exists with type ${type.schemaType} but a type of ${type.castedType} would be needed.`
       );
     }
   });
-  if (errorMessages.length > 0) {
-    return exitWithError(errorMessages.join('\n'));
+  if (error) {
+    return process.exit(1);
   }
 
   if (!create) {
