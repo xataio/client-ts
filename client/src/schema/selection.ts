@@ -1,5 +1,5 @@
 import { If, IsArray, IsObject, StringKeys, UnionToIntersection, Values } from '../util/types';
-import { XataRecord } from './record';
+import { Link, XataRecord } from './record';
 
 // Public: Utility type to get a union with the selectable columns of an object
 export type SelectableColumn<O, RecursivePath extends any[] = []> =
@@ -77,11 +77,15 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
             ? NestedValueAtColumn<NonNullable<O[K]>, M> & XataRecord
             : unknown; //`Property ${M} is not selectable on type ${K}`
         }
-      : unknown //`Property ${M} does not exist on type ${N}`
+      : unknown //`Property ${N} is not a property of type ${O}`
     : Key extends DataProps<O>
-    ? { [K in Key]: O[K] }
+    ? {
+        [K in Key]: NonNullable<O[K]> extends XataRecord ? SelectedPick<NonNullable<O[K]>, ['*']> : O[K];
+      }
     : Key extends '*'
     ? {
-        [K in keyof NonNullable<O>]: NonNullable<NonNullable<O>[K]> extends XataRecord ? XataRecord : NonNullable<O>[K];
+        [K in keyof NonNullable<O>]: NonNullable<NonNullable<O>[K]> extends XataRecord
+          ? Link<NonNullable<NonNullable<O>[K]>> | null // Link improves read/update method signatures to avoid loosing the internal type
+          : NonNullable<O>[K];
       }
     : unknown; //`Property ${Key} is invalid`;

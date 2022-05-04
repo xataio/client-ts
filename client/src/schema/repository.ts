@@ -206,6 +206,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return finalObjects;
   }
 
+  // TODO: Add column support: https://github.com/xataio/openapi/issues/139
   async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
     const fetchProps = await this.#getFetchProps();
 

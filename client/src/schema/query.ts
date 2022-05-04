@@ -43,7 +43,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
       this.#repository = this as any;
     }
 
-    this.#data.filter = {};
+    this.#data.filter = data.filter ?? parent?.filter ?? {};
     this.#data.filter.$any = data.filter?.$any ?? parent?.filter?.$any;
     this.#data.filter.$all = data.filter?.$all ?? parent?.filter?.$all;
     this.#data.filter.$not = data.filter?.$not ?? parent?.filter?.$not;

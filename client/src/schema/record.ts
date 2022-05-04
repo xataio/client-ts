@@ -1,4 +1,5 @@
 import { isObject, isString } from '../util/lang';
+import { SelectedPick } from './selection';
 
 /**
  * Represents an identifiable record from the database.
@@ -31,7 +32,7 @@ export interface XataRecord extends Identifiable {
   /**
    * Retrieves a refreshed copy of the current record from the database.
    */
-  read(): Promise<this>;
+  read(): Promise<SelectedPick<this, ['*']> | null>;
 
   /**
    * Performs a partial update of the current record. On success a new object is
@@ -39,7 +40,7 @@ export interface XataRecord extends Identifiable {
    * @param data The columns and their values that have to be updated.
    * @returns A new record containing the latest values for all the columns of the current record.
    */
-  update(data: Partial<EditableData<Omit<this, keyof XataRecord>>>): Promise<this>;
+  update(data: Partial<EditableData<Omit<this, keyof XataRecord>>>): Promise<SelectedPick<this, ['*']>>;
 
   /**
    * Performs a deletion of the current record in the database.
@@ -48,6 +49,21 @@ export interface XataRecord extends Identifiable {
    */
   delete(): Promise<void>;
 }
+
+export type Link<Record extends XataRecord> = Omit<XataRecord, 'read' | 'update'> & {
+  /**
+   * Retrieves a refreshed copy of the current record from the database.
+   */
+  read(): Promise<SelectedPick<Record, ['*']> | null>;
+
+  /**
+   * Performs a partial update of the current record. On success a new object is
+   * returned and the current object is not mutated.
+   * @param data The columns and their values that have to be updated.
+   * @returns A new record containing the latest values for all the columns of the current record.
+   */
+  update(data: Partial<EditableData<Omit<Record, keyof XataRecord>>>): Promise<SelectedPick<Record, ['*']>>;
+};
 
 export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
   return isObject(x) && isString((x as Partial<Identifiable>)?.id);
