@@ -1,3 +1,5 @@
+import { isObject, isString } from '../util/lang';
+
 type HostAliases = 'production' | 'staging';
 type ProviderBuilder = { main: string; workspaces: string };
 export type HostProvider = HostAliases | ProviderBuilder;
@@ -24,9 +26,9 @@ const providers: Record<HostAliases, ProviderBuilder> = {
 };
 
 function isValidAlias(alias: HostProvider): alias is HostAliases {
-  return typeof alias === 'string' && Object.keys(providers).includes(alias);
+  return isString(alias) && Object.keys(providers).includes(alias);
 }
 
 function isValidBuilder(builder: HostProvider): builder is ProviderBuilder {
-  return typeof builder === 'object' && typeof builder.main === 'string' && typeof builder.workspaces === 'string';
+  return isObject(builder) && isString(builder.main) && isString(builder.workspaces);
 }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-throw-literal */
 /* eslint-disable @typescript-eslint/ban-types */
-import { compactObject } from '../util/lang';
+import { compactObject, isObject, isString } from '../util/lang';
 import type { BulkError, SimpleError } from './responses';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
@@ -120,7 +120,7 @@ export async function fetch<
 }
 
 const isError = (error: any): error is { message: string } => {
-  return typeof error === 'object' && typeof (error as ApiError).message === 'string';
+  return isObject(e) && isString((e as SimpleError).message);
 };
 
 const withStatus = (error: ApiError, status: number) => compactObject({ ...error, status });

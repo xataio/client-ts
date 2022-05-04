@@ -302,23 +302,6 @@ describe('integration tests', () => {
     expect(users[0].id).toBeDefined();
   });
 
-  test('create single team', async () => {
-    const team = await client.db.teams.create({ name: 'Team ships' });
-
-    expect(team.id).toBeDefined();
-    expect(team.name).toBe('Team ships');
-  });
-
-  test('create multiple teams', async () => {
-    const teams = await client.db.teams.createMany([{ name: 'Team cars' }, { name: 'Team planes' }]);
-
-    expect(teams).toHaveLength(2);
-    expect(teams[0].id).toBeDefined();
-    expect(teams[0].name).toBe('Team cars');
-    expect(teams[1].id).toBeDefined();
-    expect(teams[1].name).toBe('Team planes');
-  });
-
   test('query implements iterator', async () => {
     const owners = [];
 
@@ -424,63 +407,8 @@ describe('integration tests', () => {
     expect(updatedUser.full_name).toBe(user.full_name);
   });
 
-  test('Insert user without id', async () => {
-    expect(
-      client.db.users.insert('', {
-        full_name: 'John Doe 3',
-        email: 'john3@doe.com'
-      })
-    ).rejects.toMatchInlineSnapshot(`
-      Object {
-        "message": "Not Found",
-        "status": 404,
-      }
-    `);
-
-    // @ts-expect-error
-    const user = await client.db.users.insert(undefined, {
-      full_name: 'John Doe 3',
-      email: 'john3@doe.com'
-    });
-
-    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
-    if (!apiUser) throw new Error('No user found');
-
-    expect(user.id).toBeDefined();
-    expect(user.full_name).toBe('John Doe 3');
-
-    expect(user.id).toBe(apiUser.id);
-    expect(user.full_name).toBe(apiUser.full_name);
-    expect(user.email).toBe(apiUser.email);
-  });
-
-  test('Insert a user with id', async () => {
-    const user = await client.db.users.insert('a-unique-record-john-4', {
-      full_name: 'John Doe 4',
-      email: 'john4@doe.com'
-    });
-
-    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
-    if (!apiUser) throw new Error('No user found');
-
-    expect(user.id).toBe('a-unique-record-john-4');
-    expect(user.full_name).toBe('John Doe 4');
-
-    expect(user.id).toBe(apiUser.id);
-    expect(user.full_name).toBe(apiUser.full_name);
-    expect(user.email).toBe(apiUser.email);
-
-    /** https://github.com/xataio/xata/issues/660
-    expect(
-      client.db.users.insert('a-unique-record-john-4', {
-        full_name: 'John Doe 5',
-        email: 'john5@doe.com'
-      })
-    ).rejects.toMatchInlineSnapshot();**/
-  });
-
   test('Upsert of a user', async () => {
-    const user = await client.db.users.updateOrInsert('my-good-old-john-6', {
+    const user = await client.db.users.createOrUpdate('my-good-old-john-6', {
       full_name: 'John Doe 6',
       email: 'john6@doe.com'
     });
@@ -552,5 +480,106 @@ describe('integration tests', () => {
         "status": 400,
       }
     `);
+  });
+});
+
+describe('record creation', () => {
+  test('create single team without id', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    expect(team.id).toBeDefined();
+    expect(team.name).toBe('Team ships');
+  });
+
+  test('create multiple teams without ids', async () => {
+    const teams = await client.db.teams.createMany([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    expect(teams).toHaveLength(2);
+    expect(teams[0].id).toBeDefined();
+    expect(teams[0].name).toBe('Team cars');
+    expect(teams[1].id).toBeDefined();
+    expect(teams[1].name).toBe('Team planes');
+  });
+
+  test('create user with id', async () => {
+    const user = await client.db.users.create('a-unique-record-john-4', {
+      full_name: 'John Doe 4',
+      email: 'john4@doe.com'
+    });
+
+    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
+    if (!apiUser) throw new Error('No user found');
+
+    expect(user.id).toBe('a-unique-record-john-4');
+    expect(user.full_name).toBe('John Doe 4');
+
+    expect(user.id).toBe(apiUser.id);
+    expect(user.full_name).toBe(apiUser.full_name);
+    expect(user.email).toBe(apiUser.email);
+
+    expect(
+      client.db.users.create('a-unique-record-john-4', {
+        full_name: 'John Doe 5',
+        email: 'john5@doe.com'
+      })
+    ).rejects.toMatchInlineSnapshot(
+      {
+        message: expect.any(String),
+        status: 422
+      } as any,
+      `
+      Object {
+        "message": Any<String>,
+        "status": 422,
+      }
+    `
+    );
+  });
+
+  test('create user with inlined id', async () => {
+    const user = await client.db.users.create({
+      id: 'a-unique-record-john-5',
+      full_name: 'John Doe 5',
+      email: 'john5@doe.com'
+    });
+
+    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
+    if (!apiUser) throw new Error('No user found');
+
+    expect(user.id).toBe('a-unique-record-john-5');
+    expect(user.full_name).toBe('John Doe 5');
+
+    expect(user.id).toBe(apiUser.id);
+    expect(user.full_name).toBe(apiUser.full_name);
+    expect(user.email).toBe(apiUser.email);
+  });
+
+  test('create user with empty id is not allowed', async () => {
+    expect(
+      client.db.users.create('', {
+        full_name: 'John Doe 3',
+        email: 'john3@doe.com'
+      })
+    ).rejects.toMatchInlineSnapshot(`[Error: The id can't be empty]`);
+  });
+
+  test('create user with empty inline id is not allowed', async () => {
+    expect(
+      client.db.users.create({
+        id: '',
+        full_name: 'John Doe 3',
+        email: 'john3@doe.com'
+      })
+    ).rejects.toMatchInlineSnapshot(`[Error: The id can't be empty]`);
+  });
+
+  test('create user with falsy id is not allowed', async () => {
+    expect(
+      //@ts-expect-error
+      client.db.users.create(null, {
+        full_name: 'John Doe 3',
+        email: 'john3@doe.com'
+      })
+    ).rejects.toMatchInlineSnapshot(`[Error: Invalid arguments for create method]`);
   });
 });

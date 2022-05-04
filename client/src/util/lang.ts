@@ -11,3 +11,11 @@ export function compactObject<T>(obj: Record<string, T | null | undefined>): Rec
 }
 
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+export function isObject(value: any): value is object {
+  return value !== undefined && value !== null && typeof value === 'object';
+}
+
+export function isString(value: any): value is string {
+  return value !== undefined && value !== null && typeof value === 'string';
+}
