@@ -69,9 +69,9 @@ describe('compareSquema', () => {
             "schemaType": "int",
           },
           Object {
-            "castedType": "string",
+            "castedType": "float",
             "columnName": "c",
-            "error": true,
+            "error": false,
             "guessedType": "float",
             "schemaType": "float",
           },
