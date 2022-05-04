@@ -117,8 +117,7 @@ export async function shouldContinue(
       return exitWithError(`Table ${table} does not exist. Use --create to create it`);
     }
     if (compare.missingColumns.length > 0) {
-      const missing = compare.missingColumns.map((col) => col.column);
-      return exitWithError(`These columns are missing: ${missing.join(', ')}. Use --create to create them`);
+      return exitWithError(`These columns are missing: ${missingColumnsList(compare)}. Use --create to create them`);
     }
   } else {
     if (compare.missingTable) {
@@ -133,11 +132,10 @@ export async function shouldContinue(
       }
     } else if (compare.missingColumns.length > 0) {
       if (!force) {
-        const missing = compare.missingColumns.map((col) => col.column);
         const response = await inquirer.prompt({
           type: 'confirm',
           name: 'confirm',
-          message: `These columns are missing: ${missing.join(', ')}. Do you want to create them?`,
+          message: `These columns are missing: ${missingColumnsList(compare)}. Do you want to create them?`,
           default: false
         });
         if (!response.confirm) return false;
@@ -146,4 +144,9 @@ export async function shouldContinue(
   }
 
   return true;
+}
+
+function missingColumnsList(compare: CompareSchemaResult) {
+  const missing = compare.missingColumns.map((col) => `${col.column} (${col.type})`);
+  return missing.join(', ');
 }
