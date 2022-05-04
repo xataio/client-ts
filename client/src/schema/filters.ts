@@ -1,3 +1,4 @@
+import { isObject } from '../util/lang';
 import { XataRecord } from './record';
 import { SelectableColumn } from './selection';
 
@@ -10,7 +11,7 @@ export type SortFilterExtended<T extends XataRecord> = {
 export type SortFilter<T extends XataRecord> = SelectableColumn<T> | SortFilterExtended<T>;
 
 export function isSortFilterObject<T extends XataRecord>(filter: SortFilter<T>): filter is SortFilterExtended<T> {
-  return typeof filter === 'object' && filter.column !== undefined;
+  return isObject(filter) && filter.column !== undefined;
 }
 
 export type FilterOperator =

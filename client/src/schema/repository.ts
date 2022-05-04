@@ -9,10 +9,11 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
+import { isObject, isString } from '../util/lang';
 import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
-import { BaseData, EditableData, isIdentifiable, XataRecord } from './record';
+import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectedPick } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
@@ -25,11 +26,19 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   SelectedPick<Record, ['*']>
 > {
   /*
-   * Creates a record in the table.
+   * Creates a single record in the table.
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  abstract create(object: EditableData<Data> & Partial<Identifiable>): Promise<SelectedPick<Record, ['*']>>;
+
+  /**
+   * Creates a single record in the table with a unique id.
+   * @param id The unique id.
+   * @param object Object containing the column names with their values to be stored in the table.
+   * @returns The full persisted record.
+   */
+  abstract create(id: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
 
   /**
    * Creates multiple records in the table.
@@ -46,14 +55,6 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract read(id: string): Promise<SelectedPick<Record, ['*']> | null>;
 
   /**
-   * Insert a single record with a unique id.
-   * @param id The unique id.
-   * @param object Object containing the column names with their values to be stored in the table.
-   * @returns The full persisted record.
-   */
-  abstract insert(id: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
-
-  /**
    * Partially update a single record given its unique id.
    * @param id The unique id.
    * @param object The column names and their values that have to be updatd.
@@ -62,13 +63,13 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract update(id: string, object: Partial<EditableData<Data>>): Promise<SelectedPick<Record, ['*']>>;
 
   /**
-   * Updates or inserts a single record. If a record exists with the given id,
+   * Creates or updates a single record. If a record exists with the given id,
    * it will be update, otherwise a new record will be created.
    * @param id A unique id.
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
-  abstract updateOrInsert(id: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  abstract createOrUpdate(id: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
 
   /**
    * Deletes a record given its unique id.
@@ -122,7 +123,23 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     };
   }
 
-  async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
+  async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  async create(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  async create(a: string | EditableData<Data>, b?: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
+    if (isString(a) && isObject(b)) {
+      if (a === '') throw new Error("The id can't be empty");
+      return this.#insertRecordWithId(a, b);
+    } else if (isObject(a) && isString(a.id)) {
+      if (a.id === '') throw new Error("The id can't be empty");
+      return this.#insertRecordWithId(a.id, { ...a, id: undefined });
+    } else if (isObject(a)) {
+      return this.#insertRecordWithoutId(a);
+    } else {
+      throw new Error('Invalid arguments for create method');
+    }
+  }
+
+  async #insertRecordWithoutId(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -134,6 +151,31 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         tableName: this.#table
       },
       body: record,
+      ...fetchProps
+    });
+
+    const finalObject = await this.read(response.id);
+    if (!finalObject) {
+      throw new Error('The server failed to save the record');
+    }
+
+    return finalObject;
+  }
+
+  async #insertRecordWithId(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
+    const fetchProps = await this.#getFetchProps();
+
+    const record = transformObjectLinks(object);
+
+    const response = await insertRecordWithID({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        tableName: this.#table,
+        recordId
+      },
+      body: record,
+      queryParams: { createOnly: true },
       ...fetchProps
     });
 
@@ -192,31 +234,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return item;
   }
 
-  async insert(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
-    const fetchProps = await this.#getFetchProps();
-
-    const record = transformObjectLinks(object);
-
-    const response = await insertRecordWithID({
-      pathParams: {
-        workspace: '{workspaceId}',
-        dbBranchName: '{dbBranch}',
-        tableName: this.#table,
-        recordId
-      },
-      body: record,
-      ...fetchProps
-    });
-
-    const finalObject = await this.read(response.id);
-    if (!finalObject) {
-      throw new Error('The server failed to save the record');
-    }
-
-    return finalObject;
-  }
-
-  async updateOrInsert(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
+  async createOrUpdate(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
@@ -329,7 +347,7 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
       const [field, linkTable] = link;
       const value = o[field];
 
-      if (value && typeof value === 'object') {
+      if (value && isObject(value)) {
         const { id } = value as any;
         if (Object.keys(value).find((col) => col === 'id')) {
           o[field] = this.initObject(linkTable, value);

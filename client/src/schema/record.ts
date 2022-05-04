@@ -1,3 +1,5 @@
+import { isObject, isString } from '../util/lang';
+
 /**
  * Represents an identifiable record from the database.
  */
@@ -48,7 +50,7 @@ export interface XataRecord extends Identifiable {
 }
 
 export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
-  return typeof x === 'object' && typeof x?.id === 'string';
+  return isObject(x) && isString((x as Partial<Identifiable>)?.id);
 }
 
 export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> {
