@@ -59,7 +59,6 @@ export async function run(
 }
 
 async function readKey() {
-  // TODO: is this the same for windows?
   const keyPath = path.join(homedir(), '.config', 'xata', 'key');
   try {
     return await readFile(keyPath, 'utf-8');
