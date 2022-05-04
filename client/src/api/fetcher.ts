@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-throw-literal */
 /* eslint-disable @typescript-eslint/ban-types */
-import { isObject, isString } from '../util/lang';
-import type { SimpleError } from './responses';
+import { compactObject, isObject, isString } from '../util/lang';
+import type { BulkError, SimpleError } from './responses';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
   const query = new URLSearchParams(queryParams).toString();
@@ -32,8 +32,6 @@ export type FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
   queryParams?: TQueryParams;
   pathParams?: TPathParams;
 };
-
-const fallbackError: SimpleError = { message: 'Network response was not ok' };
 
 function buildBaseUrl({
   path,
@@ -109,23 +107,22 @@ export async function fetch<
       return jsonResponse;
     }
 
-    if (jsonResponse.message) {
-      throw withStatus({ message: jsonResponse.message }, response.status);
-    } else {
-      throw withStatus(fallbackError, response.status);
-    }
+    const { message = 'Unknown error', errors } = jsonResponse;
+
+    throw withStatus({ message, errors }, response.status);
   } catch (e) {
-    if (e instanceof Error) {
-      const error: SimpleError = {
-        message: e.message
-      };
-      throw withStatus(error, response.status);
-    } else if (isObject(e) && isString((e as SimpleError).message)) {
-      throw withStatus(e as SimpleError, response.status);
+    if (isError(e)) {
+      throw withStatus(e, response.status);
     } else {
-      throw withStatus(fallbackError, response.status);
+      throw withStatus({ message: 'Network response was not ok' }, response.status);
     }
   }
 }
 
-const withStatus = (error: SimpleError, status: number) => ({ ...error, status });
+const isError = (error: any): error is { message: string } => {
+  return isObject(error) && isString((error as SimpleError).message);
+};
+
+const withStatus = (error: ApiError, status: number) => compactObject({ ...error, status });
+
+type ApiError = SimpleError & Partial<BulkError>;

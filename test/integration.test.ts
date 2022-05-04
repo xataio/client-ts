@@ -459,6 +459,28 @@ describe('integration tests', () => {
     expect(createdPlanes).toHaveLength(250);
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
   });
+
+  test('multiple errors in one response', async () => {
+    // @ts-expect-error
+    const invalidUsers: User[] = [{ full_name: 1 }, { full_name: 2 }];
+
+    expect(client.db.users.createMany(invalidUsers)).rejects.toMatchInlineSnapshot(`
+      Object {
+        "errors": Array [
+          Object {
+            "message": "invalid record: column [full_name]: type mismatch: expected string",
+            "status": 400,
+          },
+          Object {
+            "message": "invalid record: column [full_name]: type mismatch: expected string",
+            "status": 400,
+          },
+        ],
+        "message": "Unknown error",
+        "status": 400,
+      }
+    `);
+  });
 });
 
 describe('record creation', () => {
