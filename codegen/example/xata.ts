@@ -43,3 +43,67 @@ export class XataClient extends BaseClient<{
     };
   }
 }
+
+export function createMigration() {
+  return {
+    tables: {
+      teams: {
+        columns: {
+          name: {
+            rename(name: string) {},
+            delete() {},
+          },
+          labels: {
+            rename(name: string) {},
+            delete() {},
+          },
+          owner: {
+            rename(name: string) {},
+            delete() {},
+          },
+        },
+        delete() {},
+        rename(name: string) {},
+        addColumn(options: { name: string; type: ColumnType }) {},
+      },
+      users: {
+        columns: {
+          email: {
+            rename(name: string) {},
+            delete() {},
+          },
+          full_name: {
+            rename(name: string) {},
+            delete() {},
+          },
+          address: {
+            rename(name: string) {},
+            delete() {},
+          },
+          team: {
+            rename(name: string) {},
+            delete() {},
+          },
+        },
+        delete() {},
+        rename(name: string) {},
+        addColumn(options: { name: string; type: ColumnType }) {},
+      },
+    },
+    addTable(options: {
+      name: string;
+      columns: { name: string; type: ColumnType }[];
+    }) {},
+    run() {},
+  };
+}
+
+// TODO: get from open api spec
+type ColumnType =
+  | "int"
+  | "float"
+  | "email"
+  | "string"
+  | "text"
+  | "multiple"
+  | "bool";

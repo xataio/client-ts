@@ -116,19 +116,62 @@ export async function generate({ schema, config, language, javascriptTarget }: G
     }> {
       constructor(options: XataClientOptions) {
         super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
-        
+
         const factory = options.repositoryFactory || new RestRespositoryFactory();
         ${
           language === 'javascript'
             ? `/** @type {{ ${tables.map((table) => `"${table.name}": Repository`).join('; ')} }} */`
             : ''
         }
-        
+
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
         };
       }
     }
+
+    export function createMigration() {
+      return {
+        tables: {
+          ${tables.map(
+            (table) => `
+            ${table.name}: {
+              columns: {
+                ${table.columns.map(
+                  (column) => `
+                  ${column.name}: {
+                    rename(name: string) {
+
+                    },
+                    delete() {
+
+                    }
+                  }
+                `
+                )}
+              },
+              delete() {
+
+              },
+              rename(name: string) {
+
+              },
+              addColumn(options: { name: string, type: ColumnType }) {
+
+              }
+            }
+          `
+          )}
+        },
+        addTable(options: {name: string, columns: { name: string, type: ColumnType }[] }) {
+        },
+        run() {
+        }
+      }
+    }
+
+    // TODO: get from open api spec
+    type ColumnType = 'int' | 'float' | 'email' | 'string' | 'text' | 'multiple' | 'bool';
   `;
 
   const transpiled = transpile(code, language, javascriptTarget);

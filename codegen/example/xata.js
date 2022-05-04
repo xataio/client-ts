@@ -40,3 +40,53 @@ export class XataClient extends BaseClient {
     };
   }
 }
+export function createMigration() {
+  return {
+    tables: {
+      teams: {
+        columns: {
+          name: {
+            rename(name) {},
+            delete() {},
+          },
+          labels: {
+            rename(name) {},
+            delete() {},
+          },
+          owner: {
+            rename(name) {},
+            delete() {},
+          },
+        },
+        delete() {},
+        rename(name) {},
+        addColumn(options) {},
+      },
+      users: {
+        columns: {
+          email: {
+            rename(name) {},
+            delete() {},
+          },
+          full_name: {
+            rename(name) {},
+            delete() {},
+          },
+          address: {
+            rename(name) {},
+            delete() {},
+          },
+          team: {
+            rename(name) {},
+            delete() {},
+          },
+        },
+        delete() {},
+        rename(name) {},
+        addColumn(options) {},
+      },
+    },
+    addTable(options) {},
+    run() {},
+  };
+}

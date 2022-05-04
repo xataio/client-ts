@@ -4,3 +4,5 @@ babel.config.js
 
 # Generated files
 client/src/api/components.ts
+
+codegen/migration-*.ts
