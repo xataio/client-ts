@@ -339,46 +339,36 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
   }
 
   public initObject<T>(table: string, object: object) {
-    const o: Record<string, unknown> = {};
-    Object.assign(o, object);
+    const result: Record<string, unknown> = {};
+    Object.assign(result, object);
 
     const tableLinks = this.#links[table] || [];
     for (const link of tableLinks) {
       const [field, linkTable] = link;
-      const value = o[field];
+      const value = result[field];
 
       if (value && isObject(value)) {
-        const { id } = value as any;
-        if (Object.keys(value).find((col) => col === 'id')) {
-          o[field] = this.initObject(linkTable, value);
-        } else if (id) {
-          o[field] = {
-            id,
-            get: () => {
-              return this.db[linkTable].read(id);
-            }
-          };
-        }
+        result[field] = this.initObject(linkTable, value);
       }
     }
 
     const db = this.db;
-    o.read = function () {
-      return db[table].read(o['id'] as string);
+    result.read = function () {
+      return db[table].read(result['id'] as string);
     };
-    o.update = function (data: any) {
-      return db[table].update(o['id'] as string, data);
+    result.update = function (data: any) {
+      return db[table].update(result['id'] as string, data);
     };
-    o.delete = function () {
-      return db[table].delete(o['id'] as string);
+    result.delete = function () {
+      return db[table].delete(result['id'] as string);
     };
 
     for (const prop of ['read', 'update', 'delete']) {
-      Object.defineProperty(o, prop, { enumerable: false });
+      Object.defineProperty(result, prop, { enumerable: false });
     }
 
-    Object.freeze(o);
-    return o as T;
+    Object.freeze(result);
+    return result as T;
   }
 
   public async getBranch(): Promise<string> {
