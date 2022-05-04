@@ -1,1 +1,4 @@
-file.csv
+*.csv
+
+# Auto generated version file
+src/version.ts
