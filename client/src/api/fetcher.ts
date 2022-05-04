@@ -120,7 +120,7 @@ export async function fetch<
 }
 
 const isError = (error: any): error is { message: string } => {
-  return isObject(e) && isString((e as SimpleError).message);
+  return isObject(error) && isString((error as SimpleError).message);
 };
 
 const withStatus = (error: ApiError, status: number) => compactObject({ ...error, status });
