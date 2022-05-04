@@ -69,7 +69,9 @@ export function guessType(value: string) {
 }
 
 export function castType(a: string, b: string) {
-  if ((a === 'float' && b === 'int') || (a === 'int' && b === 'float')) {
+  if (a === b) {
+    return a;
+  } else if ((a === 'float' && b === 'int') || (a === 'int' && b === 'float')) {
     return 'float';
   } else if (a === 'text' || b === 'text') {
     return 'text';

@@ -47,6 +47,11 @@ describe('guessType', () => {
 });
 
 describe('castType', () => {
+  test('casts to the same type if the types are equal', () => {
+    expect(castType('email', 'email')).toBe('email');
+    expect(castType('multiple', 'multiple')).toBe('multiple');
+  });
+
   test('casts to float for different numeric types', () => {
     expect(castType('int', 'float')).toBe('float');
     expect(castType('float', 'int')).toBe('float');
