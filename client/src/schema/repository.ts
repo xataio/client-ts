@@ -9,10 +9,11 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
+import { isObject, isString } from '../util/lang';
 import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query, QueryOptions } from './query';
-import { BaseData, XataRecord } from './record';
+import { BaseData, Identifiable, XataRecord } from './record';
 import { Select, SelectableColumn } from './selection';
 
 export type Links = Record<string, Array<string[]>>;
@@ -25,11 +26,19 @@ export abstract class Repository<
   Record extends XataRecord = Data & XataRecord
 > extends Query<Record> {
   /*
-   * Creates a record in the table.
+   * Creates a single record in the table.
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(object: Data): Promise<Record>;
+  abstract create(object: Data & Partial<Identifiable>): Promise<Record>;
+
+  /**
+   * Creates a single record in the table with a unique id.
+   * @param id The unique id.
+   * @param object Object containing the column names with their values to be stored in the table.
+   * @returns The full persisted record.
+   */
+  abstract create(id: string, object: Data): Promise<Record>;
 
   /**
    * Creates multiple records in the table.
@@ -46,14 +55,6 @@ export abstract class Repository<
   abstract read(id: string): Promise<Record | null>;
 
   /**
-   * Insert a single record with a unique id.
-   * @param id The unique id.
-   * @param object Object containing the column names with their values to be stored in the table.
-   * @returns The full persisted record.
-   */
-  abstract insert(id: string, object: Data): Promise<Record>;
-
-  /**
    * Partially update a single record given its unique id.
    * @param id The unique id.
    * @param object The column names and their values that have to be updatd.
@@ -62,13 +63,13 @@ export abstract class Repository<
   abstract update(id: string, object: Partial<Data>): Promise<Record>;
 
   /**
-   * Updates or inserts a single record. If a record exists with the given id,
+   * Creates or updates a single record. If a record exists with the given id,
    * it will be update, otherwise a new record will be created.
    * @param id A unique id.
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
-  abstract updateOrInsert(id: string, object: Data): Promise<Record>;
+  abstract createOrUpdate(id: string, object: Data): Promise<Record>;
 
   /**
    * Deletes a record given its unique id.
@@ -104,8 +105,10 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     this.#table = table;
 
     // TODO: Remove when integrating with API client
-    const fetchImpl = typeof fetch !== 'undefined' ? fetch : this.#client.options.fetch;
+    const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
+    const fetchImpl = this.#client.options.fetch ?? globalFetch;
     if (!fetchImpl) {
+      /** @todo add a link after docs exist */
       throw new Error(
         `The \`fetch\` option passed to the Xata client is resolving to a falsy value and may not be correctly imported.`
       );
@@ -130,7 +133,23 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     };
   }
 
-  async create(object: Data): Promise<Record> {
+  async create(object: Data): Promise<Record>;
+  async create(recordId: string, object: Data): Promise<Record>;
+  async create(a: string | Data, b?: Data): Promise<Record> {
+    if (isString(a) && isObject(b)) {
+      if (a === '') throw new Error("The id can't be empty");
+      return this.#insertRecordWithId(a, b);
+    } else if (isObject(a) && isString(a.id)) {
+      if (a.id === '') throw new Error("The id can't be empty");
+      return this.#insertRecordWithId(a.id, { ...a, id: undefined });
+    } else if (isObject(a)) {
+      return this.#insertRecordWithoutId(a);
+    } else {
+      throw new Error('Invalid arguments for create method');
+    }
+  }
+
+  async #insertRecordWithoutId(object: Data): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -142,6 +161,31 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         tableName: this.#table
       },
       body: record,
+      ...fetchProps
+    });
+
+    const finalObject = await this.read(response.id);
+    if (!finalObject) {
+      throw new Error('The server failed to save the record');
+    }
+
+    return finalObject;
+  }
+
+  async #insertRecordWithId(recordId: string, object: Data): Promise<Record> {
+    const fetchProps = await this.#getFetchProps();
+
+    const record = transformObjectLinks(object);
+
+    const response = await insertRecordWithID({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        tableName: this.#table,
+        recordId
+      },
+      body: record,
+      queryParams: { createOnly: true },
       ...fetchProps
     });
 
@@ -198,31 +242,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return item;
   }
 
-  async insert(recordId: string, object: Data): Promise<Record> {
-    const fetchProps = await this.#getFetchProps();
-
-    const record = transformObjectLinks(object);
-
-    const response = await insertRecordWithID({
-      pathParams: {
-        workspace: '{workspaceId}',
-        dbBranchName: '{dbBranch}',
-        tableName: this.#table,
-        recordId
-      },
-      body: record,
-      ...fetchProps
-    });
-
-    const finalObject = await this.read(response.id);
-    if (!finalObject) {
-      throw new Error('The server failed to save the record');
-    }
-
-    return finalObject;
-  }
-
-  async updateOrInsert(recordId: string, object: Data): Promise<Record> {
+  async createOrUpdate(recordId: string, object: Data): Promise<Record> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
@@ -352,7 +372,7 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
       const [field, linkTable] = link;
       const value = o[field];
 
-      if (value && typeof value === 'object') {
+      if (value && isObject(value)) {
         const { id } = value as any;
         if (Object.keys(value).find((col) => col === 'id')) {
           o[field] = this.initObject(linkTable, value);
@@ -360,7 +380,7 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
           o[field] = {
             id,
             get: () => {
-              this.db[linkTable].read(id);
+              return this.db[linkTable].read(id);
             }
           };
         }
@@ -416,8 +436,8 @@ const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchSt
 
 // TODO: We can find a better implementation for links
 const transformObjectLinks = (object: any) => {
-  return Object.entries(object).reduce((acc, [key, value]) => {
-    if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+  return Object.entries(object ?? {}).reduce((acc, [key, value]) => {
+    if (isObject(value) && isString((value as Record<string, unknown>).id)) {
       return { ...acc, [key]: (value as XataRecord).id };
     }
 

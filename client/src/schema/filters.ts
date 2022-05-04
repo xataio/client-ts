@@ -1,3 +1,5 @@
+import { isObject } from '../util/lang';
+
 export type SortDirection = 'asc' | 'desc';
 export type SortFilterExtended<T> = {
   column: keyof T;
@@ -7,7 +9,7 @@ export type SortFilterExtended<T> = {
 export type SortFilter<T> = SortFilterExtended<T> | keyof T;
 
 export function isSortFilterObject<T>(filter: SortFilter<T>): filter is SortFilterExtended<T> {
-  return typeof filter === 'object' && filter.column !== undefined;
+  return isObject(filter) && filter.column !== undefined;
 }
 
 export type FilterOperator =

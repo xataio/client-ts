@@ -60,7 +60,7 @@ jobs:
             [Pull request has been updated, please wait for latest changes to be pushed to npm...]
 
       - name: Install dependencies
-        run: npm ci && npx lerna bootstrap --ci
+        run: npm install
 
       - name: Lint
         run: npm run lint

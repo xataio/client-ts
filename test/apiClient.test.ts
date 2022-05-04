@@ -39,7 +39,10 @@ describe('API Client Integration Tests', () => {
   });
 
   test('Create workspace with database, branch, table and records', async () => {
-    const { id: workspace } = await client.workspaces.createWorkspace({ name: 'example', slug: 'example' });
+    const { id: workspace } = await client.workspaces.createWorkspace({
+      name: 'sdk-integration-api-client',
+      slug: 'sdk-integration-api-client'
+    });
 
     const { databaseName } = await client.databases.createDatabase(workspace, 'database');
 
