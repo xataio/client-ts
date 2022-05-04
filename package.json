@@ -71,5 +71,7 @@
       "path": "client/dist/*"
     }
   ],
-  "dependencies": {}
+  "dependencies": {
+    "zod": "^3.14.4"
+  }
 }
