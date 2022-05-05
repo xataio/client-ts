@@ -4,7 +4,7 @@ import { XataRecord } from './record';
 import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
 
 interface Team {
-  name?: string | null;
+  name: string;
   labels?: string[] | null;
   owner?: UserRecord | null;
 }
@@ -13,9 +13,10 @@ type TeamRecord = Team & XataRecord;
 
 interface User {
   email?: string | null;
-  full_name?: string | null;
+  full_name: string;
   address?: { street?: string | null; zipcode?: number | null } | null;
   team?: TeamRecord | null;
+  owner: UserRecord;
 }
 
 type UserRecord = User & XataRecord;
@@ -57,11 +58,18 @@ function selectedRecordPickTest1(selectedUserBaseRecord: SelectedPick<UserRecord
   selectedUserBaseRecord.read();
   selectedUserBaseRecord.full_name;
   selectedUserBaseRecord.address?.street;
+
+  // @ts-expect-error
+  selectedUserBaseRecord.team.id;
   selectedUserBaseRecord.team?.id;
   selectedUserBaseRecord.team?.read();
   // @ts-expect-error
   selectedUserBaseRecord.team?.name;
-  selectedUserBaseRecord;
+
+  selectedUserBaseRecord.owner.id;
+  selectedUserBaseRecord.owner.read();
+  // @ts-expect-error
+  selectedUserBaseRecord.owner.full_name;
 }
 
 function selectedRecordPickTest2(selectedUserFullRecord: SelectedPick<UserRecord, ['*', 'team.*']>) {
@@ -76,6 +84,21 @@ function selectedRecordPickTest2(selectedUserFullRecord: SelectedPick<UserRecord
   selectedUserFullRecord.team?.owner?.read();
   // @ts-expect-error
   selectedUserFullRecord.team?.owner?.full_name;
+
+  // @ts-expect-error
+  selectedUserFullRecord.full_name = null;
+  selectedUserFullRecord.email = null;
+  selectedUserFullRecord.email = '';
+  // @ts-expect-error
+  selectedUserFullRecord.email = 2;
+  if (selectedUserFullRecord.team) {
+    // @ts-expect-error
+    selectedUserFullRecord.team.name = null;
+    selectedUserFullRecord.team.labels = null;
+    selectedUserFullRecord.team.labels = ['foo'];
+    // @ts-expect-error
+    selectedUserFullRecord.team.labels = [1];
+  }
 }
 
 function selectedRecordPickTest3(selectedUserNestedRecord: SelectedPick<UserRecord, ['team.owner.*']>) {
