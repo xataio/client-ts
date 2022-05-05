@@ -85,7 +85,9 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
     : Key extends '*'
     ? {
         [K in keyof NonNullable<O>]: NonNullable<NonNullable<O>[K]> extends XataRecord
-          ? Link<NonNullable<NonNullable<O>[K]>> | null // Link improves read/update method signatures to avoid loosing the internal type
+          ? NonNullable<O>[K] extends XataRecord
+            ? Link<NonNullable<O>[K]> // Link forwards read/update method signatures to avoid loosing the internal type
+            : Link<NonNullable<NonNullable<O>[K]>> | null // Preserve nullable types
           : NonNullable<O>[K];
       }
     : unknown; //`Property ${Key} is invalid`;
