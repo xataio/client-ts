@@ -1,5 +1,18 @@
 # @xata.io/client
 
+## 0.6.0
+
+### Minor Changes
+
+- 084f5df: Add type inference for columns
+- bb73c89: Unify create and insert in a single method overload
+
+### Patch Changes
+
+- 716c487: Forward nullable types on links
+- bb66bb2: Fix error handling with createMany
+- 084f5df: Fix circular dependencies on selectable column
+
 ## 0.5.1
 
 ### Patch Changes
