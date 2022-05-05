@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import { Ora } from 'ora';
 import * as path from 'path';
-import { join, relative } from 'path';
+import { dirname, join, relative } from 'path';
 import { ZodError } from 'zod';
 import { generate, Language } from './codegen.js';
 import { parseConfigFile } from './config.js';
@@ -47,8 +47,11 @@ export const generateWithOutput = async ({
     return;
   }
 
-  const code = await generate({ schema, config, language });
+  const { transpiled: code, declarations } = await generate({ schema, config, language });
   await writeFile(fullOutputPath, code);
+  if (language === 'javascript' && declarations) {
+    await writeFile(`${dirname(outputFilePath)}/types.d.ts`, declarations);
+  }
 
   spinner?.succeed(`Your XataClient is generated at ./${relative(process.cwd(), outputFilePath)}.`);
 };

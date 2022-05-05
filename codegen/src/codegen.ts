@@ -13,6 +13,12 @@ export type GenerateOptions = {
   javascriptTarget?: JavascriptTarget;
 };
 
+export type GenerateOutput = {
+  original: string;
+  transpiled: string;
+  declarations?: string;
+};
+
 function getTypeName(tableName: string) {
   const snglr = pluralize.singular(tableName);
 
@@ -38,25 +44,24 @@ function generateColumnType(column: Column) {
   return `${column.name}?: ${getTypeScriptType(column)} | null`;
 }
 
-function generateJSdocType(table: Table) {
-  const { columns } = table;
-  const revLinks: { table: string }[] = []; // table.rev_links || [];
-  const typeName = getTypeName(table.name);
-  return `
-/**
- * @typedef {Object} ${typeName}
- * @property {string} id
- * @property {Object} xata
- * @property {() => Promise<${typeName}>} read
- * @property {() => Promise<${typeName}>} update
- * @property {() => Promise<void>} delete
- ${columns.map((column) => generateJSDocColumnType(column)).join('\n ')}
- ${revLinks.map((link) => `${link.table}: Query<${getTypeName(link.table)}>`).join('\n ')}
- */`;
+function generateJSDocImportTypes(tables: Table[]) {
+  return tables
+    .map(
+      (table) => `
+  /** @typedef { import('./types').${getTypeName(table.name)} } ${getTypeName(table.name)} */
+  /** @typedef { import('./types').${getTypeName(table.name)}Record } ${getTypeName(table.name)}Record */
+  /** @typedef { import('@xata.io/client').Repository<${getTypeName(table.name)}, ${getTypeName(
+        table.name
+      )}Record> } ${getTypeName(table.name)}Repository */
+`
+    )
+    .join('\n');
 }
 
-function generateJSDocColumnType(column: Column) {
-  return `* @property {${getTypeScriptType(column)}=} ${column.name}`;
+function generateJSDocInternalType(tables: Table[]) {
+  return `/** @type {{ ${tables
+    .map((table) => `"${table.name}": ${getTypeName(table.name)}Repository`)
+    .join('; ')} }} */`;
 }
 
 function getTypeScriptType(column: Column): string {
@@ -81,7 +86,12 @@ function getTypeScriptType(column: Column): string {
 export type Language = 'typescript' | 'javascript';
 export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
-export async function generate({ schema, config, language, javascriptTarget }: GenerateOptions) {
+export async function generate({
+  schema,
+  config,
+  language,
+  javascriptTarget
+}: GenerateOptions): Promise<GenerateOutput> {
   const { tables } = schema;
   const links: Record<string, string[][]> = {};
   for (const table of tables) {
@@ -96,7 +106,6 @@ export async function generate({ schema, config, language, javascriptTarget }: G
   const parser = prettierParsers[language];
 
   const code = `
-  ${language === 'javascript' ? `    /** @typedef { import('@xata.io/client').Repository } Repository */` : ''}
     import {
       BaseClient,
       Repository,
@@ -107,7 +116,7 @@ export async function generate({ schema, config, language, javascriptTarget }: G
 
     ${tables.map((table) => generateTableType(table)).join('\n')}
 
-    ${language === 'javascript' ? tables.map((table) => generateJSdocType(table)).join('\n') : ''}
+    ${language === 'javascript' ? generateJSDocImportTypes(tables) : ''}
 
     const links = ${JSON.stringify(links)};
 
@@ -118,12 +127,7 @@ export async function generate({ schema, config, language, javascriptTarget }: G
         super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
         
         const factory = options.repositoryFactory || new RestRespositoryFactory();
-        ${
-          language === 'javascript'
-            ? `/** @type {{ ${tables.map((table) => `"${table.name}": Repository`).join('; ')} }} */`
-            : ''
-        }
-        
+        ${language === 'javascript' ? generateJSDocInternalType : ''}
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
         };
@@ -132,8 +136,11 @@ export async function generate({ schema, config, language, javascriptTarget }: G
   `;
 
   const transpiled = transpile(code, language, javascriptTarget);
+  const declarations = emitDeclarations(code);
 
-  return prettier.format(transpiled, { parser, plugins: [parserTypeScript, parserJavascript] });
+  const pretty = prettier.format(transpiled, { parser, plugins: [parserTypeScript, parserJavascript] });
+
+  return { original: code, transpiled: pretty, declarations };
 }
 
 const prettierParsers: Record<Language, BuiltInParserName> = {
@@ -148,4 +155,30 @@ function transpile(code: string, language: Language, javascriptTarget: Javascrip
     case 'javascript':
       return ts.transpile(code, { target: ts.ScriptTarget[javascriptTarget] });
   }
+}
+
+function emitDeclarations(code: string) {
+  const files = new Map<string, string>();
+  const inputFileName = 'index.ts';
+  const sourceFile = ts.createSourceFile(inputFileName, code, ts.ScriptTarget.ESNext);
+
+  const compilerHost = {
+    getSourceFile: (fileName: string) => (fileName === inputFileName ? sourceFile : undefined),
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    writeFile: (_name: string, _text: string) => {},
+    getDefaultLibFileName: () => 'lib.d.ts',
+    useCaseSensitiveFileNames: () => false,
+    getCanonicalFileName: (fileName: string) => fileName,
+    getCurrentDirectory: () => '',
+    getNewLine: () => '\n',
+    fileExists: (fileName: string) => fileName === inputFileName,
+    readFile: () => '',
+    directoryExists: () => true,
+    getDirectories: () => []
+  };
+
+  const program = ts.createProgram(['index.ts'], { declaration: true, emitDeclarationOnly: true }, compilerHost);
+  program.emit(undefined, (fileName, data) => files.set(fileName, data), undefined, true);
+
+  return files.get('index.d.ts');
 }

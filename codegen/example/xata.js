@@ -1,30 +1,10 @@
-/** @typedef { import('../../client/src').Repository } Repository */
 import { BaseClient, RestRespositoryFactory } from "../../client/src";
-/**
- * @typedef {Object} Team
- * @property {string} id
- * @property {Object} xata
- * @property {() => Promise<Team>} read
- * @property {() => Promise<Team>} update
- * @property {() => Promise<void>} delete
- * @property {string=} name
- * @property {string[]=} labels
- * @property {UserRecord=} owner
- 
- */
-/**
- * @typedef {Object} User
- * @property {string} id
- * @property {Object} xata
- * @property {() => Promise<User>} read
- * @property {() => Promise<User>} update
- * @property {() => Promise<void>} delete
- * @property {string=} email
- * @property {string=} full_name
- * @property {{ street?: string | null; zipcode?: number | null }=} address
- * @property {TeamRecord=} team
- 
- */
+/** @typedef { import('./types').Team } Team */
+/** @typedef { import('./types').TeamRecord } TeamRecord */
+/** @typedef { import('../../client/src').Repository<Team, TeamRecord> } TeamRepository */
+/** @typedef { import('./types').User } User */
+/** @typedef { import('./types').UserRecord } UserRecord */
+/** @typedef { import('../../client/src').Repository<User, UserRecord> } UserRepository */
 const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
 export class XataClient extends BaseClient {
   constructor(options) {
@@ -33,7 +13,11 @@ export class XataClient extends BaseClient {
       links
     );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
-    /** @type {{ "teams": Repository; "users": Repository }} */
+    function generateJSDocInternalType(tables) {
+      return `/** @type {{ ${tables
+        .map((table) => `"${table.name}": ${getTypeName(table.name)}Repository`)
+        .join("; ")} }} */`;
+    }
     this.db = {
       teams: factory.createRepository(this, "teams"),
       users: factory.createRepository(this, "users"),
