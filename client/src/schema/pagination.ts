@@ -3,14 +3,14 @@ import { XataRecord } from './record';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
-export interface Paginable<T extends XataRecord, R extends XataRecord = T> {
+export interface Paginable<Record extends XataRecord, Result extends XataRecord = Record> {
   meta: PaginationQueryMeta;
-  records: R[];
+  records: Result[];
 
-  nextPage(size?: number, offset?: number): Promise<Page<T, R>>;
-  previousPage(size?: number, offset?: number): Promise<Page<T, R>>;
-  firstPage(size?: number, offset?: number): Promise<Page<T, R>>;
-  lastPage(size?: number, offset?: number): Promise<Page<T, R>>;
+  nextPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
+  previousPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
+  firstPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
+  lastPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
 
   hasNextPage(): boolean;
 }
@@ -19,8 +19,8 @@ export interface Paginable<T extends XataRecord, R extends XataRecord = T> {
  * A Page contains a set of results from a query plus metadata about the retrieved
  * set of values such as the cursor, required to retrieve additional records.
  */
-export class Page<T extends XataRecord, R extends XataRecord = T> implements Paginable<T, R> {
-  #query: Query<T, R>;
+export class Page<Record extends XataRecord, Result extends XataRecord = Record> implements Paginable<Record, Result> {
+  #query: Query<Record, Result>;
   /**
    * Page metadata, required to retrieve additional records.
    */
@@ -28,9 +28,9 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
   /**
    * The set of results for this page.
    */
-  readonly records: R[];
+  readonly records: Result[];
 
-  constructor(query: Query<T, R>, meta: PaginationQueryMeta, records: R[] = []) {
+  constructor(query: Query<Record, Result>, meta: PaginationQueryMeta, records: Result[] = []) {
     this.#query = query;
     this.meta = meta;
     this.records = records;
@@ -42,7 +42,7 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
    * @param offset Number of results to skip when retrieving the results.
    * @returns The next page or results.
    */
-  async nextPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  async nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.#query.getPaginated({ page: { size, offset, after: this.meta.page.cursor } });
   }
 
@@ -52,7 +52,7 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
    * @param offset Number of results to skip when retrieving the results.
    * @returns The previous page or results.
    */
-  async previousPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  async previousPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.#query.getPaginated({ page: { size, offset, before: this.meta.page.cursor } });
   }
 
@@ -62,7 +62,7 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
    * @param offset Number of results to skip when retrieving the results.
    * @returns The first page or results.
    */
-  async firstPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  async firstPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.#query.getPaginated({ page: { size, offset, first: this.meta.page.cursor } });
   }
 
@@ -72,11 +72,10 @@ export class Page<T extends XataRecord, R extends XataRecord = T> implements Pag
    * @param offset Number of results to skip when retrieving the results.
    * @returns The last page or results.
    */
-  async lastPage(size?: number, offset?: number): Promise<Page<T, R>> {
+  async lastPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.#query.getPaginated({ page: { size, offset, last: this.meta.page.cursor } });
   }
 
-  // TODO: We need to add something on the backend if we want a hasPreviousPage
   /**
    * Shortcut method to check if there will be additional results if the next page of results is retrieved.
    * @returns Whether or not there will be additional results in the next page of results.

@@ -1,4 +1,16 @@
 export type StringKeys<O> = Extract<keyof O, string>;
-export type Values<O> = O[keyof O];
+export type NumberKeys<O> = Extract<keyof O, number>;
+export type Values<O> = O[StringKeys<O>];
 
 export type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (x: infer R) => any ? R : never;
+
+export type If<Condition, Then, Else> = Condition extends true ? Then : Else;
+
+export type IsObject<T> = T extends Record<string, any> ? true : false;
+export type IsArray<T> = T extends Array<any> ? true : false;
+
+export type NonEmptyArray<T> = T[] & { 0: T };
+
+export type RequiredBy<T, K extends keyof T> = T & {
+  [P in K]-?: NonNullable<T[P]>;
+};

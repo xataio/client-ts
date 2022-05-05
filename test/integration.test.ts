@@ -1,7 +1,7 @@
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { BaseClient, contains, lt, Repository, XataApiClient } from '../client/src';
+import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../client/src';
 import {
   Paginable,
   PAGINATION_DEFAULT_SIZE,
@@ -103,11 +103,11 @@ describe('integration tests', () => {
   });
 
   test('operator filter', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).getMany();
+    const teams = await client.db.teams.filter('name', contains('fruits')).getMany({ sort: ['name'] });
 
     expect(teams).toHaveLength(2);
-    expect(teams[0].name).toBe('Team fruits');
-    expect(teams[1].name).toBe('Mixed team fruits & animals');
+    expect(teams[0].name).toBe('Mixed team fruits & animals');
+    expect(teams[1].name).toBe('Team fruits');
   });
 
   test.skip('operator filter on multiple column', async () => {
@@ -461,9 +461,9 @@ describe('integration tests', () => {
   });
 
   test('multiple errors in one response', async () => {
-    // @ts-expect-error
-    const invalidUsers: User[] = [{ full_name: 1 }, { full_name: 2 }];
+    const invalidUsers = [{ full_name: 1 }, { full_name: 2 }];
 
+    // @ts-expect-error
     expect(client.db.users.createMany(invalidUsers)).rejects.toMatchInlineSnapshot(`
       Object {
         "errors": Array [
@@ -480,6 +480,54 @@ describe('integration tests', () => {
         "status": 400,
       }
     `);
+  });
+
+  test('Link is a record object', async () => {
+    const user = await client.db.users.create({
+      full_name: 'Base User'
+    });
+
+    const team = await client.db.teams.create({
+      name: 'Base team',
+      owner: user
+    });
+
+    await user.update({ team });
+
+    const updatedUser = await user.read();
+    expect(updatedUser?.team?.id).toEqual(team.id);
+
+    const response = await client.db.teams.getOne({ filter: { id: team.id }, columns: ['*', 'owner.*'] });
+    const owner = await response?.owner?.read();
+
+    expect(response?.owner?.id).toBeDefined();
+    expect(response?.owner?.full_name).toBeDefined();
+
+    expect(owner?.id).toBeDefined();
+    expect(owner?.full_name).toBeDefined();
+
+    expect(response?.owner?.id).toBe(owner?.id);
+    expect(response?.owner?.full_name).toBe(owner?.full_name);
+
+    const nestedObject = await client.db.teams.getOne({
+      filter: { id: team.id },
+      columns: ['owner.team.owner.team.owner.team', 'owner.team.owner.team.owner.full_name']
+    });
+
+    const nestedProperty = nestedObject?.owner.team.owner.team.owner.team;
+    const nestedName = nestedObject?.owner.team.owner.team.owner.full_name;
+
+    expect(nestedName).toEqual(user.full_name);
+
+    expect(isXataRecord(nestedProperty)).toBe(true);
+    expect(nestedProperty?.name).toEqual(team.name);
+    // @ts-expect-error
+    expect(nestedProperty?.owner?.full_name).toBeUndefined();
+
+    const nestedRead = await nestedProperty?.owner?.read();
+
+    expect(nestedRead?.id).toBeDefined();
+    expect(nestedRead?.full_name).toEqual(user.full_name);
   });
 });
 
