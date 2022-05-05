@@ -13,11 +13,7 @@ export class XataClient extends BaseClient {
       links
     );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
-    function generateJSDocInternalType(tables) {
-      return `/** @type {{ ${tables
-        .map((table) => `"${table.name}": ${getTypeName(table.name)}Repository`)
-        .join("; ")} }} */`;
-    }
+    /** @type {{ "teams": TeamRepository; "users": UserRepository }} */
     this.db = {
       teams: factory.createRepository(this, "teams"),
       users: factory.createRepository(this, "users"),

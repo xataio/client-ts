@@ -127,7 +127,7 @@ export async function generate({
         super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
         
         const factory = options.repositoryFactory || new RestRespositoryFactory();
-        ${language === 'javascript' ? generateJSDocInternalType : ''}
+        ${language === 'javascript' ? generateJSDocInternalType(tables) : ''}
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
         };
