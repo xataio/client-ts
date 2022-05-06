@@ -12,7 +12,7 @@ export class XataClient extends BaseClient {
       { databaseURL: "https://test-r5vcv5.xata.sh/db/test", ...options },
       links
     );
-    const factory = options.repositoryFactory || new RestRespositoryFactory();
+    const factory = options?.repositoryFactory || new RestRespositoryFactory();
     /** @type {{ "teams": TeamRepository; "users": UserRepository }} */
     this.db = {
       teams: factory.createRepository(this, "teams"),
