@@ -1,53 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`codegen should generate correct JavaScript 1`] = `
-"/** @typedef { import('@xata.io/client').Repository } Repository */
-import { BaseClient, RestRespositoryFactory } from \\"@xata.io/client\\";
-/**
- * @typedef {Object} Author
- * @property {string} id
- * @property {Object} xata
- * @property {() => Promise<Author>} read
- * @property {() => Promise<Author>} update
- * @property {() => Promise<void>} delete
- * @property {string=} name
- * @property {string=} email
- * @property {string=} photoUrl
- * @property {string=} bio
- * @property {string=} title
- 
- */
-/**
- * @typedef {Object} Post
- * @property {string} id
- * @property {Object} xata
- * @property {() => Promise<Post>} read
- * @property {() => Promise<Post>} update
- * @property {() => Promise<void>} delete
- * @property {string=} title
- * @property {string=} summary
- * @property {string=} content
- * @property {string[]=} tags
- * @property {number=} likes
- * @property {AuthorRecord=} author
- * @property {string=} date
- * @property {string=} slug
- * @property {boolean=} published
- 
- */
-/**
- * @typedef {Object} Person
- * @property {string} id
- * @property {Object} xata
- * @property {() => Promise<Person>} read
- * @property {() => Promise<Person>} update
- * @property {() => Promise<void>} delete
- * @property {string=} slug
- * @property {string=} name
- * @property {string=} title
- * @property {string=} photoUrl
- 
- */
+"import { BaseClient, RestRespositoryFactory } from \\"@xata.io/client\\";
+/** @typedef { import('./types').Author } Author */
+/** @typedef { import('./types').AuthorRecord } AuthorRecord */
+/** @typedef { import('@xata.io/client').Repository<Author, AuthorRecord> } AuthorRepository */
+/** @typedef { import('./types').Post } Post */
+/** @typedef { import('./types').PostRecord } PostRecord */
+/** @typedef { import('@xata.io/client').Repository<Post, PostRecord> } PostRepository */
+/** @typedef { import('./types').Person } Person */
+/** @typedef { import('./types').PersonRecord } PersonRecord */
+/** @typedef { import('@xata.io/client').Repository<Person, PersonRecord> } PersonRepository */
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
 export class XataClient extends BaseClient {
   constructor(options) {
@@ -59,7 +22,7 @@ export class XataClient extends BaseClient {
       links
     );
     const factory = options.repositoryFactory || new RestRespositoryFactory();
-    /** @type {{ \\"authors\\": Repository; \\"posts\\": Repository; \\"people\\": Repository }} */
+    /** @type {{ \\"authors\\": AuthorRepository; \\"posts\\": PostRepository; \\"people\\": PersonRepository }} */
     this.db = {
       authors: factory.createRepository(this, \\"authors\\"),
       posts: factory.createRepository(this, \\"posts\\"),

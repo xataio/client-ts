@@ -1,5 +1,11 @@
 # @xata.io/codegen
 
+## 0.6.0
+
+### Minor Changes
+
+- d11276b: Generate typedefs from dts files
+
 ## 0.5.1
 
 ### Patch Changes
