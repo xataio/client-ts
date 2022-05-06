@@ -1,7 +1,7 @@
 import { FilterExpression } from '../api/schemas';
 import { compact } from '../util/lang';
 import { NonEmptyArray, RequiredBy } from '../util/types';
-import { DeepConstraint, FilterConstraints } from './filters';
+import { FilterObject } from './filters';
 import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
 import { XataRecord } from './record';
 import { Repository } from './repository';
@@ -121,13 +121,12 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * })
    * ```
    *
-   * @param constraints
    * @returns A new Query object.
    */
-  filter(constraints: FilterConstraints<Record>): Query<Record, Result>;
+  filter(filters: FilterObject<Record>): Query<Record, Result>;
   filter<F extends SelectableColumn<Record>>(
     column: F,
-    value: FilterConstraints<ValueAtColumn<Record, F>> | DeepConstraint<ValueAtColumn<Record, F>>
+    value: FilterObject<ValueAtColumn<Record, F>>
   ): Query<Record, Result>;
   filter(a: any, b?: any): Query<Record, Result> {
     if (arguments.length === 1) {

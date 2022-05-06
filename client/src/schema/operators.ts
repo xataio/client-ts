@@ -1,5 +1,5 @@
-import { Constraint } from './filters';
-
+// TODO: FIXME
+type Constraint<T> = any;
 type ComparableType = number | Date;
 
 /**

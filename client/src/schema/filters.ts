@@ -1,38 +1,6 @@
 import { SingleOrArray } from '../util/types';
 import { SelectableColumn, ValueAtColumn } from './selection';
 
-export type FilterOperator =
-  | '$gt'
-  | '$lt'
-  | '$ge'
-  | '$le'
-  | '$exists'
-  | '$notExists'
-  | '$endsWith'
-  | '$startsWith'
-  | '$pattern'
-  | '$is'
-  | '$isNot'
-  | '$contains'
-  | '$includes'
-  | '$includesSubstring'
-  | '$includesPattern'
-  | '$includesAll';
-
-// TODO: restrict constraints depending on type?
-// E.g. startsWith cannot be used with numbers
-export type Constraint<T> = { [key in FilterOperator]?: T };
-
-export type DeepConstraint<T> = T extends Record<string, any>
-  ? {
-      [key in keyof T]?: T[key] | DeepConstraint<T[key]>;
-    }
-  : Constraint<T>;
-
-export type FilterConstraints<T> = {
-  [key in keyof T]?: T[key] extends Record<string, any> ? FilterConstraints<T[key]> : T[key] | DeepConstraint<T[key]>;
-};
-
 /**
  * PropertyMatchFilter
  * Example:
@@ -103,7 +71,7 @@ type ValueTypeFilters<T> = T | T extends string
 }
 */
 type AggregatorFilter<Record> = {
-  [key in '$all' | '$any' | '$not' | '$none']?: SingleOrArray<ApiFilter<Record>>;
+  [key in '$all' | '$any' | '$not' | '$none']?: SingleOrArray<FilterObject<Record>>;
 };
 
 /**
@@ -116,13 +84,13 @@ type ExistanceFilter<Record> = {
 
 type BaseApiFilter<Record> = PropertyAccessFilter<Record> | AggregatorFilter<Record> | ExistanceFilter<Record>;
 
-export type ApiFilter<Record> = BaseApiFilter<Record> | NestedApiFilter<Record>;
-
 /**
  * Nested filter
  * Injects the Api filters on nested properties
  * Example: { filter: { settings: { plan: { $any: ['free', 'trial'] } } } }
  */
 type NestedApiFilter<T> = T extends Record<string, any>
-  ? { [key in keyof T]?: SingleOrArray<ApiFilter<T[key]> | NestedApiFilter<T[key]>> }
-  : BaseApiFilter<T>;
+  ? { [key in keyof T]?: T[key] extends Record<string, any> ? SingleOrArray<FilterObject<T[key]>> : T[key] }
+  : T;
+
+export type FilterObject<Record> = BaseApiFilter<Record> | NestedApiFilter<Record>;
