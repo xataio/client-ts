@@ -27,11 +27,18 @@ describe('client options', () => {
   });
 
   test('throws if mandatory options are missing', () => {
+    const { XATA_DATABASE_URL, XATA_API_KEY } = process.env;
+    process.env.XATA_API_KEY = '';
+    process.env.XATA_DATABASE_URL = '';
+
     // @ts-expect-error Options are mandatory in TypeScript
     expect(() => buildClient({ apiKey: null }, {})).toThrow('Options databaseURL and apiKey are required');
 
     // @ts-expect-error Options are mandatory in TypeScript
     expect(() => buildClient({ databaseURL: null }, {})).toThrow('Options databaseURL and apiKey are required');
+
+    process.env.XATA_API_KEY = XATA_API_KEY;
+    process.env.XATA_DATABASE_URL = XATA_DATABASE_URL;
   });
 
   test('throws if branch cannot be resolved', async () => {
