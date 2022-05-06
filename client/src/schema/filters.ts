@@ -20,10 +20,12 @@ import { SelectableColumn, ValueAtColumn } from './selection';
 }
 */
 type PropertyAccessFilter<Record> = {
-  [key in SelectableColumn<Record>]?: Partial<ValueAtColumn<Record, key>> | PropertyFilter<ValueAtColumn<Record, key>>;
+  [key in SelectableColumn<Record>]?:
+    | NestedApiFilter<ValueAtColumn<Record, key>>
+    | PropertyFilter<ValueAtColumn<Record, key>>;
 };
 
-type PropertyFilter<T> = T | { $is: T } | { $isNot: T } | { $any: T[] } | { $none: T[] } | ValueTypeFilters<T>;
+export type PropertyFilter<T> = T | { $is: T } | { $isNot: T } | { $any: T[] } | { $none: T[] } | ValueTypeFilters<T>;
 
 type IncludesFilter<T> =
   | PropertyFilter<T>
@@ -31,20 +33,27 @@ type IncludesFilter<T> =
       [key in '$all' | '$none' | '$any']?: IncludesFilter<T> | Array<IncludesFilter<T> | { $not: IncludesFilter<T> }>;
     };
 
+export type StringTypeFilter = { [key in '$contains' | '$pattern' | '$startsWith' | '$endsWith']?: string };
+export type ComparableType = number | Date;
+export type ComparableTypeFilter<T extends ComparableType> = { [key in '$gt' | '$lt' | '$ge' | '$le']?: T };
+export type ArrayFilter<T> =
+  | {
+      [key in '$includes']?: SingleOrArray<PropertyFilter<T> | ValueTypeFilters<T>> | IncludesFilter<T>;
+    }
+  | {
+      [key in '$includesAll' | '$includesNone' | '$includesAny']?:
+        | T
+        | Array<PropertyFilter<T> | { $not: PropertyFilter<T> }>;
+    };
+
 type ValueTypeFilters<T> = T | T extends string
-  ? { [key in '$contains' | '$pattern' | '$startsWith' | '$endsWith']?: string }
+  ? StringTypeFilter
   : T extends number
-  ? { [key in '$gt' | '$lt' | '$ge' | '$le']?: number }
+  ? ComparableTypeFilter<number>
+  : T extends Date
+  ? ComparableTypeFilter<Date>
   : T extends Array<infer T>
-  ?
-      | {
-          [key in '$includes']?: SingleOrArray<PropertyFilter<T> | ValueTypeFilters<T>> | IncludesFilter<T>;
-        }
-      | {
-          [key in '$includesAll' | '$includesNone' | '$includesAny']?:
-            | T
-            | Array<PropertyFilter<T> | { $not: PropertyFilter<T> }>;
-        }
+  ? ArrayFilter<T>
   : never;
 
 /**
@@ -71,14 +80,14 @@ type ValueTypeFilters<T> = T | T extends string
 }
 */
 type AggregatorFilter<Record> = {
-  [key in '$all' | '$any' | '$not' | '$none']?: SingleOrArray<FilterObject<Record>>;
+  [key in '$all' | '$any' | '$not' | '$none']?: SingleOrArray<Filter<Record>>;
 };
 
 /**
  * Existance filter
  * Example: { filter: { $exists: "settings" } }
  */
-type ExistanceFilter<Record> = {
+export type ExistanceFilter<Record> = {
   [key in '$exists' | '$notExists']?: SelectableColumn<Record>;
 };
 
@@ -90,7 +99,7 @@ type BaseApiFilter<Record> = PropertyAccessFilter<Record> | AggregatorFilter<Rec
  * Example: { filter: { settings: { plan: { $any: ['free', 'trial'] } } } }
  */
 type NestedApiFilter<T> = T extends Record<string, any>
-  ? { [key in keyof T]?: T[key] extends Record<string, any> ? SingleOrArray<FilterObject<T[key]>> : T[key] }
-  : T;
+  ? { [key in keyof T]?: T[key] extends Record<string, any> ? SingleOrArray<Filter<T[key]>> : PropertyFilter<T[key]> }
+  : PropertyFilter<T>;
 
-export type FilterObject<Record> = BaseApiFilter<Record> | NestedApiFilter<Record>;
+export type Filter<Record> = BaseApiFilter<Record> | NestedApiFilter<Record>;
