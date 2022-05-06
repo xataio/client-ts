@@ -28,13 +28,10 @@ describe('client options', () => {
 
   test('throws if mandatory options are missing', () => {
     // @ts-expect-error Options are mandatory in TypeScript
-    expect(() => buildClient({ apiKey: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
+    expect(() => buildClient({ apiKey: null }, {})).toThrow('Options databaseURL and apiKey are required');
 
     // @ts-expect-error Options are mandatory in TypeScript
-    expect(() => buildClient({ databaseURL: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
-
-    // @ts-expect-error Options are mandatory in TypeScript
-    expect(() => buildClient({ branch: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
+    expect(() => buildClient({ databaseURL: null }, {})).toThrow('Options databaseURL and apiKey are required');
   });
 
   test('throws if branch cannot be resolved', async () => {
