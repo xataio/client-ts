@@ -1,3 +1,10 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+///<reference path="../types/global-node.d.ts"/>
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+///<reference path="../types/global-cloudflare.d.ts"/>
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+///<reference path="../types/global-deno.d.ts"/>
+
 import { isObject, isString } from './lang';
 
 export function getEnvVariable(name: string): string | undefined {
