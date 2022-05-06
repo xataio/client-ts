@@ -1,15 +1,16 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 ///<reference path="./global-node.d.ts"/>
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+///<reference path="./global-cloudflare.d.ts"/>
 
 import { getBranchDetails } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
 
-const XATA_BRANCH = 'XATA_BRANCH';
-const XATA_DATABASE_URL = 'XATA_DATABASE_URL';
-const XATA_API_KEY = 'XATA_API_KEY';
-
 export async function getBranch(fetchProps: FetcherExtraProps) {
-  const env = (await getEnvNode(XATA_BRANCH)) || (await getEnvDeno(XATA_BRANCH));
+  const env =
+    getEnvNode('XATA_BRANCH') ||
+    getEnvDeno('XATA_BRANCH') ||
+    (typeof XATA_BRANCH === 'string' ? XATA_BRANCH : undefined);
   if (env) return env;
 
   const branch = (await getGitBranchhNode()) || (await getGitBranchDeno());
@@ -78,9 +79,17 @@ async function getGitBranchDeno(): Promise<string | undefined> {
 }
 
 export function getDatabaseUrl() {
-  return getEnvNode(XATA_DATABASE_URL) || getEnvDeno(XATA_DATABASE_URL);
+  return (
+    getEnvNode('XATA_DATABASE_URL') ||
+    getEnvDeno('XATA_DATABASE_URL') ||
+    (typeof XATA_DATABASE_URL === 'string' ? XATA_DATABASE_URL : undefined)
+  );
 }
 
 export function getAPIKey() {
-  return getEnvNode(XATA_API_KEY) || getEnvDeno(XATA_API_KEY);
+  return (
+    getEnvNode('XATA_API_KEY') ||
+    getEnvDeno('XATA_API_KEY') ||
+    (typeof XATA_API_KEY === 'string' ? XATA_API_KEY : undefined)
+  );
 }
