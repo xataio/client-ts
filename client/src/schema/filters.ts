@@ -1,4 +1,4 @@
-import { XataRecord } from './record';
+import { SingleOrArray } from '../util/types';
 import { SelectableColumn, ValueAtColumn } from './selection';
 
 export type FilterOperator =
@@ -51,35 +51,31 @@ export type FilterConstraints<T> = {
   }
 }
 */
-type PropertyAccessFilter<Record extends XataRecord> = {
-  [key in SelectableColumn<Record>]?:
-    | Partial<ValueAtColumn<Record, key>>
-    | ValueTypeFilters<Record, ValueAtColumn<Record, key>>
-    | { $is: ValueAtColumn<Record, key> }
-    | { $isNot: ValueAtColumn<Record, key> }
-    | { $any: ValueAtColumn<Record, key>[] };
+type PropertyAccessFilter<Record> = {
+  [key in SelectableColumn<Record>]?: Partial<ValueAtColumn<Record, key>> | PropertyFilter<ValueAtColumn<Record, key>>;
 };
 
-type ValueTypeFilters<Record extends XataRecord, T> = T extends string
+type PropertyFilter<T> = T | { $is: T } | { $isNot: T } | { $any: T[] } | { $none: T[] } | ValueTypeFilters<T>;
+
+type IncludesFilter<T> =
+  | PropertyFilter<T>
+  | {
+      [key in '$all' | '$none' | '$any']?: IncludesFilter<T> | Array<IncludesFilter<T> | { $not: IncludesFilter<T> }>;
+    };
+
+type ValueTypeFilters<T> = T | T extends string
   ? { [key in '$contains' | '$pattern' | '$startsWith' | '$endsWith']?: string }
   : T extends number
   ? { [key in '$gt' | '$lt' | '$ge' | '$le']?: number }
   : T extends Array<infer T>
   ?
       | {
-          [key in '$includes']?:
-            | T
-            | T[]
-            | {
-                [key in '$all' | '$none' | '$any']?: Array<
-                  ValueTypeFilters<Record, T> | { $not: ValueTypeFilters<Record, T> }
-                >;
-              };
+          [key in '$includes']?: SingleOrArray<PropertyFilter<T> | ValueTypeFilters<T>> | IncludesFilter<T>;
         }
       | {
-          [key in '$includesAll' | '$includesNone' | '$includesAny']?: Array<
-            ValueTypeFilters<Record, T> | { $not: ValueTypeFilters<Record, T> }
-          >;
+          [key in '$includesAll' | '$includesNone' | '$includesAny']?:
+            | T
+            | Array<PropertyFilter<T> | { $not: PropertyFilter<T> }>;
         }
   : never;
 
@@ -106,24 +102,27 @@ type ValueTypeFilters<Record extends XataRecord, T> = T extends string
     ],
 }
 */
-type AggregatorFilter<Record extends XataRecord> = {
-  [key in '$all' | '$any' | '$not' | '$none']?: ApiFilter<Record> | ApiFilter<Record>[];
+type AggregatorFilter<Record> = {
+  [key in '$all' | '$any' | '$not' | '$none']?: SingleOrArray<ApiFilter<Record>>;
 };
 
 /**
  * Existance filter
- * Example:
-{
-  "filter": {
-    "$exists": "settings",
-  },
-}
-*/
-type ExistanceFilter<Record extends XataRecord> = {
+ * Example: { filter: { $exists: "settings" } }
+ */
+type ExistanceFilter<Record> = {
   [key in '$exists' | '$notExists']?: SelectableColumn<Record>;
 };
 
-export type ApiFilter<Record extends XataRecord> =
-  | PropertyAccessFilter<Record>
-  | AggregatorFilter<Record>
-  | ExistanceFilter<Record>;
+type BaseApiFilter<Record> = PropertyAccessFilter<Record> | AggregatorFilter<Record> | ExistanceFilter<Record>;
+
+export type ApiFilter<Record> = BaseApiFilter<Record> | NestedApiFilter<Record>;
+
+/**
+ * Nested filter
+ * Injects the Api filters on nested properties
+ * Example: { filter: { settings: { plan: { $any: ['free', 'trial'] } } } }
+ */
+type NestedApiFilter<T> = T extends Record<string, any>
+  ? { [key in keyof T]?: SingleOrArray<ApiFilter<T[key]> | NestedApiFilter<T[key]>> }
+  : BaseApiFilter<T>;

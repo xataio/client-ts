@@ -1,3 +1,4 @@
+// eslint-disable no-unused-vars
 import { ApiFilter } from './filters';
 import { XataRecord } from './record';
 
@@ -7,11 +8,12 @@ type Record = XataRecord & {
   number: number;
   boolean: boolean;
   test: string;
-  labels: string[];
+  labels?: string[];
   age: number;
   settings: {
     plan: string;
     dark: boolean;
+    labels?: string[];
   };
 };
 
@@ -156,6 +158,77 @@ const existsValueMustBeStringNotInt: ApiFilter<Record> = { $exists: 42 };
 // Exists value must be string not objct
 // @ts-expect-error
 const existsValueMustBeStringNotObject: ApiFilter<Record> = { $exists: { field: 'settings.unknown' } };
+
+// Filter by one column
+const filterByOneColumn: ApiFilter<Record> = { name: 'r1' };
+
+// Filter with the $is operator
+const filterWithTheIsOperator: ApiFilter<Record> = { name: { $is: 'r1' } };
+
+// Filter with dot notation
+const filterWithDotNotation: ApiFilter<Record> = { 'settings.plan': 'free' };
+
+// Filter with nested object
+const filterWithNestedObject: ApiFilter<Record> = { 'settings.plan': { $is: 'free' } };
+
+// Filter with $any operation
+const filterWithAnyOperation: ApiFilter<Record> = { 'settings.plan': { $any: ['free', 'paid'] } };
+
+// Filter with and operations
+const filterWithAndOperations: ApiFilter<Record> = { 'settings.dark': true, 'settings.plan': 'free' };
+
+// Filter with both and and any operations
+const filterWithBothAndAndAnyOperations: ApiFilter<Record> = {
+  $any: { 'settings.dark': true, 'settings.plan': 'free' }
+};
+
+// Filter with both and and any operations in array
+const filterWithBothAndAndAnyOperationsInArray: ApiFilter<Record> = { $any: [{ name: 'r1' }, { name: 'r2' }] };
+
+// Filter with exists operation
+const filterWithExistsOperation: ApiFilter<Record> = { $exists: 'settings' };
+
+// Filter with exists, and and any operations
+const filterWithExistsAndAndAnyOperations: ApiFilter<Record> = { $all: [{ $exists: 'settings' }, { $exists: 'name' }] };
+
+// Filter with not exists operation
+const filterWithNotExistsOperation: ApiFilter<Record> = { $notExists: 'settings' };
+
+// Filter with partial match
+const filterWithPartialMatch: ApiFilter<Record> = { name: { $contains: 'value' } };
+
+// Filter with pattern operator
+const filterWithPatternOperator: ApiFilter<Record> = { name: { $pattern: 'value' } };
+
+// Filter with $startsWith and $endsWith operators
+const filterWithStartsWithAndEndsWithOperators: ApiFilter<Record> = {
+  name: { $startsWith: 'value', $endsWith: 'value' }
+};
+
+// Filter with numeric ranges
+const filterWithNumericRanges: ApiFilter<Record> = { age: { $lt: 30, $ge: 20 } };
+
+// Filter with negations
+const filterWithNegations: ApiFilter<Record> = { $not: { name: 'r1' } };
+
+// Filter with complex negations
+const filterWithComplexNegations: ApiFilter<Record> = { $not: { $any: [{ name: 'r1' }, { name: 'r2' }] } };
+
+// Filter with arrays complex negations
+const filterWithArraysComplexNegations: ApiFilter<Record> = {
+  labels: {
+    $includes: {
+      $all: [{ $contains: 'label' }, { $not: { $endsWith: '-debug' } }]
+    }
+  }
+};
+
+// Filters with $includesAll
+const filtersWithIncludesAll: ApiFilter<Record> = {
+  'settings.labels': {
+    $includesAll: [{ $contains: 'label' }]
+  }
+};
 
 test('fake test', () => {
   // This is a fake test to make sure that the type definitions in this file are working
