@@ -21,7 +21,7 @@ export class XataClient extends BaseClient {
       },
       links
     );
-    const factory = options.repositoryFactory || new RestRespositoryFactory();
+    const factory = options?.repositoryFactory || new RestRespositoryFactory();
     /** @type {{ \\"authors\\": AuthorRepository; \\"posts\\": PostRepository; \\"people\\": PersonRepository }} */
     this.db = {
       authors: factory.createRepository(this, \\"authors\\"),
@@ -82,7 +82,7 @@ export class XataClient extends BaseClient<{
   posts: Repository<Post>;
   people: Repository<Person>;
 }> {
-  constructor(options: XataClientOptions) {
+  constructor(options?: Partial<XataClientOptions>) {
     super(
       {
         databaseURL: \\"https://my-workspace-gfdd12.xata.sh/db/hello-xata\\",
@@ -91,7 +91,7 @@ export class XataClient extends BaseClient<{
       links
     );
 
-    const factory = options.repositoryFactory || new RestRespositoryFactory();
+    const factory = options?.repositoryFactory || new RestRespositoryFactory();
 
     this.db = {
       authors: factory.createRepository(this, \\"authors\\"),
