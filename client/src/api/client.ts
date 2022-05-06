@@ -566,6 +566,7 @@ class RecordsApi {
     branch: Schemas.BranchName,
     tableName: Schemas.TableName,
     recordId: Schemas.RecordID,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     options: Types.GetRecordRequestBody = {}
   ): Promise<Schemas.XataRecord> {
     return operationsByTag.records.getRecord({
