@@ -1,20 +1,14 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-///<reference path="./global-node.d.ts"/>
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-///<reference path="./global-cloudflare.d.ts"/>
-
 import { getBranchDetails } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
+import { getEnvVariable, getGitBranch } from '../util/environment';
+import { isObject, isString } from '../util/lang';
 
-export async function getBranch(fetchProps: FetcherExtraProps) {
-  const env =
-    getEnvNode('XATA_BRANCH') ||
-    getEnvDeno('XATA_BRANCH') ||
-    (typeof XATA_BRANCH === 'string' ? XATA_BRANCH : undefined);
+export async function getBranch(fetchProps: FetcherExtraProps): Promise<string | undefined> {
+  const env = isString(XATA_BRANCH) ? XATA_BRANCH : getEnvVariable('XATA_BRANCH');
   if (env) return env;
 
-  const branch = (await getGitBranchhNode()) || (await getGitBranchDeno());
-  if (!branch) return;
+  const branch = await getGitBranch();
+  if (!branch) return undefined;
 
   // TODO: in the future, call /resolve endpoint
   // For now, call API to see if the branch exists. If not, use a default value.
@@ -32,64 +26,17 @@ export async function getBranch(fetchProps: FetcherExtraProps) {
       }
     });
   } catch (err) {
-    if (typeof err === 'object' && (err as Record<string, unknown>).status === 404) return 'main';
+    if (isObject(err) && err.status === 404) return 'main';
     throw err;
   }
 
   return branch;
 }
 
-function getEnvNode(name: string): string | undefined {
-  if (typeof process !== 'object') return;
-  return process.env[name];
-}
-
-function getEnvDeno(name: string): string | undefined {
-  if (typeof Deno !== 'object') return;
-  try {
-    return Deno.env.get(name);
-  } catch (err) {
-    // Ignore
-    // Will fail if not using --allow-env
-  }
-}
-
-async function getGitBranchhNode(): Promise<string | undefined> {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require('child_process').execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
-  } catch (err) {
-    // Ignore
-  }
-}
-
-async function getGitBranchDeno(): Promise<string | undefined> {
-  if (typeof Deno !== 'object') return;
-  try {
-    const process = Deno.run({
-      cmd: ['git', 'branch', '--show-current'],
-      stdout: 'piped',
-      stderr: 'piped'
-    });
-    return new TextDecoder().decode(await process.output()).trim();
-  } catch (err) {
-    // Ignore
-    // Will fail if not using --allow-run
-  }
-}
-
 export function getDatabaseUrl() {
-  return (
-    getEnvNode('XATA_DATABASE_URL') ||
-    getEnvDeno('XATA_DATABASE_URL') ||
-    (typeof XATA_DATABASE_URL === 'string' ? XATA_DATABASE_URL : undefined)
-  );
+  return isString(XATA_DATABASE_URL) ? XATA_DATABASE_URL : getEnvVariable('XATA_DATABASE_URL');
 }
 
 export function getAPIKey() {
-  return (
-    getEnvNode('XATA_API_KEY') ||
-    getEnvDeno('XATA_API_KEY') ||
-    (typeof XATA_API_KEY === 'string' ? XATA_API_KEY : undefined)
-  );
+  return isString(XATA_API_KEY) ? XATA_API_KEY : getEnvVariable('XATA_API_KEY');
 }
