@@ -1,11 +1,15 @@
 import { getBranchDetails } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
 import { getEnvVariable, getGitBranch } from '../util/environment';
-import { isObject, isString } from '../util/lang';
+import { isObject } from '../util/lang';
 
 export async function getBranch(fetchProps: FetcherExtraProps): Promise<string | undefined> {
-  const env = isString(XATA_BRANCH) ? XATA_BRANCH : getEnvVariable('XATA_BRANCH');
-  if (env) return env;
+  try {
+    const env = getEnvVariable('XATA_BRANCH') ?? XATA_BRANCH;
+    if (env) return env;
+  } catch (err) {
+    // Ignore
+  }
 
   const branch = await getGitBranch();
   if (!branch) return undefined;
@@ -34,9 +38,17 @@ export async function getBranch(fetchProps: FetcherExtraProps): Promise<string |
 }
 
 export function getDatabaseUrl() {
-  return isString(XATA_DATABASE_URL) ? XATA_DATABASE_URL : getEnvVariable('XATA_DATABASE_URL');
+  try {
+    return getEnvVariable('XATA_DATABASE_URL') ?? XATA_DATABASE_URL;
+  } catch (err) {
+    return undefined;
+  }
 }
 
 export function getAPIKey() {
-  return isString(XATA_API_KEY) ? XATA_API_KEY : getEnvVariable('XATA_API_KEY');
+  try {
+    return getEnvVariable('XATA_API_KEY') ?? XATA_API_KEY;
+  } catch (err) {
+    return undefined;
+  }
 }
