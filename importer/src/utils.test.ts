@@ -147,4 +147,8 @@ describe('parseRow', () => {
   test('parses multiples', () => {
     expect(parseRow(['[]', '[1,2,3]'], ['multiple', 'multiple'])).toEqual([[], ['1', '2', '3']]);
   });
+
+  test('parses emails', () => {
+    expect(parseRow(['', 'foo@example.com'], ['email', 'email'])).toEqual([null, 'foo@example.com']);
+  });
 });

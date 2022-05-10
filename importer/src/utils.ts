@@ -92,6 +92,8 @@ export function parseRow(values: string[], types: string[]) {
       return ['true', 'false'].includes(val) ? val === 'true' : null;
     } else if (type === 'multiple') {
       return parseArray(val);
+    } else if (type === 'email') {
+      return val || null;
     }
     return val;
   });
