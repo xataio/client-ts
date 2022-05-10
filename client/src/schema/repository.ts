@@ -106,28 +106,28 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param id The unique id.
    * @throws If the record could not be found or there was an error while performing the deletion.
    */
-  abstract delete(id: string): void;
+  abstract delete(id: string): Promise<void>;
 
   /**
    * Deletes a record given its unique id.
    * @param id An object with a unique id.
    * @throws If the record could not be found or there was an error while performing the deletion.
    */
-  abstract delete(id: Identifiable): void;
+  abstract delete(id: Identifiable): Promise<void>;
 
   /**
    * Deletes a record given a list of unique ids.
    * @param ids The array of unique ids.
    * @throws If the record could not be found or there was an error while performing the deletion.
    */
-  abstract delete(ids: string[]): void;
+  abstract delete(ids: string[]): Promise<void>;
 
   /**
    * Deletes a record given a list of unique ids.
    * @param ids An array of objects with unique ids.
    * @throws If the record could not be found or there was an error while performing the deletion.
    */
-  abstract delete(ids: Identifiable[]): void;
+  abstract delete(ids: Identifiable[]): Promise<void>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -277,12 +277,20 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
     const fetchProps = await this.#getFetchProps();
 
-    const response = await getRecord({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-      ...fetchProps
-    });
+    try {
+      const response = await getRecord({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+        ...fetchProps
+      });
 
-    return this.#client.initObject(this.#table, response);
+      return this.#client.initObject(this.#table, response);
+    } catch (e) {
+      if (isObject(e) && e.status === 404) {
+        return null;
+      }
+
+      throw e;
+    }
   }
 
   async update(object: Partial<EditableData<Data>> & Identifiable): Promise<SelectedPick<Record, ['*']>>;

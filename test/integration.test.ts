@@ -64,7 +64,7 @@ beforeAll(async () => {
     await user.delete();
   }
 
-  await client.db.users.createMany(mockUsers);
+  await client.db.users.create(mockUsers);
 
   const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getOne();
   const ownerFruits = await client.db.users.filter('full_name', 'Owner of team fruits').getOne();
@@ -453,7 +453,7 @@ describe('integration tests', () => {
 
     const planes = Array(250).map((_, index) => ({ name: `Plane ${index}` }));
 
-    const createdPlanes = await schemaLessclient.db.planes.createMany(planes);
+    const createdPlanes = await schemaLessclient.db.planes.create(planes);
     const queriedPlanes = await schemaLessclient.db.planes.getPaginated();
 
     expect(createdPlanes).toHaveLength(250);
@@ -464,7 +464,7 @@ describe('integration tests', () => {
     const invalidUsers = [{ full_name: 1 }, { full_name: 2 }];
 
     // @ts-expect-error
-    expect(client.db.users.createMany(invalidUsers)).rejects.toMatchInlineSnapshot(`
+    expect(client.db.users.create(invalidUsers)).rejects.toMatchInlineSnapshot(`
       Object {
         "errors": Array [
           Object {
@@ -540,7 +540,7 @@ describe('record creation', () => {
   });
 
   test('create multiple teams without ids', async () => {
-    const teams = await client.db.teams.createMany([{ name: 'Team cars' }, { name: 'Team planes' }]);
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     expect(teams).toHaveLength(2);
     expect(teams[0].id).toBeDefined();
@@ -629,5 +629,157 @@ describe('record creation', () => {
         email: 'john3@doe.com'
       })
     ).rejects.toMatchInlineSnapshot(`[Error: Invalid arguments for create method]`);
+  });
+});
+
+describe('record update', () => {
+  test('update single team', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    const updatedTeam = await client.db.teams.update(team.id, { name: 'Team boats' });
+
+    expect(updatedTeam.id).toBe(team.id);
+
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+    if (!apiTeam) throw new Error('No team found');
+
+    expect(updatedTeam.name).toBe('Team boats');
+    expect(apiTeam.name).toBe('Team boats');
+  });
+
+  test('update multiple teams', async () => {
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    const updatedTeams = await client.db.teams.update(teams.map((team) => ({ id: team.id, name: 'Team boats' })));
+
+    expect(updatedTeams).toHaveLength(2);
+
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+
+    expect(apiTeams).toHaveLength(2);
+    expect(apiTeams[0].name).toBe('Team boats');
+    expect(apiTeams[1].name).toBe('Team boats');
+  });
+
+  test('update team with inline id', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    const updatedTeam = await client.db.teams.update({ id: team.id, name: 'Team boats' });
+
+    expect(updatedTeam.id).toBe(team.id);
+
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+
+    expect(updatedTeam.name).toBe('Team boats');
+    expect(apiTeam?.name).toBe('Team boats');
+  });
+});
+
+describe('record deletion', () => {
+  test('delete single team with id', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    await client.db.teams.delete(team.id);
+
+    const copy = await team.read();
+
+    expect(copy).toBeNull();
+
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+
+    expect(apiTeam).toBeNull();
+  });
+
+  test('delete multiple teams with id list', async () => {
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    await client.db.teams.delete(teams.map((team) => team.id));
+
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+
+    expect(apiTeams).toHaveLength(0);
+  });
+
+  test('delete single team with id in object', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    await client.db.teams.delete(team);
+
+    const copy = await team.read();
+
+    expect(copy).toBeNull();
+
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+
+    expect(apiTeam).toBeNull();
+  });
+
+  test('delete multiple teams with id in object', async () => {
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    await client.db.teams.delete(teams);
+
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+
+    expect(apiTeams).toHaveLength(0);
+  });
+
+  test('delete team with own operation', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    await team.delete();
+
+    const copy = await team.read();
+
+    expect(copy).toBeNull();
+
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+
+    expect(apiTeam).toBeNull();
+  });
+});
+
+describe('record create or update', () => {
+  test('create or update single team with id', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    const updatedTeam = await client.db.teams.createOrUpdate(team.id, { name: 'Team boats' });
+
+    expect(updatedTeam.id).toBe(team.id);
+
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+
+    expect(updatedTeam.name).toBe('Team boats');
+    expect(apiTeam?.name).toBe('Team boats');
+  });
+
+  test('create or update team with inline id', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    const updatedTeam = await client.db.teams.createOrUpdate({ id: team.id, name: 'Team boats' });
+
+    expect(updatedTeam.id).toBe(team.id);
+
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+
+    expect(updatedTeam.name).toBe('Team boats');
+    expect(apiTeam?.name).toBe('Team boats');
+  });
+
+  test('create or update multiple teams', async () => {
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    const updatedTeams = await client.db.teams.createOrUpdate(
+      teams.map((team) => ({ id: team.id, name: 'Team boats' }))
+    );
+
+    expect(updatedTeams).toHaveLength(2);
+
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+
+    expect(apiTeams).toHaveLength(2);
+
+    expect(apiTeams[0].name).toBe('Team boats');
+    expect(apiTeams[1].name).toBe('Team boats');
   });
 });
