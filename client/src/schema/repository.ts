@@ -428,7 +428,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     const body = {
       filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
-      sort: buildSortFilter(data.sort),
+      sort: data.sort ? buildSortFilter(data.sort) : undefined,
       page: data.page,
       columns: data.columns
     };
