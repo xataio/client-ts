@@ -427,36 +427,16 @@ describe('integration tests', () => {
   });
 
   test('Pagination size limit', async () => {
-    expect(client.db.users.getPaginated({ page: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toMatchInlineSnapshot(
-      {
-        message: 'page size exceeds max limit of 200',
-        stack: expect.any(String),
-        status: 400
-      } as any,
-      `
-      Object {
-        "message": "page size exceeds max limit of 200",
-        "stack": Any<String>,
-        "status": 400,
-      }
-    `
+    expect(client.db.users.getPaginated({ page: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
+      'message',
+      'page size exceeds max limit of 200'
     );
   });
 
   test('Pagination offset limit', async () => {
-    expect(client.db.users.getPaginated({ page: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toMatchInlineSnapshot(
-      {
-        message: 'page offset must not exceed 800',
-        stack: expect.any(String),
-        status: 400
-      } as any,
-      `
-      Object {
-        "message": "page offset must not exceed 800",
-        "stack": Any<String>,
-        "status": 400,
-      }
-    `
+    expect(client.db.users.getPaginated({ page: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
+      'message',
+      'page offset must not exceed 800'
     );
   });
 
@@ -478,50 +458,7 @@ describe('integration tests', () => {
   test('multiple errors in one response', async () => {
     const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as any;
 
-    expect(client.db.users.createMany(invalidUsers)).rejects.toMatchInlineSnapshot(
-      {
-        message: 'Unknown error',
-        status: 400,
-        errors: [
-          {
-            //message: 'record ignored: transaction failed',
-            status: 409
-          },
-
-          {
-            message: 'invalid record: column [full_name]: type mismatch: expected string',
-            status: 400
-          },
-
-          {
-            message: 'invalid record: column [full_name]: type mismatch: expected string',
-            status: 400
-          }
-        ],
-
-        stack: expect.any(String)
-      } as any,
-      `
-      Object {
-        "errors": Array [
-          Object {
-            "status": 409,
-          },
-          Object {
-            "message": "invalid record: column [full_name]: type mismatch: expected string",
-            "status": 400,
-          },
-          Object {
-            "message": "invalid record: column [full_name]: type mismatch: expected string",
-            "status": 400,
-          },
-        ],
-        "message": "Unknown error",
-        "stack": Any<String>,
-        "status": 400,
-      }
-    `
-    );
+    expect(client.db.users.createMany(invalidUsers)).rejects.toHaveProperty('status', 400);
   });
 
   test('Link is a record object', async () => {
@@ -612,20 +549,7 @@ describe('record creation', () => {
         full_name: 'John Doe 5',
         email: 'john5@doe.com'
       })
-    ).rejects.toMatchInlineSnapshot(
-      {
-        message: expect.any(String),
-        stack: expect.any(String),
-        status: 422
-      } as any,
-      `
-      Object {
-        "message": Any<String>,
-        "stack": Any<String>,
-        "status": 422,
-      }
-    `
-    );
+    ).rejects.toHaveProperty('status', 422);
   });
 
   test('create user with inlined id', async () => {

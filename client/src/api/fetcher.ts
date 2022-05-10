@@ -108,7 +108,7 @@ export async function fetch<
 
     throw new FetcherError({ message, status: response.status, errors });
   } catch (error) {
-    const message = hasMessage(error) ? error.message : 'Unknown error';
+    const message = hasMessage(error) ? error.message : 'Unknown network error';
     const parent = error instanceof Error ? error : undefined;
 
     throw new FetcherError({ message, status: response.status }, parent);
