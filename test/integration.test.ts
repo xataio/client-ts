@@ -427,22 +427,37 @@ describe('integration tests', () => {
   });
 
   test('Pagination size limit', async () => {
-    expect(client.db.users.getPaginated({ page: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toMatchInlineSnapshot(`
+    expect(client.db.users.getPaginated({ page: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toMatchInlineSnapshot(
+      {
+        message: 'page size exceeds max limit of 200',
+        stack: expect.any(String),
+        status: 400
+      } as any,
+      `
       Object {
         "message": "page size exceeds max limit of 200",
+        "stack": Any<String>,
         "status": 400,
       }
-    `);
+    `
+    );
   });
 
   test('Pagination offset limit', async () => {
-    expect(client.db.users.getPaginated({ page: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects
-      .toMatchInlineSnapshot(`
+    expect(client.db.users.getPaginated({ page: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toMatchInlineSnapshot(
+      {
+        message: 'page offset must not exceed 800',
+        stack: expect.any(String),
+        status: 400
+      } as any,
+      `
       Object {
         "message": "page offset must not exceed 800",
+        "stack": Any<String>,
         "status": 400,
       }
-    `);
+    `
+    );
   });
 
   test('Pagination default value', async () => {
@@ -461,12 +476,37 @@ describe('integration tests', () => {
   });
 
   test('multiple errors in one response', async () => {
-    const invalidUsers = [{ full_name: 1 }, { full_name: 2 }];
+    const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as any;
 
-    // @ts-expect-error
-    expect(client.db.users.createMany(invalidUsers)).rejects.toMatchInlineSnapshot(`
+    expect(client.db.users.createMany(invalidUsers)).rejects.toMatchInlineSnapshot(
+      {
+        message: 'Unknown error',
+        status: 400,
+        errors: [
+          {
+            //message: 'record ignored: transaction failed',
+            status: 409
+          },
+
+          {
+            message: 'invalid record: column [full_name]: type mismatch: expected string',
+            status: 400
+          },
+
+          {
+            message: 'invalid record: column [full_name]: type mismatch: expected string',
+            status: 400
+          }
+        ],
+
+        stack: expect.any(String)
+      } as any,
+      `
       Object {
         "errors": Array [
+          Object {
+            "status": 409,
+          },
           Object {
             "message": "invalid record: column [full_name]: type mismatch: expected string",
             "status": 400,
@@ -477,9 +517,11 @@ describe('integration tests', () => {
           },
         ],
         "message": "Unknown error",
+        "stack": Any<String>,
         "status": 400,
       }
-    `);
+    `
+    );
   });
 
   test('Link is a record object', async () => {
@@ -573,11 +615,13 @@ describe('record creation', () => {
     ).rejects.toMatchInlineSnapshot(
       {
         message: expect.any(String),
+        stack: expect.any(String),
         status: 422
       } as any,
       `
       Object {
         "message": Any<String>,
+        "stack": Any<String>,
         "status": 422,
       }
     `

@@ -111,7 +111,7 @@ export async function fetch<
 
     throw withStatus({ message, errors }, response.status);
   } catch (e) {
-    if (isError(e)) {
+    if (isApiError(e)) {
       throw withStatus(e, response.status);
     } else {
       throw withStatus({ message: 'Network response was not ok' }, response.status);
@@ -119,10 +119,10 @@ export async function fetch<
   }
 }
 
-const isError = (error: any): error is { message: string } => {
+const isApiError = (error: any): error is { message: string } => {
   return isObject(error) && isString((error as SimpleError).message);
 };
 
-const withStatus = (error: ApiError, status: number) => compactObject({ ...error, status });
+const withStatus = (error: ApiError, status: number) => compactObject({ ...error, status, stack: new Error().stack });
 
 type ApiError = SimpleError & Partial<BulkError>;
