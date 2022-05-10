@@ -10,11 +10,11 @@ import {
 } from '../api';
 import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { isObject, isString } from '../util/lang';
-import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectedPick } from './selection';
+import { buildSortFilter } from './sorting';
 
 export type Links = Record<string, Array<string[]>>;
 
