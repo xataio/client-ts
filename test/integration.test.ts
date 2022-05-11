@@ -524,8 +524,10 @@ describe('record creation', () => {
     expect(teams).toHaveLength(2);
     expect(teams[0].id).toBeDefined();
     expect(teams[0].name).toBe('Team cars');
+    expect(teams[0].read).toBeDefined();
     expect(teams[1].id).toBeDefined();
     expect(teams[1].name).toBe('Team planes');
+    expect(teams[1].read).toBeDefined();
   });
 
   test('create user with id', async () => {
@@ -538,6 +540,7 @@ describe('record creation', () => {
     if (!apiUser) throw new Error('No user found');
 
     expect(user.id).toBe('a-unique-record-john-4');
+    expect(user.read).toBeDefined();
     expect(user.full_name).toBe('John Doe 4');
 
     expect(user.id).toBe(apiUser.id);
@@ -563,6 +566,7 @@ describe('record creation', () => {
     if (!apiUser) throw new Error('No user found');
 
     expect(user.id).toBe('a-unique-record-john-5');
+    expect(user.read).toBeDefined();
     expect(user.full_name).toBe('John Doe 5');
 
     expect(user.id).toBe(apiUser.id);
@@ -714,6 +718,7 @@ describe('record create or update', () => {
     const updatedTeam = await client.db.teams.createOrUpdate(team.id, { name: 'Team boats' });
 
     expect(updatedTeam.id).toBe(team.id);
+    expect(updatedTeam.read).toBeDefined();
 
     const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
 
@@ -727,6 +732,7 @@ describe('record create or update', () => {
     const updatedTeam = await client.db.teams.createOrUpdate({ id: team.id, name: 'Team boats' });
 
     expect(updatedTeam.id).toBe(team.id);
+    expect(updatedTeam.read).toBeDefined();
 
     const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
 
@@ -742,6 +748,7 @@ describe('record create or update', () => {
     );
 
     expect(updatedTeams).toHaveLength(2);
+    expect(updatedTeams[0].read).toBeDefined();
 
     const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
 
@@ -749,5 +756,46 @@ describe('record create or update', () => {
 
     expect(apiTeams[0].name).toBe('Team boats');
     expect(apiTeams[1].name).toBe('Team boats');
+  });
+});
+
+describe('search', () => {
+  test('search teams by table', async () => {
+    const owners = await client.db.users.search('Owner');
+    expect(owners.length).toBeGreaterThan(0);
+
+    expect(owners[0].id).toBeDefined();
+    expect(owners[0].full_name?.includes('Owner')).toBeTruthy();
+    expect(owners[0].read).toBeDefined();
+  });
+
+  test('search globally by tables', async () => {
+    const { users, teams } = await client.search('fruits', ['teams', 'users']);
+
+    expect(users.length).toBeGreaterThan(0);
+    expect(teams.length).toBeGreaterThan(0);
+
+    expect(users[0].id).toBeDefined();
+    expect(users[0].read).toBeDefined();
+    expect(users[0].full_name?.includes('fruits')).toBeTruthy();
+
+    expect(teams[0].id).toBeDefined();
+    expect(teams[0].read).toBeDefined();
+    expect(teams[0].name?.includes('fruits')).toBeTruthy();
+  });
+
+  test('search globally with all tables', async () => {
+    const { users, teams } = await client.search('fruits');
+
+    expect(users.length).toBeGreaterThan(0);
+    expect(teams.length).toBeGreaterThan(0);
+
+    expect(users[0].id).toBeDefined();
+    expect(users[0].read).toBeDefined();
+    expect(users[0].full_name?.includes('fruits')).toBeTruthy();
+
+    expect(teams[0].id).toBeDefined();
+    expect(teams[0].read).toBeDefined();
+    expect(teams[0].name?.includes('fruits')).toBeTruthy();
   });
 });

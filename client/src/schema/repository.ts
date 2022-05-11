@@ -5,11 +5,13 @@ import {
   insertRecord,
   insertRecordWithID,
   queryTable,
+  searchBranch,
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { isObject, isString } from '../util/lang';
+import { GetArrayInnerType } from '../util/types';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
@@ -128,6 +130,14 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @throws If the record could not be found or there was an error while performing the deletion.
    */
   abstract delete(ids: Identifiable[]): Promise<void>;
+
+  /**
+   * Search for records in the table.
+   * @param query The query to search for.
+   * @param options The options to search with (like: fuzziness)
+   * @returns The found records.
+   */
+  abstract search(query: string, options?: { fuzziness?: number }): Promise<SelectedPick<Record, ['*']>[]>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -423,6 +433,18 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
   }
 
+  async search(query: string, options: { fuzziness?: number } = {}): Promise<SelectedPick<Record, ['*']>[]> {
+    const fetchProps = await this.#getFetchProps();
+
+    const { records } = await searchBranch({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
+      body: { tables: [this.#table], query, fuzziness: options.fuzziness },
+      ...fetchProps
+    });
+
+    return records.map((item) => this.#client.initObject(this.#table, item));
+  }
+
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
     const data = query.getQueryOptions();
 
@@ -481,8 +503,8 @@ export type XataClientOptions = {
 export class BaseClient<D extends Record<string, Repository<any>> = Record<string, Repository<any>>> {
   #links: Links;
   #branch: BranchStrategyValue;
-
   options: XataClientOptions;
+
   public db!: D;
 
   constructor(options: XataClientOptions, links: Links = {}) {
@@ -497,10 +519,23 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
 
     this.db = new Proxy({} as D, {
       get: (_target, prop) => {
-        if (typeof prop !== 'string') throw new Error('Invalid table name');
+        if (!isString(prop)) throw new Error('Invalid table name');
         return factory.createRepository(this, prop);
       }
     });
+  }
+
+  async search<Tables extends keyof D>(
+    query: string,
+    tables: Tables[] = Object.keys(this.db) as Tables[],
+    options?: { fuzziness?: number }
+  ): Promise<{ [Model in GetArrayInnerType<typeof tables>]: Awaited<ReturnType<D[Model]['search']>> }> {
+    // TODO: Implement global search with a single call, REST repository abstraction needed
+    const results = await Promise.all(
+      tables.map((table) => this.db[table].search(query, options).then((results) => [table, results]))
+    );
+
+    return Object.fromEntries(results);
   }
 
   public initObject<T>(table: string, object: object) {
