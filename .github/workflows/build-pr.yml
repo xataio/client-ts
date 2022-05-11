@@ -13,6 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - run: |
+          echo Git version
+          git --version
+          echo Current git branch
+          git branch --show-current
+          echo All branches
+          git branch
+          git checkout -b test-branch-${{ github.sha }}
+          echo Current git branch
+          git branch --show-current
+
       - name: Read .nvmrc
         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
         id: nvm
