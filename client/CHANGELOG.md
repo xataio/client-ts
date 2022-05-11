@@ -1,5 +1,19 @@
 # @xata.io/client
 
+## 0.7.0
+
+### Minor Changes
+
+- 6ce5512: Add bulk operations for all methods
+- 2a1fa4f: Introduced automatic branch resolution mechanism
+
+### Patch Changes
+
+- d033f3a: Improve column selection output type with non-nullable columns
+- b1e92db: Include stack trace with errors
+- deed570: Improve sorting with multiple properties
+- 80b5417: Improve filtering types
+
 ## 0.6.0
 
 ### Minor Changes
