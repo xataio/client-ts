@@ -511,6 +511,17 @@ describe('integration tests', () => {
     expect(nestedRead?.id).toBeDefined();
     expect(nestedRead?.full_name).toEqual(user.full_name);
   });
+
+  test('Update link with linked object', async () => {
+    const owner = await client.db.users.create({ full_name: 'Example User' });
+    const owner2 = await client.db.users.create({ full_name: 'Example User 2' });
+
+    const team = await client.db.teams.create({ name: 'Example Team', owner });
+    const updated = await team.update({ owner: owner2 });
+
+    expect(team.owner?.id).toEqual(owner.id);
+    expect(updated.owner?.id).toEqual(owner2.id);
+  });
 });
 
 describe('record creation', () => {
@@ -621,7 +632,7 @@ describe('record update', () => {
   test('update multiple teams', async () => {
     const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
-    const updatedTeams = await client.db.teams.update(teams.map((team) => ({ id: team.id, name: 'Team boats' })));
+    const updatedTeams = await client.db.teams.update(teams.map((team) => ({ ...team, name: 'Team boats' })));
 
     expect(updatedTeams).toHaveLength(2);
 
