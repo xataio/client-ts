@@ -22,7 +22,7 @@ export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]
   >;
 
 // Public: Utility type to get the value of a column at a given path
-export type ValueAtColumn<O extends XataRecord, P extends SelectableColumn<O>> = P extends '*'
+export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
   ? Values<O> // Alias for any property
   : P extends 'id'
   ? string // Alias for id (not in schema)

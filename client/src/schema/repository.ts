@@ -10,11 +10,11 @@ import {
 } from '../api';
 import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { isObject, isString } from '../util/lang';
-import { buildSortFilter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectedPick } from './selection';
+import { buildSortFilter } from './sorting';
 
 export type Links = Record<string, Array<string[]>>;
 
@@ -264,7 +264,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     const body = {
       filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
-      sort: buildSortFilter(data.sort),
+      sort: data.sort ? buildSortFilter(data.sort) : undefined,
       page: data.page,
       columns: data.columns
     };
