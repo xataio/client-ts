@@ -11,12 +11,8 @@ const envBranchNames = [
 ];
 
 export async function getBranch(fetchProps: Omit<FetcherExtraProps, 'workspacesApiUrl'>): Promise<string | undefined> {
-  try {
-    const env = getBranchByEnvVariable();
-    if (env) return env;
-  } catch (err) {
-    // Ignore
-  }
+  const env = getBranchByEnvVariable();
+  if (env) return env;
 
   const branch = await getGitBranch();
   if (!branch) return undefined;
@@ -51,7 +47,11 @@ function getBranchByEnvVariable(): string | undefined {
       return value;
     }
   }
-  return XATA_BRANCH;
+  try {
+    return XATA_BRANCH;
+  } catch (err) {
+    // Ignore ReferenceError. Only CloudFlare workers set env variables as global variables
+  }
 }
 
 export function getDatabaseUrl() {
