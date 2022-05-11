@@ -22,7 +22,7 @@ export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]
   >;
 
 // Public: Utility type to get the value of a column at a given path
-export type ValueAtColumn<O extends XataRecord, P extends SelectableColumn<O>> = P extends '*'
+export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
   ? Values<O> // Alias for any property
   : P extends 'id'
   ? string // Alias for id (not in schema)
@@ -74,20 +74,24 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
     ? N extends DataProps<O>
       ? {
           [K in N]: M extends SelectableColumn<NonNullable<O[K]>>
-            ? NestedValueAtColumn<NonNullable<O[K]>, M> & XataRecord
+            ? NonNullable<O[K]> extends XataRecord
+              ? ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M> & XataRecord>
+              : ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M>>
             : unknown; //`Property ${M} is not selectable on type ${K}`
         }
       : unknown //`Property ${N} is not a property of type ${O}`
     : Key extends DataProps<O>
     ? {
-        [K in Key]: NonNullable<O[K]> extends XataRecord ? SelectedPick<NonNullable<O[K]>, ['*']> : O[K];
+        [K in Key]: NonNullable<O[K]> extends XataRecord
+          ? ForwardNullable<O[K], SelectedPick<NonNullable<O[K]>, ['*']>>
+          : O[K];
       }
     : Key extends '*'
     ? {
-        [K in keyof NonNullable<O>]: NonNullable<NonNullable<O>[K]> extends XataRecord
-          ? NonNullable<O>[K] extends XataRecord
-            ? Link<NonNullable<O>[K]> // Link forwards read/update method signatures to avoid loosing the internal type
-            : Link<NonNullable<NonNullable<O>[K]>> | null // Preserve nullable types
-          : NonNullable<O>[K];
+        [K in StringKeys<O>]: NonNullable<O[K]> extends XataRecord
+          ? ForwardNullable<O[K], Link<NonNullable<O[K]>>> // Link forwards read/update method signatures to avoid loosing the internal type
+          : O[K];
       }
     : unknown; //`Property ${Key} is invalid`;
+
+type ForwardNullable<T, R> = T extends NonNullable<T> ? R : R | null;

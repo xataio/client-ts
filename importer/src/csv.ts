@@ -21,25 +21,28 @@ function initConverter({ noheader }: ParseOptions) {
 
 function process(converter: Converter, { callback, batchSize = 100, columns, maxRows }: ParseOptions) {
   let rows = 0;
+  // Even after calling converter.end() it seems that csvtojson reads one or two lines more.
+  // We want to avoid that.
+  let stopped = false;
   return new Promise((resolve, reject) => {
     let lines: string[][] = [];
     converter.on('header', (header) => {
       if (!columns) columns = header;
     });
     converter.subscribe(
-      (line) => {
+      async (line) => {
+        if (stopped) return;
+
         lines.push(line);
         if (lines.length >= batchSize) {
-          const p = callback(lines, columns, rows);
+          const stop = await callback(lines, columns, rows);
+          if (stop) {
+            stopped = true;
+            converter.end();
+            return;
+          }
+
           lines = [];
-          return p
-            .then((stop) => {
-              if (stop) converter.end();
-            })
-            .catch((err) => {
-              converter.end();
-              reject(err);
-            });
         }
         rows++;
         if (maxRows && rows > maxRows) {
@@ -48,6 +51,7 @@ function process(converter: Converter, { callback, batchSize = 100, columns, max
       },
       reject,
       () => {
+        if (stopped) return;
         const p = lines.length > 0 ? callback(lines, columns, rows) : Promise.resolve();
         p.then(resolve).catch(reject);
       }

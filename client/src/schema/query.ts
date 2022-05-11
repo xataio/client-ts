@@ -1,11 +1,12 @@
 import { FilterExpression } from '../api/schemas';
 import { compact } from '../util/lang';
 import { NonEmptyArray, RequiredBy } from '../util/types';
-import { DeepConstraint, FilterConstraints, SortDirection, SortFilter } from './filters';
+import { Filter } from './filters';
 import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
 import { XataRecord } from './record';
 import { Repository } from './repository';
 import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
+import { SortDirection, SortFilter } from './sorting';
 
 export type QueryOptions<T extends XataRecord> = {
   page?: PaginationOptions;
@@ -72,7 +73,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param queries An array of subqueries.
    * @returns A new Query object.
    */
-  any(...queries: Query<Record, Result>[]): Query<Record, Result> {
+  any(...queries: Query<Record, any>[]): Query<Record, Result> {
     const $any = queries.map((query) => query.getQueryOptions().filter ?? {});
     return new Query<Record, Result>(this.#repository, this.#table, { filter: { $any } }, this.#data);
   }
@@ -82,7 +83,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param queries An array of subqueries.
    * @returns A new Query object.
    */
-  all(...queries: Query<Record, Result>[]): Query<Record, Result> {
+  all(...queries: Query<Record, any>[]): Query<Record, Result> {
     const $all = queries.map((query) => query.getQueryOptions().filter ?? {});
     return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
   }
@@ -92,7 +93,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param queries An array of subqueries.
    * @returns A new Query object.
    */
-  not(...queries: Query<Record, Result>[]): Query<Record, Result> {
+  not(...queries: Query<Record, any>[]): Query<Record, Result> {
     const $not = queries.map((query) => query.getQueryOptions().filter ?? {});
     return new Query<Record, Result>(this.#repository, this.#table, { filter: { $not } }, this.#data);
   }
@@ -102,7 +103,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param queries An array of subqueries.
    * @returns A new Query object.
    */
-  none(...queries: Query<Record, Result>[]): Query<Record, Result> {
+  none(...queries: Query<Record, any>[]): Query<Record, Result> {
     const $none = queries.map((query) => query.getQueryOptions().filter ?? {});
     return new Query<Record, Result>(this.#repository, this.#table, { filter: { $none } }, this.#data);
   }
@@ -120,14 +121,10 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * })
    * ```
    *
-   * @param constraints
    * @returns A new Query object.
    */
-  filter(constraints: FilterConstraints<Record>): Query<Record, Result>;
-  filter<F extends SelectableColumn<Record>>(
-    column: F,
-    value: FilterConstraints<ValueAtColumn<Record, F>> | DeepConstraint<ValueAtColumn<Record, F>>
-  ): Query<Record, Result>;
+  filter(filters: Filter<Record>): Query<Record, Result>;
+  filter<F extends SelectableColumn<Record>>(column: F, value: Filter<ValueAtColumn<Record, F>>): Query<Record, Result>;
   filter(a: any, b?: any): Query<Record, Result> {
     if (arguments.length === 1) {
       const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));

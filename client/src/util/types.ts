@@ -14,3 +14,15 @@ export type NonEmptyArray<T> = T[] & { 0: T };
 export type RequiredBy<T, K extends keyof T> = T & {
   [P in K]-?: NonNullable<T[P]>;
 };
+
+export type GetArrayInnerType<T extends readonly any[]> = T[number];
+export type NonNullableValues<Obj> = { [K in keyof Obj]: NonNullable<Obj[K]> };
+export type KeysOfUnion<T> = T extends T ? keyof T : never;
+
+type Impossible<K extends keyof any> = {
+  [P in K]: never;
+};
+
+export type Exactly<T, U extends T = T> = U & Impossible<Exclude<keyof U, keyof T>>;
+
+export type SingleOrArray<T> = T | T[];

@@ -30,12 +30,10 @@ describe('API Client Integration Tests', () => {
 
     await client.workspaces.deleteWorkspace(workspace.id);
 
-    await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toMatchInlineSnapshot(`
-            Object {
-              "message": "no access to the workspace",
-              "status": 401,
-            }
-          `);
+    await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toHaveProperty(
+      'message',
+      'no access to the workspace'
+    );
   });
 
   test('Create workspace with database, branch, table and records', async () => {

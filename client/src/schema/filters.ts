@@ -1,65 +1,105 @@
-import { isObject } from '../util/lang';
-import { XataRecord } from './record';
-import { SelectableColumn } from './selection';
+import { SingleOrArray } from '../util/types';
+import { SelectableColumn, ValueAtColumn } from './selection';
 
-export type SortDirection = 'asc' | 'desc';
-export type SortFilterExtended<T extends XataRecord> = {
-  column: SelectableColumn<T>;
-  direction?: SortDirection;
+/**
+ * PropertyMatchFilter
+ * Example:
+{
+  "filter": {
+    "name": "value",
+    "name": {
+       "$is":  "value",
+       "$any": [ "value1", "value2" ],
+    },
+    "settings.plan": {"$any": ["free", "paid"]},
+    "settings.plan": "free",
+    "settings": {
+      "plan": "free"
+    },
+  }
+}
+*/
+type PropertyAccessFilter<Record> = {
+  [key in SelectableColumn<Record>]?:
+    | NestedApiFilter<ValueAtColumn<Record, key>>
+    | PropertyFilter<ValueAtColumn<Record, key>>;
 };
 
-export type SortFilter<T extends XataRecord> = SelectableColumn<T> | SortFilterExtended<T>;
+export type PropertyFilter<T> = T | { $is: T } | { $isNot: T } | { $any: T[] } | { $none: T[] } | ValueTypeFilters<T>;
 
-export function isSortFilterObject<T extends XataRecord>(filter: SortFilter<T>): filter is SortFilterExtended<T> {
-  return isObject(filter) && filter.column !== undefined;
-}
+type IncludesFilter<T> =
+  | PropertyFilter<T>
+  | {
+      [key in '$all' | '$none' | '$any']?: IncludesFilter<T> | Array<IncludesFilter<T> | { $not: IncludesFilter<T> }>;
+    };
 
-export type FilterOperator =
-  | '$gt'
-  | '$lt'
-  | '$ge'
-  | '$le'
-  | '$exists'
-  | '$notExists'
-  | '$endsWith'
-  | '$startsWith'
-  | '$pattern'
-  | '$is'
-  | '$isNot'
-  | '$contains'
-  | '$includes'
-  | '$includesSubstring'
-  | '$includesPattern'
-  | '$includesAll';
-
-export function buildSortFilter<T extends XataRecord>(
-  filter?: SortFilter<T> | SortFilter<T>[]
-): { [key: string]: SortDirection } | undefined {
-  if (!filter) return undefined;
-
-  const filters: SortFilter<T>[] = Array.isArray(filter) ? filter : [filter];
-
-  return filters.reduce((acc, item) => {
-    if (typeof item === 'string') {
-      return { ...acc, [item]: 'asc' };
-    } else if (isSortFilterObject(item)) {
-      return { ...acc, [item.column]: item.direction };
-    } else {
-      return acc;
+export type StringTypeFilter = { [key in '$contains' | '$pattern' | '$startsWith' | '$endsWith']?: string };
+export type ComparableType = number | Date;
+export type ComparableTypeFilter<T extends ComparableType> = { [key in '$gt' | '$lt' | '$ge' | '$le']?: T };
+export type ArrayFilter<T> =
+  | {
+      [key in '$includes']?: SingleOrArray<PropertyFilter<T> | ValueTypeFilters<T>> | IncludesFilter<T>;
     }
-  }, {});
+  | {
+      [key in '$includesAll' | '$includesNone' | '$includesAny']?:
+        | T
+        | Array<PropertyFilter<T> | { $not: PropertyFilter<T> }>;
+    };
+
+type ValueTypeFilters<T> = T | T extends string
+  ? StringTypeFilter
+  : T extends number
+  ? ComparableTypeFilter<number>
+  : T extends Date
+  ? ComparableTypeFilter<Date>
+  : T extends Array<infer T>
+  ? ArrayFilter<T>
+  : never;
+
+/**
+ * AggregatorFilter
+ * Example:
+{
+  "filter": {
+      "$any": {
+        "settings.dark": true,
+        "settings.plan": "free"
+      }
+  },
 }
-
-// TODO: restrict constraints depending on type?
-// E.g. startsWith cannot be used with numbers
-export type Constraint<T> = { [key in FilterOperator]?: T };
-
-export type DeepConstraint<T> = T extends Record<string, any>
-  ? {
-      [key in keyof T]?: T[key] | DeepConstraint<T[key]>;
-    }
-  : Constraint<T>;
-
-export type FilterConstraints<T> = {
-  [key in keyof T]?: T[key] extends Record<string, any> ? FilterConstraints<T[key]> : T[key] | DeepConstraint<T[key]>;
+{
+  "filter": {
+    "$any": [
+      {
+        "name": "r1",
+      },
+      {
+        "name": "r2",
+      },
+    ],
+}
+*/
+type AggregatorFilter<Record> = {
+  [key in '$all' | '$any' | '$not' | '$none']?: SingleOrArray<Filter<Record>>;
 };
+
+/**
+ * Existance filter
+ * Example: { filter: { $exists: "settings" } }
+ */
+export type ExistanceFilter<Record> = {
+  [key in '$exists' | '$notExists']?: SelectableColumn<Record>;
+};
+
+type BaseApiFilter<Record> = PropertyAccessFilter<Record> | AggregatorFilter<Record> | ExistanceFilter<Record>;
+
+/**
+ * Nested filter
+ * Injects the Api filters on nested properties
+ * Example: { filter: { settings: { plan: { $any: ['free', 'trial'] } } } }
+ */
+type NestedApiFilter<T> = T extends Record<string, any>
+  ? { [key in keyof T]?: T[key] extends Record<string, any> ? SingleOrArray<Filter<T[key]>> : PropertyFilter<T[key]> }
+  : PropertyFilter<T>;
+
+export type Filter<Record> = BaseApiFilter<Record> | NestedApiFilter<Record>;
