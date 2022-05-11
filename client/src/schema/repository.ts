@@ -45,7 +45,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @returns Array of the persisted records.
    */
-  abstract createMany(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]>;
+  abstract create(objects: Array<EditableData<Data> & Partial<Identifiable>>): Promise<SelectedPick<Record, ['*']>[]>;
 
   /**
    * Queries a single record from the table given its unique id.
@@ -55,12 +55,34 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract read(id: string): Promise<SelectedPick<Record, ['*']> | null>;
 
   /**
+   * Partially update a single record.
+   * @param object An object with its id and the columns to be updated.
+   * @returns The full persisted record.
+   */
+  abstract update(object: Partial<EditableData<Data>> & Identifiable): Promise<SelectedPick<Record, ['*']>>;
+
+  /**
    * Partially update a single record given its unique id.
    * @param id The unique id.
-   * @param object The column names and their values that have to be updatd.
+   * @param object The column names and their values that have to be updated.
    * @returns The full persisted record.
    */
   abstract update(id: string, object: Partial<EditableData<Data>>): Promise<SelectedPick<Record, ['*']>>;
+
+  /**
+   * Partially updates multiple records.
+   * @param objects An array of objects with their ids and columns to be updated.
+   * @returns Array of the persisted records.
+   */
+  abstract update(objects: Array<Partial<EditableData<Data>> & Identifiable>): Promise<SelectedPick<Record, ['*']>[]>;
+
+  /**
+   * Creates or updates a single record. If a record exists with the given id,
+   * it will be update, otherwise a new record will be created.
+   * @param object Object containing the column names with their values to be persisted in the table.
+   * @returns The full persisted record.
+   */
+  abstract createOrUpdate(object: EditableData<Data> & Identifiable): Promise<SelectedPick<Record, ['*']>>;
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
@@ -72,11 +94,40 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract createOrUpdate(id: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
 
   /**
+   * Creates or updates a single record. If a record exists with the given id,
+   * it will be update, otherwise a new record will be created.
+   * @param objects Array of objects with the column names and the values to be stored in the table.
+   * @returns Array of the persisted records.
+   */
+  abstract createOrUpdate(objects: Array<EditableData<Data> & Identifiable>): Promise<SelectedPick<Record, ['*']>[]>;
+
+  /**
    * Deletes a record given its unique id.
    * @param id The unique id.
    * @throws If the record could not be found or there was an error while performing the deletion.
    */
-  abstract delete(id: string): void;
+  abstract delete(id: string): Promise<void>;
+
+  /**
+   * Deletes a record given its unique id.
+   * @param id An object with a unique id.
+   * @throws If the record could not be found or there was an error while performing the deletion.
+   */
+  abstract delete(id: Identifiable): Promise<void>;
+
+  /**
+   * Deletes a record given a list of unique ids.
+   * @param ids The array of unique ids.
+   * @throws If the record could not be found or there was an error while performing the deletion.
+   */
+  abstract delete(ids: string[]): Promise<void>;
+
+  /**
+   * Deletes a record given a list of unique ids.
+   * @param ids An array of objects with unique ids.
+   * @throws If the record could not be found or there was an error while performing the deletion.
+   */
+  abstract delete(ids: Identifiable[]): Promise<void>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -125,18 +176,34 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
   async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
   async create(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
-  async create(a: string | EditableData<Data>, b?: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
+  async create(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]>;
+  async create(
+    a: string | EditableData<Data> | EditableData<Data>[],
+    b?: EditableData<Data>
+  ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
+    // Create many records
+    if (Array.isArray(a)) {
+      return this.#bulkInsertTableRecords(a);
+    }
+
+    // Create one record with id as param
     if (isString(a) && isObject(b)) {
       if (a === '') throw new Error("The id can't be empty");
       return this.#insertRecordWithId(a, b);
-    } else if (isObject(a) && isString(a.id)) {
+    }
+
+    // Create one record with id as property
+    if (isObject(a) && isString(a.id)) {
       if (a.id === '') throw new Error("The id can't be empty");
       return this.#insertRecordWithId(a.id, { ...a, id: undefined });
-    } else if (isObject(a)) {
-      return this.#insertRecordWithoutId(a);
-    } else {
-      throw new Error('Invalid arguments for create method');
     }
+
+    // Create one record without id
+    if (isObject(a)) {
+      return this.#insertRecordWithoutId(a);
+    }
+
+    throw new Error('Invalid arguments for create method');
   }
 
   async #insertRecordWithoutId(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
@@ -187,7 +254,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return finalObject;
   }
 
-  async createMany(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]> {
+  async #bulkInsertTableRecords(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]> {
     const fetchProps = await this.#getFetchProps();
 
     const records = objects.map((object) => transformObjectLinks(object));
@@ -210,15 +277,55 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
     const fetchProps = await this.#getFetchProps();
 
-    const response = await getRecord({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-      ...fetchProps
-    });
+    try {
+      const response = await getRecord({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+        ...fetchProps
+      });
 
-    return this.#client.initObject(this.#table, response);
+      return this.#client.initObject(this.#table, response);
+    } catch (e) {
+      if (isObject(e) && e.status === 404) {
+        return null;
+      }
+
+      throw e;
+    }
   }
 
-  async update(recordId: string, object: Partial<EditableData<Data>>): Promise<SelectedPick<Record, ['*']>> {
+  async update(object: Partial<EditableData<Data>> & Identifiable): Promise<SelectedPick<Record, ['*']>>;
+  async update(recordId: string, object: Partial<EditableData<Data>>): Promise<SelectedPick<Record, ['*']>>;
+  async update(objects: Array<Partial<EditableData<Data>> & Identifiable>): Promise<SelectedPick<Record, ['*']>[]>;
+  async update(
+    a: string | (Partial<EditableData<Data>> & Identifiable) | Array<Partial<EditableData<Data>> & Identifiable>,
+    b?: Partial<EditableData<Data>>
+  ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
+    // Update many records
+    if (Array.isArray(a)) {
+      if (a.length > 100) {
+        // TODO: Implement bulk update when API has support for it
+        console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
+      }
+      return Promise.all(a.map((object) => this.update(object)));
+    }
+
+    // Update one record with id as param
+    if (isString(a) && isObject(b)) {
+      return this.#updateRecordWithID(a, b);
+    }
+
+    // Update one record with id as property
+    if (isObject(a) && isString(a.id)) {
+      return this.#updateRecordWithID(a.id, { ...a, id: undefined });
+    }
+
+    throw new Error('Invalid arguments for update method');
+  }
+
+  async #updateRecordWithID(
+    recordId: string,
+    object: Partial<EditableData<Data>>
+  ): Promise<SelectedPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const record = transformObjectLinks(object);
@@ -235,7 +342,37 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return item;
   }
 
-  async createOrUpdate(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
+  async createOrUpdate(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  async createOrUpdate(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  async createOrUpdate(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]>;
+  async createOrUpdate(
+    a: string | EditableData<Data> | EditableData<Data>[],
+    b?: EditableData<Data>
+  ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
+    // Create or update many records
+    if (Array.isArray(a)) {
+      if (a.length > 100) {
+        // TODO: Implement bulk update when API has support for it
+        console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
+      }
+
+      return Promise.all(a.map((object) => this.createOrUpdate(object)));
+    }
+
+    // Create or update one record with id as param
+    if (isString(a) && isObject(b)) {
+      return this.#upsertRecordWithID(a, b);
+    }
+
+    // Create or update one record with id as property
+    if (isObject(a) && isString(a.id)) {
+      return this.#upsertRecordWithID(a.id, { ...a, id: undefined });
+    }
+
+    throw new Error('Invalid arguments for createOrUpdate method');
+  }
+
+  async #upsertRecordWithID(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>> {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
@@ -250,7 +387,34 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return item;
   }
 
-  async delete(recordId: string): Promise<void> {
+  async delete(recordId: string | Identifiable | Array<string | Identifiable>): Promise<void> {
+    // Delete many records
+    if (Array.isArray(recordId)) {
+      if (recordId.length > 100) {
+        // TODO: Implement bulk delete when API has support for it
+        console.warn('Bulk delete operation is not optimized in the Xata API yet, this request might be slow');
+      }
+
+      await Promise.all(recordId.map((id) => this.delete(id)));
+      return;
+    }
+
+    // Delete one record with id as param
+    if (isString(recordId)) {
+      await this.#deleteRecord(recordId);
+      return;
+    }
+
+    // Delete one record with id as property
+    if (isObject(recordId) && isString(recordId.id)) {
+      await this.#deleteRecord(recordId.id);
+      return;
+    }
+
+    throw new Error('Invalid arguments for delete method');
+  }
+
+  async #deleteRecord(recordId: string): Promise<void> {
     const fetchProps = await this.#getFetchProps();
 
     await deleteRecord({
