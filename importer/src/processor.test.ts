@@ -152,7 +152,7 @@ const dumbTableInfo: TableInfo = {
 
 describe('createProcessor', () => {
   test('fails when the number of types and columns does not match', () => {
-    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
     const shouldContinue = jest.fn();
 
     expect(() => createProcessor(xata, dumbTableInfo, { shouldContinue, types: [], columns: ['a'] })).toThrowError(
@@ -162,7 +162,7 @@ describe('createProcessor', () => {
   });
 
   test('needs to receive a header or receive specific column names', async () => {
-    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
     const shouldContinue = jest.fn();
 
     const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue });
@@ -174,7 +174,7 @@ describe('createProcessor', () => {
   });
 
   test('calls shuldContinue and stops the parsing if it returns false', async () => {
-    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
     const shouldContinue = jest.fn().mockImplementation(() => false);
 
     Object.defineProperty(xata, 'branches', {
@@ -194,7 +194,7 @@ describe('createProcessor', () => {
   });
 
   test('calls shuldContinue, continues, creates a table and inserts the records', async () => {
-    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
     const shouldContinue = jest.fn().mockImplementation(() => true);
 
     // Mock branches API
@@ -248,7 +248,7 @@ describe('createProcessor', () => {
   });
 
   test('calls shuldContinue, continues, updates a table and inserts the records', async () => {
-    const xata = new XataApiClient({ fetch: {} as any, apiKey: '' });
+    const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
     const shouldContinue = jest.fn().mockImplementation(() => true);
 
     // Mock branches API
