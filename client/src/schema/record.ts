@@ -79,6 +79,6 @@ export type EditableData<O extends BaseData> = {
   [K in keyof O]: O[K] extends XataRecord
     ? { id: string }
     : NonNullable<O[K]> extends XataRecord
-    ? { id: string } | undefined
+    ? { id: string } | null | undefined
     : O[K];
 };

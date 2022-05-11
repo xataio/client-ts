@@ -584,6 +584,10 @@ const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchSt
 
 const transformObjectLinks = (object: any) => {
   return Object.entries(object).reduce((acc, [key, value]) => {
+    // Ignore internal properties
+    if (key === 'xata') return acc;
+
+    // Transform links to identifier
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
   }, {});
 };

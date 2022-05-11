@@ -471,7 +471,7 @@ describe('Repository.update', () => {
         Array [
           "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
           Object {
-            "body": "{\\"id\\":\\"rec_1234\\",\\"xata\\":{\\"version\\":1},\\"name\\":\\"Ada\\"}",
+            "body": "{\\"id\\":\\"rec_1234\\",\\"name\\":\\"Ada\\"}",
             "headers": Object {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
