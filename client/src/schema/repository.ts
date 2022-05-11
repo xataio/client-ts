@@ -479,8 +479,7 @@ function resolveXataClientOptions(options?: Partial<XataClientOptions>): XataCli
       getBranch({
         apiKey,
         apiUrl: databaseURL,
-        fetchImpl: getFetchImplementation(options?.fetch),
-        workspacesApiUrl: '' // It is calculated by getBranch()
+        fetchImpl: getFetchImplementation(options?.fetch)
       }));
 
   if (!databaseURL || !apiKey) {

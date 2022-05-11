@@ -2,6 +2,8 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../client/src';
+import { FetchImpl } from '../client/src/api/fetcher';
+import { getBranch } from '../client/src/schema/config';
 import {
   Paginable,
   PAGINATION_DEFAULT_SIZE,
@@ -10,6 +12,9 @@ import {
 } from '../client/src/schema/pagination';
 import { User, UserRecord, XataClient } from '../codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from './mock_data';
+import { execSync } from 'child_process';
+import { DBBranch } from '../client/src/api/schemas';
+import { ok } from 'assert';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
@@ -749,5 +754,77 @@ describe('record create or update', () => {
 
     expect(apiTeams[0].name).toBe('Team boats');
     expect(apiTeams[1].name).toBe('Team boats');
+  });
+});
+
+describe('getBranch', () => {
+  const envNames = ['XATA_DATABASE_URL', 'XATA_API_KEY'];
+  const envValues: Record<string, string | undefined> = {};
+  const gitBranch = execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
+
+  beforeAll(() => {
+    // Remember current env variable values
+    for (const name of envNames) {
+      envValues[name] = process.env[name];
+    }
+  });
+
+  beforeEach(() => {
+    // Unset env variables
+    for (const name of envNames) {
+      process.env[name] = undefined;
+    }
+  });
+
+  afterAll(() => {
+    // Reset env variable values
+    for (const name of envNames) {
+      process.env[name] = envValues[name];
+    }
+  });
+
+  test('uses the XATA_BRANCH env variable if it is set', async () => {
+    const branchName = 'using-env-variable';
+    process.env.XATA_BRANCH = branchName;
+    const branch = await getBranch({
+      apiKey: '',
+      apiUrl: '',
+      fetchImpl: {} as FetchImpl
+    });
+
+    expect(branch).toEqual(branchName);
+  });
+
+  test('uses the git branch if XATA_BRANCH is not set', async () => {
+    const fetchImpl = jest.fn(() => ({
+      ok: true,
+      json() {
+        return { branchName: gitBranch };
+      }
+    }));
+    const branch = await getBranch({
+      apiKey: '',
+      apiUrl: 'https://workspace-id-1234.xata.sh/db/test:main',
+      fetchImpl: fetchImpl as unknown as FetchImpl
+    });
+
+    expect(branch).toEqual(gitBranch);
+  });
+
+  test('uses `main` if XATA_BRANCH is not set and there is not associated git branch', async () => {
+    const fetchImpl = jest.fn(() => ({
+      ok: false,
+      status: 404,
+      json() {
+        return {};
+      }
+    }));
+    const branch = await getBranch({
+      apiKey: '',
+      apiUrl: 'https://workspace-id-1234.xata.sh/db/test:main',
+      fetchImpl: fetchImpl as unknown as FetchImpl
+    });
+
+    expect(branch).toEqual('main');
   });
 });

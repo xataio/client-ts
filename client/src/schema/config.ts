@@ -3,7 +3,7 @@ import { FetcherExtraProps } from '../api/fetcher';
 import { getEnvVariable, getGitBranch } from '../util/environment';
 import { isObject } from '../util/lang';
 
-export async function getBranch(fetchProps: FetcherExtraProps): Promise<string | undefined> {
+export async function getBranch(fetchProps: Omit<FetcherExtraProps, 'workspacesApiUrl'>): Promise<string | undefined> {
   try {
     const env = getEnvVariable('XATA_BRANCH') ?? XATA_BRANCH;
     if (env) return env;
