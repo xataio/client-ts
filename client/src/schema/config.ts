@@ -3,9 +3,16 @@ import { FetcherExtraProps } from '../api/fetcher';
 import { getEnvVariable, getGitBranch } from '../util/environment';
 import { isObject } from '../util/lang';
 
+const envBranchNames = [
+  'XATA_BRANCH',
+  'VERCEL_GIT_COMMIT_REF', // Vercel
+  'CF_PAGES_BRANCH', // Cloudflare Pages
+  'BRANCH' // Netlify. Putting it the last one because it is more ambiguous
+];
+
 export async function getBranch(fetchProps: Omit<FetcherExtraProps, 'workspacesApiUrl'>): Promise<string | undefined> {
   try {
-    const env = getEnvVariable('XATA_BRANCH') ?? XATA_BRANCH;
+    const env = getBranchByEnvVariable();
     if (env) return env;
   } catch (err) {
     // Ignore
@@ -35,6 +42,16 @@ export async function getBranch(fetchProps: Omit<FetcherExtraProps, 'workspacesA
   }
 
   return branch;
+}
+
+function getBranchByEnvVariable(): string | undefined {
+  for (const name of envBranchNames) {
+    const value = getEnvVariable(name);
+    if (value) {
+      return value;
+    }
+  }
+  return XATA_BRANCH;
 }
 
 export function getDatabaseUrl() {

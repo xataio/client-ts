@@ -13,8 +13,6 @@ import {
 import { User, UserRecord, XataClient } from '../codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from './mock_data';
 import { execSync } from 'child_process';
-import { DBBranch } from '../client/src/api/schemas';
-import { ok } from 'assert';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
@@ -758,44 +756,34 @@ describe('record create or update', () => {
 });
 
 describe('getBranch', () => {
-  const envNames = ['XATA_DATABASE_URL', 'XATA_API_KEY'];
-  const envValues: Record<string, string | undefined> = {};
+  const envValues = { ...process.env };
   const gitBranch = execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
-
-  beforeAll(() => {
-    // Remember current env variable values
-    for (const name of envNames) {
-      envValues[name] = process.env[name];
-    }
-  });
-
-  beforeEach(() => {
-    // Unset env variables
-    for (const name of envNames) {
-      process.env[name] = undefined;
-    }
-  });
 
   afterAll(() => {
     // Reset env variable values
-    for (const name of envNames) {
-      process.env[name] = envValues[name];
-    }
+    process.env = envValues;
   });
 
-  test('uses the XATA_BRANCH env variable if it is set', async () => {
+  test('uses an env variable if it is set', async () => {
     const branchName = 'using-env-variable';
-    process.env.XATA_BRANCH = branchName;
-    const branch = await getBranch({
-      apiKey: '',
-      apiUrl: '',
-      fetchImpl: {} as FetchImpl
-    });
 
-    expect(branch).toEqual(branchName);
+    const getBranchOptions = { apiKey: '', apiUrl: '', fetchImpl: {} as FetchImpl };
+
+    process.env = { XATA_BRANCH: branchName };
+    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+
+    process.env = { VERCEL_GIT_COMMIT_REF: branchName };
+    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+
+    process.env = { CF_PAGES_BRANCH: branchName };
+    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+
+    process.env = { BRANCH: branchName };
+    expect(await getBranch(getBranchOptions)).toEqual(branchName);
   });
 
-  test('uses the git branch if XATA_BRANCH is not set', async () => {
+  test('uses the git branch if no env variable is set', async () => {
+    process.env = {};
     const fetchImpl = jest.fn(() => ({
       ok: true,
       json() {
@@ -811,7 +799,8 @@ describe('getBranch', () => {
     expect(branch).toEqual(gitBranch);
   });
 
-  test('uses `main` if XATA_BRANCH is not set and there is not associated git branch', async () => {
+  test('uses `main` if no env variable is set is not set and there is not associated git branch', async () => {
+    process.env = {};
     const fetchImpl = jest.fn(() => ({
       ok: false,
       status: 404,
