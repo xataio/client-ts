@@ -1,3 +1,5 @@
+import { getAPIKey } from '../schema/config';
+import { getFetchImplementation } from '../util/fetch';
 import type * as Types from './components';
 import { operationsByTag } from './components';
 import type { FetcherExtraProps, FetchImpl } from './fetcher';
@@ -7,7 +9,7 @@ import type * as Schemas from './schemas';
 
 export interface XataApiClientOptions {
   fetch?: FetchImpl;
-  apiKey: string;
+  apiKey?: string;
   host?: HostProvider;
 }
 
@@ -15,22 +17,18 @@ export class XataApiClient {
   #extraProps: FetcherExtraProps;
 
   constructor(options: XataApiClientOptions) {
-    const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
-    const fetchImpl = options.fetch ?? globalFetch;
-    if (!fetchImpl) {
-      /** @todo add a link after docs exist */
-      throw new Error(
-        `The \`fetch\` option passed to the Xata client is resolving to a falsy value and may not be correctly imported.`
-      );
-    }
-
     const provider = options.host ?? 'production';
+    const apiKey = options?.apiKey ?? getAPIKey();
+
+    if (!apiKey) {
+      throw new Error('Could not resolve a valid apiKey');
+    }
 
     this.#extraProps = {
       apiUrl: getHostUrl(provider, 'main'),
       workspacesApiUrl: getHostUrl(provider, 'workspaces'),
-      fetchImpl,
-      apiKey: options.apiKey
+      fetchImpl: getFetchImplementation(options.fetch),
+      apiKey
     };
   }
 

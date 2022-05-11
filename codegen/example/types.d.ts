@@ -19,5 +19,5 @@ export declare class XataClient extends BaseClient<{
     "teams": Repository<Team>;
     "users": Repository<User>;
 }> {
-    constructor(options: XataClientOptions);
+    constructor(options?: XataClientOptions);
 }
