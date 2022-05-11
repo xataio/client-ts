@@ -23,7 +23,7 @@ export class XataClient extends BaseClient<{
   teams: Repository<Team>;
   users: Repository<User>;
 }> {
-  constructor(options?: Partial<XataClientOptions>) {
+  constructor(options?: XataClientOptions) {
     super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, links);
 
     const factory = options?.repositoryFactory || new RestRespositoryFactory();

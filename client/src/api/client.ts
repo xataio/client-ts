@@ -1,3 +1,4 @@
+import { getAPIKey } from '../schema/config';
 import { getFetchImplementation } from '../util/fetch';
 import type * as Types from './components';
 import { operationsByTag } from './components';
@@ -8,7 +9,7 @@ import type * as Schemas from './schemas';
 
 export interface XataApiClientOptions {
   fetch?: FetchImpl;
-  apiKey: string;
+  apiKey?: string;
   host?: HostProvider;
 }
 
@@ -17,12 +18,17 @@ export class XataApiClient {
 
   constructor(options: XataApiClientOptions) {
     const provider = options.host ?? 'production';
+    const apiKey = options?.apiKey ?? getAPIKey();
+
+    if (!apiKey) {
+      throw new Error('Could not resolve a valid apiKey');
+    }
 
     this.#extraProps = {
       apiUrl: getHostUrl(provider, 'main'),
       workspacesApiUrl: getHostUrl(provider, 'workspaces'),
       fetchImpl: getFetchImplementation(options.fetch),
-      apiKey: options.apiKey
+      apiKey
     };
   }
 

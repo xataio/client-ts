@@ -152,9 +152,15 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async #getFetchProps(): Promise<FetcherExtraProps> {
     const branch = await this.#client.getBranch();
 
+    const apiKey = this.#client.options.apiKey ?? getAPIKey();
+
+    if (!apiKey) {
+      throw new Error('Could not resolve a valid apiKey');
+    }
+
     return {
       fetchImpl: this.#fetch,
-      apiKey: this.#client.options.apiKey,
+      apiKey,
       apiUrl: '',
       // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
       workspacesApiUrl: (path, params) => {
@@ -462,11 +468,11 @@ export type XataClientOptions = {
    */
   fetch?: FetchImpl;
   databaseURL?: string;
-  branch: BranchStrategyOption;
+  branch?: BranchStrategyOption;
   /**
    * API key to be used. You can create one in your account settings at https://app.xata.io/settings.
    */
-  apiKey: string;
+  apiKey?: string;
   repositoryFactory?: RepositoryFactory;
 };
 
@@ -501,7 +507,7 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
   options: XataClientOptions;
   public db!: D;
 
-  constructor(options: Partial<XataClientOptions> | undefined, links: Links = {}) {
+  constructor(options: XataClientOptions = {}, links: Links = {}) {
     this.options = resolveXataClientOptions(options);
     // Make this property not enumerable so it doesn't show up in console.dir, etc.
     Object.defineProperty(this.options, 'apiKey', { enumerable: false });
