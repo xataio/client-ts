@@ -493,8 +493,8 @@ describe('integration tests', () => {
       columns: ['owner.team.owner.team.owner.team', 'owner.team.owner.team.owner.full_name']
     });
 
-    const nestedProperty = nestedObject?.owner.team.owner.team.owner.team;
-    const nestedName = nestedObject?.owner.team.owner.team.owner.full_name;
+    const nestedProperty = nestedObject?.owner?.team?.owner?.team?.owner?.team;
+    const nestedName = nestedObject?.owner?.team?.owner?.team?.owner?.full_name;
 
     expect(nestedName).toEqual(user.full_name);
 
