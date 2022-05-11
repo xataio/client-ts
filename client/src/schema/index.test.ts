@@ -5,7 +5,7 @@ interface User extends XataRecord {
   name: string;
 }
 
-const buildClient = (options: Partial<XataClientOptions> = {}) => {
+const buildClient = (options: XataClientOptions = {}) => {
   const {
     apiKey = '1234',
     databaseURL = 'https://my-workspace-5df34do.staging.xatabase.co/db/xata',

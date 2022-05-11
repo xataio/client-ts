@@ -82,7 +82,7 @@ export class XataClient extends BaseClient<{
   posts: Repository<Post>;
   people: Repository<Person>;
 }> {
-  constructor(options?: Partial<XataClientOptions>) {
+  constructor(options?: XataClientOptions) {
     super(
       {
         databaseURL: \\"https://my-workspace-gfdd12.xata.sh/db/hello-xata\\",
