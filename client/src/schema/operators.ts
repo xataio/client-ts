@@ -79,6 +79,21 @@ export const isNot = <T>(value: T): PropertyFilter<T> => ({ $isNot: value });
 export const contains = (value: string): StringTypeFilter => ({ $contains: value });
 
 /**
- * Operator to restrict results to only arrays that include the given value.
+ * Operator to restrict results if some array items match the predicate.
  */
 export const includes = <T>(value: T): ArrayFilter<T> => ({ $includes: value });
+
+/**
+ * Operator to restrict results if all array items match the predicate.
+ */
+export const includesAll = <T>(value: T): ArrayFilter<T> => ({ $includesAll: value });
+
+/**
+ * Operator to restrict results if none array items match the predicate.
+ */
+export const includesNone = <T>(value: T): ArrayFilter<T> => ({ $includesNone: value });
+
+/**
+ * Operator to restrict results if some array items match the predicate.
+ */
+export const includesAny = <T>(value: T): ArrayFilter<T> => ({ $includesAny: value });
