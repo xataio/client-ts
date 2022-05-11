@@ -12,7 +12,7 @@ export function compactObject<T>(obj: Record<string, T | null | undefined>): Rec
 
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
-export function isObject(value: any): Record<string, unknown> {
+export function isObject(value: any): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
