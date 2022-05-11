@@ -248,3 +248,4 @@ import {
   XataRecord
 } from 'https://esm.sh/@xata.io/client@<version>/dist/schema?target=deno';
 ```
+
