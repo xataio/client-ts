@@ -152,14 +152,15 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   #client: BaseClient<any>;
   #fetch: any;
   #table: string;
-  #links: TableLink[];
+  #links: LinkDictionary;
+  #branch: BranchStrategyValue;
 
-  constructor(client: BaseClient<any>, table: string, links?: TableLink[]) {
+  constructor(client: BaseClient<any>, table: string, links?: LinkDictionary) {
     super(null, table, {});
     this.#client = client;
     this.#table = table;
     this.#fetch = getFetchImplementation(this.#client.options.fetch);
-    this.#links = links ?? [];
+    this.#links = links ?? {};
   }
 
   async #getFetchProps(): Promise<FetcherExtraProps> {
@@ -472,7 +473,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     const result: Dictionary<unknown> = {};
     Object.assign(result, object);
 
-    for (const link of this.#links) {
+    const tableLinks = this.#links[table] || [];
+    for (const link of tableLinks) {
       const [field, linkTable] = link;
       const value = result[field];
 
@@ -505,7 +507,7 @@ interface RepositoryFactory {
   createRepository<Data extends BaseData>(
     client: BaseClient<any>,
     table: string,
-    links?: TableLink[]
+    links?: LinkDictionary
   ): Repository<Data & XataRecord>;
 }
 
@@ -513,7 +515,7 @@ export class RestRespositoryFactory implements RepositoryFactory {
   createRepository<Data extends BaseData>(
     client: BaseClient<any>,
     table: string,
-    links?: TableLink[]
+    links?: LinkDictionary
   ): Repository<Data & XataRecord> {
     return new RestRepository<Data & XataRecord>(client, table, links);
   }
@@ -581,7 +583,7 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
     this.db = new Proxy({} as D, {
       get: (_target, prop) => {
         if (!isString(prop)) throw new Error('Invalid table name');
-        return factory.createRepository(this, prop, links?.[prop]);
+        return factory.createRepository(this, prop, links);
       }
     });
   }
