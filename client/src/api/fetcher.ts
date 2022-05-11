@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-throw-literal */
-/* eslint-disable @typescript-eslint/ban-types */
-import { compactObject, isObject, isString } from '../util/lang';
-import type { BulkError, SimpleError } from './responses';
+import { isObject, isString } from '../util/lang';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
   const query = new URLSearchParams(queryParams).toString();
@@ -109,20 +106,34 @@ export async function fetch<
 
     const { message = 'Unknown error', errors } = jsonResponse;
 
-    throw withStatus({ message, errors }, response.status);
-  } catch (e) {
-    if (isError(e)) {
-      throw withStatus(e, response.status);
-    } else {
-      throw withStatus({ message: 'Network response was not ok' }, response.status);
-    }
+    throw new FetcherError({ message, status: response.status, errors });
+  } catch (error) {
+    const message = hasMessage(error) ? error.message : 'Unknown network error';
+    const parent = error instanceof Error ? error : undefined;
+
+    throw new FetcherError({ message, status: response.status }, parent);
   }
 }
 
-const isError = (error: any): error is { message: string } => {
-  return isObject(error) && isString((error as SimpleError).message);
+const hasMessage = (error: any): error is { message: string } => {
+  return isObject(error) && isString(error.message);
 };
 
-const withStatus = (error: ApiError, status: number) => compactObject({ ...error, status });
+export class FetcherError extends Error {
+  public status: number;
+  public errors: Array<{ status: number; message?: string }> | undefined;
 
-type ApiError = SimpleError & Partial<BulkError>;
+  constructor(
+    data: { message: string; status: number; errors?: Array<{ status: number; message?: string }> },
+    parent?: Error
+  ) {
+    super(data.message);
+    this.status = data.status;
+    this.errors = data.errors;
+
+    if (parent) {
+      this.stack = parent.stack;
+      this.cause = parent.cause;
+    }
+  }
+}
