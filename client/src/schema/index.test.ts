@@ -5,7 +5,7 @@ interface User extends XataRecord {
   name: string;
 }
 
-const buildClient = (options: Partial<XataClientOptions> = {}) => {
+const buildClient = (options: XataClientOptions = {}) => {
   const {
     apiKey = '1234',
     databaseURL = 'https://my-workspace-5df34do.staging.xatabase.co/db/xata',
@@ -27,14 +27,18 @@ describe('client options', () => {
   });
 
   test('throws if mandatory options are missing', () => {
-    // @ts-expect-error Options are mandatory in TypeScript
-    expect(() => buildClient({ apiKey: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
+    const { XATA_DATABASE_URL, XATA_API_KEY } = process.env;
+    process.env.XATA_API_KEY = '';
+    process.env.XATA_DATABASE_URL = '';
 
     // @ts-expect-error Options are mandatory in TypeScript
-    expect(() => buildClient({ databaseURL: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
+    expect(() => buildClient({ apiKey: null }, {})).toThrow('Options databaseURL and apiKey are required');
 
     // @ts-expect-error Options are mandatory in TypeScript
-    expect(() => buildClient({ branch: null }, {})).toThrow('Options databaseURL, apiKey and branch are required');
+    expect(() => buildClient({ databaseURL: null }, {})).toThrow('Options databaseURL and apiKey are required');
+
+    process.env.XATA_API_KEY = XATA_API_KEY;
+    process.env.XATA_DATABASE_URL = XATA_DATABASE_URL;
   });
 
   test('throws if branch cannot be resolved', async () => {

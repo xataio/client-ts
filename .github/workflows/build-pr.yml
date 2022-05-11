@@ -13,6 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Create git branch
+        run: |
+          # Create a git branch from the detached HEAD.
+          # We need this for some integration tests.
+          # This branch is not pushed, it's just local to the workflow environment.
+          git checkout -b test-branch-${{ github.sha }}
+
       - name: Read .nvmrc
         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
         id: nvm

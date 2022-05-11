@@ -123,10 +123,10 @@ export async function generate({
     export class XataClient extends BaseClient<{
       ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
     }> {
-      constructor(options: XataClientOptions) {
+      constructor(options?: XataClientOptions) {
         super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
-        
-        const factory = options.repositoryFactory || new RestRespositoryFactory();
+
+        const factory = options?.repositoryFactory || new RestRespositoryFactory();
         ${language === 'javascript' ? generateJSDocInternalType(tables) : ''}
         this.db = {
           ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}

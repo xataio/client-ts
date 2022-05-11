@@ -9,7 +9,9 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
+import { getFetchImplementation } from '../util/fetch';
 import { isObject, isString } from '../util/lang';
+import { getAPIKey, getBranch, getDatabaseUrl } from './config';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
@@ -144,25 +146,21 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     super(null, table, {});
     this.#client = client;
     this.#table = table;
-
-    // TODO: Remove when integrating with API client
-    const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
-    const fetchImpl = this.#client.options.fetch ?? globalFetch;
-    if (!fetchImpl) {
-      /** @todo add a link after docs exist */
-      throw new Error(
-        `The \`fetch\` option passed to the Xata client is resolving to a falsy value and may not be correctly imported.`
-      );
-    }
-    this.#fetch = fetchImpl;
+    this.#fetch = getFetchImplementation(this.#client.options.fetch);
   }
 
   async #getFetchProps(): Promise<FetcherExtraProps> {
     const branch = await this.#client.getBranch();
 
+    const apiKey = this.#client.options.apiKey ?? getAPIKey();
+
+    if (!apiKey) {
+      throw new Error('Could not resolve a valid apiKey');
+    }
+
     return {
       fetchImpl: this.#fetch,
-      apiKey: this.#client.options.apiKey,
+      apiKey,
       apiUrl: '',
       // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
       workspacesApiUrl: (path, params) => {
@@ -470,13 +468,37 @@ export type XataClientOptions = {
    */
   fetch?: FetchImpl;
   databaseURL?: string;
-  branch: BranchStrategyOption;
+  branch?: BranchStrategyOption;
   /**
    * API key to be used. You can create one in your account settings at https://app.xata.io/settings.
    */
-  apiKey: string;
+  apiKey?: string;
   repositoryFactory?: RepositoryFactory;
 };
+
+function resolveXataClientOptions(options?: Partial<XataClientOptions>): XataClientOptions {
+  const databaseURL = options?.databaseURL || getDatabaseUrl() || '';
+  const apiKey = options?.apiKey || getAPIKey() || '';
+  const branch =
+    options?.branch ||
+    (() =>
+      getBranch({
+        apiKey,
+        apiUrl: databaseURL,
+        fetchImpl: getFetchImplementation(options?.fetch)
+      }));
+
+  if (!databaseURL || !apiKey) {
+    throw new Error('Options databaseURL and apiKey are required');
+  }
+
+  return {
+    ...options,
+    databaseURL,
+    apiKey,
+    branch
+  };
+}
 
 export class BaseClient<D extends Record<string, Repository<any>> = Record<string, Repository<any>>> {
   #links: Links;
@@ -485,15 +507,13 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
   options: XataClientOptions;
   public db!: D;
 
-  constructor(options: XataClientOptions, links: Links = {}) {
-    if (!options.databaseURL || !options.apiKey || !options.branch) {
-      throw new Error('Options databaseURL, apiKey and branch are required');
-    }
-
-    this.options = options;
+  constructor(options: XataClientOptions = {}, links: Links = {}) {
+    this.options = resolveXataClientOptions(options);
+    // Make this property not enumerable so it doesn't show up in console.dir, etc.
+    Object.defineProperty(this.options, 'apiKey', { enumerable: false });
     this.#links = links;
 
-    const factory = options.repositoryFactory || new RestRespositoryFactory();
+    const factory = this.options.repositoryFactory || new RestRespositoryFactory();
 
     this.db = new Proxy({} as D, {
       get: (_target, prop) => {
