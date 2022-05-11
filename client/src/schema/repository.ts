@@ -164,7 +164,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   async #getFetchProps(): Promise<FetcherExtraProps> {
-    const branch = await this.#client.getBranch();
+    const branch = await this.#getBranch();
 
     const apiKey = this.#client.options.apiKey ?? getAPIKey();
 
@@ -184,6 +184,27 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         return baseUrl + newPath;
       }
     };
+  }
+
+  async #getBranch(): Promise<string> {
+    if (this.#branch) return this.#branch;
+
+    const { branch: param } = this.#client.options;
+    const strategies = Array.isArray(param) ? [...param] : [param];
+
+    const evaluateBranch = async (strategy: BranchStrategy) => {
+      return isBranchStrategyBuilder(strategy) ? await strategy() : strategy;
+    };
+
+    for await (const strategy of strategies) {
+      const branch = await evaluateBranch(strategy);
+      if (branch) {
+        this.#branch = branch;
+        return branch;
+      }
+    }
+
+    throw new Error('Unable to resolve branch value');
   }
 
   async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
@@ -568,7 +589,6 @@ function resolveXataClientOptions(options?: Partial<XataClientOptions>): XataCli
 }
 
 export class BaseClient<D extends Record<string, Repository<any>> = Record<string, Repository<any>>> {
-  #branch: BranchStrategyValue;
   options: XataClientOptions;
 
   public db!: D;
@@ -599,27 +619,6 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
     );
 
     return Object.fromEntries(results);
-  }
-
-  public async getBranch(): Promise<string> {
-    if (this.#branch) return this.#branch;
-
-    const { branch: param } = this.options;
-    const strategies = Array.isArray(param) ? [...param] : [param];
-
-    const evaluateBranch = async (strategy: BranchStrategy) => {
-      return isBranchStrategyBuilder(strategy) ? await strategy() : strategy;
-    };
-
-    for await (const strategy of strategies) {
-      const branch = await evaluateBranch(strategy);
-      if (branch) {
-        this.#branch = branch;
-        return branch;
-      }
-    }
-
-    throw new Error('Unable to resolve branch value');
   }
 }
 
