@@ -3,12 +3,11 @@ import ts from 'typescript';
 import prettier, { BuiltInParserName } from 'prettier';
 import parserJavascript from 'prettier/parser-babel.js';
 import parserTypeScript from 'prettier/parser-typescript.js';
-import { XataConfigSchema } from './config.js';
 import { Column, Table, XataDatabaseSchema } from './schema.js';
 
 export type GenerateOptions = {
   schema: XataDatabaseSchema;
-  config: XataConfigSchema;
+  databaseUrl: string;
   language: Language;
   javascriptTarget?: JavascriptTarget;
 };
@@ -88,7 +87,7 @@ export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
 export async function generate({
   schema,
-  config,
+  databaseUrl,
   language,
   javascriptTarget
 }: GenerateOptions): Promise<GenerateOutput> {
@@ -124,7 +123,7 @@ export async function generate({
       ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
     }> {
       constructor(options?: XataClientOptions) {
-        super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
+        super({ databaseURL: "${databaseUrl}", ...options}, links);
 
         const factory = options?.repositoryFactory || new RestRespositoryFactory();
         ${language === 'javascript' ? generateJSDocInternalType(tables) : ''}

@@ -9,7 +9,7 @@ const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
 export class XataClient extends BaseClient {
   constructor(options) {
     super(
-      { databaseURL: "https://test-r5vcv5.xata.sh/db/test", ...options },
+      { databaseURL: "https://test-r5vcv5.xata.sh/db/todo", ...options },
       links
     );
     const factory = options?.repositoryFactory || new RestRespositoryFactory();

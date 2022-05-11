@@ -6,13 +6,13 @@ export interface Team {
 }
 export declare type TeamRecord = Team & XataRecord;
 export interface User {
-    email?: string | null;
-    full_name?: string | null;
     address?: {
-        street?: string | null;
         zipcode?: number | null;
+        street?: string | null;
     } | null;
+    email?: string | null;
     team?: TeamRecord | null;
+    full_name?: string | null;
 }
 export declare type UserRecord = User & XataRecord;
 export declare class XataClient extends BaseClient<{
