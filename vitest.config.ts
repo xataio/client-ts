@@ -3,6 +3,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   test: {
-    testTimeout: 50000
+    // TODO: Parallelize tests and mark integration tests as long-running
+    testTimeout: 50000,
+    hookTimeout: 50000
   }
 });

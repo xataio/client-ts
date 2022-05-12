@@ -246,7 +246,7 @@ describe('request', () => {
       };
     });
 
-    await expect(users.getOne()).rejects.toThrowErrorMatchingInlineSnapshot('"expected is not a function"');
+    await expect(users.getOne()).rejects.toMatchInlineSnapshot('[Error: Not Found]');
   });
 
   test('returns the json body if the response is ok', async () => {
@@ -275,7 +275,7 @@ type ExpectedRequest = {
 };
 
 async function expectRequest(
-  fetch: any,
+  fetch: ReturnType<typeof vi.fn>,
   expectedRequest: ExpectedRequest[] | ExpectedRequest,
   callback: () => void,
   response?: any
