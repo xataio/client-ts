@@ -15,8 +15,8 @@ export class XataClient extends BaseClient {
     const factory = options?.repositoryFactory || new RestRespositoryFactory();
     /** @type {{ "teams": TeamRepository; "users": UserRepository }} */
     this.db = {
-      teams: factory.createRepository(this, "teams"),
-      users: factory.createRepository(this, "users"),
+      teams: factory.createRepository(this, "teams", links),
+      users: factory.createRepository(this, "users", links),
     };
   }
 }
