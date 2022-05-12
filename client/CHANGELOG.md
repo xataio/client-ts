@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 01aef78: Fix CDN bundle for browsers
+- 01aef78: Fix bundle for browsers
 - 56be1fd: Allow sending updates with link object
 - fc51771: Add includes operator helper methods
 
