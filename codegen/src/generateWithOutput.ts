@@ -1,26 +1,20 @@
 import * as fs from 'fs/promises';
-import { Ora } from 'ora';
 import * as path from 'path';
 import { dirname, relative } from 'path';
 import { generate, Language } from './codegen.js';
 import { parseSchemaFile } from './schema.js';
+import { spinner } from './spinner.js';
 
 export interface GenerateWithOutputOptions {
-  spinner?: Ora;
   schema: ReturnType<typeof parseSchemaFile>;
   databaseURL: string;
   outputFilePath: string;
-  writeFile?: typeof fs.writeFile;
 }
 
-export const generateWithOutput = async ({
-  outputFilePath,
-  schema,
-  databaseURL: databaseUrl,
-  spinner,
-  writeFile = fs.writeFile
-}: GenerateWithOutputOptions) => {
-  if (spinner) spinner.text = 'Found schema, generating...';
+export const generateWithOutput = async ({ outputFilePath, schema, databaseURL }: GenerateWithOutputOptions) => {
+  if (spinner) {
+    spinner.text = 'Found schema, generating...';
+  }
 
   const dir = dirname(outputFilePath);
   await fs.mkdir(dir, { recursive: true });
@@ -30,10 +24,10 @@ export const generateWithOutput = async ({
 
   const language = getLanguageFromExtension(extension);
 
-  const { transpiled: code, declarations } = await generate({ schema, databaseUrl, language });
-  await writeFile(fullOutputPath, code);
+  const { transpiled: code, declarations } = await generate({ schema, databaseURL, language });
+  await fs.writeFile(fullOutputPath, code);
   if (language === 'javascript' && declarations) {
-    await writeFile(`${dirname(outputFilePath)}/types.d.ts`, declarations);
+    await fs.writeFile(`${dirname(outputFilePath)}/types.d.ts`, declarations);
   }
 
   spinner?.succeed(`Your XataClient is generated at ./${relative(process.cwd(), outputFilePath)}`);

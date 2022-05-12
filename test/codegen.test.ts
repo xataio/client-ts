@@ -1,28 +1,32 @@
+import { readFile, unlink } from 'fs/promises';
 import { join } from 'path';
-import { generateWithOutput } from '../codegen/src/generateWithOutput';
+import { generateFromLocalFiles } from '../codegen/src/local';
 
-describe('codegen', () => {
+const xataDirectory = join(__dirname, 'mocks');
+
+describe('generateFromLocalFiles', () => {
   it('should generate correct TypeScript', async () => {
-    const xataDirectory = join(__dirname, 'mocks');
     const outputFilePath = 'hahaha.ts';
+    await deleteFile(outputFilePath);
+    await generateFromLocalFiles(xataDirectory, outputFilePath);
 
-    const writeFile = jest.fn();
-    await generateWithOutput({ xataDirectory, outputFilePath, writeFile });
-
-    const [path, content] = writeFile.mock.calls[0];
-    expect(path).toEqual(join(process.cwd(), 'hahaha.ts'));
-    expect(content).toMatchSnapshot();
+    expect(readFile(outputFilePath, 'utf-8')).toMatchSnapshot();
   });
 
   it('should generate correct JavaScript', async () => {
-    const xataDirectory = join(__dirname, 'mocks');
     const outputFilePath = 'hahaha.js';
+    await deleteFile(outputFilePath);
+    await generateFromLocalFiles(xataDirectory, outputFilePath);
 
-    const writeFile = jest.fn();
-    await generateWithOutput({ xataDirectory, outputFilePath, writeFile: writeFile });
-
-    const [path, content] = writeFile.mock.calls[0];
-    expect(path).toEqual(join(process.cwd(), 'hahaha.js'));
-    expect(content).toMatchSnapshot();
+    expect(readFile(outputFilePath, 'utf-8')).toMatchSnapshot();
   });
 });
+
+async function deleteFile(path: string) {
+  try {
+    await unlink(path);
+  } catch (err) {
+    if ((err as any).code === 'ENOENT') return;
+    throw err;
+  }
+}

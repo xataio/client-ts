@@ -14,7 +14,7 @@ export async function generateFromLocalFiles(xataDirectory: string, out: string)
     await fs.access(schemaFile); // Make sure the schema file exists
   } catch (e: any) {
     if (e.code !== 'ENOENT') exitWithError(e);
-    spinner.info(
+    spinner?.info(
       `You need to first install the Xata CLI and create a new database or pull the schema of an existing one. To learn more, visit ${chalk.blueBright(
         'https://docs.xata.io/cli/getting-started'
       )}.
@@ -28,7 +28,7 @@ export async function generateFromLocalFiles(xataDirectory: string, out: string)
   const databaseUrl = await getLocalDatabaseUrl(xataDirectory);
 
   try {
-    await generateWithOutput({ schema, databaseURL: databaseUrl, outputFilePath: out, spinner });
+    await generateWithOutput({ schema, databaseURL: databaseUrl, outputFilePath: out });
   } catch (e) {
     exitWithError(e);
   }

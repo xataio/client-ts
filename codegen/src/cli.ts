@@ -24,7 +24,7 @@ program
   )
   .option('-o, --out <path>', 'A path to store your generated API client.', defaultOutputFile)
   .action(async (xataDirectory, { out }) => {
-    spinner.start('Checking schema...');
+    spinner?.start('Checking schema...');
 
     try {
       const databaseURL = getDatabaseURL();

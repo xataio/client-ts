@@ -7,7 +7,7 @@ import { Column, Table, XataDatabaseSchema } from './schema.js';
 
 export type GenerateOptions = {
   schema: XataDatabaseSchema;
-  databaseUrl: string;
+  databaseURL: string;
   language: Language;
   javascriptTarget?: JavascriptTarget;
 };
@@ -87,7 +87,7 @@ export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
 export async function generate({
   schema,
-  databaseUrl,
+  databaseURL,
   language,
   javascriptTarget
 }: GenerateOptions): Promise<GenerateOutput> {
@@ -123,7 +123,7 @@ export async function generate({
       ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
     }> {
       constructor(options?: XataClientOptions) {
-        super({ databaseURL: "${databaseUrl}", ...options}, links);
+        super({ databaseURL: "${databaseURL}", ...options}, links);
 
         const factory = options?.repositoryFactory || new RestRespositoryFactory();
         ${language === 'javascript' ? generateJSDocInternalType(tables) : ''}
