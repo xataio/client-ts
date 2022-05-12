@@ -28,7 +28,7 @@ export async function generateFromLocalFiles(xataDirectory: string, out: string)
   const databaseUrl = await getLocalDatabaseUrl(xataDirectory);
 
   try {
-    await generateWithOutput({ schema, databaseUrl, outputFilePath: out, spinner });
+    await generateWithOutput({ schema, databaseURL: databaseUrl, outputFilePath: out, spinner });
   } catch (e) {
     exitWithError(e);
   }

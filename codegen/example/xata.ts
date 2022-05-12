@@ -15,10 +15,10 @@ export interface Team {
 export type TeamRecord = Team & XataRecord;
 
 export interface User {
-  email?: string | null;
-  team?: TeamRecord | null;
   full_name?: string | null;
   address?: { zipcode?: number | null; street?: string | null } | null;
+  email?: string | null;
+  team?: TeamRecord | null;
 }
 
 export type UserRecord = User & XataRecord;

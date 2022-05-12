@@ -8,7 +8,7 @@ import { parseSchemaFile } from './schema.js';
 export interface GenerateWithOutputOptions {
   spinner?: Ora;
   schema: ReturnType<typeof parseSchemaFile>;
-  databaseUrl: string;
+  databaseURL: string;
   outputFilePath: string;
   writeFile?: typeof fs.writeFile;
 }
@@ -16,7 +16,7 @@ export interface GenerateWithOutputOptions {
 export const generateWithOutput = async ({
   outputFilePath,
   schema,
-  databaseUrl,
+  databaseURL: databaseUrl,
   spinner,
   writeFile = fs.writeFile
 }: GenerateWithOutputOptions) => {

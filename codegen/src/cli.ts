@@ -6,6 +6,7 @@ import { exitWithError } from './errors.js';
 import { generateFromLocalFiles } from './local.js';
 import { spinner } from './spinner.js';
 import { CODEGEN_VERSION } from './version.js';
+import { getDatabaseURL, getAPIKey } from '@xata.io/client';
 
 const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'src', 'xata.ts');
@@ -26,9 +27,10 @@ program
     spinner.start('Checking schema...');
 
     try {
-      const { XATA_DATABASE_URL, XATA_API_KEY } = process.env;
-      if (XATA_DATABASE_URL && XATA_API_KEY) {
-        await generateFromAPI(XATA_DATABASE_URL, XATA_API_KEY, out);
+      const databaseURL = getDatabaseURL();
+      const apiKey = getAPIKey();
+      if (databaseURL && apiKey) {
+        await generateFromAPI(databaseURL, apiKey, out);
       } else {
         await generateFromLocalFiles(xataDirectory, out);
       }
