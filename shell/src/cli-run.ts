@@ -11,10 +11,8 @@ import repl from 'repl';
 export async function run() {
   dotenv.config();
   // TODO: do not generate in the current dir
-  const tempFile = path.join(process.cwd(), `xata-${Date.now()}.js`);
-  const tempFile2 = tempFile.replace('.js', '.mjs');
+  const tempFile = path.join(process.cwd(), `xata-${Date.now()}.mjs`);
   await generateClient(tempFile);
-  await fs.rename(tempFile, tempFile2);
 
   const defaultEval = getDefaultEval();
 
@@ -41,8 +39,8 @@ export async function run() {
     }
   });
 
-  const { XataClient } = await import(tempFile2);
-  await fs.unlink(tempFile2);
+  const { XataClient } = await import(tempFile);
+  await fs.unlink(tempFile);
 
   replServer.context.xata = new XataClient({ fetch });
 }
