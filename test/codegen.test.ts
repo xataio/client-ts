@@ -1,36 +1,31 @@
-import { readFile, unlink } from 'fs/promises';
+import * as fs from 'fs/promises';
 import { join } from 'path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { generateFromLocalFiles } from '../codegen/src/local';
+
+vi.mock('fs/promises', async () => {
+  const realFs: typeof fs = await vi.importActual('fs/promises');
+  return { ...realFs, writeFile: vi.fn() };
+});
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
+const writeFileMock = fs.writeFile as unknown as ReturnType<typeof vi.fn>['mock'];
 
 const xataDirectory = join(__dirname, 'mocks');
 
 describe('generateFromLocalFiles', () => {
   it('should generate correct TypeScript', async () => {
-    const outputFilePath = 'test/example.ts';
-    await deleteFile(outputFilePath);
+    const outputFilePath = 'example.ts';
     await generateFromLocalFiles(xataDirectory, outputFilePath);
-
-    expect(await readFile(outputFilePath, 'utf-8')).toMatchSnapshot();
-    await deleteFile(outputFilePath);
+    expect(writeFileMock.calls.map((item) => item[1])).toMatchSnapshot();
   });
 
   it('should generate correct JavaScript', async () => {
-    const outputFilePath = 'test/example.js';
-    await deleteFile(outputFilePath);
+    const outputFilePath = 'example.js';
     await generateFromLocalFiles(xataDirectory, outputFilePath);
-
-    expect(await readFile(outputFilePath, 'utf-8')).toMatchSnapshot();
-    await deleteFile(outputFilePath);
-    await deleteFile('test/types.d.ts');
+    expect(writeFileMock.calls.map((item) => item[1])).toMatchSnapshot();
   });
 });
-
-async function deleteFile(path: string) {
-  try {
-    await unlink(path);
-  } catch (err) {
-    if ((err as Record<string, unknown>).code === 'ENOENT') return;
-    throw err;
-  }
-}
