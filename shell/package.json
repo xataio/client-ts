@@ -24,7 +24,7 @@
   "homepage": "https://github.com/xataio/client-ts/blob/main/shell/README.md",
   "dependencies": {
     "@xata.io/client": "^0.7.2",
-    "@xata.io/codegen": "^0.0.0-alpha.217d1d3",
+    "@xata.io/codegen": "0.0.0-alpha.217d1d3",
     "cross-fetch": "^3.1.5",
     "dotenv": "^16.0.1"
   },
