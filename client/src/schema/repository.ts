@@ -547,9 +547,13 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
 
   async search<Tables extends keyof D>(
     query: string,
-    tables: Tables[] = Object.keys(this.db) as Tables[],
-    options?: { fuzziness?: number }
-  ): Promise<{ [Model in GetArrayInnerType<typeof tables>]: Awaited<ReturnType<D[Model]['search']>> }> {
+    options?: { fuzziness?: number; tables?: Tables[] }
+  ): Promise<{
+    [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]: Awaited<
+      ReturnType<D[Model]['search']>
+    >;
+  }> {
+    const tables = options?.tables ?? Object.keys(this.db);
     // TODO: Implement global search with a single call, REST repository abstraction needed
     const results = await Promise.all(
       tables.map((table) => this.db[table].search(query, options).then((results) => [table, results]))
