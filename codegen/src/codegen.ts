@@ -129,7 +129,9 @@ export async function generate({
         const factory = options?.repositoryFactory || new RestRespositoryFactory();
         ${language === 'javascript' ? generateJSDocInternalType(tables) : ''}
         this.db = {
-          ${tables.map((table) => `"${table.name}": factory.createRepository(this, "${table.name}"),`).join('\n')}
+          ${tables
+            .map((table) => `"${table.name}": factory.createRepository(this, "${table.name}", links),`)
+            .join('\n')}
         };
       }
     }
