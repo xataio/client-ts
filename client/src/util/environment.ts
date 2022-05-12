@@ -28,8 +28,6 @@ export function getEnvVariable(name: string): string | undefined {
 }
 
 export async function getGitBranch(): Promise<string | undefined> {
-  if (!isObject(process)) return undefined;
-
   // Node.js: child_process.execSync
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
