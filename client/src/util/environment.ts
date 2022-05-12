@@ -31,7 +31,8 @@ export async function getGitBranch(): Promise<string | undefined> {
   // Node.js: child_process.execSync
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require('child_process').execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
+    const result = require('child_process').execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
+    if (result) return result;
   } catch (err) {
     // Ignore
   }
