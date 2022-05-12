@@ -36,6 +36,7 @@ export const generateWithOutput = async ({ outputFilePath, schema, databaseURL }
 const getLanguageFromExtension = (extension?: string): Language => {
   switch (extension) {
     case 'js':
+    case 'mjs':
       return 'javascript';
     case 'ts':
     case undefined:
