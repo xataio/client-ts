@@ -1,14 +1,15 @@
-import chalk from 'chalk';
 import { program } from 'commander';
-import { access, mkdir } from 'fs/promises';
-import ora from 'ora';
-import { dirname, join } from 'path';
-import { generateWithOutput } from './generateWithOutput.js';
+import dotenv from 'dotenv';
+import { join, relative } from 'path';
+import { generateFromAPI } from './api.js';
+import { exitWithError } from './errors.js';
+import { generateFromLocalFiles } from './local.js';
+import { spinner } from './spinner.js';
 import { CODEGEN_VERSION } from './version.js';
+import { getDatabaseURL, getAPIKey } from '@xata.io/client';
 
 const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'src', 'xata.ts');
-const spinner = ora();
 
 program
   .name('xata-codegen')
@@ -20,36 +21,25 @@ program
     defaultXataDirectory
   )
   .option('-o, --out <path>', 'A path to store your generated API client.', defaultOutputFile)
-  .action(async (xataDirectory, { out }) => {
-    const schema = join(xataDirectory, 'schema.json');
-    spinner.start('Checking schema...');
+  .option('-e, --env <path>', 'Path to the .env file to load.', '.env')
+  .action(async (xataDirectory, { out, env }) => {
+    dotenv.config({ path: env });
+
+    spinner?.start('Checking schema...');
 
     try {
-      await access(schema); // Make sure the schema file exists
-    } catch (e: any) {
-      if (e.code !== 'ENOENT') exitWithError(e);
-      spinner.info(
-        `You need to first install the Xata CLI and create a new database or pull the schema of an existing one. To learn more, visit ${chalk.blueBright(
-          'https://docs.xata.io/cli/getting-started'
-        )}.
-    `
-      );
-      exitWithError('No local Xata schema found.');
-      return;
-    }
+      const databaseURL = getDatabaseURL();
+      const apiKey = getAPIKey();
+      if (databaseURL && apiKey) {
+        await generateFromAPI(out, { databaseURL, apiKey });
+      } else {
+        await generateFromLocalFiles(xataDirectory, out);
+      }
 
-    try {
-      const dir = dirname(out);
-      await mkdir(dir, { recursive: true });
-      await generateWithOutput({ xataDirectory, outputFilePath: out, spinner });
-    } catch (e) {
-      exitWithError(e);
+      spinner?.succeed(`Your XataClient is generated at ./${relative(process.cwd(), out)}`);
+    } catch (err) {
+      exitWithError(err);
     }
   });
 
 program.parse();
-
-function exitWithError(err: unknown) {
-  spinner.fail(err instanceof Error ? err.message : String(err));
-  process.exit(1);
-}

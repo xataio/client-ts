@@ -1,7 +1,8 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1
 
-exports[`codegen should generate correct JavaScript 1`] = `
-"import { BaseClient, RestRespositoryFactory } from \\"@xata.io/client\\";
+exports[`generateFromLocalFiles > should generate correct JavaScript 1`] = `
+[
+  "import { BaseClient, RestRespositoryFactory } from \\"@xata.io/client\\";
 /** @typedef { import('./types').Author } Author */
 /** @typedef { import('./types').AuthorRecord } AuthorRecord */
 /** @typedef { import('@xata.io/client').Repository<Author, AuthorRecord> } AuthorRepository */
@@ -30,11 +31,49 @@ export class XataClient extends BaseClient {
     };
   }
 }
-"
+",
+  "import { BaseClient, Repository, XataClientOptions, XataRecord } from '@xata.io/client';
+export interface Author {
+    name?: string | null;
+    email?: string | null;
+    photoUrl?: string | null;
+    bio?: string | null;
+    title?: string | null;
+}
+export declare type AuthorRecord = Author & XataRecord;
+export interface Post {
+    title?: string | null;
+    summary?: string | null;
+    content?: string | null;
+    tags?: string[] | null;
+    likes?: number | null;
+    author?: AuthorRecord | null;
+    date?: string | null;
+    slug?: string | null;
+    published?: boolean | null;
+}
+export declare type PostRecord = Post & XataRecord;
+export interface Person {
+    slug?: string | null;
+    name?: string | null;
+    title?: string | null;
+    photoUrl?: string | null;
+}
+export declare type PersonRecord = Person & XataRecord;
+export declare class XataClient extends BaseClient<{
+    \\"authors\\": Repository<Author>;
+    \\"posts\\": Repository<Post>;
+    \\"people\\": Repository<Person>;
+}> {
+    constructor(options?: XataClientOptions);
+}
+",
+]
 `;
 
-exports[`codegen should generate correct TypeScript 1`] = `
-"import {
+exports[`generateFromLocalFiles > should generate correct TypeScript 1`] = `
+[
+  "import {
   BaseClient,
   Repository,
   RestRespositoryFactory,
@@ -100,5 +139,6 @@ export class XataClient extends BaseClient<{
     };
   }
 }
-"
+",
+]
 `;
