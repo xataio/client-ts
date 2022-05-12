@@ -1624,8 +1624,9 @@ export type QueryTableVariables = {
  *       },
  *       {
  *         "name": "r2",
- *       },
- *     ],
+ *       }
+ *     ]
+ *   }
  * }
  * ```
  *
@@ -1635,7 +1636,7 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "$exists": "settings",
- *   },
+ *   }
  * }
  * ```
  *
@@ -1650,8 +1651,8 @@ export type QueryTableVariables = {
  *       },
  *       {
  *         "$exists": "name",
- *       },
- *     ],
+ *       }
+ *     ]
  *   }
  * }
  * ```
@@ -1662,7 +1663,7 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "$notExists": "settings",
- *   },
+ *   }
  * }
  * ```
  *

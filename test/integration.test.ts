@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { join } from 'path';
 import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../client/src';
 import { FetchImpl } from '../client/src/api/fetcher';
-import { getBranch } from '../client/src/schema/config';
+import { getCurrentBranchName } from '../client/src/util/config';
 import {
   Paginable,
   PAGINATION_DEFAULT_SIZE,
@@ -511,6 +511,17 @@ describe('integration tests', () => {
     expect(nestedRead?.id).toBeDefined();
     expect(nestedRead?.full_name).toEqual(user.full_name);
   });
+
+  test('Update link with linked object', async () => {
+    const owner = await client.db.users.create({ full_name: 'Example User' });
+    const owner2 = await client.db.users.create({ full_name: 'Example User 2' });
+
+    const team = await client.db.teams.create({ name: 'Example Team', owner });
+    const updated = await team.update({ owner: owner2 });
+
+    expect(team.owner?.id).toEqual(owner.id);
+    expect(updated.owner?.id).toEqual(owner2.id);
+  });
 });
 
 describe('record creation', () => {
@@ -625,7 +636,7 @@ describe('record update', () => {
   test('update multiple teams', async () => {
     const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
-    const updatedTeams = await client.db.teams.update(teams.map((team) => ({ id: team.id, name: 'Team boats' })));
+    const updatedTeams = await client.db.teams.update(teams.map((team) => ({ ...team, name: 'Team boats' })));
 
     expect(updatedTeams).toHaveLength(2);
 
@@ -777,16 +788,16 @@ describe('getBranch', () => {
     const getBranchOptions = { apiKey: '', apiUrl: '', fetchImpl: {} as FetchImpl };
 
     process.env = { XATA_BRANCH: branchName };
-    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
     process.env = { VERCEL_GIT_COMMIT_REF: branchName };
-    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
     process.env = { CF_PAGES_BRANCH: branchName };
-    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
     process.env = { BRANCH: branchName };
-    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
   });
 
   test('uses the git branch if no env variable is set', async () => {
@@ -797,9 +808,9 @@ describe('getBranch', () => {
         return { branchName: gitBranch };
       }
     }));
-    const branch = await getBranch({
-      apiKey: '',
-      apiUrl: 'https://workspace-id-1234.xata.sh/db/test:main',
+    const branch = await getCurrentBranchName({
+      apiKey: 'anything',
+      databaseURL: 'https://workspace-id-1234.xata.sh/db/test:main',
       fetchImpl: fetchImpl as unknown as FetchImpl
     });
 
@@ -815,9 +826,9 @@ describe('getBranch', () => {
         return {};
       }
     }));
-    const branch = await getBranch({
-      apiKey: '',
-      apiUrl: 'https://workspace-id-1234.xata.sh/db/test:main',
+    const branch = await getCurrentBranchName({
+      apiKey: 'anything',
+      databaseURL: 'https://workspace-id-1234.xata.sh/db/test:main',
       fetchImpl: fetchImpl as unknown as FetchImpl
     });
 
