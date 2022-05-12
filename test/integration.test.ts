@@ -1,6 +1,8 @@
+import { execSync } from 'child_process';
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../client/src';
 import { FetchImpl } from '../client/src/api/fetcher';
 import { getBranch } from '../client/src/schema/config';
@@ -12,7 +14,6 @@ import {
 } from '../client/src/schema/pagination';
 import { User, UserRecord, XataClient } from '../codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from './mock_data';
-import { execSync } from 'child_process';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
@@ -28,9 +29,6 @@ const api = new XataApiClient({
   apiKey: process.env.XATA_API_KEY || '',
   fetch
 });
-
-// Integration tests take longer than unit tests, increasing the timeout
-jest.setTimeout(500000);
 
 beforeAll(async () => {
   const id = Math.round(Math.random() * 100000);
@@ -459,7 +457,7 @@ describe('integration tests', () => {
   });
 
   test('multiple errors in one response', async () => {
-    const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as any;
+    const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as User[];
 
     expect(client.db.users.create(invalidUsers)).rejects.toHaveProperty('status', 400);
   });
@@ -795,7 +793,7 @@ describe('getBranch', () => {
 
   test('uses the git branch if no env variable is set', async () => {
     process.env = {};
-    const fetchImpl = jest.fn(() => ({
+    const fetchImpl = vi.fn(() => ({
       ok: true,
       json() {
         return { branchName: gitBranch };
@@ -812,7 +810,7 @@ describe('getBranch', () => {
 
   test('uses `main` if no env variable is set is not set and there is not associated git branch', async () => {
     process.env = {};
-    const fetchImpl = jest.fn(() => ({
+    const fetchImpl = vi.fn(() => ({
       ok: false,
       status: 404,
       json() {

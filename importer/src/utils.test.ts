@@ -1,4 +1,5 @@
-import { parseArray, normalizeColumnName, splitCommas, guessType, castType, guessTypes, parseRow } from './utils.js';
+import { describe, expect, test } from 'vitest';
+import { castType, guessType, guessTypes, normalizeColumnName, parseArray, parseRow, splitCommas } from './utils.js';
 
 describe('splitCommas', () => {
   test('returns undefined for falsy values', () => {
