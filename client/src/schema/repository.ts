@@ -13,7 +13,7 @@ import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { getFetchImplementation } from '../util/fetch';
 import { isObject, isString } from '../util/lang';
 import { Dictionary, GetArrayInnerType, StringKeys } from '../util/types';
-import { getAPIKey, getBranch, getDatabaseUrl } from './config';
+import { getAPIKey, getCurrentBranchName, getDatabaseURL } from '../util/config';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
@@ -565,16 +565,9 @@ export type XataClientOptions = {
 };
 
 function resolveXataClientOptions(options?: Partial<XataClientOptions>): XataClientOptions {
-  const databaseURL = options?.databaseURL || getDatabaseUrl() || '';
+  const databaseURL = options?.databaseURL || getDatabaseURL() || '';
   const apiKey = options?.apiKey || getAPIKey() || '';
-  const branch =
-    options?.branch ||
-    (() =>
-      getBranch({
-        apiKey,
-        apiUrl: databaseURL,
-        fetchImpl: getFetchImplementation(options?.fetch)
-      }));
+  const branch = options?.branch || (() => getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch }));
 
   if (!databaseURL || !apiKey) {
     throw new Error('Options databaseURL and apiKey are required');
@@ -610,9 +603,13 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
 
   async search<Tables extends StringKeys<D>>(
     query: string,
-    tables: Tables[] = Object.keys(this.db) as Tables[],
-    options?: { fuzziness?: number }
-  ): Promise<{ [Model in GetArrayInnerType<typeof tables>]: Awaited<ReturnType<D[Model]['search']>> }> {
+    options?: { fuzziness?: number; tables?: Tables[] }
+  ): Promise<{
+    [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]: Awaited<
+      ReturnType<D[Model]['search']>
+    >;
+  }> {
+    const tables = options?.tables ?? Object.keys(this.db);
     // TODO: Implement global search with a single call, REST repository abstraction needed
     const results = await Promise.all(
       tables.map((table) => this.db[table].search(query, options).then((results) => [table, results]))
@@ -628,6 +625,10 @@ const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchSt
 
 const transformObjectLinks = (object: any) => {
   return Object.entries(object).reduce((acc, [key, value]) => {
+    // Ignore internal properties
+    if (key === 'xata') return acc;
+
+    // Transform links to identifier
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
   }, {});
 };

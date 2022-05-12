@@ -1,9 +1,12 @@
 {
   "name": "@xata.io/client",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Xata.io SDK for TypeScript and JavaScript",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "browser": {
+    "child_process": false
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -p tsconfig.build.json",

@@ -112,7 +112,7 @@ You will learn more about the available operations below, under the `API Design`
 If you don't have a schema file, or you are building a generic way to interact with Xata, you can use the `BaseClient` class without schema validation.
 
 ```ts
-import { BaseClient } from '@xata/client';
+import { BaseClient } from '@xata.io/client';
 
 const xata = new BaseClient({
   branch: 'branchname',
