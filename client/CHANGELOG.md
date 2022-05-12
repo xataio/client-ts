@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.7.1
+
+### Patch Changes
+
+- 01aef78: Fix CDN bundle for browsers
+- 56be1fd: Allow sending updates with link object
+- fc51771: Add includes operator helper methods
+
 ## 0.7.0
 
 ### Minor Changes
