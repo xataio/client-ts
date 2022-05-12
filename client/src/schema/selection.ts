@@ -13,15 +13,13 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   | NestedColumns<O, RecursivePath>;
 
 // Public: Utility type to get the XataRecord built from a list of selected columns
-export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]> = Readonly<
-  XataRecord &
-    // For each column, we get its nested value and join it as an intersection
-    UnionToIntersection<
-      Values<{
-        [K in Key[number]]: NestedValueAtColumn<O, K> & XataRecord;
-      }>
-    >
->;
+export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]> = XataRecord &
+  // For each column, we get its nested value and join it as an intersection
+  UnionToIntersection<
+    Values<{
+      [K in Key[number]]: NestedValueAtColumn<O, K> & XataRecord;
+    }>
+  >;
 
 // Public: Utility type to get the value of a column at a given path
 export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'

@@ -25,14 +25,14 @@ export type Links = Record<string, Array<string[]>>;
  */
 export abstract class Repository<Data extends BaseData, Record extends XataRecord = Data & XataRecord> extends Query<
   Record,
-  SelectedPick<Record, ['*']>
+  Readonly<SelectedPick<Record, ['*']>>
 > {
   /*
    * Creates a single record in the table.
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(object: EditableData<Data> & Partial<Identifiable>): Promise<SelectedPick<Record, ['*']>>;
+  abstract create(object: EditableData<Data> & Partial<Identifiable>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates a single record in the table with a unique id.
@@ -40,28 +40,30 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(id: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  abstract create(id: string, object: EditableData<Data>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates multiple records in the table.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @returns Array of the persisted records.
    */
-  abstract create(objects: Array<EditableData<Data> & Partial<Identifiable>>): Promise<SelectedPick<Record, ['*']>[]>;
+  abstract create(
+    objects: Array<EditableData<Data> & Partial<Identifiable>>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
   /**
    * Queries a single record from the table given its unique id.
    * @param id The unique id.
    * @returns The persisted record for the given id or null if the record could not be found.
    */
-  abstract read(id: string): Promise<SelectedPick<Record, ['*']> | null>;
+  abstract read(id: string): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
 
   /**
    * Partially update a single record.
    * @param object An object with its id and the columns to be updated.
    * @returns The full persisted record.
    */
-  abstract update(object: Partial<EditableData<Data>> & Identifiable): Promise<SelectedPick<Record, ['*']>>;
+  abstract update(object: Partial<EditableData<Data>> & Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Partially update a single record given its unique id.
@@ -69,14 +71,16 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object The column names and their values that have to be updated.
    * @returns The full persisted record.
    */
-  abstract update(id: string, object: Partial<EditableData<Data>>): Promise<SelectedPick<Record, ['*']>>;
+  abstract update(id: string, object: Partial<EditableData<Data>>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Partially updates multiple records.
    * @param objects An array of objects with their ids and columns to be updated.
    * @returns Array of the persisted records.
    */
-  abstract update(objects: Array<Partial<EditableData<Data>> & Identifiable>): Promise<SelectedPick<Record, ['*']>[]>;
+  abstract update(
+    objects: Array<Partial<EditableData<Data>> & Identifiable>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
@@ -84,7 +88,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object Object containing the column names with their values to be persisted in the table.
    * @returns The full persisted record.
    */
-  abstract createOrUpdate(object: EditableData<Data> & Identifiable): Promise<SelectedPick<Record, ['*']>>;
+  abstract createOrUpdate(object: EditableData<Data> & Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
@@ -93,7 +97,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
-  abstract createOrUpdate(id: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
+  abstract createOrUpdate(id: string, object: EditableData<Data>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
@@ -101,7 +105,9 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @returns Array of the persisted records.
    */
-  abstract createOrUpdate(objects: Array<EditableData<Data> & Identifiable>): Promise<SelectedPick<Record, ['*']>[]>;
+  abstract createOrUpdate(
+    objects: Array<EditableData<Data> & Identifiable>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
   /**
    * Deletes a record given its unique id.
