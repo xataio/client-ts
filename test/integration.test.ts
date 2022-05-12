@@ -826,7 +826,7 @@ describe('getBranch', () => {
 });
 
 describe('search', () => {
-  test('search teams by table', async () => {
+  test.skip('search teams by table', async () => {
     const owners = await client.db.users.search('Owner');
     expect(owners.length).toBeGreaterThan(0);
 
@@ -835,7 +835,7 @@ describe('search', () => {
     expect(owners[0].read).toBeDefined();
   });
 
-  test('search globally by tables', async () => {
+  test.skip('search globally by tables', async () => {
     const { users, teams } = await client.search('fruits', ['teams', 'users']);
 
     expect(users.length).toBeGreaterThan(0);
@@ -850,7 +850,7 @@ describe('search', () => {
     expect(teams[0].name?.includes('fruits')).toBeTruthy();
   });
 
-  test('search globally with all tables', async () => {
+  test.skip('search globally with all tables', async () => {
     const { users, teams } = await client.search('fruits');
 
     expect(users.length).toBeGreaterThan(0);
