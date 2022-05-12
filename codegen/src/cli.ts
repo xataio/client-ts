@@ -31,7 +31,7 @@ program
       const databaseURL = getDatabaseURL();
       const apiKey = getAPIKey();
       if (databaseURL && apiKey) {
-        await generateFromAPI(databaseURL, apiKey, out);
+        await generateFromAPI(out, databaseURL, apiKey);
       } else {
         await generateFromLocalFiles(xataDirectory, out);
       }
