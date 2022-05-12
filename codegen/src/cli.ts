@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import dotenv from 'dotenv';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { generateFromAPI } from './api.js';
 import { exitWithError } from './errors.js';
 import { generateFromLocalFiles } from './local.js';
@@ -35,6 +35,8 @@ program
       } else {
         await generateFromLocalFiles(xataDirectory, out);
       }
+
+      spinner?.succeed(`Your XataClient is generated at ./${relative(process.cwd(), out)}`);
     } catch (err) {
       exitWithError(err);
     }
