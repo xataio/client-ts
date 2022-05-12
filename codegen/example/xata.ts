@@ -7,18 +7,18 @@ import {
 } from "../../client/src";
 
 export interface Team {
+  labels?: string[] | null;
   owner?: UserRecord | null;
   name?: string | null;
-  labels?: string[] | null;
 }
 
 export type TeamRecord = Team & XataRecord;
 
 export interface User {
+  email?: string | null;
   team?: TeamRecord | null;
   full_name?: string | null;
-  address?: { zipcode?: number | null; street?: string | null } | null;
-  email?: string | null;
+  address?: { street?: string | null; zipcode?: number | null } | null;
 }
 
 export type UserRecord = User & XataRecord;

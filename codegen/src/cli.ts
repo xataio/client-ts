@@ -11,8 +11,6 @@ import { getDatabaseURL, getAPIKey } from '@xata.io/client';
 const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'src', 'xata.ts');
 
-dotenv.config();
-
 program
   .name('xata-codegen')
   .description('The Xata SDK CLI is used to generate type-safe and predictable clients used to interact with Xata.')
@@ -23,7 +21,10 @@ program
     defaultXataDirectory
   )
   .option('-o, --out <path>', 'A path to store your generated API client.', defaultOutputFile)
-  .action(async (xataDirectory, { out }) => {
+  .option('-e, --env <path>', 'Path to the .env file to load.', '.env')
+  .action(async (xataDirectory, { out, env }) => {
+    dotenv.config({ path: env });
+
     spinner?.start('Checking schema...');
 
     try {

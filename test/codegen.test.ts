@@ -1,6 +1,6 @@
 import { readFile, unlink } from 'fs/promises';
 import { join } from 'path';
-import { generateFromLocalFiles } from '../codegen/src/local';
+import { generateFromLocalFiles } from '../codegen/src/local.js';
 
 const xataDirectory = join(__dirname, 'mocks');
 
