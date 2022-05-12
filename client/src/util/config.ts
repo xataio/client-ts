@@ -44,7 +44,7 @@ export async function getCurrentBranchDetails(options?: BranchResolutionOptions)
   // TODO: in the future, call /resolve endpoint
   // For now, call API to see if the branch exists. If not, use a default value.
   const details = await getDatabaseBranch(branch, options);
-  if (details) return branch;
+  if (details) return details;
 
   return getDatabaseBranch(defaultBranch, options);
 }
