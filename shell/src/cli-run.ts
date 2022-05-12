@@ -17,6 +17,7 @@ export async function run() {
   const defaultEval = getDefaultEval();
 
   const replServer = repl.start({
+    preview: true,
     eval(evalCmd, context, file, callback) {
       try {
         const table = evalCmd.endsWith('\\t\n');
