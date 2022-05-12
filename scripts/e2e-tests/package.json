@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {},
   "dependencies": {
-    "@cloudflare/wrangler": "latest",
+    "wrangler": "latest",
     "netlify-cli": "latest",
     "vercel": "latest"
   }
