@@ -24,9 +24,9 @@ export class XataClient extends BaseClient {
     const factory = options?.repositoryFactory || new RestRespositoryFactory();
     /** @type {{ \\"authors\\": AuthorRepository; \\"posts\\": PostRepository; \\"people\\": PersonRepository }} */
     this.db = {
-      authors: factory.createRepository(this, \\"authors\\"),
-      posts: factory.createRepository(this, \\"posts\\"),
-      people: factory.createRepository(this, \\"people\\"),
+      authors: factory.createRepository(this, \\"authors\\", links),
+      posts: factory.createRepository(this, \\"posts\\", links),
+      people: factory.createRepository(this, \\"people\\", links),
     };
   }
 }
@@ -94,9 +94,9 @@ export class XataClient extends BaseClient<{
     const factory = options?.repositoryFactory || new RestRespositoryFactory();
 
     this.db = {
-      authors: factory.createRepository(this, \\"authors\\"),
-      posts: factory.createRepository(this, \\"posts\\"),
-      people: factory.createRepository(this, \\"people\\"),
+      authors: factory.createRepository(this, \\"authors\\", links),
+      posts: factory.createRepository(this, \\"posts\\", links),
+      people: factory.createRepository(this, \\"people\\", links),
     };
   }
 }
