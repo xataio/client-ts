@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {},
   "dependencies": {
-    "wrangler": "latest",
     "netlify-cli": "latest",
-    "vercel": "latest"
+    "vercel": "latest",
+    "wrangler": "latest"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^3.10.0"
   }
 }

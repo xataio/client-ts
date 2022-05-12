@@ -80,7 +80,7 @@ jobs:
         env:
           XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
-          XATA_DATABASE_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
+          XATA_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
 
       - name: Configure npm registry token
         run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
