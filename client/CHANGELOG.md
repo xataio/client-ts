@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 4803b6f: Memoize api client namespaces
+- 4803b6f: Memoize ApiClient namespaces
 - 1f268d7: Add search in XataClient
 - d58c3d9: Hide private helper utilities
 - f3b731b: Expose branch resolution API
