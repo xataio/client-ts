@@ -824,3 +824,44 @@ describe('getBranch', () => {
     expect(branch).toEqual('main');
   });
 });
+
+describe('search', () => {
+  test('search teams by table', async () => {
+    const owners = await client.db.users.search('Owner');
+    expect(owners.length).toBeGreaterThan(0);
+
+    expect(owners[0].id).toBeDefined();
+    expect(owners[0].full_name?.includes('Owner')).toBeTruthy();
+    expect(owners[0].read).toBeDefined();
+  });
+
+  test('search globally by tables', async () => {
+    const { users, teams } = await client.search('fruits', ['teams', 'users']);
+
+    expect(users.length).toBeGreaterThan(0);
+    expect(teams.length).toBeGreaterThan(0);
+
+    expect(users[0].id).toBeDefined();
+    expect(users[0].read).toBeDefined();
+    expect(users[0].full_name?.includes('fruits')).toBeTruthy();
+
+    expect(teams[0].id).toBeDefined();
+    expect(teams[0].read).toBeDefined();
+    expect(teams[0].name?.includes('fruits')).toBeTruthy();
+  });
+
+  test('search globally with all tables', async () => {
+    const { users, teams } = await client.search('fruits');
+
+    expect(users.length).toBeGreaterThan(0);
+    expect(teams.length).toBeGreaterThan(0);
+
+    expect(users[0].id).toBeDefined();
+    expect(users[0].read).toBeDefined();
+    expect(users[0].full_name?.includes('fruits')).toBeTruthy();
+
+    expect(teams[0].id).toBeDefined();
+    expect(teams[0].read).toBeDefined();
+    expect(teams[0].name?.includes('fruits')).toBeTruthy();
+  });
+});
