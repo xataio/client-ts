@@ -11,7 +11,7 @@ import {
 import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
 import { getFetchImplementation } from '../util/fetch';
 import { isObject, isString } from '../util/lang';
-import { getAPIKey, getBranch, getDatabaseUrl } from './config';
+import { getAPIKey, getCurrentBranchName, getDatabaseURL } from '../util/config';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
@@ -477,16 +477,9 @@ export type XataClientOptions = {
 };
 
 function resolveXataClientOptions(options?: Partial<XataClientOptions>): XataClientOptions {
-  const databaseURL = options?.databaseURL || getDatabaseUrl() || '';
+  const databaseURL = options?.databaseURL || getDatabaseURL() || '';
   const apiKey = options?.apiKey || getAPIKey() || '';
-  const branch =
-    options?.branch ||
-    (() =>
-      getBranch({
-        apiKey,
-        apiUrl: databaseURL,
-        fetchImpl: getFetchImplementation(options?.fetch)
-      }));
+  const branch = options?.branch || (() => getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch }));
 
   if (!databaseURL || !apiKey) {
     throw new Error('Options databaseURL and apiKey are required');

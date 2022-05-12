@@ -9,3 +9,4 @@ export class XataError extends Error {
 
 export * from './api';
 export * from './schema';
+export * from './util/config';

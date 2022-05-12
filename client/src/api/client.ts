@@ -1,4 +1,4 @@
-import { getAPIKey } from '../schema/config';
+import { getAPIKey } from '../util/config';
 import { getFetchImplementation } from '../util/fetch';
 import type * as Types from './components';
 import { operationsByTag } from './components';
