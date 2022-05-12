@@ -26,12 +26,12 @@ jobs:
       - name: 📥 Install dependencies
         uses: bahmutov/npm-install@v1
         with:
-          working-directory: ./scripts/e2e-tests
+          working-directory: ./test/e2e
           useLockFile: false
 
       - name: 🚀 Deploy to Cloudflare Workers
         run: node ./${{ matrix.target }}.mjs
-        working-directory: ./scripts/e2e-tests
+        working-directory: ./test/e2e
         env:
           XATA_API_KEY: ${{ secrets.E2E_XATA_API_KEY }}
           XATA_WORKSPACE: ${{ secrets.E2E_XATA_WORKSPACE }}

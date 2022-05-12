@@ -9,6 +9,6 @@
     "wrangler": "latest"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^3.10.0"
+    "ts-node": "^10.7.0"
   }
 }
