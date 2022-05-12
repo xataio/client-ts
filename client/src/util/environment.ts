@@ -28,11 +28,12 @@ export function getEnvVariable(name: string): string | undefined {
 }
 
 export async function getGitBranch(): Promise<string | undefined> {
+  if (!isObject(process)) return undefined;
+
   // Node.js: child_process.execSync
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const result = require('child_process').execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
-    if (result) return result;
+    return require('child_process').execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
   } catch (err) {
     // Ignore
   }
