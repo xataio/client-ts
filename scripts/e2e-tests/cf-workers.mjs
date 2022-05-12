@@ -1,0 +1,1 @@
+console.log("Cloudflare Workers E2E Tests");

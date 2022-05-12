@@ -1,0 +1,11 @@
+{
+  "name": "e2e-tests",
+  "description": "Dependencies for E2E tests",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "@cloudflare/wrangler": "latest",
+    "netlify-cli": "latest",
+    "vercel": "latest"
+  }
+}
