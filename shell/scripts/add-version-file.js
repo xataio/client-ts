@@ -9,6 +9,6 @@ const pkgPath = path.join(__dirname, '../package.json');
 const pkgContents = fs.readFileSync(pkgPath, 'utf8');
 const pkg = JSON.parse(pkgContents);
 
-const contents = `export const IMPORTER_VERSION = '${pkg.version}';`;
+const contents = `export const SHELL_VERSION = '${pkg.version}';`;
 const versionPath = path.join(__dirname, '../src/version.ts');
 fs.writeFileSync(versionPath, contents);

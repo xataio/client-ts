@@ -7,11 +7,18 @@ import fs from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
 import repl from 'repl';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-export async function run() {
-  dotenv.config();
-  // TODO: do not generate in the current dir
-  const tempFile = path.join(process.cwd(), `xata-${Date.now()}.mjs`);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export async function run(options: { env?: string }) {
+  dotenv.config({ path: options.env || '.env' });
+
+  // Generate the file in the same dir than this package's code so it
+  // can import @xata.io/client
+  const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
   await generateClient(tempFile);
 
   const defaultEval = getDefaultEval();
@@ -46,19 +53,21 @@ export async function run() {
   replServer.context.xata = new XataClient({ fetch });
 }
 
+// This is a hacky way I found to get the defaultEval
+// from Node.js source code https://github.com/nodejs/node/blob/master/lib/repl.js#L409-L640
 function getDefaultEval() {
-  const input = new EventEmitter();
-  (input as any).resume = function () {
+  const input = new EventEmitter() as any;
+  input.resume = function () {
     /* empty */
   };
-  (input as any).pause = function () {
+  input.pause = function () {
     /* empty */
   };
 
-  const replServer = repl.start({
-    input: input as any,
-    output: createWriteStream(path.join(tmpdir(), `output-${Date.now()}`))
-  });
+  // Maybe we coan use an in-memory implementation of a write stream
+  const output = createWriteStream(path.join(tmpdir(), `output-${Date.now()}`));
+
+  const replServer = repl.start({ input, output });
   const defaultEval = replServer.eval;
   replServer.pause();
   return defaultEval;
