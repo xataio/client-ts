@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { join } from 'path';
 import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../client/src';
 import { FetchImpl } from '../client/src/api/fetcher';
-import { getBranch } from '../client/src/schema/config';
+import { getCurrentBranchName } from '../client/src/util/config';
 import {
   Paginable,
   PAGINATION_DEFAULT_SIZE,
@@ -781,16 +781,16 @@ describe('getBranch', () => {
     const getBranchOptions = { apiKey: '', apiUrl: '', fetchImpl: {} as FetchImpl };
 
     process.env = { XATA_BRANCH: branchName };
-    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
     process.env = { VERCEL_GIT_COMMIT_REF: branchName };
-    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
     process.env = { CF_PAGES_BRANCH: branchName };
-    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
     process.env = { BRANCH: branchName };
-    expect(await getBranch(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
   });
 
   test('uses the git branch if no env variable is set', async () => {
@@ -801,9 +801,9 @@ describe('getBranch', () => {
         return { branchName: gitBranch };
       }
     }));
-    const branch = await getBranch({
-      apiKey: '',
-      apiUrl: 'https://workspace-id-1234.xata.sh/db/test:main',
+    const branch = await getCurrentBranchName({
+      apiKey: 'anything',
+      databaseURL: 'https://workspace-id-1234.xata.sh/db/test:main',
       fetchImpl: fetchImpl as unknown as FetchImpl
     });
 
@@ -819,9 +819,9 @@ describe('getBranch', () => {
         return {};
       }
     }));
-    const branch = await getBranch({
-      apiKey: '',
-      apiUrl: 'https://workspace-id-1234.xata.sh/db/test:main',
+    const branch = await getCurrentBranchName({
+      apiKey: 'anything',
+      databaseURL: 'https://workspace-id-1234.xata.sh/db/test:main',
       fetchImpl: fetchImpl as unknown as FetchImpl
     });
 
