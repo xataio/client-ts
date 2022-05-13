@@ -3,12 +3,11 @@ import ts from 'typescript';
 import prettier, { BuiltInParserName } from 'prettier';
 import parserJavascript from 'prettier/parser-babel.js';
 import parserTypeScript from 'prettier/parser-typescript.js';
-import { XataConfigSchema } from './config.js';
 import { Column, Table, XataDatabaseSchema } from './schema.js';
 
 export type GenerateOptions = {
   schema: XataDatabaseSchema;
-  config: XataConfigSchema;
+  databaseURL: string;
   language: Language;
   javascriptTarget?: JavascriptTarget;
 };
@@ -28,40 +27,46 @@ function getTypeName(tableName: string) {
   return snglr.substring(0, 1).toUpperCase() + snglr.substring(1);
 }
 
-function generateTableType(table: Table) {
-  const { columns } = table;
-  const revLinks: { table: string }[] = []; // table.rev_links || [];
-  return `export interface ${getTypeName(table.name)} {
+function generateTableTypes(tables: Table[]) {
+  const types = tables.map((table) => {
+    const { columns } = table;
+    const revLinks: { table: string }[] = []; // table.rev_links || [];
+
+    return `export interface ${getTypeName(table.name)} {
     ${columns.map((column) => generateColumnType(column)).join('\n')}
     ${revLinks.map((link) => `${link.table}: Query<${getTypeName(link.table)}>`).join('\n')}
   };
 
   export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;
   `;
+  });
+
+  const schema = `export type DatabaseSchema = {
+    ${tables.map((table) => `${table.name}: ${getTypeName(table.name)};`).join('\n')}
+  }`;
+
+  return [...types, schema].join('\n');
 }
 
 function generateColumnType(column: Column) {
   return `${column.name}?: ${getTypeScriptType(column)} | null`;
 }
 
-function generateJSDocImportTypes(tables: Table[]) {
-  return tables
-    .map(
-      (table) => `
-  /** @typedef { import('./types').${getTypeName(table.name)} } ${getTypeName(table.name)} */
-  /** @typedef { import('./types').${getTypeName(table.name)}Record } ${getTypeName(table.name)}Record */
-  /** @typedef { import('@xata.io/client').Repository<${getTypeName(table.name)}, ${getTypeName(
-        table.name
-      )}Record> } ${getTypeName(table.name)}Repository */
-`
-    )
-    .join('\n');
-}
-
-function generateJSDocInternalType(tables: Table[]) {
-  return `/** @type {{ ${tables
-    .map((table) => `"${table.name}": ${getTypeName(table.name)}Repository`)
-    .join('; ')} }} */`;
+function generateAbstractClient(language: Language) {
+  switch (language) {
+    case 'typescript':
+      return `const DatabaseClient = buildClient<DatabaseSchema>();`;
+    case 'javascript':
+      return `
+        /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
+        /** @typedef { import('@xata.io/client').SchemaNamespace<DatabaseSchema> } SchemaNamespace */
+        /** @typedef { import('@xata.io/client').SearchNamespace<DatabaseSchema> } SearchNamespace */
+        /** @typedef { { db: SchemaNamespace, search: SearchNamespace }} Namespaces */
+        /** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema, Namespaces> } */
+        const DatabaseClient = buildClient();`;
+    default:
+      return '';
+  }
 }
 
 function getTypeScriptType(column: Column): string {
@@ -88,7 +93,7 @@ export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
 export async function generate({
   schema,
-  config,
+  databaseURL,
   language,
   javascriptTarget
 }: GenerateOptions): Promise<GenerateOutput> {
@@ -107,32 +112,20 @@ export async function generate({
 
   const code = `
     import {
-      BaseClient,
-      Repository,
-      RestRespositoryFactory,
-      XataClientOptions,
+      buildClient,
+      BaseClientOptions,
       XataRecord
     } from '@xata.io/client';
 
-    ${tables.map((table) => generateTableType(table)).join('\n')}
-
-    ${language === 'javascript' ? generateJSDocImportTypes(tables) : ''}
+    ${generateTableTypes(tables)}
 
     const links = ${JSON.stringify(links)};
 
-    export class XataClient extends BaseClient<{
-      ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
-    }> {
-      constructor(options?: XataClientOptions) {
-        super({ databaseURL: "https://${config.workspaceID}.xata.sh/db/${config.dbName}", ...options}, links);
+    ${generateAbstractClient(language)}
 
-        const factory = options?.repositoryFactory || new RestRespositoryFactory();
-        ${language === 'javascript' ? generateJSDocInternalType(tables) : ''}
-        this.db = {
-          ${tables
-            .map((table) => `"${table.name}": factory.createRepository(this, "${table.name}", links),`)
-            .join('\n')}
-        };
+    export class XataClient extends DatabaseClient {
+      constructor(options?: BaseClientOptions) {
+        super({ databaseURL: "${databaseURL}", ...options}, links);
       }
     }
   `;
@@ -179,7 +172,11 @@ function emitDeclarations(code: string) {
     getDirectories: () => []
   };
 
-  const program = ts.createProgram(['index.ts'], { declaration: true, emitDeclarationOnly: true }, compilerHost);
+  const program = ts.createProgram(
+    ['index.ts'],
+    { declaration: true, emitDeclarationOnly: true, removeComments: true },
+    compilerHost
+  );
   program.emit(undefined, (fileName, data) => files.set(fileName, data), undefined, true);
 
   return files.get('index.d.ts');

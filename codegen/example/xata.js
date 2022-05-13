@@ -1,22 +1,16 @@
-import { BaseClient, RestRespositoryFactory } from "../../client/src";
-/** @typedef { import('./types').Team } Team */
-/** @typedef { import('./types').TeamRecord } TeamRecord */
-/** @typedef { import('../../client/src').Repository<Team, TeamRecord> } TeamRepository */
-/** @typedef { import('./types').User } User */
-/** @typedef { import('./types').UserRecord } UserRecord */
-/** @typedef { import('../../client/src').Repository<User, UserRecord> } UserRepository */
+import { buildClient } from "../../client/src";
 const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
-export class XataClient extends BaseClient {
+/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
+/** @typedef { import('../../client/src').SchemaNamespace<DatabaseSchema> } SchemaNamespace */
+/** @typedef { import('../../client/src').SearchNamespace<DatabaseSchema> } SearchNamespace */
+/** @typedef { { db: SchemaNamespace, search: SearchNamespace }} Namespaces */
+/** @type { import('../../client/src').WrapperConstructor<DatabaseSchema, Namespaces> } */
+const DatabaseClient = buildClient();
+export class XataClient extends DatabaseClient {
   constructor(options) {
     super(
       { databaseURL: "https://test-r5vcv5.xata.sh/db/test", ...options },
       links
     );
-    const factory = options?.repositoryFactory || new RestRespositoryFactory();
-    /** @type {{ "teams": TeamRepository; "users": UserRepository }} */
-    this.db = {
-      teams: factory.createRepository(this, "teams", links),
-      users: factory.createRepository(this, "users", links),
-    };
   }
 }

@@ -1,28 +1,31 @@
+import * as fs from 'fs/promises';
 import { join } from 'path';
-import { generateWithOutput } from '../codegen/src/generateWithOutput';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { generateFromLocalFiles } from '../codegen/src/local';
 
-describe('codegen', () => {
+vi.mock('fs/promises', async () => {
+  const realFs: typeof fs = await vi.importActual('fs/promises');
+  return { ...realFs, writeFile: vi.fn() };
+});
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
+const writeFileMock = fs.writeFile as unknown as ReturnType<typeof vi.fn>['mock'];
+
+const xataDirectory = join(__dirname, 'mocks');
+
+describe('generateFromLocalFiles', () => {
   it('should generate correct TypeScript', async () => {
-    const xataDirectory = join(__dirname, 'mocks');
-    const outputFilePath = 'hahaha.ts';
-
-    const writeFile = jest.fn();
-    await generateWithOutput({ xataDirectory, outputFilePath, writeFile });
-
-    const [path, content] = writeFile.mock.calls[0];
-    expect(path).toEqual(join(process.cwd(), 'hahaha.ts'));
-    expect(content).toMatchSnapshot();
+    const outputFilePath = 'example.ts';
+    await generateFromLocalFiles(xataDirectory, outputFilePath);
+    expect(writeFileMock.calls.map((item) => item[1])).toMatchSnapshot();
   });
 
   it('should generate correct JavaScript', async () => {
-    const xataDirectory = join(__dirname, 'mocks');
-    const outputFilePath = 'hahaha.js';
-
-    const writeFile = jest.fn();
-    await generateWithOutput({ xataDirectory, outputFilePath, writeFile: writeFile });
-
-    const [path, content] = writeFile.mock.calls[0];
-    expect(path).toEqual(join(process.cwd(), 'hahaha.js'));
-    expect(content).toMatchSnapshot();
+    const outputFilePath = 'example.js';
+    await generateFromLocalFiles(xataDirectory, outputFilePath);
+    expect(writeFileMock.calls.map((item) => item[1])).toMatchSnapshot();
   });
 });

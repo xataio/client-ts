@@ -1,4 +1,4 @@
-import { BaseClient, Repository, XataClientOptions, XataRecord } from '../../client/src';
+import { BaseClientOptions, XataRecord } from '../../client/src';
 export interface Team {
     name?: string | null;
     labels?: string[] | null;
@@ -15,9 +15,12 @@ export interface User {
     team?: TeamRecord | null;
 }
 export declare type UserRecord = User & XataRecord;
-export declare class XataClient extends BaseClient<{
-    "teams": Repository<Team>;
-    "users": Repository<User>;
-}> {
-    constructor(options?: XataClientOptions);
+export declare type DatabaseSchema = {
+    teams: Team;
+    users: User;
+};
+declare const DatabaseClient: any;
+export declare class XataClient extends DatabaseClient {
+    constructor(options?: BaseClientOptions);
 }
+export {};

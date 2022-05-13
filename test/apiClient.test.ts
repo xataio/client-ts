@@ -1,6 +1,7 @@
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
+import { describe, expect, test } from 'vitest';
 import { XataApiClient } from '../client/src';
 
 // Get environment variables before reading them
@@ -10,9 +11,6 @@ const client = new XataApiClient({
   fetch,
   apiKey: process.env.XATA_API_KEY || ''
 });
-
-// Integration tests take longer than unit tests, increasing the timeout
-jest.setTimeout(50000);
 
 describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace', async () => {

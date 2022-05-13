@@ -3,4 +3,4 @@
 '@xata.io/codegen': patch
 ---
 
-Hide private helper utilities
+Refactor client builder

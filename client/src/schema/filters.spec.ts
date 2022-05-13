@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { test } from 'vitest';
 import { Filter } from './filters';
 import { XataRecord } from './record';
 
