@@ -8,8 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -p tsconfig.build.json",
     "prepack": "npm run build",
-    "prebuild": "node scripts/add-version-file.js",
-    "postbuild": "node scripts/inject-hashbang.js"
+    "prebuild": "node ../scripts/add-version-file.mjs",
+    "postbuild": "node ../scripts/inject-hashbang.mjs"
   },
   "repository": {
     "type": "git",
