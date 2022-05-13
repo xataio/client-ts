@@ -1,5 +1,18 @@
 # @xata.io/codegen
 
+## 0.8.0
+
+### Minor Changes
+
+- 8b56394: Support using environment variables instead of a xata dir
+
+### Patch Changes
+
+- bde908e: Refactor client builder
+- Updated dependencies [bde908e]
+- Updated dependencies [ea3eef8]
+  - @xata.io/client@0.8.0
+
 ## 0.7.2
 
 ### Patch Changes
