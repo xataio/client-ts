@@ -2,7 +2,7 @@
 
 exports[`generateFromLocalFiles > should generate correct JavaScript 1`] = `
 [
-  "import { BaseClient, RestRespositoryFactory } from \\"@xata.io/client\\";
+  "import { buildClient } from \\"@xata.io/client\\";
 /** @typedef { import('./types').Author } Author */
 /** @typedef { import('./types').AuthorRecord } AuthorRecord */
 /** @typedef { import('@xata.io/client').Repository<Author, AuthorRecord> } AuthorRepository */
@@ -13,7 +13,7 @@ exports[`generateFromLocalFiles > should generate correct JavaScript 1`] = `
 /** @typedef { import('./types').PersonRecord } PersonRecord */
 /** @typedef { import('@xata.io/client').Repository<Person, PersonRecord> } PersonRepository */
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
-export class XataClient extends BaseClient {
+export class XataClient extends buildClient() {
   constructor(options) {
     super(
       {
@@ -22,17 +22,10 @@ export class XataClient extends BaseClient {
       },
       links
     );
-    const factory = options?.repositoryFactory || new RestRespositoryFactory();
-    /** @type {{ \\"authors\\": AuthorRepository; \\"posts\\": PostRepository; \\"people\\": PersonRepository }} */
-    this.db = {
-      authors: factory.createRepository(this, \\"authors\\", links),
-      posts: factory.createRepository(this, \\"posts\\", links),
-      people: factory.createRepository(this, \\"people\\", links),
-    };
   }
 }
 ",
-  "import { BaseClient, Repository, XataClientOptions, XataRecord } from '@xata.io/client';
+  "import { BaseClientOptions, XataRecord } from '@xata.io/client';
 export interface Author {
     name?: string | null;
     email?: string | null;
@@ -60,26 +53,18 @@ export interface Person {
     photoUrl?: string | null;
 }
 export declare type PersonRecord = Person & XataRecord;
-export declare class XataClient extends BaseClient<{
-    \\"authors\\": Repository<Author>;
-    \\"posts\\": Repository<Post>;
-    \\"people\\": Repository<Person>;
-}> {
-    constructor(options?: XataClientOptions);
+declare const XataClient_base: any;
+export declare class XataClient extends XataClient_base {
+    constructor(options?: BaseClientOptions);
 }
+export {};
 ",
 ]
 `;
 
 exports[`generateFromLocalFiles > should generate correct TypeScript 1`] = `
 [
-  "import {
-  BaseClient,
-  Repository,
-  RestRespositoryFactory,
-  XataClientOptions,
-  XataRecord,
-} from \\"@xata.io/client\\";
+  "import { buildClient, BaseClientOptions, XataRecord } from \\"@xata.io/client\\";
 
 export interface Author {
   name?: string | null;
@@ -116,12 +101,12 @@ export type PersonRecord = Person & XataRecord;
 
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
 
-export class XataClient extends BaseClient<{
-  authors: Repository<Author>;
-  posts: Repository<Post>;
-  people: Repository<Person>;
-}> {
-  constructor(options?: XataClientOptions) {
+export class XataClient extends buildClient<{
+  authors: Author;
+  posts: Post;
+  people: Person;
+}>() {
+  constructor(options?: BaseClientOptions) {
     super(
       {
         databaseURL: \\"https://my-workspace-gfdd12.xata.sh/db/hello-xata\\",
@@ -129,14 +114,6 @@ export class XataClient extends BaseClient<{
       },
       links
     );
-
-    const factory = options?.repositoryFactory || new RestRespositoryFactory();
-
-    this.db = {
-      authors: factory.createRepository(this, \\"authors\\", links),
-      posts: factory.createRepository(this, \\"posts\\", links),
-      people: factory.createRepository(this, \\"people\\", links),
-    };
   }
 }
 ",

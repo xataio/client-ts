@@ -106,10 +106,8 @@ export async function generate({
 
   const code = `
     import {
-      BaseClient,
-      Repository,
-      RestRespositoryFactory,
-      XataClientOptions,
+      buildClient,
+      BaseClientOptions,
       XataRecord
     } from '@xata.io/client';
 
@@ -119,19 +117,11 @@ export async function generate({
 
     const links = ${JSON.stringify(links)};
 
-    export class XataClient extends BaseClient<{
-      ${tables.map((table) => `"${table.name}": Repository<${getTypeName(table.name)}>;`).join('\n')}
-    }> {
-      constructor(options?: XataClientOptions) {
+    export class XataClient extends buildClient<{
+      ${tables.map((table) => `${table.name}: ${getTypeName(table.name)};`).join('\n')}
+    }>() {
+      constructor(options?: BaseClientOptions) {
         super({ databaseURL: "${databaseURL}", ...options}, links);
-
-        const factory = options?.repositoryFactory || new RestRespositoryFactory();
-        ${language === 'javascript' ? generateJSDocInternalType(tables) : ''}
-        this.db = {
-          ${tables
-            .map((table) => `"${table.name}": factory.createRepository(this, "${table.name}", links),`)
-            .join('\n')}
-        };
       }
     }
   `;
