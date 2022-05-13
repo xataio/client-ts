@@ -2,18 +2,15 @@
 
 exports[`generateFromLocalFiles > should generate correct JavaScript 1`] = `
 [
-  "import { BaseClient, RestRespositoryFactory } from \\"@xata.io/client\\";
-/** @typedef { import('./types').Author } Author */
-/** @typedef { import('./types').AuthorRecord } AuthorRecord */
-/** @typedef { import('@xata.io/client').Repository<Author, AuthorRecord> } AuthorRepository */
-/** @typedef { import('./types').Post } Post */
-/** @typedef { import('./types').PostRecord } PostRecord */
-/** @typedef { import('@xata.io/client').Repository<Post, PostRecord> } PostRepository */
-/** @typedef { import('./types').Person } Person */
-/** @typedef { import('./types').PersonRecord } PersonRecord */
-/** @typedef { import('@xata.io/client').Repository<Person, PersonRecord> } PersonRepository */
+  "import { buildClient } from \\"@xata.io/client\\";
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
-export class XataClient extends BaseClient {
+/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
+/** @typedef { import('@xata.io/client').SchemaNamespace<DatabaseSchema> } SchemaNamespace */
+/** @typedef { import('@xata.io/client').SearchNamespace<DatabaseSchema> } SearchNamespace */
+/** @typedef { { db: SchemaNamespace, search: SearchNamespace }} Namespaces */
+/** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema, Namespaces> } */
+const DatabaseClient = buildClient();
+export class XataClient extends DatabaseClient {
   constructor(options) {
     super(
       {
@@ -22,17 +19,10 @@ export class XataClient extends BaseClient {
       },
       links
     );
-    const factory = options?.repositoryFactory || new RestRespositoryFactory();
-    /** @type {{ \\"authors\\": AuthorRepository; \\"posts\\": PostRepository; \\"people\\": PersonRepository }} */
-    this.db = {
-      authors: factory.createRepository(this, \\"authors\\", links),
-      posts: factory.createRepository(this, \\"posts\\", links),
-      people: factory.createRepository(this, \\"people\\", links),
-    };
   }
 }
 ",
-  "import { BaseClient, Repository, XataClientOptions, XataRecord } from '@xata.io/client';
+  "import { BaseClientOptions, XataRecord } from '@xata.io/client';
 export interface Author {
     name?: string | null;
     email?: string | null;
@@ -60,26 +50,23 @@ export interface Person {
     photoUrl?: string | null;
 }
 export declare type PersonRecord = Person & XataRecord;
-export declare class XataClient extends BaseClient<{
-    \\"authors\\": Repository<Author>;
-    \\"posts\\": Repository<Post>;
-    \\"people\\": Repository<Person>;
-}> {
-    constructor(options?: XataClientOptions);
+export declare type DatabaseSchema = {
+    authors: Author;
+    posts: Post;
+    people: Person;
+};
+declare const DatabaseClient: any;
+export declare class XataClient extends DatabaseClient {
+    constructor(options?: BaseClientOptions);
 }
+export {};
 ",
 ]
 `;
 
 exports[`generateFromLocalFiles > should generate correct TypeScript 1`] = `
 [
-  "import {
-  BaseClient,
-  Repository,
-  RestRespositoryFactory,
-  XataClientOptions,
-  XataRecord,
-} from \\"@xata.io/client\\";
+  "import { buildClient, BaseClientOptions, XataRecord } from \\"@xata.io/client\\";
 
 export interface Author {
   name?: string | null;
@@ -114,14 +101,18 @@ export interface Person {
 
 export type PersonRecord = Person & XataRecord;
 
+export type DatabaseSchema = {
+  authors: Author;
+  posts: Post;
+  people: Person;
+};
+
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
 
-export class XataClient extends BaseClient<{
-  authors: Repository<Author>;
-  posts: Repository<Post>;
-  people: Repository<Person>;
-}> {
-  constructor(options?: XataClientOptions) {
+const DatabaseClient = buildClient<DatabaseSchema>();
+
+export class XataClient extends DatabaseClient {
+  constructor(options?: BaseClientOptions) {
     super(
       {
         databaseURL: \\"https://my-workspace-gfdd12.xata.sh/db/hello-xata\\",
@@ -129,14 +120,6 @@ export class XataClient extends BaseClient<{
       },
       links
     );
-
-    const factory = options?.repositoryFactory || new RestRespositoryFactory();
-
-    this.db = {
-      authors: factory.createRepository(this, \\"authors\\", links),
-      posts: factory.createRepository(this, \\"posts\\", links),
-      people: factory.createRepository(this, \\"people\\", links),
-    };
   }
 }
 ",
