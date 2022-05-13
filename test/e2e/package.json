@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {},
   "dependencies": {
+    "@remix-run/dev": "^1.4.3",
     "netlify-cli": "latest",
+    "remix": "^1.4.3",
     "vercel": "latest",
     "wrangler": "latest"
   },
