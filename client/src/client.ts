@@ -105,7 +105,7 @@ export const buildClient = <
     }
   } as unknown as WrapperConstructor<Schemas, Namespaces, ExternalNamespaces>;
 
-interface WrapperConstructor<
+export interface WrapperConstructor<
   Schemas extends Record<string, BaseData> = Record<string, any>,
   Namespaces extends Record<string, Namespace> = { db: SchemaNamespace<Schemas>; search: SearchNamespace<Schemas> },
   ExternalNamespaces extends Record<string, Namespace> = Record<string, Namespace>

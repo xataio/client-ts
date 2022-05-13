@@ -3,17 +3,14 @@
 exports[`generateFromLocalFiles > should generate correct JavaScript 1`] = `
 [
   "import { buildClient } from \\"@xata.io/client\\";
-/** @typedef { import('./types').Author } Author */
-/** @typedef { import('./types').AuthorRecord } AuthorRecord */
-/** @typedef { import('@xata.io/client').Repository<Author, AuthorRecord> } AuthorRepository */
-/** @typedef { import('./types').Post } Post */
-/** @typedef { import('./types').PostRecord } PostRecord */
-/** @typedef { import('@xata.io/client').Repository<Post, PostRecord> } PostRepository */
-/** @typedef { import('./types').Person } Person */
-/** @typedef { import('./types').PersonRecord } PersonRecord */
-/** @typedef { import('@xata.io/client').Repository<Person, PersonRecord> } PersonRepository */
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
-export class XataClient extends buildClient() {
+/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
+/** @typedef { import('@xata.io/client').SchemaNamespace<DatabaseSchema> } SchemaNamespace */
+/** @typedef { import('@xata.io/client').SearchNamespace<DatabaseSchema> } SearchNamespace */
+/** @typedef { { db: SchemaNamespace, search: SearchNamespace }} Namespaces */
+/** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema, Namespaces> } */
+const DatabaseClient = buildClient();
+export class XataClient extends DatabaseClient {
   constructor(options) {
     super(
       {
@@ -53,8 +50,13 @@ export interface Person {
     photoUrl?: string | null;
 }
 export declare type PersonRecord = Person & XataRecord;
-declare const XataClient_base: any;
-export declare class XataClient extends XataClient_base {
+export declare type DatabaseSchema = {
+    authors: Author;
+    posts: Post;
+    people: Person;
+};
+declare const DatabaseClient: any;
+export declare class XataClient extends DatabaseClient {
     constructor(options?: BaseClientOptions);
 }
 export {};
@@ -99,13 +101,17 @@ export interface Person {
 
 export type PersonRecord = Person & XataRecord;
 
-const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
-
-export class XataClient extends buildClient<{
+export type DatabaseSchema = {
   authors: Author;
   posts: Post;
   people: Person;
-}>() {
+};
+
+const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
+
+const DatabaseClient = buildClient<DatabaseSchema>();
+
+export class XataClient extends DatabaseClient {
   constructor(options?: BaseClientOptions) {
     super(
       {

@@ -17,12 +17,16 @@ export interface User {
 
 export type UserRecord = User & XataRecord;
 
-const links = { teams: [['owner', 'users']], users: [['team', 'teams']] };
-
-export class XataClient extends buildClient<{
+export type DatabaseSchema = {
   teams: Team;
   users: User;
-}>() {
+};
+
+const links = { teams: [['owner', 'users']], users: [['team', 'teams']] };
+
+const DatabaseClient = buildClient<DatabaseSchema>();
+
+export class XataClient extends DatabaseClient {
   constructor(options?: BaseClientOptions) {
     super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, links);
   }

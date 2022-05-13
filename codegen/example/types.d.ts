@@ -15,8 +15,12 @@ export interface User {
     team?: TeamRecord | null;
 }
 export declare type UserRecord = User & XataRecord;
-declare const XataClient_base: any;
-export declare class XataClient extends XataClient_base {
+export declare type DatabaseSchema = {
+    teams: Team;
+    users: User;
+};
+declare const DatabaseClient: any;
+export declare class XataClient extends DatabaseClient {
     constructor(options?: BaseClientOptions);
 }
 export {};

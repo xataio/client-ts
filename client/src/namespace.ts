@@ -1,4 +1,4 @@
-import { FetcherExtraProps, FetchImpl } from './api/fetcher';
+import { FetcherExtraProps } from './api/fetcher';
 
 export abstract class Namespace {
   abstract build(options: NamespaceBuildOptions): unknown;
