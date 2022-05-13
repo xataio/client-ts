@@ -1,22 +1,21 @@
-import { generateClient } from '@xata.io/codegen';
 import { getDatabaseURL } from '@xata.io/client';
+import { generateClient } from '@xata.io/codegen';
+import chalk from 'chalk';
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { EventEmitter } from 'events';
 import { createWriteStream } from 'fs';
-import fs from 'fs/promises';
-import { tmpdir } from 'os';
-import path from 'path';
+import fs, { mkdir } from 'fs/promises';
+import ora from 'ora';
+import { homedir, tmpdir } from 'os';
+import path, { dirname } from 'path';
 import repl from 'repl';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import chalk from 'chalk';
-import ora from 'ora';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export async function run(options: { env?: string; databaseURL?: string; apiKey?: string }) {
+export async function run(options: { env?: string; databaseURL?: string; apiKey?: string; code?: string }) {
   const spinner = ora();
   spinner.start('Downloading schema and genrating client');
   dotenv.config({ path: options.env || '.env' });
@@ -69,6 +68,12 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
   await fs.unlink(tempFile);
 
   replServer.context.xata = new XataClient({ fetch });
+
+  await setupHistory(replServer);
+
+  if (options.code) {
+    replServer.write(`${options.code}\n`);
+  }
 }
 
 // This is a hacky way I found to get the defaultEval
@@ -94,4 +99,20 @@ function getDefaultEval() {
 function postProcess(result: any, options: { table: boolean }, callback: (err: Error | null, result: any) => void) {
   const { table } = options;
   return callback(null, table ? console.table(result) : result);
+}
+
+async function setupHistory(replServer: repl.REPLServer) {
+  try {
+    const configDir = path.join(homedir(), '.config', 'xata-shell');
+    await mkdir(configDir, { recursive: true });
+    process.env.NODE_REPL_HISTORY = path.join(configDir, 'history');
+    await new Promise((resolve, reject) => {
+      replServer.setupHistory(path.join(configDir, 'history'), function (err) {
+        if (err) return reject(err);
+        resolve(undefined);
+      });
+    });
+  } catch (err) {
+    // Ignore. It's ok not to have a history file
+  }
 }
