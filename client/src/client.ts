@@ -4,16 +4,16 @@ import { SchemaNamespace } from './schema';
 import { BaseData } from './schema/record';
 import { LinkDictionary } from './schema/repository';
 import { SearchNamespace } from './search';
-import { BranchStrategy, BranchStrategyOption, isBranchStrategyBuilder } from './util/branches';
+import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
 import { getAPIKey, getCurrentBranchName, getDatabaseURL } from './util/config';
 import { getFetchImplementation } from './util/fetch';
-import { StringKeys } from './util/types';
+import { AllRequired, StringKeys } from './util/types';
 
 export type BaseClientOptions = {
-  fetch: FetchImpl;
-  apiKey: string;
-  databaseURL: string;
-  branch: BranchStrategyOption;
+  fetch?: FetchImpl;
+  apiKey?: string;
+  databaseURL?: string;
+  branch?: BranchStrategyOption;
 };
 
 export const buildClientWithNamespaces =
@@ -29,7 +29,9 @@ export const buildClient = <
   external?: ExternalNamespaces
 ) =>
   class {
-    constructor(options: Partial<BaseClientOptions> = {}, links?: LinkDictionary) {
+    #branch: BranchStrategyValue;
+
+    constructor(options: BaseClientOptions = {}, links?: LinkDictionary) {
       const safeOptions = this.#parseOptions(options);
 
       const namespaces = {
@@ -45,12 +47,14 @@ export const buildClient = <
       }
     }
 
-    #parseOptions(options?: Partial<BaseClientOptions>): BaseClientOptions {
+    #parseOptions(options?: BaseClientOptions) {
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
       const apiKey = options?.apiKey || getAPIKey();
-      const branch =
-        options?.branch ?? (() => getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch }));
+      const branch = async () =>
+        options?.branch
+          ? await this.#evaluateBranch(options.branch)
+          : await getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch });
 
       if (!databaseURL || !apiKey) {
         throw new Error('Options databaseURL and apiKey are required');
@@ -59,7 +63,15 @@ export const buildClient = <
       return { fetch, databaseURL, apiKey, branch };
     }
 
-    async #getFetchProps({ fetch, apiKey, databaseURL, branch }: BaseClientOptions): Promise<FetcherExtraProps> {
+    async #getFetchProps({
+      fetch,
+      apiKey,
+      databaseURL,
+      branch
+    }: AllRequired<BaseClientOptions>): Promise<FetcherExtraProps> {
+      const branchValue = await this.#evaluateBranch(branch);
+      if (!branchValue) throw new Error('Unable to resolve branch value');
+
       return {
         fetchImpl: fetch,
         apiKey,
@@ -67,13 +79,14 @@ export const buildClient = <
         // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
         workspacesApiUrl: (path, params) => {
           const hasBranch = params.dbBranchName ?? params.branch;
-          const newPath = path.replace(/^\/db\/[^/]+/, hasBranch ? `:${branch}` : '');
+          const newPath = path.replace(/^\/db\/[^/]+/, hasBranch ? `:${branchValue}` : '');
           return databaseURL + newPath;
         }
       };
     }
 
     async #evaluateBranch(param?: BranchStrategyOption): Promise<string | undefined> {
+      if (this.#branch) return this.#branch;
       if (!param) return undefined;
 
       const strategies = Array.isArray(param) ? [...param] : [param];
@@ -84,7 +97,10 @@ export const buildClient = <
 
       for await (const strategy of strategies) {
         const branch = await evaluateBranch(strategy);
-        if (branch) return branch;
+        if (branch) {
+          this.#branch = branch;
+          return branch;
+        }
       }
     }
   } as unknown as WrapperConstructor<Schemas, Namespaces, ExternalNamespaces>;

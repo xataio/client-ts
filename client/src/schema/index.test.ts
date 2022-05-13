@@ -39,7 +39,7 @@ describe('client options', () => {
     process.env.XATA_DATABASE_URL = XATA_DATABASE_URL;
   });
 
-  test.skip('throws if branch cannot be resolved', async () => {
+  test('throws if branch cannot be resolved', async () => {
     const { users } = buildClient({ branch: () => null });
 
     await expect(users.getOne()).rejects.toThrow('Unable to resolve branch value');
@@ -77,7 +77,7 @@ describe('client options', () => {
     `);
   });
 
-  test.skip('provide branch as an array', async () => {
+  test('provide branch as an array', async () => {
     const { fetch, users } = buildClient({
       branch: [process.env.NOT_DEFINED_VARIABLE, async () => null, 'branch', 'main']
     });
@@ -111,7 +111,7 @@ describe('client options', () => {
     `);
   });
 
-  test.skip('provide branch as a function', async () => {
+  test('provide branch as a function', async () => {
     const { fetch, users } = buildClient({ branch: () => 'branch' });
 
     fetch.mockReset().mockImplementation(() => {
@@ -143,7 +143,7 @@ describe('client options', () => {
     `);
   });
 
-  test.skip('ensure branch resolution is memoized', async () => {
+  test('ensure branch resolution is memoized', async () => {
     const branchGetter = vi.fn(() => 'branch');
 
     const { fetch, users } = buildClient({ branch: branchGetter });
