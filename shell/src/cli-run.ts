@@ -1,4 +1,5 @@
 import { generateClient } from '@xata.io/codegen';
+import { getDatabaseURL } from '@xata.io/client';
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { EventEmitter } from 'events';
@@ -9,20 +10,37 @@ import path from 'path';
 import repl from 'repl';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import chalk from 'chalk';
+import ora from 'ora';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export async function run(options: { env?: string }) {
+export async function run(options: { env?: string; databaseURL?: string; apiKey?: string }) {
+  const spinner = ora();
+  spinner.start('Downloading schema and genrating client');
   dotenv.config({ path: options.env || '.env' });
+
+  const databaseURL = options.databaseURL || getDatabaseURL();
 
   // Generate the file in the same dir than this package's code so it
   // can import @xata.io/client
   const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
-  await generateClient(tempFile);
+  try {
+    await generateClient(tempFile, { ...options, databaseURL });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    spinner.fail(message);
+    process.exit(1);
+  }
+
+  spinner.info(
+    `Connected to ${chalk.bold(databaseURL)}. There's a XataClient instance in the ${chalk.bold(
+      'xata'
+    )} global variable.`
+  );
 
   const defaultEval = getDefaultEval();
-
   const replServer = repl.start({
     preview: true,
     eval(evalCmd, context, file, callback) {
