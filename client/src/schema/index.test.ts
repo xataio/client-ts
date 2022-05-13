@@ -1,14 +1,14 @@
 /* eslint-disable no-useless-escape */
 
 import { describe, expect, test, vi } from 'vitest';
+import { BaseClient, BaseClientOptions } from '..';
 import { XataRecord } from './record';
-import { BaseClient, RestRepository, XataClientOptions } from './repository';
 
 interface User extends XataRecord {
   name: string;
 }
 
-const buildClient = (options: XataClientOptions = {}) => {
+const buildClient = (options: Partial<BaseClientOptions> = {}) => {
   const {
     apiKey = '1234',
     databaseURL = 'https://my-workspace-5df34do.staging.xatabase.co/db/xata',
@@ -16,19 +16,14 @@ const buildClient = (options: XataClientOptions = {}) => {
   } = options;
 
   const fetch = vi.fn();
-  const client = new BaseClient({ fetch, apiKey, databaseURL, branch }, {});
-  const users = new RestRepository<User>(client, 'users');
+  const client = new BaseClient({ fetch, apiKey, databaseURL, branch });
+
+  const users = client.db.users;
 
   return { fetch, client, users };
 };
 
 describe('client options', () => {
-  test('option parameters are set', () => {
-    const { client } = buildClient({ apiKey: 'apiKey', databaseURL: 'url' });
-    expect(client.options.apiKey).toBe('apiKey');
-    expect(client.options.databaseURL).toBe('url');
-  });
-
   test('throws if mandatory options are missing', () => {
     const { XATA_DATABASE_URL, XATA_API_KEY } = process.env;
     process.env.XATA_API_KEY = '';

@@ -1,10 +1,4 @@
-import {
-  BaseClient,
-  Repository,
-  RestRespositoryFactory,
-  XataClientOptions,
-  XataRecord,
-} from "../../client/src";
+import { buildClient, BaseClientOptions, XataRecord } from '../../client/src';
 
 export interface Team {
   owner?: UserRecord | null;
@@ -53,32 +47,24 @@ export interface Nasdaq {
 
 export type NasdaqRecord = Nasdaq & XataRecord;
 
-const links = {
-  teams: [["owner", "users"]],
-  users: [["team", "teams"]],
-  foobar: [],
-  nasdaq: [],
+export type DatabaseSchema = {
+  teams: Team;
+  users: User;
+  foobar: Foobar;
+  nasdaq: Nasdaq;
 };
 
-export class XataClient extends BaseClient<{
-  teams: Repository<Team>;
-  users: Repository<User>;
-  foobar: Repository<Foobar>;
-  nasdaq: Repository<Nasdaq>;
-}> {
-  constructor(options?: XataClientOptions) {
-    super(
-      { databaseURL: "https://test-r5vcv5.xata.sh/db/test", ...options },
-      links
-    );
+const links = {
+  teams: [['owner', 'users']],
+  users: [['team', 'teams']],
+  foobar: [],
+  nasdaq: []
+};
 
-    const factory = options?.repositoryFactory || new RestRespositoryFactory();
+const DatabaseClient = buildClient<DatabaseSchema>();
 
-    this.db = {
-      teams: factory.createRepository(this, "teams", links),
-      users: factory.createRepository(this, "users", links),
-      foobar: factory.createRepository(this, "foobar", links),
-      nasdaq: factory.createRepository(this, "nasdaq", links),
-    };
+export class XataClient extends DatabaseClient {
+  constructor(options?: BaseClientOptions) {
+    super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, links);
   }
 }

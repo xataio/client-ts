@@ -16,7 +16,11 @@ export type RequiredBy<T, K extends keyof T> = T & {
 };
 
 export type GetArrayInnerType<T extends readonly any[]> = T[number];
-export type NonNullableValues<Obj> = { [K in keyof Obj]: NonNullable<Obj[K]> };
+
+export type AllRequired<T> = {
+  [P in keyof T]-?: T[P];
+};
+
 export type KeysOfUnion<T> = T extends T ? keyof T : never;
 
 type Impossible<K extends keyof any> = {
