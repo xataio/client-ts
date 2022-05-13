@@ -1,36 +1,39 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { XataApiClient } from '@xata.io/client';
 import { Table } from '@xata.io/client/dist/api/schemas';
+import { describe, expect, test, vi } from 'vitest';
 import { compareSquema, createProcessor, TableInfo } from './processor.js';
 
 describe('compareSquema', () => {
   test('returns a missing table', () => {
     const diff = compareSquema(['a', 'b', 'c'], ['string', 'int', 'float'], undefined);
     expect(diff).toMatchInlineSnapshot(`
-      Object {
-        "columnTypes": Array [
-          Object {
+      {
+        "columnTypes": [
+          {
             "columnName": "a",
             "schemaType": "string",
           },
-          Object {
+          {
             "columnName": "b",
             "schemaType": "int",
           },
-          Object {
+          {
             "columnName": "c",
             "schemaType": "float",
           },
         ],
-        "missingColumns": Array [
-          Object {
+        "missingColumns": [
+          {
             "column": "a",
             "type": "string",
           },
-          Object {
+          {
             "column": "b",
             "type": "int",
           },
-          Object {
+          {
             "column": "c",
             "type": "float",
           },
@@ -52,23 +55,23 @@ describe('compareSquema', () => {
     };
     const diff = compareSquema(['a', 'b', 'c'], ['string', 'int', 'float'], table);
     expect(diff).toMatchInlineSnapshot(`
-      Object {
-        "columnTypes": Array [
-          Object {
+      {
+        "columnTypes": [
+          {
             "castedType": "string",
             "columnName": "a",
             "error": false,
             "guessedType": "string",
             "schemaType": "string",
           },
-          Object {
+          {
             "castedType": "int",
             "columnName": "b",
             "error": false,
             "guessedType": "int",
             "schemaType": "int",
           },
-          Object {
+          {
             "castedType": "float",
             "columnName": "c",
             "error": false,
@@ -76,12 +79,12 @@ describe('compareSquema', () => {
             "schemaType": "float",
           },
         ],
-        "missingColumns": Array [
-          Object {
+        "missingColumns": [
+          {
             "column": "a",
             "type": "string",
           },
-          Object {
+          {
             "column": "b",
             "type": "int",
           },
@@ -103,23 +106,23 @@ describe('compareSquema', () => {
     };
     const diff = compareSquema(['a', 'b', 'c'], ['string', 'int', 'string'], table);
     expect(diff).toMatchInlineSnapshot(`
-      Object {
-        "columnTypes": Array [
-          Object {
+      {
+        "columnTypes": [
+          {
             "castedType": "string",
             "columnName": "a",
             "error": false,
             "guessedType": "string",
             "schemaType": "string",
           },
-          Object {
+          {
             "castedType": "int",
             "columnName": "b",
             "error": false,
             "guessedType": "int",
             "schemaType": "int",
           },
-          Object {
+          {
             "castedType": "string",
             "columnName": "c",
             "error": true,
@@ -127,12 +130,12 @@ describe('compareSquema', () => {
             "schemaType": "float",
           },
         ],
-        "missingColumns": Array [
-          Object {
+        "missingColumns": [
+          {
             "column": "a",
             "type": "string",
           },
-          Object {
+          {
             "column": "b",
             "type": "int",
           },
@@ -153,7 +156,7 @@ const dumbTableInfo: TableInfo = {
 describe('createProcessor', () => {
   test('fails when the number of types and columns does not match', () => {
     const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
-    const shouldContinue = jest.fn();
+    const shouldContinue = vi.fn();
 
     expect(() => createProcessor(xata, dumbTableInfo, { shouldContinue, types: [], columns: ['a'] })).toThrowError(
       'Different number of column names and column types'
@@ -163,7 +166,7 @@ describe('createProcessor', () => {
 
   test('needs to receive a header or receive specific column names', async () => {
     const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
-    const shouldContinue = jest.fn();
+    const shouldContinue = vi.fn();
 
     const { callback } = createProcessor(xata, dumbTableInfo, { shouldContinue });
     await expect(callback([[]], [], 1)).rejects.toEqual(
@@ -175,7 +178,7 @@ describe('createProcessor', () => {
 
   test('calls shuldContinue and stops the parsing if it returns false', async () => {
     const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
-    const shouldContinue = jest.fn().mockImplementation(() => false);
+    const shouldContinue = vi.fn().mockImplementation(() => false);
 
     Object.defineProperty(xata, 'branches', {
       get() {
@@ -195,7 +198,7 @@ describe('createProcessor', () => {
 
   test('calls shuldContinue, continues, creates a table and inserts the records', async () => {
     const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
-    const shouldContinue = jest.fn().mockImplementation(() => true);
+    const shouldContinue = vi.fn().mockImplementation(() => true);
 
     // Mock branches API
     Object.defineProperty(xata, 'branches', {
@@ -209,8 +212,8 @@ describe('createProcessor', () => {
     });
 
     // Mock tables API
-    const createTable = jest.fn();
-    const addTableColumn = jest.fn();
+    const createTable = vi.fn();
+    const addTableColumn = vi.fn();
     Object.defineProperty(xata, 'tables', {
       get() {
         return {
@@ -221,7 +224,7 @@ describe('createProcessor', () => {
     });
 
     // Mock records API
-    const bulkInsertTableRecords = jest.fn();
+    const bulkInsertTableRecords = vi.fn();
     Object.defineProperty(xata, 'records', {
       get() {
         return {
@@ -249,7 +252,7 @@ describe('createProcessor', () => {
 
   test('calls shuldContinue, continues, updates a table and inserts the records', async () => {
     const xata = new XataApiClient({ fetch: {} as any, apiKey: 'anything' });
-    const shouldContinue = jest.fn().mockImplementation(() => true);
+    const shouldContinue = vi.fn().mockImplementation(() => true);
 
     // Mock branches API
     Object.defineProperty(xata, 'branches', {
@@ -263,8 +266,8 @@ describe('createProcessor', () => {
     });
 
     // Mock tables API
-    const createTable = jest.fn();
-    const addTableColumn = jest.fn();
+    const createTable = vi.fn();
+    const addTableColumn = vi.fn();
     Object.defineProperty(xata, 'tables', {
       get() {
         return {
@@ -275,7 +278,7 @@ describe('createProcessor', () => {
     });
 
     // Mock records API
-    const bulkInsertTableRecords = jest.fn();
+    const bulkInsertTableRecords = vi.fn();
     Object.defineProperty(xata, 'records', {
       get() {
         return {

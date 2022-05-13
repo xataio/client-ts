@@ -1,31 +1,29 @@
+/* eslint-disable no-useless-escape */
+
+import { describe, expect, test, vi } from 'vitest';
+import { BaseClient, BaseClientOptions } from '..';
 import { XataRecord } from './record';
-import { XataClientOptions, BaseClient, RestRepository } from './repository';
 
 interface User extends XataRecord {
   name: string;
 }
 
-const buildClient = (options: XataClientOptions = {}) => {
+const buildClient = (options: Partial<BaseClientOptions> = {}) => {
   const {
     apiKey = '1234',
     databaseURL = 'https://my-workspace-5df34do.staging.xatabase.co/db/xata',
     branch = 'main'
   } = options;
 
-  const fetch = jest.fn();
-  const client = new BaseClient({ fetch, apiKey, databaseURL, branch }, {});
-  const users = new RestRepository<User>(client, 'users');
+  const fetch = vi.fn();
+  const client = new BaseClient({ fetch, apiKey, databaseURL, branch });
+
+  const users = client.db.users;
 
   return { fetch, client, users };
 };
 
 describe('client options', () => {
-  test('option parameters are set', () => {
-    const { client } = buildClient({ apiKey: 'apiKey', databaseURL: 'url' });
-    expect(client.options.apiKey).toBe('apiKey');
-    expect(client.options.databaseURL).toBe('url');
-  });
-
   test('throws if mandatory options are missing', () => {
     const { XATA_DATABASE_URL, XATA_API_KEY } = process.env;
     process.env.XATA_API_KEY = '';
@@ -64,11 +62,11 @@ describe('client options', () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      Array [
+      [
         "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/tables/users/query",
-        Object {
+        {
           "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-          "headers": Object {
+          "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
             "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -98,11 +96,11 @@ describe('client options', () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      Array [
+      [
         "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/tables/users/query",
-        Object {
+        {
           "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-          "headers": Object {
+          "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
             "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -130,11 +128,11 @@ describe('client options', () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      Array [
+      [
         "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/tables/users/query",
-        Object {
+        {
           "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-          "headers": Object {
+          "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
             "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -146,7 +144,7 @@ describe('client options', () => {
   });
 
   test('ensure branch resolution is memoized', async () => {
-    const branchGetter = jest.fn(() => 'branch');
+    const branchGetter = vi.fn(() => 'branch');
 
     const { fetch, users } = buildClient({ branch: branchGetter });
 
@@ -185,11 +183,11 @@ describe('request', () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      Array [
+      [
         "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
-        Object {
+        {
           "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-          "headers": Object {
+          "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
             "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -217,11 +215,11 @@ describe('request', () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      Array [
+      [
         "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
-        Object {
+        {
           "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
-          "headers": Object {
+          "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
             "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -243,7 +241,7 @@ describe('request', () => {
       };
     });
 
-    await expect(users.getOne()).rejects.toThrowErrorMatchingInlineSnapshot(`"Not Found"`);
+    await expect(users.getOne()).rejects.toMatchInlineSnapshot('[Error: Not Found]');
   });
 
   test('returns the json body if the response is ok', async () => {
@@ -272,7 +270,7 @@ type ExpectedRequest = {
 };
 
 async function expectRequest(
-  fetch: jest.Mock<any, any>,
+  fetch: ReturnType<typeof vi.fn>,
   expectedRequest: ExpectedRequest[] | ExpectedRequest,
   callback: () => void,
   response?: any
@@ -307,12 +305,12 @@ describe('query', () => {
       });
 
       expect(result).toMatchInlineSnapshot(`
-        Array [
-          Array [
+        [
+          [
             "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
-            Object {
+            {
               "body": "{\\"columns\\":[\\"*\\"]}",
-              "headers": Object {
+              "headers": {
                 "Authorization": "Bearer 1234",
                 "Content-Type": "application/json",
                 "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -334,12 +332,12 @@ describe('query', () => {
       });
 
       expect(result).toMatchInlineSnapshot(`
-        Array [
-          Array [
+        [
+          [
             "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
-            Object {
-              "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
-              "headers": Object {
+            {
+              "body": "{\\"filter\\":{\\"\$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
+              "headers": {
                 "Authorization": "Bearer 1234",
                 "Content-Type": "application/json",
                 "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -369,12 +367,12 @@ describe('query', () => {
       );
 
       expect(result).toMatchInlineSnapshot(`
-        Array [
-          Array [
+        [
+          [
             "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
-            Object {
+            {
               "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-              "headers": Object {
+              "headers": {
                 "Authorization": "Bearer 1234",
                 "Content-Type": "application/json",
                 "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -401,12 +399,12 @@ describe('query', () => {
       );
 
       expect(result).toMatchInlineSnapshot(`
-        Array [
-          Array [
+        [
+          [
             "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
-            Object {
+            {
               "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-              "headers": Object {
+              "headers": {
                 "Authorization": "Bearer 1234",
                 "Content-Type": "application/json",
                 "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -429,12 +427,12 @@ describe('read', () => {
     const result = await expectRequest(fetch, expected, () => users.read(id));
 
     expect(result).toMatchInlineSnapshot(`
-      Array [
-        Array [
+      [
+        [
           "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
-          Object {
+          {
             "body": undefined,
-            "headers": Object {
+            "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
               "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -467,12 +465,12 @@ describe('Repository.update', () => {
     );
 
     expect(result).toMatchInlineSnapshot(`
-      Array [
-        Array [
+      [
+        [
           "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
-          Object {
+          {
             "body": "{\\"id\\":\\"rec_1234\\",\\"name\\":\\"Ada\\"}",
-            "headers": Object {
+            "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
               "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -480,11 +478,11 @@ describe('Repository.update', () => {
             "method": "PATCH",
           },
         ],
-        Array [
+        [
           "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
-          Object {
+          {
             "body": undefined,
-            "headers": Object {
+            "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
               "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -509,12 +507,12 @@ describe('Repository.delete', () => {
     });
 
     expect(result).toMatchInlineSnapshot(`
-      Array [
-        Array [
+      [
+        [
           "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
-          Object {
+          {
             "body": undefined,
-            "headers": Object {
+            "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
               "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -553,12 +551,12 @@ describe('create', () => {
     );
 
     expect(result).toMatchInlineSnapshot(`
-      Array [
-        Array [
+      [
+        [
           "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data",
-          Object {
+          {
             "body": "{\\"name\\":\\"Ada\\"}",
-            "headers": Object {
+            "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
               "Host": "my-workspace-5df34do.staging.xatabase.co",
@@ -566,11 +564,11 @@ describe('create', () => {
             "method": "POST",
           },
         ],
-        Array [
+        [
           "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
-          Object {
+          {
             "body": undefined,
-            "headers": Object {
+            "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
               "Host": "my-workspace-5df34do.staging.xatabase.co",

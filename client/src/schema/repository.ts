@@ -1,3 +1,4 @@
+import { SchemaNamespaceResult } from '.';
 import {
   bulkInsertTableRecords,
   deleteRecord,
@@ -5,20 +6,21 @@ import {
   insertRecord,
   insertRecordWithID,
   queryTable,
+  searchBranch,
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
-import { FetcherExtraProps, FetchImpl } from '../api/fetcher';
-import { getFetchImplementation } from '../util/fetch';
+import { FetcherExtraProps } from '../api/fetcher';
 import { isObject, isString } from '../util/lang';
-import { getAPIKey, getBranch, getDatabaseUrl } from './config';
+import { Dictionary } from '../util/types';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
 
-export type Links = Record<string, Array<string[]>>;
+type TableLink = string[];
+export type LinkDictionary = Dictionary<TableLink[]>;
 
 /**
  * Common interface for performing operations on a table.
@@ -131,6 +133,14 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    */
   abstract delete(ids: Identifiable[]): Promise<void>;
 
+  /**
+   * Search for records in the table.
+   * @param query The query to search for.
+   * @param options The options to search with (like: fuzziness)
+   * @returns The found records.
+   */
+  abstract search(query: string, options?: { fuzziness?: number }): Promise<SelectedPick<Record, ['*']>[]>;
+
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
 
@@ -138,38 +148,23 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   Record,
   SelectedPick<Record, ['*']>
 > {
-  #client: BaseClient<any>;
-  #fetch: any;
   #table: string;
+  #links: LinkDictionary;
+  #getFetchProps: () => Promise<FetcherExtraProps>;
+  #schemaNamespace: SchemaNamespaceResult<any>;
 
-  constructor(client: BaseClient<any>, table: string) {
-    super(null, table, {});
-    this.#client = client;
-    this.#table = table;
-    this.#fetch = getFetchImplementation(this.#client.options.fetch);
-  }
+  constructor(options: {
+    table: string;
+    links?: LinkDictionary;
+    getFetchProps: () => Promise<FetcherExtraProps>;
+    schemaNamespace: SchemaNamespaceResult<any>;
+  }) {
+    super(null, options.table, {});
 
-  async #getFetchProps(): Promise<FetcherExtraProps> {
-    const branch = await this.#client.getBranch();
-
-    const apiKey = this.#client.options.apiKey ?? getAPIKey();
-
-    if (!apiKey) {
-      throw new Error('Could not resolve a valid apiKey');
-    }
-
-    return {
-      fetchImpl: this.#fetch,
-      apiKey,
-      apiUrl: '',
-      // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
-      workspacesApiUrl: (path, params) => {
-        const baseUrl = this.#client.options.databaseURL ?? '';
-        const hasBranch = params.dbBranchName ?? params.branch;
-        const newPath = path.replace(/^\/db\/[^/]+/, hasBranch ? `:${branch}` : '');
-        return baseUrl + newPath;
-      }
-    };
+    this.#table = options.table;
+    this.#links = options.links ?? {};
+    this.#getFetchProps = options.getFetchProps;
+    this.#schemaNamespace = options.schemaNamespace;
   }
 
   async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
@@ -281,7 +276,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         ...fetchProps
       });
 
-      return this.#client.initObject(this.#table, response);
+      return this.#initObject(this.#table, response);
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -421,6 +416,18 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
   }
 
+  async search(query: string, options: { fuzziness?: number } = {}): Promise<SelectedPick<Record, ['*']>[]> {
+    const fetchProps = await this.#getFetchProps();
+
+    const { records } = await searchBranch({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
+      body: { tables: [this.#table], query, fuzziness: options.fuzziness },
+      ...fetchProps
+    });
+
+    return records.map((item) => this.#initObject(this.#table, item));
+  }
+
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
     const data = query.getQueryOptions();
 
@@ -438,93 +445,13 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const records = objects.map((record) => this.#client.initObject<Result>(this.#table, record));
+    const records = objects.map((record) => this.#initObject<Result>(this.#table, record));
 
     return new Page<Record, Result>(query, meta, records);
   }
-}
 
-interface RepositoryFactory {
-  createRepository<Data extends BaseData>(client: BaseClient<any>, table: string): Repository<Data & XataRecord>;
-}
-
-export class RestRespositoryFactory implements RepositoryFactory {
-  createRepository<Data extends BaseData>(client: BaseClient<any>, table: string): Repository<Data & XataRecord> {
-    return new RestRepository<Data & XataRecord>(client, table);
-  }
-}
-
-type BranchStrategyValue = string | undefined | null;
-type BranchStrategyBuilder = () => BranchStrategyValue | Promise<BranchStrategyValue>;
-type BranchStrategy = BranchStrategyValue | BranchStrategyBuilder;
-type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
-
-export type XataClientOptions = {
-  /**
-   * Fetch implementation. This option is only required if the runtime does not include a fetch implementation
-   * available in the global scope. If you are running your code on Deno or Cloudflare workers for example,
-   * you won't need to provide a specific fetch implementation. But for most versions of Node.js you'll need
-   * to provide one. Such as cross-fetch, node-fetch or isomorphic-fetch.
-   */
-  fetch?: FetchImpl;
-  databaseURL?: string;
-  branch?: BranchStrategyOption;
-  /**
-   * API key to be used. You can create one in your account settings at https://app.xata.io/settings.
-   */
-  apiKey?: string;
-  repositoryFactory?: RepositoryFactory;
-};
-
-function resolveXataClientOptions(options?: Partial<XataClientOptions>): XataClientOptions {
-  const databaseURL = options?.databaseURL || getDatabaseUrl() || '';
-  const apiKey = options?.apiKey || getAPIKey() || '';
-  const branch =
-    options?.branch ||
-    (() =>
-      getBranch({
-        apiKey,
-        apiUrl: databaseURL,
-        fetchImpl: getFetchImplementation(options?.fetch)
-      }));
-
-  if (!databaseURL || !apiKey) {
-    throw new Error('Options databaseURL and apiKey are required');
-  }
-
-  return {
-    ...options,
-    databaseURL,
-    apiKey,
-    branch
-  };
-}
-
-export class BaseClient<D extends Record<string, Repository<any>> = Record<string, Repository<any>>> {
-  #links: Links;
-  #branch: BranchStrategyValue;
-
-  options: XataClientOptions;
-  public db!: D;
-
-  constructor(options: XataClientOptions = {}, links: Links = {}) {
-    this.options = resolveXataClientOptions(options);
-    // Make this property not enumerable so it doesn't show up in console.dir, etc.
-    Object.defineProperty(this.options, 'apiKey', { enumerable: false });
-    this.#links = links;
-
-    const factory = this.options.repositoryFactory || new RestRespositoryFactory();
-
-    this.db = new Proxy({} as D, {
-      get: (_target, prop) => {
-        if (typeof prop !== 'string') throw new Error('Invalid table name');
-        return factory.createRepository(this, prop);
-      }
-    });
-  }
-
-  public initObject<T>(table: string, object: object) {
-    const result: Record<string, unknown> = {};
+  #initObject<T>(table: string, object: object) {
+    const result: Dictionary<unknown> = {};
     Object.assign(result, object);
 
     const tableLinks = this.#links[table] || [];
@@ -533,11 +460,11 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
       const value = result[field];
 
       if (value && isObject(value)) {
-        result[field] = this.initObject(linkTable, value);
+        result[field] = this.#initObject(linkTable, value);
       }
     }
 
-    const db = this.db;
+    const db = this.#schemaNamespace;
     result.read = function () {
       return db[table].read(result['id'] as string);
     };
@@ -555,32 +482,7 @@ export class BaseClient<D extends Record<string, Repository<any>> = Record<strin
     Object.freeze(result);
     return result as T;
   }
-
-  public async getBranch(): Promise<string> {
-    if (this.#branch) return this.#branch;
-
-    const { branch: param } = this.options;
-    const strategies = Array.isArray(param) ? [...param] : [param];
-
-    const evaluateBranch = async (strategy: BranchStrategy) => {
-      return isBranchStrategyBuilder(strategy) ? await strategy() : strategy;
-    };
-
-    for await (const strategy of strategies) {
-      const branch = await evaluateBranch(strategy);
-      if (branch) {
-        this.#branch = branch;
-        return branch;
-      }
-    }
-
-    throw new Error('Unable to resolve branch value');
-  }
 }
-
-const isBranchStrategyBuilder = (strategy: BranchStrategy): strategy is BranchStrategyBuilder => {
-  return typeof strategy === 'function';
-};
 
 const transformObjectLinks = (object: any) => {
   return Object.entries(object).reduce((acc, [key, value]) => {

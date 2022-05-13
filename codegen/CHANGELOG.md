@@ -1,5 +1,11 @@
 # @xata.io/codegen
 
+## 0.7.2
+
+### Patch Changes
+
+- d58c3d9: Hide private helper utilities
+
 ## 0.6.0
 
 ### Minor Changes

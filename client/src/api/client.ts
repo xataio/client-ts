@@ -1,4 +1,4 @@
-import { getAPIKey } from '../schema/config';
+import { getAPIKey } from '../util/config';
 import { getFetchImplementation } from '../util/fetch';
 import type * as Types from './components';
 import { operationsByTag } from './components';
@@ -15,6 +15,14 @@ export interface XataApiClientOptions {
 
 export class XataApiClient {
   #extraProps: FetcherExtraProps;
+  #namespaces: Partial<{
+    user: UserApi;
+    workspaces: WorkspaceApi;
+    databases: DatabaseApi;
+    branches: BranchApi;
+    tables: TableApi;
+    records: RecordsApi;
+  }> = {};
 
   constructor(options: XataApiClientOptions = {}) {
     const provider = options.host ?? 'production';
@@ -33,27 +41,33 @@ export class XataApiClient {
   }
 
   public get user() {
-    return new UserApi(this.#extraProps);
+    if (!this.#namespaces.user) this.#namespaces.user = new UserApi(this.#extraProps);
+    return this.#namespaces.user;
   }
 
   public get workspaces() {
-    return new WorkspaceApi(this.#extraProps);
+    if (!this.#namespaces.workspaces) this.#namespaces.workspaces = new WorkspaceApi(this.#extraProps);
+    return this.#namespaces.workspaces;
   }
 
   public get databases() {
-    return new DatabaseApi(this.#extraProps);
+    if (!this.#namespaces.databases) this.#namespaces.databases = new DatabaseApi(this.#extraProps);
+    return this.#namespaces.databases;
   }
 
   public get branches() {
-    return new BranchApi(this.#extraProps);
+    if (!this.#namespaces.branches) this.#namespaces.branches = new BranchApi(this.#extraProps);
+    return this.#namespaces.branches;
   }
 
   public get tables() {
-    return new TableApi(this.#extraProps);
+    if (!this.#namespaces.tables) this.#namespaces.tables = new TableApi(this.#extraProps);
+    return this.#namespaces.tables;
   }
 
   public get records() {
-    return new RecordsApi(this.#extraProps);
+    if (!this.#namespaces.records) this.#namespaces.records = new RecordsApi(this.#extraProps);
+    return this.#namespaces.records;
   }
 }
 
