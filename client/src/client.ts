@@ -34,7 +34,7 @@ export const buildClient = <
     constructor(options: BaseClientOptions = {}, links?: LinkDictionary) {
       const safeOptions = this.#parseOptions(options);
 
-      const namespaces = {
+      const namespaces: Record<string, XataPlugin> = {
         db: new SchemaPlugin(links),
         search: new SearchPlugin(),
         ...plugins
@@ -43,7 +43,7 @@ export const buildClient = <
       for (const [key, namespace] of Object.entries(namespaces)) {
         if (!namespace) continue;
         // @ts-ignore
-        this[key] = namespace.build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
+        this[key] = await namespace.build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
       }
     }
 
@@ -111,9 +111,9 @@ export interface WrapperConstructor<
   ExternalPlugins extends Record<string, XataPlugin> = Record<string, XataPlugin>
 > {
   new (options?: Partial<BaseClientOptions>, links?: LinkDictionary): {
-    [Key in StringKeys<BuiltinPlugins>]: ReturnType<BuiltinPlugins[Key]['build']>;
+    [Key in StringKeys<BuiltinPlugins>]: Awaited<ReturnType<BuiltinPlugins[Key]['build']>>;
   } & {
-    [Key in StringKeys<NonNullable<ExternalPlugins>>]: ReturnType<NonNullable<ExternalPlugins>[Key]['build']>;
+    [Key in StringKeys<NonNullable<ExternalPlugins>>]: Awaited<ReturnType<NonNullable<ExternalPlugins>[Key]['build']>>;
   };
 }
 
