@@ -16,17 +16,8 @@ export type BaseClientOptions = {
   branch?: BranchStrategyOption;
 };
 
-export const buildClientWithPlugins =
-  <Plugins extends Record<string, XataPlugin>>(plugins: Plugins) =>
-  <Schemas extends Record<string, BaseData>>() =>
-    buildClient<Schemas, Plugins>(plugins);
-
-export const buildClient = <
-  Schemas extends Record<string, BaseData>,
-  ExternalPlugins extends Record<string, XataPlugin> = {},
-  BuiltinPlugins extends Record<string, XataPlugin> = { db: SchemaPlugin<Schemas>; search: SearchPlugin<Schemas> }
->(
-  plugins?: ExternalPlugins
+export const buildClient = <Schemas extends Record<string, BaseData>, Plugins extends Record<string, XataPlugin> = {}>(
+  plugins?: Plugins
 ) =>
   class {
     #branch: BranchStrategyValue;
@@ -42,8 +33,17 @@ export const buildClient = <
 
       for (const [key, namespace] of Object.entries(namespaces)) {
         if (!namespace) continue;
-        // @ts-ignore
-        this[key] = await namespace.build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
+        const result = namespace.build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
+
+        if (result instanceof Promise) {
+          void result.then((namespace: unknown) => {
+            // @ts-ignore
+            this[key] = namespace;
+          });
+        } else {
+          // @ts-ignore
+          this[key] = result;
+        }
       }
     }
 
@@ -103,17 +103,17 @@ export const buildClient = <
         }
       }
     }
-  } as unknown as WrapperConstructor<Schemas, BuiltinPlugins, ExternalPlugins>;
+  } as unknown as WrapperConstructor<Schemas, Plugins>;
 
 export interface WrapperConstructor<
-  Schemas extends Record<string, BaseData> = Record<string, any>,
-  BuiltinPlugins extends Record<string, XataPlugin> = { db: SchemaPlugin<Schemas>; search: SearchPlugin<Schemas> },
-  ExternalPlugins extends Record<string, XataPlugin> = Record<string, XataPlugin>
+  Schemas extends Record<string, BaseData>,
+  Plugins extends Record<string, XataPlugin>
 > {
   new (options?: Partial<BaseClientOptions>, links?: LinkDictionary): {
-    [Key in StringKeys<BuiltinPlugins>]: Awaited<ReturnType<BuiltinPlugins[Key]['build']>>;
+    db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
+    search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
   } & {
-    [Key in StringKeys<NonNullable<ExternalPlugins>>]: Awaited<ReturnType<NonNullable<ExternalPlugins>[Key]['build']>>;
+    [Key in StringKeys<NonNullable<Plugins>>]: Awaited<ReturnType<NonNullable<Plugins>[Key]['build']>>;
   };
 }
 

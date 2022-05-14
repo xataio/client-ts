@@ -5,10 +5,7 @@ exports[`generateFromLocalFiles > should generate correct JavaScript 1`] = `
   "import { buildClient } from \\"@xata.io/client\\";
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
 /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
-/** @typedef { import('@xata.io/client').SchemaPlugin<DatabaseSchema> } SchemaPlugin */
-/** @typedef { import('@xata.io/client').SearchPlugin<DatabaseSchema> } SearchPlugin */
-/** @typedef { { db: SchemaPlugin, search: SearchPlugin }} BuiltinPlugins */
-/** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema, BuiltinPlugins> } */
+/** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema> } */
 const DatabaseClient = buildClient();
 export class XataClient extends DatabaseClient {
   constructor(options) {

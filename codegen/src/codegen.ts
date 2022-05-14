@@ -55,14 +55,12 @@ function generateColumnType(column: Column) {
 function generateAbstractClient(language: Language) {
   switch (language) {
     case 'typescript':
-      return `const DatabaseClient = buildClient<DatabaseSchema>();`;
+      return `
+        const DatabaseClient = buildClient<DatabaseSchema>();`;
     case 'javascript':
       return `
         /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
-        /** @typedef { import('@xata.io/client').SchemaPlugin<DatabaseSchema> } SchemaPlugin */
-        /** @typedef { import('@xata.io/client').SearchPlugin<DatabaseSchema> } SearchPlugin */
-        /** @typedef { { db: SchemaPlugin, search: SearchPlugin }} BuiltinPlugins */
-        /** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema, BuiltinPlugins> } */
+        /** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema> } */
         const DatabaseClient = buildClient();`;
     default:
       return '';
