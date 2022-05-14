@@ -1,4 +1,4 @@
-import { buildClient, BaseClientOptions, XataRecord } from '../../client/src';
+import { buildClient, BaseClientOptions, XataRecord } from "../../client/src";
 
 export interface Team {
   name?: string | null;
@@ -22,12 +22,15 @@ export type DatabaseSchema = {
   users: User;
 };
 
-const links = { teams: [['owner', 'users']], users: [['team', 'teams']] };
+const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
 
 const DatabaseClient = buildClient<DatabaseSchema>();
 
 export class XataClient extends DatabaseClient {
   constructor(options?: BaseClientOptions) {
-    super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, links);
+    super(
+      { databaseURL: "https://test-r5vcv5.xata.sh/db/test", ...options },
+      links
+    );
   }
 }

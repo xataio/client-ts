@@ -59,10 +59,10 @@ function generateAbstractClient(language: Language) {
     case 'javascript':
       return `
         /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
-        /** @typedef { import('@xata.io/client').SchemaNamespace<DatabaseSchema> } SchemaNamespace */
-        /** @typedef { import('@xata.io/client').SearchNamespace<DatabaseSchema> } SearchNamespace */
-        /** @typedef { { db: SchemaNamespace, search: SearchNamespace }} Namespaces */
-        /** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema, Namespaces> } */
+        /** @typedef { import('@xata.io/client').SchemaPlugin<DatabaseSchema> } SchemaPlugin */
+        /** @typedef { import('@xata.io/client').SearchPlugin<DatabaseSchema> } SearchPlugin */
+        /** @typedef { { db: SchemaPlugin, search: SearchPlugin }} BuiltinPlugins */
+        /** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema, BuiltinPlugins> } */
         const DatabaseClient = buildClient();`;
     default:
       return '';

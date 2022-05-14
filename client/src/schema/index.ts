@@ -1,4 +1,4 @@
-import { Namespace, NamespaceBuildOptions } from '../namespace';
+import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isString } from '../util/lang';
 import { BaseData } from './record';
 import { LinkDictionary, Repository, RestRepository } from './repository';
@@ -15,30 +15,30 @@ export type SchemaDefinition = {
   links?: LinkDictionary;
 };
 
-export type SchemaNamespaceResult<Schemas extends Record<string, BaseData>> = {
+export type SchemaPluginResult<Schemas extends Record<string, BaseData>> = {
   [Key in keyof Schemas]: Repository<Schemas[Key]>;
 };
 
-export class SchemaNamespace<Schemas extends Record<string, BaseData>> extends Namespace {
+export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
   constructor(private links?: LinkDictionary) {
     super();
   }
 
-  build(options: NamespaceBuildOptions): SchemaNamespaceResult<Schemas> {
+  build(options: XataPluginOptions): SchemaPluginResult<Schemas> {
     const { getFetchProps } = options;
 
     const links = this.links;
 
-    const schemaNamespace: any = new Proxy(
+    const db: any = new Proxy(
       {},
       {
         get: (_target, table) => {
           if (!isString(table)) throw new Error('Invalid table name');
-          return new RestRepository({ schemaNamespace, getFetchProps, table, links });
+          return new RestRepository({ db, getFetchProps, table, links });
         }
       }
     );
 
-    return schemaNamespace;
+    return db;
   }
 }
