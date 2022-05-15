@@ -109,10 +109,13 @@ export interface WrapperConstructor<
   Schemas extends Record<string, BaseData>,
   Plugins extends Record<string, XataPlugin>
 > {
-  new (options?: Partial<BaseClientOptions>, links?: LinkDictionary): {
-    db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
-    search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
-  } & {
+  new (options?: Partial<BaseClientOptions>, links?: LinkDictionary): Omit<
+    {
+      db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
+      search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
+    },
+    keyof Plugins
+  > & {
     [Key in StringKeys<NonNullable<Plugins>>]: Awaited<ReturnType<NonNullable<Plugins>[Key]['build']>>;
   };
 }

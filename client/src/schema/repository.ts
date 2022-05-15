@@ -150,10 +150,10 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
 
-export class RestRepository<Data extends BaseData, Record extends XataRecord = Data & XataRecord> extends Query<
-  Record,
-  SelectedPick<Record, ['*']>
-> {
+export class RestRepository<Data extends BaseData, Record extends XataRecord = Data & XataRecord>
+  extends Query<Record, SelectedPick<Record, ['*']>>
+  implements Repository<Data, Record>
+{
   #table: string;
   #links: LinkDictionary;
   #getFetchProps: () => Promise<FetcherExtraProps>;
