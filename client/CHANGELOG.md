@@ -1,5 +1,12 @@
 # @xata.io/client
 
+## 0.8.0
+
+### Patch Changes
+
+- bde908e: Refactor client builder
+- ea3eef8: Make records returned by the API readonly
+
 ## 0.7.2
 
 ### Patch Changes
