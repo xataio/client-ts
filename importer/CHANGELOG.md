@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Updated dependencies [bde908e]
+- Update dependencies [bde908e]
 
 ## 0.1.1
 
