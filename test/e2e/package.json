@@ -5,8 +5,14 @@
   "scripts": {},
   "dependencies": {
     "@remix-run/dev": "^1.4.3",
+    "edge-runtime": "latest",
     "netlify-cli": "latest",
     "remix": "^1.4.3",
+    "rollup": "^2.73.0",
+    "rollup-plugin-import-cdn": "^0.2.0",
+    "rollup-plugin-typescript2": "^0.31.2",
+    "tslib": "^2.4.0",
+    "typescript": "^4.6.4",
     "vercel": "latest",
     "wrangler": "latest"
   },
