@@ -1,7 +1,7 @@
 {
-  "name": "@xata.io/importer",
-  "version": "0.1.2",
-  "description": "Importer for xata.io",
+  "name": "@xata.io/shell",
+  "version": "0.0.0",
+  "description": "Shell for xata.io",
   "main": "./dist/index.js",
   "type": "module",
   "scripts": {
@@ -21,24 +21,17 @@
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
-  "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
+  "homepage": "https://github.com/xataio/client-ts/blob/main/shell/README.md",
   "dependencies": {
     "@xata.io/client": "^0.8.0",
-    "camelcase": "^6.3.0",
-    "commander": "^9.2.0",
+    "@xata.io/codegen": "^0.8.0",
+    "chalk": "^5.0.1",
     "cross-fetch": "^3.1.5",
-    "csvtojson": "^2.0.10",
-    "inquirer": "^8.2.4",
-    "ora": "^6.1.0",
-    "transliteration": "^2.2.0",
-    "zod": "^3.15.1"
-  },
-  "devDependencies": {
-    "@types/csvtojson": "^2.0.0",
-    "@types/inquirer": "^8.2.1"
+    "dotenv": "^16.0.1",
+    "ora": "^6.1.0"
   },
   "bin": {
-    "importer": "./dist/cli.js",
-    "xata-importer": "./dist/cli.js"
+    "shell": "./dist/cli.js",
+    "xata-shell": "./dist/cli.js"
   }
 }

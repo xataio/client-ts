@@ -1,4 +1,4 @@
 {
-  "packages": ["client", "codegen", "importer"],
+  "packages": ["client", "codegen", "importer", "shell"],
   "version": "0.2.2"
 }
