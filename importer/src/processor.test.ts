@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { XataApiClient } from '@xata.io/client';
-import { Table } from '@xata.io/client/dist/api/schemas';
+import { Schemas, XataApiClient } from '@xata.io/client';
 import { describe, expect, test, vi } from 'vitest';
 import { compareSquema, createProcessor, TableInfo } from './processor.js';
 
@@ -44,7 +43,7 @@ describe('compareSquema', () => {
   });
 
   test('returns missing columns', () => {
-    const table: Table = {
+    const table: Schemas.Table = {
       name: 'foo',
       columns: [
         {
@@ -95,7 +94,7 @@ describe('compareSquema', () => {
   });
 
   test('returns incompatible types', () => {
-    const table: Table = {
+    const table: Schemas.Table = {
       name: 'foo',
       columns: [
         {
