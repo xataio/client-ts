@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/shell",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Shell for xata.io",
   "main": "./dist/index.js",
   "type": "module",
