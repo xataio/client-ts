@@ -1,7 +1,7 @@
 import { Command } from '@oclif/core';
 
-export default class World extends Command {
-  static description = 'Say hello world';
+export default class WorkspacesList extends Command {
+  static description = 'List your workspaces';
 
   static examples = [
     `$ oex hello world
