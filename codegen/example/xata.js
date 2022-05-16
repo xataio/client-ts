@@ -1,5 +1,5 @@
-import { buildClient } from "../../client/src";
-const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
+import { buildClient } from '../../client/src';
+const links = { teams: [['owner', 'users']], users: [['team', 'teams']] };
 /** @type { import('../../client/src').ClientConstructor<{}> } */
 const DatabaseClient = buildClient();
 /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */

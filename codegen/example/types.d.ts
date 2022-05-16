@@ -21,6 +21,6 @@ export declare type DatabaseSchema = {
 };
 declare const DatabaseClient: any;
 export declare class XataClient extends DatabaseClient<DatabaseSchema> {
-    constructor(options?: BaseClientOptions);
+  constructor(options?: BaseClientOptions);
 }
 export {};
