@@ -1,11 +1,11 @@
 import { searchBranch } from '../api';
-import { Namespace, NamespaceBuildOptions } from '../namespace';
+import { XataPlugin, XataPluginOptions } from '../plugins';
 import { BaseData, XataRecord } from '../schema/record';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
-export class SearchNamespace<Schemas extends Record<string, BaseData>> extends Namespace {
-  build({ getFetchProps }: NamespaceBuildOptions) {
+export class SearchPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
+  build({ getFetchProps }: XataPluginOptions) {
     return {
       all: async <Tables extends StringKeys<Schemas>>(
         query: string,
@@ -48,7 +48,7 @@ export class SearchNamespace<Schemas extends Record<string, BaseData>> extends N
   async #search<Tables extends StringKeys<Schemas>>(
     query: string,
     options: { fuzziness?: number; tables?: Tables[] },
-    getFetchProps: NamespaceBuildOptions['getFetchProps']
+    getFetchProps: XataPluginOptions['getFetchProps']
   ) {
     const fetchProps = await getFetchProps();
     const { tables, fuzziness } = options ?? {};

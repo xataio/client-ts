@@ -1,9 +1,9 @@
 import { FetcherExtraProps, FetchImpl } from './api/fetcher';
-import { Namespace } from './namespace';
-import { SchemaNamespace } from './schema';
+import { XataPlugin } from './plugins';
+import { SchemaPlugin } from './schema';
 import { BaseData } from './schema/record';
 import { LinkDictionary } from './schema/repository';
-import { SearchNamespace } from './search';
+import { SearchPlugin } from './search';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
 import { getAPIKey, getCurrentBranchName, getDatabaseURL } from './util/config';
 import { getFetchImplementation } from './util/fetch';
@@ -16,34 +16,32 @@ export type BaseClientOptions = {
   branch?: BranchStrategyOption;
 };
 
-export const buildClientWithNamespaces =
-  <ExternalNamespaces extends Record<string, Namespace>>(namespaces: ExternalNamespaces) =>
-  <Schemas extends Record<string, BaseData>>() =>
-    buildClient<Schemas, ExternalNamespaces>(namespaces);
-
-export const buildClient = <
-  Schemas extends Record<string, BaseData>,
-  ExternalNamespaces extends Record<string, Namespace> = {},
-  Namespaces extends Record<string, Namespace> = { db: SchemaNamespace<Schemas>; search: SearchNamespace<Schemas> }
->(
-  external?: ExternalNamespaces
-) =>
+export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
   class {
     #branch: BranchStrategyValue;
 
     constructor(options: BaseClientOptions = {}, links?: LinkDictionary) {
       const safeOptions = this.#parseOptions(options);
 
-      const namespaces = {
-        db: new SchemaNamespace(links),
-        search: new SearchNamespace(),
-        ...external
+      const namespaces: Record<string, XataPlugin> = {
+        db: new SchemaPlugin(links),
+        search: new SearchPlugin(),
+        ...plugins
       };
 
       for (const [key, namespace] of Object.entries(namespaces)) {
         if (!namespace) continue;
-        // @ts-ignore
-        this[key] = namespace.build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
+        const result = namespace.build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
+
+        if (result instanceof Promise) {
+          void result.then((namespace: unknown) => {
+            // @ts-ignore
+            this[key] = namespace;
+          });
+        } else {
+          // @ts-ignore
+          this[key] = result;
+        }
       }
     }
 
@@ -103,18 +101,18 @@ export const buildClient = <
         }
       }
     }
-  } as unknown as WrapperConstructor<Schemas, Namespaces, ExternalNamespaces>;
+  } as unknown as ClientConstructor<Plugins>;
 
-export interface WrapperConstructor<
-  Schemas extends Record<string, BaseData> = Record<string, any>,
-  Namespaces extends Record<string, Namespace> = { db: SchemaNamespace<Schemas>; search: SearchNamespace<Schemas> },
-  ExternalNamespaces extends Record<string, Namespace> = Record<string, Namespace>
-> {
-  new (options?: Partial<BaseClientOptions>, links?: LinkDictionary): {
-    [Key in StringKeys<Namespaces>]: ReturnType<Namespaces[Key]['build']>;
-  } & {
-    [Key in StringKeys<NonNullable<ExternalNamespaces>>]: ReturnType<NonNullable<ExternalNamespaces>[Key]['build']>;
+export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
+  new <Schemas extends Record<string, BaseData>>(options?: Partial<BaseClientOptions>, links?: LinkDictionary): Omit<
+    {
+      db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
+      search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
+    },
+    keyof Plugins
+  > & {
+    [Key in StringKeys<NonNullable<Plugins>>]: Awaited<ReturnType<NonNullable<Plugins>[Key]['build']>>;
   };
 }
 
-export class BaseClient extends buildClient<Record<string, any>>() {}
+export class BaseClient extends buildClient()<Record<string, any>> {}

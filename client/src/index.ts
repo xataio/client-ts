@@ -8,6 +8,7 @@ export class XataError extends Error {
 }
 
 export * from './api';
+export * from './plugins';
 export * from './client';
 export * from './schema';
 export * from './search';

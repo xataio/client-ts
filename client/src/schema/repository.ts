@@ -1,4 +1,4 @@
-import { SchemaNamespaceResult } from '.';
+import { SchemaPluginResult } from '.';
 import {
   bulkInsertTableRecords,
   deleteRecord,
@@ -150,27 +150,27 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
 
-export class RestRepository<Data extends BaseData, Record extends XataRecord = Data & XataRecord> extends Query<
-  Record,
-  SelectedPick<Record, ['*']>
-> {
+export class RestRepository<Data extends BaseData, Record extends XataRecord = Data & XataRecord>
+  extends Query<Record, SelectedPick<Record, ['*']>>
+  implements Repository<Data, Record>
+{
   #table: string;
   #links: LinkDictionary;
   #getFetchProps: () => Promise<FetcherExtraProps>;
-  #schemaNamespace: SchemaNamespaceResult<any>;
+  db: SchemaPluginResult<any>;
 
   constructor(options: {
     table: string;
     links?: LinkDictionary;
     getFetchProps: () => Promise<FetcherExtraProps>;
-    schemaNamespace: SchemaNamespaceResult<any>;
+    db: SchemaPluginResult<any>;
   }) {
     super(null, options.table, {});
 
     this.#table = options.table;
     this.#links = options.links ?? {};
     this.#getFetchProps = options.getFetchProps;
-    this.#schemaNamespace = options.schemaNamespace;
+    this.db = options.db;
   }
 
   async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
@@ -470,7 +470,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       }
     }
 
-    const db = this.#schemaNamespace;
+    const db = this.db;
     result.read = function () {
       return db[table].read(result['id'] as string);
     };
