@@ -4,9 +4,10 @@ exports[`generateFromLocalFiles > should generate correct JavaScript 1`] = `
 [
   "import { buildClient } from \\"@xata.io/client\\";
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
-/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
-/** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema> } */
+/** @type { import('@xata.io/client').ClientConstructor<{}> } */
 const DatabaseClient = buildClient();
+/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
+/** @extends DatabaseClient<DatabaseSchema> */
 export class XataClient extends DatabaseClient {
   constructor(options) {
     super(
@@ -53,7 +54,7 @@ export declare type DatabaseSchema = {
     people: Person;
 };
 declare const DatabaseClient: any;
-export declare class XataClient extends DatabaseClient {
+export declare class XataClient extends DatabaseClient<DatabaseSchema> {
     constructor(options?: BaseClientOptions);
 }
 export {};
@@ -106,9 +107,9 @@ export type DatabaseSchema = {
 
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
 
-const DatabaseClient = buildClient<DatabaseSchema>();
+const DatabaseClient = buildClient();
 
-export class XataClient extends DatabaseClient {
+export class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
     super(
       {

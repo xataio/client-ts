@@ -1,8 +1,9 @@
 import { buildClient } from "../../client/src";
 const links = { teams: [["owner", "users"]], users: [["team", "teams"]] };
-/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
-/** @type { import('../../client/src').WrapperConstructor<DatabaseSchema> } */
+/** @type { import('../../client/src').ClientConstructor<{}> } */
 const DatabaseClient = buildClient();
+/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
+/** @extends DatabaseClient<DatabaseSchema> */
 export class XataClient extends DatabaseClient {
   constructor(options) {
     super(

@@ -52,21 +52,6 @@ function generateColumnType(column: Column) {
   return `${column.name}?: ${getTypeScriptType(column)} | null`;
 }
 
-function generateAbstractClient(language: Language) {
-  switch (language) {
-    case 'typescript':
-      return `
-        const DatabaseClient = buildClient<DatabaseSchema>();`;
-    case 'javascript':
-      return `
-        /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
-        /** @type { import('@xata.io/client').WrapperConstructor<DatabaseSchema> } */
-        const DatabaseClient = buildClient();`;
-    default:
-      return '';
-  }
-}
-
 function getTypeScriptType(column: Column): string {
   if (column.type === 'email') return 'string';
   if (column.type === 'text') return 'string';
@@ -119,9 +104,16 @@ export async function generate({
 
     const links = ${JSON.stringify(links)};
 
-    ${generateAbstractClient(language)}
+    ${language === 'javascript' ? `/** @type { import('@xata.io/client').ClientConstructor<{}> } */` : ''}
+    const DatabaseClient = buildClient();
 
-    export class XataClient extends DatabaseClient {
+    ${
+      language === 'javascript'
+        ? `/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
+           /** @extends DatabaseClient<DatabaseSchema> */`
+        : ''
+    }
+    export class XataClient extends DatabaseClient<DatabaseSchema> {
       constructor(options?: BaseClientOptions) {
         super({ databaseURL: "${databaseURL}", ...options}, links);
       }

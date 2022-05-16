@@ -16,9 +16,7 @@ export type BaseClientOptions = {
   branch?: BranchStrategyOption;
 };
 
-export const buildClient = <Schemas extends Record<string, BaseData>, Plugins extends Record<string, XataPlugin> = {}>(
-  plugins?: Plugins
-) =>
+export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
   class {
     #branch: BranchStrategyValue;
 
@@ -103,13 +101,10 @@ export const buildClient = <Schemas extends Record<string, BaseData>, Plugins ex
         }
       }
     }
-  } as unknown as WrapperConstructor<Schemas, Plugins>;
+  } as unknown as ClientConstructor<Plugins>;
 
-export interface WrapperConstructor<
-  Schemas extends Record<string, BaseData>,
-  Plugins extends Record<string, XataPlugin>
-> {
-  new (options?: Partial<BaseClientOptions>, links?: LinkDictionary): Omit<
+export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
+  new <Schemas extends Record<string, BaseData>>(options?: Partial<BaseClientOptions>, links?: LinkDictionary): Omit<
     {
       db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
       search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
@@ -120,4 +115,4 @@ export interface WrapperConstructor<
   };
 }
 
-export class BaseClient extends buildClient<Record<string, any>>() {}
+export class BaseClient extends buildClient()<Record<string, any>> {}
