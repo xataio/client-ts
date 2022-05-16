@@ -34,8 +34,11 @@ async function main() {
   // Build the app
   execSync('npm run build', { cwd: projectDir });
 
+  // Create CF Pages project
+  execSync(`npx wrangler pages project create ${appName} --production-branch main`, { cwd: projectDir });
+
   // Publish the app to CF
-  execSync(`npx wrangler publish public`, { cwd: projectDir });
+  execSync(`npx wrangler pages publish public --project-name ${appName}`, { cwd: projectDir });
 }
 
 main();
