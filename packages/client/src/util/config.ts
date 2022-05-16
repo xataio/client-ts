@@ -1,5 +1,6 @@
 import { getBranchDetails } from '../api';
 import { FetchImpl } from '../api/fetcher';
+import { getAPIKey } from './apiKey';
 import { getEnvVariable, getGitBranch } from './environment';
 import { getFetchImplementation } from './fetch';
 import { isObject } from './lang';
@@ -99,14 +100,6 @@ function getBranchByEnvVariable(): string | undefined {
 export function getDatabaseURL() {
   try {
     return getEnvVariable('XATA_DATABASE_URL') ?? XATA_DATABASE_URL;
-  } catch (err) {
-    return undefined;
-  }
-}
-
-export function getAPIKey() {
-  try {
-    return getEnvVariable('XATA_API_KEY') ?? XATA_API_KEY;
   } catch (err) {
     return undefined;
   }
