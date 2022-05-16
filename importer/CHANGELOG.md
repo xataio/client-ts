@@ -5,8 +5,6 @@
 ### Patch Changes
 
 - Updated dependencies [bde908e]
-- Updated dependencies [ea3eef8]
-  - @xata.io/client@0.8.0
 
 ## 0.1.1
 
