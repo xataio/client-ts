@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import { join } from 'path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { generateFromLocalFiles } from '../codegen/src/local';
+import { generateFromLocalFiles } from '../packages/codegen/src/local';
 
 vi.mock('fs/promises', async () => {
   const realFs: typeof fs = await vi.importActual('fs/promises');

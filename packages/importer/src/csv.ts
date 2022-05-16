@@ -1,5 +1,5 @@
 import csv from 'csvtojson';
-import { Converter } from 'csvtojson/v2/Converter';
+import { Converter } from 'csvtojson/v2/Converter.js';
 import internal from 'stream';
 import { ParseOptions } from './index.js';
 
