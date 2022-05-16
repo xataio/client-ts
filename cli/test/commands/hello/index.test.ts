@@ -1,10 +1,10 @@
 import { expect, test } from '@oclif/test';
 
-describe('hello', () => {
+describe('branches list', () => {
   test
     .stdout()
-    .command(['hello', 'friend', '--from=oclif'])
-    .it('runs hello cmd', (ctx) => {
-      expect(ctx.stdout).to.contain('hello friend from oclif!');
+    .command(['branches:list'])
+    .it('runs branches list', (ctx) => {
+      expect(ctx.stdout).to.contain('hello world');
     });
 });

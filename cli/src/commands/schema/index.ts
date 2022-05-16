@@ -1,23 +1,17 @@
-import { Command, Flags } from '@oclif/core';
+import { Command } from '@oclif/core';
 
 export default class Schema extends Command {
   static description = 'View and edit the schema of the current database';
 
-  static examples = [
-    `$ oex hello friend --from oclif
-hello friend from oclif! (./src/commands/hello/index.ts)
-`
-  ];
+  static examples = [];
 
-  static flags = {
-    from: Flags.string({ char: 'f', description: 'Whom is saying hello', required: true })
-  };
+  static flags = {};
 
-  static args = [{ name: 'person', description: 'Person to say hello to', required: true }];
+  static args = [];
 
   async run(): Promise<void> {
-    const { args, flags } = await this.parse(Schema);
+    // const { args, flags } = await this.parse(Schema);
 
-    this.log(`hello ${args.person} from ${flags.from}! (./src/commands/hello/index.ts)`);
+    this.error('To be done');
   }
 }
