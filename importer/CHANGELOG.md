@@ -1,5 +1,11 @@
 # @xata.io/importer
 
+## 0.1.2
+
+### Patch Changes
+
+- Update dependencies [bde908e]
+
 ## 0.1.1
 
 ### Patch Changes

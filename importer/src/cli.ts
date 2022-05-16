@@ -1,11 +1,11 @@
 import { program } from 'commander';
 import { run } from './cli-run.js';
-import { IMPORTER_VERSION } from './version.js';
+import { VERSION } from './version.js';
 
 program
   .name('xata-importer')
   .description('Importer utility for xata.io')
-  .version(IMPORTER_VERSION)
+  .version(VERSION)
   .argument('<file>', 'File containing the data to import. Pass "-" to pipe content instead.')
   .option('--table <table>', 'The table in which to import the data.')
   .option('--columns <columns>', 'List of column names.')
