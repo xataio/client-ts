@@ -18,7 +18,6 @@ async function main() {
 
   const appName = getAppName('cf-pages');
   const projectDir = path.join(__dirname, 'apps', 'cf-pages', 'remix');
-  const deploymentUrl = `https://${appName}.pages.dev`;
 
   // Create Remix app
   await createApp({
@@ -65,10 +64,10 @@ async function main() {
   execSync(`npx wrangler pages publish . --project-name ${appName} --branch main`, { cwd: projectDir });
 
   // Wait for deployment to complete
-  await checkDeploymentStatus(accountId, appName, accountApiToken);
-  await checkUrl(deploymentUrl);
+  const deploymentUrl = await checkDeploymentStatus(accountId, appName, accountApiToken);
+  const url = await checkUrls([`https://${appName}.pages.dev`, deploymentUrl]);
 
-  const response = await fetch(`${deploymentUrl}/test`, {
+  const response = await fetch(`${url}/test`, {
     agent: new https.Agent({
       // SSL Certificate can take some time to load
       rejectUnauthorized: false
@@ -125,21 +124,26 @@ async function checkDeploymentStatus(accountId: string, appName: string, apiToke
   }
 }
 
-async function checkUrl(url: string, retry = 0): Promise<void> {
+async function checkUrls(urls: string[], retry = 0): Promise<string> {
   if (retry > 20) throw new Error('URL check failed');
-  console.log(`Checking ${url}, retry ${retry + 1}`);
 
-  try {
-    const response = await fetch(url);
-    if (response.status >= 200 && response.status < 400) {
-      return;
-    } else {
-      throw new Error(`${url} responded with status ${response.status}`);
+  for (const url of urls) {
+    console.log(`Checking ${url}, retry ${retry + 1}`);
+    try {
+      const response = await fetch(url, {
+        agent: new https.Agent({
+          // SSL Certificate can take some time to load
+          rejectUnauthorized: false
+        })
+      });
+      if (response.status >= 200 && response.status < 400) return url;
+    } catch (error) {
+      console.warn(`Failed to fetch ${url}`);
     }
-  } catch (error) {
-    await timeout(Math.min(1000 * Math.pow(2, retry), 60000));
-    return checkUrl(url, retry + 1);
   }
+
+  await timeout(Math.min(1000 * Math.pow(2, retry), 60000));
+  return checkUrls(urls, retry + 1);
 }
 
 async function timeout(ms: number) {
