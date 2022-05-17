@@ -1,10 +1,10 @@
 import { createApp } from '@remix-run/dev';
 import { execSync } from 'child_process';
+import https from 'https';
 import fetch from 'node-fetch';
 import path from 'path';
+import { isObject } from '../../packages/client/src/util/lang';
 import { getAppName } from './shared';
-import https from 'https';
-import retry from 'retry';
 
 async function main() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -32,6 +32,9 @@ async function main() {
   // Install npm dependencies
   execSync('npm install', { cwd: projectDir });
 
+  // Install npm dependencies
+  execSync('npm install file:../../../../../packages/client', { cwd: projectDir });
+
   // Copy route
   execSync('cp ../test.ts app/routes/test.ts', { cwd: projectDir });
 
@@ -41,14 +44,25 @@ async function main() {
   // Create CF Pages project
   execSync(`npx wrangler pages project create ${appName} --production-branch main`, { cwd: projectDir });
 
+  // Add environment variables
+  await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${appName}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accountApiToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      deployment_configs: {
+        production: {
+          env_vars: {
+            XATA_API_KEY: { value: process.env.XATA_API_KEY },
+            XATA_WORKSPACE: { value: process.env.XATA_WORKSPACE },
+            NODE_VERSION: { value: 'v16.7.0' }
+          }
+        }
+      }
+    })
+  });
+
   // Publish the app to CF
   execSync(`npx wrangler pages publish . --project-name ${appName} --branch main`, { cwd: projectDir });
-
-  // Force deployment
-  await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${appName}/deployments`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accountApiToken}` }
-  });
 
   // Wait for deployment to complete
   await checkDeploymentStatus(accountId, appName, accountApiToken);
@@ -56,70 +70,78 @@ async function main() {
 
   const response = await fetch(`${deploymentUrl}/test`, {
     agent: new https.Agent({
-      // SSL Certificate takes a long time to load
+      // SSL Certificate can take some time to load
       rejectUnauthorized: false
     })
   });
-  const body = await response.json();
 
-  console.log(body);
+  const body = await response.json();
 
   // Delete the app from CF
   await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${appName}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${accountApiToken}` }
   });
+
+  if (
+    isObject(body) &&
+    Array.isArray(body.users) &&
+    Array.isArray(body.teams) &&
+    body.users.length > 0 &&
+    body.teams.length > 0
+  ) {
+    console.log('Successfully fetched data from CF');
+  } else {
+    throw new Error('Failed to fetch data from CF');
+  }
 }
 
 main();
 
-function checkDeploymentStatus(accountId: string, appName: string, apiToken: string) {
-  const operation = retry.operation({ retries: 20 });
+async function checkDeploymentStatus(accountId: string, appName: string, apiToken: string, retry = 0): Promise<string> {
+  if (retry > 20) throw new Error('Deployment failed');
+  console.log(`Checking deployment status, retry ${retry + 1}`);
 
-  return new Promise((resolve) => {
-    operation.attempt(async (currentAttempt) => {
-      console.log(`Checking deployment status; attempt ${currentAttempt}`);
-      const response = await fetch(
-        `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${appName}/deployments`,
-        { headers: { Authorization: `Bearer ${apiToken}` } }
-      );
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${appName}/deployments`,
+    { headers: { Authorization: `Bearer ${apiToken}` } }
+  );
 
-      if (response.status >= 200 && response.status < 400) {
-        const data = await response.json();
-        const deployment = data.result[0];
-        const latest = deployment.latest_stage;
-        if (latest.name === 'deploy' && latest.status === 'success') {
-          resolve('Pages deployed successfully');
-        } else {
-          const message = `Deployment not complete; latest stage: ${latest.name}/${latest.status}`;
-          console.error(message);
-          operation.retry(new Error(message));
-        }
-      } else {
-        const message = `URL responded with status ${response.status}`;
-        console.error(message);
-        operation.retry(new Error(message));
-      }
-    });
-  });
+  if (response.status >= 200 && response.status < 400) {
+    const data = await response.json();
+    const deployment = data.result[0];
+    const latest = deployment.latest_stage;
+    if (latest.name === 'deploy' && latest.status === 'success') {
+      console.log('Deployment successful');
+      return deployment.url;
+    } else {
+      console.error(`Deployment not complete; latest stage: ${latest.name}/${latest.status}`);
+      await timeout(Math.min(1000 * Math.pow(2, retry), 60000));
+      return checkDeploymentStatus(accountId, appName, apiToken, retry + 1);
+    }
+  } else {
+    await timeout(Math.min(1000 * Math.pow(2, retry), 60000));
+    return checkDeploymentStatus(accountId, appName, apiToken, retry + 1);
+  }
 }
 
-export function checkUrl(url: string) {
-  const operation = retry.operation({ retries: 10 });
+async function checkUrl(url: string, retry = 0): Promise<void> {
+  if (retry > 5) throw new Error('URL check failed');
+  console.log(`Checking ${url}, retry ${retry + 1}`);
 
-  return new Promise((resolve, reject) => {
-    operation.attempt(async () => {
-      try {
-        const response = await fetch(url);
-        if (response.status >= 200 && response.status < 400) {
-          resolve(`${url} responded with status ${response.status}`);
-        } else {
-          throw new Error(`${url} responded with status ${response.status}`);
-        }
-      } catch (error: any) {
-        console.error(error);
-        reject(operation.retry(error));
-      }
-    });
-  });
+  try {
+    const response = await fetch(url);
+    if (response.status >= 200 && response.status < 400) {
+      return;
+    } else {
+      throw new Error(`${url} responded with status ${response.status}`);
+    }
+  } catch (error) {
+    await timeout(Math.min(1000 * Math.pow(2, retry), 60000));
+    return checkUrl(url, retry + 1);
+  }
+}
+
+async function timeout(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

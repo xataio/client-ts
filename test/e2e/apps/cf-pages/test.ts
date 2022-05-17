@@ -1,5 +1,13 @@
-export const loader = async () => {
-  /**const { XATA_WORKSPACE: workspace, XATA_API_KEY: apiKey } = env;
+// @ts-ignore
+import { LoaderFunction } from '@remix-run/cloudflare';
+// @ts-ignore
+import { XataApiClient, BaseClient } from '@xata.io/client';
+
+export const loader: LoaderFunction = async ({ context }: { context: Record<string, unknown> }) => {
+  const { XATA_WORKSPACE: workspace, XATA_API_KEY: apiKey } = context;
+  if (!workspace || !apiKey) {
+    throw new Error('XATA_WORKSPACE and XATA_API_KEY are required');
+  }
 
   const api = new XataApiClient({ apiKey });
 
@@ -12,7 +20,7 @@ export const loader = async () => {
   await api.tables.setTableSchema(workspace, databaseName, 'main', 'teams', { columns: teamColumns });
   await api.tables.setTableSchema(workspace, databaseName, 'main', 'users', { columns: userColumns });
 
-  const xata = new XataClient({
+  const xata = new BaseClient({
     databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
     branch: 'main',
     apiKey
@@ -26,5 +34,55 @@ export const loader = async () => {
 
   await api.databases.deleteDatabase(workspace, databaseName);
 
-  return new Response(JSON.stringify({ users, teams }));**/
+  return new Response(JSON.stringify({ users, teams }));
 };
+
+const userColumns: any[] = [
+  {
+    name: 'email',
+    type: 'email'
+  },
+  {
+    name: 'full_name',
+    type: 'string'
+  },
+  {
+    name: 'address',
+    type: 'object',
+    columns: [
+      {
+        name: 'street',
+        type: 'string'
+      },
+      {
+        name: 'zipcode',
+        type: 'int'
+      }
+    ]
+  },
+  {
+    name: 'team',
+    type: 'link',
+    link: {
+      table: 'teams'
+    }
+  }
+];
+
+const teamColumns: any[] = [
+  {
+    name: 'name',
+    type: 'string'
+  },
+  {
+    name: 'labels',
+    type: 'multiple'
+  },
+  {
+    name: 'owner',
+    type: 'link',
+    link: {
+      table: 'users'
+    }
+  }
+];
