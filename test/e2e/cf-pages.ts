@@ -126,7 +126,7 @@ async function checkDeploymentStatus(accountId: string, appName: string, apiToke
 }
 
 async function checkUrl(url: string, retry = 0): Promise<void> {
-  if (retry > 5) throw new Error('URL check failed');
+  if (retry > 20) throw new Error('URL check failed');
   console.log(`Checking ${url}, retry ${retry + 1}`);
 
   try {
