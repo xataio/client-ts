@@ -1,5 +1,17 @@
 # @xata.io/codegen
 
+## 0.8.1
+
+### Patch Changes
+
+- 5110261: Fix execution from the browser
+- 0047193: Add new plugin system for the SDK
+- Updated dependencies [5110261]
+- Updated dependencies [aa3d7e7]
+- Updated dependencies [0047193]
+- Updated dependencies [43856a5]
+  - @xata.io/client@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes
