@@ -1,7 +1,7 @@
 import { program } from 'commander';
 import dotenv from 'dotenv';
 import { join, relative } from 'path';
-import { generateFromAPI } from './api.js';
+import { generateFromContext } from './api.js';
 import { exitWithError } from './errors.js';
 import { generateFromLocalFiles } from './local.js';
 import { spinner } from './spinner.js';
@@ -31,7 +31,7 @@ program
       const databaseURL = getDatabaseURL();
       const apiKey = getAPIKey();
       if (databaseURL && apiKey) {
-        await generateFromAPI(out, { databaseURL, apiKey });
+        await generateFromContext(out, { databaseURL, apiKey });
       } else {
         await generateFromLocalFiles(xataDirectory, out);
       }

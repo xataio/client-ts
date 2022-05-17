@@ -1,5 +1,5 @@
 import { getDatabaseURL } from '@xata.io/client';
-import { generateFromAPI } from '@xata.io/codegen';
+import { generateFromContext } from '@xata.io/codegen';
 import chalk from 'chalk';
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
@@ -26,7 +26,7 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
   // can import @xata.io/client
   const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
   try {
-    const { transpiled } = await generateFromAPI('javascript', { ...options, databaseURL });
+    const { transpiled } = await generateFromContext('javascript', { ...options, databaseURL });
     await fs.writeFile(tempFile, transpiled);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

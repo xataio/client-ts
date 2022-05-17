@@ -9,7 +9,7 @@ type BranchResolutionOptions = {
   fetchImpl?: FetchImpl;
 };
 
-export async function generateFromAPI(language: Language, options?: BranchResolutionOptions) {
+export async function generateFromContext(language: Language, options?: BranchResolutionOptions) {
   const resolvedOptions = { ...options };
   resolvedOptions.databaseURL = resolvedOptions.databaseURL || getDatabaseURL();
   resolvedOptions.fetchImpl = resolvedOptions.fetchImpl || fetch;

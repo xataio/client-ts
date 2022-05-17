@@ -1,5 +1,5 @@
 export { generate } from './codegen.js';
-export { generateFromAPI } from './api.js';
+export { generateFromContext } from './api.js';
 export type { GenerateOptions, Language } from './codegen.js';
 export type { XataConfigSchema } from './config.js';
 export { parseConfigFile } from './config.js';

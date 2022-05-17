@@ -12,7 +12,7 @@
     "build": "lerna run build",
     "size": "npm run build && size-limit",
     "openapi-gen": "openapi-codegen xatabase",
-    "build-example": "cd codegen && npm run example-ts && npm run example-js && cd .."
+    "build-example": "cd packages/codegen && npm run example-ts && npm run example-js && cd .."
   },
   "repository": {
     "type": "git",
