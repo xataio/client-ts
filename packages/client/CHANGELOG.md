@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.8.2
+
+### Patch Changes
+
+- 3d81e7a: Make db model references stable
+
 ## 0.8.1
 
 ### Patch Changes
