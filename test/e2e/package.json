@@ -8,6 +8,7 @@
     "edge-runtime": "latest",
     "netlify-cli": "latest",
     "remix": "^1.4.3",
+    "retry": "^0.13.1",
     "rollup": "^2.73.0",
     "rollup-plugin-import-cdn": "^0.2.0",
     "rollup-plugin-typescript2": "^0.31.2",
@@ -17,6 +18,7 @@
     "wrangler": "latest"
   },
   "devDependencies": {
+    "@types/retry": "^0.12.2",
     "ts-node": "^10.7.0"
   }
 }

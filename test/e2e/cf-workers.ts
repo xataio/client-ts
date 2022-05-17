@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import fetch from 'cross-fetch';
-import { isObject } from '../../client/src/util/lang';
+import { isObject } from '../../packages/client/src/util/lang';
 import { getAppName, timeout } from './shared';
 
 async function main() {
@@ -9,9 +9,6 @@ async function main() {
 
   const accountDomain = process.env.CLOUDFLARE_ACCOUNT_DOMAIN;
   if (!accountDomain) throw new Error('CLOUDFLARE_ACCOUNT_DOMAIN is not set');
-
-  const accountEmail = process.env.CLOUDFLARE_ACCOUNT_EMAIL;
-  if (!accountEmail) throw new Error('CLOUDFLARE_ACCOUNT_EMAIL is not set');
 
   const accountApiToken = process.env.CLOUDFLARE_API_TOKEN;
   if (!accountApiToken) throw new Error('CLOUDFLARE_API_TOKEN is not set');
@@ -39,7 +36,7 @@ async function main() {
 
   await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/${appName}`, {
     method: 'DELETE',
-    headers: { 'X-Auth-Email': accountEmail, 'X-Auth-Key': accountApiToken }
+    headers: { Authorization: `Bearer ${accountApiToken}` }
   });
 
   if (
