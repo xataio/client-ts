@@ -2,9 +2,6 @@ name: Build PR
 
 on:
   pull_request:
-  push:
-    branches:
-      - 'main'
 
 jobs:
   build:
@@ -31,7 +28,7 @@ jobs:
           cache: 'npm'
 
       - name: Set build version
-        run: echo ::set-output name=TAG::0.0.0-${{ github.event_name == 'pull_request' && 'alpha' || 'beta' }}.$(git rev-parse --short HEAD)
+        run: echo ::set-output name=TAG::0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
         id: version
 
       - name: Find Comment
@@ -70,31 +67,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Lint
-        run: npm run lint
-
       - name: Compile
         run: npm run build
-
-      - name: Test
-        run: npm test
-        env:
-          XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
-          XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
-          XATA_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
 
       - name: Configure npm registry token
         run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish beta build
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag dev --no-verify-access --yes
-
-      - name: Publish canary build
+      - name: Publish build
         if: ${{ github.event_name == 'pull_request' }}
-        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag canary --no-verify-access --yes
+        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-verify-access --yes
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
@@ -125,3 +108,42 @@ jobs:
             npm install @xata.io/importer@${{ steps.version.outputs.TAG }}
             npm install @xata.io/shell@${{ steps.version.outputs.TAG }}
             ```
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create git branch
+        run: |
+          # Create a git branch from the detached HEAD.
+          # We need this for some integration tests.
+          # This branch is not pushed, it's just local to the workflow environment.
+          git checkout -b test-branch-${{ github.sha }}
+
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+
+      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+        env:
+          XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
+          XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
+          XATA_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}

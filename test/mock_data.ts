@@ -1,4 +1,4 @@
-import { Column } from '../client/src/api/schemas';
+import { Column } from '../packages/client/src/api/schemas';
 
 const animals = [
   'Ape',

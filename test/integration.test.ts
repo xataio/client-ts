@@ -3,16 +3,16 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
-import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../client/src';
-import { FetchImpl } from '../client/src/api/fetcher';
-import { getCurrentBranchName } from '../client/src/util/config';
+import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../packages/client/src';
+import { FetchImpl } from '../packages/client/src/api/fetcher';
+import { getCurrentBranchName } from '../packages/client/src/util/config';
 import {
   Paginable,
   PAGINATION_DEFAULT_SIZE,
   PAGINATION_MAX_OFFSET,
   PAGINATION_MAX_SIZE
-} from '../client/src/schema/pagination';
-import { User, UserRecord, XataClient } from '../codegen/example/xata';
+} from '../packages/client/src/schema/pagination';
+import { User, UserRecord, XataClient } from '../packages/codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from './mock_data';
 
 // Get environment variables before reading them
@@ -844,8 +844,8 @@ describe('search', () => {
     expect(owners[0].read).toBeDefined();
   });
 
-  test.skip('search globally by tables', async () => {
-    const { users, teams } = await client.search('fruits', ['teams', 'users']);
+  test.skip('search by tables with filter', async () => {
+    const { users, teams } = await client.search.byTable('fruits', { tables: ['teams', 'users'] });
 
     expect(users.length).toBeGreaterThan(0);
     expect(teams.length).toBeGreaterThan(0);
@@ -859,8 +859,8 @@ describe('search', () => {
     expect(teams[0].name?.includes('fruits')).toBeTruthy();
   });
 
-  test.skip('search globally with all tables', async () => {
-    const { users, teams } = await client.search('fruits');
+  test.skip('search by table with all tables', async () => {
+    const { users, teams } = await client.search.byTable('fruits');
 
     expect(users.length).toBeGreaterThan(0);
     expect(teams.length).toBeGreaterThan(0);
@@ -872,5 +872,50 @@ describe('search', () => {
     expect(teams[0].id).toBeDefined();
     expect(teams[0].read).toBeDefined();
     expect(teams[0].name?.includes('fruits')).toBeTruthy();
+  });
+
+  test.skip('search all with filter', async () => {
+    const results = await client.search.all('fruits', { tables: ['teams', 'users'] });
+
+    for (const result of results) {
+      if (result.table === 'teams') {
+        expect(result.record.id).toBeDefined();
+        expect(result.record.read).toBeDefined();
+        expect(result.record.name?.includes('fruits')).toBeTruthy();
+      } else {
+        expect(result.record.id).toBeDefined();
+        expect(result.record.read).toBeDefined();
+        expect(result.record.full_name?.includes('fruits')).toBeTruthy();
+      }
+    }
+  });
+
+  test.skip('search all with filter partial', async () => {
+    const results = await client.search.all('fruits', { tables: ['teams'] });
+
+    for (const result of results) {
+      expect(result.record.id).toBeDefined();
+      expect(result.record.read).toBeDefined();
+      expect(result.record.name?.includes('fruits')).toBeTruthy();
+
+      //@ts-expect-error
+      result.table === 'users';
+    }
+  });
+
+  test.skip('search all with all tables', async () => {
+    const results = await client.search.all('fruits');
+
+    for (const result of results) {
+      if (result.table === 'teams') {
+        expect(result.record.id).toBeDefined();
+        expect(result.record.read).toBeDefined();
+        expect(result.record.name?.includes('fruits')).toBeTruthy();
+      } else {
+        expect(result.record.id).toBeDefined();
+        expect(result.record.read).toBeDefined();
+        expect(result.record.full_name?.includes('fruits')).toBeTruthy();
+      }
+    }
   });
 });

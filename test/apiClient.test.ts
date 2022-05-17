@@ -2,7 +2,7 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { describe, expect, test } from 'vitest';
-import { XataApiClient } from '../client/src';
+import { XataApiClient } from '../packages/client/src';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
