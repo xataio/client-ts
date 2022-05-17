@@ -65,7 +65,7 @@
   },
   "size-limit": [
     {
-      "path": "client/dist/*"
+      "path": "packages/client/dist/*"
     }
   ],
   "dependencies": {

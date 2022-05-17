@@ -3,16 +3,16 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
-import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../client/src';
-import { FetchImpl } from '../client/src/api/fetcher';
-import { getCurrentBranchName } from '../client/src/util/config';
+import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../packages/client/src';
+import { FetchImpl } from '../packages/client/src/api/fetcher';
+import { getCurrentBranchName } from '../packages/client/src/util/config';
 import {
   Paginable,
   PAGINATION_DEFAULT_SIZE,
   PAGINATION_MAX_OFFSET,
   PAGINATION_MAX_SIZE
-} from '../client/src/schema/pagination';
-import { User, UserRecord, XataClient } from '../codegen/example/xata';
+} from '../packages/client/src/schema/pagination';
+import { User, UserRecord, XataClient } from '../packages/codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from './mock_data';
 
 // Get environment variables before reading them

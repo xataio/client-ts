@@ -3,7 +3,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
-    project: 'codegen/tsconfig.json'
+    project: 'packages/codegen/tsconfig.json'
   },
   rules: {
     '@typescript-eslint/no-explicit-any': 'off',
