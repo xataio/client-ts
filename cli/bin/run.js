@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+import { Errors, flush, run } from '@oclif/core';
+import './mokey-patch-oclif.js';
+
+run(void 0, import.meta.url)
+  .then(flush)
+  .catch(Errors.handle);

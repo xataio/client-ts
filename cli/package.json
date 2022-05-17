@@ -9,6 +9,8 @@
   "homepage": "https://github.com/xataio/client-ts",
   "license": "MIT",
   "main": "dist/index.js",
+  "module": "dist/index.js",
+  "type": "module",
   "repository": "xataio/client-ts",
   "files": [
     "/bin",
@@ -17,7 +19,7 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@oclif/core": "^1",
+    "@oclif/core": "^1.8.1",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.0.1"
   },
