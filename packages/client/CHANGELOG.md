@@ -1,5 +1,14 @@
 # @xata.io/client
 
+## 0.8.1
+
+### Patch Changes
+
+- 5110261: Fix execution from the browser
+- aa3d7e7: Allow sending sort as in the API
+- 0047193: Add new plugin system for the SDK
+- 43856a5: Add discriminated union search
+
 ## 0.8.0
 
 ### Patch Changes
