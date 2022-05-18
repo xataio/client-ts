@@ -3,8 +3,7 @@ import { execSync } from 'child_process';
 import https from 'https';
 import fetch from 'node-fetch';
 import path from 'path';
-import { isObject } from '../../packages/client/src/util/lang';
-import { getAppName } from './shared';
+import { getAppName, isObject } from './shared';
 
 async function main() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;

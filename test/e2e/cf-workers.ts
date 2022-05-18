@@ -1,7 +1,6 @@
 import { execSync } from 'child_process';
 import fetch from 'cross-fetch';
-import { isObject } from '../../packages/client/src/util/lang';
-import { getAppName, timeout } from './shared';
+import { getAppName, isObject, timeout } from './shared';
 
 async function main() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;

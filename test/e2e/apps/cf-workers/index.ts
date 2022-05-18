@@ -1,5 +1,5 @@
-import { XataApiClient } from '../../../../client/src';
-import { XataClient } from '../../../../codegen/example/xata';
+import { XataApiClient } from '../../../../packages/client/src';
+import { XataClient } from '../../../../packages/codegen/example/xata';
 import { teamColumns, userColumns } from '../../../mock_data';
 
 export default {

@@ -3,7 +3,7 @@ import { EdgeRuntime } from 'edge-runtime';
 import { rollup } from 'rollup';
 import { importCdn } from 'rollup-plugin-import-cdn';
 import typescript from 'rollup-plugin-typescript2';
-import { isObject } from '../../client/src/util/lang';
+import { isObject } from './shared';
 
 async function main() {
   const runtime = new EdgeRuntime({
