@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.8.3
+
+### Patch Changes
+
+- c660356: Export ESM and CJS bundles
+
 ## 0.8.2
 
 ### Patch Changes
