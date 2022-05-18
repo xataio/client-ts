@@ -13,7 +13,7 @@ export default defineConfig({
       '**/cypress/**',
       '**/.{idea,git,cache,output,temp}/**',
       // The CI is tested with mocha, so vitest must ignore it
-      'cli/**/*.test.ts'
+      'cli/**'
     ]
   }
 });
