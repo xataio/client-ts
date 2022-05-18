@@ -1,5 +1,4 @@
-import { XataApiClient } from '@xata.io/client';
-import { Table, Column } from '@xata.io/client/dist/api/schemas';
+import { Schemas, XataApiClient } from '@xata.io/client';
 import { ParseOptions } from './index.js';
 import { castType, guessTypes, normalizeColumnName, parseRow } from './utils.js';
 
@@ -75,7 +74,7 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
   return { ...options, callback };
 }
 
-export async function findTable(xata: XataApiClient, tableInfo: TableInfo) {
+export async function findTable(xata: XataApiClient, tableInfo: TableInfo): Promise<Schemas.Table | undefined> {
   const { workspaceID, database, branch, tableName: name } = tableInfo;
   const branchDetails = await xata.branches.getBranchDetails(workspaceID, database, branch);
   const { schema } = branchDetails;
@@ -84,7 +83,11 @@ export async function findTable(xata: XataApiClient, tableInfo: TableInfo) {
   return tables.find((t) => t.name === name);
 }
 
-export function compareSquema(columns: string[], types: string[], table: Table | undefined): CompareSchemaResult {
+export function compareSquema(
+  columns: string[],
+  types: string[],
+  table: Schemas.Table | undefined
+): CompareSchemaResult {
   if (!table) {
     return {
       missingTable: true,
@@ -135,7 +138,7 @@ export async function updateSchema(xata: XataApiClient, tableInfo: TableInfo, ch
   for (const column of changes.missingColumns) {
     await xata.tables.addTableColumn(workspaceID, database, branch, tableName, {
       name: column.column,
-      type: column.type as Column['type']
+      type: column.type as Schemas.Column['type']
     });
   }
 }

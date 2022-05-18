@@ -1,6 +1,7 @@
 node_modules
 .eslintrc.js
 babel.config.js
+rollup.config.js
 dist
 
 # Generated files
