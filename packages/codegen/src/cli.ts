@@ -1,12 +1,14 @@
+import { getAPIKey, getDatabaseURL } from '@xata.io/client';
 import { program } from 'commander';
 import dotenv from 'dotenv';
-import { join, relative } from 'path';
-import { generateFromAPI } from './api.js';
+import fs from 'fs/promises';
+import path, { dirname, join, relative } from 'path';
+import { generateFromContext } from './api.js';
 import { exitWithError } from './errors.js';
+import { getLanguageFromExtension } from './generateWithOutput.js';
 import { generateFromLocalFiles } from './local.js';
 import { spinner } from './spinner.js';
 import { VERSION } from './version.js';
-import { getDatabaseURL, getAPIKey } from '@xata.io/client';
 
 const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'src', 'xata.ts');
@@ -31,7 +33,14 @@ program
       const databaseURL = getDatabaseURL();
       const apiKey = getAPIKey();
       if (databaseURL && apiKey) {
-        await generateFromAPI(out, { databaseURL, apiKey });
+        const outputFilePath = path.resolve(process.cwd(), out);
+        const [extension] = outputFilePath.split('.').slice(-1);
+
+        const language = getLanguageFromExtension(extension);
+
+        const { transpiled, declarations } = await generateFromContext(language, { databaseURL, apiKey });
+        await fs.writeFile(outputFilePath, transpiled);
+        if (declarations) await fs.writeFile(`${dirname(outputFilePath)}/types.d.ts`, declarations);
       } else {
         await generateFromLocalFiles(xataDirectory, out);
       }

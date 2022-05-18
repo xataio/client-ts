@@ -1,8 +1,7 @@
-import { getCurrentBranchDetails, getDatabaseURL } from '@xata.io/client';
-import { FetchImpl } from '@xata.io/client/dist/api/fetcher';
-import { generateWithOutput } from './generateWithOutput.js';
-import { parseSchemaFile } from './schema.js';
+import { getCurrentBranchDetails, getDatabaseURL, FetchImpl } from '@xata.io/client';
 import { fetch } from 'cross-fetch';
+import { generate, Language } from './codegen.js';
+import { parseSchemaFile } from './schema.js';
 
 type BranchResolutionOptions = {
   databaseURL?: string;
@@ -10,7 +9,7 @@ type BranchResolutionOptions = {
   fetchImpl?: FetchImpl;
 };
 
-export async function generateFromAPI(out: string, options?: BranchResolutionOptions) {
+export async function generateFromContext(language: Language, options?: BranchResolutionOptions) {
   const resolvedOptions = { ...options };
   resolvedOptions.databaseURL = resolvedOptions.databaseURL || getDatabaseURL();
   resolvedOptions.fetchImpl = resolvedOptions.fetchImpl || fetch;
@@ -27,5 +26,5 @@ export async function generateFromAPI(out: string, options?: BranchResolutionOpt
     formatVersion: '1.0'
   };
 
-  await generateWithOutput({ schema, databaseURL: resolvedOptions.databaseURL, outputFilePath: out });
+  return generate({ schema, databaseURL: resolvedOptions.databaseURL, language });
 }
