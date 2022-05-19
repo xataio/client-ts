@@ -282,7 +282,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         ...fetchProps
       });
 
-      return this.#initObject(this.#table, response);
+      return initObject(this.db, this.#links, this.#table, response);
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -431,7 +431,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    return records.map((item) => this.#initObject(this.#table, item));
+    return records.map((item) => initObject(this.db, this.#links, this.#table, item));
   }
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
@@ -451,42 +451,9 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const records = objects.map((record) => this.#initObject<Result>(this.#table, record));
+    const records = objects.map((record) => initObject<Result>(this.db, this.#links, this.#table, record));
 
     return new Page<Record, Result>(query, meta, records);
-  }
-
-  #initObject<T>(table: string, object: object) {
-    const result: Dictionary<unknown> = {};
-    Object.assign(result, object);
-
-    const tableLinks = this.#links[table] || [];
-    for (const link of tableLinks) {
-      const [field, linkTable] = link;
-      const value = result[field];
-
-      if (value && isObject(value)) {
-        result[field] = this.#initObject(linkTable, value);
-      }
-    }
-
-    const db = this.db;
-    result.read = function () {
-      return db[table].read(result['id'] as string);
-    };
-    result.update = function (data: any) {
-      return db[table].update(result['id'] as string, data);
-    };
-    result.delete = function () {
-      return db[table].delete(result['id'] as string);
-    };
-
-    for (const prop of ['read', 'update', 'delete']) {
-      Object.defineProperty(result, prop, { enumerable: false });
-    }
-
-    Object.freeze(result);
-    return result as T;
   }
 }
 
@@ -498,4 +465,41 @@ const transformObjectLinks = (object: any) => {
     // Transform links to identifier
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
   }, {});
+};
+
+export const initObject = <T>(
+  db: Record<string, Repository<any>>,
+  links: LinkDictionary,
+  table: string,
+  object: object
+) => {
+  const result: Dictionary<unknown> = {};
+  Object.assign(result, object);
+
+  const tableLinks = links[table] || [];
+  for (const link of tableLinks) {
+    const [field, linkTable] = link;
+    const value = result[field];
+
+    if (value && isObject(value)) {
+      result[field] = initObject(db, links, linkTable, value);
+    }
+  }
+
+  result.read = function () {
+    return db[table].read(result['id'] as string);
+  };
+  result.update = function (data: any) {
+    return db[table].update(result['id'] as string, data);
+  };
+  result.delete = function () {
+    return db[table].delete(result['id'] as string);
+  };
+
+  for (const prop of ['read', 'update', 'delete']) {
+    Object.defineProperty(result, prop, { enumerable: false });
+  }
+
+  Object.freeze(result);
+  return result as T;
 };
