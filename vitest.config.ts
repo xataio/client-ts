@@ -11,9 +11,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/cypress/**',
-      '**/.{idea,git,cache,output,temp}/**',
-      // The CI is tested with mocha, so vitest must ignore it
-      'cli/**'
+      '**/.{idea,git,cache,output,temp}/**'
     ]
   }
 });
