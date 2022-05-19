@@ -55,16 +55,6 @@ beforeAll(async () => {
   await api.tables.setTableSchema(workspace, databaseName, 'main', 'teams', { columns: teamColumns });
   await api.tables.setTableSchema(workspace, databaseName, 'main', 'users', { columns: userColumns });
 
-  const teams = await client.db.teams.getMany();
-  for (const team of teams) {
-    await team.delete();
-  }
-
-  const users = await client.db.users.getMany();
-  for (const user of users) {
-    await user.delete();
-  }
-
   await client.db.users.create(mockUsers);
 
   const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getOne();
@@ -831,91 +821,5 @@ describe('getBranch', () => {
     });
 
     expect(branch).toEqual('main');
-  });
-});
-
-describe('search', () => {
-  test.skip('search teams by table', async () => {
-    const owners = await client.db.users.search('Owner');
-    expect(owners.length).toBeGreaterThan(0);
-
-    expect(owners[0].id).toBeDefined();
-    expect(owners[0].full_name?.includes('Owner')).toBeTruthy();
-    expect(owners[0].read).toBeDefined();
-  });
-
-  test.skip('search by tables with filter', async () => {
-    const { users, teams } = await client.search.byTable('fruits', { tables: ['teams', 'users'] });
-
-    expect(users.length).toBeGreaterThan(0);
-    expect(teams.length).toBeGreaterThan(0);
-
-    expect(users[0].id).toBeDefined();
-    expect(users[0].read).toBeDefined();
-    expect(users[0].full_name?.includes('fruits')).toBeTruthy();
-
-    expect(teams[0].id).toBeDefined();
-    expect(teams[0].read).toBeDefined();
-    expect(teams[0].name?.includes('fruits')).toBeTruthy();
-  });
-
-  test.skip('search by table with all tables', async () => {
-    const { users, teams } = await client.search.byTable('fruits');
-
-    expect(users.length).toBeGreaterThan(0);
-    expect(teams.length).toBeGreaterThan(0);
-
-    expect(users[0].id).toBeDefined();
-    expect(users[0].read).toBeDefined();
-    expect(users[0].full_name?.includes('fruits')).toBeTruthy();
-
-    expect(teams[0].id).toBeDefined();
-    expect(teams[0].read).toBeDefined();
-    expect(teams[0].name?.includes('fruits')).toBeTruthy();
-  });
-
-  test.skip('search all with filter', async () => {
-    const results = await client.search.all('fruits', { tables: ['teams', 'users'] });
-
-    for (const result of results) {
-      if (result.table === 'teams') {
-        expect(result.record.id).toBeDefined();
-        expect(result.record.read).toBeDefined();
-        expect(result.record.name?.includes('fruits')).toBeTruthy();
-      } else {
-        expect(result.record.id).toBeDefined();
-        expect(result.record.read).toBeDefined();
-        expect(result.record.full_name?.includes('fruits')).toBeTruthy();
-      }
-    }
-  });
-
-  test.skip('search all with filter partial', async () => {
-    const results = await client.search.all('fruits', { tables: ['teams'] });
-
-    for (const result of results) {
-      expect(result.record.id).toBeDefined();
-      expect(result.record.read).toBeDefined();
-      expect(result.record.name?.includes('fruits')).toBeTruthy();
-
-      //@ts-expect-error
-      result.table === 'users';
-    }
-  });
-
-  test.skip('search all with all tables', async () => {
-    const results = await client.search.all('fruits');
-
-    for (const result of results) {
-      if (result.table === 'teams') {
-        expect(result.record.id).toBeDefined();
-        expect(result.record.read).toBeDefined();
-        expect(result.record.name?.includes('fruits')).toBeTruthy();
-      } else {
-        expect(result.record.id).toBeDefined();
-        expect(result.record.read).toBeDefined();
-        expect(result.record.full_name?.includes('fruits')).toBeTruthy();
-      }
-    }
   });
 });
