@@ -64,7 +64,7 @@ beforeAll(async () => {
   });
 
   await waitForSearchIndexing();
-}, 120000);
+});
 
 afterAll(async () => {
   await api.databases.deleteDatabase(workspace, databaseName);
@@ -158,7 +158,7 @@ describe('search', () => {
 
 async function waitForSearchIndexing(): Promise<void> {
   const { users = [], teams = [] } = await client.search.byTable('fruits');
-  if (users.length === 0 && teams.length === 0) {
+  if (users.length === 0 || teams.length === 0) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return waitForSearchIndexing();
   }
