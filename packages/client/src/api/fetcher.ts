@@ -1,4 +1,4 @@
-import { isObject, isString } from '../util/lang';
+import { FetcherError, PossibleErrors } from './errors';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
   const query = new URLSearchParams(queryParams).toString();
@@ -21,6 +21,8 @@ export type FetcherExtraProps = {
   apiKey: string;
 };
 
+export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
+
 export type FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
   url: string;
   method: string;
@@ -28,7 +30,7 @@ export type FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
   headers?: THeaders;
   queryParams?: TQueryParams;
   pathParams?: TPathParams;
-};
+} & FetcherExtraProps;
 
 function buildBaseUrl({
   path,
@@ -58,7 +60,8 @@ function hostHeader(url: string): { Host?: string } {
 
 export async function fetch<
   TData,
-  TBody extends Record<string, unknown> | undefined,
+  TError extends ErrorWrapper<{ status: unknown; payload: PossibleErrors }>,
+  TBody extends Record<string, unknown> | undefined | null,
   THeaders extends Record<string, unknown>,
   TQueryParams extends Record<string, unknown>,
   TPathParams extends Record<string, string>
@@ -104,36 +107,8 @@ export async function fetch<
       return jsonResponse;
     }
 
-    const { message = 'Unknown error', errors } = jsonResponse;
-
-    throw new FetcherError({ message, status: response.status, errors });
+    throw new FetcherError(response.status, jsonResponse as TError['payload']);
   } catch (error) {
-    const message = hasMessage(error) ? error.message : 'Unknown network error';
-    const parent = error instanceof Error ? error : undefined;
-
-    throw new FetcherError({ message, status: response.status }, parent);
-  }
-}
-
-const hasMessage = (error: any): error is { message: string } => {
-  return isObject(error) && isString(error.message);
-};
-
-export class FetcherError extends Error {
-  public status: number;
-  public errors: Array<{ status: number; message?: string }> | undefined;
-
-  constructor(
-    data: { message: string; status: number; errors?: Array<{ status: number; message?: string }> },
-    parent?: Error
-  ) {
-    super(data.message);
-    this.status = data.status;
-    this.errors = data.errors;
-
-    if (parent) {
-      this.stack = parent.stack;
-      this.cause = parent.cause;
-    }
+    throw new FetcherError(response.status, error as Error);
   }
 }
