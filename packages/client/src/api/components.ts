@@ -3,9 +3,25 @@
  *
  * @version 1.0
  */
+import type * as Fetcher from './fetcher';
 import { fetch, FetcherExtraProps } from './fetcher';
 import type * as Schemas from './schemas';
 import type * as Responses from './responses';
+
+export type GetUserError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type GetUserVariables = FetcherExtraProps;
 
@@ -13,7 +29,22 @@ export type GetUserVariables = FetcherExtraProps;
  * Return details of the user making the request
  */
 export const getUser = (variables: GetUserVariables) =>
-  fetch<Schemas.UserWithID, undefined, {}, {}, {}>({ url: '/user', method: 'get', ...variables });
+  fetch<Schemas.UserWithID, GetUserError, undefined, {}, {}, {}>({ url: '/user', method: 'get', ...variables });
+
+export type UpdateUserError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type UpdateUserVariables = {
   body: Schemas.User;
@@ -23,7 +54,22 @@ export type UpdateUserVariables = {
  * Update user info
  */
 export const updateUser = (variables: UpdateUserVariables) =>
-  fetch<Schemas.UserWithID, Schemas.User, {}, {}, {}>({ url: '/user', method: 'put', ...variables });
+  fetch<Schemas.UserWithID, UpdateUserError, Schemas.User, {}, {}, {}>({ url: '/user', method: 'put', ...variables });
+
+export type DeleteUserError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type DeleteUserVariables = FetcherExtraProps;
 
@@ -31,7 +77,22 @@ export type DeleteUserVariables = FetcherExtraProps;
  * Delete the user making the request
  */
 export const deleteUser = (variables: DeleteUserVariables) =>
-  fetch<undefined, undefined, {}, {}, {}>({ url: '/user', method: 'delete', ...variables });
+  fetch<undefined, DeleteUserError, undefined, {}, {}, {}>({ url: '/user', method: 'delete', ...variables });
+
+export type GetUserAPIKeysError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type GetUserAPIKeysResponse = {
   keys: {
@@ -46,7 +107,11 @@ export type GetUserAPIKeysVariables = FetcherExtraProps;
  * Retrieve a list of existing user API keys
  */
 export const getUserAPIKeys = (variables: GetUserAPIKeysVariables) =>
-  fetch<GetUserAPIKeysResponse, undefined, {}, {}, {}>({ url: '/user/keys', method: 'get', ...variables });
+  fetch<GetUserAPIKeysResponse, GetUserAPIKeysError, undefined, {}, {}, {}>({
+    url: '/user/keys',
+    method: 'get',
+    ...variables
+  });
 
 export type CreateUserAPIKeyPathParams = {
   /*
@@ -54,6 +119,21 @@ export type CreateUserAPIKeyPathParams = {
    */
   keyName: Schemas.APIKeyName;
 };
+
+export type CreateUserAPIKeyError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type CreateUserAPIKeyResponse = {
   name: string;
@@ -69,7 +149,7 @@ export type CreateUserAPIKeyVariables = {
  * Create and return new API key
  */
 export const createUserAPIKey = (variables: CreateUserAPIKeyVariables) =>
-  fetch<CreateUserAPIKeyResponse, undefined, {}, {}, CreateUserAPIKeyPathParams>({
+  fetch<CreateUserAPIKeyResponse, CreateUserAPIKeyError, undefined, {}, {}, CreateUserAPIKeyPathParams>({
     url: '/user/keys/{keyName}',
     method: 'post',
     ...variables
@@ -82,6 +162,21 @@ export type DeleteUserAPIKeyPathParams = {
   keyName: Schemas.APIKeyName;
 };
 
+export type DeleteUserAPIKeyError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type DeleteUserAPIKeyVariables = {
   pathParams: DeleteUserAPIKeyPathParams;
 } & FetcherExtraProps;
@@ -90,11 +185,26 @@ export type DeleteUserAPIKeyVariables = {
  * Delete an existing API key
  */
 export const deleteUserAPIKey = (variables: DeleteUserAPIKeyVariables) =>
-  fetch<undefined, undefined, {}, {}, DeleteUserAPIKeyPathParams>({
+  fetch<undefined, DeleteUserAPIKeyError, undefined, {}, {}, DeleteUserAPIKeyPathParams>({
     url: '/user/keys/{keyName}',
     method: 'delete',
     ...variables
   });
+
+export type CreateWorkspaceError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type CreateWorkspaceVariables = {
   body: Schemas.WorkspaceMeta;
@@ -104,7 +214,26 @@ export type CreateWorkspaceVariables = {
  * Creates a new workspace with the user requesting it as its single owner.
  */
 export const createWorkspace = (variables: CreateWorkspaceVariables) =>
-  fetch<Schemas.Workspace, Schemas.WorkspaceMeta, {}, {}, {}>({ url: '/workspaces', method: 'post', ...variables });
+  fetch<Schemas.Workspace, CreateWorkspaceError, Schemas.WorkspaceMeta, {}, {}, {}>({
+    url: '/workspaces',
+    method: 'post',
+    ...variables
+  });
+
+export type GetWorkspacesListError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type GetWorkspacesListResponse = {
   workspaces: {
@@ -121,7 +250,11 @@ export type GetWorkspacesListVariables = FetcherExtraProps;
  * Retrieve the list of workspaces the user belongs to
  */
 export const getWorkspacesList = (variables: GetWorkspacesListVariables) =>
-  fetch<GetWorkspacesListResponse, undefined, {}, {}, {}>({ url: '/workspaces', method: 'get', ...variables });
+  fetch<GetWorkspacesListResponse, GetWorkspacesListError, undefined, {}, {}, {}>({
+    url: '/workspaces',
+    method: 'get',
+    ...variables
+  });
 
 export type GetWorkspacePathParams = {
   /*
@@ -129,6 +262,21 @@ export type GetWorkspacePathParams = {
    */
   workspaceId: Schemas.WorkspaceID;
 };
+
+export type GetWorkspaceError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type GetWorkspaceVariables = {
   pathParams: GetWorkspacePathParams;
@@ -138,7 +286,7 @@ export type GetWorkspaceVariables = {
  * Retrieve workspace info from a workspace ID
  */
 export const getWorkspace = (variables: GetWorkspaceVariables) =>
-  fetch<Schemas.Workspace, undefined, {}, {}, GetWorkspacePathParams>({
+  fetch<Schemas.Workspace, GetWorkspaceError, undefined, {}, {}, GetWorkspacePathParams>({
     url: '/workspaces/{workspaceId}',
     method: 'get',
     ...variables
@@ -151,6 +299,21 @@ export type UpdateWorkspacePathParams = {
   workspaceId: Schemas.WorkspaceID;
 };
 
+export type UpdateWorkspaceError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type UpdateWorkspaceVariables = {
   body: Schemas.WorkspaceMeta;
   pathParams: UpdateWorkspacePathParams;
@@ -160,7 +323,7 @@ export type UpdateWorkspaceVariables = {
  * Update workspace info
  */
 export const updateWorkspace = (variables: UpdateWorkspaceVariables) =>
-  fetch<Schemas.Workspace, Schemas.WorkspaceMeta, {}, {}, UpdateWorkspacePathParams>({
+  fetch<Schemas.Workspace, UpdateWorkspaceError, Schemas.WorkspaceMeta, {}, {}, UpdateWorkspacePathParams>({
     url: '/workspaces/{workspaceId}',
     method: 'put',
     ...variables
@@ -173,6 +336,21 @@ export type DeleteWorkspacePathParams = {
   workspaceId: Schemas.WorkspaceID;
 };
 
+export type DeleteWorkspaceError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type DeleteWorkspaceVariables = {
   pathParams: DeleteWorkspacePathParams;
 } & FetcherExtraProps;
@@ -181,7 +359,7 @@ export type DeleteWorkspaceVariables = {
  * Delete the workspace with the provided ID
  */
 export const deleteWorkspace = (variables: DeleteWorkspaceVariables) =>
-  fetch<undefined, undefined, {}, {}, DeleteWorkspacePathParams>({
+  fetch<undefined, DeleteWorkspaceError, undefined, {}, {}, DeleteWorkspacePathParams>({
     url: '/workspaces/{workspaceId}',
     method: 'delete',
     ...variables
@@ -194,6 +372,21 @@ export type GetWorkspaceMembersListPathParams = {
   workspaceId: Schemas.WorkspaceID;
 };
 
+export type GetWorkspaceMembersListError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type GetWorkspaceMembersListVariables = {
   pathParams: GetWorkspaceMembersListPathParams;
 } & FetcherExtraProps;
@@ -202,7 +395,7 @@ export type GetWorkspaceMembersListVariables = {
  * Retrieve the list of members of the given workspace
  */
 export const getWorkspaceMembersList = (variables: GetWorkspaceMembersListVariables) =>
-  fetch<Schemas.WorkspaceMembers, undefined, {}, {}, GetWorkspaceMembersListPathParams>({
+  fetch<Schemas.WorkspaceMembers, GetWorkspaceMembersListError, undefined, {}, {}, GetWorkspaceMembersListPathParams>({
     url: '/workspaces/{workspaceId}/members',
     method: 'get',
     ...variables
@@ -219,6 +412,21 @@ export type UpdateWorkspaceMemberRolePathParams = {
   userId: Schemas.UserID;
 };
 
+export type UpdateWorkspaceMemberRoleError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type UpdateWorkspaceMemberRoleRequestBody = {
   role: Schemas.Role;
 };
@@ -232,11 +440,14 @@ export type UpdateWorkspaceMemberRoleVariables = {
  * Update a workspace member role. Workspaces must always have at least one owner, so this operation will fail if trying to remove owner role from the last owner in the workspace.
  */
 export const updateWorkspaceMemberRole = (variables: UpdateWorkspaceMemberRoleVariables) =>
-  fetch<undefined, UpdateWorkspaceMemberRoleRequestBody, {}, {}, UpdateWorkspaceMemberRolePathParams>({
-    url: '/workspaces/{workspaceId}/members/{userId}',
-    method: 'put',
-    ...variables
-  });
+  fetch<
+    undefined,
+    UpdateWorkspaceMemberRoleError,
+    UpdateWorkspaceMemberRoleRequestBody,
+    {},
+    {},
+    UpdateWorkspaceMemberRolePathParams
+  >({ url: '/workspaces/{workspaceId}/members/{userId}', method: 'put', ...variables });
 
 export type RemoveWorkspaceMemberPathParams = {
   /*
@@ -249,6 +460,21 @@ export type RemoveWorkspaceMemberPathParams = {
   userId: Schemas.UserID;
 };
 
+export type RemoveWorkspaceMemberError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type RemoveWorkspaceMemberVariables = {
   pathParams: RemoveWorkspaceMemberPathParams;
 } & FetcherExtraProps;
@@ -257,7 +483,7 @@ export type RemoveWorkspaceMemberVariables = {
  * Remove the member from the workspace
  */
 export const removeWorkspaceMember = (variables: RemoveWorkspaceMemberVariables) =>
-  fetch<undefined, undefined, {}, {}, RemoveWorkspaceMemberPathParams>({
+  fetch<undefined, RemoveWorkspaceMemberError, undefined, {}, {}, RemoveWorkspaceMemberPathParams>({
     url: '/workspaces/{workspaceId}/members/{userId}',
     method: 'delete',
     ...variables
@@ -269,6 +495,21 @@ export type InviteWorkspaceMemberPathParams = {
    */
   workspaceId: Schemas.WorkspaceID;
 };
+
+export type InviteWorkspaceMemberError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type InviteWorkspaceMemberRequestBody = {
   /*
@@ -287,11 +528,14 @@ export type InviteWorkspaceMemberVariables = {
  * Invite some user to join the workspace with the given role
  */
 export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables) =>
-  fetch<Schemas.WorkspaceInvite, InviteWorkspaceMemberRequestBody, {}, {}, InviteWorkspaceMemberPathParams>({
-    url: '/workspaces/{workspaceId}/invites',
-    method: 'post',
-    ...variables
-  });
+  fetch<
+    Schemas.WorkspaceInvite,
+    InviteWorkspaceMemberError,
+    InviteWorkspaceMemberRequestBody,
+    {},
+    {},
+    InviteWorkspaceMemberPathParams
+  >({ url: '/workspaces/{workspaceId}/invites', method: 'post', ...variables });
 
 export type CancelWorkspaceMemberInvitePathParams = {
   /*
@@ -304,6 +548,21 @@ export type CancelWorkspaceMemberInvitePathParams = {
   inviteId: Schemas.InviteID;
 };
 
+export type CancelWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type CancelWorkspaceMemberInviteVariables = {
   pathParams: CancelWorkspaceMemberInvitePathParams;
 } & FetcherExtraProps;
@@ -312,7 +571,7 @@ export type CancelWorkspaceMemberInviteVariables = {
  * This operation provides a way to cancel invites by deleting them. Already accepted invites cannot be deleted.
  */
 export const cancelWorkspaceMemberInvite = (variables: CancelWorkspaceMemberInviteVariables) =>
-  fetch<undefined, undefined, {}, {}, CancelWorkspaceMemberInvitePathParams>({
+  fetch<undefined, CancelWorkspaceMemberInviteError, undefined, {}, {}, CancelWorkspaceMemberInvitePathParams>({
     url: '/workspaces/{workspaceId}/invites/{inviteId}',
     method: 'delete',
     ...variables
@@ -329,6 +588,21 @@ export type ResendWorkspaceMemberInvitePathParams = {
   inviteId: Schemas.InviteID;
 };
 
+export type ResendWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type ResendWorkspaceMemberInviteVariables = {
   pathParams: ResendWorkspaceMemberInvitePathParams;
 } & FetcherExtraProps;
@@ -337,7 +611,7 @@ export type ResendWorkspaceMemberInviteVariables = {
  * This operation provides a way to resend an Invite notification. Invite notifications can only be sent for Invites not yet accepted.
  */
 export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInviteVariables) =>
-  fetch<undefined, undefined, {}, {}, ResendWorkspaceMemberInvitePathParams>({
+  fetch<undefined, ResendWorkspaceMemberInviteError, undefined, {}, {}, ResendWorkspaceMemberInvitePathParams>({
     url: '/workspaces/{workspaceId}/invites/{inviteId}/resend',
     method: 'post',
     ...variables
@@ -354,6 +628,21 @@ export type AcceptWorkspaceMemberInvitePathParams = {
   inviteKey: Schemas.InviteKey;
 };
 
+export type AcceptWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type AcceptWorkspaceMemberInviteVariables = {
   pathParams: AcceptWorkspaceMemberInvitePathParams;
 } & FetcherExtraProps;
@@ -362,7 +651,7 @@ export type AcceptWorkspaceMemberInviteVariables = {
  * Accept the invitation to join a workspace. If the operation succeeds the user will be a member of the workspace
  */
 export const acceptWorkspaceMemberInvite = (variables: AcceptWorkspaceMemberInviteVariables) =>
-  fetch<undefined, undefined, {}, {}, AcceptWorkspaceMemberInvitePathParams>({
+  fetch<undefined, AcceptWorkspaceMemberInviteError, undefined, {}, {}, AcceptWorkspaceMemberInvitePathParams>({
     url: '/workspaces/{workspaceId}/invites/{inviteKey}/accept',
     method: 'post',
     ...variables
@@ -372,6 +661,17 @@ export type GetDatabaseListPathParams = {
   workspace: string;
 };
 
+export type GetDatabaseListError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
 export type GetDatabaseListVariables = {
   pathParams: GetDatabaseListPathParams;
 } & FetcherExtraProps;
@@ -380,7 +680,7 @@ export type GetDatabaseListVariables = {
  * List all databases available in your Workspace.
  */
 export const getDatabaseList = (variables: GetDatabaseListVariables) =>
-  fetch<Schemas.ListDatabasesResponse, undefined, {}, {}, GetDatabaseListPathParams>({
+  fetch<Schemas.ListDatabasesResponse, GetDatabaseListError, undefined, {}, {}, GetDatabaseListPathParams>({
     url: '/dbs',
     method: 'get',
     ...variables
@@ -394,6 +694,21 @@ export type GetBranchListPathParams = {
   workspace: string;
 };
 
+export type GetBranchListError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type GetBranchListVariables = {
   pathParams: GetBranchListPathParams;
 } & FetcherExtraProps;
@@ -402,7 +717,7 @@ export type GetBranchListVariables = {
  * List all available Branches
  */
 export const getBranchList = (variables: GetBranchListVariables) =>
-  fetch<Schemas.ListBranchesResponse, undefined, {}, {}, GetBranchListPathParams>({
+  fetch<Schemas.ListBranchesResponse, GetBranchListError, undefined, {}, {}, GetBranchListPathParams>({
     url: '/dbs/{dbName}',
     method: 'get',
     ...variables
@@ -415,6 +730,17 @@ export type CreateDatabasePathParams = {
   dbName: Schemas.DBName;
   workspace: string;
 };
+
+export type CreateDatabaseError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
 
 export type CreateDatabaseResponse = {
   /*
@@ -448,7 +774,7 @@ export type CreateDatabaseVariables = {
  * Create Database with identifier name
  */
 export const createDatabase = (variables: CreateDatabaseVariables) =>
-  fetch<CreateDatabaseResponse, CreateDatabaseRequestBody, {}, {}, CreateDatabasePathParams>({
+  fetch<CreateDatabaseResponse, CreateDatabaseError, CreateDatabaseRequestBody, {}, {}, CreateDatabasePathParams>({
     url: '/dbs/{dbName}',
     method: 'put',
     ...variables
@@ -462,6 +788,21 @@ export type DeleteDatabasePathParams = {
   workspace: string;
 };
 
+export type DeleteDatabaseError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type DeleteDatabaseVariables = {
   pathParams: DeleteDatabasePathParams;
 } & FetcherExtraProps;
@@ -470,7 +811,7 @@ export type DeleteDatabaseVariables = {
  * Delete a database and all of its branches and tables permanently.
  */
 export const deleteDatabase = (variables: DeleteDatabaseVariables) =>
-  fetch<undefined, undefined, {}, {}, DeleteDatabasePathParams>({
+  fetch<undefined, DeleteDatabaseError, undefined, {}, {}, DeleteDatabasePathParams>({
     url: '/dbs/{dbName}',
     method: 'delete',
     ...variables
@@ -484,12 +825,27 @@ export type GetBranchDetailsPathParams = {
   workspace: string;
 };
 
+export type GetBranchDetailsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type GetBranchDetailsVariables = {
   pathParams: GetBranchDetailsPathParams;
 } & FetcherExtraProps;
 
 export const getBranchDetails = (variables: GetBranchDetailsVariables) =>
-  fetch<Schemas.DBBranch, undefined, {}, {}, GetBranchDetailsPathParams>({
+  fetch<Schemas.DBBranch, GetBranchDetailsError, undefined, {}, {}, GetBranchDetailsPathParams>({
     url: '/db/{dbBranchName}',
     method: 'get',
     ...variables
@@ -510,6 +866,21 @@ export type CreateBranchQueryParams = {
   from?: string;
 };
 
+export type CreateBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type CreateBranchRequestBody = {
   /*
    * Select the branch to fork from. Defaults to 'main'
@@ -525,7 +896,7 @@ export type CreateBranchVariables = {
 } & FetcherExtraProps;
 
 export const createBranch = (variables: CreateBranchVariables) =>
-  fetch<undefined, CreateBranchRequestBody, {}, CreateBranchQueryParams, CreateBranchPathParams>({
+  fetch<undefined, CreateBranchError, CreateBranchRequestBody, {}, CreateBranchQueryParams, CreateBranchPathParams>({
     url: '/db/{dbBranchName}',
     method: 'put',
     ...variables
@@ -539,6 +910,21 @@ export type DeleteBranchPathParams = {
   workspace: string;
 };
 
+export type DeleteBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type DeleteBranchVariables = {
   pathParams: DeleteBranchPathParams;
 } & FetcherExtraProps;
@@ -547,7 +933,7 @@ export type DeleteBranchVariables = {
  * Delete the branch in the database and all its resources
  */
 export const deleteBranch = (variables: DeleteBranchVariables) =>
-  fetch<undefined, undefined, {}, {}, DeleteBranchPathParams>({
+  fetch<undefined, DeleteBranchError, undefined, {}, {}, DeleteBranchPathParams>({
     url: '/db/{dbBranchName}',
     method: 'delete',
     ...variables
@@ -561,6 +947,21 @@ export type UpdateBranchMetadataPathParams = {
   workspace: string;
 };
 
+export type UpdateBranchMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type UpdateBranchMetadataVariables = {
   body?: Schemas.BranchMetadata;
   pathParams: UpdateBranchMetadataPathParams;
@@ -570,7 +971,7 @@ export type UpdateBranchMetadataVariables = {
  * Update the branch metadata
  */
 export const updateBranchMetadata = (variables: UpdateBranchMetadataVariables) =>
-  fetch<undefined, Schemas.BranchMetadata, {}, {}, UpdateBranchMetadataPathParams>({
+  fetch<undefined, UpdateBranchMetadataError, Schemas.BranchMetadata, {}, {}, UpdateBranchMetadataPathParams>({
     url: '/db/{dbBranchName}/metadata',
     method: 'put',
     ...variables
@@ -584,12 +985,27 @@ export type GetBranchMetadataPathParams = {
   workspace: string;
 };
 
+export type GetBranchMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type GetBranchMetadataVariables = {
   pathParams: GetBranchMetadataPathParams;
 } & FetcherExtraProps;
 
 export const getBranchMetadata = (variables: GetBranchMetadataVariables) =>
-  fetch<Schemas.BranchMetadata, undefined, {}, {}, GetBranchMetadataPathParams>({
+  fetch<Schemas.BranchMetadata, GetBranchMetadataError, undefined, {}, {}, GetBranchMetadataPathParams>({
     url: '/db/{dbBranchName}/metadata',
     method: 'get',
     ...variables
@@ -602,6 +1018,21 @@ export type GetBranchMigrationHistoryPathParams = {
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
 };
+
+export type GetBranchMigrationHistoryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type GetBranchMigrationHistoryResponse = {
   startedFrom?: Schemas.StartedFromMetadata;
@@ -621,6 +1052,7 @@ export type GetBranchMigrationHistoryVariables = {
 export const getBranchMigrationHistory = (variables: GetBranchMigrationHistoryVariables) =>
   fetch<
     GetBranchMigrationHistoryResponse,
+    GetBranchMigrationHistoryError,
     GetBranchMigrationHistoryRequestBody,
     {},
     {},
@@ -634,6 +1066,21 @@ export type ExecuteBranchMigrationPlanPathParams = {
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
 };
+
+export type ExecuteBranchMigrationPlanError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type ExecuteBranchMigrationPlanRequestBody = {
   version: number;
@@ -649,11 +1096,14 @@ export type ExecuteBranchMigrationPlanVariables = {
  * Apply a migration plan to the branch
  */
 export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlanVariables) =>
-  fetch<undefined, ExecuteBranchMigrationPlanRequestBody, {}, {}, ExecuteBranchMigrationPlanPathParams>({
-    url: '/db/{dbBranchName}/migrations/execute',
-    method: 'post',
-    ...variables
-  });
+  fetch<
+    undefined,
+    ExecuteBranchMigrationPlanError,
+    ExecuteBranchMigrationPlanRequestBody,
+    {},
+    {},
+    ExecuteBranchMigrationPlanPathParams
+  >({ url: '/db/{dbBranchName}/migrations/execute', method: 'post', ...variables });
 
 export type GetBranchMigrationPlanPathParams = {
   /*
@@ -662,6 +1112,21 @@ export type GetBranchMigrationPlanPathParams = {
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
 };
+
+export type GetBranchMigrationPlanError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type GetBranchMigrationPlanVariables = {
   body: Schemas.Schema;
@@ -672,11 +1137,14 @@ export type GetBranchMigrationPlanVariables = {
  * Compute a migration plan from a target schema the branch should be migrated too.
  */
 export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariables) =>
-  fetch<Responses.BranchMigrationPlan, Schemas.Schema, {}, {}, GetBranchMigrationPlanPathParams>({
-    url: '/db/{dbBranchName}/migrations/plan',
-    method: 'post',
-    ...variables
-  });
+  fetch<
+    Responses.BranchMigrationPlan,
+    GetBranchMigrationPlanError,
+    Schemas.Schema,
+    {},
+    {},
+    GetBranchMigrationPlanPathParams
+  >({ url: '/db/{dbBranchName}/migrations/plan', method: 'post', ...variables });
 
 export type GetBranchStatsPathParams = {
   /*
@@ -685,6 +1153,21 @@ export type GetBranchStatsPathParams = {
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
 };
+
+export type GetBranchStatsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type GetBranchStatsResponse = {
   timestamp: string;
@@ -706,7 +1189,7 @@ export type GetBranchStatsVariables = {
  * Get branch usage metrics.
  */
 export const getBranchStats = (variables: GetBranchStatsVariables) =>
-  fetch<GetBranchStatsResponse, undefined, {}, {}, GetBranchStatsPathParams>({
+  fetch<GetBranchStatsResponse, GetBranchStatsError, undefined, {}, {}, GetBranchStatsPathParams>({
     url: '/db/{dbBranchName}/stats',
     method: 'get',
     ...variables
@@ -724,6 +1207,25 @@ export type CreateTablePathParams = {
   workspace: string;
 };
 
+export type CreateTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type CreateTableVariables = {
   pathParams: CreateTablePathParams;
 } & FetcherExtraProps;
@@ -732,7 +1234,7 @@ export type CreateTableVariables = {
  * Creates a new table with the given name. Returns 422 if a table with the same name already exists.
  */
 export const createTable = (variables: CreateTableVariables) =>
-  fetch<undefined, undefined, {}, {}, CreateTablePathParams>({
+  fetch<undefined, CreateTableError, undefined, {}, {}, CreateTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}',
     method: 'put',
     ...variables
@@ -750,6 +1252,17 @@ export type DeleteTablePathParams = {
   workspace: string;
 };
 
+export type DeleteTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
 export type DeleteTableVariables = {
   pathParams: DeleteTablePathParams;
 } & FetcherExtraProps;
@@ -758,7 +1271,7 @@ export type DeleteTableVariables = {
  * Deletes the table with the given name.
  */
 export const deleteTable = (variables: DeleteTableVariables) =>
-  fetch<undefined, undefined, {}, {}, DeleteTablePathParams>({
+  fetch<undefined, DeleteTableError, undefined, {}, {}, DeleteTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}',
     method: 'delete',
     ...variables
@@ -775,6 +1288,21 @@ export type UpdateTablePathParams = {
   tableName: Schemas.TableName;
   workspace: string;
 };
+
+export type UpdateTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type UpdateTableRequestBody = {
   /*
@@ -801,7 +1329,7 @@ export type UpdateTableVariables = {
  * ```
  */
 export const updateTable = (variables: UpdateTableVariables) =>
-  fetch<undefined, UpdateTableRequestBody, {}, {}, UpdateTablePathParams>({
+  fetch<undefined, UpdateTableError, UpdateTableRequestBody, {}, {}, UpdateTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}',
     method: 'patch',
     ...variables
@@ -819,6 +1347,21 @@ export type GetTableSchemaPathParams = {
   workspace: string;
 };
 
+export type GetTableSchemaError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type GetTableSchemaResponse = {
   columns: Schemas.Column[];
 };
@@ -828,7 +1371,7 @@ export type GetTableSchemaVariables = {
 } & FetcherExtraProps;
 
 export const getTableSchema = (variables: GetTableSchemaVariables) =>
-  fetch<GetTableSchemaResponse, undefined, {}, {}, GetTableSchemaPathParams>({
+  fetch<GetTableSchemaResponse, GetTableSchemaError, undefined, {}, {}, GetTableSchemaPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/schema',
     method: 'get',
     ...variables
@@ -846,6 +1389,25 @@ export type SetTableSchemaPathParams = {
   workspace: string;
 };
 
+export type SetTableSchemaError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type SetTableSchemaRequestBody = {
   columns: Schemas.Column[];
 };
@@ -856,7 +1418,7 @@ export type SetTableSchemaVariables = {
 } & FetcherExtraProps;
 
 export const setTableSchema = (variables: SetTableSchemaVariables) =>
-  fetch<undefined, SetTableSchemaRequestBody, {}, {}, SetTableSchemaPathParams>({
+  fetch<undefined, SetTableSchemaError, SetTableSchemaRequestBody, {}, {}, SetTableSchemaPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/schema',
     method: 'put',
     ...variables
@@ -874,6 +1436,21 @@ export type GetTableColumnsPathParams = {
   workspace: string;
 };
 
+export type GetTableColumnsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type GetTableColumnsResponse = {
   columns: Schemas.Column[];
 };
@@ -887,7 +1464,7 @@ export type GetTableColumnsVariables = {
  * full dot-separated path (flattened).
  */
 export const getTableColumns = (variables: GetTableColumnsVariables) =>
-  fetch<GetTableColumnsResponse, undefined, {}, {}, GetTableColumnsPathParams>({
+  fetch<GetTableColumnsResponse, GetTableColumnsError, undefined, {}, {}, GetTableColumnsPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns',
     method: 'get',
     ...variables
@@ -905,6 +1482,21 @@ export type AddTableColumnPathParams = {
   workspace: string;
 };
 
+export type AddTableColumnError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type AddTableColumnVariables = {
   body: Schemas.Column;
   pathParams: AddTableColumnPathParams;
@@ -916,7 +1508,7 @@ export type AddTableColumnVariables = {
  * passing `"name": "address.city"` will auto-create the `address` object if it doesn't exist.
  */
 export const addTableColumn = (variables: AddTableColumnVariables) =>
-  fetch<Responses.MigrationIdResponse, Schemas.Column, {}, {}, AddTableColumnPathParams>({
+  fetch<Responses.MigrationIdResponse, AddTableColumnError, Schemas.Column, {}, {}, AddTableColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns',
     method: 'post',
     ...variables
@@ -938,6 +1530,21 @@ export type GetColumnPathParams = {
   workspace: string;
 };
 
+export type GetColumnError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type GetColumnVariables = {
   pathParams: GetColumnPathParams;
 } & FetcherExtraProps;
@@ -946,7 +1553,7 @@ export type GetColumnVariables = {
  * Get the definition of a single column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
  */
 export const getColumn = (variables: GetColumnVariables) =>
-  fetch<Schemas.Column, undefined, {}, {}, GetColumnPathParams>({
+  fetch<Schemas.Column, GetColumnError, undefined, {}, {}, GetColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
     method: 'get',
     ...variables
@@ -968,6 +1575,21 @@ export type DeleteColumnPathParams = {
   workspace: string;
 };
 
+export type DeleteColumnError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type DeleteColumnVariables = {
   pathParams: DeleteColumnPathParams;
 } & FetcherExtraProps;
@@ -976,7 +1598,7 @@ export type DeleteColumnVariables = {
  * Deletes the specified column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
  */
 export const deleteColumn = (variables: DeleteColumnVariables) =>
-  fetch<Responses.MigrationIdResponse, undefined, {}, {}, DeleteColumnPathParams>({
+  fetch<Responses.MigrationIdResponse, DeleteColumnError, undefined, {}, {}, DeleteColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
     method: 'delete',
     ...variables
@@ -998,6 +1620,21 @@ export type UpdateColumnPathParams = {
   workspace: string;
 };
 
+export type UpdateColumnError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type UpdateColumnRequestBody = {
   /*
    * @minLength 1
@@ -1014,7 +1651,7 @@ export type UpdateColumnVariables = {
  * Update column with partial data. Can be used for renaming the column by providing a new "name" field. To refer to sub-objects, the column name can contain dots. For example `address.country`.
  */
 export const updateColumn = (variables: UpdateColumnVariables) =>
-  fetch<Responses.MigrationIdResponse, UpdateColumnRequestBody, {}, {}, UpdateColumnPathParams>({
+  fetch<Responses.MigrationIdResponse, UpdateColumnError, UpdateColumnRequestBody, {}, {}, UpdateColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
     method: 'patch',
     ...variables
@@ -1032,6 +1669,21 @@ export type InsertRecordPathParams = {
   workspace: string;
 };
 
+export type InsertRecordError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type InsertRecordResponse = {
   id: string;
   xata: {
@@ -1048,7 +1700,7 @@ export type InsertRecordVariables = {
  * Insert a new Record into the Table
  */
 export const insertRecord = (variables: InsertRecordVariables) =>
-  fetch<InsertRecordResponse, Record<string, any>, {}, {}, InsertRecordPathParams>({
+  fetch<InsertRecordResponse, InsertRecordError, Record<string, any>, {}, {}, InsertRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data',
     method: 'post',
     ...variables
@@ -1075,6 +1727,25 @@ export type InsertRecordWithIDQueryParams = {
   ifVersion?: number;
 };
 
+export type InsertRecordWithIDError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type InsertRecordWithIDVariables = {
   body?: Record<string, any>;
   pathParams: InsertRecordWithIDPathParams;
@@ -1087,6 +1758,7 @@ export type InsertRecordWithIDVariables = {
 export const insertRecordWithID = (variables: InsertRecordWithIDVariables) =>
   fetch<
     Responses.RecordUpdateResponse,
+    InsertRecordWithIDError,
     Record<string, any>,
     {},
     InsertRecordWithIDQueryParams,
@@ -1113,6 +1785,25 @@ export type UpdateRecordWithIDQueryParams = {
   ifVersion?: number;
 };
 
+export type UpdateRecordWithIDError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type UpdateRecordWithIDVariables = {
   body?: Record<string, any>;
   pathParams: UpdateRecordWithIDPathParams;
@@ -1122,6 +1813,7 @@ export type UpdateRecordWithIDVariables = {
 export const updateRecordWithID = (variables: UpdateRecordWithIDVariables) =>
   fetch<
     Responses.RecordUpdateResponse,
+    UpdateRecordWithIDError,
     Record<string, any>,
     {},
     UpdateRecordWithIDQueryParams,
@@ -1148,6 +1840,25 @@ export type UpsertRecordWithIDQueryParams = {
   ifVersion?: number;
 };
 
+export type UpsertRecordWithIDError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type UpsertRecordWithIDVariables = {
   body?: Record<string, any>;
   pathParams: UpsertRecordWithIDPathParams;
@@ -1157,6 +1868,7 @@ export type UpsertRecordWithIDVariables = {
 export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables) =>
   fetch<
     Responses.RecordUpdateResponse,
+    UpsertRecordWithIDError,
     Record<string, any>,
     {},
     UpsertRecordWithIDQueryParams,
@@ -1179,12 +1891,27 @@ export type DeleteRecordPathParams = {
   workspace: string;
 };
 
+export type DeleteRecordError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type DeleteRecordVariables = {
   pathParams: DeleteRecordPathParams;
 } & FetcherExtraProps;
 
 export const deleteRecord = (variables: DeleteRecordVariables) =>
-  fetch<undefined, undefined, {}, {}, DeleteRecordPathParams>({
+  fetch<undefined, DeleteRecordError, undefined, {}, {}, DeleteRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
     method: 'delete',
     ...variables
@@ -1206,6 +1933,21 @@ export type GetRecordPathParams = {
   workspace: string;
 };
 
+export type GetRecordError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
 export type GetRecordRequestBody = {
   columns?: Schemas.ColumnsFilter;
 };
@@ -1219,7 +1961,7 @@ export type GetRecordVariables = {
  * Retrieve record by ID
  */
 export const getRecord = (variables: GetRecordVariables) =>
-  fetch<Schemas.XataRecord, GetRecordRequestBody, {}, {}, GetRecordPathParams>({
+  fetch<Schemas.XataRecord, GetRecordError, GetRecordRequestBody, {}, {}, GetRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
     method: 'get',
     ...variables
@@ -1236,6 +1978,21 @@ export type BulkInsertTableRecordsPathParams = {
   tableName: Schemas.TableName;
   workspace: string;
 };
+
+export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BulkError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type BulkInsertTableRecordsResponse = {
   recordIDs: string[];
@@ -1254,11 +2011,14 @@ export type BulkInsertTableRecordsVariables = {
  * Bulk insert records
  */
 export const bulkInsertTableRecords = (variables: BulkInsertTableRecordsVariables) =>
-  fetch<BulkInsertTableRecordsResponse, BulkInsertTableRecordsRequestBody, {}, {}, BulkInsertTableRecordsPathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/bulk',
-    method: 'post',
-    ...variables
-  });
+  fetch<
+    BulkInsertTableRecordsResponse,
+    BulkInsertTableRecordsError,
+    BulkInsertTableRecordsRequestBody,
+    {},
+    {},
+    BulkInsertTableRecordsPathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/bulk', method: 'post', ...variables });
 
 export type QueryTablePathParams = {
   /*
@@ -1271,6 +2031,21 @@ export type QueryTablePathParams = {
   tableName: Schemas.TableName;
   workspace: string;
 };
+
+export type QueryTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type QueryTableRequestBody = {
   filter?: Schemas.FilterExpression;
@@ -1988,7 +2763,7 @@ export type QueryTableVariables = {
  * ```
  */
 export const queryTable = (variables: QueryTableVariables) =>
-  fetch<Responses.QueryResponse, QueryTableRequestBody, {}, {}, QueryTablePathParams>({
+  fetch<Responses.QueryResponse, QueryTableError, QueryTableRequestBody, {}, {}, QueryTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/query',
     method: 'post',
     ...variables
@@ -2001,6 +2776,21 @@ export type SearchBranchPathParams = {
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
 };
+
+export type SearchBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
 
 export type SearchBranchRequestBody = {
   /*
@@ -2035,7 +2825,7 @@ export type SearchBranchVariables = {
  * Run a free text search operation across the database branch.
  */
 export const searchBranch = (variables: SearchBranchVariables) =>
-  fetch<Responses.SearchResponse, SearchBranchRequestBody, {}, {}, SearchBranchPathParams>({
+  fetch<Responses.SearchResponse, SearchBranchError, SearchBranchRequestBody, {}, {}, SearchBranchPathParams>({
     url: '/db/{dbBranchName}/search',
     method: 'post',
     ...variables
