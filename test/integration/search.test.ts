@@ -64,7 +64,7 @@ beforeAll(async () => {
   });
 
   await waitForSearchIndexing();
-});
+}, 120000);
 
 afterAll(async () => {
   await api.databases.deleteDatabase(workspace, databaseName);
