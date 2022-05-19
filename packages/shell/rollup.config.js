@@ -1,14 +1,15 @@
 import autoExternal from 'rollup-plugin-auto-external';
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
+import internal from 'rollup-plugin-internal';
 import builtins from 'rollup-plugin-node-builtins';
-import shebang from 'rollup-plugin-preserve-shebang';
 import globals from 'rollup-plugin-node-globals';
+import shebang from 'rollup-plugin-preserve-shebang';
 
 export default [
   {
     input: 'src/index.ts',
-    plugins: [esbuild()],
+    plugins: [esbuild(), autoExternal(), internal(['@xata.io/client', '@xata.io/codegen'])],
     output: [
       {
         file: `dist/index.cjs`,
@@ -37,6 +38,6 @@ export default [
       format: 'es',
       banner: '#!/usr/bin/env node'
     },
-    plugins: [shebang(), globals(), builtins(), esbuild(), autoExternal()]
+    plugins: [shebang(), globals(), builtins(), esbuild(), autoExternal(), internal(['@xata.io/client', 'codegen'])]
   }
 ];
