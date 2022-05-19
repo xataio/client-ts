@@ -21,7 +21,7 @@ const api = new XataApiClient({
 });
 
 beforeAll(async () => {
-  const id = Math.round(Math.random() * 100000);
+  /**const id = Math.round(Math.random() * 100000);
 
   const database = await api.databases.createDatabase(workspace, `sdk-integration-test-search-${id}`);
   databaseName = database.databaseName;
@@ -63,15 +63,15 @@ beforeAll(async () => {
     labels: ['monkey', 'banana', 'apple', 'dolphin']
   });
 
-  await waitForSearchIndexing();
+  await waitForSearchIndexing();**/
 });
 
 afterAll(async () => {
-  await api.databases.deleteDatabase(workspace, databaseName);
+  //await api.databases.deleteDatabase(workspace, databaseName);
 });
 
 describe('search', () => {
-  test('search teams by table', async () => {
+  test.skip('search teams by table', async () => {
     const owners = await client.db.users.search('Owner');
     expect(owners.length).toBeGreaterThan(0);
 
@@ -80,7 +80,7 @@ describe('search', () => {
     expect(owners[0].read).toBeDefined();
   });
 
-  test('search by tables with filter', async () => {
+  test.skip('search by tables with filter', async () => {
     const { users = [], teams = [] } = await client.search.byTable('fruits', { tables: ['teams', 'users'] });
 
     expect(users.length).toBeGreaterThan(0);
@@ -95,7 +95,7 @@ describe('search', () => {
     expect(teams[0].name?.includes('fruits')).toBeTruthy();
   });
 
-  test('search by table with all tables', async () => {
+  test.skip('search by table with all tables', async () => {
     const { users = [], teams = [] } = await client.search.byTable('fruits');
 
     expect(users.length).toBeGreaterThan(0);
@@ -110,7 +110,7 @@ describe('search', () => {
     expect(teams[0].name?.includes('fruits')).toBeTruthy();
   });
 
-  test('search all with filter', async () => {
+  test.skip('search all with filter', async () => {
     const results = await client.search.all('fruits', { tables: ['teams', 'users'] });
 
     for (const result of results) {
@@ -126,7 +126,7 @@ describe('search', () => {
     }
   });
 
-  test('search all with filter partial', async () => {
+  test.skip('search all with filter partial', async () => {
     const results = await client.search.all('fruits', { tables: ['teams'] });
 
     for (const result of results) {
@@ -139,7 +139,7 @@ describe('search', () => {
     }
   });
 
-  test('search all with all tables', async () => {
+  test.skip('search all with all tables', async () => {
     const results = await client.search.all('fruits');
 
     for (const result of results) {
