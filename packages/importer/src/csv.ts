@@ -1,7 +1,7 @@
 import csv from 'csvtojson';
-import { Converter } from 'csvtojson/v2/Converter.js';
+import { Converter } from 'csvtojson/v2/Converter';
 import internal from 'stream';
-import { ParseOptions } from './index.js';
+import { ParseOptions } from './index';
 
 export async function parseString(text: string, options: ParseOptions) {
   return process(initConverter(options).fromString(text), options);

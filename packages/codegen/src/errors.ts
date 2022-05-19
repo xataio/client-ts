@@ -1,4 +1,4 @@
-import { spinner } from './spinner.js';
+import { spinner } from './spinner';
 
 export function exitWithError(err: unknown) {
   const message = err instanceof Error ? err.message : String(err);

@@ -3,12 +3,12 @@ import { program } from 'commander';
 import dotenv from 'dotenv';
 import fs from 'fs/promises';
 import path, { dirname, join, relative } from 'path';
-import { generateFromContext } from './api.js';
-import { exitWithError } from './errors.js';
-import { getLanguageFromExtension } from './generateWithOutput.js';
-import { generateFromLocalFiles } from './local.js';
-import { spinner } from './spinner.js';
-import { VERSION } from './version.js';
+import { generateFromContext } from './api';
+import { exitWithError } from './errors';
+import { getLanguageFromExtension } from './generateWithOutput';
+import { generateFromLocalFiles } from './local';
+import { spinner } from './spinner';
+import { VERSION } from './version';
 
 const defaultXataDirectory = join(process.cwd(), 'xata');
 const defaultOutputFile = join(process.cwd(), 'src', 'xata.ts');

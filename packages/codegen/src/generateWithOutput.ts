@@ -1,8 +1,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { dirname } from 'path';
-import { generate, Language } from './codegen.js';
-import { parseSchemaFile } from './schema.js';
+import { generate, Language } from './codegen';
+import { parseSchemaFile } from './schema';
 
 export interface GenerateWithOutputOptions {
   schema: ReturnType<typeof parseSchemaFile>;
