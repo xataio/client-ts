@@ -1,7 +1,7 @@
 import { getCurrentBranchDetails, getDatabaseURL, FetchImpl } from '@xata.io/client';
 import { fetch } from 'cross-fetch';
-import { generate, Language } from './codegen.js';
-import { parseSchemaFile } from './schema.js';
+import { generate, Language } from './codegen';
+import { parseSchemaFile } from './schema';
 
 type BranchResolutionOptions = {
   databaseURL?: string;

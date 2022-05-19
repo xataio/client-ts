@@ -1,6 +1,6 @@
 import { program } from 'commander';
-import { run } from './cli-run.js';
-import { VERSION } from './version.js';
+import { run } from './cli-run';
+import { VERSION } from './version';
 
 program
   .name('xata-importer')
