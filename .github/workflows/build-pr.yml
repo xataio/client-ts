@@ -80,7 +80,7 @@ jobs:
 
       - name: Publish build
         if: ${{ github.event_name == 'pull_request' }}
-        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-verify-access --yes
+        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --exact --no-verify-access --yes
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
