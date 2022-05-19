@@ -7,7 +7,7 @@
     "@remix-run/dev": "latest",
     "create-next-app": "latest",
     "edge-runtime": "latest",
-    "netlify-cli": "latest",
+    "netlify-cli": "^10.3.1",
     "next": "latest",
     "remix": "latest",
     "rollup": "^2.73.0",

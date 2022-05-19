@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import fetch from 'cross-fetch';
-import { getAppName, isObject, timeout } from './shared';
+import { getAppName, isObject, timeout } from '../shared';
 
 async function main() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -15,8 +15,11 @@ async function main() {
   const appName = getAppName('cf-workers');
   const deploymentUrl = `https://${appName}.${accountDomain}.workers.dev`;
 
+  // Install client
+  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG}`);
+
   // Publish the app to CF
-  execSync(`npx wrangler publish apps/cf-workers/index.ts --name ${appName}`);
+  execSync(`npx wrangler publish test.ts --name ${appName}`);
 
   // Add secrets
   execSync(`npx wrangler secret --name ${appName} put XATA_API_KEY`, {

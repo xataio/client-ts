@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import https from 'https';
 import fetch from 'node-fetch';
 import path from 'path';
-import { getAppName, isObject } from './shared';
+import { getAppName, isObject } from '../shared';
 
 async function main() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -16,7 +16,7 @@ async function main() {
   if (!accountApiToken) throw new Error('CLOUDFLARE_API_TOKEN is not set');
 
   const appName = getAppName('cf-pages');
-  const projectDir = path.join(__dirname, 'apps', 'cf-pages', 'remix');
+  const projectDir = path.join(__dirname, 'remix');
 
   // Create Remix app
   await createApp({
@@ -30,8 +30,8 @@ async function main() {
   // Install npm dependencies
   execSync('npm install', { cwd: projectDir });
 
-  // Install npm dependencies
-  execSync('npm install file:../../../../../packages/client', { cwd: projectDir });
+  // Install client
+  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG}`, { cwd: projectDir });
 
   // Copy route
   execSync('cp ../test.ts app/routes/test.ts', { cwd: projectDir });

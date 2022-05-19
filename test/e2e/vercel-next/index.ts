@@ -1,18 +1,17 @@
 import { exec, execSync } from 'child_process';
 import fetch from 'cross-fetch';
 import path from 'path';
-import { getAppName, isObject } from './shared';
+import { getAppName, isObject } from '../shared';
 
 async function main() {
   const accountApiToken = process.env.VERCEL_API_TOKEN;
   if (!accountApiToken) throw new Error('VERCEL_API_TOKEN is not set');
 
   const appName = getAppName('vercel-next');
-  const parentDir = path.join(__dirname, 'apps', 'vercel-next');
-  const projectDir = path.join(parentDir, 'app');
+  const projectDir = path.join(__dirname, 'app');
 
   // Create Nextjs app
-  execSync(`npx create-next-app app --ts --use-npm`, { cwd: parentDir });
+  execSync(`npx create-next-app app --ts --use-npm`);
 
   // Install npm dependencies
   execSync('npm install @xata.io/client', { cwd: projectDir });

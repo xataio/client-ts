@@ -3,7 +3,7 @@ import { EdgeRuntime } from 'edge-runtime';
 import { rollup } from 'rollup';
 import { importCdn } from 'rollup-plugin-import-cdn';
 import typescript from 'rollup-plugin-typescript2';
-import { isObject } from './shared';
+import { isObject } from '../shared';
 
 async function main() {
   const runtime = new EdgeRuntime({
@@ -15,12 +15,9 @@ async function main() {
   });
 
   const bundle = await rollup({
-    input: `${process.cwd()}/apps/edge-runtime/index.ts`,
+    input: `${process.cwd()}/test.ts`,
     output: { file: `file://bundle.js` },
-    plugins: [
-      typescript({ tsconfig: `${process.cwd()}/apps/edge-runtime/tsconfig.json` }),
-      importCdn({ fetchImpl: fetch })
-    ]
+    plugins: [typescript({ tsconfig: `${process.cwd()}/tsconfig.json` }), importCdn({ fetchImpl: fetch })]
   });
 
   const { output } = await bundle.generate({});
