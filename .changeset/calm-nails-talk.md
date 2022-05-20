@@ -2,4 +2,4 @@
 '@xata.io/client': patch
 ---
 
-Allow sending sort as in the API
+Fix search results return type

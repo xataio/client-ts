@@ -22,6 +22,8 @@ export type SchemaPluginResult<Schemas extends Record<string, BaseData>> = {
 };
 
 export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
+  #tables: Record<string, Repository<any>> = {};
+
   constructor(private links?: LinkDictionary) {
     super();
   }
@@ -36,7 +38,9 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
       {
         get: (_target, table) => {
           if (!isString(table)) throw new Error('Invalid table name');
-          return new RestRepository({ db, getFetchProps, table, links });
+          if (!this.#tables[table]) this.#tables[table] = new RestRepository({ db, getFetchProps, table, links });
+
+          return this.#tables[table];
         }
       }
     );

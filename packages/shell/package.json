@@ -1,15 +1,24 @@
 {
   "name": "@xata.io/shell",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shell for xata.io",
-  "main": "./dist/index.js",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.cjs"
+  },
+  "bin": {
+    "shell": "./dist/cli.js",
+    "xata-shell": "./dist/cli.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "rimraf dist && rollup -c",
     "prepack": "npm run build",
-    "prebuild": "node ../../scripts/add-version-file.mjs",
-    "postbuild": "node ../../scripts/inject-hashbang.mjs"
+    "prebuild": "node ../../scripts/add-version-file.mjs"
   },
   "repository": {
     "type": "git",
@@ -23,15 +32,11 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/shell/README.md",
   "dependencies": {
-    "@xata.io/client": "^0.8.0",
+    "@xata.io/client": "^0.8.3",
     "@xata.io/codegen": "^0.8.0",
     "chalk": "^5.0.1",
     "cross-fetch": "^3.1.5",
     "dotenv": "^16.0.1",
     "ora": "^6.1.0"
-  },
-  "bin": {
-    "shell": "./dist/cli.js",
-    "xata-shell": "./dist/cli.js"
   }
 }

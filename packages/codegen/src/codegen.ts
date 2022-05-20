@@ -1,9 +1,9 @@
 import pluralize from 'pluralize';
 import ts from 'typescript';
 import prettier, { BuiltInParserName } from 'prettier';
-import parserJavascript from 'prettier/parser-babel.js';
-import parserTypeScript from 'prettier/parser-typescript.js';
-import { Column, Table, XataDatabaseSchema } from './schema.js';
+import * as parserJavascript from 'prettier/parser-babel.js';
+import * as parserTypeScript from 'prettier/parser-typescript.js';
+import { Column, Table, XataDatabaseSchema } from './schema';
 
 export type GenerateOptions = {
   schema: XataDatabaseSchema;

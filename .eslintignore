@@ -1,7 +1,8 @@
 node_modules
 .eslintrc.js
 babel.config.js
+rollup.config.js
 dist
 
 # Generated files
-client/src/api/components.ts
+packages/client/src/api/components.ts

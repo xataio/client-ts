@@ -1,9 +1,9 @@
 import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { XataPlugin } from './plugins';
-import { SchemaPlugin } from './schema';
+import { SchemaPlugin, SchemaPluginResult } from './schema';
 import { BaseData } from './schema/record';
 import { LinkDictionary } from './schema/repository';
-import { SearchPlugin } from './search';
+import { SearchPlugin, SearchPluginResult } from './search';
 import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
 import { getCurrentBranchName, getDatabaseURL } from './util/config';
@@ -20,17 +20,22 @@ export type BaseClientOptions = {
 export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
   class {
     #branch: BranchStrategyValue;
+    db: SchemaPluginResult<any>;
+    search: SearchPluginResult<any>;
 
     constructor(options: BaseClientOptions = {}, links?: LinkDictionary) {
       const safeOptions = this.#parseOptions(options);
 
-      const namespaces: Record<string, XataPlugin> = {
-        db: new SchemaPlugin(links),
-        search: new SearchPlugin(),
-        ...plugins
-      };
+      const db = new SchemaPlugin(links).build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
+      const search = new SearchPlugin(db, links ?? {}).build({
+        getFetchProps: () => this.#getFetchProps(safeOptions)
+      });
 
-      for (const [key, namespace] of Object.entries(namespaces)) {
+      // We assign the namespaces after creating in case the user overrides the db plugin
+      this.db = db;
+      this.search = search;
+
+      for (const [key, namespace] of Object.entries(plugins ?? {})) {
         if (!namespace) continue;
         const result = namespace.build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
 

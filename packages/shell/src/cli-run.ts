@@ -1,5 +1,5 @@
 import { getDatabaseURL } from '@xata.io/client';
-import { generateClient } from '@xata.io/codegen';
+import { generateFromContext } from '@xata.io/codegen';
 import chalk from 'chalk';
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export async function run(options: { env?: string; databaseURL?: string; apiKey?: string; code?: string }) {
+export async function run(options: { env?: string; databaseURL?: string; apiKey?: string; code?: string } = {}) {
   const spinner = ora();
   spinner.start('Downloading schema and generating client');
   dotenv.config({ path: options.env || '.env' });
@@ -26,7 +26,8 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
   // can import @xata.io/client
   const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
   try {
-    await generateClient(tempFile, { ...options, databaseURL });
+    const { transpiled } = await generateFromContext('javascript', { ...options, databaseURL });
+    await fs.writeFile(tempFile, transpiled);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     spinner.fail(message);
@@ -52,7 +53,7 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
         defaultEval.bind(replServer)(evalCmd, context, file, function (err, result) {
           if (err) return callback(err, null);
           if (result && typeof result === 'object' && typeof result.then === 'function') {
-            result.then((res: any) => postProcess(res, { table }, callback)).catch(callback);
+            result.then((res: unknown) => postProcess(res, { table }, callback)).catch(callback);
           } else {
             postProcess(result, { table }, callback);
           }

@@ -1,1 +1,1 @@
-export {};
+export { run } from './cli-run';

@@ -2,11 +2,11 @@ import chalk from 'chalk';
 import * as fs from 'fs/promises';
 import { join } from 'path';
 import { ZodError } from 'zod';
-import { parseConfigFile } from './config.js';
-import { exitWithError } from './errors.js';
-import { generateWithOutput } from './generateWithOutput.js';
-import { parseSchemaFile } from './schema.js';
-import { spinner } from './spinner.js';
+import { parseConfigFile } from './config';
+import { exitWithError } from './errors';
+import { generateWithOutput } from './generateWithOutput';
+import { parseSchemaFile } from './schema';
+import { spinner } from './spinner';
 
 export async function generateFromLocalFiles(xataDirectory: string, out: string) {
   const schemaFile = join(xataDirectory, 'schema.json');

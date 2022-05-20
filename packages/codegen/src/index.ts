@@ -1,7 +1,7 @@
-export { generate } from './codegen.js';
-export { generateFromAPI as generateClient } from './api.js';
-export type { GenerateOptions, Language } from './codegen.js';
-export type { XataConfigSchema } from './config.js';
-export { parseConfigFile } from './config.js';
-export { parseSchemaFile } from './schema.js';
-export type { Column, Table, XataDatabaseSchema } from './schema.js';
+export { generate } from './codegen';
+export { generateFromContext } from './api';
+export type { GenerateOptions, Language } from './codegen';
+export type { XataConfigSchema } from './config';
+export { parseConfigFile } from './config';
+export { parseSchemaFile } from './schema';
+export type { Column, Table, XataDatabaseSchema } from './schema';

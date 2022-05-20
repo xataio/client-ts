@@ -24,7 +24,7 @@ export class XataApiClient {
     records: RecordsApi;
   }> = {};
 
-  constructor(options: XataApiClientOptions) {
+  constructor(options: XataApiClientOptions = {}) {
     const provider = options.host ?? 'production';
     const apiKey = options?.apiKey ?? getAPIKey();
 
