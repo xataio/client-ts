@@ -21,10 +21,10 @@ const api = new XataApiClient({
 });
 
 class MockCache implements CacheImpl {
-  get = vi.fn(async () => null);
-  set = vi.fn(async () => undefined);
-  delete = vi.fn(async () => undefined);
-  clear = vi.fn(async () => undefined);
+  get = vi.fn();
+  set = vi.fn();
+  delete = vi.fn();
+  clear = vi.fn();
 }
 
 const cache = new MockCache();
@@ -54,7 +54,7 @@ afterAll(async () => {
 });
 
 describe('cache', () => {
-  test('set, get and remove', async () => {
+  test('miss - set, get and remove', async () => {
     cache.set.mockReset();
 
     const user = await client.db.users.create({ full_name: 'John Doe' });
@@ -75,5 +75,31 @@ describe('cache', () => {
 
     expect(cache.delete).toHaveBeenCalledTimes(1);
     expect(cache.delete).toHaveBeenCalledWith(`users-${user.id}`);
+  });
+
+  test('hit - get, set and remove', async () => {
+    cache.get.mockReset();
+    cache.get.mockImplementationOnce(async () => ({ id: 'foo', full_name: 'John Doe', xata: { version: 1 } }));
+
+    const user = await client.db.users.read('foo');
+
+    expect(cache.get).toHaveBeenCalledTimes(1);
+    expect(cache.get).toHaveBeenCalledWith('users-foo');
+    expect(user?.id).toBe('foo');
+    expect(user?.full_name).toBe('John Doe');
+
+    cache.set.mockReset();
+
+    const update = await client.db.users.createOrUpdate('foo', { full_name: 'John Smith' });
+
+    expect(cache.set).toHaveBeenCalledTimes(1);
+    expect(cache.set).toHaveBeenCalledWith('users-foo', update);
+
+    cache.delete.mockReset();
+
+    await update.delete();
+
+    expect(cache.delete).toHaveBeenCalledTimes(1);
+    expect(cache.delete).toHaveBeenCalledWith('users-foo');
   });
 });
