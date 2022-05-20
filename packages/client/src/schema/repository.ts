@@ -11,8 +11,11 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
+import { RecordsMetadata } from '../api/schemas';
+import { XataPluginOptions } from '../plugins';
 import { isObject, isString } from '../util/lang';
 import { Dictionary } from '../util/types';
+import { CacheImpl } from './cache';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
@@ -158,19 +161,23 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   #links: LinkDictionary;
   #getFetchProps: () => Promise<FetcherExtraProps>;
   db: SchemaPluginResult<any>;
+  recordCache: CacheImpl;
+  queryCache: CacheImpl;
 
   constructor(options: {
     table: string;
     links?: LinkDictionary;
-    getFetchProps: () => Promise<FetcherExtraProps>;
     db: SchemaPluginResult<any>;
+    pluginOptions: XataPluginOptions;
   }) {
     super(null, options.table, {});
 
     this.#table = options.table;
     this.#links = options.links ?? {};
-    this.#getFetchProps = options.getFetchProps;
+    this.#getFetchProps = options.pluginOptions.getFetchProps;
     this.db = options.db;
+    this.recordCache = options.pluginOptions.cache;
+    this.queryCache = options.pluginOptions.cache;
   }
 
   async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
@@ -182,24 +189,36 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Create many records
     if (Array.isArray(a)) {
-      return this.#bulkInsertTableRecords(a);
+      const records = await this.#bulkInsertTableRecords(a);
+      await Promise.all(records.map((record) => this.recordCache.set(record.id, record)));
+
+      return records;
     }
 
     // Create one record with id as param
     if (isString(a) && isObject(b)) {
       if (a === '') throw new Error("The id can't be empty");
-      return this.#insertRecordWithId(a, b);
+      const record = await this.#insertRecordWithId(a, b);
+      await this.recordCache.set(record.id, record);
+
+      return record;
     }
 
     // Create one record with id as property
     if (isObject(a) && isString(a.id)) {
       if (a.id === '') throw new Error("The id can't be empty");
-      return this.#insertRecordWithId(a.id, { ...a, id: undefined });
+      const record = await this.#insertRecordWithId(a.id, { ...a, id: undefined });
+      await this.recordCache.set(record.id, record);
+
+      return record;
     }
 
     // Create one record without id
     if (isObject(a)) {
-      return this.#insertRecordWithoutId(a);
+      const record = await this.#insertRecordWithoutId(a);
+      await this.recordCache.set(record.id, record);
+
+      return record;
     }
 
     throw new Error('Invalid arguments for create method');
@@ -274,6 +293,9 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
   async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
+    const cacheRecord = await this.recordCache.get<SelectedPick<Record, ['*']>>(recordId);
+    if (cacheRecord) return cacheRecord;
+
     const fetchProps = await this.#getFetchProps();
 
     try {
@@ -310,12 +332,18 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     // Update one record with id as param
     if (isString(a) && isObject(b)) {
-      return this.#updateRecordWithID(a, b);
+      const record = await this.#updateRecordWithID(a, b);
+      await this.recordCache.set(record.id, record);
+
+      return record;
     }
 
     // Update one record with id as property
     if (isObject(a) && isString(a.id)) {
-      return this.#updateRecordWithID(a.id, { ...a, id: undefined });
+      const record = await this.#updateRecordWithID(a.id, { ...a, id: undefined });
+      await this.recordCache.set(record.id, record);
+
+      return record;
     }
 
     throw new Error('Invalid arguments for update method');
@@ -360,12 +388,18 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     // Create or update one record with id as param
     if (isString(a) && isObject(b)) {
-      return this.#upsertRecordWithID(a, b);
+      const record = await this.#upsertRecordWithID(a, b);
+      await this.recordCache.set(record.id, record);
+
+      return record;
     }
 
     // Create or update one record with id as property
     if (isObject(a) && isString(a.id)) {
-      return this.#upsertRecordWithID(a.id, { ...a, id: undefined });
+      const record = await this.#upsertRecordWithID(a.id, { ...a, id: undefined });
+      await this.recordCache.set(record.id, record);
+
+      return record;
     }
 
     throw new Error('Invalid arguments for createOrUpdate method');
@@ -386,27 +420,29 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return item;
   }
 
-  async delete(recordId: string | Identifiable | Array<string | Identifiable>): Promise<void> {
+  async delete(a: string | Identifiable | Array<string | Identifiable>): Promise<void> {
     // Delete many records
-    if (Array.isArray(recordId)) {
-      if (recordId.length > 100) {
+    if (Array.isArray(a)) {
+      if (a.length > 100) {
         // TODO: Implement bulk delete when API has support for it
         console.warn('Bulk delete operation is not optimized in the Xata API yet, this request might be slow');
       }
 
-      await Promise.all(recordId.map((id) => this.delete(id)));
+      await Promise.all(a.map((id) => this.delete(id)));
       return;
     }
 
     // Delete one record with id as param
-    if (isString(recordId)) {
-      await this.#deleteRecord(recordId);
+    if (isString(a)) {
+      await this.#deleteRecord(a);
+      await this.recordCache.delete(a);
       return;
     }
 
     // Delete one record with id as property
-    if (isObject(recordId) && isString(recordId.id)) {
-      await this.#deleteRecord(recordId.id);
+    if (isObject(a) && isString(a.id)) {
+      await this.#deleteRecord(a.id);
+      await this.recordCache.delete(a.id);
       return;
     }
 
@@ -435,6 +471,9 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
+    const cacheQuery = await this.queryCache.get<{ meta: RecordsMetadata; records: Result[] }>(query.toString());
+    if (cacheQuery) return new Page<Record, Result>(query, cacheQuery.meta, cacheQuery.records);
+
     const data = query.getQueryOptions();
 
     const body = {
@@ -452,6 +491,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
 
     const records = objects.map((record) => initObject<Result>(this.db, this.#links, this.#table, record));
+    await this.queryCache.set(query.toString(), { meta, records });
 
     return new Page<Record, Result>(query, meta, records);
   }

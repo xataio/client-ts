@@ -68,6 +68,11 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     return this.#data;
   }
 
+  toString(): string {
+    // TODO: Find a better way to serialize the query
+    return JSON.stringify(this.#data);
+  }
+
   /**
    * Builds a new query object representing a logical OR between the given subqueries.
    * @param queries An array of subqueries.

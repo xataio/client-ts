@@ -28,9 +28,7 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
     super();
   }
 
-  build(options: XataPluginOptions): SchemaPluginResult<Schemas> {
-    const { getFetchProps } = options;
-
+  build(pluginOptions: XataPluginOptions): SchemaPluginResult<Schemas> {
     const links = this.links;
 
     const db: any = new Proxy(
@@ -38,7 +36,9 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
       {
         get: (_target, table) => {
           if (!isString(table)) throw new Error('Invalid table name');
-          if (!this.#tables[table]) this.#tables[table] = new RestRepository({ db, getFetchProps, table, links });
+          if (!this.#tables[table]) {
+            this.#tables[table] = new RestRepository({ db, pluginOptions, table, links });
+          }
 
           return this.#tables[table];
         }
