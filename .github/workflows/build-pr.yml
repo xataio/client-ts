@@ -182,8 +182,8 @@ jobs:
         env:
           VERSION_TAG: 0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
 
-          XATA_API_KEY: ${{ secrets.E2E_XATA_API_KEY }}
-          XATA_WORKSPACE: ${{ secrets.E2E_XATA_WORKSPACE }}
+          XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
+          XATA_WORKSPACE: ${{ secrets.INTEGRATION_TEST_WORKSPACE }}
 
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.E2E_CF_ACCOUNT_ID }}
           CLOUDFLARE_ACCOUNT_DOMAIN: ${{ secrets.E2E_CF_ACCOUNT_DOMAIN }}
