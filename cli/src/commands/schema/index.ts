@@ -1,6 +1,6 @@
-import { Command } from '@oclif/core';
+import { Base } from '../../base.js';
 
-export default class Schema extends Command {
+export default class Schema extends Base {
   static description = 'View and edit the schema of the current database';
 
   static examples = [];

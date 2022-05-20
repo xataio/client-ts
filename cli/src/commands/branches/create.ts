@@ -1,6 +1,6 @@
-import { Command } from '@oclif/core';
+import { Base } from '../../base.js';
 
-export default class BranchesCreate extends Command {
+export default class BranchesCreate extends Base {
   static description = 'Create a branch';
 
   static examples = [];

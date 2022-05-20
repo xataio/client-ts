@@ -1,6 +1,6 @@
-import { Command } from '@oclif/core';
+import { Base } from '../../base.js';
 
-export default class Workspaces extends Command {
+export default class Workspaces extends Base {
   static description = 'List, create and delete workspaces';
 
   static examples = [];

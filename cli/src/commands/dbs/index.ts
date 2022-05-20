@@ -1,6 +1,6 @@
-import { Command } from '@oclif/core';
+import { Base } from '../../base.js';
 
-export default class Databases extends Command {
+export default class Databases extends Base {
   static description = 'List, create and delete databases';
 
   static examples = [];

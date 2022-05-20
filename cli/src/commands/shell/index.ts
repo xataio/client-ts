@@ -1,6 +1,6 @@
-import { Command } from '@oclif/core';
+import { Base } from '../../base.js';
 
-export default class Shell extends Command {
+export default class Shell extends Base {
   static description = 'Open a shell to the current database';
 
   static examples = [];
