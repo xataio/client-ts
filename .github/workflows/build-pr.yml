@@ -65,10 +65,7 @@ jobs:
             [Pull request has been updated, please wait for latest changes to be pushed to npm...]
 
       - name: Install dependencies
-        run: |
-          npm install
-          cd cli
-          npm install
+        run: npm install
 
       - name: Compile
         run: npm run build
