@@ -1,6 +1,5 @@
 import { Flags } from '@oclif/core';
 import { Base } from '../../base.js';
-import { getXataClient } from '../../client.js';
 import { parseDatabaseURL } from '../../defaults.js';
 
 export default class DatabasesList extends Base {
@@ -26,7 +25,7 @@ export default class DatabasesList extends Base {
     if (!workspace)
       return this.error('Could not find workspace id. Please set XATA_DATABASE_URL or use the --workspace flag.');
 
-    const xata = await getXataClient(this);
+    const xata = await this.getXataClient();
     const databaseList = await xata.databases.getDatabaseList(workspace);
     const dbs = databaseList.databases || [];
 

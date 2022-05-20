@@ -1,6 +1,5 @@
 import { Flags } from '@oclif/core';
 import { Base } from '../../base.js';
-import { getXataClient } from '../../client.js';
 import { parseDatabaseURL } from '../../defaults.js';
 
 export default class BranchesList extends Base {
@@ -32,7 +31,7 @@ export default class BranchesList extends Base {
     if (!database)
       return this.error('Could not find database name. Please set XATA_DATABASE_URL or use the --database flag.');
 
-    const xata = await getXataClient(this);
+    const xata = await this.getXataClient();
     const branches = await xata.branches.getBranchList(workspace, database);
 
     if (this.jsonEnabled()) return branches.branches;

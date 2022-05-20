@@ -1,12 +1,21 @@
 import { Command } from '@oclif/core';
-import table from 'text-table';
-import dotenv from 'dotenv';
+import { XataApiClient } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
+import dotenv from 'dotenv';
+import fetch from 'node-fetch';
+import table from 'text-table';
+import { readAPIKey } from './key.js';
 
 export abstract class Base extends Command {
   async init() {
     dotenv.config();
+  }
+
+  async getXataClient() {
+    const apiKey = await readAPIKey();
+    if (!apiKey) this.error('Could not instantiate Xata client. No API key found.'); // TODO: give suggested next steps
+    return new XataApiClient({ apiKey, fetch });
   }
 
   printTable(headers: string[], rows: string[][], align?: table.Options['align']) {
