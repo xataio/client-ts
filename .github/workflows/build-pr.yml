@@ -142,7 +142,8 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm test
+        run: |
+          npm test
         env:
           XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
