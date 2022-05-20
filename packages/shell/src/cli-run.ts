@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export async function run(options: { env?: string; databaseURL?: string; apiKey?: string; code?: string }) {
+export async function run(options: { env?: string; databaseURL?: string; apiKey?: string; code?: string } = {}) {
   const spinner = ora();
   spinner.start('Downloading schema and generating client');
   dotenv.config({ path: options.env || '.env' });
