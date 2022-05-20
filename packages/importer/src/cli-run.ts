@@ -2,13 +2,13 @@ import { readFile } from 'fs/promises';
 import ora from 'ora';
 import { homedir } from 'os';
 import path from 'path';
-import { parseFile, parseStream } from './csv.js';
-import { CompareSchemaResult, createProcessor, TableInfo } from './processor.js';
-import { splitCommas } from './utils.js';
+import { parseFile, parseStream } from './csv';
+import { CompareSchemaResult, createProcessor, TableInfo } from './processor';
+import { splitCommas } from './utils';
 import { XataApiClient } from '@xata.io/client';
 import fetch from 'cross-fetch';
 import inquirer from 'inquirer';
-import { parseConfigFile } from './config.js';
+import { parseConfigFile } from './config';
 
 const spinner = ora();
 

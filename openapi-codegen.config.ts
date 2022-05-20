@@ -10,7 +10,7 @@ export default defineConfig({
       repository: 'openapi',
       specPath: 'bundled/openapi.yaml'
     },
-    outputDir: 'client/src/api',
+    outputDir: 'packages/client/src/api',
     to: async (context) => {
       // TODO: Fix me, allow no filenamePrefix
       const filenamePrefix = ' ';

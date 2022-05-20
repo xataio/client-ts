@@ -1,6 +1,6 @@
 import { Schemas, XataApiClient } from '@xata.io/client';
-import { ParseOptions } from './index.js';
-import { castType, guessTypes, normalizeColumnName, parseRow } from './utils.js';
+import { ParseOptions } from './index';
+import { castType, guessTypes, normalizeColumnName, parseRow } from './utils';
 
 export type CompareSchemaResult = {
   missingTable: boolean;

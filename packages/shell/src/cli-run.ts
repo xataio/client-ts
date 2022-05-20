@@ -53,7 +53,7 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
         defaultEval.bind(replServer)(evalCmd, context, file, function (err, result) {
           if (err) return callback(err, null);
           if (result && typeof result === 'object' && typeof result.then === 'function') {
-            result.then((res: any) => postProcess(res, { table }, callback)).catch(callback);
+            result.then((res: unknown) => postProcess(res, { table }, callback)).catch(callback);
           } else {
             postProcess(result, { table }, callback);
           }

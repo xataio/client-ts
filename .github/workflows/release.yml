@@ -16,6 +16,8 @@ jobs:
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
+          # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
+          persist-credentials: false
 
       - name: Configure
         run: |
