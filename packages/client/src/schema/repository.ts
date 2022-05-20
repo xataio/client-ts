@@ -190,7 +190,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     // Create many records
     if (Array.isArray(a)) {
       const records = await this.#bulkInsertTableRecords(a);
-      await Promise.all(records.map((record) => this.recordCache.set(record.id, record)));
+      await Promise.all(records.map((record) => this.recordCache.set(`${this.#table}-${record.id}`, record)));
 
       return records;
     }
@@ -199,7 +199,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (isString(a) && isObject(b)) {
       if (a === '') throw new Error("The id can't be empty");
       const record = await this.#insertRecordWithId(a, b);
-      await this.recordCache.set(record.id, record);
+      await this.recordCache.set(`${this.#table}-${record.id}`, record);
 
       return record;
     }
@@ -208,7 +208,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (isObject(a) && isString(a.id)) {
       if (a.id === '') throw new Error("The id can't be empty");
       const record = await this.#insertRecordWithId(a.id, { ...a, id: undefined });
-      await this.recordCache.set(record.id, record);
+      await this.recordCache.set(`${this.#table}-${record.id}`, record);
 
       return record;
     }
@@ -216,7 +216,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     // Create one record without id
     if (isObject(a)) {
       const record = await this.#insertRecordWithoutId(a);
-      await this.recordCache.set(record.id, record);
+      await this.recordCache.set(`${this.#table}-${record.id}`, record);
 
       return record;
     }
@@ -293,7 +293,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
   async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
-    const cacheRecord = await this.recordCache.get<SelectedPick<Record, ['*']>>(recordId);
+    const cacheRecord = await this.recordCache.get<SelectedPick<Record, ['*']>>(`${this.#table}-${recordId}`);
     if (cacheRecord) return cacheRecord;
 
     const fetchProps = await this.#getFetchProps();
@@ -334,7 +334,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (isString(a) && isObject(b)) {
       await this.recordCache.delete(a);
       const record = await this.#updateRecordWithID(a, b);
-      await this.recordCache.set(record.id, record);
+      await this.recordCache.set(`${this.#table}-${record.id}`, record);
 
       return record;
     }
@@ -343,7 +343,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (isObject(a) && isString(a.id)) {
       await this.recordCache.delete(a.id);
       const record = await this.#updateRecordWithID(a.id, { ...a, id: undefined });
-      await this.recordCache.set(record.id, record);
+      await this.recordCache.set(`${this.#table}-${record.id}`, record);
 
       return record;
     }
@@ -392,7 +392,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (isString(a) && isObject(b)) {
       await this.recordCache.delete(a);
       const record = await this.#upsertRecordWithID(a, b);
-      await this.recordCache.set(record.id, record);
+      await this.recordCache.set(`${this.#table}-${record.id}`, record);
 
       return record;
     }
@@ -401,7 +401,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (isObject(a) && isString(a.id)) {
       await this.recordCache.delete(a.id);
       const record = await this.#upsertRecordWithID(a.id, { ...a, id: undefined });
-      await this.recordCache.set(record.id, record);
+      await this.recordCache.set(`${this.#table}-${record.id}`, record);
 
       return record;
     }
@@ -475,7 +475,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
-    const cacheQuery = await this.queryCache.get<{ meta: RecordsMetadata; records: Result[] }>(query.toString());
+    const cacheQuery = await this.queryCache.get<{ meta: RecordsMetadata; records: Result[] }>(query.key());
     if (cacheQuery) return new Page<Record, Result>(query, cacheQuery.meta, cacheQuery.records);
 
     const data = query.getQueryOptions();
@@ -495,7 +495,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
 
     const records = objects.map((record) => initObject<Result>(this.db, this.#links, this.#table, record));
-    await this.queryCache.set(query.toString(), { meta, records });
+    await this.queryCache.set(query.key(), { meta, records });
 
     return new Page<Record, Result>(query, meta, records);
   }
