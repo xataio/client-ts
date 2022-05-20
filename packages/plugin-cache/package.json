@@ -1,0 +1,27 @@
+{
+  "name": "@xata.io/client-plugin-cache",
+  "version": "0.0.1",
+  "private": true,
+  "description": "",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.cjs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rimraf dist && rollup -c",
+    "prepack": "npm run build"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xataio/client-ts/issues"
+  },
+  "dependencies": {
+    "@xata.io/client": "^0.8.3",
+    "lru-cache": "^7.10.1"
+  }
+}

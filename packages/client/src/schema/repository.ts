@@ -332,6 +332,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     // Update one record with id as param
     if (isString(a) && isObject(b)) {
+      await this.recordCache.delete(a);
       const record = await this.#updateRecordWithID(a, b);
       await this.recordCache.set(record.id, record);
 
@@ -340,6 +341,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     // Update one record with id as property
     if (isObject(a) && isString(a.id)) {
+      await this.recordCache.delete(a.id);
       const record = await this.#updateRecordWithID(a.id, { ...a, id: undefined });
       await this.recordCache.set(record.id, record);
 
@@ -388,6 +390,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     // Create or update one record with id as param
     if (isString(a) && isObject(b)) {
+      await this.recordCache.delete(a);
       const record = await this.#upsertRecordWithID(a, b);
       await this.recordCache.set(record.id, record);
 
@@ -396,6 +399,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     // Create or update one record with id as property
     if (isObject(a) && isString(a.id)) {
+      await this.recordCache.delete(a.id);
       const record = await this.#upsertRecordWithID(a.id, { ...a, id: undefined });
       await this.recordCache.set(record.id, record);
 

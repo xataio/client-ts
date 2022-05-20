@@ -3,6 +3,7 @@ import { isString } from '../util/lang';
 import { BaseData } from './record';
 import { LinkDictionary, Repository, RestRepository } from './repository';
 
+export * from './cache';
 export * from './operators';
 export * from './pagination';
 export { Query } from './query';
