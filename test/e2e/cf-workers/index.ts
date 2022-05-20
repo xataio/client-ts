@@ -16,10 +16,10 @@ async function main() {
   const deploymentUrl = `https://${appName}.${accountDomain}.workers.dev`;
 
   // Install client
-  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG}`);
+  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG} --no-save`);
 
   // Publish the app to CF
-  execSync(`npx wrangler publish test.ts --name ${appName}`);
+  execSync(`npx wrangler publish test.ts --name ${appName}`, { cwd: __dirname });
 
   // Add secrets
   execSync(`npx wrangler secret --name ${appName} put XATA_API_KEY`, {
