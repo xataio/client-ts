@@ -176,7 +176,7 @@ jobs:
           working-directory: ./test/e2e
           useLockFile: false
 
-      - name: 🚀 Deploy to Cloudflare Workers
+      - name: 🚀 Deploy to ${{ matrix.target }}
         run: npx ts-node ${{ matrix.target }}
         working-directory: ./test/e2e
         env:

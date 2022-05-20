@@ -5,6 +5,7 @@
   "scripts": {},
   "dependencies": {
     "@remix-run/dev": "latest",
+    "@types/node": "^17.0.35",
     "create-next-app": "latest",
     "edge-runtime": "latest",
     "netlify-cli": "^10.3.1",
