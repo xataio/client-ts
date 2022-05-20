@@ -24,6 +24,7 @@
     "@oclif/plugin-plugins": "^2.0.1"
   },
   "devDependencies": {
+    "chai": "^4.3.6",
     "eslint": "^7.32.0",
     "eslint-config-oclif": "^4",
     "eslint-config-oclif-typescript": "^1.0.2",

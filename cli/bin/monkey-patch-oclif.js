@@ -4,6 +4,8 @@
  *
  * This file monkey-patches Oclif with the code
  * from this PR https://github.com/oclif/core/pull/417 to support them.
+ * The PR has been merged so in the next release we should be able to remove
+ * this monkey patching.
  */
 import { tsPath } from '@oclif/core';
 import ModuleLoader from '@oclif/core/lib/module-loader.js';
