@@ -1,7 +1,7 @@
 import { FetcherError, PossibleErrors } from './errors';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
-  const query = new URLSearchParams(queryParams).key();
+  const query = new URLSearchParams(queryParams).toString();
   const queryString = query.length > 0 ? `?${query}` : '';
   return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
 };
