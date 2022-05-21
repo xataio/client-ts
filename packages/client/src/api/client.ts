@@ -1,4 +1,4 @@
-import { getAPIKey } from '../util/config';
+import { getAPIKey } from '../util/apiKey';
 import { getFetchImplementation } from '../util/fetch';
 import type * as Types from './components';
 import { operationsByTag } from './components';
@@ -24,7 +24,7 @@ export class XataApiClient {
     records: RecordsApi;
   }> = {};
 
-  constructor(options: XataApiClientOptions) {
+  constructor(options: XataApiClientOptions = {}) {
     const provider = options.host ?? 'production';
     const apiKey = options?.apiKey ?? getAPIKey();
 

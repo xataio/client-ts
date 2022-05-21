@@ -4,8 +4,9 @@ import { SchemaPlugin, SchemaPluginResult } from './schema';
 import { BaseData } from './schema/record';
 import { LinkDictionary } from './schema/repository';
 import { SearchPlugin, SearchPluginResult } from './search';
+import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
-import { getAPIKey, getCurrentBranchName, getDatabaseURL } from './util/config';
+import { getCurrentBranchName, getDatabaseURL } from './util/config';
 import { getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 
