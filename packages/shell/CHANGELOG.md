@@ -1,5 +1,14 @@
 # @xata.io/shell
 
+## 0.1.2
+
+### Patch Changes
+
+- 10a4a2a: Make run() options optional
+- Updated dependencies [dd958a4]
+- Updated dependencies [f5ec686]
+  - @xata.io/client@0.8.4
+
 ## 0.1.1
 
 ### Patch Changes
