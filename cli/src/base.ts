@@ -8,6 +8,8 @@ import table from 'text-table';
 import { readAPIKey } from './key.js';
 
 export abstract class Base extends Command {
+  locale: string | undefined = undefined;
+
   async init() {
     dotenv.config();
   }
@@ -26,6 +28,6 @@ export abstract class Base extends Command {
   }
 
   formatDate(date: string) {
-    return new Date(date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    return new Date(date).toLocaleString(this.locale, { dateStyle: 'medium', timeStyle: 'short' });
   }
 }
