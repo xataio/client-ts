@@ -1,8 +1,8 @@
 import { Flags } from '@oclif/core';
-import { Base } from '../../base.js';
+import { BaseCommand } from '../../base.js';
 import { parseDatabaseURL } from '../../defaults.js';
 
-export default class DatabasesList extends Base {
+export default class DatabasesList extends BaseCommand {
   static description = 'List your databases';
 
   static examples = [];

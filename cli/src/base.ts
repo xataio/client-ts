@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import table from 'text-table';
 import { readAPIKey } from './key.js';
 
-export abstract class Base extends Command {
+export abstract class BaseCommand extends Command {
   locale: string | undefined = undefined;
 
   async init() {

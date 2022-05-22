@@ -1,6 +1,6 @@
-import { Base } from '../../base.js';
+import { BaseCommand } from '../../base.js';
 
-export default class Branches extends Base {
+export default class Branches extends BaseCommand {
   static description = 'List, create and delete branches';
 
   static examples = [];

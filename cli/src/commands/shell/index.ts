@@ -1,6 +1,6 @@
-import { Base } from '../../base.js';
+import { BaseCommand } from '../../base.js';
 
-export default class Shell extends Base {
+export default class Shell extends BaseCommand {
   static description = 'Open a shell to the current database';
 
   static examples = [];

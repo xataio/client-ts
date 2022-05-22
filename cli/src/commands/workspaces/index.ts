@@ -1,6 +1,6 @@
-import { Base } from '../../base.js';
+import { BaseCommand } from '../../base.js';
 
-export default class Workspaces extends Base {
+export default class Workspaces extends BaseCommand {
   static description = 'List, create and delete workspaces';
 
   static examples = [];

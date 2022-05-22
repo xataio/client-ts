@@ -1,6 +1,6 @@
-import { Base } from '../../base.js';
+import { BaseCommand } from '../../base.js';
 
-export default class DatabasesDelete extends Base {
+export default class DatabasesDelete extends BaseCommand {
   static description = 'Delete a database';
 
   static examples = [];
