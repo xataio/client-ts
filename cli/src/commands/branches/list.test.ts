@@ -1,12 +1,16 @@
 import { Config } from '@oclif/core';
 import fetch from 'node-fetch';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
 import BranchesList from './list.js';
 
 vi.mock('node-fetch');
 
 clearEnvVariables();
+
+beforeEach(() => {
+  process.env.XATA_API_KEY = '1234abcdef';
+});
 
 afterEach(() => {
   vi.clearAllMocks();
