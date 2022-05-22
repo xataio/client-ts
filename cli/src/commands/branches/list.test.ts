@@ -33,6 +33,24 @@ describe('branches list', () => {
     );
   });
 
+  test('fails if the HTTP response is not ok', async () => {
+    fetchMock.mockReturnValue({
+      ok: false,
+      json: async () => ({
+        message: 'Something went wrong'
+      })
+    });
+
+    const config = await Config.load();
+    const list = new BranchesList(['--workspace', 'test-1234', '--database', 'test'], config as Config);
+
+    await expect(list.run()).rejects.toThrow('Something went wrong');
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test');
+    expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
+  });
+
   test.each([[false], [true]])('returns the data with enabled = %o', async (json) => {
     fetchMock.mockReturnValue({
       ok: true,

@@ -15,6 +15,24 @@ afterEach(() => {
 const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 
 describe('workspaces list', () => {
+  test('fails if the HTTP response is not ok', async () => {
+    fetchMock.mockReturnValue({
+      ok: false,
+      json: async () => ({
+        message: 'Something went wrong'
+      })
+    });
+
+    const config = await Config.load();
+    const list = new WorkspacesList([], config as Config);
+
+    await expect(list.run()).rejects.toThrow('Something went wrong');
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces');
+    expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
+  });
+
   test.each([[false], [true]])('returns the data with enabled = %o', async (json) => {
     fetchMock.mockReturnValue({
       ok: true,
