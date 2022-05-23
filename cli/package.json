@@ -23,6 +23,7 @@
     "@oclif/core": "^1.8.2",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.0.1",
+    "@types/prompts": "^2.0.14",
     "@xata.io/client": "^0.8.3",
     "@xata.io/shell": "^0.1.1",
     "ansi-regex": "^6.0.1",
