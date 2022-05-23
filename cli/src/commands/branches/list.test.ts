@@ -70,6 +70,8 @@ describe('branches list', () => {
 
     const config = await Config.load();
     const list = new BranchesList(['--workspace', 'test-1234', '--database', 'test'], config as Config);
+    list.locale = 'en-US';
+    list.timeZone = 'UTC';
 
     expect(BranchesList.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);
@@ -107,7 +109,7 @@ describe('branches list', () => {
           [
             [
               "main",
-              "Jan 1, 2020, 1:00 AM",
+              "Jan 1, 2020, 12:00 AM",
             ],
           ],
         ]

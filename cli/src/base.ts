@@ -9,6 +9,7 @@ import { readAPIKey } from './key.js';
 
 export abstract class BaseCommand extends Command {
   locale: string | undefined = undefined;
+  timeZone: string | undefined = undefined;
 
   async init() {
     dotenv.config();
@@ -28,6 +29,10 @@ export abstract class BaseCommand extends Command {
   }
 
   formatDate(date: string) {
-    return new Date(date).toLocaleString(this.locale, { dateStyle: 'medium', timeStyle: 'short' });
+    return new Date(date).toLocaleString(this.locale, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: this.timeZone
+    });
   }
 }

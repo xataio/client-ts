@@ -62,6 +62,8 @@ describe('databases list', () => {
 
     const config = await Config.load();
     const list = new DatabasesList(['--workspace', 'test-1234'], config as Config);
+    list.locale = 'en-US';
+    list.timeZone = 'UTC';
 
     expect(DatabasesList.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);
@@ -101,7 +103,7 @@ describe('databases list', () => {
           [
             [
               "test",
-              "Jan 1, 2020, 1:00 AM",
+              "Jan 1, 2020, 12:00 AM",
               "3",
             ],
           ],
