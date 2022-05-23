@@ -8,6 +8,8 @@ import table from 'text-table';
 import { readAPIKey } from './key.js';
 
 export abstract class BaseCommand extends Command {
+  // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
+  // By default this will use the system locale and timezone.
   locale: string | undefined = undefined;
   timeZone: string | undefined = undefined;
 
