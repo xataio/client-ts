@@ -43,6 +43,7 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
   const defaultEval = getDefaultEval();
   const replServer = repl.start({
     preview: true,
+    ignoreUndefined: true,
     eval(evalCmd, context, file, callback) {
       try {
         const table = evalCmd.endsWith('\\t\n');
