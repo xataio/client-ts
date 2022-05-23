@@ -4,6 +4,7 @@ exports[`generateFromLocalFiles > should generate correct JavaScript 1`] = `
 [
   "import { buildClient } from \\"@xata.io/client\\";
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
+const tables = [\\"authors\\", \\"posts\\", \\"people\\"];
 /** @type { import('@xata.io/client').ClientConstructor<{}> } */
 const DatabaseClient = buildClient();
 /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
@@ -15,7 +16,8 @@ export class XataClient extends DatabaseClient {
         databaseURL: \\"https://my-workspace-gfdd12.xata.sh/db/hello-xata\\",
         ...options,
       },
-      links
+      links,
+      tables
     );
   }
 }
@@ -107,6 +109,8 @@ export type DatabaseSchema = {
 
 const links = { authors: [], posts: [[\\"author\\", \\"authors\\"]], people: [] };
 
+const tables = [\\"authors\\", \\"posts\\", \\"people\\"];
+
 const DatabaseClient = buildClient();
 
 export class XataClient extends DatabaseClient<DatabaseSchema> {
@@ -116,7 +120,8 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
         databaseURL: \\"https://my-workspace-gfdd12.xata.sh/db/hello-xata\\",
         ...options,
       },
-      links
+      links,
+      tables
     );
   }
 }
