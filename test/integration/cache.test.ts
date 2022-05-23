@@ -60,21 +60,21 @@ describe('cache', () => {
     const user = await client.db.users.create({ full_name: 'John Doe' });
 
     expect(cache.set).toHaveBeenCalledTimes(1);
-    expect(cache.set).toHaveBeenCalledWith(`users-${user.id}`, user);
+    expect(cache.set).toHaveBeenCalledWith(`users:${user.id}`, user);
 
     cache.get.mockReset();
 
     await client.db.users.read(user.id);
 
     expect(cache.get).toHaveBeenCalledTimes(1);
-    expect(cache.get).toHaveBeenCalledWith(`users-${user.id}`);
+    expect(cache.get).toHaveBeenCalledWith(`users:${user.id}`);
 
     cache.delete.mockReset();
 
     await user.delete();
 
     expect(cache.delete).toHaveBeenCalledTimes(1);
-    expect(cache.delete).toHaveBeenCalledWith(`users-${user.id}`);
+    expect(cache.delete).toHaveBeenCalledWith(`users:${user.id}`);
   });
 
   test('hit - get, set and remove', async () => {
@@ -84,7 +84,7 @@ describe('cache', () => {
     const user = await client.db.users.read('foo');
 
     expect(cache.get).toHaveBeenCalledTimes(1);
-    expect(cache.get).toHaveBeenCalledWith('users-foo');
+    expect(cache.get).toHaveBeenCalledWith('users:foo');
     expect(user?.id).toBe('foo');
     expect(user?.full_name).toBe('John Doe');
 
@@ -93,13 +93,13 @@ describe('cache', () => {
     const update = await client.db.users.createOrUpdate('foo', { full_name: 'John Smith' });
 
     expect(cache.set).toHaveBeenCalledTimes(1);
-    expect(cache.set).toHaveBeenCalledWith('users-foo', update);
+    expect(cache.set).toHaveBeenCalledWith('users:foo', update);
 
     cache.delete.mockReset();
 
     await update.delete();
 
     expect(cache.delete).toHaveBeenCalledTimes(1);
-    expect(cache.delete).toHaveBeenCalledWith('users-foo');
+    expect(cache.delete).toHaveBeenCalledWith('users:foo');
   });
 });
