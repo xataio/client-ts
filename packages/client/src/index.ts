@@ -13,3 +13,4 @@ export * from './client';
 export * from './schema';
 export * from './search';
 export * from './util/config';
+export * from './util/apiKey';

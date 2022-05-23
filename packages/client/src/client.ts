@@ -5,8 +5,9 @@ import { CacheImpl, NoCache } from './schema/cache';
 import { BaseData } from './schema/record';
 import { LinkDictionary } from './schema/repository';
 import { SearchPlugin, SearchPluginResult } from './search';
+import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
-import { getAPIKey, getCurrentBranchName, getDatabaseURL } from './util/config';
+import { getCurrentBranchName, getDatabaseURL } from './util/config';
 import { getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 
@@ -24,14 +25,14 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
 
-    constructor(options: BaseClientOptions = {}, links?: LinkDictionary) {
+    constructor(options: BaseClientOptions = {}, links?: LinkDictionary, tables?: string[]) {
       const safeOptions = this.#parseOptions(options);
       const pluginOptions: XataPluginOptions = {
         getFetchProps: () => this.#getFetchProps(safeOptions),
         cache: safeOptions.cache
       };
 
-      const db = new SchemaPlugin(links).build(pluginOptions);
+      const db = new SchemaPlugin(links, tables).build(pluginOptions);
       const search = new SearchPlugin(db, links ?? {}).build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin

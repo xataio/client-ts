@@ -104,6 +104,8 @@ export async function generate({
 
     const links = ${JSON.stringify(links)};
 
+    const tables = [${tables.map((table) => `'${table.name}'`).join(', ')}];
+
     ${language === 'javascript' ? `/** @type { import('@xata.io/client').ClientConstructor<{}> } */` : ''}
     const DatabaseClient = buildClient();
 
@@ -115,7 +117,7 @@ export async function generate({
     }
     export class XataClient extends DatabaseClient<DatabaseSchema> {
       constructor(options?: BaseClientOptions) {
-        super({ databaseURL: "${databaseURL}", ...options}, links);
+        super({ databaseURL: "${databaseURL}", ...options}, links, tables);
       }
     }
   `;

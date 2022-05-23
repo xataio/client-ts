@@ -1,5 +1,12 @@
 # @xata.io/client
 
+## 0.8.4
+
+### Patch Changes
+
+- dd958a4: Fix search results return type
+- f5ec686: Make XataApiClientOptions optional
+
 ## 0.8.3
 
 ### Patch Changes
