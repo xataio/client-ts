@@ -23,10 +23,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
 
-    constructor(options: BaseClientOptions = {}, links?: LinkDictionary) {
+    constructor(options: BaseClientOptions = {}, links?: LinkDictionary, tables?: string[]) {
       const safeOptions = this.#parseOptions(options);
 
-      const db = new SchemaPlugin(links).build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
+      const db = new SchemaPlugin(links, tables).build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
       const search = new SearchPlugin(db, links ?? {}).build({
         getFetchProps: () => this.#getFetchProps(safeOptions)
       });
