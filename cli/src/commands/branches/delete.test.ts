@@ -46,7 +46,10 @@ describe('branches delete', () => {
 
   test('exists if the user does not confirm', async () => {
     const config = await Config.load();
-    const list = new BranchesDelete(['--workspace', 'test-1234', '--database', 'foo'], config as Config);
+    const list = new BranchesDelete(
+      ['--workspace', 'test-1234', '--database', 'foo', '--branch', 'main'],
+      config as Config
+    );
 
     promptsMock.mockReturnValue({ confirm: false });
 
@@ -63,7 +66,10 @@ describe('branches delete', () => {
     promptsMock.mockReturnValue({ confirm: true });
 
     const config = await Config.load();
-    const list = new BranchesDelete(['--workspace', 'test-1234', '--database', 'foo'], config as Config);
+    const list = new BranchesDelete(
+      ['--workspace', 'test-1234', '--database', 'foo', '--branch', 'main'],
+      config as Config
+    );
 
     await expect(list.run()).rejects.toThrow('Something went wrong');
 
@@ -80,7 +86,10 @@ describe('branches delete', () => {
     promptsMock.mockReturnValue({ confirm: true });
 
     const config = await Config.load();
-    const list = new BranchesDelete(['--workspace', 'test-1234', '--database', 'foo'], config as Config);
+    const list = new BranchesDelete(
+      ['--workspace', 'test-1234', '--database', 'foo', '--branch', 'main'],
+      config as Config
+    );
 
     expect(BranchesDelete.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);
@@ -115,7 +124,7 @@ describe('branches delete', () => {
 
     const config = await Config.load();
     process.env.XATA_DATABASE_URL = 'https://test-1234.xata.sh/db/foo';
-    const list = new BranchesDelete([], config as Config);
+    const list = new BranchesDelete(['--branch', 'main'], config as Config);
 
     expect(BranchesDelete.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(true);
