@@ -70,7 +70,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
   key(): string {
     // TODO: Find a better way to serialize the query
-    return `${this.#table}-${JSON.stringify(this.#data)}`;
+    return `${this.#table}:${JSON.stringify(this.#data)}`;
   }
 
   /**

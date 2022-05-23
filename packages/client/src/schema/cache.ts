@@ -6,15 +6,15 @@ export interface CacheImpl {
 }
 
 export class NoCache implements CacheImpl {
-  async get<T>(_key: string): Promise<T | null> {
+  async get<T>(): Promise<T | null> {
     return null;
   }
 
-  async set<T>(_key: string, _value: T): Promise<void> {
+  async set(): Promise<void> {
     return;
   }
 
-  async delete(_key: string): Promise<void> {
+  async delete(): Promise<void> {
     return;
   }
 

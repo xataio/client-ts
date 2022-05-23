@@ -190,7 +190,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     // Create many records
     if (Array.isArray(a)) {
       const records = await this.#bulkInsertTableRecords(a);
-      await Promise.all(records.map((record) => this.recordCache.set(`${this.#table}-${record.id}`, record)));
+      await Promise.all(records.map((record) => this.recordCache.set(`${this.#table}:${record.id}`, record)));
 
       return records;
     }
@@ -199,7 +199,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (isString(a) && isObject(b)) {
       if (a === '') throw new Error("The id can't be empty");
       const record = await this.#insertRecordWithId(a, b);
-      await this.recordCache.set(`${this.#table}-${record.id}`, record);
+      await this.recordCache.set(`${this.#table}:${record.id}`, record);
 
       return record;
     }
@@ -208,7 +208,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (isObject(a) && isString(a.id)) {
       if (a.id === '') throw new Error("The id can't be empty");
       const record = await this.#insertRecordWithId(a.id, { ...a, id: undefined });
-      await this.recordCache.set(`${this.#table}-${record.id}`, record);
+      await this.recordCache.set(`${this.#table}:${record.id}`, record);
 
       return record;
     }
@@ -216,7 +216,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     // Create one record without id
     if (isObject(a)) {
       const record = await this.#insertRecordWithoutId(a);
-      await this.recordCache.set(`${this.#table}-${record.id}`, record);
+      await this.recordCache.set(`${this.#table}:${record.id}`, record);
 
       return record;
     }
@@ -293,7 +293,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
   async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
-    const cacheRecord = await this.recordCache.get<SelectedPick<Record, ['*']>>(`${this.#table}-${recordId}`);
+    const cacheRecord = await this.recordCache.get<SelectedPick<Record, ['*']>>(`${this.#table}:${recordId}`);
     if (cacheRecord) return cacheRecord;
 
     const fetchProps = await this.#getFetchProps();
@@ -332,18 +332,18 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     // Update one record with id as param
     if (isString(a) && isObject(b)) {
-      await this.recordCache.delete(`${this.#table}-${a}`);
+      await this.recordCache.delete(`${this.#table}:${a}`);
       const record = await this.#updateRecordWithID(a, b);
-      await this.recordCache.set(`${this.#table}-${record.id}`, record);
+      await this.recordCache.set(`${this.#table}:${record.id}`, record);
 
       return record;
     }
 
     // Update one record with id as property
     if (isObject(a) && isString(a.id)) {
-      await this.recordCache.delete(`${this.#table}-${a.id}`);
+      await this.recordCache.delete(`${this.#table}:${a.id}`);
       const record = await this.#updateRecordWithID(a.id, { ...a, id: undefined });
-      await this.recordCache.set(`${this.#table}-${record.id}`, record);
+      await this.recordCache.set(`${this.#table}:${record.id}`, record);
 
       return record;
     }
@@ -390,18 +390,18 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     // Create or update one record with id as param
     if (isString(a) && isObject(b)) {
-      await this.recordCache.delete(`${this.#table}-${a}`);
+      await this.recordCache.delete(`${this.#table}:${a}`);
       const record = await this.#upsertRecordWithID(a, b);
-      await this.recordCache.set(`${this.#table}-${record.id}`, record);
+      await this.recordCache.set(`${this.#table}:${record.id}`, record);
 
       return record;
     }
 
     // Create or update one record with id as property
     if (isObject(a) && isString(a.id)) {
-      await this.recordCache.delete(`${this.#table}-${a.id}`);
+      await this.recordCache.delete(`${this.#table}:${a.id}`);
       const record = await this.#upsertRecordWithID(a.id, { ...a, id: undefined });
-      await this.recordCache.set(`${this.#table}-${record.id}`, record);
+      await this.recordCache.set(`${this.#table}:${record.id}`, record);
 
       return record;
     }
@@ -439,14 +439,14 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     // Delete one record with id as param
     if (isString(a)) {
       await this.#deleteRecord(a);
-      await this.recordCache.delete(`${this.#table}-${a}`);
+      await this.recordCache.delete(`${this.#table}:${a}`);
       return;
     }
 
     // Delete one record with id as property
     if (isObject(a) && isString(a.id)) {
       await this.#deleteRecord(a.id);
-      await this.recordCache.delete(`${this.#table}-${a.id}`);
+      await this.recordCache.delete(`${this.#table}:${a.id}`);
       return;
     }
 
