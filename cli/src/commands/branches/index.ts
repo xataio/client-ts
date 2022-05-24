@@ -1,6 +1,6 @@
-import { Command } from '@oclif/core';
+import { BaseCommand } from '../../base.js';
 
-export default class Branches extends Command {
+export default class Branches extends BaseCommand {
   static description = 'List, create and delete branches';
 
   static examples = [];

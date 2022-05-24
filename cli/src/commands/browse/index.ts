@@ -1,6 +1,6 @@
-import { Command } from '@oclif/core';
+import { BaseCommand } from '../../base.js';
 
-export default class Browse extends Command {
+export default class Browse extends BaseCommand {
   static description = 'Open the current database in the browser';
 
   static examples = [];

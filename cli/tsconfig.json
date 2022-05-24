@@ -8,7 +8,8 @@
     "rootDir": "src",
     "strict": true,
     "target": "es2019",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"]
 }

@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/codegen/README.md",
   "dependencies": {
-    "@xata.io/client": "^0.8.1",
+    "@xata.io/client": "^0.8.4",
     "chalk": "5.0.1",
     "command-exists": "^1.2.9",
     "commander": "^9.2.0",
@@ -47,7 +47,7 @@
     "tar": "^6.1.11",
     "typescript": "^4.6.4",
     "unzipper": "^0.10.11",
-    "zod": "^3.16.0"
+    "zod": "^3.17.2"
   },
   "devDependencies": {
     "@types/command-exists": "^1.2.0",
