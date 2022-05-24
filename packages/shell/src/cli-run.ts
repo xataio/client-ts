@@ -41,8 +41,9 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
   );
 
   const fetchApi = async (method: string, path: string, body?: string) => {
+    const { protocol, host } = parseDatabaseURL(databaseURL);
     // TODO: Add support for staging, how?
-    const baseUrl = path.startsWith('/db') ? databaseURL : 'https://api.xata.io';
+    const baseUrl = path.startsWith('/db') ? `${protocol}//${host}` : 'https://api.xata.io';
 
     try {
       const response = await fetch(`${baseUrl}${path}`, {
@@ -145,4 +146,16 @@ async function setupHistory(replServer: repl.REPLServer) {
   } catch (err) {
     // Ignore. It's ok not to have a history file
   }
+}
+
+function parseDatabaseURL(databaseURL?: string) {
+  databaseURL = databaseURL || getDatabaseURL() || '';
+  const [protocol, , host, , database] = databaseURL.split('/');
+  const [workspace] = (host || '').split('.');
+  return {
+    protocol,
+    host,
+    database,
+    workspace
+  };
 }
