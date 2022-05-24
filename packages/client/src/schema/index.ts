@@ -24,7 +24,7 @@ export type SchemaPluginResult<Schemas extends Record<string, BaseData>> = {
 export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
   #tables: Record<string, Repository<any>> = {};
 
-  constructor(private links?: LinkDictionary) {
+  constructor(private links?: LinkDictionary, private tableNames?: string[]) {
     super();
   }
 
@@ -44,6 +44,11 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
         }
       }
     );
+
+    // Inject generated tables for shell to auto-complete
+    for (const table of this.tableNames ?? []) {
+      db[table] = new RestRepository({ db, getFetchProps, table, links });
+    }
 
     return db;
   }
