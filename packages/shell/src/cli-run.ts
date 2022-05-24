@@ -70,8 +70,9 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
           evalCmd = evalCmd.substring(0, evalCmd.length - 3);
         }
 
-        const [verb, path, body] = evalCmd.split(' ');
+        const [verb, path, ...rest] = evalCmd.split(' ');
         if (['get', 'post', 'patch', 'put', 'delete'].includes(verb.toLowerCase())) {
+          const body = rest.join(' ');
           return fetchApi(verb, path, body).then((result) => {
             return postProcess(result, { table }, callback);
           });
