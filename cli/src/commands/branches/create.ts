@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { parseDatabaseURL } from '../../defaults.js';
-
+import { createBranch, defaultGitBranch, isGitInstalled, isWorkingDirClean } from '../../git.js';
 export default class BranchesCreate extends BaseCommand {
   static description = 'Create a branch';
 
@@ -16,6 +16,10 @@ export default class BranchesCreate extends BaseCommand {
     }),
     from: Flags.string({
       description: 'Branch name to branch off from'
+    }),
+    noGit: Flags.boolean({
+      name: 'no-git',
+      description: 'Disable git integration'
     })
   };
 
@@ -43,10 +47,44 @@ export default class BranchesCreate extends BaseCommand {
 
     const xata = await this.getXataClient();
 
-    const result = await xata.branches.createBranch(workspace, database, branch, flags.from);
+    const { noGit, from } = flags;
+    const useGit = !noGit;
+
+    if (useGit) {
+      if (!isGitInstalled()) {
+        this.error(
+          'Git cannot be found. Please install it or use the --no-git flag to disable integrating xata branches with git branches.'
+        );
+      }
+      try {
+        if (!isWorkingDirClean()) {
+          this.error(
+            'The working directory has uncommited changes. Please commit or stash them before creating a branch. Or use the --no-git flag to disable integrating xata branches with git branches.'
+          );
+        }
+      } catch (err) {
+        if (err instanceof Error && err.message.includes('not a git repository')) {
+          this.error(
+            'The working directory is not under git version control. Please initialize or clone a git repository or use the --no-git flag to disable integrating xata branches with git branches.'
+          );
+        } else {
+          throw err;
+        }
+      }
+      // TODO calculate associated git branch with `from` xata branch
+      const gitBase = from || defaultGitBranch();
+      createBranch(branch, gitBase);
+    }
+
+    const result = await xata.branches.createBranch(workspace, database, branch, from);
 
     if (this.jsonEnabled()) return result;
 
-    this.log(`Branch ${branch} successfully created`);
+    let message = `Branch ${branch} successfully created`;
+    if (useGit) {
+      message = `${message}. A new git branch with the same name has been created and is your current branch.`;
+    }
+
+    this.log(message);
   }
 }
