@@ -1,4 +1,4 @@
-import { getDatabaseURL } from '@xata.io/client';
+import { getDatabaseURL, XataApiClient } from '@xata.io/client';
 import { generateFromContext } from '@xata.io/codegen';
 import chalk from 'chalk';
 import fetch from 'cross-fetch';
@@ -40,6 +40,26 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
     )} global variable.`
   );
 
+  const fetchApi = async (method: string, path: string, body?: string) => {
+    // TODO: Add support for staging, how?
+    const baseUrl = path.startsWith('/db') ? databaseURL : 'https://api.xata.io';
+
+    try {
+      const response = await fetch(`${baseUrl}${path}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${options.apiKey || process.env.XATA_API_KEY}`
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+
+      return response.json();
+    } catch (err) {
+      return err;
+    }
+  };
+
   const defaultEval = getDefaultEval();
   const replServer = repl.start({
     preview: true,
@@ -48,6 +68,13 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
         const table = evalCmd.endsWith('\\t\n');
         if (evalCmd.endsWith('\\t\n')) {
           evalCmd = evalCmd.substring(0, evalCmd.length - 3);
+        }
+
+        const [verb, path, body] = evalCmd.split(' ');
+        if (['get', 'post', 'patch', 'put', 'delete'].includes(verb.toLowerCase())) {
+          return fetchApi(verb, path, body).then((result) => {
+            return postProcess(result, { table }, callback);
+          });
         }
 
         defaultEval.bind(replServer)(evalCmd, context, file, function (err, result) {
@@ -69,6 +96,7 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
   await fs.unlink(tempFile);
 
   replServer.context.xata = new XataClient({ fetch });
+  replServer.context.api = new XataApiClient({ fetch });
 
   await setupHistory(replServer);
 
