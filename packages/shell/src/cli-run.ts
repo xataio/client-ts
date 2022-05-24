@@ -9,6 +9,7 @@ import fs, { mkdir } from 'fs/promises';
 import ora from 'ora';
 import { homedir, tmpdir } from 'os';
 import path, { dirname } from 'path';
+import RJSON from 'relaxed-json';
 import repl from 'repl';
 import { fileURLToPath } from 'url';
 
@@ -40,7 +41,7 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
     )} global variable.`
   );
 
-  const fetchApi = async (method: string, path: string, body?: string) => {
+  const fetchApi = async (method: string, path: string, body?: any) => {
     const { protocol, host } = parseDatabaseURL(databaseURL);
     // TODO: Add support for staging, how?
     const baseUrl = path.startsWith('/db') ? `${protocol}//${host}` : 'https://api.xata.io';
@@ -52,7 +53,7 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
           'Content-Type': 'application/json',
           Authorization: `Bearer ${options.apiKey || process.env.XATA_API_KEY}`
         },
-        body: body ? JSON.stringify(body) : undefined
+        body: body ? JSON.stringify(RJSON.parse(body)) : undefined
       });
 
       return response.json();
