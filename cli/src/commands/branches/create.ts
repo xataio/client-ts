@@ -17,8 +17,7 @@ export default class BranchesCreate extends BaseCommand {
     from: Flags.string({
       description: 'Branch name to branch off from'
     }),
-    noGit: Flags.boolean({
-      name: 'no-git',
+    'no-git': Flags.boolean({
       description: 'Disable git integration'
     })
   };
@@ -47,7 +46,7 @@ export default class BranchesCreate extends BaseCommand {
 
     const xata = await this.getXataClient();
 
-    const { noGit, from } = flags;
+    const { 'no-git': noGit, from } = flags;
     const useGit = !noGit;
 
     if (useGit) {
