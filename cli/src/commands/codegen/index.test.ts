@@ -12,6 +12,7 @@ clearEnvVariables();
 
 beforeEach(() => {
   process.env.XATA_API_KEY = '1234abcdef';
+  process.env.XATA_BRANCH = 'main';
 });
 
 afterEach(() => {
