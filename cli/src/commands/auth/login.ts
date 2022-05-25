@@ -1,6 +1,6 @@
 import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
-import { readAPIKey, writeAPIKey } from '../../key.js';
+import { readAPIKeyFromFile, writeAPIKey } from '../../key.js';
 
 export default class Login extends BaseCommand {
   static description = 'Authenticate with Xata';
@@ -12,7 +12,7 @@ export default class Login extends BaseCommand {
   static args = [];
 
   async run(): Promise<void> {
-    const existingKey = await readAPIKey();
+    const existingKey = await readAPIKeyFromFile();
     if (existingKey) {
       const result = await prompts({
         type: 'confirm',
