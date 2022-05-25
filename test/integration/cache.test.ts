@@ -1,9 +1,10 @@
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
-import { CacheImpl, XataApiClient } from '../../packages/client/src';
-import { XataClient } from '../../packages/codegen/example/xata';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { XataApiClient } from '../../packages/client/src';
+import { User, XataClient } from '../../packages/codegen/example/xata';
+import { LRUCache } from '../../packages/plugin-client-cache';
 import { teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
@@ -20,14 +21,7 @@ const api = new XataApiClient({
   fetch
 });
 
-class MockCache implements CacheImpl {
-  get = vi.fn();
-  set = vi.fn();
-  delete = vi.fn();
-  clear = vi.fn();
-}
-
-const cache = new MockCache();
+const cache = new LRUCache();
 
 beforeAll(async () => {
   const id = Math.round(Math.random() * 100000);
@@ -53,53 +47,96 @@ afterAll(async () => {
   await api.databases.deleteDatabase(workspace, databaseName);
 });
 
+afterEach(async () => {
+  await cache.clear();
+});
+
 describe('cache', () => {
   test('miss - set, get and remove', async () => {
-    cache.set.mockReset();
-
     const user = await client.db.users.create({ full_name: 'John Doe' });
 
-    expect(cache.set).toHaveBeenCalledTimes(1);
-    expect(cache.set).toHaveBeenCalledWith(`users:${user.id}`, user);
-
-    cache.get.mockReset();
+    const cachedItem = await cache.get<User>(`rec_users:${user.id}`);
+    expect(cachedItem?.full_name).toBe('John Doe');
 
     await client.db.users.read(user.id);
 
-    expect(cache.get).toHaveBeenCalledTimes(1);
-    expect(cache.get).toHaveBeenCalledWith(`users:${user.id}`);
-
-    cache.delete.mockReset();
+    const cachedItem2 = await cache.get<User>(`rec_users:${user.id}`);
+    expect(cachedItem2?.full_name).toBe('John Doe');
 
     await user.delete();
 
-    expect(cache.delete).toHaveBeenCalledTimes(1);
-    expect(cache.delete).toHaveBeenCalledWith(`users:${user.id}`);
+    const cachedItem3 = await cache.get<User>(`rec_users:${user.id}`);
+    expect(cachedItem3).toBeNull();
   });
 
   test('hit - get, set and remove', async () => {
-    cache.get.mockReset();
-    cache.get.mockImplementationOnce(async () => ({ id: 'foo', full_name: 'John Doe', xata: { version: 1 } }));
-
+    await cache.set('rec_users:foo', { id: 'foo', full_name: 'John Doe', xata: { version: 1 } });
     const user = await client.db.users.read('foo');
 
-    expect(cache.get).toHaveBeenCalledTimes(1);
-    expect(cache.get).toHaveBeenCalledWith('users:foo');
     expect(user?.id).toBe('foo');
     expect(user?.full_name).toBe('John Doe');
 
-    cache.set.mockReset();
-
     const update = await client.db.users.createOrUpdate('foo', { full_name: 'John Smith' });
 
-    expect(cache.set).toHaveBeenCalledTimes(1);
-    expect(cache.set).toHaveBeenCalledWith('users:foo', update);
+    const cachedItem = await cache.get<User>('rec_users:foo');
 
-    cache.delete.mockReset();
+    expect(cachedItem?.full_name).toBe('John Smith');
 
     await update.delete();
 
-    expect(cache.delete).toHaveBeenCalledTimes(1);
-    expect(cache.delete).toHaveBeenCalledWith('users:foo');
+    const allCache = await cache.getAll();
+    expect(allCache).toEqual({});
+  });
+
+  test('query invalidated', async () => {
+    const user = await client.db.users.create({ full_name: 'Jane Doe' });
+
+    const cachedQueries0 = await cache
+      .getAll()
+      .then((cache) => Object.entries(cache).filter(([key]) => key.startsWith('query_')));
+
+    expect(cachedQueries0).toHaveLength(0);
+
+    const query1 = await client.db.users.filter({ id: user.id }).getOne();
+
+    console.log('foo', await cache.getAll());
+    const cachedQueries1 = await cache
+      .getAll()
+      .then((cache) => Object.entries(cache).filter(([key]) => key.startsWith('query_')));
+
+    expect(cachedQueries1).toHaveLength(1);
+
+    expect(query1?.id).toBe(user.id);
+    expect(query1?.full_name).toBe('Jane Doe');
+
+    await user.update({ full_name: 'Jane Smith' });
+
+    const query2 = await client.db.users.filter({ id: user.id }).getOne();
+
+    const cachedQueries2 = await cache
+      .getAll()
+      .then((cache) => Object.entries(cache).filter(([key]) => key.startsWith('query_')));
+
+    expect(cachedQueries2).toHaveLength(1);
+
+    expect(query2?.id).toBe(user.id);
+    expect(query2?.full_name).toBe('Jane Smith');
+  });
+
+  test('query invalidated with nested object', async () => {
+    const owner = await client.db.users.create({ full_name: 'John Smith' });
+    const team = await client.db.teams.create({ name: 'Team 1', owner });
+    const member = await client.db.users.create({ full_name: 'Jane Doe', team });
+
+    expect(await cache.getAll().then(Object.entries)).toHaveLength(3);
+
+    const query = await client.db.users.filter('id', member.id).select(['*', 'team.owner.full_name']).getOne();
+    expect(query?.team?.owner?.full_name).toBe('John Smith');
+
+    expect(await cache.getAll().then(Object.entries)).toHaveLength(4);
+
+    await owner.update({ full_name: 'John Doe' });
+
+    expect(await cache.getAll().then(Object.entries)).toHaveLength(3);
   });
 });

@@ -8,6 +8,10 @@ export class LRUCache implements CacheImpl {
     this.#cache = new LRU({ max: 500, ...options });
   }
 
+  async getAll(): Promise<Record<string, unknown>> {
+    return Object.fromEntries(this.#cache.dump());
+  }
+
   async get<T>(key: string): Promise<T | null> {
     return this.#cache.get<T>(key) ?? null;
   }

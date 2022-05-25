@@ -1,4 +1,5 @@
 export interface CacheImpl {
+  getAll(): Promise<Record<string, unknown>>;
   get: <T>(key: string) => Promise<T | null>;
   set: <T>(key: string, value: T) => Promise<void>;
   delete: (key: string) => Promise<void>;
@@ -6,6 +7,10 @@ export interface CacheImpl {
 }
 
 export class NoCache implements CacheImpl {
+  async getAll(): Promise<Record<string, unknown>> {
+    return {};
+  }
+
   async get<T>(): Promise<T | null> {
     return null;
   }

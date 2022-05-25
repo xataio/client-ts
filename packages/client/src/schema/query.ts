@@ -1,5 +1,5 @@
 import { FilterExpression } from '../api/schemas';
-import { compact } from '../util/lang';
+import { compact, toBase64 } from '../util/lang';
 import { NonEmptyArray, RequiredBy } from '../util/types';
 import { Filter } from './filters';
 import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
@@ -69,8 +69,8 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   }
 
   key(): string {
-    // TODO: Find a better way to serialize the query
-    return `${this.#table}:${JSON.stringify(this.#data)}`;
+    const key = JSON.stringify(this.#data);
+    return toBase64(key);
   }
 
   /**
