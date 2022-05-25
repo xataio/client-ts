@@ -32,13 +32,7 @@ export default class Login extends BaseCommand {
     });
     if (!result.key) this.exit(2);
 
-    this.log('Checking access to the API...');
-    const xata = await this.getXataClient(result.key);
-    try {
-      await xata.workspaces.getWorkspacesList();
-    } catch (err) {
-      return this.error(`Error accessing the API: ${err instanceof Error ? err.message : String(err)}`);
-    }
+    await this.verifyAPIKey(result.key);
 
     await writeAPIKey(result.key);
 
