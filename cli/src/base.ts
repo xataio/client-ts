@@ -17,8 +17,8 @@ export abstract class BaseCommand extends Command {
     dotenv.config();
   }
 
-  async getXataClient() {
-    const apiKey = await readAPIKey();
+  async getXataClient(apiKey?: string | null) {
+    apiKey = apiKey || (await readAPIKey());
     if (!apiKey) this.error('Could not instantiate Xata client. No API key found.'); // TODO: give suggested next steps
     return new XataApiClient({ apiKey, fetch });
   }
