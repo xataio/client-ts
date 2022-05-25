@@ -45,7 +45,7 @@ export default class Codegen extends BaseCommand {
 
     await mkdir(dir, { recursive: true });
     await writeFile(output, code);
-    if (declarations && language != 'typescript') {
+    if (declarations && language !== 'typescript') {
       await writeFile(path.join(dir, 'types.d.ts'), declarations);
     }
 
