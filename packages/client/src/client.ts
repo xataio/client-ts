@@ -1,7 +1,7 @@
 import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { SchemaPlugin, SchemaPluginResult } from './schema';
-import { CacheImpl, NoCache } from './schema/cache';
+import { CacheImpl, SimpleCache } from './schema/cache';
 import { BaseData } from './schema/record';
 import { LinkDictionary } from './schema/repository';
 import { SearchPlugin, SearchPluginResult } from './search';
@@ -59,7 +59,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
       const apiKey = options?.apiKey || getAPIKey();
-      const cache = options?.cache ?? new NoCache();
+      const cache = options?.cache ?? new SimpleCache();
       const branch = async () =>
         options?.branch
           ? await this.#evaluateBranch(options.branch)

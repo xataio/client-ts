@@ -6,24 +6,30 @@ export interface CacheImpl {
   clear: () => Promise<void>;
 }
 
-export class NoCache implements CacheImpl {
+export class SimpleCache implements CacheImpl {
+  #map: Map<string, unknown>;
+
+  constructor() {
+    this.#map = new Map();
+  }
+
   async getAll(): Promise<Record<string, unknown>> {
-    return {};
+    return Object.fromEntries(this.#map);
   }
 
-  async get<T>(): Promise<T | null> {
-    return null;
+  async get<T>(key: string): Promise<T | null> {
+    return (this.#map.get(key) ?? null) as T | null;
   }
 
-  async set(): Promise<void> {
-    return;
+  async set<T>(key: string, value: T): Promise<void> {
+    this.#map.set(key, value);
   }
 
-  async delete(): Promise<void> {
-    return;
+  async delete(key: string): Promise<void> {
+    this.#map.delete(key);
   }
 
   async clear(): Promise<void> {
-    return;
+    return this.#map.clear();
   }
 }

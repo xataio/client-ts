@@ -2,9 +2,8 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
-import { XataApiClient } from '../../packages/client/src';
+import { SimpleCache, XataApiClient } from '../../packages/client/src';
 import { User, XataClient } from '../../packages/codegen/example/xata';
-import { LRUCache } from '../../packages/plugin-client-cache';
 import { teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
@@ -21,7 +20,7 @@ const api = new XataApiClient({
   fetch
 });
 
-const cache = new LRUCache();
+const cache = new SimpleCache();
 
 beforeAll(async () => {
   const id = Math.round(Math.random() * 100000);
