@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import path, { dirname, extname, relative } from 'path';
 import { BaseCommand } from '../../base.js';
 
-const langauges: Record<string, 'javascript' | 'typescript'> = {
+const languages: Record<string, 'javascript' | 'typescript'> = {
   '.js': 'javascript',
   '.mjs': 'javascript',
   '.ts': 'typescript'
@@ -30,11 +30,11 @@ export default class Codegen extends BaseCommand {
 
     const ext = extname(output);
     const dir = dirname(output);
-    const language = langauges[ext];
+    const language = languages[ext];
     if (!language) {
       return this.error(
         `Cannot generate code for a file with extension ${ext}. Please use one of the following extensions: ${Object.keys(
-          langauges
+          languages
         ).join(', ')}`
       );
     }
