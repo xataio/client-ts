@@ -96,7 +96,7 @@ describe('cache', () => {
 
     expect(cachedQueries0).toHaveLength(0);
 
-    const query1 = await client.db.users.filter({ id: user.id }).getOne();
+    const query1 = await client.db.users.filter({ id: user.id }).getFirst();
 
     const cachedQueries1 = await cache
       .getAll()
@@ -109,7 +109,7 @@ describe('cache', () => {
 
     await user.update({ full_name: 'Jane Smith' });
 
-    const query2 = await client.db.users.filter({ id: user.id }).getOne();
+    const query2 = await client.db.users.filter({ id: user.id }).getFirst();
 
     const cachedQueries2 = await cache
       .getAll()
@@ -128,7 +128,7 @@ describe('cache', () => {
 
     expect(await cache.getAll().then(Object.entries)).toHaveLength(3);
 
-    const query = await client.db.users.filter('id', member.id).select(['*', 'team.owner.full_name']).getOne();
+    const query = await client.db.users.filter('id', member.id).select(['*', 'team.owner.full_name']).getFirst();
     expect(query?.team?.owner?.full_name).toBe('John Smith');
 
     expect(await cache.getAll().then(Object.entries)).toHaveLength(4);
@@ -143,7 +143,7 @@ describe('cache', () => {
 
     await cache.clear();
 
-    await client.db.users.filter({ id: user.id }).getOne();
+    await client.db.users.filter({ id: user.id }).getFirst();
 
     const cacheItems = Object.entries(await cache.getAll());
     expect(Object.keys(cacheItems)).toHaveLength(1);
@@ -155,7 +155,7 @@ describe('cache', () => {
 
     await cache.set(cacheKey, { ...value, records: [{ ...user, full_name: 'Jane Doe' }] });
 
-    const query = await client.db.users.filter({ id: user.id }).getOne({ ttl: 120000 });
+    const query = await client.db.users.filter({ id: user.id }).getFirst({ cache: 120000 });
     expect(query?.full_name).toBe('Jane Doe');
   });
 
@@ -164,7 +164,7 @@ describe('cache', () => {
 
     await cache.clear();
 
-    await client.db.users.filter({ id: user.id }).getOne();
+    await client.db.users.filter({ id: user.id }).getFirst();
 
     const cacheItems = Object.entries(await cache.getAll());
     expect(cacheItems).toHaveLength(1);
@@ -175,7 +175,7 @@ describe('cache', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const query = await client.db.users.filter({ id: user.id }).getOne({ cache: 500 });
+    const query = await client.db.users.filter({ id: user.id }).getFirst({ cache: 500 });
     expect(query?.full_name).toBe('John Doe');
   });
 });
