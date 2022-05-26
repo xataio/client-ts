@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/shell",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Shell for xata.io",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -32,11 +32,15 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/shell/README.md",
   "dependencies": {
-    "@xata.io/client": "^0.8.3",
-    "@xata.io/codegen": "^0.8.0",
+    "@xata.io/client": "^0.8.4",
+    "@xata.io/codegen": "^0.8.1",
     "chalk": "^5.0.1",
     "cross-fetch": "^3.1.5",
     "dotenv": "^16.0.1",
-    "ora": "^6.1.0"
+    "ora": "^6.1.0",
+    "relaxed-json": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/relaxed-json": "^1.0.1"
   }
 }

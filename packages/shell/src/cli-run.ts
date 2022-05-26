@@ -1,4 +1,4 @@
-import { getDatabaseURL } from '@xata.io/client';
+import { getDatabaseURL, XataApiClient } from '@xata.io/client';
 import { generateFromContext } from '@xata.io/codegen';
 import chalk from 'chalk';
 import fetch from 'cross-fetch';
@@ -9,13 +9,14 @@ import fs, { mkdir } from 'fs/promises';
 import ora from 'ora';
 import { homedir, tmpdir } from 'os';
 import path, { dirname } from 'path';
+import RJSON from 'relaxed-json';
 import repl from 'repl';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export async function run(options: { env?: string; databaseURL?: string; apiKey?: string; code?: string }) {
+export async function run(options: { env?: string; databaseURL?: string; apiKey?: string; code?: string } = {}) {
   const spinner = ora();
   spinner.start('Downloading schema and generating client');
   dotenv.config({ path: options.env || '.env' });
@@ -40,6 +41,27 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
     )} global variable.`
   );
 
+  const fetchApi = async (method: string, path: string, body?: any) => {
+    const { protocol, host } = parseDatabaseURL(databaseURL);
+    // TODO: Add support for staging, how?
+    const baseUrl = path.startsWith('/db') ? `${protocol}//${host}` : 'https://api.xata.io';
+
+    try {
+      const response = await fetch(`${baseUrl}${path}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${options.apiKey || process.env.XATA_API_KEY}`
+        },
+        body: body ? JSON.stringify(RJSON.parse(body)) : undefined
+      });
+
+      return response.json();
+    } catch (err) {
+      return err;
+    }
+  };
+
   const defaultEval = getDefaultEval();
   const replServer = repl.start({
     preview: true,
@@ -48,6 +70,14 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
         const table = evalCmd.endsWith('\\t\n');
         if (evalCmd.endsWith('\\t\n')) {
           evalCmd = evalCmd.substring(0, evalCmd.length - 3);
+        }
+
+        const [verb, path, ...rest] = evalCmd.split(' ');
+        if (['get', 'post', 'patch', 'put', 'delete'].includes(verb.toLowerCase())) {
+          const body = rest.join(' ');
+          return fetchApi(verb, path, body).then((result) => {
+            return postProcess(result, { table }, callback);
+          });
         }
 
         defaultEval.bind(replServer)(evalCmd, context, file, function (err, result) {
@@ -69,6 +99,7 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
   await fs.unlink(tempFile);
 
   replServer.context.xata = new XataClient({ fetch });
+  replServer.context.api = new XataApiClient({ fetch });
 
   await setupHistory(replServer);
 
@@ -116,4 +147,16 @@ async function setupHistory(replServer: repl.REPLServer) {
   } catch (err) {
     // Ignore. It's ok not to have a history file
   }
+}
+
+function parseDatabaseURL(databaseURL?: string) {
+  databaseURL = databaseURL || getDatabaseURL() || '';
+  const [protocol, , host, , database] = databaseURL.split('/');
+  const [workspace] = (host || '').split('.');
+  return {
+    protocol,
+    host,
+    database,
+    workspace
+  };
 }

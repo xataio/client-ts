@@ -1,5 +1,11 @@
 # @xata.io/shell
 
+## 0.1.2
+
+### Patch Changes
+
+- 10a4a2a: Make run() options optional
+
 ## 0.1.1
 
 ### Patch Changes
