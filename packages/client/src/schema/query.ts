@@ -13,7 +13,7 @@ export type QueryOptions<T extends XataRecord> = {
   columns?: NonEmptyArray<SelectableColumn<T>>;
   filter?: FilterExpression;
   sort?: SortFilter<T> | SortFilter<T>[];
-  ttl?: number;
+  cache?: number;
 };
 
 /**
@@ -53,7 +53,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     this.#data.sort = data.sort ?? parent?.sort;
     this.#data.columns = data.columns ?? parent?.columns ?? ['*'];
     this.#data.page = data.page ?? parent?.page;
-    this.#data.ttl = data.ttl ?? parent?.ttl;
+    this.#data.cache = data.cache ?? parent?.cache;
 
     this.any = this.any.bind(this);
     this.all = this.all.bind(this);
@@ -267,6 +267,15 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     const records = await this.getMany({ ...options, page: { size: 1 } });
     // Method overloading does not provide type inference for the return type.
     return (records[0] as unknown as Result) || null;
+  }
+
+  /**
+   * Builds a new query object adding a cache TTL in milliseconds.
+   * @param ttl The cache TTL in milliseconds.
+   * @returns A new Query object.
+   */
+  cache(ttl: number): Query<Record, Result> {
+    return new Query<Record, Result>(this.#repository, this.#table, { cache: ttl }, this.#data);
   }
 
   nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {

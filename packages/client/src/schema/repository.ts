@@ -161,7 +161,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   #links: LinkDictionary;
   #getFetchProps: () => Promise<FetcherExtraProps>;
   db: SchemaPluginResult<any>;
-  cache: CacheImpl;
+  #cache: CacheImpl;
 
   constructor(options: {
     table: string;
@@ -175,7 +175,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     this.#links = options.links ?? {};
     this.#getFetchProps = options.pluginOptions.getFetchProps;
     this.db = options.db;
-    this.cache = options.pluginOptions.cache;
+    this.#cache = options.pluginOptions.cache;
   }
 
   async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
@@ -499,39 +499,39 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   async #invalidateCache(recordId: string): Promise<void> {
-    await this.cache.delete(`rec_${this.#table}:${recordId}`);
+    await this.#cache.delete(`rec_${this.#table}:${recordId}`);
 
-    const cacheItems = await this.cache.getAll();
+    const cacheItems = await this.#cache.getAll();
     const queries = Object.entries(cacheItems).filter(([key]) => key.startsWith('query_'));
 
     for (const [key, value] of queries) {
       const ids = getIds(value);
-      if (ids.includes(recordId)) await this.cache.delete(key);
+      if (ids.includes(recordId)) await this.#cache.delete(key);
     }
   }
 
   async #setCacheRecord(record: SelectedPick<Record, ['*']>): Promise<void> {
-    if (!this.cache.cacheRecords) return;
-    await this.cache.set(`rec_${this.#table}:${record.id}`, record);
+    if (!this.#cache.cacheRecords) return;
+    await this.#cache.set(`rec_${this.#table}:${record.id}`, record);
   }
 
   async #getCacheRecord(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
-    if (!this.cache.cacheRecords) return null;
-    return this.cache.get<SelectedPick<Record, ['*']>>(`rec_${this.#table}:${recordId}`);
+    if (!this.#cache.cacheRecords) return null;
+    return this.#cache.get<SelectedPick<Record, ['*']>>(`rec_${this.#table}:${recordId}`);
   }
 
   async #setCacheQuery(query: Query<Record, XataRecord>, meta: RecordsMetadata, records: XataRecord[]): Promise<void> {
-    await this.cache.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
+    await this.#cache.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
   }
 
   async #getCacheQuery<T extends XataRecord>(
     query: Query<Record, XataRecord>
   ): Promise<{ meta: RecordsMetadata; records: T[] } | null> {
     const key = `query_${this.#table}:${query.key()}`;
-    const result = await this.cache.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
+    const result = await this.#cache.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
     if (!result) return null;
 
-    const { ttl = 0 } = query.getQueryOptions();
+    const { cache: ttl = 0 } = query.getQueryOptions();
     if (!ttl || ttl < 0) return result;
 
     const hasExpired = result.date.getTime() + ttl < Date.now();
