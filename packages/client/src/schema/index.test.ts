@@ -42,7 +42,7 @@ describe('client options', () => {
   test('throws if branch cannot be resolved', async () => {
     const { users } = buildClient({ branch: () => null });
 
-    await expect(users.getOne()).rejects.toThrow('Unable to resolve branch value');
+    await expect(users.getFirst()).rejects.toThrow('Unable to resolve branch value');
   });
 
   test('provide branch as a string', async () => {
@@ -58,7 +58,7 @@ describe('client options', () => {
       };
     });
 
-    await users.getOne();
+    await users.getFirst();
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
@@ -92,7 +92,7 @@ describe('client options', () => {
       };
     });
 
-    await users.getOne();
+    await users.getFirst();
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
@@ -124,7 +124,7 @@ describe('client options', () => {
       };
     });
 
-    await users.getOne();
+    await users.getFirst();
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
@@ -158,7 +158,7 @@ describe('client options', () => {
       };
     });
 
-    await users.getOne();
+    await users.getFirst();
     await users.getMany();
 
     expect(branchGetter).toHaveBeenCalledTimes(1);
@@ -179,7 +179,7 @@ describe('request', () => {
       };
     });
 
-    await users.getOne();
+    await users.getFirst();
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
@@ -241,7 +241,7 @@ describe('request', () => {
       };
     });
 
-    await expect(users.getOne()).rejects.toMatchInlineSnapshot('[Error: Not Found]');
+    await expect(users.getFirst()).rejects.toMatchInlineSnapshot('[Error: Not Found]');
   });
 
   test('returns the json body if the response is ok', async () => {
@@ -258,7 +258,7 @@ describe('request', () => {
       };
     });
 
-    const result = await users.getOne();
+    const result = await users.getFirst();
     expect(result).toEqual(json);
   });
 });
@@ -350,7 +350,7 @@ describe('query', () => {
     });
   });
 
-  describe('getOne', () => {
+  describe('getFirst', () => {
     test('returns a single object', async () => {
       const { fetch, users } = buildClient();
 
@@ -360,7 +360,7 @@ describe('query', () => {
         fetch,
         expected,
         async () => {
-          const first = await users.getOne();
+          const first = await users.getFirst();
           expect(first?.id).toBe(resultBody.records[0].id);
         },
         resultBody
@@ -392,7 +392,7 @@ describe('query', () => {
         fetch,
         expected,
         async () => {
-          const first = await users.getOne();
+          const first = await users.getFirst();
           expect(first).toBeNull();
         },
         { records: [], meta: { page: { cursor: '', more: false } } }
