@@ -13,6 +13,7 @@ export type QueryOptions<T extends XataRecord> = {
   columns?: NonEmptyArray<SelectableColumn<T>>;
   filter?: FilterExpression;
   sort?: SortFilter<T> | SortFilter<T>[];
+  ttl?: number;
 };
 
 /**
@@ -52,6 +53,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     this.#data.sort = data.sort ?? parent?.sort;
     this.#data.columns = data.columns ?? parent?.columns ?? ['*'];
     this.#data.page = data.page ?? parent?.page;
+    this.#data.ttl = data.ttl ?? parent?.ttl;
 
     this.any = this.any.bind(this);
     this.all = this.all.bind(this);
@@ -69,8 +71,9 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   }
 
   key(): string {
-    const key = JSON.stringify(this.#data);
-    return toBase64(key);
+    const { columns = [], filter = {}, sort = [], page = {} } = this.#data;
+    const key = JSON.stringify({ columns, filter, sort, page });
+    return key;
   }
 
   /**

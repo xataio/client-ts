@@ -99,7 +99,6 @@ describe('cache', () => {
 
     const query1 = await client.db.users.filter({ id: user.id }).getOne();
 
-    console.log('foo', await cache.getAll());
     const cachedQueries1 = await cache
       .getAll()
       .then((cache) => Object.entries(cache).filter(([key]) => key.startsWith('query_')));
@@ -138,5 +137,46 @@ describe('cache', () => {
     await owner.update({ full_name: 'John Doe' });
 
     expect(await cache.getAll().then(Object.entries)).toHaveLength(3);
+  });
+
+  test('query with ttl', async () => {
+    const user = await client.db.users.create({ full_name: 'John Doe' });
+
+    await cache.clear();
+
+    await client.db.users.filter({ id: user.id }).getOne();
+
+    const cacheItems = Object.entries(await cache.getAll());
+    expect(Object.keys(cacheItems)).toHaveLength(1);
+
+    const [cacheKey, value] = cacheItems[0] as any;
+    const cacheItem = await cache.get<any>(cacheKey);
+    expect(cacheItem).not.toBeNull();
+    expect(cacheItem?.records[0]?.full_name).toBe('John Doe');
+
+    await cache.set(cacheKey, { ...value, records: [{ ...user, full_name: 'Jane Doe' }] });
+
+    const query = await client.db.users.filter({ id: user.id }).getOne({ ttl: 120000 });
+    expect(query?.full_name).toBe('Jane Doe');
+  });
+
+  test('query with expired ttl', async () => {
+    const user = await client.db.users.create({ full_name: 'John Doe' });
+
+    await cache.clear();
+
+    await client.db.users.filter({ id: user.id }).getOne();
+
+    const cacheItems = Object.entries(await cache.getAll());
+    expect(cacheItems).toHaveLength(1);
+
+    const [key, value] = cacheItems[0] as any;
+
+    await cache.set(key, { ...value, records: [{ ...user, full_name: 'Jane Doe' }] });
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const query = await client.db.users.filter({ id: user.id }).getOne({ ttl: 500 });
+    expect(query?.full_name).toBe('John Doe');
   });
 });

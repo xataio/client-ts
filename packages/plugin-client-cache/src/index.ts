@@ -9,7 +9,8 @@ export class LRUCache implements CacheImpl {
   }
 
   async getAll(): Promise<Record<string, unknown>> {
-    return Object.fromEntries(this.#cache.dump());
+    const entries = this.#cache.dump().map(([key, { value }]) => [key, value]);
+    return Object.fromEntries(entries);
   }
 
   async get<T>(key: string): Promise<T | null> {

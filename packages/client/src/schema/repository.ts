@@ -519,14 +519,21 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   async #setCacheQuery(query: Query<Record, XataRecord>, meta: RecordsMetadata, records: XataRecord[]): Promise<void> {
-    await this.cache.set(`query_${this.#table}:${query.key()}`, { meta, records });
-    console.log(`Cached query ${this.#table}:${query.key()}`);
+    await this.cache.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
   }
 
   async #getCacheQuery<T extends XataRecord>(
     query: Query<Record, XataRecord>
   ): Promise<{ meta: RecordsMetadata; records: T[] } | null> {
-    return this.cache.get<{ meta: RecordsMetadata; records: T[] }>(`query_${this.#table}:${query.key()}`);
+    const key = `query_${this.#table}:${query.key()}`;
+    const result = await this.cache.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
+    if (!result) return null;
+
+    const { ttl } = query.getQueryOptions();
+    if (!ttl || ttl < 0) return result;
+
+    const hasExpired = result.date.getTime() + ttl < new Date().getTime();
+    return hasExpired ? null : result;
   }
 }
 
