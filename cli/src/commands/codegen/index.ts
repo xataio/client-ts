@@ -22,7 +22,7 @@ export default class Codegen extends BaseCommand {
   async run(): Promise<void> {
     const { args } = await this.parse(Codegen);
 
-    const output = args.output || this.userConfig?.codegen?.output;
+    const output = args.output || this.projectConfig?.codegen?.output;
 
     if (!output) {
       return this.error('Please, specify an output file as an argument or configure it in your config file');

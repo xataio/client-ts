@@ -27,7 +27,7 @@ describe('codegen', () => {
   test('fails if the output filepath is not provided', async () => {
     const config = await Config.load();
     const command = new Codegen([], config as Config);
-    command.userConfig = {};
+    command.projectConfig = {};
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(
       '[Error: Please, specify an output file as an argument or configure it in your config file]'

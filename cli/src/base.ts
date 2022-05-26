@@ -12,29 +12,35 @@ import { cosmiconfigSync } from 'cosmiconfig';
 export const projectConfig = z.object({
   codegen: z.optional(
     z.object({
-      output: z.string()
+      output: z.string().optional(),
+      declarations: z.boolean().optional()
     })
   )
 });
 
 export type ProjectConfig = z.infer<typeof projectConfig>;
 
+const moduleName = 'xata';
 export abstract class BaseCommand extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
   // By default this will use the system locale and timezone.
   locale: string | undefined = undefined;
   timeZone: string | undefined = undefined;
 
-  userConfig: ProjectConfig | undefined;
+  projectConfig: ProjectConfig | undefined;
+
+  // In the future we can support YAML
+  searchPlaces = ['package.json', `.${moduleName}rc`, `.${moduleName}rc.json`];
 
   async init() {
     dotenv.config();
 
-    const search = cosmiconfigSync('xata').search();
+    const moduleName = 'xata';
+    const search = cosmiconfigSync(moduleName, { searchPlaces: this.searchPlaces }).search();
     if (search) {
       const result = projectConfig.safeParse(search.config);
       if (result.success) {
-        this.userConfig = result.data;
+        this.projectConfig = result.data;
       } else {
         this.warn(`The configuration file ${search.filepath} was found, but could not be parsed:`);
 
