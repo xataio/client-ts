@@ -4,7 +4,7 @@ import { homedir } from 'os';
 import * as path from 'path';
 import { dirname } from 'path';
 
-const keyPath = path.join(homedir(), '.config', 'xata', 'key');
+export const keyPath = path.join(homedir(), '.config', 'xata', 'key');
 
 export async function readAPIKey() {
   const apiKey = getAPIKey();

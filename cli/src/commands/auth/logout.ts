@@ -14,7 +14,7 @@ export default class Logout extends BaseCommand {
   async run(): Promise<void> {
     const existingKey = await readAPIKeyFromFile();
     if (!existingKey) {
-      return this.log('You are not logged in');
+      return this.error('You are not logged in');
     }
     const result = await prompts({
       type: 'confirm',
