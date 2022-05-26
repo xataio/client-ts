@@ -22,16 +22,21 @@
   "dependencies": {
     "@oclif/core": "^1.9.0",
     "@oclif/plugin-help": "^5",
-    "@types/prompts": "^2.0.14",
     "@oclif/plugin-plugins": "^2.1.0",
+    "@types/prompts": "^2.0.14",
     "@xata.io/client": "^0.8.4",
+    "@xata.io/codegen": "^0.8.1",
     "@xata.io/shell": "^0.1.2",
     "ansi-regex": "^6.0.1",
     "chalk": "^5.0.1",
+    "cosmiconfig": "^7.0.1",
     "dotenv": "^16.0.1",
     "node-fetch": "^3.2.4",
+    "open": "^8.4.0",
     "prompts": "^2.4.2",
-    "text-table": "^0.2.0"
+    "slugify": "^1.6.5",
+    "text-table": "^0.2.0",
+    "zod": "^3.17.3"
   },
   "devDependencies": {
     "@types/text-table": "^0.2.2",
@@ -39,12 +44,11 @@
     "eslint": "^8.16.0",
     "eslint-config-oclif": "^4",
     "eslint-config-oclif-typescript": "^1.0.2",
-    "globby": "^13",
     "oclif": "^3",
     "shx": "^0.3.4",
     "ts-node": "^10.8.0",
     "tslib": "^2.4.0",
-    "typescript": "^4.6.4"
+    "typescript": "^4.7.2"
   },
   "oclif": {
     "bin": "xata",

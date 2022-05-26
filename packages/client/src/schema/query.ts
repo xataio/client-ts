@@ -258,12 +258,12 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns The first record that matches the query, or null if no record matched the query.
    */
-  getOne(): Promise<Result | null>;
-  getOne(options: Omit<QueryOptions<Record>, 'columns' | 'page'>): Promise<Result | null>;
-  getOne<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
+  getFirst(): Promise<Result | null>;
+  getFirst(options: Omit<QueryOptions<Record>, 'columns' | 'page'>): Promise<Result | null>;
+  getFirst<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
     options: Options
   ): Promise<SelectedPick<Record, typeof options['columns']> | null>;
-  async getOne<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
+  async getFirst<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
     const records = await this.getMany({ ...options, page: { size: 1 } });
     // Method overloading does not provide type inference for the return type.
     return (records[0] as unknown as Result) || null;

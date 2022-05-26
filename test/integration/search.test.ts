@@ -40,8 +40,8 @@ beforeAll(async () => {
 
   await client.db.users.create(mockUsers);
 
-  const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getOne();
-  const ownerFruits = await client.db.users.filter('full_name', 'Owner of team fruits').getOne();
+  const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getFirst();
+  const ownerFruits = await client.db.users.filter('full_name', 'Owner of team fruits').getFirst();
   if (!ownerAnimals || !ownerFruits) {
     throw new Error('Could not find owner of team animals or owner of team fruits');
   }

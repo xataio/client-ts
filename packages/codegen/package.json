@@ -45,9 +45,9 @@
     "pluralize": "^8.0.0",
     "prettier": "^2.6.2",
     "tar": "^6.1.11",
-    "typescript": "^4.6.4",
+    "typescript": "^4.7.2",
     "unzipper": "^0.10.11",
-    "zod": "^3.17.2"
+    "zod": "^3.17.3"
   },
   "devDependencies": {
     "@types/command-exists": "^1.2.0",

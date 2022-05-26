@@ -57,8 +57,8 @@ beforeAll(async () => {
 
   await client.db.users.create(mockUsers);
 
-  const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getOne();
-  const ownerFruits = await client.db.users.filter('full_name', 'Owner of team fruits').getOne();
+  const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getFirst();
+  const ownerFruits = await client.db.users.filter('full_name', 'Owner of team fruits').getFirst();
   if (!ownerAnimals || !ownerFruits) {
     throw new Error('Could not find owner of team animals or owner of team fruits');
   }
@@ -217,7 +217,7 @@ describe('integration tests', () => {
   });
 
   test('returns single record', async () => {
-    const user = await client.db.users.getOne();
+    const user = await client.db.users.getFirst();
     expect(user).toBeDefined();
   });
 
@@ -316,7 +316,7 @@ describe('integration tests', () => {
   });
 
   test('includes selected columns in query', async () => {
-    const user = await client.db.users.select(['full_name']).getOne();
+    const user = await client.db.users.select(['full_name']).getFirst();
 
     expect(user).toBeDefined();
     expect(user?.id).toBeDefined();
@@ -325,8 +325,8 @@ describe('integration tests', () => {
     expect(user?.email).toBeUndefined();
   });
 
-  test('includes selected columns in getOne', async () => {
-    const user = await client.db.users.getOne({
+  test('includes selected columns in getFirst', async () => {
+    const user = await client.db.users.getFirst({
       columns: ['full_name', 'email']
     });
 
@@ -351,7 +351,7 @@ describe('integration tests', () => {
       address: { street: 'New street', zipcode: 11 }
     });
 
-    const updatedUser = await client.db.users.filter({ id: user.id }).getOne();
+    const updatedUser = await client.db.users.filter({ id: user.id }).getFirst();
     if (!updatedUser) throw new Error('No user found');
 
     await user.delete();
@@ -382,7 +382,7 @@ describe('integration tests', () => {
       address: { street: 'New street 2', zipcode: 22 }
     });
 
-    const updatedUser = await client.db.users.filter({ id: user.id }).getOne();
+    const updatedUser = await client.db.users.filter({ id: user.id }).getFirst();
     if (!updatedUser) throw new Error('No user found');
 
     await user.delete();
@@ -404,7 +404,7 @@ describe('integration tests', () => {
       email: 'john6@doe.com'
     });
 
-    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
+    const apiUser = await client.db.users.filter({ id: user.id }).getFirst();
     if (!apiUser) throw new Error('No user found');
 
     await user.delete();
@@ -467,7 +467,7 @@ describe('integration tests', () => {
     const updatedUser = await user.read();
     expect(updatedUser?.team?.id).toEqual(team.id);
 
-    const response = await client.db.teams.getOne({ filter: { id: team.id }, columns: ['*', 'owner.*'] });
+    const response = await client.db.teams.getFirst({ filter: { id: team.id }, columns: ['*', 'owner.*'] });
     const owner = await response?.owner?.read();
 
     expect(response?.owner?.id).toBeDefined();
@@ -479,7 +479,7 @@ describe('integration tests', () => {
     expect(response?.owner?.id).toBe(owner?.id);
     expect(response?.owner?.full_name).toBe(owner?.full_name);
 
-    const nestedObject = await client.db.teams.getOne({
+    const nestedObject = await client.db.teams.getFirst({
       filter: { id: team.id },
       columns: ['owner.team.owner.team.owner.team', 'owner.team.owner.team.owner.full_name']
     });
@@ -538,7 +538,7 @@ describe('record creation', () => {
       email: 'john4@doe.com'
     });
 
-    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
+    const apiUser = await client.db.users.filter({ id: user.id }).getFirst();
     if (!apiUser) throw new Error('No user found');
 
     expect(user.id).toBe('a-unique-record-john-4');
@@ -564,7 +564,7 @@ describe('record creation', () => {
       email: 'john5@doe.com'
     });
 
-    const apiUser = await client.db.users.filter({ id: user.id }).getOne();
+    const apiUser = await client.db.users.filter({ id: user.id }).getFirst();
     if (!apiUser) throw new Error('No user found');
 
     expect(user.id).toBe('a-unique-record-john-5');
@@ -614,7 +614,7 @@ describe('record update', () => {
 
     expect(updatedTeam.id).toBe(team.id);
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
     if (!apiTeam) throw new Error('No team found');
 
     expect(updatedTeam.name).toBe('Team boats');
@@ -642,7 +642,7 @@ describe('record update', () => {
 
     expect(updatedTeam.id).toBe(team.id);
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
 
     expect(updatedTeam.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
@@ -659,7 +659,7 @@ describe('record deletion', () => {
 
     expect(copy).toBeNull();
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
 
     expect(apiTeam).toBeNull();
   });
@@ -683,7 +683,7 @@ describe('record deletion', () => {
 
     expect(copy).toBeNull();
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
 
     expect(apiTeam).toBeNull();
   });
@@ -707,7 +707,7 @@ describe('record deletion', () => {
 
     expect(copy).toBeNull();
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
 
     expect(apiTeam).toBeNull();
   });
@@ -722,7 +722,7 @@ describe('record create or update', () => {
     expect(updatedTeam.id).toBe(team.id);
     expect(updatedTeam.read).toBeDefined();
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
 
     expect(updatedTeam.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
@@ -736,7 +736,7 @@ describe('record create or update', () => {
     expect(updatedTeam.id).toBe(team.id);
     expect(updatedTeam.read).toBeDefined();
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getOne();
+    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
 
     expect(updatedTeam.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');

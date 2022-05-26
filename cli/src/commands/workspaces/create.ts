@@ -1,3 +1,4 @@
+import slugify from 'slugify';
 import { BaseCommand } from '../../base.js';
 
 export default class WorkspacesCreate extends BaseCommand {
@@ -7,9 +8,24 @@ export default class WorkspacesCreate extends BaseCommand {
 
   static flags = {};
 
-  static args = [];
+  static args = [{ name: 'workspace', description: 'The new workspace name', required: true }];
 
-  async run(): Promise<void> {
-    this.error('To be done');
+  static enableJsonFlag = true;
+
+  async run(): Promise<void | unknown> {
+    const { args } = await this.parse(WorkspacesCreate);
+    const { workspace } = args;
+
+    if (!workspace) {
+      return this.error('Please, specify a workspace name');
+    }
+
+    const xata = await this.getXataClient();
+
+    const result = await xata.workspaces.createWorkspace({ name: workspace, slug: slugify(workspace) });
+
+    if (this.jsonEnabled()) return result;
+
+    this.log(`Workspace ${result.id} successfully created`);
   }
 }
