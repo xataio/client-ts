@@ -2,4 +2,4 @@
 '@xata.io/plugin-client-cache': patch
 ---
 
-Initial commit
+Initial release

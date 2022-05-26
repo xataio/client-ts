@@ -2,4 +2,4 @@
 '@xata.io/cli': patch
 ---
 
-Initial commit
+Initial release
