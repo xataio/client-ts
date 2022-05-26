@@ -73,7 +73,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   key(): string {
     const { columns = [], filter = {}, sort = [], page = {} } = this.#data;
     const key = JSON.stringify({ columns, filter, sort, page });
-    return key;
+    return toBase64(key);
   }
 
   /**
