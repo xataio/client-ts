@@ -169,11 +169,11 @@ const user = await xata.db.users.read('rec_1234abcdef');
 ```ts
 // Query objects selecting all fields.
 const users = await xata.db.users.select().getMany();
-const user = await xata.db.users.select().getOne();
+const user = await xata.db.users.select().getFirst();
 
 // You can also use `xata.db.users` directly, since it's an immutable Query too!
 const users = await xata.db.users.getMany();
-const user = await xata.db.users.getOne();
+const user = await xata.db.users.getFirst();
 
 // Query objects selecting just one or more fields
 const users = await xata.db.users.select('email', 'profile').getMany();
@@ -185,7 +185,7 @@ const users = await xata.db.users.filter('email', 'foo@example.com').getMany();
 const users = await xata.db.users.sort('full_name', 'asc').getMany();
 ```
 
-Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getMany()` or `getOne()`. Pagination with limit/offet and cursors will be available in the next release.
+Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getMany()` or `getFirst()`. Pagination with limit/offet and cursors will be available in the next release.
 
 ```ts
 // Operators that combine multiple conditions can be deconstructed
@@ -203,7 +203,7 @@ await admins.getMany(); // still returns all admins
 
 // Finally fetch the results of the query
 const users = await query.getMany();
-const firstUser = await query.getOne();
+const firstUser = await query.getFirst();
 ```
 
 **Updating objects**
