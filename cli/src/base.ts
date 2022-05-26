@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { readAPIKey } from './key.js';
 import { cosmiconfigSync } from 'cosmiconfig';
 
-export const userConfig = z.object({
+export const projectConfig = z.object({
   codegen: z.optional(
     z.object({
       output: z.string()
@@ -17,7 +17,7 @@ export const userConfig = z.object({
   )
 });
 
-export type UserConfig = z.infer<typeof userConfig>;
+export type ProjectConfig = z.infer<typeof projectConfig>;
 
 export abstract class BaseCommand extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
@@ -25,14 +25,14 @@ export abstract class BaseCommand extends Command {
   locale: string | undefined = undefined;
   timeZone: string | undefined = undefined;
 
-  userConfig: UserConfig | undefined;
+  userConfig: ProjectConfig | undefined;
 
   async init() {
     dotenv.config();
 
     const search = cosmiconfigSync('xata').search();
     if (search) {
-      const result = userConfig.safeParse(search.config);
+      const result = projectConfig.safeParse(search.config);
       if (result.success) {
         this.userConfig = result.data;
       } else {
