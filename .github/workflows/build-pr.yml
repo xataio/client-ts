@@ -178,7 +178,7 @@ jobs:
           useLockFile: false
 
       - name: 🚀 Deploy to ${{ matrix.target }}
-        run: npx ts-node --cwd ./test/e2e ${{ matrix.target }}
+        run: npx ts-node --cwdMode ${{ matrix.target }}
         working-directory: ./test/e2e
         env:
           VERSION_TAG: 0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
