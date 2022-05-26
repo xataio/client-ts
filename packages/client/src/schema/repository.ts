@@ -532,7 +532,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     const { ttl } = query.getQueryOptions();
     if (!ttl || ttl < 0) return result;
 
-    const hasExpired = result.date.getTime() + ttl < new Date().getTime();
+    const hasExpired = result.date.getTime() + ttl < Date.now();
     return hasExpired ? null : result;
   }
 }
