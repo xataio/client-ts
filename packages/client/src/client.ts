@@ -1,6 +1,7 @@
 import { FetcherExtraProps, FetchImpl } from './api/fetcher';
-import { XataPlugin } from './plugins';
+import { XataPlugin, XataPluginOptions } from './plugins';
 import { SchemaPlugin, SchemaPluginResult } from './schema';
+import { CacheImpl, SimpleCache } from './schema/cache';
 import { BaseData } from './schema/record';
 import { LinkDictionary } from './schema/repository';
 import { SearchPlugin, SearchPluginResult } from './search';
@@ -15,6 +16,7 @@ export type BaseClientOptions = {
   apiKey?: string;
   databaseURL?: string;
   branch?: BranchStrategyOption;
+  cache?: CacheImpl;
 };
 
 export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
@@ -25,11 +27,13 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
     constructor(options: BaseClientOptions = {}, links?: LinkDictionary, tables?: string[]) {
       const safeOptions = this.#parseOptions(options);
+      const pluginOptions: XataPluginOptions = {
+        getFetchProps: () => this.#getFetchProps(safeOptions),
+        cache: safeOptions.cache
+      };
 
-      const db = new SchemaPlugin(links, tables).build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
-      const search = new SearchPlugin(db, links ?? {}).build({
-        getFetchProps: () => this.#getFetchProps(safeOptions)
-      });
+      const db = new SchemaPlugin(links, tables).build(pluginOptions);
+      const search = new SearchPlugin(db, links ?? {}).build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
       this.db = db;
@@ -37,7 +41,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       for (const [key, namespace] of Object.entries(plugins ?? {})) {
         if (!namespace) continue;
-        const result = namespace.build({ getFetchProps: () => this.#getFetchProps(safeOptions) });
+        const result = namespace.build(pluginOptions);
 
         if (result instanceof Promise) {
           void result.then((namespace: unknown) => {
@@ -55,6 +59,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
       const apiKey = options?.apiKey || getAPIKey();
+      const cache = options?.cache ?? new SimpleCache({ cacheRecords: false, defaultQueryTTL: 0 });
       const branch = async () =>
         options?.branch
           ? await this.#evaluateBranch(options.branch)
@@ -64,7 +69,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         throw new Error('Options databaseURL and apiKey are required');
       }
 
-      return { fetch, databaseURL, apiKey, branch };
+      return { fetch, databaseURL, apiKey, branch, cache };
     }
 
     async #getFetchProps({
