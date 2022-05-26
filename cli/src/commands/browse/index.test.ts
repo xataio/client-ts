@@ -22,7 +22,7 @@ const openMock = open as unknown as ReturnType<typeof vi.fn>;
 describe('browse', () => {
   test('fails if there is not XATA_DATABASE_URL configured', async () => {
     const config = await Config.load();
-    const command = new Browse([], config as Config);
+    const command = new Browse(['--branch', 'foo'], config as Config);
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(
       '[Error: Could not find workspace id. Please set XATA_DATABASE_URL.]'

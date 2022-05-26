@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { getCurrentBranchName } from '@xata.io/client';
+import { getCurrentBranchName, getDatabaseURL } from '@xata.io/client';
 import { parseDatabaseURL } from '../../defaults.js';
 import open from 'open';
 export default class Browse extends Command {
