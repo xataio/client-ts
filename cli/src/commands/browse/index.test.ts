@@ -33,6 +33,7 @@ describe('browse', () => {
     const config = await Config.load();
     const command = new Browse([], config as Config);
     process.env.XATA_DATABASE_URL = 'https://test-r5vcv5.xata.sh/db/test';
+    process.env.XATA_BRANCH = 'main';
 
     await command.run();
 
