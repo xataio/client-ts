@@ -5,7 +5,19 @@ import chalk from 'chalk';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import table from 'text-table';
+import { z } from 'zod';
 import { readAPIKey } from './key.js';
+import { cosmiconfigSync } from 'cosmiconfig';
+
+export const projectConfig = z.object({
+  codegen: z.optional(
+    z.object({
+      output: z.string()
+    })
+  )
+});
+
+export type ProjectConfig = z.infer<typeof projectConfig>;
 
 export abstract class BaseCommand extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
@@ -13,12 +25,28 @@ export abstract class BaseCommand extends Command {
   locale: string | undefined = undefined;
   timeZone: string | undefined = undefined;
 
+  userConfig: ProjectConfig | undefined;
+
   async init() {
     dotenv.config();
+
+    const search = cosmiconfigSync('xata').search();
+    if (search) {
+      const result = projectConfig.safeParse(search.config);
+      if (result.success) {
+        this.userConfig = result.data;
+      } else {
+        this.warn(`The configuration file ${search.filepath} was found, but could not be parsed:`);
+
+        for (const error of result.error.errors) {
+          this.warn(`  [${error.code}] ${error.message} at "${error.path.join('.')}"`);
+        }
+      }
+    }
   }
 
-  async getXataClient() {
-    const apiKey = await readAPIKey();
+  async getXataClient(apiKey?: string | null) {
+    apiKey = apiKey || (await readAPIKey());
     if (!apiKey) this.error('Could not instantiate Xata client. No API key found.'); // TODO: give suggested next steps
     return new XataApiClient({ apiKey, fetch });
   }
@@ -36,5 +64,15 @@ export abstract class BaseCommand extends Command {
       timeStyle: 'short',
       timeZone: this.timeZone
     });
+  }
+
+  async verifyAPIKey(key: string) {
+    this.log('Checking access to the API...');
+    const xata = await this.getXataClient(key);
+    try {
+      await xata.workspaces.getWorkspacesList();
+    } catch (err) {
+      return this.error(`Error accessing the API: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 }
