@@ -531,7 +531,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     const result = await this.#cache.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
     if (!result) return null;
 
-    const { cache: ttl = 0 } = query.getQueryOptions();
+    const { cache: ttl = this.#cache.defaultQueryTTL } = query.getQueryOptions();
     if (!ttl || ttl < 0) return result;
 
     const hasExpired = result.date.getTime() + ttl < Date.now();

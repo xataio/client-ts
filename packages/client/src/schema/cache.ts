@@ -1,5 +1,7 @@
 export interface CacheImpl {
   cacheRecords: boolean;
+  defaultQueryTTL: number;
+
   getAll(): Promise<Record<string, unknown>>;
   get: <T>(key: string) => Promise<T | null>;
   set: <T>(key: string, value: T) => Promise<void>;
@@ -7,16 +9,24 @@ export interface CacheImpl {
   clear: () => Promise<void>;
 }
 
+export interface SimpleCacheOptions {
+  max?: number;
+  cacheRecords?: boolean;
+  defaultQueryTTL?: number;
+}
+
 export class SimpleCache implements CacheImpl {
   #map: Map<string, unknown>;
 
-  cacheRecords: boolean;
   capacity: number;
+  cacheRecords: boolean;
+  defaultQueryTTL: number;
 
-  constructor(options: { max?: number; cacheRecords?: boolean } = {}) {
+  constructor(options: SimpleCacheOptions = {}) {
     this.#map = new Map();
     this.capacity = options.max ?? 500;
     this.cacheRecords = options.cacheRecords ?? true;
+    this.defaultQueryTTL = options.defaultQueryTTL ?? 60 * 1000;
   }
 
   async getAll(): Promise<Record<string, unknown>> {
