@@ -1,7 +1,8 @@
 import { Command, Flags } from '@oclif/core';
-import { getCurrentBranchName, getDatabaseURL } from '@xata.io/client';
-import { parseDatabaseURL } from '../../defaults.js';
+import { getCurrentBranchName } from '@xata.io/client';
 import open from 'open';
+import { parseDatabaseURL } from '../../defaults.js';
+import fetch from 'node-fetch';
 export default class Browse extends Command {
   static description = 'Open the current database in the browser';
 
@@ -19,7 +20,7 @@ export default class Browse extends Command {
     const { flags } = await this.parse(Browse);
 
     const { workspace, database } = parseDatabaseURL();
-    const branch = flags.branch || (await getCurrentBranchName());
+    const branch = flags.branch || (await getCurrentBranchName({ fetchImpl: fetch }));
 
     if (!workspace) {
       return this.error('Could not find workspace id. Please set XATA_DATABASE_URL.');
