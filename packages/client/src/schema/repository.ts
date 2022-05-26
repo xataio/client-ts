@@ -511,10 +511,12 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   async #setCacheRecord(record: SelectedPick<Record, ['*']>): Promise<void> {
+    if (!this.cache.cacheRecords) return;
     await this.cache.set(`rec_${this.#table}:${record.id}`, record);
   }
 
   async #getCacheRecord(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
+    if (!this.cache.cacheRecords) return null;
     return this.cache.get<SelectedPick<Record, ['*']>>(`rec_${this.#table}:${recordId}`);
   }
 

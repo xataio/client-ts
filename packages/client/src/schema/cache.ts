@@ -1,4 +1,5 @@
 export interface CacheImpl {
+  cacheRecords: boolean;
   getAll(): Promise<Record<string, unknown>>;
   get: <T>(key: string) => Promise<T | null>;
   set: <T>(key: string, value: T) => Promise<void>;
@@ -9,8 +10,13 @@ export interface CacheImpl {
 export class SimpleCache implements CacheImpl {
   #map: Map<string, unknown>;
 
-  constructor() {
+  cacheRecords: boolean;
+  capacity: number;
+
+  constructor(options: { max?: number; cacheRecords?: boolean } = {}) {
     this.#map = new Map();
+    this.capacity = options.max ?? 500;
+    this.cacheRecords = options.cacheRecords ?? true;
   }
 
   async getAll(): Promise<Record<string, unknown>> {
@@ -22,7 +28,13 @@ export class SimpleCache implements CacheImpl {
   }
 
   async set<T>(key: string, value: T): Promise<void> {
+    await this.delete(key);
     this.#map.set(key, value);
+
+    if (this.#map.size > this.capacity) {
+      const leastRecentlyUsed = this.#map.keys().next().value;
+      await this.delete(leastRecentlyUsed);
+    }
   }
 
   async delete(key: string): Promise<void> {
