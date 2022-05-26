@@ -175,7 +175,7 @@ describe('cache', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const query = await client.db.users.filter({ id: user.id }).getOne({ ttl: 500 });
+    const query = await client.db.users.filter({ id: user.id }).getOne({ cache: 500 });
     expect(query?.full_name).toBe('John Doe');
   });
 });
