@@ -95,9 +95,9 @@ async function main() {
   const body = await response.json();
 
   // Delete Vercel project
-  execSync(`npx vercel remove ${appName} --token ${accountApiToken}`, {
-    cwd: projectDir,
-    env: { ...process.env, VERCEL_ORG_ID: accountId, VERCEL_PROJECT_ID: projectId }
+  await fetch(`https://api.vercel.com/v9/projects/${projectId}?teamId=${teamId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accountApiToken}` }
   });
 
   if (
