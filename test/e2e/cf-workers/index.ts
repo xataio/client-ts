@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import fetch from 'node-fetch';
+import fetch from 'cross-fetch';
 import { getAppName, isObject, timeout } from '../shared';
 
 async function main() {
