@@ -24,6 +24,7 @@ export default class Codegen extends BaseCommand {
     const output = this.projectConfig?.codegen?.output;
 
     if (!output) {
+      // TODO: `xata config get/set` will be implemented in a near future
       return this.error(
         `Please, specify an output file in your project configuration file first with ${chalk.bold(
           'xata config set codegen.output <path>'

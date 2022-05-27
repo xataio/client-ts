@@ -30,7 +30,7 @@ describe('codegen', () => {
     command.projectConfig = {};
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(
-      '[Error: Please, specify an output file in your project configuration file first with [1mxata config set codegen.output <path>[22m]'
+      '[Error: Please, specify an output file in your project configuration file first with xata config set codegen.output <path>]'
     );
   });
 
