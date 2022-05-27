@@ -1,8 +1,5 @@
-import { Flags } from '@oclif/core';
-import { getCurrentBranchName, getDatabaseURL } from '@xata.io/client';
 import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
-import { parseDatabaseURL } from '../../defaults.js';
 
 export default class BranchesDelete extends BaseCommand {
   static description = 'Delete a branch';
@@ -10,35 +7,17 @@ export default class BranchesDelete extends BaseCommand {
   static examples = [];
 
   static flags = {
-    workspace: Flags.string({
-      description: 'Workspace id the database to delete belongs to'
-    }),
-    database: Flags.string({
-      description: 'Database name the branch to delete belongs to'
-    }),
-    branch: Flags.string({
-      description: 'Branch name to delete'
-    })
+    databaseURL: this.databaseURLFlag
   };
 
-  static args = [];
+  static args = [{ name: 'branch', description: 'Branch name to delete', required: true }];
 
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { flags } = await this.parse(BranchesDelete);
-    const databaseURL = getDatabaseURL();
-    const defaults = parseDatabaseURL(databaseURL);
-    const workspace = flags.workspace || defaults.workspace;
-    const database = flags.database || defaults.database;
-    const branch = flags.branch || (await this.getBranchName(databaseURL));
-
-    if (!workspace)
-      return this.error('Could not find workspace id. Please set XATA_DATABASE_URL or use the --workspace flag.');
-    if (!database)
-      return this.error('Could not find database name. Please set XATA_DATABASE_URL or use the --database flag.');
-    if (!branch)
-      return this.error('Could not find branch name. Either set up a git repository or use the --branch flag.');
+    const { flags, args } = await this.parse(BranchesDelete);
+    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
+    const branch = args.branch;
 
     const xata = await this.getXataClient();
 
@@ -55,13 +34,5 @@ export default class BranchesDelete extends BaseCommand {
     if (this.jsonEnabled()) return {};
 
     this.log(`Branch ${database}:${branch} in the ${workspace} workspace successfully deleted`);
-  }
-
-  async getBranchName(databaseURL?: string) {
-    try {
-      return await getCurrentBranchName({ databaseURL });
-    } catch (err) {
-      // Ignore
-    }
   }
 }

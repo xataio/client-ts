@@ -1,7 +1,6 @@
-import { BaseCommand } from '../../base.js';
-import prompts from 'prompts';
 import { Flags } from '@oclif/core';
-import { parseDatabaseURL } from '../../defaults.js';
+import prompts from 'prompts';
+import { BaseCommand } from '../../base.js';
 
 export default class WorkspacesDelete extends BaseCommand {
   static description = 'Delete a workspace';
@@ -20,11 +19,7 @@ export default class WorkspacesDelete extends BaseCommand {
 
   async run(): Promise<void | unknown> {
     const { flags } = await this.parse(WorkspacesDelete);
-    const defaults = parseDatabaseURL();
-    const workspace = flags.workspace || defaults.workspace;
-
-    if (!workspace)
-      return this.error('Could not find workspace id. Please set XATA_DATABASE_URL or use the --workspace flag.');
+    const workspace = flags.workspace || (await this.getWorkspace());
 
     const xata = await this.getXataClient();
 

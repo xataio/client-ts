@@ -1,4 +1,5 @@
 import { generateFromContext } from '@xata.io/codegen';
+import chalk from 'chalk';
 import { mkdir, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path, { dirname, extname, relative } from 'path';
@@ -17,15 +18,17 @@ export default class Codegen extends BaseCommand {
 
   static flags = {};
 
-  static args = [{ name: 'output', description: 'The output file to generate', required: false }];
+  static args = [];
 
   async run(): Promise<void> {
-    const { args } = await this.parse(Codegen);
-
-    const output = args.output || this.projectConfig?.codegen?.output;
+    const output = this.projectConfig?.codegen?.output;
 
     if (!output) {
-      return this.error('Please, specify an output file as an argument or configure it in your config file');
+      return this.error(
+        `Please, specify an output file in your project configuration file first with ${chalk.bold(
+          'xata config set codegen.output <path>'
+        )}`
+      );
     }
 
     const ext = extname(output);
@@ -39,13 +42,14 @@ export default class Codegen extends BaseCommand {
       );
     }
 
-    const result = await generateFromContext('typescript', { fetchImpl: fetch });
+    const databaseURL = await this.getDatabaseURL();
+    const result = await generateFromContext('typescript', { fetchImpl: fetch, databaseURL });
     const code = result.transpiled;
     const declarations = result.declarations;
 
     await mkdir(dir, { recursive: true });
     await writeFile(output, code);
-    if (declarations && language !== 'typescript') {
+    if (declarations && this.projectConfig?.codegen?.declarations) {
       await writeFile(path.join(dir, 'types.d.ts'), declarations);
     }
 

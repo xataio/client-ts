@@ -1,6 +1,5 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
-import { parseDatabaseURL } from '../../defaults.js';
 
 export default class DatabasesList extends BaseCommand {
   static description = 'List your databases';
@@ -19,11 +18,7 @@ export default class DatabasesList extends BaseCommand {
 
   async run(): Promise<any> {
     const { flags } = await this.parse(DatabasesList);
-    const defaults = parseDatabaseURL();
-    const workspace = flags.workspace || defaults.workspace;
-
-    if (!workspace)
-      return this.error('Could not find workspace id. Please set XATA_DATABASE_URL or use the --workspace flag.');
+    const workspace = flags.workspace || (await this.getWorkspace());
 
     const xata = await this.getXataClient();
     const databaseList = await xata.databases.getDatabaseList(workspace);
