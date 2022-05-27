@@ -1,7 +1,7 @@
 import { createApp } from '@remix-run/dev';
 import { execSync } from 'child_process';
 import https from 'https';
-import fetch from 'node-fetch';
+import fetch from 'cross-fetch';
 import path from 'path';
 import { getAppName, isObject } from '../shared';
 
@@ -67,6 +67,7 @@ async function main() {
   const url = await checkUrls([`https://${appName}.pages.dev`, deploymentUrl]);
 
   const response = await fetch(`${url}/test`, {
+    // @ts-ignore
     agent: new https.Agent({
       // SSL Certificate can take some time to load
       rejectUnauthorized: false
@@ -130,6 +131,7 @@ async function checkUrls(urls: string[], retry = 0): Promise<string> {
     console.log(`Checking ${url}, retry ${retry + 1}`);
     try {
       const response = await fetch(url, {
+        // @ts-ignore
         agent: new https.Agent({
           // SSL Certificate can take some time to load
           rejectUnauthorized: false
