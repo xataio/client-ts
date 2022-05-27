@@ -8,6 +8,7 @@ import { readFile, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path from 'path';
 import prompts from 'prompts';
+import slugify from 'slugify';
 import table from 'text-table';
 import { z } from 'zod';
 import { readAPIKey } from './key.js';
@@ -103,8 +104,17 @@ export abstract class BaseCommand extends Command {
     const workspaces = await xata.workspaces.getWorkspacesList();
 
     if (workspaces.workspaces.length === 0) {
-      // TODO: check allowCreate
-      return this.error('No workspaces found, please create one first');
+      if (!options.allowCreate) {
+        return this.error('No workspaces found, please create one first');
+      }
+
+      const result = await prompts({
+        type: 'text',
+        name: 'name',
+        message: 'New workspace name'
+      });
+      const workspace = await xata.workspaces.createWorkspace({ name: result.name, slug: slugify(result.name) });
+      return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
       this.log(`You only have a workspace, using it by default: ${workspace}"`);
