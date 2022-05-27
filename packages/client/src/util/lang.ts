@@ -19,3 +19,11 @@ export function isObject(value: any): value is Record<string, unknown> {
 export function isString(value: any): value is string {
   return value !== undefined && value !== null && typeof value === 'string';
 }
+
+export function toBase64(value: string): string {
+  try {
+    return btoa(value);
+  } catch (err) {
+    return Buffer.from(value).toString('base64');
+  }
+}

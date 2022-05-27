@@ -45,8 +45,8 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  async getXataClient() {
-    const apiKey = await readAPIKey();
+  async getXataClient(apiKey?: string | null) {
+    apiKey = apiKey || (await readAPIKey());
     if (!apiKey) this.error('Could not instantiate Xata client. No API key found.'); // TODO: give suggested next steps
     return new XataApiClient({ apiKey, fetch });
   }
@@ -64,5 +64,15 @@ export abstract class BaseCommand extends Command {
       timeStyle: 'short',
       timeZone: this.timeZone
     });
+  }
+
+  async verifyAPIKey(key: string) {
+    this.log('Checking access to the API...');
+    const xata = await this.getXataClient(key);
+    try {
+      await xata.workspaces.getWorkspacesList();
+    } catch (err) {
+      return this.error(`Error accessing the API: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 }

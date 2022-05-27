@@ -1,5 +1,5 @@
 import { FilterExpression } from '../api/schemas';
-import { compact } from '../util/lang';
+import { compact, toBase64 } from '../util/lang';
 import { NonEmptyArray, RequiredBy } from '../util/types';
 import { Filter } from './filters';
 import { Page, Paginable, PaginationOptions, PaginationQueryMeta, PAGINATION_MAX_SIZE } from './pagination';
@@ -13,6 +13,7 @@ export type QueryOptions<T extends XataRecord> = {
   columns?: NonEmptyArray<SelectableColumn<T>>;
   filter?: FilterExpression;
   sort?: SortFilter<T> | SortFilter<T>[];
+  cache?: number;
 };
 
 /**
@@ -52,6 +53,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     this.#data.sort = data.sort ?? parent?.sort;
     this.#data.columns = data.columns ?? parent?.columns ?? ['*'];
     this.#data.page = data.page ?? parent?.page;
+    this.#data.cache = data.cache ?? parent?.cache;
 
     this.any = this.any.bind(this);
     this.all = this.all.bind(this);
@@ -66,6 +68,12 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
   getQueryOptions(): QueryOptions<Record> {
     return this.#data;
+  }
+
+  key(): string {
+    const { columns = [], filter = {}, sort = [], page = {} } = this.#data;
+    const key = JSON.stringify({ columns, filter, sort, page });
+    return toBase64(key);
   }
 
   /**
@@ -250,15 +258,24 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns The first record that matches the query, or null if no record matched the query.
    */
-  getOne(): Promise<Result | null>;
-  getOne(options: Omit<QueryOptions<Record>, 'columns' | 'page'>): Promise<Result | null>;
-  getOne<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
+  getFirst(): Promise<Result | null>;
+  getFirst(options: Omit<QueryOptions<Record>, 'columns' | 'page'>): Promise<Result | null>;
+  getFirst<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
     options: Options
   ): Promise<SelectedPick<Record, typeof options['columns']> | null>;
-  async getOne<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
+  async getFirst<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
     const records = await this.getMany({ ...options, page: { size: 1 } });
     // Method overloading does not provide type inference for the return type.
     return (records[0] as unknown as Result) || null;
+  }
+
+  /**
+   * Builds a new query object adding a cache TTL in milliseconds.
+   * @param ttl The cache TTL in milliseconds.
+   * @returns A new Query object.
+   */
+  cache(ttl: number): Query<Record, Result> {
+    return new Query<Record, Result>(this.#repository, this.#table, { cache: ttl }, this.#data);
   }
 
   nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
