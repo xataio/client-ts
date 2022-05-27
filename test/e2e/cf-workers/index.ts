@@ -16,7 +16,7 @@ async function main() {
   const deploymentUrl = `https://${appName}.${accountDomain}.workers.dev`;
 
   // Install client
-  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG} --no-save`);
+  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG} --no-save`, { cwd: __dirname });
 
   // Publish the app to CF
   execSync(`npx wrangler publish test.ts --name ${appName}`, { cwd: __dirname });

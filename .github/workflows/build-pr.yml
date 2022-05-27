@@ -157,7 +157,7 @@ jobs:
 
     strategy:
       matrix:
-        target: ['cf-workers', 'cf-pages', 'edge-runtime']
+        target: ['cf-workers', 'cf-pages', 'edge-runtime', 'vercel-next']
 
     steps:
       - name: 🛑 Cancel Previous Runs
@@ -189,3 +189,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.E2E_CF_ACCOUNT_ID }}
           CLOUDFLARE_ACCOUNT_DOMAIN: ${{ secrets.E2E_CF_ACCOUNT_DOMAIN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.E2E_CF_API_TOKEN }}
+
+          VERCEL_TEAM_ID: ${{ secrets.E2E_VERCEL_TEAM_ID }}
+          VERCEL_API_TOKEN: ${{ secrets.E2E_VERCEL_API_TOKEN }}
