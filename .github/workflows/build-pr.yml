@@ -157,7 +157,7 @@ jobs:
 
     strategy:
       matrix:
-        target: ['cf-workers']
+        target: ['cf-workers', 'edge-runtime']
 
     steps:
       - name: 🛑 Cancel Previous Runs

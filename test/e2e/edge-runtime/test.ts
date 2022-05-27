@@ -1,11 +1,11 @@
-import { XataApiClient } from '../../../../client/src';
-import { XataClient } from '../../../../codegen/example/xata';
-import { teamColumns, userColumns } from '../../../mock_data';
+// @ts-ignore
+import { XataApiClient, BaseClient } from '@xata.io/client';
 
 async function main() {
   // @ts-ignore
   const workspace = XATA_WORKSPACE;
 
+  // @ts-ignore
   const api = new XataApiClient({ apiKey: XATA_API_KEY });
 
   const id = Math.round(Math.random() * 100000);
@@ -17,9 +17,10 @@ async function main() {
   await api.tables.setTableSchema(workspace, databaseName, 'main', 'teams', { columns: teamColumns });
   await api.tables.setTableSchema(workspace, databaseName, 'main', 'users', { columns: userColumns });
 
-  const xata = new XataClient({
+  const xata = new BaseClient({
     databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
     branch: 'main',
+    // @ts-ignore
     apiKey: XATA_API_KEY
   });
 
@@ -35,3 +36,53 @@ async function main() {
 }
 
 main();
+
+const userColumns: any[] = [
+  {
+    name: 'email',
+    type: 'email'
+  },
+  {
+    name: 'full_name',
+    type: 'string'
+  },
+  {
+    name: 'address',
+    type: 'object',
+    columns: [
+      {
+        name: 'street',
+        type: 'string'
+      },
+      {
+        name: 'zipcode',
+        type: 'int'
+      }
+    ]
+  },
+  {
+    name: 'team',
+    type: 'link',
+    link: {
+      table: 'teams'
+    }
+  }
+];
+
+const teamColumns: any[] = [
+  {
+    name: 'name',
+    type: 'string'
+  },
+  {
+    name: 'labels',
+    type: 'multiple'
+  },
+  {
+    name: 'owner',
+    type: 'link',
+    link: {
+      table: 'users'
+    }
+  }
+];
