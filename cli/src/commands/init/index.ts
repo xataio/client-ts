@@ -29,7 +29,7 @@ export default class Init extends BaseCommand {
       this.error(`Project already configured at ${this.projectConfigLocation}`);
     }
 
-    const databaseURL = await this.getDatabaseURL(true, flags.databaseURL);
+    const databaseURL = await this.getDatabaseURL(flags.databaseURL, true);
 
     this.projectConfig = { databaseURL };
 
