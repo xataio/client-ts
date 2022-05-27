@@ -2,7 +2,7 @@ import { Flags } from '@oclif/core';
 import { getCurrentBranchName } from '@xata.io/client';
 import fetch from 'node-fetch';
 import open from 'open';
-import { BaseCommand } from '../../base';
+import { BaseCommand } from '../../base.js';
 export default class Browse extends BaseCommand {
   static description = 'Open the current database in the browser';
 

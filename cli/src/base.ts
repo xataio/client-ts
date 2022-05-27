@@ -13,17 +13,17 @@ import table from 'text-table';
 import { z } from 'zod';
 import { readAPIKey } from './key.js';
 
-export const projectConfig = z.object({
-  databaseURL: z.string().optional(),
-  codegen: z
-    .object({
-      output: z.string().optional(),
-      declarations: z.boolean().optional()
-    })
-    .optional()
+export const projectConfigSchema = z.object({
+  databaseURL: z.string(),
+  codegen: z.object({
+    output: z.string(),
+    declarations: z.boolean()
+  })
 });
 
-export type ProjectConfig = z.infer<typeof projectConfig>;
+const partialProjectConfig = projectConfigSchema.deepPartial();
+
+type ProjectConfig = z.infer<typeof partialProjectConfig>;
 
 const moduleName = 'xata';
 export abstract class BaseCommand extends Command {
@@ -51,7 +51,7 @@ export abstract class BaseCommand extends Command {
     const moduleName = 'xata';
     const search = cosmiconfigSync(moduleName, { searchPlaces: this.searchPlaces }).search();
     if (search) {
-      const result = projectConfig.safeParse(search.config);
+      const result = partialProjectConfig.safeParse(search.config);
       if (result.success) {
         this.projectConfig = result.data;
         this.projectConfigLocation = search.filepath;
