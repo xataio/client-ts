@@ -23,13 +23,6 @@ export default class Browse extends BaseCommand {
     const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
     const branch = flags.branch || (await getCurrentBranchName({ fetchImpl: fetch }));
 
-    if (!workspace) {
-      return this.error('Could not find workspace id. Please set XATA_DATABASE_URL.');
-    }
-    if (!database) {
-      return this.error('Could not find database name. Please set XATA_DATABASE_URL.');
-    }
-
     await open(`https://app.xata.io/workspaces/${workspace}/dbs/${database}/branches/${branch}`);
   }
 }
