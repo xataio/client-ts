@@ -59,12 +59,22 @@ async function main() {
     })
   });
 
-  // Publish the app to CF
-  execSync(`npx wrangler pages publish . --project-name ${appName} --branch main`, { cwd: projectDir });
+  let url: string | undefined;
 
-  // Wait for deployment to complete
-  const deploymentUrl = await checkDeploymentStatus(accountId, appName, accountApiToken);
-  const url = await checkUrls([`https://${appName}.pages.dev`, deploymentUrl]);
+  for (let retry = 0; retry <= 5; retry++) {
+    console.log(`Deploying to CloudFlare, retry ${retry + 1}`);
+    execSync(`npx wrangler pages publish . --project-name ${appName} --branch main`, { cwd: projectDir });
+
+    // Wait for deployment to complete
+    const deploymentUrl = await checkDeploymentStatus(accountId, appName, accountApiToken);
+    if (!deploymentUrl) continue;
+    url = await checkUrls([`https://${appName}.pages.dev`, deploymentUrl]);
+    if (url) break;
+
+    await timeout(Math.min(1000 * Math.pow(2, retry), 60000));
+  }
+
+  if (!url) throw new Error('Failed to deploy');
 
   const response = await fetch(`${url}/test`, {
     // @ts-ignore
@@ -97,8 +107,13 @@ async function main() {
 
 main();
 
-async function checkDeploymentStatus(accountId: string, appName: string, apiToken: string, retry = 0): Promise<string> {
-  if (retry > 20) throw new Error('Deployment failed');
+async function checkDeploymentStatus(
+  accountId: string,
+  appName: string,
+  apiToken: string,
+  retry = 0
+): Promise<string | undefined> {
+  if (retry > 5) return undefined;
   console.log(`Checking deployment status, retry ${retry + 1}`);
 
   const response = await fetch(
@@ -124,8 +139,8 @@ async function checkDeploymentStatus(accountId: string, appName: string, apiToke
   }
 }
 
-async function checkUrls(urls: string[], retry = 0): Promise<string> {
-  if (retry > 20) throw new Error('URL check failed');
+async function checkUrls(urls: string[], retry = 0): Promise<string | undefined> {
+  if (retry > 5) return undefined;
 
   for (const url of urls) {
     console.log(`Checking ${url}, retry ${retry + 1}`);
