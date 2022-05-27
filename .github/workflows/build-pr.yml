@@ -156,6 +156,7 @@ jobs:
     #if: github.ref_name == 'changeset-release/main'
 
     strategy:
+      fail-fast: false
       matrix:
         target: ['cf-workers', 'cf-pages', 'edge-runtime', 'vercel-next']
 
