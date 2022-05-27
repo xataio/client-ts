@@ -1,8 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../Users/sfera/Workspace/xata/client-ts/test/e2e/netlify-functions/test.ts"],
-  "sourceRoot": "/var/folders/gg/s1txgd515395q7h86rd7wrx00000gn/T/tmp-18217-vz4WfqXjAohF",
-  "sourcesContent": ["export default () => new Response('Hello world');\n"],
-  "mappings": ";;;;;;;;;AAAA;AAAA;AAAA;AAAA,IAAO,eAAQ,MAAM,IAAI,SAAS;",
-  "names": []
-}
