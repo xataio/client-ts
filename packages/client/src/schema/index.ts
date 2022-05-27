@@ -3,6 +3,7 @@ import { isString } from '../util/lang';
 import { BaseData } from './record';
 import { LinkDictionary, Repository, RestRepository } from './repository';
 
+export * from './cache';
 export * from './operators';
 export * from './pagination';
 export { Query } from './query';
@@ -28,9 +29,7 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
     super();
   }
 
-  build(options: XataPluginOptions): SchemaPluginResult<Schemas> {
-    const { getFetchProps } = options;
-
+  build(pluginOptions: XataPluginOptions): SchemaPluginResult<Schemas> {
     const links = this.links;
 
     const db: any = new Proxy(
@@ -38,7 +37,9 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
       {
         get: (_target, table) => {
           if (!isString(table)) throw new Error('Invalid table name');
-          if (!this.#tables[table]) this.#tables[table] = new RestRepository({ db, getFetchProps, table, links });
+          if (!this.#tables[table]) {
+            this.#tables[table] = new RestRepository({ db, pluginOptions, table, links });
+          }
 
           return this.#tables[table];
         }
@@ -47,7 +48,7 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
     // Inject generated tables for shell to auto-complete
     for (const table of this.tableNames ?? []) {
-      db[table] = new RestRepository({ db, getFetchProps, table, links });
+      db[table] = new RestRepository({ db, pluginOptions, table, links });
     }
 
     return db;

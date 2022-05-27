@@ -20,7 +20,7 @@ type BranchResolutionOptions = {
   fetchImpl?: FetchImpl;
 };
 
-export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string | undefined> {
+export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string> {
   const env = await getBranchByEnvVariable();
   if (env) return env;
 

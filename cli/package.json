@@ -34,6 +34,7 @@
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "node-fetch": "^3.2.4",
+    "open": "^8.4.0",
     "prompts": "^2.4.2",
     "slugify": "^1.6.5",
     "text-table": "^0.2.0",
