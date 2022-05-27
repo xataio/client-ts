@@ -1,4 +1,4 @@
-import fetch from 'cross-fetch';
+import fetch from 'node-fetch';
 import { EdgeRuntime } from 'edge-runtime';
 import { rollup } from 'rollup';
 import { importCdn } from 'rollup-plugin-import-cdn';

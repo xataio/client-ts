@@ -1,5 +1,5 @@
 import { exec, execSync } from 'child_process';
-import fetch from 'cross-fetch';
+import fetch from 'node-fetch';
 import path from 'path';
 import { getAppName, isObject } from '../shared';
 
