@@ -1,6 +1,6 @@
 import { EdgeRuntime } from 'edge-runtime';
 import { rollup } from 'rollup';
-import typescript from 'rollup-plugin-typescript2';
+import esbuild from 'rollup-plugin-esbuild';
 import { isObject } from '../shared';
 
 async function main() {
@@ -16,11 +16,7 @@ async function main() {
     const bundle = await rollup({
       input: `${__dirname}/test.ts`,
       output: { file: `file://bundle.js`, format: 'es' },
-      plugins: [
-        typescript({
-          tsconfigOverride: { compilerOptions: { module: 'esnext', target: 'ES6', lib: ['dom', 'esnext'] } }
-        })
-      ]
+      plugins: [esbuild()]
     });
 
     const { output } = await bundle.generate({});
