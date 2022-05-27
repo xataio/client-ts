@@ -107,7 +107,7 @@ async function checkDeploymentStatus(accountId: string, appName: string, apiToke
   );
 
   if (response.status >= 200 && response.status < 400) {
-    const data = await response.json();
+    const data = (await response.json()) as any;
     const deployment = data.result[0];
     const latest = deployment.latest_stage;
     if (latest.name === 'deploy' && latest.status === 'success') {

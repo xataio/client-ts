@@ -38,7 +38,7 @@ async function main() {
     })
   });
 
-  const { id: projectId, accountId } = await createResponse.json();
+  const { id: projectId, accountId } = (await createResponse.json()) as any;
 
   // Add environment variables
   await fetch(`https://api.vercel.com/v9/projects/${projectId}/env`, {
@@ -82,7 +82,7 @@ async function main() {
     }
   });
 
-  const { deployments } = await deploymentsResponse.json();
+  const { deployments } = (await deploymentsResponse.json()) as any;
   const deploymentUrl = deployments[0].url;
 
   const response = await fetch(`${deploymentUrl}/api/test`);

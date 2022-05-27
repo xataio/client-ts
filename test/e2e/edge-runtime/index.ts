@@ -1,15 +1,9 @@
-import { execSync } from 'child_process';
-import fetch from 'cross-fetch';
 import { EdgeRuntime } from 'edge-runtime';
 import { rollup } from 'rollup';
-import { importCdn } from 'rollup-plugin-import-cdn';
 import typescript from 'rollup-plugin-typescript2';
 import { isObject } from '../shared';
 
 async function main() {
-  // Install client
-  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG} --no-save`);
-
   const runtime = new EdgeRuntime({
     extend: (context) => {
       context.XATA_API_KEY = process.env.XATA_API_KEY;
@@ -21,12 +15,11 @@ async function main() {
   try {
     const bundle = await rollup({
       input: `${__dirname}/test.ts`,
-      output: { file: `file://bundle.js` },
+      output: { file: `file://bundle.js`, format: 'es' },
       plugins: [
         typescript({
           tsconfigOverride: { compilerOptions: { module: 'esnext', target: 'ES6', lib: ['dom', 'esnext'] } }
-        }),
-        importCdn({ fetchImpl: fetch })
+        })
       ]
     });
 
