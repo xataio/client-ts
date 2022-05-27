@@ -110,13 +110,13 @@ async function main() {
     }
   } catch (e) {
     error = e;
-
-    // Delete Vercel project
-    await fetch(`https://api.vercel.com/v9/projects/${projectId}?teamId=${teamId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${accountApiToken}` }
-    });
   }
+
+  // Delete Vercel project
+  await fetch(`https://api.vercel.com/v9/projects/${projectId}?teamId=${teamId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accountApiToken}` }
+  });
 
   if (error) {
     console.error(error);

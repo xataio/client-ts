@@ -52,12 +52,12 @@ async function main() {
     }
   } catch (e) {
     error = e;
-
-    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/${appName}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${accountApiToken}` }
-    });
   }
+
+  await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/${appName}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accountApiToken}` }
+  });
 
   if (error) {
     console.error(error);

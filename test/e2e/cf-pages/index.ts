@@ -102,13 +102,13 @@ async function main() {
     }
   } catch (e) {
     error = e;
-
-    // Delete the app from CF
-    await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${appName}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${accountApiToken}` }
-    });
   }
+
+  // Delete the app from CF
+  await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${appName}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accountApiToken}` }
+  });
 
   if (error) {
     console.error(error);
