@@ -5,6 +5,7 @@ import prompts from 'prompts';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
 import { readAPIKey } from '../../key.js';
+import Codegen from '../codegen/index.js';
 import EditSchema from '../schema/edit.js';
 
 export default class Init extends BaseCommand {
@@ -19,8 +20,6 @@ export default class Init extends BaseCommand {
   static args = [
     // TODO: add an arg for initial schema
   ];
-
-  packageManager: 'npm' | 'yarn' | undefined;
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Init);
@@ -38,7 +37,7 @@ export default class Init extends BaseCommand {
 
     await EditSchema.run([]);
 
-    await this.runCodegen();
+    await Codegen.runIfConfigured(this.projectConfig);
 
     await this.writeConfig();
 
@@ -97,15 +96,12 @@ export default class Init extends BaseCommand {
   }
 
   async getPackageManager() {
-    if (this.packageManager) return this.packageManager;
-
     const packageManager = (await this.access('yarn.lock')) ? 'yarn' : 'npm';
     if (!which.sync(packageManager, { nothrow: true })) {
       this.error(
         `Looks like ${packageManager} is not installed or is not in the PATH. This made impossible to install the code generator`
       );
     }
-    this.packageManager = packageManager;
     return packageManager;
   }
 

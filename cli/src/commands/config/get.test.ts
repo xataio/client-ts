@@ -1,5 +1,4 @@
 import { Config } from '@oclif/core';
-import { writeFile } from 'fs/promises';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import GetConfig from './get.js';
 
@@ -8,8 +7,6 @@ vi.mock('fs/promises');
 afterEach(() => {
   vi.clearAllMocks();
 });
-
-const writeFileMock = writeFile as unknown as ReturnType<typeof vi.fn>;
 
 describe('get config', () => {
   test('fails if there is not project configuration', async () => {

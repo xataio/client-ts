@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { mkdir, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path, { dirname, extname, relative } from 'path';
-import { BaseCommand } from '../../base.js';
+import { BaseCommand, ProjectConfig } from '../../base.js';
 
 const languages: Record<string, 'javascript' | 'typescript'> = {
   '.js': 'javascript',
@@ -12,7 +12,7 @@ const languages: Record<string, 'javascript' | 'typescript'> = {
 };
 
 export default class Codegen extends BaseCommand {
-  static description = 'Generate code form the current schema';
+  static description = 'Generate code form the current database schema';
 
   static examples = [];
 
@@ -24,7 +24,6 @@ export default class Codegen extends BaseCommand {
     const output = this.projectConfig?.codegen?.output;
 
     if (!output) {
-      // TODO: `xata config get/set` will be implemented in a near future
       return this.error(
         `Please, specify an output file in your project configuration file first with ${chalk.bold(
           'xata config set codegen.output <path>'
@@ -55,5 +54,9 @@ export default class Codegen extends BaseCommand {
     }
 
     this.log(`Your XataClient is generated at ./${relative(process.cwd(), output)}`);
+  }
+
+  static async runIfConfigured(projectConfig: ProjectConfig) {
+    if (projectConfig?.codegen?.output) return Codegen.run([]);
   }
 }
