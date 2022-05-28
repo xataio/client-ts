@@ -5,6 +5,7 @@ import prompts from 'prompts';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
 import { readAPIKey } from '../../key.js';
+import EditSchema from '../schema/edit.js';
 
 export default class Init extends BaseCommand {
   static description = 'Configure your working directory to work with a Xata database';
@@ -89,11 +90,7 @@ export default class Init extends BaseCommand {
   }
 
   async editSchema() {
-    // TODO
-  }
-
-  async runCodegen() {
-    // TODO
+    await EditSchema.run([]);
   }
 
   async getPackageManager() {

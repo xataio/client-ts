@@ -11,6 +11,7 @@ import prompts from 'prompts';
 import slugify from 'slugify';
 import table from 'text-table';
 import { z } from 'zod';
+import Codegen from './commands/codegen/index.js';
 import { readAPIKey } from './key.js';
 
 export const projectConfigSchema = z.object({
@@ -211,5 +212,9 @@ export abstract class BaseCommand extends Command {
     } else {
       await writeFile(fullPath, JSON.stringify(this.projectConfig, null, 2));
     }
+  }
+
+  async runCodegen() {
+    if (this.projectConfig?.codegen?.output) await Codegen.run([]);
   }
 }
