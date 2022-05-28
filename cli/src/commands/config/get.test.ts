@@ -14,7 +14,7 @@ describe('get config', () => {
     const command = new GetConfig(['foo'], config as Config);
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(
-      '[Error: No project configuration found. Use [1mxata init[22m to configure your project.]'
+      '[Error: No project configuration found. Use xata init to configure your project.]'
     );
   });
 
