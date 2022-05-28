@@ -36,7 +36,7 @@ export default class Init extends BaseCommand {
 
     await this.installSDK();
 
-    await this.editSchema();
+    await EditSchema.run([]);
 
     await this.runCodegen();
 
@@ -70,27 +70,30 @@ export default class Init extends BaseCommand {
     });
     if (!result.confirm) return;
 
-    const config = await prompts([
-      {
-        type: 'text',
-        name: 'output',
-        message: 'Choose where the output file for the code generator',
-        initial: 'src/xata.ts'
-      },
-      {
+    this.projectConfig = this.projectConfig || {};
+    this.projectConfig.codegen = {};
+
+    const { output } = await prompts({
+      type: 'text',
+      name: 'output',
+      message: 'Choose where the output file for the code generator',
+      initial: 'src/xata.ts'
+    });
+
+    this.projectConfig.codegen.output = output;
+
+    if (!output.endsWith('.ts')) {
+      const { declarations } = await prompts({
         type: 'confirm',
         name: 'declarations',
         message: 'Do you want to generate the TypeScript declarations?',
         initial: (prev) => !prev.endsWith('.ts')
+      });
+
+      if (declarations) {
+        this.projectConfig.codegen.declarations = true;
       }
-    ]);
-
-    this.projectConfig = this.projectConfig || {};
-    this.projectConfig.codegen = config;
-  }
-
-  async editSchema() {
-    await EditSchema.run([]);
+    }
   }
 
   async getPackageManager() {
