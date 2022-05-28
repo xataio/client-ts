@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { BaseCommand, projectConfigSchema } from '../../base.js';
 import { setValue } from '../../config.js';
 
-export default class Get extends BaseCommand {
+export default class SetConfig extends BaseCommand {
   static description = 'Get a specific key from the project configuration given a key path';
 
   static examples = [];
@@ -15,7 +15,7 @@ export default class Get extends BaseCommand {
   ];
 
   async run(): Promise<void> {
-    const { args } = await this.parse(Get);
+    const { args } = await this.parse(SetConfig);
 
     if (!this.projectConfig)
       return this.error(`No project configuration found. Use ${chalk.bold('xata init')} to configure your project.`);

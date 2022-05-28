@@ -2,7 +2,7 @@ import { BaseCommand } from '../../base.js';
 import get from 'lodash.get';
 import chalk from 'chalk';
 
-export default class Get extends BaseCommand {
+export default class GetConfig extends BaseCommand {
   static description = 'Set a specific key from the project configuration given a key path and a value';
 
   static examples = [];
@@ -12,7 +12,7 @@ export default class Get extends BaseCommand {
   static args = [{ name: 'key', description: 'Key path to get the value from', required: true }];
 
   async run(): Promise<void> {
-    const { args } = await this.parse(Get);
+    const { args } = await this.parse(GetConfig);
 
     if (!this.projectConfig)
       return this.error(`No project configuration found. Use ${chalk.bold('xata init')} to configure your project.`);
