@@ -182,7 +182,7 @@ export abstract class BaseCommand extends Command {
 
     const workspace = await this.getWorkspace({ allowCreate });
     const database = await this.getDatabase(workspace, { allowCreate });
-    return `https://${workspace}.xata.io/${database}`;
+    return `https://${workspace}.xata.sh/db/${database}`;
   }
 
   async getParsedDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
