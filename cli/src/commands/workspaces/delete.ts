@@ -23,13 +23,13 @@ export default class WorkspacesDelete extends BaseCommand {
 
     const xata = await this.getXataClient();
 
-    const result = await prompts({
+    const { confirm } = await prompts({
       type: 'confirm',
       name: 'confirm',
       message: `Are you sure you want to delete workspace ${workspace}?`,
       initial: true
     });
-    if (!result.confirm) return this.exit(1);
+    if (!confirm) return this.exit(1);
 
     await xata.workspaces.deleteWorkspace(workspace);
 

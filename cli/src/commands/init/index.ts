@@ -47,13 +47,13 @@ export default class Init extends BaseCommand {
   }
 
   async installSDK() {
-    const result = await prompts({
+    const { confirm } = await prompts({
       type: 'confirm',
       name: 'confirm',
       message: 'Do you want to install the TypeScript/JavaScript SDK?',
       initial: true
     });
-    if (!result.confirm) return;
+    if (!confirm) return;
 
     await this.installPackage('@xata.io/codegen');
 
@@ -61,13 +61,13 @@ export default class Init extends BaseCommand {
   }
 
   async configureCodegen() {
-    const result = await prompts({
+    const { confirm } = await prompts({
       type: 'confirm',
       name: 'confirm',
       message: 'Do you want to use the TypeScript/JavaScript code generator?',
       initial: true
     });
-    if (!result.confirm) return;
+    if (!confirm) return;
 
     this.projectConfig = this.projectConfig || {};
     this.projectConfig.codegen = {};
@@ -78,6 +78,7 @@ export default class Init extends BaseCommand {
       message: 'Choose where the output file for the code generator',
       initial: 'src/xata.ts'
     });
+    if (!output) return this.error('You must provide an output file');
 
     this.projectConfig.codegen.output = output;
 
@@ -131,14 +132,15 @@ export default class Init extends BaseCommand {
   }
 
   async writeConfig() {
-    const result = await prompts({
+    const { place } = await prompts({
       type: 'select',
       name: 'place',
       message: 'Select where to store your configuration',
       choices: this.searchPlaces.map((place) => ({ title: place, value: place }))
     });
+    if (!place) return this.error('You must select a location for the configuration file');
 
-    this.projectConfigLocation = path.join(process.cwd(), result.place);
+    this.projectConfigLocation = path.join(process.cwd(), place);
     await this.updateConfig();
   }
 

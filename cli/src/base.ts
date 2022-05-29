@@ -108,12 +108,13 @@ export abstract class BaseCommand extends Command {
         return this.error('No workspaces found, please create one first');
       }
 
-      const result = await prompts({
+      const { name } = await prompts({
         type: 'text',
         name: 'name',
         message: 'New workspace name'
       });
-      const workspace = await xata.workspaces.createWorkspace({ name: result.name, slug: slugify(result.name) });
+      if (!name) return this.error('No workspace name provided');
+      const workspace = await xata.workspaces.createWorkspace({ name, slug: slugify(name) });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
@@ -121,7 +122,7 @@ export abstract class BaseCommand extends Command {
       return workspace;
     }
 
-    const result = await prompts({
+    const { workspace } = await prompts({
       type: 'select',
       name: 'workspace',
       message: 'Select a workspace',
@@ -131,8 +132,9 @@ export abstract class BaseCommand extends Command {
         value: workspace.id
       }))
     });
+    if (!workspace) return this.error('No workspace selected');
 
-    return String(result.workspace);
+    return String(workspace);
   }
 
   async getDatabase(workspace: string, options: { allowCreate?: boolean } = {}) {
@@ -150,26 +152,26 @@ export abstract class BaseCommand extends Command {
         choices.splice(0, 0, { title: 'Create a new database', value: 'create' });
       }
 
-      const result = await prompts({
+      const { database } = await prompts({
         type: 'select',
         name: 'database',
         message: dbs.length > 0 && options.allowCreate ? 'Select a database or create a new one' : 'Select a database',
         choices
       });
-
-      const database = result.database;
+      if (!database) return this.error('No database selected');
       if (database !== 'create') return database;
     } else if (!options.allowCreate) {
       return this.error('No databases found, please create one first');
     } else {
-      const name = await prompts({
+      const { name } = await prompts({
         type: 'text',
         name: 'name',
         message: 'New database name',
         initial: path.parse(process.cwd()).name
       });
+      if (!name) return this.error('No database name provided');
 
-      await xata.databases.createDatabase(workspace, name.name);
+      await xata.databases.createDatabase(workspace, name);
 
       return name.name;
     }
