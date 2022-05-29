@@ -7,6 +7,7 @@ export default class BranchesDelete extends BaseCommand {
   static examples = [];
 
   static flags = {
+    ...this.commonFlags,
     databaseURL: this.databaseURLFlag
   };
 

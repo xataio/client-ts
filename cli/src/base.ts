@@ -1,4 +1,5 @@
 import { Command, Flags } from '@oclif/core';
+import { BooleanFlag } from '@oclif/core/lib/interfaces';
 import { XataApiClient } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
@@ -214,4 +215,13 @@ export abstract class BaseCommand extends Command {
       await writeFile(fullPath, JSON.stringify(this.projectConfig, null, 2));
     }
   }
+
+  static commonFlags = {
+    json: Flags.boolean({
+      description: 'Print the output in JSON format'
+    }),
+    'no-input': Flags.boolean({
+      description: 'Will not prompt interactively for missing values'
+    })
+  };
 }

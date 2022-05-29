@@ -7,6 +7,7 @@ export default class BranchesCreate extends BaseCommand {
   static examples = [];
 
   static flags = {
+    ...this.commonFlags,
     databaseURL: this.databaseURLFlag,
     from: Flags.string({
       description: 'Branch name to branch off from'

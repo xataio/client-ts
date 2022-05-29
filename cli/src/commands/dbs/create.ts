@@ -7,6 +7,7 @@ export default class DatabasesCreate extends BaseCommand {
   static examples = [];
 
   static flags = {
+    ...this.commonFlags,
     workspace: Flags.string({
       description: 'Workspace id the database will belongs to'
     })

@@ -8,6 +8,7 @@ export default class DatabasesDelete extends BaseCommand {
   static examples = [];
 
   static flags = {
+    ...this.commonFlags,
     workspace: Flags.string({
       description: 'Workspace id the database to delete belongs to'
     })

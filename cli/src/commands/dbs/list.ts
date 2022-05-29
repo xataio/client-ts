@@ -7,6 +7,7 @@ export default class DatabasesList extends BaseCommand {
   static examples = [];
 
   static flags = {
+    json: Flags.boolean({}),
     workspace: Flags.string({
       description: 'Workspace id to list databases from'
     })

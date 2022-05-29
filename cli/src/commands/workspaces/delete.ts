@@ -8,6 +8,7 @@ export default class WorkspacesDelete extends BaseCommand {
   static examples = [];
 
   static flags = {
+    ...this.commonFlags,
     workspace: Flags.string({
       description: 'Workspace id to delete'
     })

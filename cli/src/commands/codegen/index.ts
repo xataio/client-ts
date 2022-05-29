@@ -16,7 +16,9 @@ export default class Codegen extends BaseCommand {
 
   static examples = [];
 
-  static flags = {};
+  static flags = {
+    ...this.commonFlags
+  };
 
   static args = [];
 

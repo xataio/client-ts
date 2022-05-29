@@ -9,6 +9,7 @@ export default class Browse extends BaseCommand {
   static examples = [];
 
   static flags = {
+    ...this.commonFlags,
     databaseURL: this.databaseURLFlag,
     branch: Flags.string({
       description: 'Branch to be browsed'
