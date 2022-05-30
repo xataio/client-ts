@@ -2117,7 +2117,11 @@ export type QueryTableVariables = {
  *           "link": {
  *             "table": "users"
  *           }
- *         }
+ *         },
+ *         {
+ *           "name": "founded date",
+ *           "type": "datetime"
+ *         },
  *       ]
  *     },
  *     {
@@ -2264,7 +2268,8 @@ export type QueryTableVariables = {
  *       "version": 0
  *     },
  *     "name": "first team",
- *     "code": "A1"
+ *     "code": "A1",
+ *     "founded date": "2020-03-04T10:43:54.32Z"
  *   }
  * }
  * ```
@@ -2279,7 +2284,7 @@ export type QueryTableVariables = {
  *   `$none`, etc.
  *
  * All operators start with an `$` to differentiate them from column names
- * (which are not allowed to start with an dollar sign).
+ * (which are not allowed to start with a dollar sign).
  *
  * #### Exact matching and control operators
  *
@@ -2480,7 +2485,7 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * #### Numeric ranges
+ * #### Numeric or datetime ranges
  *
  * ```json
  * {
@@ -2492,7 +2497,18 @@ export type QueryTableVariables = {
  *   }
  * }
  * ```
- *
+ * Date ranges would support the same operators, with the date as string in
+ * [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339):
+ * ```json
+ * {
+ *   "filter": {
+ *     "<column_name>": {
+ *       "$gt": "2019-10-12T07:20:50.52Z",
+ *       "$lt": "2021-10-12T07:20:50.52Z"
+ *     }
+ *   }
+ * }
+ * ```
  * The supported operators are `$gt`, `$lt`, `$ge`, `$le`.
  *
  * #### Negations
