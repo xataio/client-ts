@@ -21,9 +21,9 @@ const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 describe('databases create', () => {
   test('fails if the database name is not provided', async () => {
     const config = await Config.load();
-    const list = new DatabasesCreate([], config as Config);
+    const command = new DatabasesCreate(['--workspace', 'test-1234'], config as Config);
 
-    await expect(list.run()).rejects.toMatchInlineSnapshot(`
+    await expect(command.run()).rejects.toMatchInlineSnapshot(`
       [Error: Missing 1 required arg:
       database  The new database name
       See more help with --help]
@@ -39,12 +39,12 @@ describe('databases create', () => {
     });
 
     const config = await Config.load();
-    const list = new DatabasesCreate(['hello-world'], config as Config);
+    const command = new DatabasesCreate(['--workspace', 'test-1234', 'hello-world'], config as Config);
 
-    await expect(list.run()).rejects.toThrow('Something went wrong');
+    await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/dbs/hello-world');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/hello-world');
     expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
   });
 
@@ -57,14 +57,14 @@ describe('databases create', () => {
     });
 
     const config = await Config.load();
-    const list = new DatabasesCreate(['hello-world'], config as Config);
+    const command = new DatabasesCreate(['--workspace', 'test-1234', 'hello-world'], config as Config);
 
     expect(DatabasesCreate.enableJsonFlag).toBe(true);
-    vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);
+    vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
 
-    const log = vi.spyOn(list, 'log');
+    const log = vi.spyOn(command, 'log');
 
-    const result = await list.run();
+    const result = await command.run();
 
     if (json) {
       expect(result).toMatchInlineSnapshot(`
@@ -77,7 +77,7 @@ describe('databases create', () => {
     }
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/dbs/hello-world');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/hello-world');
     expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
 
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);

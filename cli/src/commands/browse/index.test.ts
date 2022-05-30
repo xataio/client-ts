@@ -20,19 +20,12 @@ afterEach(() => {
 const openMock = open as unknown as ReturnType<typeof vi.fn>;
 
 describe('browse', () => {
-  test('fails if there is not XATA_DATABASE_URL configured', async () => {
-    const config = await Config.load();
-    const command = new Browse(['--branch', 'foo'], config as Config);
-
-    await expect(command.run()).rejects.toMatchInlineSnapshot(
-      '[Error: Could not find workspace id. Please set XATA_DATABASE_URL.]'
-    );
-  });
-
   test('works with a branch defined by the context', async () => {
     const config = await Config.load();
     const command = new Browse([], config as Config);
-    process.env.XATA_DATABASE_URL = 'https://test-r5vcv5.xata.sh/db/test';
+    command.projectConfig = {
+      databaseURL: 'https://test-r5vcv5.xata.sh/db/test'
+    };
     process.env.XATA_BRANCH = 'main';
 
     await command.run();
@@ -44,7 +37,9 @@ describe('browse', () => {
   test('works with a branch specified with a flag', async () => {
     const config = await Config.load();
     const command = new Browse(['--branch', 'foo'], config as Config);
-    process.env.XATA_DATABASE_URL = 'https://test-r5vcv5.xata.sh/db/test';
+    command.projectConfig = {
+      databaseURL: 'https://test-r5vcv5.xata.sh/db/test'
+    };
 
     await command.run();
 
