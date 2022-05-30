@@ -14,27 +14,27 @@ export default class Login extends BaseCommand {
   async run(): Promise<void> {
     const existingKey = await readAPIKeyFromFile();
     if (existingKey) {
-      const result = await prompts({
+      const { overwrite } = await prompts({
         type: 'confirm',
         name: 'overwrite',
         message: 'Authentication is already configured, do you want to overwrite it?'
       });
-      if (!result.overwrite) this.exit(2);
+      if (!overwrite) this.exit(2);
     }
 
     this.log(
       'You can generate a new API key at https://app.xata.io. You can learn more about API keys on our documentation site: https://docs.xata.io/concepts/api-keys'
     );
-    const result = await prompts({
+    const { key } = await prompts({
       type: 'password',
       name: 'key',
       message: 'Introduce your API key:'
     });
-    if (!result.key) this.exit(2);
+    if (!key) this.exit(2);
 
-    await this.verifyAPIKey(result.key);
+    await this.verifyAPIKey(key);
 
-    await writeAPIKey(result.key);
+    await writeAPIKey(key);
 
     this.log('All set! you can now start using xata');
   }
