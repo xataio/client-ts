@@ -22,6 +22,7 @@
   "dependencies": {
     "@oclif/core": "^1.9.0",
     "@oclif/plugin-help": "^5",
+    "@oclif/plugin-not-found": "^2.3.1",
     "@oclif/plugin-plugins": "^2.1.0",
     "@types/prompts": "^2.0.14",
     "@xata.io/client": "^0.8.4",
@@ -62,7 +63,8 @@
     "commands": "./dist/commands",
     "plugins": [
       "@oclif/plugin-help",
-      "@oclif/plugin-plugins"
+      "@oclif/plugin-plugins",
+      "@oclif/plugin-not-found"
     ],
     "topicSeparator": " ",
     "topics": {
