@@ -4,7 +4,9 @@ export default class WorkspacesList extends BaseCommand {
 
   static examples = [];
 
-  static flags = {};
+  static flags = {
+    ...this.commonFlags
+  };
 
   static args = [];
 

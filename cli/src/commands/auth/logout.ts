@@ -16,12 +16,12 @@ export default class Logout extends BaseCommand {
     if (!existingKey) {
       return this.error('You are not logged in');
     }
-    const result = await prompts({
+    const { confirm } = await prompts({
       type: 'confirm',
       name: 'confirm',
       message: 'Are you sure you want to logout of Xata?'
     });
-    if (!result.confirm) this.exit(2);
+    if (!confirm) this.exit(2);
 
     await removeAPIKey();
 

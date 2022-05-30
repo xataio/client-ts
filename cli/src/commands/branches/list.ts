@@ -1,19 +1,12 @@
-import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
-import { parseDatabaseURL } from '../../defaults.js';
-
 export default class BranchesList extends BaseCommand {
   static description = 'List branches';
 
   static examples = [];
 
   static flags = {
-    workspace: Flags.string({
-      description: 'Workspace id to list branches from'
-    }),
-    database: Flags.string({
-      description: 'Database name to list branches from'
-    })
+    ...this.commonFlags,
+    databaseURL: this.databaseURLFlag
   };
 
   static args = [];
@@ -22,14 +15,7 @@ export default class BranchesList extends BaseCommand {
 
   async run(): Promise<any> {
     const { flags } = await this.parse(BranchesList);
-    const defaults = parseDatabaseURL();
-    const workspace = flags.workspace || defaults.workspace;
-    const database = flags.database || defaults.database;
-
-    if (!workspace)
-      return this.error('Could not find workspace id. Please set XATA_DATABASE_URL or use the --workspace flag.');
-    if (!database)
-      return this.error('Could not find database name. Please set XATA_DATABASE_URL or use the --database flag.');
+    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
 
     const xata = await this.getXataClient();
     const branches = await xata.branches.getBranchList(workspace, database);

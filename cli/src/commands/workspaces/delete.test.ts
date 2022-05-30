@@ -22,17 +22,6 @@ const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 
 describe('workspaces delete', () => {
-  test('fails if the workspace id is not provided', async () => {
-    const config = await Config.load();
-    const list = new WorkspacesDelete([], config as Config);
-
-    promptsMock.mockReturnValue({ confirm: false });
-
-    await expect(list.run()).rejects.toMatchInlineSnapshot(
-      '[Error: Could not find workspace id. Please set XATA_DATABASE_URL or use the --workspace flag.]'
-    );
-  });
-
   test('exists if the user does not confirm', async () => {
     const config = await Config.load();
     const list = new WorkspacesDelete(['--workspace', 'test-1234'], config as Config);

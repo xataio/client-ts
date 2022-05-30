@@ -19,24 +19,6 @@ afterEach(() => {
 const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 
 describe('branches list', () => {
-  test('fails if no workspace is provided', async () => {
-    const config = await Config.load();
-    const list = new BranchesList([], config as Config);
-
-    await expect(list.run()).rejects.toThrow(
-      'Could not find workspace id. Please set XATA_DATABASE_URL or use the --workspace flag.'
-    );
-  });
-
-  test('fails if no database is provided', async () => {
-    const config = await Config.load();
-    const list = new BranchesList(['--workspace', 'test-1234'], config as Config);
-
-    await expect(list.run()).rejects.toThrow(
-      'Could not find database name. Please set XATA_DATABASE_URL or use the --database flag.'
-    );
-  });
-
   test('fails if the HTTP response is not ok', async () => {
     fetchMock.mockReturnValue({
       ok: false,
@@ -46,9 +28,12 @@ describe('branches list', () => {
     });
 
     const config = await Config.load();
-    const list = new BranchesList(['--workspace', 'test-1234', '--database', 'test'], config as Config);
+    const command = new BranchesList([], config as Config);
+    command.projectConfig = {
+      databaseURL: 'https://test-1234.xata.sh/db/test'
+    };
 
-    await expect(list.run()).rejects.toThrow('Something went wrong');
+    await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test');
@@ -69,16 +54,19 @@ describe('branches list', () => {
     });
 
     const config = await Config.load();
-    const list = new BranchesList(['--workspace', 'test-1234', '--database', 'test'], config as Config);
-    list.locale = 'en-US';
-    list.timeZone = 'UTC';
+    const command = new BranchesList([], config as Config);
+    command.projectConfig = {
+      databaseURL: 'https://test-1234.xata.sh/db/test'
+    };
+    command.locale = 'en-US';
+    command.timeZone = 'UTC';
 
     expect(BranchesList.enableJsonFlag).toBe(true);
-    vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);
+    vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
 
-    const printTable = vi.spyOn(list, 'printTable');
+    const printTable = vi.spyOn(command, 'printTable');
 
-    const result = await list.run();
+    const result = await command.run();
 
     if (json) {
       expect(result).toMatchInlineSnapshot(`
