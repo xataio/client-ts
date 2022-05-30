@@ -77,7 +77,7 @@ export default class Init extends BaseCommand {
     });
     if (!confirm) return;
 
-    await this.installPackage('@xata.io/codegen');
+    await this.installPackage('@xata.io/client');
 
     await this.configureCodegen();
   }
