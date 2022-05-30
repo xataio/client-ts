@@ -1,3 +1,6 @@
+import { Flags } from '@oclif/core';
+import { getBranchMigrationPlan, getCurrentBranchName } from '@xata.io/client';
+import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { access, readFile, writeFile } from 'fs/promises';
 import path from 'path';
@@ -5,6 +8,7 @@ import prompts from 'prompts';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
 import { readAPIKey } from '../../key.js';
+import { xataDatabaseSchema } from '../../schema.js';
 import Codegen from '../codegen/index.js';
 import EditSchema from '../schema/edit.js';
 
@@ -14,7 +18,10 @@ export default class Init extends BaseCommand {
   static examples = [];
 
   static flags = {
-    databaseURL: this.databaseURLFlag
+    databaseURL: this.databaseURLFlag,
+    schema: Flags.string({
+      description: 'Initializes a new database or updates an existing one with the given schema'
+    })
   };
 
   static args = [
@@ -29,13 +36,20 @@ export default class Init extends BaseCommand {
       this.error(`Project already configured at ${this.projectConfigLocation}`);
     }
 
-    const databaseURL = await this.getDatabaseURL(flags.databaseURL, true);
+    const { workspace, database, databaseURL } = await this.getParsedDatabaseURL(flags.databaseURL, true);
 
     this.projectConfig = { databaseURL };
 
     await this.installSDK();
 
-    await EditSchema.run([]);
+    if (flags.schema) {
+      // TODO: remove default value once the getCurrentBranchName() return type is fixed.
+      // It actually always returns a string, but the typing is wrong.
+      const branch = (await getCurrentBranchName()) || '';
+      await this.deploySchema(workspace, database, branch, flags.schema);
+    } else {
+      await EditSchema.run([]);
+    }
 
     await Codegen.runIfConfigured(this.projectConfig);
 
@@ -157,5 +171,110 @@ export default class Init extends BaseCommand {
     }
     content += `\n\nXATA_API_KEY=${apiKey}`;
     await writeFile('.env', content);
+  }
+
+  async deploySchema(workspace: string, database: string, branch: string, file: string) {
+    const schema = await this.parseSchema(file);
+    const xata = await this.getXataClient();
+    const plan = await xata.branches.getBranchMigrationPlan(workspace, database, branch, schema);
+
+    const { newTables, removedTables, renamedTables, tableMigrations } = plan.migration;
+
+    function isEmpty(obj?: object) {
+      if (obj == null) return true;
+      if (Array.isArray(obj)) return obj.length === 0;
+      return Object.keys(obj).length === 0;
+    }
+
+    if (isEmpty(newTables) && isEmpty(removedTables) && isEmpty(renamedTables) && isEmpty(tableMigrations)) {
+      this.log('Your schema is up to date');
+    } else {
+      this.printMigration(plan.migration);
+
+      const { confirm } = await prompts({
+        type: 'confirm',
+        name: 'confirm',
+        message: `Apply the above migration?`,
+        initial: true
+      });
+      if (!confirm) return this.exit(1);
+
+      await xata.branches.executeBranchMigrationPlan(workspace, database, branch, plan);
+    }
+  }
+
+  printMigration(migration: Awaited<ReturnType<typeof getBranchMigrationPlan>>['migration']) {
+    if (migration.title) {
+      this.log(`* ${migration.title} [status: ${migration.status}]`);
+    }
+    if (migration.id) {
+      this.log(`ID: ${migration.id}`);
+    }
+    if (migration.lastGitRevision) {
+      this.log(`git commit sha: ${migration.lastGitRevision}`);
+      if (migration.localChanges) {
+        this.log(' + local changes');
+      }
+      this.log();
+    }
+    if (migration.createdAt) {
+      this.log(`Date ${this.formatDate(migration.createdAt)}`);
+    }
+
+    if (migration.newTables) {
+      for (const tableName of Object.keys(migration.newTables)) {
+        this.log(` ${chalk.blue('CREATE table ')} ${tableName}`);
+      }
+    }
+
+    if (migration.removedTables) {
+      for (const tableName of Object.keys(migration.removedTables)) {
+        this.log(` ${chalk.red('DELETE table ')} ${tableName}`);
+      }
+    }
+
+    if (migration.renamedTables) {
+      for (const tableName of Object.keys(migration.renamedTables)) {
+        this.log(` ${chalk.blue('RENAME table ')} ${tableName}`);
+      }
+    }
+
+    if (migration.tableMigrations) {
+      for (const [tableName, tableMigration] of Object.entries(migration.tableMigrations)) {
+        this.log(`Table ${tableName}:`);
+        if (tableMigration.newColumns) {
+          for (const columnName of Object.keys(tableMigration.newColumns)) {
+            this.log(` ${chalk.blue('ADD column ')} ${columnName}`);
+          }
+        }
+        if (tableMigration.removedColumns) {
+          for (const columnName of Object.keys(tableMigration.removedColumns)) {
+            this.log(` ${chalk.red('DELETE column ')} ${columnName}`);
+          }
+        }
+        if (tableMigration.modifiedColumns) {
+          for (const [, columnMigration] of Object.entries(tableMigration.modifiedColumns)) {
+            this.log(` ${chalk.red('MODIFY column ')} ${columnMigration.old.name}`);
+          }
+        }
+      }
+    }
+  }
+
+  async parseSchema(file: string) {
+    let content: any;
+    try {
+      content = JSON.parse(await readFile(file, 'utf-8'));
+    } catch (err) {
+      this.error(`Could not parse the schema file at ${file}. Either it does not exist or is not valid JSON`);
+    }
+
+    const schema = xataDatabaseSchema.safeParse(content);
+    if (!schema.success) {
+      this.warn(`The schema file is malformed`);
+      this.printZodError(schema.error);
+      return this.error(`Could not parse the schema file at ${file}`);
+    }
+    return schema.data;
   }
 }

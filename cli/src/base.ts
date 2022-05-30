@@ -1,5 +1,4 @@
 import { Command, Flags } from '@oclif/core';
-import { BooleanFlag } from '@oclif/core/lib/interfaces';
 import { XataApiClient } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
@@ -11,7 +10,7 @@ import path from 'path';
 import prompts from 'prompts';
 import slugify from 'slugify';
 import table from 'text-table';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { readAPIKey } from './key.js';
 
 export const projectConfigSchema = z.object({
@@ -58,10 +57,7 @@ export abstract class BaseCommand extends Command {
         this.projectConfigLocation = search.filepath;
       } else {
         this.warn(`The configuration file ${search.filepath} was found, but could not be parsed:`);
-
-        for (const error of result.error.errors) {
-          this.warn(`  [${error.code}] ${error.message} at "${error.path.join('.')}"`);
-        }
+        this.printZodError(result.error);
       }
     }
   }
@@ -213,6 +209,12 @@ export abstract class BaseCommand extends Command {
       await writeFile(fullPath, JSON.stringify(content, null, 2));
     } else {
       await writeFile(fullPath, JSON.stringify(this.projectConfig, null, 2));
+    }
+  }
+
+  printZodError(err: ZodError) {
+    for (const error of err.errors) {
+      this.warn(`  [${error.code}] ${error.message} at "${error.path.join('.')}"`);
     }
   }
 
