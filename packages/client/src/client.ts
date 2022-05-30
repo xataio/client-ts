@@ -115,7 +115,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   } as unknown as ClientConstructor<Plugins>;
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
-  new <Schemas extends Record<string, BaseData>>(options?: Partial<BaseClientOptions>, links?: LinkDictionary): Omit<
+  new <Schemas extends Record<string, BaseData> = {}>(
+    options?: Partial<BaseClientOptions>,
+    links?: LinkDictionary
+  ): Omit<
     {
       db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
       search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
