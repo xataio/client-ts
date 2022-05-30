@@ -19,15 +19,6 @@ afterEach(() => {
 const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 
 describe('databases list', () => {
-  test('fails if no workspace is provided', async () => {
-    const config = await Config.load();
-    const list = new DatabasesList([], config as Config);
-
-    await expect(list.run()).rejects.toThrow(
-      'Could not find workspace id. Please set XATA_DATABASE_URL or use the --workspace flag.'
-    );
-  });
-
   test('fails if the HTTP response is not ok', async () => {
     fetchMock.mockReturnValue({
       ok: false,

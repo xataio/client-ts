@@ -27,10 +27,10 @@ describe('codegen', () => {
   test('fails if the output filepath is not provided', async () => {
     const config = await Config.load();
     const command = new Codegen([], config as Config);
-    command.userConfig = {};
+    command.projectConfig = {};
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(
-      '[Error: Please, specify an output file as an argument or configure it in your config file]'
+      '[Error: Please, specify an output file in your project configuration file first with xata config set codegen.output <path>]'
     );
   });
 
@@ -44,7 +44,12 @@ describe('codegen', () => {
 
     const config = await Config.load();
     const command = new Codegen(['xata.ts'], config as Config);
-    process.env.XATA_DATABASE_URL = 'https://test-r5vcv5.xata.sh/db/test';
+    command.projectConfig = {
+      databaseURL: 'https://test-r5vcv5.xata.sh/db/test',
+      codegen: {
+        output: 'src/xata.ts'
+      }
+    };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
@@ -65,7 +70,13 @@ describe('codegen', () => {
 
     const config = await Config.load();
     const command = new Codegen([`src/xata.${ext}`], config as Config);
-    process.env.XATA_DATABASE_URL = 'https://test-r5vcv5.xata.sh/db/test';
+    command.projectConfig = {
+      databaseURL: 'https://test-r5vcv5.xata.sh/db/test',
+      codegen: {
+        output: `src/xata.${ext}`,
+        declarations: ext === 'js'
+      }
+    };
 
     const log = vi.spyOn(command, 'log');
 
