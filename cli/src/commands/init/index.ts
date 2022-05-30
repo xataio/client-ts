@@ -21,6 +21,9 @@ export default class Init extends BaseCommand {
     databaseURL: this.databaseURLFlag,
     schema: Flags.string({
       description: 'Initializes a new database or updates an existing one with the given schema'
+    }),
+    force: Flags.boolean({
+      description: 'Overwrite existing project configuration'
     })
   };
 
@@ -32,8 +35,13 @@ export default class Init extends BaseCommand {
     const { flags } = await this.parse(Init);
 
     if (this.projectConfigLocation) {
-      // TODO: have a --force option
-      this.error(`Project already configured at ${this.projectConfigLocation}`);
+      if (!flags.force) {
+        this.error(
+          `Project already configured at ${this.projectConfigLocation}. Use ${chalk.bold('--force')} to overwrite it`
+        );
+      } else {
+        this.warn(`Will overwrite ${this.projectConfigLocation} because ${chalk.bold('--force')} is being used`);
+      }
     }
 
     const { workspace, database, databaseURL } = await this.getParsedDatabaseURL(flags.databaseURL, true);
@@ -41,6 +49,10 @@ export default class Init extends BaseCommand {
     this.projectConfig = { databaseURL };
 
     await this.installSDK();
+
+    await this.writeConfig();
+
+    await this.writeEnvFile();
 
     if (flags.schema) {
       // TODO: remove default value once the getCurrentBranchName() return type is fixed.
@@ -52,10 +64,6 @@ export default class Init extends BaseCommand {
     }
 
     await Codegen.runIfConfigured(this.projectConfig);
-
-    await this.writeConfig();
-
-    await this.writeEnvFile();
 
     this.log('Done. You are all set!');
   }
@@ -146,15 +154,18 @@ export default class Init extends BaseCommand {
   }
 
   async writeConfig() {
-    const { place } = await prompts({
-      type: 'select',
-      name: 'place',
-      message: 'Select where to store your configuration',
-      choices: this.searchPlaces.map((place) => ({ title: place, value: place }))
-    });
-    if (!place) return this.error('You must select a location for the configuration file');
+    // Reuse location when using --force
+    if (!this.projectConfigLocation) {
+      const { location } = await prompts({
+        type: 'select',
+        name: 'location',
+        message: 'Select where to store your configuration',
+        choices: this.searchPlaces.map((place) => ({ title: place, value: place }))
+      });
+      if (!location) return this.error('You must select a location for the configuration file');
 
-    this.projectConfigLocation = path.join(process.cwd(), place);
+      this.projectConfigLocation = path.join(process.cwd(), location);
+    }
     await this.updateConfig();
   }
 
@@ -174,6 +185,7 @@ export default class Init extends BaseCommand {
   }
 
   async deploySchema(workspace: string, database: string, branch: string, file: string) {
+    this.log('Reading schema file...');
     const schema = await this.parseSchema(file);
     const xata = await this.getXataClient();
     const plan = await xata.branches.getBranchMigrationPlan(workspace, database, branch, schema);
@@ -223,19 +235,19 @@ export default class Init extends BaseCommand {
 
     if (migration.newTables) {
       for (const tableName of Object.keys(migration.newTables)) {
-        this.log(` ${chalk.blue('CREATE table ')} ${tableName}`);
+        this.log(` ${chalk.bgWhite.blue('CREATE table ')} ${tableName}`);
       }
     }
 
     if (migration.removedTables) {
       for (const tableName of Object.keys(migration.removedTables)) {
-        this.log(` ${chalk.red('DELETE table ')} ${tableName}`);
+        this.log(` ${chalk.bgWhite.red('DELETE table ')} ${tableName}`);
       }
     }
 
     if (migration.renamedTables) {
       for (const tableName of Object.keys(migration.renamedTables)) {
-        this.log(` ${chalk.blue('RENAME table ')} ${tableName}`);
+        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${tableName}`);
       }
     }
 
@@ -244,17 +256,17 @@ export default class Init extends BaseCommand {
         this.log(`Table ${tableName}:`);
         if (tableMigration.newColumns) {
           for (const columnName of Object.keys(tableMigration.newColumns)) {
-            this.log(` ${chalk.blue('ADD column ')} ${columnName}`);
+            this.log(` ${chalk.bgWhite.blue('ADD column ')} ${columnName}`);
           }
         }
         if (tableMigration.removedColumns) {
           for (const columnName of Object.keys(tableMigration.removedColumns)) {
-            this.log(` ${chalk.red('DELETE column ')} ${columnName}`);
+            this.log(` ${chalk.bgWhite.red('DELETE column ')} ${columnName}`);
           }
         }
         if (tableMigration.modifiedColumns) {
           for (const [, columnMigration] of Object.entries(tableMigration.modifiedColumns)) {
-            this.log(` ${chalk.red('MODIFY column ')} ${columnMigration.old.name}`);
+            this.log(` ${chalk.bgWhite.red('MODIFY column ')} ${columnMigration.old.name}`);
           }
         }
       }

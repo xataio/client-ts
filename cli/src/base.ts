@@ -156,22 +156,31 @@ export abstract class BaseCommand extends Command {
         choices
       });
       if (!database) return this.error('No database selected');
-      if (database !== 'create') return database;
+      if (database === 'create') {
+        return this.createDatabase(workspace);
+      } else {
+        return database;
+      }
     } else if (!options.allowCreate) {
       return this.error('No databases found, please create one first');
     } else {
-      const { name } = await prompts({
-        type: 'text',
-        name: 'name',
-        message: 'New database name',
-        initial: path.parse(process.cwd()).name
-      });
-      if (!name) return this.error('No database name provided');
-
-      await xata.databases.createDatabase(workspace, name);
-
-      return name.name;
+      return this.createDatabase(workspace);
     }
+  }
+
+  async createDatabase(workspace: string) {
+    const xata = await this.getXataClient();
+    const { name } = await prompts({
+      type: 'text',
+      name: 'name',
+      message: 'New database name',
+      initial: path.parse(process.cwd()).name
+    });
+    if (!name) return this.error('No database name provided');
+
+    await xata.databases.createDatabase(workspace, name);
+
+    return name;
   }
 
   async getDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
