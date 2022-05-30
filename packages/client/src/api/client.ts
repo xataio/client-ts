@@ -13,6 +13,9 @@ export interface XataApiClientOptions {
   host?: HostProvider;
 }
 
+/**
+ * @deprecated Use XataApiPlugin instead
+ */
 export class XataApiClient {
   #extraProps: FetcherExtraProps;
   #namespaces: Partial<{
