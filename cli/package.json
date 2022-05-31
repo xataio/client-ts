@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "description": "Xata.io CLI",
   "author": "Xata Inc.",
-  "private": true,
   "bin": {
     "xata": "./bin/run"
   },
