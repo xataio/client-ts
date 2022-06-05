@@ -45,7 +45,7 @@ export default class Codegen extends BaseCommand {
     }
 
     const databaseURL = await this.getDatabaseURL();
-    const result = await generateFromContext('typescript', { fetchImpl: fetch, databaseURL });
+    const result = await generateFromContext(language, { fetchImpl: fetch, databaseURL });
     const code = result.transpiled;
     const declarations = result.declarations;
 
