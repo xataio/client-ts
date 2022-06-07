@@ -17,7 +17,7 @@ export async function generateFromLocalFiles(xataDirectory: string, out: string)
     spinner?.info(
       `You need to first install the Xata CLI and create a new database or pull the schema of an existing one. To learn more, visit ${chalk.blueBright(
         'https://docs.xata.io/cli/getting-started'
-      )}.
+      )}
   `
     );
     exitWithError('No local Xata schema found.');
