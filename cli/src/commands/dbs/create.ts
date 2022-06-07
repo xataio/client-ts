@@ -1,6 +1,5 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
-import { parseDatabaseURL } from '../../defaults.js';
 
 export default class DatabasesCreate extends BaseCommand {
   static description = 'Create a database';
@@ -8,6 +7,7 @@ export default class DatabasesCreate extends BaseCommand {
   static examples = [];
 
   static flags = {
+    ...this.commonFlags,
     workspace: Flags.string({
       description: 'Workspace id the database will belongs to'
     })
@@ -25,8 +25,7 @@ export default class DatabasesCreate extends BaseCommand {
       return this.error('Please, specify a database name');
     }
 
-    const defaults = parseDatabaseURL();
-    const workspace = flags.workspace || defaults.workspace;
+    const workspace = flags.workspace || (await this.getWorkspace());
 
     const xata = await this.getXataClient();
 

@@ -60,6 +60,7 @@ function getTypeScriptType(column: Column): string {
   if (column.type === 'bool') return 'boolean';
   if (column.type === 'int') return 'number';
   if (column.type === 'float') return 'number';
+  if (column.type === 'datetime') return 'Date';
   if (column.type === 'link') {
     if (!column.link?.table) return 'object';
     return `${getTypeName(column.link.table)}Record`;

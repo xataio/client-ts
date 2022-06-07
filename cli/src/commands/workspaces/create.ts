@@ -6,7 +6,9 @@ export default class WorkspacesCreate extends BaseCommand {
 
   static examples = [];
 
-  static flags = {};
+  static flags = {
+    ...this.commonFlags
+  };
 
   static args = [{ name: 'workspace', description: 'The new workspace name', required: true }];
 

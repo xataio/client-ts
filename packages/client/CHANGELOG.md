@@ -1,5 +1,21 @@
 # @xata.io/client
 
+## 0.9.0
+
+### Minor Changes
+
+- [#246](https://github.com/xataio/client-ts/pull/246) [`2848894`](https://github.com/xataio/client-ts/commit/284889446bbac5d6737086bf01a588d97b841730) Thanks [@SferaDev](https://github.com/SferaDev)! - Rename getOne to getFirst
+
+### Patch Changes
+
+- [#254](https://github.com/xataio/client-ts/pull/254) [`2fc2788`](https://github.com/xataio/client-ts/commit/2fc2788e583c047ffb2cd693f053f60ce608149c) Thanks [@SferaDev](https://github.com/SferaDev)! - Deprecate XataApiClient
+
+* [#230](https://github.com/xataio/client-ts/pull/230) [`a96da7c`](https://github.com/xataio/client-ts/commit/a96da7c8b548604ed25001390992531537675a44) Thanks [@SferaDev](https://github.com/SferaDev)! - Include tables in Proxy target for object introspection (shell)
+
+- [#222](https://github.com/xataio/client-ts/pull/222) [`e8d595f`](https://github.com/xataio/client-ts/commit/e8d595f54efe126b39c78cc771a5d69c551f4fba) Thanks [@SferaDev](https://github.com/SferaDev)! - Add cache strategies
+
+* [#244](https://github.com/xataio/client-ts/pull/244) [`c4dcd11`](https://github.com/xataio/client-ts/commit/c4dcd110d8f9dc3a7e4510f2f00257c9109e51fa) Thanks [@gimenete](https://github.com/gimenete)! - getCurrentBranchName never returns a Promise that resolves to undefined
+
 ## 0.8.4
 
 ### Patch Changes
