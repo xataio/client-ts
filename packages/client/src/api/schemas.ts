@@ -131,6 +131,13 @@ export type ListBranchesResponse = {
   branches: Branch[];
 };
 
+export type ListGitBranchesResponse = {
+  mapping: {
+    gitBranch: string;
+    xataBranch: string;
+  }[];
+};
+
 export type Branch = {
   name: string;
   createdAt: DateTime;
@@ -191,7 +198,7 @@ export type Table = {
  */
 export type Column = {
   name: string;
-  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object';
+  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
   link?: {
     table: string;
   };
