@@ -2119,7 +2119,7 @@ export type QueryTableVariables = {
  *           }
  *         },
  *         {
- *           "name": "founded date",
+ *           "name": "foundedDate",
  *           "type": "datetime"
  *         },
  *       ]
@@ -2269,7 +2269,7 @@ export type QueryTableVariables = {
  *     },
  *     "name": "first team",
  *     "code": "A1",
- *     "founded date": "2020-03-04T10:43:54.32Z"
+ *     "foundedDate": "2020-03-04T10:43:54.32Z"
  *   }
  * }
  * ```
@@ -2497,7 +2497,7 @@ export type QueryTableVariables = {
  *   }
  * }
  * ```
- * Date ranges would support the same operators, with the date as string in
+ * Date ranges support the same operators, with the date using the format defined in
  * [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339):
  * ```json
  * {
