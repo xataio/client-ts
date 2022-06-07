@@ -198,7 +198,7 @@ export type Table = {
  */
 export type Column = {
   name: string;
-  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object';
+  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
   link?: {
     table: string;
   };

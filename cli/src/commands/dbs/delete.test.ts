@@ -22,35 +22,26 @@ const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 
 describe('databases delete', () => {
-  test('fails if the workspace id is not provided', async () => {
-    const config = await Config.load();
-    const list = new DatabasesDelete([], config as Config);
-
-    promptsMock.mockReturnValue({ confirm: false });
-
-    await expect(list.run()).rejects.toMatchInlineSnapshot(
-      '[Error: Could not find workspace id. Please set XATA_DATABASE_URL or use the --workspace flag.]'
-    );
-  });
-
   test('fails if the database name is not provided', async () => {
     const config = await Config.load();
-    const list = new DatabasesDelete(['--workspace', 'test-1234'], config as Config);
+    const command = new DatabasesDelete(['--workspace', 'test-1234'], config as Config);
 
     promptsMock.mockReturnValue({ confirm: false });
 
-    await expect(list.run()).rejects.toMatchInlineSnapshot(
-      '[Error: Could not find database name. Please set XATA_DATABASE_URL or use the --database flag.]'
-    );
+    await expect(command.run()).rejects.toMatchInlineSnapshot(`
+      [Error: Missing 1 required arg:
+      database  The database name to delete
+      See more help with --help]
+    `);
   });
 
   test('exists if the user does not confirm', async () => {
     const config = await Config.load();
-    const list = new DatabasesDelete(['--workspace', 'test-1234', '--database', 'foo'], config as Config);
+    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
 
     promptsMock.mockReturnValue({ confirm: false });
 
-    await expect(list.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 1]');
+    await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 1]');
   });
 
   test('fails if the HTTP response is not ok', async () => {
@@ -63,9 +54,9 @@ describe('databases delete', () => {
     promptsMock.mockReturnValue({ confirm: true });
 
     const config = await Config.load();
-    const list = new DatabasesDelete(['--workspace', 'test-1234', '--database', 'foo'], config as Config);
+    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
 
-    await expect(list.run()).rejects.toThrow('Something went wrong');
+    await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/foo');
@@ -80,14 +71,14 @@ describe('databases delete', () => {
     promptsMock.mockReturnValue({ confirm: true });
 
     const config = await Config.load();
-    const list = new DatabasesDelete(['--workspace', 'test-1234', '--database', 'foo'], config as Config);
+    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
 
     expect(DatabasesDelete.enableJsonFlag).toBe(true);
-    vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);
+    vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
 
-    const log = vi.spyOn(list, 'log');
+    const log = vi.spyOn(command, 'log');
 
-    const result = await list.run();
+    const result = await command.run();
 
     if (json) {
       expect(result).toEqual({});
