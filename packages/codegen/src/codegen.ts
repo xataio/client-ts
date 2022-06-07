@@ -1,8 +1,8 @@
 import pluralize from 'pluralize';
-import ts from 'typescript';
 import prettier, { BuiltInParserName } from 'prettier';
 import * as parserJavascript from 'prettier/parser-babel.js';
 import * as parserTypeScript from 'prettier/parser-typescript.js';
+import ts from 'typescript';
 import { Column, Table, XataDatabaseSchema } from './schema';
 
 export type GenerateOptions = {
@@ -30,11 +30,9 @@ function getTypeName(tableName: string) {
 function generateTableTypes(tables: Table[]) {
   const types = tables.map((table) => {
     const { columns } = table;
-    const revLinks: { table: string }[] = []; // table.rev_links || [];
 
     return `export interface ${getTypeName(table.name)} {
     ${columns.map((column) => generateColumnType(column)).join('\n')}
-    ${revLinks.map((link) => `${link.table}: Query<${getTypeName(link.table)}>`).join('\n')}
   };
 
   export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;
@@ -82,15 +80,6 @@ export async function generate({
   javascriptTarget
 }: GenerateOptions): Promise<GenerateOutput> {
   const { tables } = schema;
-  const links: Record<string, string[][]> = {};
-  for (const table of tables) {
-    links[table.name] = [];
-    for (const column of table.columns) {
-      if (column.link) {
-        links[table.name].push([column.name, column.link.table]);
-      }
-    }
-  }
 
   const parser = prettierParsers[language];
 
@@ -102,8 +91,6 @@ export async function generate({
     } from '@xata.io/client';
 
     ${generateTableTypes(tables)}
-
-    const links = ${JSON.stringify(links)};
 
     const tables = [${tables.map((table) => `'${table.name}'`).join(', ')}];
 
@@ -118,7 +105,7 @@ export async function generate({
     }
     export class XataClient extends DatabaseClient<DatabaseSchema> {
       constructor(options?: BaseClientOptions) {
-        super({ databaseURL: "${databaseURL}", ...options}, links, tables);
+        super({ databaseURL: "${databaseURL}", ...options}, tables);
       }
     }
   `;

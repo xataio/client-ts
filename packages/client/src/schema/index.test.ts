@@ -1,9 +1,10 @@
 /* eslint-disable no-useless-escape */
 
-import { describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { BaseClient, BaseClientOptions } from '..';
+import { server } from '../../../../test/mock_server';
 import { XataRecord } from './record';
-
+import realFetch from 'cross-fetch';
 interface User extends XataRecord {
   name: string;
 }
@@ -15,13 +16,17 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
     branch = 'main'
   } = options;
 
-  const fetch = vi.fn();
+  const fetch = vi.fn(realFetch);
   const client = new BaseClient({ fetch, apiKey, databaseURL, branch });
 
   const users = client.db.users;
 
   return { fetch, client, users };
 };
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('client options', () => {
   test('throws if mandatory options are missing', () => {
@@ -48,14 +53,14 @@ describe('client options', () => {
   test('provide branch as a string', async () => {
     const { fetch, users } = buildClient({ branch: 'branch' });
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockReset().mockImplementationOnce(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
@@ -82,14 +87,14 @@ describe('client options', () => {
       branch: [process.env.NOT_DEFINED_VARIABLE, async () => null, 'branch', 'main']
     });
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockReset().mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
@@ -114,14 +119,14 @@ describe('client options', () => {
   test('provide branch as a function', async () => {
     const { fetch, users } = buildClient({ branch: () => 'branch' });
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockReset().mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
@@ -148,14 +153,14 @@ describe('client options', () => {
 
     const { fetch, users } = buildClient({ branch: branchGetter });
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockReset().mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
@@ -169,14 +174,14 @@ describe('request', () => {
   test('builds the right arguments for a GET request', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockReset().mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
@@ -201,14 +206,14 @@ describe('request', () => {
   test('builds the right arguments for a POST request', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockReset().mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getMany({ page: { size: 20 } });
@@ -238,7 +243,7 @@ describe('request', () => {
         ok: false,
         status: 404,
         json: async () => ({ message: 'Not Found' })
-      };
+      } as Response;
     });
 
     await expect(users.getFirst()).rejects.toMatchInlineSnapshot('[Error: Not Found]');
@@ -248,14 +253,14 @@ describe('request', () => {
     const { fetch, users } = buildClient();
 
     const json = { a: 1 };
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockReset().mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [json],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     const result = await users.getFirst();
