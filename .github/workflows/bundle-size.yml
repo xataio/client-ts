@@ -8,20 +8,6 @@ jobs:
       CI_JOB_NUMBER: 1
     steps:
       - uses: actions/checkout@v3
-
-      - name: Read .nvmrc
-        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
-        id: nvm
-
-      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
       - uses: andresz1/size-limit-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
