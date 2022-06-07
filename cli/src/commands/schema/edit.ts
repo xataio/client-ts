@@ -28,7 +28,7 @@ type EditableTable = Table & {
   columns: EditableColumn[];
 };
 
-const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email'];
+const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime'];
 const typesList = types.join(', ');
 const identifier = /^[a-zA-Z0-9-_~]+$/;
 
@@ -307,7 +307,7 @@ export default class EditSchema extends BaseCommand {
           name: 'name',
           message: 'The column name',
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
-            if (!identifier.test(value)) {
+            if (!identifier.test(value || '')) {
               return snippet.styles.danger(`Column name has to match ${identifier}`);
             }
             return true;
@@ -392,7 +392,7 @@ export default class EditSchema extends BaseCommand {
           name: 'name',
           message: 'The table name',
           validate(value: string, state: unknown, item: unknown, index: number) {
-            if (!identifier.test(value)) {
+            if (!identifier.test(value || '')) {
               return snippet.styles.danger(`Table name has to match ${identifier}`);
             }
             return true;
