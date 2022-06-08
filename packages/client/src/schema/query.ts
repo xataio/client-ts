@@ -188,16 +188,14 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     }
   }
 
-  getIterator(chunk: number): AsyncGenerator<Result[]>;
-  getIterator(chunk: number, options: Omit<QueryOptions<Record>, 'columns' | 'page'>): AsyncGenerator<Result[]>;
-  getIterator<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
-    chunk: number,
+  getIterator(options: Omit<QueryOptions<Record>, 'columns' | 'page'> & { chunk?: number }): AsyncGenerator<Result[]>;
+  getIterator<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'> & { chunk?: number }>(
     options: Options
   ): AsyncGenerator<SelectedPick<Record, typeof options['columns']>[]>;
   async *getIterator<Result extends XataRecord>(
-    chunk: number,
-    options: QueryOptions<Record> = {}
+    options: QueryOptions<Record> & { chunk?: number } = {}
   ): AsyncGenerator<Result[]> {
+    const { chunk = 1 } = options;
     let offset = 0;
     let end = false;
 
@@ -233,19 +231,15 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getAll(chunk?: number): Promise<Result[]>;
-  getAll(chunk: number | undefined, options: Omit<QueryOptions<Record>, 'columns' | 'page'>): Promise<Result[]>;
-  getAll<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
-    chunk: number | undefined,
+  getAll(options: Omit<QueryOptions<Record>, 'columns' | 'page'> & { chunk?: number }): Promise<Result[]>;
+  getAll<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'> & { chunk?: number }>(
     options: Options
   ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
-  async getAll<Result extends XataRecord>(
-    chunk = PAGINATION_MAX_SIZE,
-    options: QueryOptions<Record> = {}
-  ): Promise<Result[]> {
+  async getAll<Result extends XataRecord>(options: QueryOptions<Record> & { chunk?: number } = {}): Promise<Result[]> {
+    const { chunk = PAGINATION_MAX_SIZE, ...rest } = options;
     const results = [];
 
-    for await (const page of this.getIterator(chunk, options)) {
+    for await (const page of this.getIterator({ ...rest, chunk })) {
       results.push(...page);
     }
 
