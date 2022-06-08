@@ -12,9 +12,6 @@
 
 * [#259](https://github.com/xataio/client-ts/pull/259) [`a2727a3`](https://github.com/xataio/client-ts/commit/a2727a3bf6dfddb41251ff86c40afe7851a9c068) Thanks [@gimenete](https://github.com/gimenete)! - Added command "schema edit"
 
-* Updated dependencies [[`5d7c9e4`](https://github.com/xataio/client-ts/commit/5d7c9e4fa2799255e2bfc8b6fb12c89dc4e1f35e), [`e95f20a`](https://github.com/xataio/client-ts/commit/e95f20a7bce264936680353f816065fa379448fc)]:
-  - @xata.io/client@0.9.1
-
 ## 0.0.1
 
 ### Patch Changes
