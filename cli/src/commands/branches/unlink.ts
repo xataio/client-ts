@@ -1,0 +1,53 @@
+import { Flags } from '@oclif/core';
+import { BaseCommand } from '../../base.js';
+import { defaultGitBranch, isGitInstalled } from '../../git.js';
+
+export default class BranchesCreate extends BaseCommand {
+  static description = 'Unlink a git branch with a xata branch';
+
+  static examples = [];
+
+  static flags = {
+    ...this.commonFlags,
+    databaseURL: this.databaseURLFlag,
+    gitBranch: Flags.string({
+      name: 'git',
+      description: 'Git branch name'
+    })
+  };
+
+  static args = [];
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<void | unknown> {
+    const { flags } = await this.parse(BranchesCreate);
+
+    if (!isGitInstalled()) {
+      this.error('Git cannot be found. Please install it to unlink a branch.');
+    }
+
+    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
+
+    const xata = await this.getXataClient();
+
+    try {
+      // TODO Not sure about these default flags
+      const { gitBranch = defaultGitBranch() } = flags;
+
+      const result = await xata.databases.removeGitBranchesEntry(workspace, database, gitBranch);
+
+      if (this.jsonEnabled()) return result;
+
+      this.log(`Branch ${gitBranch} successfully unlinked`);
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('not a git repository')) {
+        this.error(
+          'The working directory is not under git version control. Please initialize or clone a repository to unlink a branch.'
+        );
+      } else {
+        throw err;
+      }
+    }
+  }
+}
