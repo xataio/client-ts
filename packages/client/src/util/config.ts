@@ -12,8 +12,6 @@ const envBranchNames = [
   'BRANCH' // Netlify. Putting it the last one because it is more ambiguous
 ];
 
-const defaultBranch = 'main';
-
 type BranchResolutionOptions = {
   databaseURL?: string;
   apiKey?: string;
@@ -25,9 +23,7 @@ export async function getCurrentBranchName(options?: BranchResolutionOptions): P
   if (env) return env;
 
   const gitBranch = await getGitBranch();
-  if (!gitBranch) return defaultBranch;
-
-  return resolveApiBranchName(gitBranch, options);
+  return resolveApiBranchName(gitBranch ?? '', options);
 }
 
 export async function getCurrentBranchDetails(options?: BranchResolutionOptions) {
@@ -35,9 +31,7 @@ export async function getCurrentBranchDetails(options?: BranchResolutionOptions)
   if (env) return getApiBranchDetails(env, options);
 
   const gitBranch = await getGitBranch();
-  if (!gitBranch) return getApiBranchDetails(defaultBranch, options);
-
-  const xataBranch = await resolveApiBranchName(gitBranch, options);
+  const xataBranch = await resolveApiBranchName(gitBranch ?? '', options);
 
   return getApiBranchDetails(xataBranch, options);
 }
@@ -76,7 +70,7 @@ async function resolveApiBranchName(gitBranch: string, options?: BranchResolutio
     return branch;
   } catch (err) {
     console.error("Couldn't resolve xata branch from git", err);
-    return defaultBranch;
+    return 'main';
   }
 }
 
