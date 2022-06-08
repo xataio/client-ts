@@ -73,7 +73,7 @@ describe('dates', () => {
     const date = new Date();
     const record = await xata.db.datetime.create({ date });
 
-    expect(typeof record.date).toEqual('object');
+    expect(record.date instanceof Date).toEqual(true);
     expect(record.date?.toISOString()).toEqual(date.toISOString());
   });
 });
