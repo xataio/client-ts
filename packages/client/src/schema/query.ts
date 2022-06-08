@@ -183,7 +183,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   }
 
   async *[Symbol.asyncIterator](): AsyncIterableIterator<Result> {
-    for await (const [record] of this.getIterator(1)) {
+    for await (const [record] of this.getIterator({ chunk: 1 })) {
       yield record;
     }
   }
