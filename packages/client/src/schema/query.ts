@@ -188,6 +188,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     }
   }
 
+  getIterator(): AsyncGenerator<Result[]>;
   getIterator(options: Omit<QueryOptions<Record>, 'columns' | 'page'> & { chunk?: number }): AsyncGenerator<Result[]>;
   getIterator<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'> & { chunk?: number }>(
     options: Options
@@ -231,6 +232,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
+  getAll(): Promise<Result[]>;
   getAll(options: Omit<QueryOptions<Record>, 'columns' | 'page'> & { chunk?: number }): Promise<Result[]>;
   getAll<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'> & { chunk?: number }>(
     options: Options
