@@ -74,6 +74,8 @@ export default class RandomData extends BaseCommand {
         return faker.random.words(rand(1, 3)).split(' ');
       case 'string':
         return randomString(column.name);
+      case 'datetime':
+        return faker.date.recent(rand(1, 10));
       default:
         return undefined;
     }

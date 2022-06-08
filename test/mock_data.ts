@@ -1,4 +1,4 @@
-import { Column } from '../packages/client/src/api/schemas';
+import { Column, Schema } from '../packages/client/src/api/schemas';
 
 const animals = [
   'Ape',
@@ -122,3 +122,10 @@ export const teamColumns: Column[] = [
     }
   }
 ];
+
+export const schema: Schema = {
+  tables: [
+    { name: 'users', columns: userColumns },
+    { name: 'teams', columns: teamColumns }
+  ]
+};

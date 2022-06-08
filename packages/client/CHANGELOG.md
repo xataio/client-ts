@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.9.1
+
+### Patch Changes
+
+- [#250](https://github.com/xataio/client-ts/pull/250) [`5d7c9e4`](https://github.com/xataio/client-ts/commit/5d7c9e4fa2799255e2bfc8b6fb12c89dc4e1f35e) Thanks [@xata-bot](https://github.com/xata-bot)! - Add branch resolution endpoints to api client
+
+* [#261](https://github.com/xataio/client-ts/pull/261) [`e95f20a`](https://github.com/xataio/client-ts/commit/e95f20a7bce264936680353f816065fa379448fc) Thanks [@gimenete](https://github.com/gimenete)! - Fixes a compatibility error in CloudFlare workers with latest version of wrangler
+
 ## 0.9.0
 
 ### Minor Changes
