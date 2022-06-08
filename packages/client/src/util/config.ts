@@ -1,4 +1,4 @@
-import { getBranchDetails } from '../api';
+import { getBranchDetails, resolveBranch } from '../api';
 import { FetchImpl } from '../api/fetcher';
 import { getAPIKey } from './apiKey';
 import { getEnvVariable, getGitBranch } from './environment';
@@ -21,36 +21,66 @@ type BranchResolutionOptions = {
 };
 
 export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string> {
-  const env = await getBranchByEnvVariable();
+  const env = getBranchByEnvVariable();
   if (env) return env;
 
-  const branch = await getGitBranch();
-  if (!branch) return defaultBranch;
+  const gitBranch = await getGitBranch();
+  if (!gitBranch) return defaultBranch;
 
-  // TODO: in the future, call /resolve endpoint
-  // For now, call API to see if the branch exists. If not, use a default value.
-  const details = await getDatabaseBranch(branch, options);
-  if (details) return branch;
-
-  return defaultBranch;
+  return resolveApiBranchName(gitBranch, options);
 }
 
 export async function getCurrentBranchDetails(options?: BranchResolutionOptions) {
-  const env = await getBranchByEnvVariable();
-  if (env) return getDatabaseBranch(env, options);
+  const env = getBranchByEnvVariable();
+  if (env) return getApiBranchDetails(env, options);
 
-  const branch = await getGitBranch();
-  if (!branch) return getDatabaseBranch(defaultBranch, options);
+  const gitBranch = await getGitBranch();
+  if (!gitBranch) return getApiBranchDetails(defaultBranch, options);
 
-  // TODO: in the future, call /resolve endpoint
-  // For now, call API to see if the branch exists. If not, use a default value.
-  const details = await getDatabaseBranch(branch, options);
-  if (details) return details;
+  const xataBranch = await resolveApiBranchName(gitBranch, options);
 
-  return getDatabaseBranch(defaultBranch, options);
+  return getApiBranchDetails(xataBranch, options);
 }
 
-async function getDatabaseBranch(branch: string, options?: BranchResolutionOptions) {
+async function getApiBranchDetails(branch: string, options?: BranchResolutionOptions) {
+  const { apiKey, apiUrl, fetchImpl, workspacesApiUrl, workspace, database } = getFetchProps(options);
+  const dbBranchName = `${database}:${branch}`;
+
+  try {
+    return await getBranchDetails({
+      apiKey,
+      apiUrl,
+      fetchImpl,
+      workspacesApiUrl,
+      pathParams: { dbBranchName, workspace }
+    });
+  } catch (err) {
+    if (isObject(err) && err.status === 404) return null;
+    throw err;
+  }
+}
+
+async function resolveApiBranchName(gitBranch: string, options?: BranchResolutionOptions) {
+  const { apiKey, apiUrl, fetchImpl, workspacesApiUrl, workspace, database } = getFetchProps(options);
+
+  try {
+    const { branch } = await resolveBranch({
+      apiKey,
+      apiUrl,
+      fetchImpl,
+      workspacesApiUrl,
+      pathParams: { dbName: database, workspace },
+      queryParams: { gitBranch }
+    });
+
+    return branch;
+  } catch (err) {
+    console.error("Couldn't resolve xata branch from git", err);
+    return defaultBranch;
+  }
+}
+
+function getFetchProps(options?: BranchResolutionOptions) {
   const databaseURL = options?.databaseURL || getDatabaseURL();
   const apiKey = options?.apiKey || getAPIKey();
 
@@ -65,22 +95,15 @@ async function getDatabaseBranch(branch: string, options?: BranchResolutionOptio
 
   const [protocol, , host, , database] = databaseURL.split('/');
   const [workspace] = host.split('.');
-  const dbBranchName = `${database}:${branch}`;
-  try {
-    return await getBranchDetails({
-      apiKey,
-      apiUrl: databaseURL,
-      fetchImpl: getFetchImplementation(options?.fetchImpl),
-      workspacesApiUrl: `${protocol}//${host}`,
-      pathParams: {
-        dbBranchName,
-        workspace
-      }
-    });
-  } catch (err) {
-    if (isObject(err) && err.status === 404) return null;
-    throw err;
-  }
+
+  return {
+    apiKey,
+    apiUrl: databaseURL,
+    fetchImpl: getFetchImplementation(options?.fetchImpl),
+    workspacesApiUrl: `${protocol}//${host}`,
+    workspace,
+    database
+  };
 }
 
 function getBranchByEnvVariable(): string | undefined {
