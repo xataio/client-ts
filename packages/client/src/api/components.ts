@@ -817,6 +817,254 @@ export const deleteDatabase = (variables: DeleteDatabaseVariables) =>
     ...variables
   });
 
+export type GetGitBranchesMappingPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type GetGitBranchesMappingError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type GetGitBranchesMappingVariables = {
+  pathParams: GetGitBranchesMappingPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Lists all the git branches in the mapping, and their associated Xata branches.
+ *
+ * Example response:
+ *
+ * ```json
+ * {
+ *   "mappings": [
+ *       {
+ *         "gitBranch": "main",
+ *         "xataBranch": "main"
+ *       },
+ *       {
+ *         "gitBranch": "gitBranch1",
+ *         "xataBranch": "xataBranch1"
+ *       }
+ *       {
+ *         "gitBranch": "xataBranch2",
+ *         "xataBranch": "xataBranch2"
+ *       }
+ *   ]
+ * }
+ * ```
+ */
+export const getGitBranchesMapping = (variables: GetGitBranchesMappingVariables) =>
+  fetch<
+    Schemas.ListGitBranchesResponse,
+    GetGitBranchesMappingError,
+    undefined,
+    {},
+    {},
+    GetGitBranchesMappingPathParams
+  >({ url: '/dbs/{dbName}/gitBranches', method: 'get', ...variables });
+
+export type AddGitBranchesEntryPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type AddGitBranchesEntryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type AddGitBranchesEntryResponse = {
+  /*
+   * Warning message
+   */
+  warning?: string;
+};
+
+export type AddGitBranchesEntryRequestBody = {
+  /*
+   * The name of the Git branch.
+   */
+  gitBranch: string;
+  /*
+   * The name of the Xata branch.
+   */
+  xataBranch: Schemas.BranchName;
+};
+
+export type AddGitBranchesEntryVariables = {
+  body: AddGitBranchesEntryRequestBody;
+  pathParams: AddGitBranchesEntryPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Adds an entry to the mapping of git branches to Xata branches. The git branch and the Xata branch must be present in the body of the request. If the Xata branch doesn't exist, a 400 error is returned.
+ *
+ * If the git branch is already present in the mapping, the old entry is overwritten, and a warning message is included in the response. If the git branch is added and didn't exist before, the response code is 204. If the git branch existed and it was overwritten, the response code is 201.
+ *
+ * Example request:
+ *
+ * ```json
+ * // POST https://tutorial-ng7s8c.xata.sh/dbs/demo/gitBranches
+ * {
+ *   "gitBranch": "fix/bug123",
+ *   "xataBranch": "fix_bug"
+ * }
+ * ```
+ */
+export const addGitBranchesEntry = (variables: AddGitBranchesEntryVariables) =>
+  fetch<
+    AddGitBranchesEntryResponse,
+    AddGitBranchesEntryError,
+    AddGitBranchesEntryRequestBody,
+    {},
+    {},
+    AddGitBranchesEntryPathParams
+  >({ url: '/dbs/{dbName}/gitBranches', method: 'post', ...variables });
+
+export type RemoveGitBranchesEntryPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type RemoveGitBranchesEntryQueryParams = {
+  /*
+   * The Git Branch to remove from the mapping
+   */
+  gitBranch: string;
+};
+
+export type RemoveGitBranchesEntryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type RemoveGitBranchesEntryVariables = {
+  pathParams: RemoveGitBranchesEntryPathParams;
+  queryParams: RemoveGitBranchesEntryQueryParams;
+} & FetcherExtraProps;
+
+/**
+ * Removes an entry from the mapping of git branches to Xata branches. The name of the git branch must be passed as a query parameter. If the git branch is not found, the endpoint returns a 404 status code.
+ *
+ * Example request:
+ *
+ * ```json
+ * // DELETE https://tutorial-ng7s8c.xata.sh/dbs/demo/gitBranches?gitBranch=fix%2Fbug123
+ * ```
+ */
+export const removeGitBranchesEntry = (variables: RemoveGitBranchesEntryVariables) =>
+  fetch<
+    undefined,
+    RemoveGitBranchesEntryError,
+    undefined,
+    {},
+    RemoveGitBranchesEntryQueryParams,
+    RemoveGitBranchesEntryPathParams
+  >({ url: '/dbs/{dbName}/gitBranches', method: 'delete', ...variables });
+
+export type ResolveBranchPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type ResolveBranchQueryParams = {
+  /*
+   * The Git Branch
+   */
+  gitBranch?: string;
+  /*
+   * Default branch to fallback to
+   */
+  fallbackBranch?: string;
+};
+
+export type ResolveBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type ResolveBranchResponse = {
+  branch: string;
+  reason: {
+    code: 'FOUND_IN_MAPPING' | 'BRANCH_EXISTS' | 'FALLBACK_BRANCH' | 'DEFAULT_BRANCH';
+    message: string;
+  };
+};
+
+export type ResolveBranchVariables = {
+  pathParams: ResolveBranchPathParams;
+  queryParams?: ResolveBranchQueryParams;
+} & FetcherExtraProps;
+
+/**
+ * In order to resolve the database branch, the following algorithm is used:
+ * * if the `gitBranch` is found in the [git branches mapping](), the associated Xata branch is returned
+ * * else, if a Xata branch with the exact same name as `gitBranch` exists, return it
+ * * else, return the default branch of the DB (currently `main` or the first branch)
+ *
+ * Example call:
+ *
+ * ```json
+ * // GET https://tutorial-ng7s8c.xata.sh/dbs/demo/dbs/demo/resolveBranch?gitBranch=test?fallbackBranch=tsg
+ * ```
+ *
+ * Example response:
+ *
+ * ```json
+ * {
+ *   "branch": "main",
+ *   "reason": {
+ *     "code": "DEFAULT_BRANCH",
+ *     "message": "Default branch for this database (main)"
+ *   }
+ * }
+ * ```
+ */
+export const resolveBranch = (variables: ResolveBranchVariables) =>
+  fetch<ResolveBranchResponse, ResolveBranchError, undefined, {}, ResolveBranchQueryParams, ResolveBranchPathParams>({
+    url: '/dbs/{dbName}/resolveBranch',
+    method: 'get',
+    ...variables
+  });
+
 export type GetBranchDetailsPathParams = {
   /*
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -1321,9 +1569,8 @@ export type UpdateTableVariables = {
  *
  * In the example below, we rename a table from “users” to “people”:
  *
- * ```json
- * // PATCH /db/test:main/tables/users
- *
+ * ```jsx
+ * PATCH /db/test:main/tables/users
  * {
  *   "name": "people"
  * }
@@ -2071,7 +2318,7 @@ export type QueryTableVariables = {
  * {
  *   "columns": [...],
  *   "filter": {
- *     "$all": [...],
+ *     "$all": [...]
  *     "$any": [...]
  *     ...
  *   },
@@ -2209,7 +2456,7 @@ export type QueryTableVariables = {
  * {
  *   "name": "Kilian",
  *   "address": {
- *     "street": "New street"
+ *     "street": "New street",
  *   }
  * }
  * ```
@@ -2218,7 +2465,10 @@ export type QueryTableVariables = {
  *
  * ```json
  * {
- *   "columns": ["*", "team.name"]
+ *   "columns": [
+ *     "*",
+ *     "team.name"
+ *   ]
  * }
  * ```
  *
@@ -2236,7 +2486,7 @@ export type QueryTableVariables = {
  *   "team": {
  *     "id": "XX",
  *     "xata": {
- *       "version": 0
+ *       "version": 0,
  *     },
  *     "name": "first team"
  *   }
@@ -2247,7 +2497,10 @@ export type QueryTableVariables = {
  *
  * ```json
  * {
- *   "columns": ["*", "team.*"]
+ *   "columns": [
+ *     "*",
+ *     "team.*"
+ *   ]
  * }
  * ```
  *
@@ -2265,7 +2518,7 @@ export type QueryTableVariables = {
  *   "team": {
  *     "id": "XX",
  *     "xata": {
- *       "version": 0
+ *       "version": 0,
  *     },
  *     "name": "first team",
  *     "code": "A1",
@@ -2315,7 +2568,7 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "name": "r2"
+ *       "name": "r2",
  *   }
  * }
  * ```
@@ -2337,7 +2590,7 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "settings.plan": "free"
+ *       "settings.plan": "free",
  *   }
  * }
  * ```
@@ -2347,8 +2600,8 @@ export type QueryTableVariables = {
  *   "filter": {
  *     "settings": {
  *       "plan": "free"
- *     }
- *   }
+ *     },
+ *   },
  * }
  * ```
  *
@@ -2357,8 +2610,8 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "settings.plan": { "$any": ["free", "paid"] }
- *   }
+ *     "settings.plan": {"$any": ["free", "paid"]}
+ *   },
  * }
  * ```
  *
@@ -2367,9 +2620,9 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "settings.dark": true,
- *     "settings.plan": "free"
- *   }
+ *       "settings.dark": true,
+ *       "settings.plan": "free",
+ *   },
  * }
  * ```
  *
@@ -2380,11 +2633,11 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "$any": {
- *       "settings.dark": true,
- *       "settings.plan": "free"
- *     }
- *   }
+ *       "$any": {
+ *         "settings.dark": true,
+ *         "settings.plan": "free"
+ *       }
+ *   },
  * }
  * ```
  *
@@ -2395,10 +2648,10 @@ export type QueryTableVariables = {
  *   "filter": {
  *     "$any": [
  *       {
- *         "name": "r1"
+ *         "name": "r1",
  *       },
  *       {
- *         "name": "r2"
+ *         "name": "r2",
  *       }
  *     ]
  *   }
@@ -2410,7 +2663,7 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "$exists": "settings"
+ *     "$exists": "settings",
  *   }
  * }
  * ```
@@ -2422,10 +2675,10 @@ export type QueryTableVariables = {
  *   "filter": {
  *     "$all": [
  *       {
- *         "$exists": "settings"
+ *         "$exists": "settings",
  *       },
  *       {
- *         "$exists": "name"
+ *         "$exists": "name",
  *       }
  *     ]
  *   }
@@ -2437,7 +2690,7 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "$notExists": "settings"
+ *     "$notExists": "settings",
  *   }
  * }
  * ```
@@ -2464,7 +2717,7 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "<column_name>": {
- *       "$pattern": "v*alue*"
+ *         "$pattern": "v*alue*"
  *     }
  *   }
  * }
@@ -2476,10 +2729,10 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "<column_name>": {
- *       "$endsWith": ".gz"
+ *         "$endsWith": ".gz"
  *     },
  *     "<column_name>": {
- *       "$startsWith": "tmp-"
+ *         "$startsWith": "tmp-"
  *     }
  *   }
  * }
@@ -2490,10 +2743,10 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "<column_name>": {
- *       "$ge": 0,
- *       "$lt": 100
- *     }
+ *       "<column_name>": {
+ *         "$ge": 0,
+ *         "$lt": 100
+ *       }
  *   }
  * }
  * ```
@@ -2510,6 +2763,7 @@ export type QueryTableVariables = {
  * }
  * ```
  * The supported operators are `$gt`, `$lt`, `$ge`, `$le`.
+ *
  *
  * #### Negations
  *
@@ -2535,21 +2789,15 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "$not": {
- *       "$any": [
- *         {
- *           "<column_name1>": "value1"
- *         },
- *         {
- *           "$all": [
- *             {
- *               "<column_name2>": "value2"
- *             },
- *             {
- *               "<column_name3>": "value3"
- *             }
- *           ]
- *         }
- *       ]
+ *       "$any": [{
+ *         "<column_name1>": "value1"
+ *       }, {
+ *         "$all": [{
+ *           "<column_name2>": "value2"
+ *         }, {
+ *           "<column_name3>": "value3"
+ *         }]
+ *       }]
  *     }
  *   }
  * }
@@ -2604,8 +2852,8 @@ export type QueryTableVariables = {
  *     "<array name>": {
  *       "$includes": {
  *         "$all": [
- *           { "$contains": "label" },
- *           { "$not": { "$endsWith": "-debug" } }
+ *           {"$contains": "label"},
+ *           {"$not": {"$endsWith": "-debug"}}
  *         ]
  *       }
  *     }
@@ -2625,7 +2873,9 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "settings.labels": {
- *       "$includesAll": [{ "$contains": "label" }]
+ *       "$includesAll": [
+ *         {"$contains": "label"},
+ *       ]
  *     }
  *   }
  * }
@@ -2672,6 +2922,7 @@ export type QueryTableVariables = {
  *   ]
  * }
  * ```
+ *
  *
  * ### Pagination
  *
@@ -2738,8 +2989,8 @@ export type QueryTableVariables = {
  * can be queried by update `page.after` to the returned cursor while keeping the
  * `page.before` cursor from the first range query.
  *
- * The `filter` , `columns`, `sort` , and `page.size` configuration will be
- * encoded with the cursor. The pagination request will be invalid if
+ * The `filter` , `columns`,  `sort` , and `page.size` configuration will be
+ * encoded with the cursor.  The pagination request will be invalid if
  * `filter` or `sort` is set. The columns returned and page size can be changed
  * anytime by passing the `columns` or `page.size` settings to the next query.
  *
@@ -2860,7 +3111,15 @@ export const operationsByTag = {
     resendWorkspaceMemberInvite,
     acceptWorkspaceMemberInvite
   },
-  database: { getDatabaseList, createDatabase, deleteDatabase },
+  database: {
+    getDatabaseList,
+    createDatabase,
+    deleteDatabase,
+    getGitBranchesMapping,
+    addGitBranchesEntry,
+    removeGitBranchesEntry,
+    resolveBranch
+  },
   branch: {
     getBranchList,
     getBranchDetails,

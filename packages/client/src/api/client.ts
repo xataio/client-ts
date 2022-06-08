@@ -235,6 +235,52 @@ class DatabaseApi {
       ...this.extraProps
     });
   }
+
+  public getGitBranchesMapping(
+    workspace: Schemas.WorkspaceID,
+    dbName: Schemas.DBName
+  ): Promise<Schemas.ListGitBranchesResponse> {
+    return operationsByTag.database.getGitBranchesMapping({
+      pathParams: { workspace, dbName },
+      ...this.extraProps
+    });
+  }
+
+  public addGitBranchesEntry(
+    workspace: Schemas.WorkspaceID,
+    dbName: Schemas.DBName,
+    body: Types.AddGitBranchesEntryRequestBody
+  ): Promise<Types.AddGitBranchesEntryResponse> {
+    return operationsByTag.database.addGitBranchesEntry({
+      pathParams: { workspace, dbName },
+      body,
+      ...this.extraProps
+    });
+  }
+
+  public removeGitBranchesEntry(
+    workspace: Schemas.WorkspaceID,
+    dbName: Schemas.DBName,
+    gitBranch: string
+  ): Promise<void> {
+    return operationsByTag.database.removeGitBranchesEntry({
+      pathParams: { workspace, dbName },
+      queryParams: { gitBranch },
+      ...this.extraProps
+    });
+  }
+
+  public resolveBranch(
+    workspace: Schemas.WorkspaceID,
+    dbName: Schemas.DBName,
+    gitBranch: string
+  ): Promise<Types.ResolveBranchResponse> {
+    return operationsByTag.database.resolveBranch({
+      pathParams: { workspace, dbName },
+      queryParams: { gitBranch },
+      ...this.extraProps
+    });
+  }
 }
 
 class BranchApi {

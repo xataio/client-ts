@@ -69,7 +69,7 @@ afterAll(async () => {
 });
 
 describe('dates', () => {
-  test('add a record with a date', async () => {
+  test.skip('add a record with a date', async () => {
     const date = new Date();
     const record = await xata.db.datetime.create({ date });
 
