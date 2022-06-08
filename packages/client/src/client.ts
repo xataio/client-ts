@@ -3,7 +3,6 @@ import { XataPlugin, XataPluginOptions } from './plugins';
 import { SchemaPlugin, SchemaPluginResult } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
 import { BaseData } from './schema/record';
-import { LinkDictionary } from './schema/repository';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
@@ -25,15 +24,15 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
 
-    constructor(options: BaseClientOptions = {}, links?: LinkDictionary, tables?: string[]) {
+    constructor(options: BaseClientOptions = {}, tables?: string[]) {
       const safeOptions = this.#parseOptions(options);
       const pluginOptions: XataPluginOptions = {
         getFetchProps: () => this.#getFetchProps(safeOptions),
         cache: safeOptions.cache
       };
 
-      const db = new SchemaPlugin(links, tables).build(pluginOptions);
-      const search = new SearchPlugin(db, links ?? {}).build(pluginOptions);
+      const db = new SchemaPlugin(tables).build(pluginOptions);
+      const search = new SearchPlugin(db).build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
       this.db = db;
@@ -115,10 +114,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   } as unknown as ClientConstructor<Plugins>;
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
-  new <Schemas extends Record<string, BaseData> = {}>(
-    options?: Partial<BaseClientOptions>,
-    links?: LinkDictionary
-  ): Omit<
+  new <Schemas extends Record<string, BaseData> = {}>(options?: Partial<BaseClientOptions>, tables?: string[]): Omit<
     {
       db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
       search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
