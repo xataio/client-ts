@@ -183,30 +183,31 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   }
 
   async *[Symbol.asyncIterator](): AsyncIterableIterator<Result> {
-    for await (const [record] of this.getIterator(1)) {
+    for await (const [record] of this.getIterator({ batchSize: 1 })) {
       yield record;
     }
   }
 
-  getIterator(chunk: number): AsyncGenerator<Result[]>;
-  getIterator(chunk: number, options: Omit<QueryOptions<Record>, 'columns' | 'page'>): AsyncGenerator<Result[]>;
-  getIterator<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
-    chunk: number,
+  getIterator(): AsyncGenerator<Result[]>;
+  getIterator(
+    options: Omit<QueryOptions<Record>, 'columns' | 'page'> & { batchSize?: number }
+  ): AsyncGenerator<Result[]>;
+  getIterator<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'> & { batchSize?: number }>(
     options: Options
   ): AsyncGenerator<SelectedPick<Record, typeof options['columns']>[]>;
   async *getIterator<Result extends XataRecord>(
-    chunk: number,
-    options: QueryOptions<Record> = {}
+    options: QueryOptions<Record> & { batchSize?: number } = {}
   ): AsyncGenerator<Result[]> {
+    const { batchSize = 1 } = options;
     let offset = 0;
     let end = false;
 
     while (!end) {
-      const { records, meta } = await this.getPaginated({ ...options, pagination: { size: chunk, offset } });
+      const { records, meta } = await this.getPaginated({ ...options, pagination: { size: batchSize, offset } });
       // Method overloading does not provide type inference for the return type.
       yield records as unknown as Result[];
 
-      offset += chunk;
+      offset += batchSize;
       end = !meta.page.more;
     }
   }
@@ -233,19 +234,18 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getAll(chunk?: number): Promise<Result[]>;
-  getAll(chunk: number | undefined, options: Omit<QueryOptions<Record>, 'columns' | 'page'>): Promise<Result[]>;
-  getAll<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'>>(
-    chunk: number | undefined,
+  getAll(): Promise<Result[]>;
+  getAll(options: Omit<QueryOptions<Record>, 'columns' | 'page'> & { batchSize?: number }): Promise<Result[]>;
+  getAll<Options extends RequiredBy<Omit<QueryOptions<Record>, 'page'>, 'columns'> & { batchSize?: number }>(
     options: Options
   ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
   async getAll<Result extends XataRecord>(
-    chunk = PAGINATION_MAX_SIZE,
-    options: QueryOptions<Record> = {}
+    options: QueryOptions<Record> & { batchSize?: number } = {}
   ): Promise<Result[]> {
+    const { batchSize = PAGINATION_MAX_SIZE, ...rest } = options;
     const results = [];
 
-    for await (const page of this.getIterator(chunk, options)) {
+    for await (const page of this.getIterator({ ...rest, batchSize })) {
       results.push(...page);
     }
 

@@ -307,7 +307,7 @@ describe('integration tests', () => {
   test('query implements iterator with chunks', async () => {
     const owners = [];
 
-    for await (const chunk of client.db.users.filter('full_name', contains('Owner')).getIterator(10)) {
+    for await (const chunk of client.db.users.filter('full_name', contains('Owner')).getIterator({ batchSize: 10 })) {
       owners.push(...chunk);
     }
 
