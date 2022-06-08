@@ -211,7 +211,7 @@ describe('request', () => {
       };
     });
 
-    await users.getMany({ page: { size: 20 } });
+    await users.getMany({ pagination: { size: 20 } });
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
