@@ -1,27 +1,28 @@
 /* eslint-disable no-useless-escape */
 
-import { describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { BaseClient, BaseClientOptions } from '..';
+import { server } from '../../../../test/mock_server';
 import { XataRecord } from './record';
-
+import realFetch from 'cross-fetch';
 interface User extends XataRecord {
   name: string;
 }
 
 const buildClient = (options: Partial<BaseClientOptions> = {}) => {
-  const {
-    apiKey = '1234',
-    databaseURL = 'https://my-workspace-5df34do.staging.xatabase.co/db/xata',
-    branch = 'main'
-  } = options;
+  const { apiKey = '1234', databaseURL = 'https://mock.xata.sh/db/xata', branch = 'main' } = options;
 
-  const fetch = vi.fn();
+  const fetch = vi.fn(realFetch);
   const client = new BaseClient({ fetch, apiKey, databaseURL, branch });
 
   const users = client.db.users;
 
   return { fetch, client, users };
 };
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('client options', () => {
   test('throws if mandatory options are missing', () => {
@@ -48,28 +49,27 @@ describe('client options', () => {
   test('provide branch as a string', async () => {
     const { fetch, users } = buildClient({ branch: 'branch' });
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockImplementationOnce(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
 
-    expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/tables/users/query",
+        "https://mock.xata.sh/db/xata:branch/tables/users/query",
         {
           "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
           "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
+            "Host": "mock.xata.sh",
           },
           "method": "POST",
         },
@@ -82,28 +82,27 @@ describe('client options', () => {
       branch: [process.env.NOT_DEFINED_VARIABLE, async () => null, 'branch', 'main']
     });
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockImplementationOnce(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
 
-    expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/tables/users/query",
+        "https://mock.xata.sh/db/xata:branch/tables/users/query",
         {
           "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
           "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
+            "Host": "mock.xata.sh",
           },
           "method": "POST",
         },
@@ -114,28 +113,27 @@ describe('client options', () => {
   test('provide branch as a function', async () => {
     const { fetch, users } = buildClient({ branch: () => 'branch' });
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockImplementationOnce(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
 
-    expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:branch/tables/users/query",
+        "https://mock.xata.sh/db/xata:branch/tables/users/query",
         {
           "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
           "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
+            "Host": "mock.xata.sh",
           },
           "method": "POST",
         },
@@ -148,14 +146,14 @@ describe('client options', () => {
 
     const { fetch, users } = buildClient({ branch: branchGetter });
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockImplementationOnce(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
@@ -169,28 +167,27 @@ describe('request', () => {
   test('builds the right arguments for a GET request', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockImplementationOnce(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     await users.getFirst();
 
-    expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
+        "https://mock.xata.sh/db/xata:main/tables/users/query",
         {
           "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
           "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
+            "Host": "mock.xata.sh",
           },
           "method": "POST",
         },
@@ -201,28 +198,27 @@ describe('request', () => {
   test('builds the right arguments for a POST request', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockImplementationOnce(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
-    await users.getMany({ page: { size: 20 } });
+    await users.getMany({ pagination: { size: 20 } });
 
-    expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       [
-        "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
+        "https://mock.xata.sh/db/xata:main/tables/users/query",
         {
           "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
           "headers": {
             "Authorization": "Bearer 1234",
             "Content-Type": "application/json",
-            "Host": "my-workspace-5df34do.staging.xatabase.co",
+            "Host": "mock.xata.sh",
           },
           "method": "POST",
         },
@@ -233,12 +229,12 @@ describe('request', () => {
   test('throws if the response is not ok', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockReset().mockImplementation(async () => {
+    fetch.mockImplementationOnce(async () => {
       return {
         ok: false,
         status: 404,
         json: async () => ({ message: 'Not Found' })
-      };
+      } as Response;
     });
 
     await expect(users.getFirst()).rejects.toMatchInlineSnapshot('[Error: Not Found]');
@@ -248,14 +244,14 @@ describe('request', () => {
     const { fetch, users } = buildClient();
 
     const json = { a: 1 };
-    fetch.mockReset().mockImplementation(() => {
+    fetch.mockImplementationOnce(async () => {
       return {
         ok: true,
         json: async () => ({
           records: [json],
           meta: { page: { cursor: '', more: false } }
         })
-      };
+      } as Response;
     });
 
     const result = await users.getFirst();
@@ -275,7 +271,7 @@ async function expectRequest(
   callback: () => void,
   response?: any
 ): Promise<any[]> {
-  fetch.mockReset().mockImplementation(() => {
+  fetch.mockImplementationOnce(() => {
     return {
       ok: true,
       json: async () => response
@@ -285,11 +281,6 @@ async function expectRequest(
   await callback();
 
   const { calls } = fetch.mock;
-
-  const requests = Array.isArray(expectedRequest) ? expectedRequest : [expectedRequest];
-
-  expect(calls.length).toBe(requests.length);
-
   return calls;
 }
 
@@ -307,15 +298,27 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           [
-            "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
+            "https://mock.xata.sh/db/xata:main/tables/users/query",
             {
               "body": "{\\"columns\\":[\\"*\\"]}",
               "headers": {
                 "Authorization": "Bearer 1234",
                 "Content-Type": "application/json",
-                "Host": "my-workspace-5df34do.staging.xatabase.co",
+                "Host": "mock.xata.sh",
               },
               "method": "POST",
+            },
+          ],
+          [
+            "https://mock.xata.sh/db/xata:main",
+            {
+              "body": undefined,
+              "headers": {
+                "Authorization": "Bearer 1234",
+                "Content-Type": "application/json",
+                "Host": "mock.xata.sh",
+              },
+              "method": "GET",
             },
           ],
         ]
@@ -334,15 +337,27 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           [
-            "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
+            "https://mock.xata.sh/db/xata:main/tables/users/query",
             {
-              "body": "{\\"filter\\":{\\"\$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
+              "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
               "headers": {
                 "Authorization": "Bearer 1234",
                 "Content-Type": "application/json",
-                "Host": "my-workspace-5df34do.staging.xatabase.co",
+                "Host": "mock.xata.sh",
               },
               "method": "POST",
+            },
+          ],
+          [
+            "https://mock.xata.sh/db/xata:main",
+            {
+              "body": undefined,
+              "headers": {
+                "Authorization": "Bearer 1234",
+                "Content-Type": "application/json",
+                "Host": "mock.xata.sh",
+              },
+              "method": "GET",
             },
           ],
         ]
@@ -369,15 +384,27 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           [
-            "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
+            "https://mock.xata.sh/db/xata:main/tables/users/query",
             {
               "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
               "headers": {
                 "Authorization": "Bearer 1234",
                 "Content-Type": "application/json",
-                "Host": "my-workspace-5df34do.staging.xatabase.co",
+                "Host": "mock.xata.sh",
               },
               "method": "POST",
+            },
+          ],
+          [
+            "https://mock.xata.sh/db/xata:main",
+            {
+              "body": undefined,
+              "headers": {
+                "Authorization": "Bearer 1234",
+                "Content-Type": "application/json",
+                "Host": "mock.xata.sh",
+              },
+              "method": "GET",
             },
           ],
         ]
@@ -401,15 +428,27 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           [
-            "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/query",
+            "https://mock.xata.sh/db/xata:main/tables/users/query",
             {
               "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
               "headers": {
                 "Authorization": "Bearer 1234",
                 "Content-Type": "application/json",
-                "Host": "my-workspace-5df34do.staging.xatabase.co",
+                "Host": "mock.xata.sh",
               },
               "method": "POST",
+            },
+          ],
+          [
+            "https://mock.xata.sh/db/xata:main",
+            {
+              "body": undefined,
+              "headers": {
+                "Authorization": "Bearer 1234",
+                "Content-Type": "application/json",
+                "Host": "mock.xata.sh",
+              },
+              "method": "GET",
             },
           ],
         ]
@@ -429,13 +468,25 @@ describe('read', () => {
     expect(result).toMatchInlineSnapshot(`
       [
         [
-          "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
+          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
           {
             "body": undefined,
             "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
-              "Host": "my-workspace-5df34do.staging.xatabase.co",
+              "Host": "mock.xata.sh",
+            },
+            "method": "GET",
+          },
+        ],
+        [
+          "https://mock.xata.sh/db/xata:main",
+          {
+            "body": undefined,
+            "headers": {
+              "Authorization": "Bearer 1234",
+              "Content-Type": "application/json",
+              "Host": "mock.xata.sh",
             },
             "method": "GET",
           },
@@ -467,25 +518,37 @@ describe('Repository.update', () => {
     expect(result).toMatchInlineSnapshot(`
       [
         [
-          "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
+          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
           {
             "body": "{\\"id\\":\\"rec_1234\\",\\"name\\":\\"Ada\\"}",
             "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
-              "Host": "my-workspace-5df34do.staging.xatabase.co",
+              "Host": "mock.xata.sh",
             },
             "method": "PATCH",
           },
         ],
         [
-          "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
+          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
           {
             "body": undefined,
             "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
-              "Host": "my-workspace-5df34do.staging.xatabase.co",
+              "Host": "mock.xata.sh",
+            },
+            "method": "GET",
+          },
+        ],
+        [
+          "https://mock.xata.sh/db/xata:main",
+          {
+            "body": undefined,
+            "headers": {
+              "Authorization": "Bearer 1234",
+              "Content-Type": "application/json",
+              "Host": "mock.xata.sh",
             },
             "method": "GET",
           },
@@ -509,13 +572,13 @@ describe('Repository.delete', () => {
     expect(result).toMatchInlineSnapshot(`
       [
         [
-          "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
+          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
           {
             "body": undefined,
             "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
-              "Host": "my-workspace-5df34do.staging.xatabase.co",
+              "Host": "mock.xata.sh",
             },
             "method": "DELETE",
           },
@@ -553,25 +616,37 @@ describe('create', () => {
     expect(result).toMatchInlineSnapshot(`
       [
         [
-          "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data",
+          "https://mock.xata.sh/db/xata:main/tables/users/data",
           {
             "body": "{\\"name\\":\\"Ada\\"}",
             "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
-              "Host": "my-workspace-5df34do.staging.xatabase.co",
+              "Host": "mock.xata.sh",
             },
             "method": "POST",
           },
         ],
         [
-          "https://my-workspace-5df34do.staging.xatabase.co/db/xata:main/tables/users/data/rec_1234",
+          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
           {
             "body": undefined,
             "headers": {
               "Authorization": "Bearer 1234",
               "Content-Type": "application/json",
-              "Host": "my-workspace-5df34do.staging.xatabase.co",
+              "Host": "mock.xata.sh",
+            },
+            "method": "GET",
+          },
+        ],
+        [
+          "https://mock.xata.sh/db/xata:main",
+          {
+            "body": undefined,
+            "headers": {
+              "Authorization": "Bearer 1234",
+              "Content-Type": "application/json",
+              "Host": "mock.xata.sh",
             },
             "method": "GET",
           },
