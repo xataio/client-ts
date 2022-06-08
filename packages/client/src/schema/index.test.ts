@@ -208,7 +208,7 @@ describe('request', () => {
       } as Response;
     });
 
-    await users.getMany({ page: { size: 20 } });
+    await users.getMany({ pagination: { size: 20 } });
 
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       [

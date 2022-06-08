@@ -222,8 +222,8 @@ describe('integration tests', () => {
   });
 
   test('returns many records with offset/size', async () => {
-    const page1 = await client.db.users.getMany({ page: { size: 10 } });
-    const page2 = await client.db.users.getMany({ page: { size: 10, offset: 10 } });
+    const page1 = await client.db.users.getMany({ pagination: { size: 10 } });
+    const page2 = await client.db.users.getMany({ pagination: { size: 10, offset: 10 } });
 
     expect(page1).not.toEqual(page2);
     expect(page1).toHaveLength(10);
@@ -234,7 +234,7 @@ describe('integration tests', () => {
     const size = Math.floor(mockUsers.length / 1.5);
     const lastPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
 
-    const page1 = await client.db.users.getPaginated({ page: { size } });
+    const page1 = await client.db.users.getPaginated({ pagination: { size } });
     const page2 = await page1.nextPage();
     const page3 = await page2.nextPage();
     const firstPage = await page3.firstPage();
@@ -255,7 +255,7 @@ describe('integration tests', () => {
   });
 
   test('returns many records with cursor passing a offset/size', async () => {
-    const page1 = await client.db.users.getPaginated({ page: { size: 5 } });
+    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
     const page2 = await page1.nextPage(10);
     const page3 = await page2.nextPage(10);
     const page2And3 = await page1.nextPage(20);
@@ -270,7 +270,7 @@ describe('integration tests', () => {
 
   test('repository implements pagination', async () => {
     const loadUsers = async (repository: Repository<User>) => {
-      return repository.getPaginated({ page: { size: 10 } });
+      return repository.getPaginated({ pagination: { size: 10 } });
     };
 
     const users = await loadUsers(client.db.users);
@@ -418,14 +418,14 @@ describe('integration tests', () => {
   });
 
   test('Pagination size limit', async () => {
-    expect(client.db.users.getPaginated({ page: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
+    expect(client.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
       'message',
       'page size exceeds max limit of 200'
     );
   });
 
   test('Pagination offset limit', async () => {
-    expect(client.db.users.getPaginated({ page: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
+    expect(client.db.users.getPaginated({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
       'message',
       'page offset must not exceed 800'
     );
