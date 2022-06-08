@@ -1,5 +1,14 @@
 # @xata.io/cli
 
+## 0.1.1
+
+### Patch Changes
+
+- [#273](https://github.com/xataio/client-ts/pull/273) [`30bfc10`](https://github.com/xataio/client-ts/commit/30bfc10f07ec0743cdaf15f1173e0487686a9d58) Thanks [@SferaDev](https://github.com/SferaDev)! - Add datetime columns
+
+- Updated dependencies [[`30bfc10`](https://github.com/xataio/client-ts/commit/30bfc10f07ec0743cdaf15f1173e0487686a9d58)]:
+  - @xata.io/codegen@0.9.2
+
 ## 0.1.0
 
 ### Minor Changes
