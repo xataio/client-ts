@@ -59,12 +59,8 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
         return records.map((record) => {
           const { table = 'orphan' } = record.xata;
-          const columns = schema.tables.find((t) => t.name === table)?.columns;
-          if (!columns) {
-            console.error(`No schema columns found for table ${table}`);
-          }
 
-          return { table, record: initObject(this.db, columns ?? [], table, record) } as any;
+          return { table, record: initObject(this.db, schema, table, record) } as any;
         });
       },
       byTable: async <Tables extends StringKeys<Schemas>>(
@@ -80,13 +76,9 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
         return records.reduce((acc, record) => {
           const { table = 'orphan' } = record.xata;
-          const columns = schema.tables.find((t) => t.name === table)?.columns;
-          if (!columns) {
-            console.error(`No schema columns found for table ${table}`);
-          }
 
           const items = acc[table] ?? [];
-          const item = initObject(this.db, columns ?? [], table, record);
+          const item = initObject(this.db, schema, table, record);
 
           return { ...acc, [table]: [...items, item] };
         }, {} as any);

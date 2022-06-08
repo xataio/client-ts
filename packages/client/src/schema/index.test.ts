@@ -310,7 +310,7 @@ describe('query', () => {
             },
           ],
           [
-            "https://mock.xata.sh/db/xata:main/tables/users/schema",
+            "https://mock.xata.sh/db/xata:main",
             {
               "body": undefined,
               "headers": {
@@ -349,7 +349,7 @@ describe('query', () => {
             },
           ],
           [
-            "https://mock.xata.sh/db/xata:main/tables/users/schema",
+            "https://mock.xata.sh/db/xata:main",
             {
               "body": undefined,
               "headers": {
@@ -396,7 +396,7 @@ describe('query', () => {
             },
           ],
           [
-            "https://mock.xata.sh/db/xata:main/tables/users/schema",
+            "https://mock.xata.sh/db/xata:main",
             {
               "body": undefined,
               "headers": {
@@ -440,7 +440,7 @@ describe('query', () => {
             },
           ],
           [
-            "https://mock.xata.sh/db/xata:main/tables/users/schema",
+            "https://mock.xata.sh/db/xata:main",
             {
               "body": undefined,
               "headers": {
@@ -480,7 +480,7 @@ describe('read', () => {
           },
         ],
         [
-          "https://mock.xata.sh/db/xata:main/tables/users/schema",
+          "https://mock.xata.sh/db/xata:main",
           {
             "body": undefined,
             "headers": {
@@ -542,7 +542,7 @@ describe('Repository.update', () => {
           },
         ],
         [
-          "https://mock.xata.sh/db/xata:main/tables/users/schema",
+          "https://mock.xata.sh/db/xata:main",
           {
             "body": undefined,
             "headers": {
@@ -640,7 +640,7 @@ describe('create', () => {
           },
         ],
         [
-          "https://mock.xata.sh/db/xata:main/tables/users/schema",
+          "https://mock.xata.sh/db/xata:main",
           {
             "body": undefined,
             "headers": {

@@ -2,8 +2,8 @@ import { SchemaPluginResult } from '.';
 import {
   bulkInsertTableRecords,
   deleteRecord,
+  getBranchDetails,
   getRecord,
-  getTableSchema,
   insertRecord,
   insertRecordWithID,
   queryTable,
@@ -12,7 +12,7 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
-import { Column, RecordsMetadata } from '../api/schemas';
+import { RecordsMetadata, Schema } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { isObject, isString } from '../util/lang';
 import { Dictionary } from '../util/types';
@@ -159,7 +159,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   #getFetchProps: () => Promise<FetcherExtraProps>;
   db: SchemaPluginResult<any>;
   #cache: CacheImpl;
-  #schemaColumns: Column[] | undefined;
+  #schema?: Schema;
 
   constructor(options: { table: string; db: SchemaPluginResult<any>; pluginOptions: XataPluginOptions }) {
     super(null, options.table, {});
@@ -294,8 +294,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         ...fetchProps
       });
 
-      const columns = await this.#getSchemaColumns();
-      return initObject(this.db, columns, this.#table, response);
+      const schema = await this.#getSchema();
+      return initObject(this.db, schema, this.#table, response);
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -462,8 +462,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const columns = await this.#getSchemaColumns();
-    return records.map((item) => initObject(this.db, columns, this.#table, item));
+    const schema = await this.#getSchema();
+    return records.map((item) => initObject(this.db, schema, this.#table, item));
   }
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
@@ -486,8 +486,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const columns = await this.#getSchemaColumns();
-    const records = objects.map((record) => initObject<Result>(this.db, columns, this.#table, record));
+    const schema = await this.#getSchema();
+    const records = objects.map((record) => initObject<Result>(this.db, schema, this.#table, record));
     await this.#setCacheQuery(query, meta, records);
 
     return new Page<Record, Result>(query, meta, records);
@@ -533,16 +533,17 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return hasExpired ? null : result;
   }
 
-  async #getSchemaColumns(): Promise<Column[]> {
-    if (this.#schemaColumns) return this.#schemaColumns;
+  async #getSchema(): Promise<Schema> {
+    if (this.#schema) return this.#schema;
+    const fetchProps = await this.#getFetchProps();
 
-    const { columns } = await getTableSchema({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
-      ...(await this.#getFetchProps())
+    const { schema } = await getBranchDetails({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
+      ...fetchProps
     });
 
-    this.#schemaColumns = columns;
-    return columns;
+    this.#schema = schema;
+    return schema;
   }
 }
 
@@ -556,16 +557,14 @@ const transformObjectLinks = (object: any) => {
   }, {});
 };
 
-export const initObject = <T>(
-  db: Record<string, Repository<any>>,
-  columns: Column[],
-  table: string,
-  object: object
-) => {
+export const initObject = <T>(db: Record<string, Repository<any>>, schema: Schema, table: string, object: object) => {
   const result: Dictionary<unknown> = {};
   Object.assign(result, object);
 
-  for (const column of columns) {
+  const { columns } = schema.tables.find(({ name }) => name === table) ?? {};
+  if (!columns) console.error(`Table ${table} not found in schema`);
+
+  for (const column of columns ?? []) {
     const value = result[column.name];
 
     switch (column.type) {
@@ -586,7 +585,7 @@ export const initObject = <T>(
         if (!linkTable) {
           console.error(`Failed to parse link for field ${column.name}`);
         } else if (value && isObject(value)) {
-          result[column.name] = initObject(db, columns, linkTable, value);
+          result[column.name] = initObject(db, schema, linkTable, value);
         }
 
         break;
