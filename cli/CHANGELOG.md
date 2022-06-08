@@ -1,5 +1,23 @@
 # @xata.io/cli
 
+## 0.1.1
+
+### Patch Changes
+
+- [#273](https://github.com/xataio/client-ts/pull/273) [`30bfc10`](https://github.com/xataio/client-ts/commit/30bfc10f07ec0743cdaf15f1173e0487686a9d58) Thanks [@SferaDev](https://github.com/SferaDev)! - Add datetime columns
+
+## 0.1.0
+
+### Minor Changes
+
+- [#263](https://github.com/xataio/client-ts/pull/263) [`8ac045c`](https://github.com/xataio/client-ts/commit/8ac045c900f546f6abc2d4a73c38e07047b53583) Thanks [@gimenete](https://github.com/gimenete)! - Added command random-data
+
+### Patch Changes
+
+- [#258](https://github.com/xataio/client-ts/pull/258) [`8bd00a3`](https://github.com/xataio/client-ts/commit/8bd00a3efb2328d6700ee89ecdebc3356bc55d7f) Thanks [@gimenete](https://github.com/gimenete)! - Fixes a bug that make the CLI always generate TypeScript code
+
+* [#259](https://github.com/xataio/client-ts/pull/259) [`a2727a3`](https://github.com/xataio/client-ts/commit/a2727a3bf6dfddb41251ff86c40afe7851a9c068) Thanks [@gimenete](https://github.com/gimenete)! - Added command "schema edit"
+
 ## 0.0.1
 
 ### Patch Changes
