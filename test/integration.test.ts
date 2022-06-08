@@ -18,8 +18,6 @@ import { mockUsers, teamColumns, userColumns } from './mock_data';
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
 
-const backupEnv = { ...process.env };
-
 let client: XataClient;
 let schemaLessclient: BaseClient;
 let databaseName: string;
@@ -777,21 +775,21 @@ describe('getBranch', () => {
 
     const getBranchOptions = { apiKey: '', apiUrl: '', fetchImpl: {} as FetchImpl };
 
-    process.env = { ...backupEnv, XATA_BRANCH: branchName };
+    process.env = { NODE_ENV: 'development', XATA_BRANCH: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
-    process.env = { ...backupEnv, VERCEL_GIT_COMMIT_REF: branchName };
+    process.env = { NODE_ENV: 'development', VERCEL_GIT_COMMIT_REF: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
-    process.env = { ...backupEnv, CF_PAGES_BRANCH: branchName };
+    process.env = { NODE_ENV: 'development', CF_PAGES_BRANCH: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
-    process.env = { ...backupEnv, BRANCH: branchName };
+    process.env = { NODE_ENV: 'development', BRANCH: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
   });
 
   test('uses the git branch if no env variable is set', async () => {
-    process.env = { ...backupEnv };
+    process.env = { NODE_ENV: 'development' };
     const fetchImpl = vi.fn(() => ({
       ok: true,
       json() {
@@ -808,7 +806,7 @@ describe('getBranch', () => {
   });
 
   test('uses `main` if no env variable is set is not set and there is not associated git branch', async () => {
-    process.env = { ...backupEnv };
+    process.env = { NODE_ENV: 'development' };
     const fetchImpl = vi.fn(() => ({
       ok: false,
       status: 404,
