@@ -2,6 +2,7 @@ import { SchemaPluginResult } from '.';
 import {
   bulkInsertTableRecords,
   deleteRecord,
+  getBranchDetails,
   getRecord,
   insertRecord,
   insertRecordWithID,
@@ -11,7 +12,7 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
-import { RecordsMetadata } from '../api/schemas';
+import { RecordsMetadata, Schema } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { isObject, isString } from '../util/lang';
 import { Dictionary } from '../util/types';
@@ -21,9 +22,6 @@ import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
-
-type TableLink = string[];
-export type LinkDictionary = Dictionary<TableLink[]>;
 
 /**
  * Common interface for performing operations on a table.
@@ -158,21 +156,15 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   implements Repository<Data, Record>
 {
   #table: string;
-  #links: LinkDictionary;
   #getFetchProps: () => Promise<FetcherExtraProps>;
   db: SchemaPluginResult<any>;
   #cache: CacheImpl;
+  #schema?: Schema;
 
-  constructor(options: {
-    table: string;
-    links?: LinkDictionary;
-    db: SchemaPluginResult<any>;
-    pluginOptions: XataPluginOptions;
-  }) {
+  constructor(options: { table: string; db: SchemaPluginResult<any>; pluginOptions: XataPluginOptions }) {
     super(null, options.table, {});
 
     this.#table = options.table;
-    this.#links = options.links ?? {};
     this.#getFetchProps = options.pluginOptions.getFetchProps;
     this.db = options.db;
     this.#cache = options.pluginOptions.cache;
@@ -302,7 +294,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         ...fetchProps
       });
 
-      return initObject(this.db, this.#links, this.#table, response);
+      const schema = await this.#getSchema();
+      return initObject(this.db, schema, this.#table, response);
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -469,7 +462,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    return records.map((item) => initObject(this.db, this.#links, this.#table, item));
+    const schema = await this.#getSchema();
+    return records.map((item) => initObject(this.db, schema, this.#table, item));
   }
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
@@ -481,7 +475,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     const body = {
       filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
       sort: data.sort ? buildSortFilter(data.sort) : undefined,
-      page: data.page,
+      page: data.pagination,
       columns: data.columns
     };
 
@@ -492,7 +486,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const records = objects.map((record) => initObject<Result>(this.db, this.#links, this.#table, record));
+    const schema = await this.#getSchema();
+    const records = objects.map((record) => initObject<Result>(this.db, schema, this.#table, record));
     await this.#setCacheQuery(query, meta, records);
 
     return new Page<Record, Result>(query, meta, records);
@@ -537,6 +532,19 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     const hasExpired = result.date.getTime() + ttl < Date.now();
     return hasExpired ? null : result;
   }
+
+  async #getSchema(): Promise<Schema> {
+    if (this.#schema) return this.#schema;
+    const fetchProps = await this.#getFetchProps();
+
+    const { schema } = await getBranchDetails({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
+      ...fetchProps
+    });
+
+    this.#schema = schema;
+    return schema;
+  }
 }
 
 const transformObjectLinks = (object: any) => {
@@ -549,22 +557,41 @@ const transformObjectLinks = (object: any) => {
   }, {});
 };
 
-export const initObject = <T>(
-  db: Record<string, Repository<any>>,
-  links: LinkDictionary,
-  table: string,
-  object: object
-) => {
+export const initObject = <T>(db: Record<string, Repository<any>>, schema: Schema, table: string, object: object) => {
   const result: Dictionary<unknown> = {};
   Object.assign(result, object);
 
-  const tableLinks = links[table] || [];
-  for (const link of tableLinks) {
-    const [field, linkTable] = link;
-    const value = result[field];
+  const { columns } = schema.tables.find(({ name }) => name === table) ?? {};
+  if (!columns) console.error(`Table ${table} not found in schema`);
 
-    if (value && isObject(value)) {
-      result[field] = initObject(db, links, linkTable, value);
+  for (const column of columns ?? []) {
+    const value = result[column.name];
+
+    switch (column.type) {
+      case 'datetime': {
+        const date = new Date(value as string | number);
+
+        if (isNaN(date.getTime())) {
+          console.error(`Failed to parse date ${value} for field ${column.name}`);
+        } else {
+          result[column.name] = date;
+        }
+
+        break;
+      }
+      case 'link': {
+        const linkTable = column.link?.table;
+
+        if (!linkTable) {
+          console.error(`Failed to parse link for field ${column.name}`);
+        } else if (value && isObject(value)) {
+          result[column.name] = initObject(db, schema, linkTable, value);
+        }
+
+        break;
+      }
+      default:
+        break;
     }
   }
 

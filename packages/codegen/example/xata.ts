@@ -22,12 +22,12 @@ export type DatabaseSchema = {
   users: User;
 };
 
-const links = { teams: [['owner', 'users']], users: [['team', 'teams']] };
+const tables = ['teams', 'users'];
 
 const DatabaseClient = buildClient();
 
 export class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
-    super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, links);
+    super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, tables);
   }
 }

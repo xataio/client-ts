@@ -2,7 +2,7 @@ import { XataRecord } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isString } from '../util/lang';
 import { BaseData } from './record';
-import { LinkDictionary, Repository, RestRepository } from './repository';
+import { Repository, RestRepository } from './repository';
 
 export * from './cache';
 export * from './operators';
@@ -11,12 +11,10 @@ export { Query } from './query';
 export { isIdentifiable, isXataRecord } from './record';
 export type { BaseData, EditableData, Identifiable, XataRecord } from './record';
 export { Repository, RestRepository } from './repository';
-export type { LinkDictionary } from './repository';
 export * from './selection';
 
 export type SchemaDefinition = {
   table: string;
-  links?: LinkDictionary;
 };
 
 export type SchemaPluginResult<Schemas extends Record<string, BaseData>> = {
@@ -26,20 +24,18 @@ export type SchemaPluginResult<Schemas extends Record<string, BaseData>> = {
 export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
   #tables: Record<string, Repository<any>> = {};
 
-  constructor(private links?: LinkDictionary, private tableNames?: string[]) {
+  constructor(private tableNames?: string[]) {
     super();
   }
 
   build(pluginOptions: XataPluginOptions): SchemaPluginResult<Schemas> {
-    const links = this.links;
-
     const db: any = new Proxy(
       {},
       {
         get: (_target, table) => {
           if (!isString(table)) throw new Error('Invalid table name');
           if (!this.#tables[table]) {
-            this.#tables[table] = new RestRepository({ db, pluginOptions, table, links });
+            this.#tables[table] = new RestRepository({ db, pluginOptions, table });
           }
 
           return this.#tables[table];
@@ -49,7 +45,7 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
     // Inject generated tables for shell to auto-complete
     for (const table of this.tableNames ?? []) {
-      db[table] = new RestRepository({ db, pluginOptions, table, links });
+      db[table] = new RestRepository({ db, pluginOptions, table });
     }
 
     return db;
