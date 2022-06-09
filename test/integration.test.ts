@@ -268,6 +268,43 @@ describe('integration tests', () => {
     expect(page2And3.records).toEqual([...page2.records, ...page3.records]);
   });
 
+  test('fails if sending cursor with sorting', async () => {
+    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
+    const { records: records1, meta } = page1;
+    const page2 = await page1.nextPage();
+
+    expect(meta.page.more).toBe(true);
+    expect(meta.page.cursor).toBeDefined();
+    expect(records1).toHaveLength(5);
+
+    const { records: records2, meta: meta2 } = await client.db.users.getPaginated({
+      pagination: { after: meta.page.cursor }
+    });
+
+    expect(meta2.page.more).toBe(true);
+    expect(meta2.page.cursor).toBeDefined();
+    expect(records2).toHaveLength(5);
+    expect(records2).toEqual(page2.records);
+
+    const { records: records3, meta: meta3 } = await client.db.users.getPaginated({
+      pagination: { after: meta.page.cursor },
+      columns: ['full_name']
+    });
+
+    expect(meta3.page.more).toBe(true);
+    expect(meta3.page.cursor).toBeDefined();
+    expect(records3).toHaveLength(5);
+    expect(records3).not.toEqual(page2.records);
+
+    expect(
+      client.db.users.getPaginated({
+        // @ts-expect-error
+        pagination: { after: meta.page.cursor },
+        sort: { column: 'full_name', direction: 'asc' }
+      })
+    ).rejects.toThrow();
+  });
+
   test('repository implements pagination', async () => {
     const loadUsers = async (repository: Repository<User>) => {
       return repository.getPaginated({ pagination: { size: 10 } });
