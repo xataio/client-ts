@@ -178,4 +178,52 @@ describe('cache', () => {
     const query = await client.db.users.filter({ id: user.id }).getFirst({ cache: 500 });
     expect(query?.full_name).toBe('John Doe');
   });
+
+  test("query with negative ttl doesn't cache", async () => {
+    const user = await client.db.users.create({ full_name: 'John Doe' });
+
+    await cache.clear();
+
+    await client.db.users.filter({ id: user.id }).getFirst();
+
+    const cacheItems = Object.entries(await cache.getAll());
+    expect(cacheItems).toHaveLength(1);
+
+    const [key, value] = cacheItems[0] as any;
+
+    await cache.set(key, { ...value, records: [{ ...user, full_name: 'Jane Doe' }] });
+
+    const query = await client.db.users.filter({ id: user.id }).getFirst({ cache: -1 });
+    expect(query?.full_name).toBe('John Doe');
+  });
+
+  test('no cache', async () => {
+    const client1 = new XataClient({
+      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
+      branch: 'main',
+      apiKey: process.env.XATA_API_KEY || '',
+      fetch
+    });
+
+    const client2 = new XataClient({
+      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
+      branch: 'main',
+      apiKey: process.env.XATA_API_KEY || '',
+      fetch
+    });
+
+    const teamsA1 = await client1.db.teams.getAll();
+    const teamsA2 = await client2.db.teams.getAll();
+
+    expect(teamsA1).toHaveLength(teamsA2.length);
+
+    await client2.db.teams.create({});
+
+    const teamsB1 = await client1.db.teams.getAll();
+    const teamsB2 = await client2.db.teams.getAll();
+
+    expect(teamsB1).toHaveLength(teamsB2.length);
+    expect(teamsB1).toHaveLength(teamsA1.length + 1);
+    expect(teamsB2).toHaveLength(teamsA2.length + 1);
+  });
 });
