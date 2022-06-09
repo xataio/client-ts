@@ -1,6 +1,6 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
-import { createBranch, defaultGitBranch, isGitInstalled, isWorkingDirClean } from '../../git.js';
+import { createBranch, currentGitBranch, defaultGitBranch, isGitInstalled, isWorkingDirClean } from '../../git.js';
 export default class BranchesCreate extends BaseCommand {
   static description = 'Create a branch';
 
@@ -48,6 +48,15 @@ export default class BranchesCreate extends BaseCommand {
             'The working directory has uncommited changes. Please commit or stash them before creating a branch. Or use the --no-git flag to disable integrating xata branches with git branches.'
           );
         }
+
+        const currentBranch = currentGitBranch();
+        if (currentBranch !== branch) {
+          const { branch: gitBase } = from
+            ? await xata.databases.resolveBranch(workspace, database, from)
+            : { branch: defaultGitBranch() };
+
+          createBranch(branch, gitBase);
+        }
       } catch (err) {
         if (err instanceof Error && err.message.includes('not a git repository')) {
           this.error(
@@ -57,12 +66,12 @@ export default class BranchesCreate extends BaseCommand {
           throw err;
         }
       }
-      // TODO calculate associated git branch with `from` xata branch
-      const gitBase = from || defaultGitBranch();
-      createBranch(branch, gitBase);
     }
 
     const result = await xata.branches.createBranch(workspace, database, branch, from);
+    if (useGit) {
+      await xata.databases.addGitBranchesEntry(workspace, database, { xataBranch: branch, gitBranch: branch });
+    }
 
     if (this.jsonEnabled()) return result;
 
