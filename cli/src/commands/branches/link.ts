@@ -1,8 +1,6 @@
 import { Flags } from '@oclif/core';
-import { getCurrentBranchDetails } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
-import { defaultGitBranch, isGitInstalled } from '../../git.js';
-import fetch from 'node-fetch';
+import { currentGitBranch, isGitInstalled } from '../../git.js';
 
 export default class BranchesCreate extends BaseCommand {
   static description = 'Link a git branch with a xata branch';
@@ -33,15 +31,20 @@ export default class BranchesCreate extends BaseCommand {
       this.error('Git cannot be found. Please install it to link branches.');
     }
 
-    const { workspace, database, databaseURL } = await this.getParsedDatabaseURL(flags.databaseURL);
+    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
 
     const xata = await this.getXataClient();
 
     try {
-      // TODO Not sure about these default flags
-      const { gitBranch = defaultGitBranch(), xataBranch = await getCurrentBranchName(databaseURL) } = flags;
-      if (!xataBranch) {
-        this.error('Could not resolve the current branch');
+      const {
+        gitBranch = currentGitBranch(),
+        xataBranch = await this.getBranch(workspace, database, { allowCreate: true })
+      } = flags;
+
+      if (!gitBranch) {
+        this.error('Could not resolve the current git branch');
+      } else if (!xataBranch) {
+        this.error('Could not resolve the xata branch');
       }
 
       const result = await xata.databases.addGitBranchesEntry(workspace, database, { gitBranch, xataBranch });
@@ -59,9 +62,4 @@ export default class BranchesCreate extends BaseCommand {
       }
     }
   }
-}
-
-async function getCurrentBranchName(databaseURL: string) {
-  const branchDetails = await getCurrentBranchDetails({ fetchImpl: fetch, databaseURL });
-  return branchDetails?.branchName;
 }

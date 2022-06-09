@@ -1,6 +1,6 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
-import { defaultGitBranch, isGitInstalled } from '../../git.js';
+import { currentGitBranch, isGitInstalled } from '../../git.js';
 
 export default class BranchesCreate extends BaseCommand {
   static description = 'Unlink a git branch with a xata branch';
@@ -32,8 +32,10 @@ export default class BranchesCreate extends BaseCommand {
     const xata = await this.getXataClient();
 
     try {
-      // TODO Not sure about these default flags
-      const { gitBranch = defaultGitBranch() } = flags;
+      const { gitBranch = currentGitBranch() } = flags;
+      if (!gitBranch) {
+        this.error('Could not resolve the current git branch');
+      }
 
       const result = await xata.databases.removeGitBranchesEntry(workspace, database, gitBranch);
 

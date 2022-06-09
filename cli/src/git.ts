@@ -14,6 +14,11 @@ export function listRemotes() {
   });
 }
 
+export function currentGitBranch() {
+  const out = run('git', ['branch', '--show-current']);
+  return out === '' ? null : out;
+}
+
 export function defaultGitBranch(remote?: string) {
   if (!remote) {
     const remotes = listRemotes();
