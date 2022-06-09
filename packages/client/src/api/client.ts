@@ -1,5 +1,6 @@
 import { getAPIKey } from '../util/apiKey';
 import { getFetchImplementation } from '../util/fetch';
+import { isString } from '../util/lang';
 import type * as Types from './components';
 import { operationsByTag } from './components';
 import type { FetcherExtraProps, FetchImpl } from './fetcher';
@@ -308,12 +309,12 @@ class BranchApi {
     workspace: Schemas.WorkspaceID,
     database: Schemas.DBName,
     branch: Schemas.BranchName,
-    from = '',
+    from?: string,
     options: Types.CreateBranchRequestBody = {}
   ): Promise<void> {
     return operationsByTag.branch.createBranch({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
-      queryParams: { from },
+      queryParams: isString(from) ? { from } : undefined,
       body: options,
       ...this.extraProps
     });
