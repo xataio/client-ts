@@ -51,7 +51,7 @@ describe('branches create', () => {
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA?from=');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
     expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
   });
 
@@ -81,7 +81,7 @@ describe('branches create', () => {
     }
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA?from=');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
     expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
 
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
@@ -165,7 +165,7 @@ describe('branches create', () => {
       }
 
       expect(fetchMock).toHaveBeenCalledOnce();
-      expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA?from=');
+      expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
       expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
 
       expect(createBranch).toHaveBeenCalledOnce();
