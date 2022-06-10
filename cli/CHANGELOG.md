@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [#289](https://github.com/xataio/client-ts/pull/289) [`9a41035`](https://github.com/xataio/client-ts/commit/9a410354911d89116b332dd3ed7345b1156f74ef) Thanks [@gimenete](https://github.com/gimenete)! - Fix execution of cli from npx
+- [#289](https://github.com/xataio/client-ts/pull/289) [`9a41035`](https://github.com/xataio/client-ts/commit/9a410354911d89116b332dd3ed7345b1156f74ef) Thanks [@gimenete](https://github.com/gimenete)! - Fix execution of the cli from npx
 
 ## 0.1.2
 
