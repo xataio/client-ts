@@ -2,8 +2,9 @@ import { faker } from '@faker-js/faker';
 import { Flags } from '@oclif/core';
 import { getCurrentBranchDetails } from '@xata.io/client';
 import { Column } from '@xata.io/codegen';
-import { BaseCommand } from '../../base.js';
 import fetch from 'node-fetch';
+import { BaseCommand } from '../../base.js';
+import { readAPIKeyFromFile } from '../../key.js';
 
 export default class RandomData extends BaseCommand {
   static description = 'Insert random data in the database';
@@ -25,10 +26,11 @@ export default class RandomData extends BaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(RandomData);
+    const apiKey = (await readAPIKeyFromFile()) ?? undefined;
 
     const { workspace, database, databaseURL } = await this.getParsedDatabaseURL();
     const xata = await this.getXataClient();
-    const branchDetails = await getCurrentBranchDetails({ fetchImpl: fetch, databaseURL });
+    const branchDetails = await getCurrentBranchDetails({ fetchImpl: fetch, databaseURL, apiKey });
 
     if (!branchDetails) {
       this.error('Could not resolve the current branch');

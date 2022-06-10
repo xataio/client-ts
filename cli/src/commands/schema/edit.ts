@@ -5,6 +5,7 @@ import clipboardy from 'clipboardy';
 import enquirer from 'enquirer';
 import fetch from 'node-fetch';
 import { BaseCommand } from '../../base.js';
+import { readAPIKeyFromFile } from '../../key.js';
 import Codegen from '../codegen/index.js';
 
 // The enquirer library has type definitions but they are very poor
@@ -69,7 +70,9 @@ export default class EditSchema extends BaseCommand {
 
   async run(): Promise<void> {
     const { databaseURL } = await this.getParsedDatabaseURL();
-    this.branchDetails = await getCurrentBranchDetails({ fetchImpl: fetch, databaseURL });
+    const apiKey = (await readAPIKeyFromFile()) ?? undefined;
+
+    this.branchDetails = await getCurrentBranchDetails({ fetchImpl: fetch, databaseURL, apiKey });
     if (!this.branchDetails) this.error('Could not get the schema from the current branch');
     this.tables = this.branchDetails.schema.tables;
     await this.showSchema();
