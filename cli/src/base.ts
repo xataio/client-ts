@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { XataApiClient } from '@xata.io/client';
+import { Schemas, XataApiClient } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { cosmiconfigSync } from 'cosmiconfig';
@@ -218,6 +218,95 @@ export abstract class BaseCommand extends Command {
       await writeFile(fullPath, JSON.stringify(content, null, 2));
     } else {
       await writeFile(fullPath, JSON.stringify(this.projectConfig, null, 2));
+    }
+  }
+
+  async deploySchema(workspace: string, database: string, branch: string, schema: Schemas.Schema) {
+    const xata = await this.getXataClient();
+    const plan = await xata.branches.getBranchMigrationPlan(workspace, database, branch, schema);
+
+    const { newTables, removedTables, renamedTables, tableMigrations } = plan.migration;
+
+    function isEmpty(obj?: object) {
+      if (obj == null) return true;
+      if (Array.isArray(obj)) return obj.length === 0;
+      return Object.keys(obj).length === 0;
+    }
+
+    if (isEmpty(newTables) && isEmpty(removedTables) && isEmpty(renamedTables) && isEmpty(tableMigrations)) {
+      this.log('Your schema is up to date');
+    } else {
+      this.printMigration(plan.migration);
+      this.log();
+
+      const { confirm } = await prompts({
+        type: 'confirm',
+        name: 'confirm',
+        message: `Do you want to apply the above migration into the ${branch} branch?`,
+        initial: true
+      });
+      if (!confirm) return this.exit(1);
+
+      await xata.branches.executeBranchMigrationPlan(workspace, database, branch, plan);
+    }
+  }
+
+  printMigration(migration: Schemas.BranchMigration) {
+    if (migration.title) {
+      this.log(`* ${migration.title} [status: ${migration.status}]`);
+    }
+    if (migration.id) {
+      this.log(`ID: ${migration.id}`);
+    }
+    if (migration.lastGitRevision) {
+      this.log(`git commit sha: ${migration.lastGitRevision}`);
+      if (migration.localChanges) {
+        this.log(' + local changes');
+      }
+      this.log();
+    }
+    if (migration.createdAt) {
+      this.log(`Date ${this.formatDate(migration.createdAt)}`);
+    }
+
+    if (migration.newTables) {
+      for (const tableName of Object.keys(migration.newTables)) {
+        this.log(` ${chalk.bgWhite.blue('CREATE table ')} ${tableName}`);
+      }
+    }
+
+    if (migration.removedTables) {
+      for (const tableName of Object.keys(migration.removedTables)) {
+        this.log(` ${chalk.bgWhite.red('DELETE table ')} ${tableName}`);
+      }
+    }
+
+    if (migration.renamedTables) {
+      for (const tableName of Object.keys(migration.renamedTables)) {
+        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${tableName}`);
+      }
+    }
+
+    if (migration.tableMigrations) {
+      for (const [tableName, tableMigration] of Object.entries(migration.tableMigrations)) {
+        this.log();
+        this.log(`Table ${tableName}:`);
+        if (tableMigration.newColumns) {
+          for (const columnName of Object.keys(tableMigration.newColumns)) {
+            this.log(` ${chalk.bgWhite.blue('ADD column ')} ${columnName}`);
+          }
+        }
+        if (tableMigration.removedColumns) {
+          for (const columnName of Object.keys(tableMigration.removedColumns)) {
+            this.log(` ${chalk.bgWhite.red('DELETE column ')} ${columnName}`);
+          }
+        }
+        if (tableMigration.modifiedColumns) {
+          for (const [, columnMigration] of Object.entries(tableMigration.modifiedColumns)) {
+            this.log(` ${chalk.bgWhite.red('MODIFY column ')} ${columnMigration.old.name}`);
+          }
+        }
+      }
     }
   }
 
