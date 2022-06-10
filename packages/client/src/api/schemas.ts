@@ -131,13 +131,6 @@ export type ListBranchesResponse = {
   branches: Branch[];
 };
 
-export type ListGitBranchesResponse = {
-  mapping: {
-    gitBranch: string;
-    xataBranch: string;
-  }[];
-};
-
 export type Branch = {
   name: string;
   createdAt: DateTime;
