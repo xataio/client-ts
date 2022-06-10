@@ -58,7 +58,7 @@ export default class Codegen extends BaseCommand {
     this.log(`Your XataClient is generated at ./${relative(process.cwd(), output)}`);
   }
 
-  static async runIfConfigured(projectConfig: ProjectConfig) {
+  static async runIfConfigured(projectConfig?: ProjectConfig) {
     if (projectConfig?.codegen?.output) return Codegen.run([]);
   }
 }

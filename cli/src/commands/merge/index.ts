@@ -2,6 +2,7 @@ import { getCurrentBranchDetails, Schemas } from '@xata.io/client';
 import fetch from 'node-fetch';
 import { BaseCommand } from '../../base.js';
 import deepmerge from 'deepmerge';
+import Codegen from '../codegen/index.js';
 
 export default class Merge extends BaseCommand {
   static description = 'Merge the current branch with another branch';
@@ -27,6 +28,8 @@ export default class Merge extends BaseCommand {
     const finalSchema = deepmerge(currentBranchDetails.schema, otherBranchDetails.schema);
 
     await this.deploySchema(workspace, database, currentBranchDetails.branchName, finalSchema);
+
+    await Codegen.runIfConfigured(this.projectConfig);
 
     this.log('Done. You are all set!');
   }

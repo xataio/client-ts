@@ -205,9 +205,7 @@ export default class EditSchema extends BaseCommand {
         await this.deleteTable(result.table);
       } else if (result.type === 'migrate') {
         await this.migrate();
-        if (this.projectConfig) {
-          await Codegen.runIfConfigured(this.projectConfig);
-        }
+        await Codegen.runIfConfigured(this.projectConfig);
         process.exit(0);
       }
     } catch (err) {
