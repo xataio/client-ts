@@ -11,7 +11,6 @@ export default class SchemaDump extends BaseCommand {
   static examples = [];
 
   static flags = {
-    ...this.commonFlags,
     file: Flags.string({ char: 'f', description: 'File to write the schma to' })
   };
 
