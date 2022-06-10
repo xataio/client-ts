@@ -36,6 +36,8 @@ describe('auth login', () => {
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 2]');
 
+    expect(1).toEqual(true);
+
     expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
