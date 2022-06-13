@@ -290,7 +290,7 @@ export abstract class BaseCommand extends Command {
 
     if (branchFlag) {
       branch = branchFlag;
-    } if (info.source === 'config') {
+    } else if (info.source === 'config') {
       branch = await getCurrentBranchName({
         fetchImpl: fetch,
         databaseURL: info.databaseURL,
