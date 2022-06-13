@@ -289,14 +289,13 @@ export abstract class BaseCommand extends Command {
         databaseURL: info.databaseURL,
         apiKey: (await readAPIKey()) ?? undefined
       });
+    } else if (process.env.XATA_BRANCH !== undefined) {
+      branch = process.env.XATA_BRANCH;
     } else {
       branch = await this.getBranch(info.workspace, info.database);
     }
 
-    return {
-      ...info,
-      branch
-    };
+    return { ...info, branch };
   }
 
   async updateConfig() {
