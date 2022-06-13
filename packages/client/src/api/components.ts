@@ -1036,9 +1036,10 @@ export type ResolveBranchVariables = {
 
 /**
  * In order to resolve the database branch, the following algorithm is used:
- * * if the `gitBranch` is found in the [git branches mapping](), the associated Xata branch is returned
+ * * if the `gitBranch` was provided and is found in the [git branches mapping](/api-reference/dbs/db_name/gitBranches), the associated Xata branch is returned
  * * else, if a Xata branch with the exact same name as `gitBranch` exists, return it
- * * else, return the default branch of the DB (currently `main` or the first branch)
+ * * else, if `fallbackBranch` is provided and a branch with that name exists, return it
+ * * else, return the default branch of the DB (`main` or the first branch)
  *
  * Example call:
  *
