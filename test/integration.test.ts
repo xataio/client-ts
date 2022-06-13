@@ -842,7 +842,7 @@ describe('getBranch', () => {
     expect(branch).toEqual(gitBranch);
   });
 
-  test('returns undefined if no env variable is set is not set and there is not associated git branch', async () => {
+  test('uses `main` if no env variable is set is not set and there is not associated git branch', async () => {
     process.env = { NODE_ENV: 'development' };
     const fetchImpl = vi.fn(() => ({
       ok: false,
@@ -857,6 +857,6 @@ describe('getBranch', () => {
       fetchImpl: fetchImpl as unknown as FetchImpl
     });
 
-    expect(branch).toBeUndefined();
+    expect(branch).toEqual('main');
   });
 });

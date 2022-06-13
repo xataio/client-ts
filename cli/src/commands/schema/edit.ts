@@ -67,9 +67,10 @@ export default class EditSchema extends BaseCommand {
   selectItem: EditableColumn | EditableTable | null = null;
 
   async run(): Promise<void> {
-    const { databaseURL } = await this.getParsedDatabaseURL();
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch();
 
-    this.branchDetails = await this.getBranchDetails(databaseURL);
+    const xata = await this.getXataClient();
+    this.branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
     if (!this.branchDetails) this.error('Could not get the schema from the current branch');
     this.tables = this.branchDetails.schema.tables;
     await this.showSchema();

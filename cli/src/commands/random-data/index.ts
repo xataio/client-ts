@@ -24,14 +24,12 @@ export default class RandomData extends BaseCommand {
   async run(): Promise<void> {
     const { flags } = await this.parse(RandomData);
 
-    const { workspace, database, databaseURL } = await this.getParsedDatabaseURL();
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch();
     const xata = await this.getXataClient();
-    const branchDetails = await this.getBranchDetails(databaseURL);
+    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
     if (!branchDetails) {
       this.error('Could not resolve the current branch');
     }
-
-    const branch = branchDetails.branchName;
 
     for (const table of branchDetails.schema.tables) {
       if (flags.table && !flags.table.includes(table.name)) continue;
