@@ -278,7 +278,7 @@ export abstract class BaseCommand extends Command {
     const { workspace, database, databaseURL } = await this.getParsedDatabaseURL(databaseURLFlag);
     const apiKey = (await readAPIKey()) ?? undefined;
     const currentBranch = await getCurrentBranchName({ fetchImpl: fetch, databaseURL, apiKey });
-    const branch = currentBranch ?? this.getBranch(workspace, database);
+    const branch = currentBranch ?? (await this.getBranch(workspace, database));
 
     return this.#xataClient?.branches.getBranchDetails(workspace, database, branch);
   }
