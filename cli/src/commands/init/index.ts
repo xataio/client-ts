@@ -89,6 +89,7 @@ export default class Init extends BaseCommand {
       message: 'Do you want to use the TypeScript/JavaScript code generator?',
       initial: true
     });
+    if (confirm === undefined) return this.exit(1);
     if (!confirm) return;
 
     this.projectConfig = this.projectConfig || {};
@@ -108,8 +109,7 @@ export default class Init extends BaseCommand {
       const { declarations } = await prompts({
         type: 'confirm',
         name: 'declarations',
-        message: 'Do you want to generate the TypeScript declarations?',
-        initial: (prev) => !prev.endsWith('.ts')
+        message: 'Do you want to generate the TypeScript declarations?'
       });
 
       if (declarations) {
