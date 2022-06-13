@@ -12,7 +12,7 @@ const envBranchNames = [
   'BRANCH' // Netlify. Putting it the last one because it is more ambiguous
 ];
 
-const defaultBranch = 'main';
+export const defaultBranch = 'main';
 
 type BranchResolutionOptions = {
   databaseURL?: string;
@@ -20,23 +20,23 @@ type BranchResolutionOptions = {
   fetchImpl?: FetchImpl;
 };
 
-export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string> {
-  const env = await getBranchByEnvVariable();
+export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string | undefined> {
+  const env = getBranchByEnvVariable();
   if (env) return env;
 
   const branch = await getGitBranch();
-  if (!branch) return defaultBranch;
+  if (!branch) return undefined;
 
   // TODO: in the future, call /resolve endpoint
   // For now, call API to see if the branch exists. If not, use a default value.
   const details = await getDatabaseBranch(branch, options);
   if (details) return branch;
 
-  return defaultBranch;
+  return undefined;
 }
 
 export async function getCurrentBranchDetails(options?: BranchResolutionOptions) {
-  const env = await getBranchByEnvVariable();
+  const env = getBranchByEnvVariable();
   if (env) return getDatabaseBranch(env, options);
 
   const branch = await getGitBranch();

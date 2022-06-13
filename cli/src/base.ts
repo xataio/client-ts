@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { XataApiClient } from '@xata.io/client';
+import { getCurrentBranchName, Schemas, XataApiClient } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { cosmiconfigSync } from 'cosmiconfig';
@@ -146,7 +146,7 @@ export abstract class BaseCommand extends Command {
       }));
 
       if (options.allowCreate) {
-        choices.splice(0, 0, { title: 'Create a new database', value: 'create' });
+        choices.splice(0, 0, { title: '<Create a new database>', value: 'create' });
       }
 
       const { database } = await prompts({
@@ -168,6 +168,49 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  async getBranch(
+    workspace: string,
+    database: string,
+    options: { allowEmpty?: boolean; allowCreate?: boolean; title?: string } = {}
+  ) {
+    const xata = await this.getXataClient();
+    const { branches = [] } = await xata.branches.getBranchList(workspace, database);
+
+    if (branches.length > 0) {
+      const choices = branches.map((db) => ({
+        title: db.name,
+        value: db.name
+      }));
+
+      if (options.allowEmpty) {
+        choices.splice(0, 0, { title: '<None>', value: 'empty' });
+      }
+
+      if (options.allowCreate) {
+        choices.splice(0, 0, { title: '<Create a new branch>', value: 'create' });
+      }
+
+      const {
+        title = branches.length > 0 && options.allowCreate ? 'Select a branch or create a new one' : 'Select a branch'
+      } = options;
+
+      const { branch } = await prompts({ type: 'select', name: 'branch', message: title, choices });
+
+      if (!branch) return this.error('No branch selected');
+      if (branch === 'create') {
+        return this.createBranch(workspace, database);
+      } else if (branch === 'empty') {
+        return '';
+      } else {
+        return branch;
+      }
+    } else if (!options.allowCreate) {
+      return this.error('No branches found, please create one first');
+    } else {
+      return this.createBranch(workspace, database);
+    }
+  }
+
   async createDatabase(workspace: string) {
     const xata = await this.getXataClient();
     const { name } = await prompts({
@@ -179,6 +222,30 @@ export abstract class BaseCommand extends Command {
     if (!name) return this.error('No database name provided');
 
     await xata.databases.createDatabase(workspace, name);
+
+    return name;
+  }
+
+  async createBranch(workspace: string, database: string) {
+    const xata = await this.getXataClient();
+    const { name } = await prompts({
+      type: 'text',
+      name: 'name',
+      message: 'New branch name'
+    });
+    if (!name) return this.error('No branch name provided');
+
+    const from = await this.getBranch(workspace, database, {
+      allowCreate: false,
+      allowEmpty: true,
+      title: 'Select a base branch'
+    });
+
+    if (!from) {
+      await xata.branches.createBranch(workspace, database, name);
+    } else {
+      await xata.branches.createBranch(workspace, database, name, from);
+    }
 
     return name;
   }
@@ -205,6 +272,15 @@ export abstract class BaseCommand extends Command {
       database,
       workspace
     };
+  }
+
+  async getBranchDetails(databaseURLFlag?: string): Promise<Schemas.DBBranch | undefined> {
+    const { workspace, database, databaseURL } = await this.getParsedDatabaseURL(databaseURLFlag);
+    const apiKey = (await readAPIKey()) ?? undefined;
+    const currentBranch = await getCurrentBranchName({ fetchImpl: fetch, databaseURL, apiKey });
+    const branch = currentBranch ?? this.getBranch(workspace, database);
+
+    return this.#xataClient?.branches.getBranchDetails(workspace, database, branch);
   }
 
   async updateConfig() {

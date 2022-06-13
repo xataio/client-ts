@@ -6,7 +6,7 @@ import { BaseData } from './schema/record';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
-import { getCurrentBranchName, getDatabaseURL } from './util/config';
+import { defaultBranch, getCurrentBranchName, getDatabaseURL } from './util/config';
 import { getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 
@@ -62,7 +62,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const branch = async () =>
         options?.branch
           ? await this.#evaluateBranch(options.branch)
-          : await getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch });
+          : (await getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch })) ?? defaultBranch;
 
       if (!databaseURL || !apiKey) {
         throw new Error('Options databaseURL and apiKey are required');

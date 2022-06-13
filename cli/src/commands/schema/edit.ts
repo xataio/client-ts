@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { getBranchDetails, getCurrentBranchDetails } from '@xata.io/client';
+import { getBranchDetails, Schemas } from '@xata.io/client';
 import chalk from 'chalk';
 import clipboardy from 'clipboardy';
 import enquirer from 'enquirer';
-import fetch from 'node-fetch';
 import { BaseCommand } from '../../base.js';
-import { readAPIKeyFromFile } from '../../key.js';
 import Codegen from '../codegen/index.js';
 
 // The enquirer library has type definitions but they are very poor
@@ -63,16 +61,15 @@ export default class EditSchema extends BaseCommand {
 
   static args = [];
 
-  branchDetails: Awaited<ReturnType<typeof getCurrentBranchDetails>> = null;
+  branchDetails: Schemas.DBBranch | undefined;
   tables: EditableTable[] = [];
 
   selectItem: EditableColumn | EditableTable | null = null;
 
   async run(): Promise<void> {
     const { databaseURL } = await this.getParsedDatabaseURL();
-    const apiKey = (await readAPIKeyFromFile()) ?? undefined;
 
-    this.branchDetails = await getCurrentBranchDetails({ fetchImpl: fetch, databaseURL, apiKey });
+    this.branchDetails = await this.getBranchDetails(databaseURL);
     if (!this.branchDetails) this.error('Could not get the schema from the current branch');
     this.tables = this.branchDetails.schema.tables;
     await this.showSchema();
