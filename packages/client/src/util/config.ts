@@ -1,4 +1,4 @@
-import { getBranchDetails, resolveBranch } from '../api';
+import { getBranchDetails } from '../api';
 import { FetchImpl } from '../api/fetcher';
 import { getAPIKey } from './apiKey';
 import { getEnvVariable, getGitBranch } from './environment';
@@ -12,6 +12,8 @@ const envBranchNames = [
   'BRANCH' // Netlify. Putting it the last one because it is more ambiguous
 ];
 
+const defaultBranch = 'main';
+
 type BranchResolutionOptions = {
   databaseURL?: string;
   apiKey?: string;
@@ -22,59 +24,33 @@ export async function getCurrentBranchName(options?: BranchResolutionOptions): P
   const env = getBranchByEnvVariable();
   if (env) return env;
 
-  const gitBranch = await getGitBranch();
-  return resolveApiBranchName(gitBranch ?? '', options);
+  const branch = await getGitBranch();
+  if (!branch) return defaultBranch;
+
+  // TODO: in the future, call /resolve endpoint
+  // For now, call API to see if the branch exists. If not, use a default value.
+  const details = await getDatabaseBranch(branch, options);
+  if (details) return branch;
+
+  return defaultBranch;
 }
 
 export async function getCurrentBranchDetails(options?: BranchResolutionOptions) {
   const env = getBranchByEnvVariable();
-  if (env) return getApiBranchDetails(env, options);
+  if (env) return getDatabaseBranch(env, options);
 
-  const gitBranch = await getGitBranch();
-  const xataBranch = await resolveApiBranchName(gitBranch ?? '', options);
+  const branch = await getGitBranch();
+  if (!branch) return getDatabaseBranch(defaultBranch, options);
 
-  return getApiBranchDetails(xataBranch, options);
+  // TODO: in the future, call /resolve endpoint
+  // For now, call API to see if the branch exists. If not, use a default value.
+  const details = await getDatabaseBranch(branch, options);
+  if (details) return details;
+
+  return getDatabaseBranch(defaultBranch, options);
 }
 
-async function getApiBranchDetails(branch: string, options?: BranchResolutionOptions) {
-  const { apiKey, apiUrl, fetchImpl, workspacesApiUrl, workspace, database } = getFetchProps(options);
-  const dbBranchName = `${database}:${branch}`;
-
-  try {
-    return await getBranchDetails({
-      apiKey,
-      apiUrl,
-      fetchImpl,
-      workspacesApiUrl,
-      pathParams: { dbBranchName, workspace }
-    });
-  } catch (err) {
-    if (isObject(err) && err.status === 404) return null;
-    throw err;
-  }
-}
-
-async function resolveApiBranchName(gitBranch: string, options?: BranchResolutionOptions) {
-  const { apiKey, apiUrl, fetchImpl, workspacesApiUrl, workspace, database } = getFetchProps(options);
-
-  try {
-    const { branch } = await resolveBranch({
-      apiKey,
-      apiUrl,
-      fetchImpl,
-      workspacesApiUrl,
-      pathParams: { dbName: database, workspace },
-      queryParams: { gitBranch }
-    });
-
-    return branch;
-  } catch (err) {
-    console.error("Couldn't resolve xata branch from git", err);
-    return 'main';
-  }
-}
-
-function getFetchProps(options?: BranchResolutionOptions) {
+async function getDatabaseBranch(branch: string, options?: BranchResolutionOptions) {
   const databaseURL = options?.databaseURL || getDatabaseURL();
   const apiKey = options?.apiKey || getAPIKey();
 
@@ -89,15 +65,22 @@ function getFetchProps(options?: BranchResolutionOptions) {
 
   const [protocol, , host, , database] = databaseURL.split('/');
   const [workspace] = host.split('.');
-
-  return {
-    apiKey,
-    apiUrl: databaseURL,
-    fetchImpl: getFetchImplementation(options?.fetchImpl),
-    workspacesApiUrl: `${protocol}//${host}`,
-    workspace,
-    database
-  };
+  const dbBranchName = `${database}:${branch}`;
+  try {
+    return await getBranchDetails({
+      apiKey,
+      apiUrl: databaseURL,
+      fetchImpl: getFetchImplementation(options?.fetchImpl),
+      workspacesApiUrl: `${protocol}//${host}`,
+      pathParams: {
+        dbBranchName,
+        workspace
+      }
+    });
+  } catch (err) {
+    if (isObject(err) && err.status === 404) return null;
+    throw err;
+  }
 }
 
 function getBranchByEnvVariable(): string | undefined {

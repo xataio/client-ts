@@ -1,5 +1,23 @@
 # @xata.io/client
 
+## 0.10.0
+
+### Minor Changes
+
+- [#272](https://github.com/xataio/client-ts/pull/272) [`6d76275`](https://github.com/xataio/client-ts/commit/6d7627555a404a4c2da42f4187df6f8300f9a46f) Thanks [@SferaDev](https://github.com/SferaDev)! - Rename page options to pagination
+
+* [#270](https://github.com/xataio/client-ts/pull/270) [`1864742`](https://github.com/xataio/client-ts/commit/18647428d8608841de514c3784fb711c39dccc6d) Thanks [@SferaDev](https://github.com/SferaDev)! - Move chunk to options object
+
+### Patch Changes
+
+- [#281](https://github.com/xataio/client-ts/pull/281) [`d1ec0df`](https://github.com/xataio/client-ts/commit/d1ec0df14834088a816919bfc68216f3f9b2d9ef) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not send from param on undefined
+
+* [#282](https://github.com/xataio/client-ts/pull/282) [`1af6f1a`](https://github.com/xataio/client-ts/commit/1af6f1aaa1123e77a895961581c87f06a88db698) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not allow filter/sort with cursor navigation
+
+- [#284](https://github.com/xataio/client-ts/pull/284) [`be4eda8`](https://github.com/xataio/client-ts/commit/be4eda8f73037d97fef7de28b56d7471dd867875) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix cache ttl with 0 value
+
+* [#265](https://github.com/xataio/client-ts/pull/265) [`99be734`](https://github.com/xataio/client-ts/commit/99be734827576d888aa12a579ed1983a0a8a8e83) Thanks [@SferaDev](https://github.com/SferaDev)! - Add datetime field type support
+
 ## 0.9.1
 
 ### Patch Changes

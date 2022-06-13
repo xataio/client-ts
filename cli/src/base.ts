@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { XataApiClient } from '@xata.io/client';
+import { getCurrentBranchName, XataApiClient } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { cosmiconfigSync } from 'cosmiconfig';
@@ -172,7 +172,7 @@ export abstract class BaseCommand extends Command {
     workspace: string,
     database: string,
     options: { allowEmpty?: boolean; allowCreate?: boolean; title?: string } = {}
-  ) {
+  ): Promise<string> {
     const xata = await this.getXataClient();
     const { branches = [] } = await xata.branches.getBranchList(workspace, database);
 
@@ -226,7 +226,7 @@ export abstract class BaseCommand extends Command {
     return name;
   }
 
-  async createBranch(workspace: string, database: string) {
+  async createBranch(workspace: string, database: string): Promise<string> {
     const xata = await this.getXataClient();
     const { name } = await prompts({
       type: 'text',
@@ -250,18 +250,21 @@ export abstract class BaseCommand extends Command {
     return name;
   }
 
-  async getDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
-    if (databaseURLFlag) return databaseURLFlag;
-    if (this.projectConfig?.databaseURL) return this.projectConfig.databaseURL;
-    if (process.env.XATA_DATABASE_URL) return process.env.XATA_DATABASE_URL;
+  async getDatabaseURL(
+    databaseURLFlag?: string,
+    allowCreate?: boolean
+  ): Promise<{ databaseURL: string; source: 'flag' | 'config' | 'env' | 'interactive' }> {
+    if (databaseURLFlag) return { databaseURL: databaseURLFlag, source: 'flag' };
+    if (this.projectConfig?.databaseURL) return { databaseURL: this.projectConfig.databaseURL, source: 'config' };
+    if (process.env.XATA_DATABASE_URL) return { databaseURL: process.env.XATA_DATABASE_URL, source: 'env' };
 
     const workspace = await this.getWorkspace({ allowCreate });
     const database = await this.getDatabase(workspace, { allowCreate });
-    return `https://${workspace}.xata.sh/db/${database}`;
+    return { databaseURL: `https://${workspace}.xata.sh/db/${database}`, source: 'interactive' };
   }
 
   async getParsedDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
-    const databaseURL = await this.getDatabaseURL(databaseURLFlag, allowCreate);
+    const { databaseURL, source } = await this.getDatabaseURL(databaseURLFlag, allowCreate);
 
     const [protocol, , host, , database] = databaseURL.split('/');
     const [workspace] = (host || '').split('.');
@@ -270,8 +273,29 @@ export abstract class BaseCommand extends Command {
       protocol,
       host,
       database,
-      workspace
+      workspace,
+      source
     };
+  }
+
+  async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, allowCreate?: boolean) {
+    const info = await this.getParsedDatabaseURL(databaseURLFlag, allowCreate);
+
+    let branch = '';
+
+    if (info.source === 'config') {
+      branch = await getCurrentBranchName({
+        fetchImpl: fetch,
+        databaseURL: info.databaseURL,
+        apiKey: (await readAPIKey()) ?? undefined
+      });
+    } else if (process.env.XATA_BRANCH !== undefined) {
+      branch = process.env.XATA_BRANCH;
+    } else {
+      branch = await this.getBranch(info.workspace, info.database);
+    }
+
+    return { ...info, branch };
   }
 
   async updateConfig() {
