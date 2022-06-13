@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { getBranchDetails, getCurrentBranchDetails } from '@xata.io/client';
+import { getBranchDetails, Schemas } from '@xata.io/client';
 import chalk from 'chalk';
 import clipboardy from 'clipboardy';
 import enquirer from 'enquirer';
-import fetch from 'node-fetch';
 import { BaseCommand } from '../../base.js';
 import Codegen from '../codegen/index.js';
 
@@ -62,14 +61,16 @@ export default class EditSchema extends BaseCommand {
 
   static args = [];
 
-  branchDetails: Awaited<ReturnType<typeof getCurrentBranchDetails>> = null;
+  branchDetails: Schemas.DBBranch | undefined;
   tables: EditableTable[] = [];
 
   selectItem: EditableColumn | EditableTable | null = null;
 
   async run(): Promise<void> {
-    const { databaseURL } = await this.getParsedDatabaseURL();
-    this.branchDetails = await getCurrentBranchDetails({ fetchImpl: fetch, databaseURL });
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch();
+
+    const xata = await this.getXataClient();
+    this.branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
     if (!this.branchDetails) this.error('Could not get the schema from the current branch');
     this.tables = this.branchDetails.schema.tables;
     await this.showSchema();

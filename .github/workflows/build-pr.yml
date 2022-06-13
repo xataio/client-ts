@@ -104,9 +104,7 @@ jobs:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/codegen@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/importer@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/shell@${{ steps.version.outputs.TAG }}
+            npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 
   test:
@@ -153,7 +151,7 @@ jobs:
     name: E2E Test
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref_name == 'changeset-release/main'
+    if: github.head_ref == 'changeset-release/main'
 
     strategy:
       fail-fast: false

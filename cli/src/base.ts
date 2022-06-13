@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { Schemas, XataApiClient } from '@xata.io/client';
+import { getCurrentBranchName, Schemas, XataApiClient } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { cosmiconfigSync } from 'cosmiconfig';
@@ -146,7 +146,7 @@ export abstract class BaseCommand extends Command {
       }));
 
       if (options.allowCreate) {
-        choices.splice(0, 0, { title: 'Create a new database', value: 'create' });
+        choices.splice(0, 0, { title: '<Create a new database>', value: 'create' });
       }
 
       const { database } = await prompts({
@@ -168,6 +168,49 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  async getBranch(
+    workspace: string,
+    database: string,
+    options: { allowEmpty?: boolean; allowCreate?: boolean; title?: string } = {}
+  ): Promise<string> {
+    const xata = await this.getXataClient();
+    const { branches = [] } = await xata.branches.getBranchList(workspace, database);
+
+    if (branches.length > 0) {
+      const choices = branches.map((db) => ({
+        title: db.name,
+        value: db.name
+      }));
+
+      if (options.allowEmpty) {
+        choices.splice(0, 0, { title: '<None>', value: 'empty' });
+      }
+
+      if (options.allowCreate) {
+        choices.splice(0, 0, { title: '<Create a new branch>', value: 'create' });
+      }
+
+      const {
+        title = branches.length > 0 && options.allowCreate ? 'Select a branch or create a new one' : 'Select a branch'
+      } = options;
+
+      const { branch } = await prompts({ type: 'select', name: 'branch', message: title, choices });
+
+      if (!branch) return this.error('No branch selected');
+      if (branch === 'create') {
+        return this.createBranch(workspace, database);
+      } else if (branch === 'empty') {
+        return '';
+      } else {
+        return branch;
+      }
+    } else if (!options.allowCreate) {
+      return this.error('No branches found, please create one first');
+    } else {
+      return this.createBranch(workspace, database);
+    }
+  }
+
   async createDatabase(workspace: string) {
     const xata = await this.getXataClient();
     const { name } = await prompts({
@@ -183,18 +226,45 @@ export abstract class BaseCommand extends Command {
     return name;
   }
 
-  async getDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
-    if (databaseURLFlag) return databaseURLFlag;
-    if (this.projectConfig?.databaseURL) return this.projectConfig.databaseURL;
-    if (process.env.XATA_DATABASE_URL) return process.env.XATA_DATABASE_URL;
+  async createBranch(workspace: string, database: string): Promise<string> {
+    const xata = await this.getXataClient();
+    const { name } = await prompts({
+      type: 'text',
+      name: 'name',
+      message: 'New branch name'
+    });
+    if (!name) return this.error('No branch name provided');
+
+    const from = await this.getBranch(workspace, database, {
+      allowCreate: false,
+      allowEmpty: true,
+      title: 'Select a base branch'
+    });
+
+    if (!from) {
+      await xata.branches.createBranch(workspace, database, name);
+    } else {
+      await xata.branches.createBranch(workspace, database, name, from);
+    }
+
+    return name;
+  }
+
+  async getDatabaseURL(
+    databaseURLFlag?: string,
+    allowCreate?: boolean
+  ): Promise<{ databaseURL: string; source: 'flag' | 'config' | 'env' | 'interactive' }> {
+    if (databaseURLFlag) return { databaseURL: databaseURLFlag, source: 'flag' };
+    if (this.projectConfig?.databaseURL) return { databaseURL: this.projectConfig.databaseURL, source: 'config' };
+    if (process.env.XATA_DATABASE_URL) return { databaseURL: process.env.XATA_DATABASE_URL, source: 'env' };
 
     const workspace = await this.getWorkspace({ allowCreate });
     const database = await this.getDatabase(workspace, { allowCreate });
-    return `https://${workspace}.xata.sh/db/${database}`;
+    return { databaseURL: `https://${workspace}.xata.sh/db/${database}`, source: 'interactive' };
   }
 
   async getParsedDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
-    const databaseURL = await this.getDatabaseURL(databaseURLFlag, allowCreate);
+    const { databaseURL, source } = await this.getDatabaseURL(databaseURLFlag, allowCreate);
 
     const [protocol, , host, , database] = databaseURL.split('/');
     const [workspace] = (host || '').split('.');
@@ -203,8 +273,29 @@ export abstract class BaseCommand extends Command {
       protocol,
       host,
       database,
-      workspace
+      workspace,
+      source
     };
+  }
+
+  async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, allowCreate?: boolean) {
+    const info = await this.getParsedDatabaseURL(databaseURLFlag, allowCreate);
+
+    let branch = '';
+
+    if (info.source === 'config') {
+      branch = await getCurrentBranchName({
+        fetchImpl: fetch,
+        databaseURL: info.databaseURL,
+        apiKey: (await readAPIKey()) ?? undefined
+      });
+    } else if (process.env.XATA_BRANCH !== undefined) {
+      branch = process.env.XATA_BRANCH;
+    } else {
+      branch = await this.getBranch(info.workspace, info.database);
+    }
+
+    return { ...info, branch };
   }
 
   async updateConfig() {

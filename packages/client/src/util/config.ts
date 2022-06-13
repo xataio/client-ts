@@ -21,7 +21,7 @@ type BranchResolutionOptions = {
 };
 
 export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string> {
-  const env = await getBranchByEnvVariable();
+  const env = getBranchByEnvVariable();
   if (env) return env;
 
   const branch = await getGitBranch();
@@ -36,7 +36,7 @@ export async function getCurrentBranchName(options?: BranchResolutionOptions): P
 }
 
 export async function getCurrentBranchDetails(options?: BranchResolutionOptions) {
-  const env = await getBranchByEnvVariable();
+  const env = getBranchByEnvVariable();
   if (env) return getDatabaseBranch(env, options);
 
   const branch = await getGitBranch();
