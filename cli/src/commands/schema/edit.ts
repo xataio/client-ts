@@ -66,12 +66,16 @@ export default class EditSchema extends BaseCommand {
 
   branchDetails: Schemas.DBBranch | undefined;
   tables: EditableTable[] = [];
+  workspace!: string;
+  database!: string;
 
   selectItem: EditableColumn | EditableTable | null = null;
 
   async run(): Promise<void> {
     const { flags } = await this.parse(EditSchema);
     const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
+    this.workspace = workspace;
+    this.database = database;
 
     const xata = await this.getXataClient();
     this.branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
@@ -501,7 +505,8 @@ export default class EditSchema extends BaseCommand {
       return;
     }
 
-    const { workspace, database } = await this.getParsedDatabaseURL();
+    const workspace = this.workspace;
+    const database = this.database;
 
     const xata = await this.getXataClient();
     const branch = this.branchDetails.branchName;
