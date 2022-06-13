@@ -151,7 +151,7 @@ jobs:
     name: E2E Test
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref_name == 'changeset-release/main'
+    if: github.head_ref == 'changeset-release/main'
 
     strategy:
       fail-fast: false
