@@ -172,7 +172,7 @@ export abstract class BaseCommand extends Command {
     workspace: string,
     database: string,
     options: { allowEmpty?: boolean; allowCreate?: boolean; title?: string } = {}
-  ) {
+  ): Promise<string> {
     const xata = await this.getXataClient();
     const { branches = [] } = await xata.branches.getBranchList(workspace, database);
 
@@ -226,7 +226,7 @@ export abstract class BaseCommand extends Command {
     return name;
   }
 
-  async createBranch(workspace: string, database: string) {
+  async createBranch(workspace: string, database: string): Promise<string> {
     const xata = await this.getXataClient();
     const { name } = await prompts({
       type: 'text',
