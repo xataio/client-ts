@@ -22,6 +22,8 @@ export default class Shell extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
+    databaseURL: this.databaseURLFlag,
+    branch: this.branchFlag,
     code: Flags.string({
       description: 'Fragment of code to be executed in the shell immediately after starting it'
     })
@@ -32,7 +34,7 @@ export default class Shell extends BaseCommand {
     const apiKey = await readAPIKey();
     if (!apiKey)
       this.error('No API key found. Either use the XATA_API_KEY environment variable or run `xata auth login`');
-    const { protocol, host, databaseURL } = await this.getParsedDatabaseURL();
+    const { protocol, host, databaseURL } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
 
     // Generate the file in the same dir than this package's code so it
     // can import @xata.io/client

@@ -19,7 +19,7 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@faker-js/faker": "^7.1.0",
+    "@faker-js/faker": "^7.2.0",
     "@oclif/core": "^1.9.0",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-not-found": "^2.3.1",
@@ -36,7 +36,7 @@
     "enquirer": "^2.3.6",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "node-fetch": "^3.2.5",
+    "node-fetch": "^3.2.6",
     "open": "^8.4.0",
     "prompts": "^2.4.2",
     "relaxed-json": "^1.0.3",
