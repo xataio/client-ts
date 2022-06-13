@@ -286,19 +286,20 @@ export abstract class BaseCommand extends Command {
   async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, branchFlag?: string, allowCreate?: boolean) {
     const info = await this.getParsedDatabaseURL(databaseURLFlag, allowCreate);
 
-    let branch = branchFlag;
-    if (!branch) {
-      if (info.source === 'config') {
-        branch = await getCurrentBranchName({
-          fetchImpl: fetch,
-          databaseURL: info.databaseURL,
-          apiKey: (await readAPIKey()) ?? undefined
-        });
-      } else if (process.env.XATA_BRANCH !== undefined) {
-        branch = process.env.XATA_BRANCH;
-      } else {
-        branch = await this.getBranch(info.workspace, info.database);
-      }
+    let branch = '';
+
+    if (branchFlag) {
+      branch = branchFlag;
+    } if (info.source === 'config') {
+      branch = await getCurrentBranchName({
+        fetchImpl: fetch,
+        databaseURL: info.databaseURL,
+        apiKey: (await readAPIKey()) ?? undefined
+      });
+    } else if (process.env.XATA_BRANCH !== undefined) {
+      branch = process.env.XATA_BRANCH;
+    } else {
+      branch = await this.getBranch(info.workspace, info.database);
     }
 
     return { ...info, branch };
