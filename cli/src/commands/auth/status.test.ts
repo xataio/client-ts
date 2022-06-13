@@ -6,7 +6,6 @@ import Status from './status.js';
 import prompts from 'prompts';
 import * as fs from 'fs/promises';
 import { keyPath } from '../../key.js';
-import { dirname } from 'path';
 
 vi.mock('node-fetch');
 vi.mock('prompts');
