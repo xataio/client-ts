@@ -1,9 +1,7 @@
 import { Flags } from '@oclif/core';
-import { getCurrentBranchDetails } from '@xata.io/client';
-import { BaseCommand } from '../../base.js';
-import fetch from 'node-fetch';
-import { writeFile } from 'fs/promises';
 import { Schemas } from '@xata.io/client';
+import { writeFile } from 'fs/promises';
+import { BaseCommand } from '../../base.js';
 
 export default class SchemaDump extends BaseCommand {
   static description = 'Dump the schema as a JSON file';
@@ -19,8 +17,10 @@ export default class SchemaDump extends BaseCommand {
   async run(): Promise<Schemas.Schema | undefined> {
     const { flags } = await this.parse(SchemaDump);
 
-    const { databaseURL } = await this.getParsedDatabaseURL();
-    const branchDetails = await getCurrentBranchDetails({ fetchImpl: fetch, databaseURL });
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch();
+
+    const xata = await this.getXataClient();
+    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
     if (!branchDetails) return this.error('Could not resolve the current branch');
     if (!flags.file) return branchDetails.schema;
 
