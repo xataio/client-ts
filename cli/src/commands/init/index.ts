@@ -75,6 +75,7 @@ export default class Init extends BaseCommand {
       message: 'Do you want to install the TypeScript/JavaScript SDK?',
       initial: true
     });
+    if (confirm === undefined) return this.exit(1);
     if (!confirm) return;
 
     await this.installPackage('@xata.io/client');
