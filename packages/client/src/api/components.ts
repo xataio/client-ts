@@ -1043,7 +1043,7 @@ export type ResolveBranchVariables = {
  * Example call:
  *
  * ```json
- * // GET https://tutorial-ng7s8c.xata.sh/dbs/demo/dbs/demo/resolveBranch?gitBranch=test?fallbackBranch=tsg
+ * // GET https://tutorial-ng7s8c.xata.sh/dbs/demo/dbs/demo/resolveBranch?gitBranch=test&fallbackBranch=tsg
  * ```
  *
  * Example response:
@@ -1569,8 +1569,9 @@ export type UpdateTableVariables = {
  *
  * In the example below, we rename a table from “users” to “people”:
  *
- * ```jsx
- * PATCH /db/test:main/tables/users
+ * ```json
+ * // PATCH /db/test:main/tables/users
+ *
  * {
  *   "name": "people"
  * }
@@ -2318,7 +2319,7 @@ export type QueryTableVariables = {
  * {
  *   "columns": [...],
  *   "filter": {
- *     "$all": [...]
+ *     "$all": [...],
  *     "$any": [...]
  *     ...
  *   },
@@ -2456,7 +2457,7 @@ export type QueryTableVariables = {
  * {
  *   "name": "Kilian",
  *   "address": {
- *     "street": "New street",
+ *     "street": "New street"
  *   }
  * }
  * ```
@@ -2465,10 +2466,7 @@ export type QueryTableVariables = {
  *
  * ```json
  * {
- *   "columns": [
- *     "*",
- *     "team.name"
- *   ]
+ *   "columns": ["*", "team.name"]
  * }
  * ```
  *
@@ -2486,7 +2484,7 @@ export type QueryTableVariables = {
  *   "team": {
  *     "id": "XX",
  *     "xata": {
- *       "version": 0,
+ *       "version": 0
  *     },
  *     "name": "first team"
  *   }
@@ -2497,10 +2495,7 @@ export type QueryTableVariables = {
  *
  * ```json
  * {
- *   "columns": [
- *     "*",
- *     "team.*"
- *   ]
+ *   "columns": ["*", "team.*"]
  * }
  * ```
  *
@@ -2518,7 +2513,7 @@ export type QueryTableVariables = {
  *   "team": {
  *     "id": "XX",
  *     "xata": {
- *       "version": 0,
+ *       "version": 0
  *     },
  *     "name": "first team",
  *     "code": "A1",
@@ -2568,7 +2563,7 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *       "name": "r2",
+ *     "name": "r2"
  *   }
  * }
  * ```
@@ -2590,7 +2585,7 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *       "settings.plan": "free",
+ *     "settings.plan": "free"
  *   }
  * }
  * ```
@@ -2600,8 +2595,8 @@ export type QueryTableVariables = {
  *   "filter": {
  *     "settings": {
  *       "plan": "free"
- *     },
- *   },
+ *     }
+ *   }
  * }
  * ```
  *
@@ -2610,8 +2605,8 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "settings.plan": {"$any": ["free", "paid"]}
- *   },
+ *     "settings.plan": { "$any": ["free", "paid"] }
+ *   }
  * }
  * ```
  *
@@ -2620,9 +2615,9 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *       "settings.dark": true,
- *       "settings.plan": "free",
- *   },
+ *     "settings.dark": true,
+ *     "settings.plan": "free"
+ *   }
  * }
  * ```
  *
@@ -2633,11 +2628,11 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *       "$any": {
- *         "settings.dark": true,
- *         "settings.plan": "free"
- *       }
- *   },
+ *     "$any": {
+ *       "settings.dark": true,
+ *       "settings.plan": "free"
+ *     }
+ *   }
  * }
  * ```
  *
@@ -2648,10 +2643,10 @@ export type QueryTableVariables = {
  *   "filter": {
  *     "$any": [
  *       {
- *         "name": "r1",
+ *         "name": "r1"
  *       },
  *       {
- *         "name": "r2",
+ *         "name": "r2"
  *       }
  *     ]
  *   }
@@ -2663,7 +2658,7 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "$exists": "settings",
+ *     "$exists": "settings"
  *   }
  * }
  * ```
@@ -2675,10 +2670,10 @@ export type QueryTableVariables = {
  *   "filter": {
  *     "$all": [
  *       {
- *         "$exists": "settings",
+ *         "$exists": "settings"
  *       },
  *       {
- *         "$exists": "name",
+ *         "$exists": "name"
  *       }
  *     ]
  *   }
@@ -2690,7 +2685,7 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *     "$notExists": "settings",
+ *     "$notExists": "settings"
  *   }
  * }
  * ```
@@ -2717,7 +2712,7 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "<column_name>": {
- *         "$pattern": "v*alue*"
+ *       "$pattern": "v*alue*"
  *     }
  *   }
  * }
@@ -2729,10 +2724,10 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "<column_name>": {
- *         "$endsWith": ".gz"
+ *       "$endsWith": ".gz"
  *     },
  *     "<column_name>": {
- *         "$startsWith": "tmp-"
+ *       "$startsWith": "tmp-"
  *     }
  *   }
  * }
@@ -2743,10 +2738,10 @@ export type QueryTableVariables = {
  * ```json
  * {
  *   "filter": {
- *       "<column_name>": {
- *         "$ge": 0,
- *         "$lt": 100
- *       }
+ *     "<column_name>": {
+ *       "$ge": 0,
+ *       "$lt": 100
+ *     }
  *   }
  * }
  * ```
@@ -2763,7 +2758,6 @@ export type QueryTableVariables = {
  * }
  * ```
  * The supported operators are `$gt`, `$lt`, `$ge`, `$le`.
- *
  *
  * #### Negations
  *
@@ -2789,15 +2783,21 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "$not": {
- *       "$any": [{
- *         "<column_name1>": "value1"
- *       }, {
- *         "$all": [{
- *           "<column_name2>": "value2"
- *         }, {
- *           "<column_name3>": "value3"
- *         }]
- *       }]
+ *       "$any": [
+ *         {
+ *           "<column_name1>": "value1"
+ *         },
+ *         {
+ *           "$all": [
+ *             {
+ *               "<column_name2>": "value2"
+ *             },
+ *             {
+ *               "<column_name3>": "value3"
+ *             }
+ *           ]
+ *         }
+ *       ]
  *     }
  *   }
  * }
@@ -2852,8 +2852,8 @@ export type QueryTableVariables = {
  *     "<array name>": {
  *       "$includes": {
  *         "$all": [
- *           {"$contains": "label"},
- *           {"$not": {"$endsWith": "-debug"}}
+ *           { "$contains": "label" },
+ *           { "$not": { "$endsWith": "-debug" } }
  *         ]
  *       }
  *     }
@@ -2873,9 +2873,7 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "settings.labels": {
- *       "$includesAll": [
- *         {"$contains": "label"},
- *       ]
+ *       "$includesAll": [{ "$contains": "label" }]
  *     }
  *   }
  * }
@@ -2922,7 +2920,6 @@ export type QueryTableVariables = {
  *   ]
  * }
  * ```
- *
  *
  * ### Pagination
  *
@@ -2989,8 +2986,8 @@ export type QueryTableVariables = {
  * can be queried by update `page.after` to the returned cursor while keeping the
  * `page.before` cursor from the first range query.
  *
- * The `filter` , `columns`,  `sort` , and `page.size` configuration will be
- * encoded with the cursor.  The pagination request will be invalid if
+ * The `filter` , `columns`, `sort` , and `page.size` configuration will be
+ * encoded with the cursor. The pagination request will be invalid if
  * `filter` or `sort` is set. The columns returned and page size can be changed
  * anytime by passing the `columns` or `page.size` settings to the next query.
  *

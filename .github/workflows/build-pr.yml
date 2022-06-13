@@ -104,9 +104,7 @@ jobs:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/codegen@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/importer@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/shell@${{ steps.version.outputs.TAG }}
+            npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 
   test:
