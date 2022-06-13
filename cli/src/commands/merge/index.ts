@@ -17,9 +17,9 @@ export default class Merge extends BaseCommand {
     const { args } = await this.parse(Merge);
     const { branch } = args;
 
-    const { workspace, database, databaseURL } = await this.getParsedDatabaseURL();
+    const { workspace, database, branch: currentBranch } = await this.getParsedDatabaseURLWithBranch();
     const xata = await this.getXataClient();
-    const currentBranchDetails = await getCurrentBranchDetails({ fetchImpl: fetch, databaseURL });
+    const currentBranchDetails = await xata.branches.getBranchDetails(workspace, database, currentBranch);
     if (!currentBranchDetails) return this.error('Could not resolve the current branch');
     const otherBranchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
     if (!otherBranchDetails) return this.error(`Could not find branch ${branch}`);
