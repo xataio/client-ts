@@ -4,13 +4,14 @@ import open from 'open';
 import url from 'url';
 import crypto from 'crypto';
 
-export function handler(
-  privateKey: string,
-  passphrase: string,
-  callback: (err: unknown | null, apiKey?: string) => void
-) {
+export function handler(privateKey: string, passphrase: string, callback: (apiKey: string) => void) {
   return (req: http.IncomingMessage, res: http.ServerResponse) => {
     try {
+      if (req.method !== 'GET') {
+        res.writeHead(405);
+        return res.end();
+      }
+
       const parsedURL = url.parse(req.url ?? '', true);
       if (parsedURL.pathname !== '/') {
         res.writeHead(404);
@@ -26,12 +27,10 @@ export function handler(
         .toString('utf8');
       res.writeHead(200);
       res.end('You are all set! You can close this tab now');
-      callback(null, apiKey);
+      callback(apiKey);
     } catch (err) {
-      console.log(err instanceof Error ? err.stack : String(err));
       res.writeHead(500);
       res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
-      callback(err);
     }
   };
 }
@@ -67,10 +66,10 @@ export function generateKeys() {
 export async function createAPIKeyThroughWebUI() {
   const { publicKey, privateKey, passphrase } = generateKeys();
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<string>((resolve) => {
     const server = http.createServer(
-      handler(privateKey, passphrase, (err, apiKey) => {
-        err ? reject(err) : resolve(apiKey ?? '');
+      handler(privateKey, passphrase, (apiKey) => {
+        resolve(apiKey);
         server.close();
       })
     );
