@@ -1,8 +1,9 @@
+import Case from 'case';
 import pluralize from 'pluralize';
-import ts from 'typescript';
 import prettier, { BuiltInParserName } from 'prettier';
 import * as parserJavascript from 'prettier/parser-babel.js';
 import * as parserTypeScript from 'prettier/parser-typescript.js';
+import ts from 'typescript';
 import { Column, Table, XataDatabaseSchema } from './schema';
 
 export type GenerateOptions = {
@@ -19,22 +20,21 @@ export type GenerateOutput = {
 };
 
 function getTypeName(tableName: string) {
-  const snglr = pluralize.singular(tableName);
+  const pascal = Case.pascal(tableName);
+  const name = pluralize.singular(pascal);
 
   // If table starts with a number, prepend a $ sign
-  if (snglr.match(/^\d/)) return `$${snglr}`;
+  if (name.match(/^\d/)) return `$${name}`;
 
-  return snglr.substring(0, 1).toUpperCase() + snglr.substring(1);
+  return name;
 }
 
 function generateTableTypes(tables: Table[]) {
   const types = tables.map((table) => {
     const { columns } = table;
-    const revLinks: { table: string }[] = []; // table.rev_links || [];
 
     return `export interface ${getTypeName(table.name)} {
     ${columns.map((column) => generateColumnType(column)).join('\n')}
-    ${revLinks.map((link) => `${link.table}: Query<${getTypeName(link.table)}>`).join('\n')}
   };
 
   export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;
@@ -42,14 +42,17 @@ function generateTableTypes(tables: Table[]) {
   });
 
   const schema = `export type DatabaseSchema = {
-    ${tables.map((table) => `${table.name}: ${getTypeName(table.name)};`).join('\n')}
+    ${tables.map((table) => `"${table.name}": ${getTypeName(table.name)};`).join('\n')}
   }`;
 
   return [...types, schema].join('\n');
 }
 
+// Gotchas:
+// - Add commas to the name, to support kebab-case
+// - We have a "?: | null" because we don't have constraints yet, to be improved
 function generateColumnType(column: Column) {
-  return `${column.name}?: ${getTypeScriptType(column)} | null`;
+  return `"${column.name}"?: ${getTypeScriptType(column)} | null`;
 }
 
 function getTypeScriptType(column: Column): string {
@@ -60,6 +63,7 @@ function getTypeScriptType(column: Column): string {
   if (column.type === 'bool') return 'boolean';
   if (column.type === 'int') return 'number';
   if (column.type === 'float') return 'number';
+  if (column.type === 'datetime') return 'Date';
   if (column.type === 'link') {
     if (!column.link?.table) return 'object';
     return `${getTypeName(column.link.table)}Record`;
@@ -81,15 +85,6 @@ export async function generate({
   javascriptTarget
 }: GenerateOptions): Promise<GenerateOutput> {
   const { tables } = schema;
-  const links: Record<string, string[][]> = {};
-  for (const table of tables) {
-    links[table.name] = [];
-    for (const column of table.columns) {
-      if (column.link) {
-        links[table.name].push([column.name, column.link.table]);
-      }
-    }
-  }
 
   const parser = prettierParsers[language];
 
@@ -101,8 +96,6 @@ export async function generate({
     } from '@xata.io/client';
 
     ${generateTableTypes(tables)}
-
-    const links = ${JSON.stringify(links)};
 
     const tables = [${tables.map((table) => `'${table.name}'`).join(', ')}];
 
@@ -117,7 +110,7 @@ export async function generate({
     }
     export class XataClient extends DatabaseClient<DatabaseSchema> {
       constructor(options?: BaseClientOptions) {
-        super({ databaseURL: "${databaseURL}", ...options}, links, tables);
+        super({ databaseURL: "${databaseURL}", ...options}, tables);
       }
     }
   `;
@@ -127,7 +120,11 @@ export async function generate({
 
   const pretty = prettier.format(transpiled, { parser, plugins: [parserTypeScript, parserJavascript] });
 
-  return { original: code, transpiled: pretty, declarations };
+  const prettyDeclarations = declarations
+    ? prettier.format(declarations, { parser: 'typescript', plugins: [parserTypeScript] })
+    : undefined;
+
+  return { original: code, transpiled: pretty, declarations: prettyDeclarations };
 }
 
 const prettierParsers: Record<Language, BuiltInParserName> = {

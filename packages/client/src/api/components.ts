@@ -817,6 +817,255 @@ export const deleteDatabase = (variables: DeleteDatabaseVariables) =>
     ...variables
   });
 
+export type GetGitBranchesMappingPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type GetGitBranchesMappingError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type GetGitBranchesMappingVariables = {
+  pathParams: GetGitBranchesMappingPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Lists all the git branches in the mapping, and their associated Xata branches.
+ *
+ * Example response:
+ *
+ * ```json
+ * {
+ *   "mappings": [
+ *       {
+ *         "gitBranch": "main",
+ *         "xataBranch": "main"
+ *       },
+ *       {
+ *         "gitBranch": "gitBranch1",
+ *         "xataBranch": "xataBranch1"
+ *       }
+ *       {
+ *         "gitBranch": "xataBranch2",
+ *         "xataBranch": "xataBranch2"
+ *       }
+ *   ]
+ * }
+ * ```
+ */
+export const getGitBranchesMapping = (variables: GetGitBranchesMappingVariables) =>
+  fetch<
+    Schemas.ListGitBranchesResponse,
+    GetGitBranchesMappingError,
+    undefined,
+    {},
+    {},
+    GetGitBranchesMappingPathParams
+  >({ url: '/dbs/{dbName}/gitBranches', method: 'get', ...variables });
+
+export type AddGitBranchesEntryPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type AddGitBranchesEntryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type AddGitBranchesEntryResponse = {
+  /*
+   * Warning message
+   */
+  warning?: string;
+};
+
+export type AddGitBranchesEntryRequestBody = {
+  /*
+   * The name of the Git branch.
+   */
+  gitBranch: string;
+  /*
+   * The name of the Xata branch.
+   */
+  xataBranch: Schemas.BranchName;
+};
+
+export type AddGitBranchesEntryVariables = {
+  body: AddGitBranchesEntryRequestBody;
+  pathParams: AddGitBranchesEntryPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Adds an entry to the mapping of git branches to Xata branches. The git branch and the Xata branch must be present in the body of the request. If the Xata branch doesn't exist, a 400 error is returned.
+ *
+ * If the git branch is already present in the mapping, the old entry is overwritten, and a warning message is included in the response. If the git branch is added and didn't exist before, the response code is 204. If the git branch existed and it was overwritten, the response code is 201.
+ *
+ * Example request:
+ *
+ * ```json
+ * // POST https://tutorial-ng7s8c.xata.sh/dbs/demo/gitBranches
+ * {
+ *   "gitBranch": "fix/bug123",
+ *   "xataBranch": "fix_bug"
+ * }
+ * ```
+ */
+export const addGitBranchesEntry = (variables: AddGitBranchesEntryVariables) =>
+  fetch<
+    AddGitBranchesEntryResponse,
+    AddGitBranchesEntryError,
+    AddGitBranchesEntryRequestBody,
+    {},
+    {},
+    AddGitBranchesEntryPathParams
+  >({ url: '/dbs/{dbName}/gitBranches', method: 'post', ...variables });
+
+export type RemoveGitBranchesEntryPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type RemoveGitBranchesEntryQueryParams = {
+  /*
+   * The Git Branch to remove from the mapping
+   */
+  gitBranch: string;
+};
+
+export type RemoveGitBranchesEntryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type RemoveGitBranchesEntryVariables = {
+  pathParams: RemoveGitBranchesEntryPathParams;
+  queryParams: RemoveGitBranchesEntryQueryParams;
+} & FetcherExtraProps;
+
+/**
+ * Removes an entry from the mapping of git branches to Xata branches. The name of the git branch must be passed as a query parameter. If the git branch is not found, the endpoint returns a 404 status code.
+ *
+ * Example request:
+ *
+ * ```json
+ * // DELETE https://tutorial-ng7s8c.xata.sh/dbs/demo/gitBranches?gitBranch=fix%2Fbug123
+ * ```
+ */
+export const removeGitBranchesEntry = (variables: RemoveGitBranchesEntryVariables) =>
+  fetch<
+    undefined,
+    RemoveGitBranchesEntryError,
+    undefined,
+    {},
+    RemoveGitBranchesEntryQueryParams,
+    RemoveGitBranchesEntryPathParams
+  >({ url: '/dbs/{dbName}/gitBranches', method: 'delete', ...variables });
+
+export type ResolveBranchPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type ResolveBranchQueryParams = {
+  /*
+   * The Git Branch
+   */
+  gitBranch?: string;
+  /*
+   * Default branch to fallback to
+   */
+  fallbackBranch?: string;
+};
+
+export type ResolveBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type ResolveBranchResponse = {
+  branch: string;
+  reason: {
+    code: 'FOUND_IN_MAPPING' | 'BRANCH_EXISTS' | 'FALLBACK_BRANCH' | 'DEFAULT_BRANCH';
+    message: string;
+  };
+};
+
+export type ResolveBranchVariables = {
+  pathParams: ResolveBranchPathParams;
+  queryParams?: ResolveBranchQueryParams;
+} & FetcherExtraProps;
+
+/**
+ * In order to resolve the database branch, the following algorithm is used:
+ * * if the `gitBranch` was provided and is found in the [git branches mapping](/api-reference/dbs/db_name/gitBranches), the associated Xata branch is returned
+ * * else, if a Xata branch with the exact same name as `gitBranch` exists, return it
+ * * else, if `fallbackBranch` is provided and a branch with that name exists, return it
+ * * else, return the default branch of the DB (`main` or the first branch)
+ *
+ * Example call:
+ *
+ * ```json
+ * // GET https://tutorial-ng7s8c.xata.sh/dbs/demo/dbs/demo/resolveBranch?gitBranch=test&fallbackBranch=tsg
+ * ```
+ *
+ * Example response:
+ *
+ * ```json
+ * {
+ *   "branch": "main",
+ *   "reason": {
+ *     "code": "DEFAULT_BRANCH",
+ *     "message": "Default branch for this database (main)"
+ *   }
+ * }
+ * ```
+ */
+export const resolveBranch = (variables: ResolveBranchVariables) =>
+  fetch<ResolveBranchResponse, ResolveBranchError, undefined, {}, ResolveBranchQueryParams, ResolveBranchPathParams>({
+    url: '/dbs/{dbName}/resolveBranch',
+    method: 'get',
+    ...variables
+  });
+
 export type GetBranchDetailsPathParams = {
   /*
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -2117,7 +2366,11 @@ export type QueryTableVariables = {
  *           "link": {
  *             "table": "users"
  *           }
- *         }
+ *         },
+ *         {
+ *           "name": "foundedDate",
+ *           "type": "datetime"
+ *         },
  *       ]
  *     },
  *     {
@@ -2264,7 +2517,8 @@ export type QueryTableVariables = {
  *       "version": 0
  *     },
  *     "name": "first team",
- *     "code": "A1"
+ *     "code": "A1",
+ *     "foundedDate": "2020-03-04T10:43:54.32Z"
  *   }
  * }
  * ```
@@ -2279,7 +2533,7 @@ export type QueryTableVariables = {
  *   `$none`, etc.
  *
  * All operators start with an `$` to differentiate them from column names
- * (which are not allowed to start with an dollar sign).
+ * (which are not allowed to start with a dollar sign).
  *
  * #### Exact matching and control operators
  *
@@ -2480,7 +2734,7 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * #### Numeric ranges
+ * #### Numeric or datetime ranges
  *
  * ```json
  * {
@@ -2492,7 +2746,18 @@ export type QueryTableVariables = {
  *   }
  * }
  * ```
- *
+ * Date ranges support the same operators, with the date using the format defined in
+ * [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339):
+ * ```json
+ * {
+ *   "filter": {
+ *     "<column_name>": {
+ *       "$gt": "2019-10-12T07:20:50.52Z",
+ *       "$lt": "2021-10-12T07:20:50.52Z"
+ *     }
+ *   }
+ * }
+ * ```
  * The supported operators are `$gt`, `$lt`, `$ge`, `$le`.
  *
  * #### Negations
@@ -2844,7 +3109,15 @@ export const operationsByTag = {
     resendWorkspaceMemberInvite,
     acceptWorkspaceMemberInvite
   },
-  database: { getDatabaseList, createDatabase, deleteDatabase },
+  database: {
+    getDatabaseList,
+    createDatabase,
+    deleteDatabase,
+    getGitBranchesMapping,
+    addGitBranchesEntry,
+    removeGitBranchesEntry,
+    resolveBranch
+  },
   branch: {
     getBranchList,
     getBranchDetails,

@@ -222,8 +222,8 @@ describe('integration tests', () => {
   });
 
   test('returns many records with offset/size', async () => {
-    const page1 = await client.db.users.getMany({ page: { size: 10 } });
-    const page2 = await client.db.users.getMany({ page: { size: 10, offset: 10 } });
+    const page1 = await client.db.users.getMany({ pagination: { size: 10 } });
+    const page2 = await client.db.users.getMany({ pagination: { size: 10, offset: 10 } });
 
     expect(page1).not.toEqual(page2);
     expect(page1).toHaveLength(10);
@@ -234,7 +234,7 @@ describe('integration tests', () => {
     const size = Math.floor(mockUsers.length / 1.5);
     const lastPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
 
-    const page1 = await client.db.users.getPaginated({ page: { size } });
+    const page1 = await client.db.users.getPaginated({ pagination: { size } });
     const page2 = await page1.nextPage();
     const page3 = await page2.nextPage();
     const firstPage = await page3.firstPage();
@@ -255,7 +255,7 @@ describe('integration tests', () => {
   });
 
   test('returns many records with cursor passing a offset/size', async () => {
-    const page1 = await client.db.users.getPaginated({ page: { size: 5 } });
+    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
     const page2 = await page1.nextPage(10);
     const page3 = await page2.nextPage(10);
     const page2And3 = await page1.nextPage(20);
@@ -268,9 +268,46 @@ describe('integration tests', () => {
     expect(page2And3.records).toEqual([...page2.records, ...page3.records]);
   });
 
+  test('fails if sending cursor with sorting', async () => {
+    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
+    const { records: records1, meta } = page1;
+    const page2 = await page1.nextPage();
+
+    expect(meta.page.more).toBe(true);
+    expect(meta.page.cursor).toBeDefined();
+    expect(records1).toHaveLength(5);
+
+    const { records: records2, meta: meta2 } = await client.db.users.getPaginated({
+      pagination: { after: meta.page.cursor }
+    });
+
+    expect(meta2.page.more).toBe(true);
+    expect(meta2.page.cursor).toBeDefined();
+    expect(records2).toHaveLength(5);
+    expect(records2).toEqual(page2.records);
+
+    const { records: records3, meta: meta3 } = await client.db.users.getPaginated({
+      pagination: { after: meta.page.cursor },
+      columns: ['full_name']
+    });
+
+    expect(meta3.page.more).toBe(true);
+    expect(meta3.page.cursor).toBeDefined();
+    expect(records3).toHaveLength(5);
+    expect(records3).not.toEqual(page2.records);
+
+    expect(
+      client.db.users.getPaginated({
+        // @ts-expect-error
+        pagination: { after: meta.page.cursor },
+        sort: { column: 'full_name', direction: 'asc' }
+      })
+    ).rejects.toThrow();
+  });
+
   test('repository implements pagination', async () => {
     const loadUsers = async (repository: Repository<User>) => {
-      return repository.getPaginated({ page: { size: 10 } });
+      return repository.getPaginated({ pagination: { size: 10 } });
     };
 
     const users = await loadUsers(client.db.users);
@@ -307,7 +344,7 @@ describe('integration tests', () => {
   test('query implements iterator with chunks', async () => {
     const owners = [];
 
-    for await (const chunk of client.db.users.filter('full_name', contains('Owner')).getIterator(10)) {
+    for await (const chunk of client.db.users.filter('full_name', contains('Owner')).getIterator({ batchSize: 10 })) {
       owners.push(...chunk);
     }
 
@@ -418,14 +455,14 @@ describe('integration tests', () => {
   });
 
   test('Pagination size limit', async () => {
-    expect(client.db.users.getPaginated({ page: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
+    expect(client.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
       'message',
       'page size exceeds max limit of 200'
     );
   });
 
   test('Pagination offset limit', async () => {
-    expect(client.db.users.getPaginated({ page: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
+    expect(client.db.users.getPaginated({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
       'message',
       'page offset must not exceed 800'
     );
@@ -775,21 +812,21 @@ describe('getBranch', () => {
 
     const getBranchOptions = { apiKey: '', apiUrl: '', fetchImpl: {} as FetchImpl };
 
-    process.env = { XATA_BRANCH: branchName };
+    process.env = { NODE_ENV: 'development', XATA_BRANCH: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
-    process.env = { VERCEL_GIT_COMMIT_REF: branchName };
+    process.env = { NODE_ENV: 'development', VERCEL_GIT_COMMIT_REF: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
-    process.env = { CF_PAGES_BRANCH: branchName };
+    process.env = { NODE_ENV: 'development', CF_PAGES_BRANCH: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
 
-    process.env = { BRANCH: branchName };
+    process.env = { NODE_ENV: 'development', BRANCH: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
   });
 
   test('uses the git branch if no env variable is set', async () => {
-    process.env = {};
+    process.env = { NODE_ENV: 'development' };
     const fetchImpl = vi.fn(() => ({
       ok: true,
       json() {
@@ -806,7 +843,7 @@ describe('getBranch', () => {
   });
 
   test('uses `main` if no env variable is set is not set and there is not associated git branch', async () => {
-    process.env = {};
+    process.env = { NODE_ENV: 'development' };
     const fetchImpl = vi.fn(() => ({
       ok: false,
       status: 404,

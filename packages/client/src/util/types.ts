@@ -32,3 +32,5 @@ export type Exactly<T, U extends T = T> = U & Impossible<Exclude<keyof U, keyof 
 export type SingleOrArray<T> = T | T[];
 
 export type Dictionary<T> = Record<string, T>;
+
+export type OmitBy<T, K extends keyof T> = T extends any ? Omit<T, K> : never;

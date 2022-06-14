@@ -30,8 +30,10 @@ export function getEnvVariable(name: string): string | undefined {
 export async function getGitBranch(): Promise<string | undefined> {
   // Node.js: child_process.execSync
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require('child_process').execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
+    if (typeof require === 'function') {
+      const req = require; // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
+      return req('child_process').execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
+    }
   } catch (err) {
     // Ignore
   }
