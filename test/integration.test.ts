@@ -22,13 +22,11 @@ let client: XataClient;
 let schemaLessclient: BaseClient;
 let databaseName: string;
 
+const apiKey = process.env.XATA_API_KEY ?? '';
 const workspace = process.env.XATA_WORKSPACE ?? '';
 if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
 
-const api = new XataApiClient({
-  apiKey: process.env.XATA_API_KEY || '',
-  fetch
-});
+const api = new XataApiClient({ apiKey, fetch });
 
 beforeAll(async () => {
   const id = Math.round(Math.random() * 100000);
@@ -810,7 +808,11 @@ describe('getBranch', () => {
   test('uses an env variable if it is set', async () => {
     const branchName = 'using-env-variable';
 
-    const getBranchOptions = { apiKey: '', apiUrl: '', fetchImpl: {} as FetchImpl };
+    const getBranchOptions = {
+      apiKey,
+      apiUrl: `https://${workspace}.xata.sh/db/${databaseName}`,
+      fetchImpl: fetch
+    };
 
     process.env = { NODE_ENV: 'development', XATA_BRANCH: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
@@ -825,38 +827,28 @@ describe('getBranch', () => {
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
   });
 
-  test('uses the git branch if no env variable is set', async () => {
-    process.env = { NODE_ENV: 'development' };
-    const fetchImpl = vi.fn(() => ({
-      ok: true,
-      json() {
-        return { branchName: gitBranch };
-      }
-    }));
-    const branch = await getCurrentBranchName({
-      apiKey: 'anything',
-      databaseURL: 'https://workspace-id-1234.xata.sh/db/test:main',
-      fetchImpl: fetchImpl as unknown as FetchImpl
-    });
-
-    expect(branch).toEqual(gitBranch);
-  });
-
   test('uses `main` if no env variable is set is not set and there is not associated git branch', async () => {
     process.env = { NODE_ENV: 'development' };
-    const fetchImpl = vi.fn(() => ({
-      ok: false,
-      status: 404,
-      json() {
-        return {};
-      }
-    }));
     const branch = await getCurrentBranchName({
-      apiKey: 'anything',
-      databaseURL: 'https://workspace-id-1234.xata.sh/db/test:main',
-      fetchImpl: fetchImpl as unknown as FetchImpl
+      apiKey,
+      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
+      fetchImpl: fetch
     });
 
     expect(branch).toEqual('main');
+  });
+
+  test('uses the git branch name if branch exists', async () => {
+    process.env = { NODE_ENV: 'development' };
+
+    await api.branches.createBranch(workspace, databaseName, gitBranch);
+
+    const branch = await getCurrentBranchName({
+      apiKey,
+      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
+      fetchImpl: fetch
+    });
+
+    expect(branch).toEqual(gitBranch);
   });
 });

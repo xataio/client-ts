@@ -49,7 +49,8 @@ describe('branches list', () => {
             name: 'main',
             createdAt: '2020-01-01T00:00:00.000Z'
           }
-        ]
+        ],
+        mapping: []
       })
     });
 
@@ -73,6 +74,7 @@ describe('branches list', () => {
         [
           {
             "createdAt": "2020-01-01T00:00:00.000Z",
+            "mapping": undefined,
             "name": "main",
           },
         ]
@@ -81,7 +83,7 @@ describe('branches list', () => {
       expect(result).toBeUndefined();
     }
 
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 
@@ -93,11 +95,13 @@ describe('branches list', () => {
           [
             "Name",
             "Created at",
+            "Git branch",
           ],
           [
             [
               "main",
               "Jan 1, 2020, 12:00 AM",
+              "-",
             ],
           ],
         ]

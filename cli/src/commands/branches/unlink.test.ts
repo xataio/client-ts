@@ -36,7 +36,6 @@ describe('branches unlink', () => {
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls.length).toBe(1);
     expect(fetchMock.mock.calls[0][0]).toEqual(
       'https://test-1234.xata.sh/dbs/test/gitBranches?gitBranch=resolve-branch-api'
     );
@@ -69,7 +68,6 @@ describe('branches unlink', () => {
     }
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls.length).toBe(1);
     expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test/gitBranches?gitBranch=foo');
     expect(fetchMock.mock.calls[0][1].method).toEqual('DELETE');
 

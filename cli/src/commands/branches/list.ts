@@ -21,13 +21,14 @@ export default class BranchesList extends BaseCommand {
     const { branches } = await xata.branches.getBranchList(workspace, database);
     const { mapping } = await xata.databases.getGitBranchesMapping(workspace, database);
 
-    if (this.jsonEnabled()) return { branches, mapping };
+    const data = branches.map((branch) => ({
+      ...branch,
+      mapping: mapping.find(({ xataBranch }) => xataBranch === branch.name)?.gitBranch
+    }));
 
-    const rows = branches.map((b) => [
-      b.name,
-      this.formatDate(b.createdAt),
-      mapping.find(({ xataBranch }) => xataBranch === b.name)?.gitBranch ?? '-'
-    ]);
+    if (this.jsonEnabled()) return data;
+
+    const rows = data.map((b) => [b.name, this.formatDate(b.createdAt), b.mapping ?? '-']);
 
     this.printTable(['Name', 'Created at', 'Git branch'], rows);
   }

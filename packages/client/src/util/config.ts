@@ -27,7 +27,7 @@ export async function getCurrentBranchName(options?: BranchResolutionOptions): P
   const gitBranch = await getGitBranch();
   if (!gitBranch) return defaultBranch;
 
-  return await resolveXataBranch(gitBranch, options);
+  return resolveXataBranch(gitBranch, options);
 }
 
 export async function getCurrentBranchDetails(options?: BranchResolutionOptions) {
@@ -51,16 +51,20 @@ async function resolveXataBranch(gitBranch: string, options?: BranchResolutionOp
   const [protocol, , host, , dbName] = databaseURL.split('/');
   const [workspace] = host.split('.');
 
-  const { branch } = await resolveBranch({
-    apiKey,
-    apiUrl: databaseURL,
-    fetchImpl: getFetchImplementation(options?.fetchImpl),
-    workspacesApiUrl: `${protocol}//${host}`,
-    pathParams: { dbName, workspace },
-    queryParams: { gitBranch, fallbackBranch: defaultBranch }
-  });
+  try {
+    const { branch } = await resolveBranch({
+      apiKey,
+      apiUrl: databaseURL,
+      fetchImpl: getFetchImplementation(options?.fetchImpl),
+      workspacesApiUrl: `${protocol}//${host}`,
+      pathParams: { dbName, workspace },
+      queryParams: { gitBranch, fallbackBranch: defaultBranch }
+    });
 
-  return branch;
+    return branch;
+  } catch (err) {
+    return defaultBranch;
+  }
 }
 
 async function getDatabaseBranch(branch: string, options?: BranchResolutionOptions) {
