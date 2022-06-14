@@ -45,6 +45,11 @@ export abstract class BaseCommand extends Command {
     description: 'URL of the database in the format https://{workspace}.xata.sh/db/{database}'
   });
 
+  static branchFlag = Flags.string({
+    name: 'branch',
+    description: 'Branch name to use'
+  });
+
   async init() {
     dotenv.config();
 
@@ -278,12 +283,14 @@ export abstract class BaseCommand extends Command {
     };
   }
 
-  async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, allowCreate?: boolean) {
+  async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, branchFlag?: string, allowCreate?: boolean) {
     const info = await this.getParsedDatabaseURL(databaseURLFlag, allowCreate);
 
     let branch = '';
 
-    if (info.source === 'config') {
+    if (branchFlag) {
+      branch = branchFlag;
+    } else if (info.source === 'config') {
       branch = await getCurrentBranchName({
         fetchImpl: fetch,
         databaseURL: info.databaseURL,

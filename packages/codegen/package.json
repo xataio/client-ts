@@ -35,6 +35,7 @@
   "homepage": "https://github.com/xataio/client-ts/blob/main/codegen/README.md",
   "dependencies": {
     "@xata.io/client": "^0.10.0",
+    "case": "^1.6.3",
     "chalk": "5.0.1",
     "command-exists": "^1.2.9",
     "commander": "^9.3.0",
