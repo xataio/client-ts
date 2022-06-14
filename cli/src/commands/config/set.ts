@@ -22,6 +22,6 @@ export default class SetConfig extends BaseCommand {
 
     setValue(args.key, projectConfigSchema, this.projectConfig, args.value);
 
-    this.updateConfig();
+    await this.updateConfig();
   }
 }
