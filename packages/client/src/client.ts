@@ -40,7 +40,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       this.search = search;
 
       for (const [key, namespace] of Object.entries(plugins ?? {})) {
-        if (namespace == undefined) continue;
+        if (namespace === undefined) continue;
         const result = namespace.build(pluginOptions);
 
         if (result instanceof Promise) {
