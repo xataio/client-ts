@@ -5,7 +5,7 @@ import { clearEnvVariables } from '../utils.test.js';
 import Login from './login.js';
 import prompts from 'prompts';
 import * as fs from 'fs/promises';
-import { credentialsPath } from '../../credentials';
+import { credentialsPath } from '../../credentials.js';
 import { dirname } from 'path';
 import ini from 'ini';
 

@@ -2,7 +2,7 @@ import { Config } from '@oclif/core';
 import * as fs from 'fs/promises';
 import prompts from 'prompts';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { credentialsPath } from '../../credentials';
+import { credentialsPath } from '../../credentials.js';
 import { clearEnvVariables } from '../utils.test.js';
 import Logout from './logout.js';
 import ini from 'ini';

@@ -5,7 +5,7 @@ import { clearEnvVariables } from '../utils.test.js';
 import Status from './status.js';
 import prompts from 'prompts';
 import * as fs from 'fs/promises';
-import { credentialsPath } from '../../credentials';
+import { credentialsPath } from '../../credentials.js';
 import ini from 'ini';
 
 vi.mock('node-fetch');

@@ -11,7 +11,7 @@ import prompts from 'prompts';
 import slugify from 'slugify';
 import table from 'text-table';
 import { z, ZodError } from 'zod';
-import { getProfile } from './credentials';
+import { getProfile } from './credentials.js';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
