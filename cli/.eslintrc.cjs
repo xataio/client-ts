@@ -3,10 +3,9 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
-    project: 'packages/client/tsconfig.json'
+    project: 'cli/tsconfig.json'
   },
   rules: {
     '@typescript-eslint/no-floating-promises': 'error',
-    "@typescript-eslint/strict-boolean-expressions": ["error", { allowNullableString: true, allowNullableObject: true }],
   }
 };

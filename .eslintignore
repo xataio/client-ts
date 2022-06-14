@@ -3,6 +3,7 @@ node_modules
 babel.config.js
 rollup.config.js
 dist
+bin
 
 # Generated files
 packages/client/src/api/components.ts
