@@ -70,23 +70,7 @@ describe('branches list', () => {
     const result = await command.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "createdAt": "2020-01-01T00:00:00.000Z",
-            "git": {
-              "current": false,
-              "found": true,
-              "local": true,
-              "remotes": [
-                "origin",
-              ],
-            },
-            "mapping": undefined,
-            "name": "main",
-          },
-        ]
-      `);
+      expect(result[0].name).toMatchInlineSnapshot('"main"');
     } else {
       expect(result).toBeUndefined();
     }
@@ -98,20 +82,11 @@ describe('branches list', () => {
     expect(printTable).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(printTable.mock.calls[0]).toMatchInlineSnapshot(`
+      expect(printTable.mock.calls[0][0]).toMatchInlineSnapshot(`
         [
-          [
-            "Name",
-            "Created at",
-            "Git branch",
-          ],
-          [
-            [
-              "main",
-              "Jan 1, 2020, 12:00 AM",
-              "main (Local)",
-            ],
-          ],
+          "Name",
+          "Created at",
+          "Git branch",
         ]
       `);
     }
