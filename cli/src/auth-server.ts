@@ -4,7 +4,49 @@ import open from 'open';
 import url from 'url';
 import crypto from 'crypto';
 
-export async function createAPIKeyThroughWebUI() {
+export function handler(
+  privateKey: string,
+  passphrase: string,
+  callback: (err: unknown | null, apiKey?: string) => void
+) {
+  return (req: http.IncomingMessage, res: http.ServerResponse) => {
+    try {
+      const parsedURL = url.parse(req.url ?? '', true);
+      if (parsedURL.pathname !== '/') {
+        res.writeHead(404);
+        return res.end();
+      }
+      if (!parsedURL.query.key) {
+        res.writeHead(400);
+        return res.end('Missing key parameter');
+      }
+      const privKey = crypto.createPrivateKey({ key: privateKey, passphrase });
+      const apiKey = crypto
+        .privateDecrypt(privKey, Buffer.from(String(parsedURL.query.key).replace(/ /g, '+'), 'base64'))
+        .toString('utf8');
+      res.writeHead(200);
+      res.end('You are all set! You can close this tab now');
+      callback(null, apiKey);
+    } catch (err) {
+      console.log(err instanceof Error ? err.stack : String(err));
+      res.writeHead(500);
+      res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
+      callback(err);
+    }
+  };
+}
+
+export function generateURL(port: number, publicKey: string, privateKey: string, passphrase: string) {
+  const pub = publicKey
+    .replace(/\n/g, '')
+    .replace('-----BEGIN PUBLIC KEY-----', '')
+    .replace('-----END PUBLIC KEY-----', '');
+  const data = Buffer.from(JSON.stringify({ name: 'Xata CLI', redirect: `http://localhost:${port}` }));
+  const info = crypto.privateEncrypt({ key: privateKey, passphrase }, data).toString('base64');
+  return `https://app.xata.io/new-api-key?pub=${encodeURIComponent(pub)}&info=${encodeURIComponent(info)}`;
+}
+
+export function generateKeys() {
   const passphrase = crypto.randomBytes(32).toString('hex');
   const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 4096,
@@ -19,44 +61,22 @@ export async function createAPIKeyThroughWebUI() {
       passphrase
     }
   });
+  return { publicKey, privateKey, passphrase };
+}
+
+export async function createAPIKeyThroughWebUI() {
+  const { publicKey, privateKey, passphrase } = generateKeys();
 
   return new Promise<string>((resolve, reject) => {
-    const server = http.createServer((req, res) => {
-      try {
-        const parsedURL = url.parse(req.url ?? '', true);
-        if (parsedURL.pathname !== '/') {
-          res.writeHead(404);
-          return res.end();
-        }
-        if (!parsedURL.query.key) {
-          res.writeHead(400);
-          return res.end('Missing key parameter');
-        }
-        const privKey = crypto.createPrivateKey({ key: privateKey, passphrase });
-        const apiKey = crypto
-          .privateDecrypt(privKey, Buffer.from(String(parsedURL.query.key).replace(/ /g, '+'), 'base64'))
-          .toString('utf8');
-        res.writeHead(200);
-        res.end('You are all set! You can close this tab now');
+    const server = http.createServer(
+      handler(privateKey, passphrase, (err, apiKey) => {
+        err ? reject(err) : resolve(apiKey ?? '');
         server.close();
-        resolve(apiKey);
-      } catch (err) {
-        console.log(err instanceof Error ? err.stack : String(err));
-        res.writeHead(500);
-        res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
-        server.close();
-        reject(err);
-      }
-    });
+      })
+    );
     server.listen(() => {
       const { port } = server.address() as AddressInfo;
-      const pub = publicKey
-        .replace(/\n/g, '')
-        .replace('-----BEGIN PUBLIC KEY-----', '')
-        .replace('-----END PUBLIC KEY-----', '');
-      const data = Buffer.from(JSON.stringify({ name: 'Xata CLI', redirect: `http://localhost:${port}` }));
-      const info = crypto.privateEncrypt({ key: privateKey, passphrase }, data).toString('base64');
-      const openURL = `https://app.xata.io/new-api-key?pub=${encodeURIComponent(pub)}&info=${encodeURIComponent(info)}`;
+      const openURL = generateURL(port, publicKey, privateKey, passphrase);
       open(openURL).catch(() => {
         console.log(`Please open ${openURL} in your browser`);
       });
