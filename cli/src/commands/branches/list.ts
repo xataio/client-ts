@@ -1,4 +1,6 @@
+import _ from 'lodash';
 import { BaseCommand } from '../../base.js';
+import { currentGitBranch, listBranches } from '../../git.js';
 export default class BranchesList extends BaseCommand {
   static description = 'List branches';
 
@@ -20,15 +22,35 @@ export default class BranchesList extends BaseCommand {
     const xata = await this.getXataClient();
     const { branches } = await xata.branches.getBranchList(workspace, database);
     const { mapping } = await xata.databases.getGitBranchesMapping(workspace, database);
+    const gitBranches = listBranches();
+    const current = currentGitBranch();
 
-    const data = branches.map((branch) => ({
-      ...branch,
-      mapping: mapping.find(({ xataBranch }) => xataBranch === branch.name)?.gitBranch
-    }));
+    const data = branches.map((branch) => {
+      const { gitBranch } = mapping.find(({ xataBranch }) => xataBranch === branch.name) ?? {};
+      const git = gitBranches.find(({ name }) => name === branch.name);
+
+      return {
+        ...branch,
+        mapping: gitBranch,
+        git: {
+          found: git !== undefined,
+          current: current === branch.name,
+          local: git?.local ?? false,
+          remotes: git?.remotes ?? []
+        }
+      };
+    });
 
     if (this.jsonEnabled()) return data;
 
-    const rows = data.map((b) => [b.name, this.formatDate(b.createdAt), b.mapping ?? '-']);
+    const rows = data.map((b) => [
+      b.name,
+      this.formatDate(b.createdAt),
+      _.compact([
+        b.mapping ?? b.git.found ? b.name : '-',
+        b.git.current ? '(Current)' : b.git.local ? '(Local)' : b.git.found ? '(Remote)' : undefined
+      ]).join(' ')
+    ]);
 
     this.printTable(['Name', 'Created at', 'Git branch'], rows);
   }

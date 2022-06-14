@@ -808,6 +808,8 @@ describe('getBranch', () => {
   test('uses an env variable if it is set', async () => {
     const branchName = 'using-env-variable';
 
+    await api.branches.createBranch(workspace, databaseName, branchName);
+
     const getBranchOptions = {
       apiKey,
       apiUrl: `https://${workspace}.xata.sh/db/${databaseName}`,

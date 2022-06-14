@@ -164,7 +164,7 @@ describe('branches create', () => {
         expect(result).toBeUndefined();
       }
 
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
       expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
       expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
 
@@ -214,7 +214,7 @@ describe('branches create', () => {
         expect(result).toBeUndefined();
       }
 
-      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
       expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test/resolveBranch?gitBranch=base');
       expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
       expect(fetchMock.mock.calls[1][0]).toEqual('https://test-1234.xata.sh/db/test:featureA?from=base');
