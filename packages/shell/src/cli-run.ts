@@ -41,7 +41,7 @@ export async function run(options: { env?: string; databaseURL?: string; apiKey?
     )} global variable.`
   );
 
-  const fetchApi = async (method: string, path: string, body?: any) => {
+  const fetchApi = async (method: string, path: string, body?: string) => {
     const { protocol, host } = parseDatabaseURL(databaseURL);
     // TODO: Add support for staging, how?
     const baseUrl = path.startsWith('/db') ? `${protocol}//${host}` : 'https://api.xata.io';

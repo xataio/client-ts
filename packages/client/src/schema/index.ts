@@ -34,7 +34,7 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
       {
         get: (_target, table) => {
           if (!isString(table)) throw new Error('Invalid table name');
-          if (!this.#tables[table]) {
+          if (this.#tables[table] === undefined) {
             this.#tables[table] = new RestRepository({ db, pluginOptions, table });
           }
 
