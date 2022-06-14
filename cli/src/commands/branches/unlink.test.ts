@@ -1,6 +1,7 @@
 import { Config } from '@oclif/core';
 import fetch from 'node-fetch';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { currentGitBranch } from '../../git.js';
 import { clearEnvVariables } from '../utils.test.js';
 import BranchesUnlink from './unlink.js';
 
@@ -34,11 +35,10 @@ describe('branches unlink', () => {
     };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
+    const gitBranch = currentGitBranch();
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual(
-      'https://test-1234.xata.sh/dbs/test/gitBranches?gitBranch=resolve-branch-api'
-    );
+    expect(fetchMock.mock.calls[0][0]).toEqual(`https://test-1234.xata.sh/dbs/test/gitBranches?gitBranch=${gitBranch}`);
     expect(fetchMock.mock.calls[0][1].method).toEqual('DELETE');
   });
 
