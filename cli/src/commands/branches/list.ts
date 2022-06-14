@@ -48,7 +48,13 @@ export default class BranchesList extends BaseCommand {
       this.formatDate(b.createdAt),
       _.compact([
         b.mapping ?? b.git.found ? b.name : '-',
-        b.git.current ? '(Current)' : b.git.local ? '(Local)' : b.git.found ? '(Remote)' : undefined
+        b.git.current
+          ? '(Current)'
+          : b.git.local
+          ? '(Local)'
+          : b.git.found
+          ? `(Remote: ${b.git.remotes.join(', ')})`
+          : undefined
       ]).join(' ')
     ]);
 
