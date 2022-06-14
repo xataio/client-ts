@@ -18,7 +18,8 @@ export type BaseClientOptions = {
   cache?: CacheImpl;
 };
 
-export const buildClient = <Plugins extends Record<string, XataPlugin> = Record<string, never>>(plugins?: Plugins) =>
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
   class {
     #branch: BranchStrategyValue;
     db: SchemaPluginResult<any>;
@@ -114,10 +115,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = Record<
   } as unknown as ClientConstructor<Plugins>;
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
-  new <Schemas extends Record<string, BaseData> = Record<string, never>>(
-    options?: Partial<BaseClientOptions>,
-    tables?: string[]
-  ): Omit<
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  new <Schemas extends Record<string, BaseData> = {}>(options?: Partial<BaseClientOptions>, tables?: string[]): Omit<
     {
       db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
       search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
