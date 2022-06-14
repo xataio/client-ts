@@ -12,8 +12,6 @@ const envBranchNames = [
   'BRANCH' // Netlify. Putting it the last one because it is more ambiguous
 ];
 
-const defaultBranch = 'main';
-
 type BranchResolutionOptions = {
   databaseURL?: string;
   apiKey?: string;
@@ -22,11 +20,14 @@ type BranchResolutionOptions = {
 
 export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string> {
   const env = getBranchByEnvVariable();
-  if (env) return env;
+  if (env) {
+    const details = await getDatabaseBranch(env, options);
+    if (details) return env;
+
+    console.warn(`Branch ${env} not found in Xata. Ignoring...`);
+  }
 
   const gitBranch = await getGitBranch();
-  if (!gitBranch) return defaultBranch;
-
   return resolveXataBranch(gitBranch, options);
 }
 
@@ -35,7 +36,7 @@ export async function getCurrentBranchDetails(options?: BranchResolutionOptions)
   return getDatabaseBranch(branch, options);
 }
 
-async function resolveXataBranch(gitBranch: string, options?: BranchResolutionOptions): Promise<string> {
+async function resolveXataBranch(gitBranch: string | undefined, options?: BranchResolutionOptions): Promise<string> {
   const databaseURL = options?.databaseURL || getDatabaseURL();
   const apiKey = options?.apiKey || getAPIKey();
 
@@ -51,20 +52,16 @@ async function resolveXataBranch(gitBranch: string, options?: BranchResolutionOp
   const [protocol, , host, , dbName] = databaseURL.split('/');
   const [workspace] = host.split('.');
 
-  try {
-    const { branch } = await resolveBranch({
-      apiKey,
-      apiUrl: databaseURL,
-      fetchImpl: getFetchImplementation(options?.fetchImpl),
-      workspacesApiUrl: `${protocol}//${host}`,
-      pathParams: { dbName, workspace },
-      queryParams: { gitBranch, fallbackBranch: defaultBranch }
-    });
+  const { branch } = await resolveBranch({
+    apiKey,
+    apiUrl: databaseURL,
+    fetchImpl: getFetchImplementation(options?.fetchImpl),
+    workspacesApiUrl: `${protocol}//${host}`,
+    pathParams: { dbName, workspace },
+    queryParams: { gitBranch, fallbackBranch: getEnvVariable('XATA_FALLBACK_BRANCH') }
+  });
 
-    return branch;
-  } catch (err) {
-    return defaultBranch;
-  }
+  return branch;
 }
 
 async function getDatabaseBranch(branch: string, options?: BranchResolutionOptions) {
