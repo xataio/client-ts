@@ -67,9 +67,19 @@ describe('auth login', () => {
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
         {
-          "message": "Introduce your API key:",
-          "name": "key",
-          "type": "password",
+          "choices": [
+            {
+              "title": "Create a new API key opening a browser",
+              "value": "create",
+            },
+            {
+              "title": "Existing API key",
+              "value": "existing",
+            },
+          ],
+          "message": "Do you want to use an existing API key or create a new API key?",
+          "name": "decision",
+          "type": "select",
         },
       ]
     `);
@@ -84,7 +94,8 @@ describe('auth login', () => {
       throw new Error('ENOENT');
     });
 
-    promptsMock.mockReturnValue({ key: '1234abcdef' });
+    // We are mocking a response that is valid for the two prompts that will be rendered
+    promptsMock.mockReturnValue({ decision: 'existing', key: '1234abcdef' });
 
     fetchMock.mockReturnValue({
       ok: true,
@@ -94,8 +105,27 @@ describe('auth login', () => {
     await command.run();
 
     expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
-    expect(promptsMock).toHaveBeenCalledOnce();
+    expect(promptsMock).toHaveBeenCalledTimes(2);
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
+      [
+        {
+          "choices": [
+            {
+              "title": "Create a new API key opening a browser",
+              "value": "create",
+            },
+            {
+              "title": "Existing API key",
+              "value": "existing",
+            },
+          ],
+          "message": "Do you want to use an existing API key or create a new API key?",
+          "name": "decision",
+          "type": "select",
+        },
+      ]
+    `);
+    expect(promptsMock.mock.calls[1]).toMatchInlineSnapshot(`
       [
         {
           "message": "Introduce your API key:",
