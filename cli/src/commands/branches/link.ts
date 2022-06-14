@@ -10,12 +10,10 @@ export default class BranchesCreate extends BaseCommand {
   static flags = {
     ...this.commonFlags,
     databaseURL: this.databaseURLFlag,
-    gitBranch: Flags.string({
-      name: 'git',
+    git: Flags.string({
       description: 'Git branch name'
     }),
-    xataBranch: Flags.string({
-      name: 'xata',
+    xata: Flags.string({
       description: 'Xata branch name'
     })
   };
@@ -37,8 +35,8 @@ export default class BranchesCreate extends BaseCommand {
 
     try {
       const {
-        gitBranch = currentGitBranch(),
-        xataBranch = await this.getBranch(workspace, database, { allowCreate: true })
+        git: gitBranch = currentGitBranch(),
+        xata: xataBranch = await this.getBranch(workspace, database, { allowCreate: true })
       } = flags;
 
       if (!gitBranch) {

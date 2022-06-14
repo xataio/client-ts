@@ -10,8 +10,7 @@ export default class BranchesCreate extends BaseCommand {
   static flags = {
     ...this.commonFlags,
     databaseURL: this.databaseURLFlag,
-    gitBranch: Flags.string({
-      name: 'git',
+    git: Flags.string({
       description: 'Git branch name'
     })
   };
@@ -32,7 +31,7 @@ export default class BranchesCreate extends BaseCommand {
     const xata = await this.getXataClient();
 
     try {
-      const { gitBranch = currentGitBranch() } = flags;
+      const { git: gitBranch = currentGitBranch() } = flags;
       if (!gitBranch) {
         this.error('Could not resolve the current git branch');
       }
