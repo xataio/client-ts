@@ -1,3 +1,4 @@
+import Case from 'case';
 import pluralize from 'pluralize';
 import prettier, { BuiltInParserName } from 'prettier';
 import * as parserJavascript from 'prettier/parser-babel.js';
@@ -19,12 +20,13 @@ export type GenerateOutput = {
 };
 
 function getTypeName(tableName: string) {
-  const snglr = pluralize.singular(tableName);
+  const pascal = Case.pascal(tableName);
+  const name = pluralize.singular(pascal);
 
   // If table starts with a number, prepend a $ sign
-  if (snglr.match(/^\d/)) return `$${snglr}`;
+  if (name.match(/^\d/)) return `$${name}`;
 
-  return snglr.substring(0, 1).toUpperCase() + snglr.substring(1);
+  return name;
 }
 
 function generateTableTypes(tables: Table[]) {
@@ -40,14 +42,17 @@ function generateTableTypes(tables: Table[]) {
   });
 
   const schema = `export type DatabaseSchema = {
-    ${tables.map((table) => `${table.name}: ${getTypeName(table.name)};`).join('\n')}
+    ${tables.map((table) => `"${table.name}": ${getTypeName(table.name)};`).join('\n')}
   }`;
 
   return [...types, schema].join('\n');
 }
 
+// Gotchas:
+// - Add commas to the name, to support kebab-case
+// - We have a "?: | null" because we don't have constraints yet, to be improved
 function generateColumnType(column: Column) {
-  return `${column.name}?: ${getTypeScriptType(column)} | null`;
+  return `"${column.name}"?: ${getTypeScriptType(column)} | null`;
 }
 
 function getTypeScriptType(column: Column): string {
@@ -115,7 +120,11 @@ export async function generate({
 
   const pretty = prettier.format(transpiled, { parser, plugins: [parserTypeScript, parserJavascript] });
 
-  return { original: code, transpiled: pretty, declarations };
+  const prettyDeclarations = declarations
+    ? prettier.format(declarations, { parser: 'typescript', plugins: [parserTypeScript] })
+    : undefined;
+
+  return { original: code, transpiled: pretty, declarations: prettyDeclarations };
 }
 
 const prettierParsers: Record<Language, BuiltInParserName> = {

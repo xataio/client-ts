@@ -20,42 +20,42 @@ export class XataClient extends DatabaseClient {
   }
 }
 ",
-  "import { BaseClientOptions, XataRecord } from '@xata.io/client';
+  "import { BaseClientOptions, XataRecord } from \\"@xata.io/client\\";
 export interface Author {
-    name?: string | null;
-    email?: string | null;
-    photoUrl?: string | null;
-    bio?: string | null;
-    title?: string | null;
+  name?: string | null;
+  email?: string | null;
+  photoUrl?: string | null;
+  bio?: string | null;
+  title?: string | null;
 }
 export declare type AuthorRecord = Author & XataRecord;
 export interface Post {
-    title?: string | null;
-    summary?: string | null;
-    content?: string | null;
-    tags?: string[] | null;
-    likes?: number | null;
-    author?: AuthorRecord | null;
-    date?: string | null;
-    slug?: string | null;
-    published?: boolean | null;
+  title?: string | null;
+  summary?: string | null;
+  content?: string | null;
+  tags?: string[] | null;
+  likes?: number | null;
+  author?: AuthorRecord | null;
+  date?: string | null;
+  slug?: string | null;
+  published?: boolean | null;
 }
 export declare type PostRecord = Post & XataRecord;
 export interface Person {
-    slug?: string | null;
-    name?: string | null;
-    title?: string | null;
-    photoUrl?: string | null;
+  slug?: string | null;
+  name?: string | null;
+  title?: string | null;
+  photoUrl?: string | null;
 }
 export declare type PersonRecord = Person & XataRecord;
 export declare type DatabaseSchema = {
-    authors: Author;
-    posts: Post;
-    people: Person;
+  authors: Author;
+  posts: Post;
+  people: Person;
 };
 declare const DatabaseClient: any;
 export declare class XataClient extends DatabaseClient<DatabaseSchema> {
-    constructor(options?: BaseClientOptions);
+  constructor(options?: BaseClientOptions);
 }
 export {};
 ",
@@ -122,4 +122,66 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
 }
 ",
 ]
+`;
+
+exports[`generateFromLocalFiles > should respect case naming 1`] = `
+"import { buildClient, BaseClientOptions, XataRecord } from \\"@xata.io/client\\";
+
+export interface TeamsLike {
+  \\"name-test\\"?: string | null;
+  labels_Test?: string[] | null;
+  ownerFoo?: UsersFooRecord | null;
+}
+
+export type TeamsLikeRecord = TeamsLike & XataRecord;
+
+export interface UsersFoo {
+  \\"email-random\\"?: string | null;
+  full_name?: string | null;
+  teamLike?: TeamsLikeRecord | null;
+}
+
+export type UsersFooRecord = UsersFoo & XataRecord;
+
+export type DatabaseSchema = {
+  teams_Like: TeamsLike;
+  \\"users-foo\\": UsersFoo;
+};
+
+const tables = [\\"teams_Like\\", \\"users-foo\\"];
+
+const DatabaseClient = buildClient();
+
+export class XataClient extends DatabaseClient<DatabaseSchema> {
+  constructor(options?: BaseClientOptions) {
+    super({ databaseURL: \\"\\", ...options }, tables);
+  }
+}
+"
+`;
+
+exports[`generateFromLocalFiles > should respect numbers in names 1`] = `
+"import { buildClient, BaseClientOptions, XataRecord } from \\"@xata.io/client\\";
+
+export interface $1teamsCase {
+  \\"2nameCase\\"?: string | null;
+  \\"3Labels\\"?: string[] | null;
+}
+
+export type $1teamsCaseRecord = $1teamsCase & XataRecord;
+
+export type DatabaseSchema = {
+  \\"1teams-case\\": $1teamsCase;
+};
+
+const tables = [\\"1teams-case\\"];
+
+const DatabaseClient = buildClient();
+
+export class XataClient extends DatabaseClient<DatabaseSchema> {
+  constructor(options?: BaseClientOptions) {
+    super({ databaseURL: \\"\\", ...options }, tables);
+  }
+}
+"
 `;
