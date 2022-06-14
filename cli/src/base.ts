@@ -70,22 +70,22 @@ export abstract class BaseCommand extends Command {
   async getXataClient(apiKey?: string | null) {
     if (this.#xataClient) return this.#xataClient;
 
-    const credentials = apiKey ? undefined : await getProfile();
+    const profile = apiKey ? undefined : await getProfile();
 
-    apiKey = apiKey || credentials?.apiKey;
+    apiKey = apiKey || profile?.apiKey;
     if (!apiKey)
       this.error(
         'Could not instantiate Xata client. No API key found. Please run `xata auth login` or configure a project with `xata init`.'
       );
 
     let host: XataApiClientOptions['host'];
-    if (credentials?.host) {
-      if (credentials.host === 'staging') {
+    if (profile?.api) {
+      if (profile.api === 'staging') {
         host = 'staging';
       } else {
         host = {
-          main: credentials.host,
-          workspaces: credentials.host
+          main: profile.api,
+          workspaces: profile.api
         };
       }
     }

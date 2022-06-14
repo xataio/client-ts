@@ -6,7 +6,8 @@ import path, { dirname } from 'path';
 import z from 'zod';
 
 const profileSchema = z.object({
-  host: z.string().optional(), // future use
+  api: z.string().optional(),
+  web: z.string().optional(),
   apiKey: z.string()
 });
 
