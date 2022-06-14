@@ -120,7 +120,11 @@ export async function generate({
 
   const pretty = prettier.format(transpiled, { parser, plugins: [parserTypeScript, parserJavascript] });
 
-  return { original: code, transpiled: pretty, declarations };
+  const prettyDeclarations = declarations
+    ? prettier.format(declarations, { parser: 'typescript', plugins: [parserTypeScript] })
+    : undefined;
+
+  return { original: code, transpiled: pretty, declarations: prettyDeclarations };
 }
 
 const prettierParsers: Record<Language, BuiltInParserName> = {
