@@ -7,7 +7,7 @@ import path from 'path';
 import prompts from 'prompts';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
-import { readAPIKey } from '../../key.js';
+import { getProfile } from '../../credentials.js';
 import { xataDatabaseSchema } from '../../schema.js';
 import Codegen from '../codegen/index.js';
 import EditSchema from '../schema/edit.js';
@@ -172,7 +172,7 @@ export default class Init extends BaseCommand {
 
   async writeEnvFile() {
     // TODO: generate a database-scoped API key
-    const apiKey = await readAPIKey();
+    const apiKey = (await getProfile())?.apiKey;
 
     let content = '';
     try {
