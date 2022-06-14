@@ -18,6 +18,7 @@ export type BaseClientOptions = {
   cache?: CacheImpl;
 };
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
   class {
     #branch: BranchStrategyValue;
@@ -39,7 +40,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       this.search = search;
 
       for (const [key, namespace] of Object.entries(plugins ?? {})) {
-        if (!namespace) continue;
+        if (namespace === undefined) continue;
         const result = namespace.build(pluginOptions);
 
         if (result instanceof Promise) {
@@ -60,7 +61,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const apiKey = options?.apiKey || getAPIKey();
       const cache = options?.cache ?? new SimpleCache({ cacheRecords: false, defaultQueryTTL: 0 });
       const branch = async () =>
-        options?.branch
+        options?.branch !== undefined
           ? await this.#evaluateBranch(options.branch)
           : await getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch });
 
@@ -95,7 +96,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
     async #evaluateBranch(param?: BranchStrategyOption): Promise<string | undefined> {
       if (this.#branch) return this.#branch;
-      if (!param) return undefined;
+      if (param === undefined) return undefined;
 
       const strategies = Array.isArray(param) ? [...param] : [param];
 
@@ -114,6 +115,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   } as unknown as ClientConstructor<Plugins>;
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
+  // eslint-disable-next-line @typescript-eslint/ban-types
   new <Schemas extends Record<string, BaseData> = {}>(options?: Partial<BaseClientOptions>, tables?: string[]): Omit<
     {
       db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;

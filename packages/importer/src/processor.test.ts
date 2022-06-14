@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { Schemas, XataApiClient } from '@xata.io/client';
 import { describe, expect, test, vi } from 'vitest';
 import { compareSquema, createProcessor, TableInfo } from './processor';
