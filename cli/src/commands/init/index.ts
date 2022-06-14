@@ -55,9 +55,7 @@ export default class Init extends BaseCommand {
     await this.writeEnvFile();
 
     if (flags.schema) {
-      // TODO: remove default value once the getCurrentBranchName() return type is fixed.
-      // It actually always returns a string, but the typing is wrong.
-      const branch = (await getCurrentBranchName()) || '';
+      const branch = await getCurrentBranchName();
       await this.deploySchema(workspace, database, branch, flags.schema);
     } else {
       await EditSchema.run([]);

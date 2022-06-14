@@ -1,6 +1,4 @@
 import { Flags } from '@oclif/core';
-import { getCurrentBranchName } from '@xata.io/client';
-import fetch from 'node-fetch';
 import open from 'open';
 import { BaseCommand } from '../../base.js';
 export default class Browse extends BaseCommand {
@@ -21,8 +19,7 @@ export default class Browse extends BaseCommand {
   async run(): Promise<void> {
     const { flags } = await this.parse(Browse);
 
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
-    const branch = flags.branch || (await getCurrentBranchName({ fetchImpl: fetch }));
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
 
     await open(`https://app.xata.io/workspaces/${workspace}/dbs/${database}/branches/${branch}`);
   }
