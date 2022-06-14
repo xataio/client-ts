@@ -2,9 +2,10 @@ import { Config } from '@oclif/core';
 import * as fs from 'fs/promises';
 import prompts from 'prompts';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { keyPath } from '../../key.js';
+import { credentialsPath } from '../../credentials';
 import { clearEnvVariables } from '../utils.test.js';
 import Logout from './logout.js';
+import ini from 'ini';
 
 vi.mock('node-fetch');
 vi.mock('prompts');
@@ -23,7 +24,7 @@ afterEach(() => {
 const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 
 describe('branches delete', () => {
-  test('exists if there are no api key configured', async () => {
+  test('exists if there are no profile configured', async () => {
     const config = await Config.load();
     const command = new Logout([], config as Config);
 
@@ -33,20 +34,20 @@ describe('branches delete', () => {
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: You are not logged in]');
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
   });
 
   test('exists if the user does not confirm', async () => {
     const config = await Config.load();
     const command = new Logout([], config as Config);
 
-    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue('1234abcdef');
+    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue(ini.stringify({ default: { apiKey: 'abcdef1234' } }));
 
     promptsMock.mockReturnValue({ confirm: false });
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 2]');
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -59,18 +60,18 @@ describe('branches delete', () => {
     `);
   });
 
-  test('deletes the api key file if the user confirms', async () => {
+  test('updates the credentials file if the user confirms', async () => {
     const config = await Config.load();
     const command = new Logout([], config as Config);
 
-    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue('1234abcdef');
-    const unlink = vi.spyOn(fs, 'unlink').mockResolvedValue(undefined);
+    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue(ini.stringify({ default: { apiKey: 'abcdef1234' } }));
+    const writeFile = vi.spyOn(fs, 'writeFile').mockResolvedValue(undefined);
 
     promptsMock.mockReturnValue({ confirm: true });
 
     await command.run();
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -81,6 +82,6 @@ describe('branches delete', () => {
         },
       ]
     `);
-    expect(unlink).toHaveBeenCalledWith(keyPath);
+    expect(writeFile).toHaveBeenCalledWith(credentialsPath, '', { mode: 0o600 });
   });
 });

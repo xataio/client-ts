@@ -5,7 +5,8 @@ import { clearEnvVariables } from '../utils.test.js';
 import Status from './status.js';
 import prompts from 'prompts';
 import * as fs from 'fs/promises';
-import { keyPath } from '../../key.js';
+import { credentialsPath } from '../../credentials';
+import ini from 'ini';
 
 vi.mock('node-fetch');
 vi.mock('prompts');
@@ -38,7 +39,7 @@ describe('auth status', () => {
 
     await command.run();
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
     expect(log).toHaveBeenCalledWith('You are not logged in, run `xata auth login` first');
   });
 
@@ -47,7 +48,7 @@ describe('auth status', () => {
     const command = new Status([], config as Config);
     const log = vi.spyOn(command, 'log');
 
-    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue('1234abcdef');
+    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue(ini.stringify({ default: { apiKey: '1234abcdef' } }));
 
     fetchMock.mockReturnValue({
       ok: true,
@@ -56,7 +57,7 @@ describe('auth status', () => {
 
     await command.run();
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
 
     expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');

@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { getCurrentBranchName, XataApiClient } from '@xata.io/client';
+import { getCurrentBranchName, XataApiClient, XataApiClientOptions } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { cosmiconfigSync } from 'cosmiconfig';
@@ -11,7 +11,7 @@ import prompts from 'prompts';
 import slugify from 'slugify';
 import table from 'text-table';
 import { z, ZodError } from 'zod';
-import { readAPIKey } from './key.js';
+import { getProfile } from './credentials';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -70,9 +70,26 @@ export abstract class BaseCommand extends Command {
   async getXataClient(apiKey?: string | null) {
     if (this.#xataClient) return this.#xataClient;
 
-    apiKey = apiKey || (await readAPIKey());
-    if (!apiKey) this.error('Could not instantiate Xata client. No API key found.'); // TODO: give suggested next steps
-    this.#xataClient = new XataApiClient({ apiKey, fetch });
+    const credentials = apiKey ? undefined : await getProfile();
+
+    apiKey = apiKey || credentials?.apiKey;
+    if (!apiKey)
+      this.error(
+        'Could not instantiate Xata client. No API key found. Please run `xata auth login` or configure a project with `xata init`.'
+      );
+
+    let host: XataApiClientOptions['host'];
+    if (credentials?.host) {
+      if (credentials.host === 'staging') {
+        host = 'staging';
+      } else {
+        host = {
+          main: credentials.host,
+          workspaces: credentials.host
+        };
+      }
+    }
+    this.#xataClient = new XataApiClient({ apiKey, fetch, host });
     return this.#xataClient;
   }
 
@@ -285,16 +302,18 @@ export abstract class BaseCommand extends Command {
 
   async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, branchFlag?: string, allowCreate?: boolean) {
     const info = await this.getParsedDatabaseURL(databaseURLFlag, allowCreate);
+    const profile = await getProfile();
 
     let branch = '';
 
     if (branchFlag) {
       branch = branchFlag;
     } else if (info.source === 'config') {
+      // TODO: pass host information
       branch = await getCurrentBranchName({
         fetchImpl: fetch,
         databaseURL: info.databaseURL,
-        apiKey: (await readAPIKey()) ?? undefined
+        apiKey: profile?.apiKey ?? undefined
       });
     } else if (process.env.XATA_BRANCH !== undefined) {
       branch = process.env.XATA_BRANCH;

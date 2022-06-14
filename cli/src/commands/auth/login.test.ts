@@ -5,8 +5,9 @@ import { clearEnvVariables } from '../utils.test.js';
 import Login from './login.js';
 import prompts from 'prompts';
 import * as fs from 'fs/promises';
-import { keyPath } from '../../key.js';
+import { credentialsPath } from '../../credentials';
 import { dirname } from 'path';
+import ini from 'ini';
 
 vi.mock('node-fetch');
 vi.mock('prompts');
@@ -26,17 +27,17 @@ const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 
 describe('auth login', () => {
-  test('checks if a key exists and exists if the user does not want to overwrite', async () => {
+  test('checks if the profile exists and exits if the user does not want to overwrite', async () => {
     const config = await Config.load();
     const command = new Login([], config as Config);
 
-    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue('1234abcdef');
+    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue(ini.stringify({ default: { apiKey: '1234abcdef' } }));
 
     promptsMock.mockReturnValue({ confirm: false });
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 2]');
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -49,7 +50,7 @@ describe('auth login', () => {
     `);
   });
 
-  test('exists if the user does not provide an API key', async () => {
+  test('exits if the user does not provide an API key', async () => {
     const config = await Config.load();
     const command = new Login([], config as Config);
     vi.spyOn(command, 'log').mockReturnValue(undefined); // silence output
@@ -62,7 +63,7 @@ describe('auth login', () => {
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 2]');
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -75,7 +76,7 @@ describe('auth login', () => {
     `);
   });
 
-  test('validates the API key and writes it to a file', async () => {
+  test('validates the API key and writes it to the credentials file', async () => {
     const config = await Config.load();
     const command = new Login([], config as Config);
     vi.spyOn(command, 'log').mockReturnValue(undefined); // silence output
@@ -93,7 +94,7 @@ describe('auth login', () => {
 
     await command.run();
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -108,7 +109,9 @@ describe('auth login', () => {
     expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 
-    expect(fs.mkdir).toHaveBeenCalledWith(dirname(keyPath), { recursive: true });
-    expect(fs.writeFile).toHaveBeenCalledWith(keyPath, '1234abcdef', { mode: 0o600 });
+    expect(fs.mkdir).toHaveBeenCalledWith(dirname(credentialsPath), { recursive: true });
+    expect(fs.writeFile).toHaveBeenCalledWith(credentialsPath, ini.stringify({ default: { apiKey: '1234abcdef' } }), {
+      mode: 0o600
+    });
   });
 });
