@@ -74,6 +74,14 @@ describe('branches list', () => {
         [
           {
             "createdAt": "2020-01-01T00:00:00.000Z",
+            "git": {
+              "current": false,
+              "found": true,
+              "local": true,
+              "remotes": [
+                "origin",
+              ],
+            },
             "mapping": undefined,
             "name": "main",
           },
@@ -101,7 +109,7 @@ describe('branches list', () => {
             [
               "main",
               "Jan 1, 2020, 12:00 AM",
-              "-",
+              "main (Local)",
             ],
           ],
         ]

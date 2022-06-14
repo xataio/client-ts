@@ -812,7 +812,7 @@ describe('getBranch', () => {
 
     const getBranchOptions = {
       apiKey,
-      apiUrl: `https://${workspace}.xata.sh/db/${databaseName}`,
+      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
       fetchImpl: fetch
     };
 
