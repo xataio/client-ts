@@ -474,7 +474,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     const body = {
       filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
-      sort: data.sort ? buildSortFilter(data.sort) : undefined,
+      sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
       page: data.pagination,
       columns: data.columns
     };
@@ -584,7 +584,7 @@ export const initObject = <T>(db: Record<string, Repository<any>>, schema: Schem
 
         if (!linkTable) {
           console.error(`Failed to parse link for field ${column.name}`);
-        } else if (value && isObject(value)) {
+        } else if (isObject(value)) {
           result[column.name] = initObject(db, schema, linkTable, value);
         }
 
