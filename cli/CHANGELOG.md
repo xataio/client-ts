@@ -1,5 +1,27 @@
 # @xata.io/cli
 
+## 0.2.0
+
+### Minor Changes
+
+- [#267](https://github.com/xataio/client-ts/pull/267) [`926ba17`](https://github.com/xataio/client-ts/commit/926ba17ccdcb38d1ab2b25a4dcb3baa2c1862516) Thanks [@gimenete](https://github.com/gimenete)! - Added option to generate an API key on the fly
+
+* [#287](https://github.com/xataio/client-ts/pull/287) [`7a895a9`](https://github.com/xataio/client-ts/commit/7a895a93b2abf705ddd02c4789c20d818d6eee43) Thanks [@gimenete](https://github.com/gimenete)! - Added merge command
+
+- [#286](https://github.com/xataio/client-ts/pull/286) [`68b0469`](https://github.com/xataio/client-ts/commit/68b046911d2e40cd352377034e0dcdfd8dedb065) Thanks [@gimenete](https://github.com/gimenete)! - Added "schema dump" command
+
+* [#301](https://github.com/xataio/client-ts/pull/301) [`a44f091`](https://github.com/xataio/client-ts/commit/a44f091b729f36b3fcfaba63fc70b02f6798ff84) Thanks [@gimenete](https://github.com/gimenete)! - Changed the way API keys are stored
+
+### Patch Changes
+
+- [#291](https://github.com/xataio/client-ts/pull/291) [`e360b6d`](https://github.com/xataio/client-ts/commit/e360b6d4b52ff6be96d4a8ddde9620f77c547b62) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix some commands to read apiKey from file
+
+* [#292](https://github.com/xataio/client-ts/pull/292) [`8a82f24`](https://github.com/xataio/client-ts/commit/8a82f24a654bf462b7c59059e99f2c36183dd6cc) Thanks [@gimenete](https://github.com/gimenete)! - Fix authentication problem with the shell command
+
+- [#297](https://github.com/xataio/client-ts/pull/297) [`e382858`](https://github.com/xataio/client-ts/commit/e38285893afb7c1b2636b12850399c34fe6cd3ee) Thanks [@gimenete](https://github.com/gimenete)! - Fixes an error when JS is used for the code generator. Also improves the CLI interactivity.
+
+* [#271](https://github.com/xataio/client-ts/pull/271) [`0bb17b8`](https://github.com/xataio/client-ts/commit/0bb17b88d49f1c8be32d2d6b0b3a5918890876cb) Thanks [@SferaDev](https://github.com/SferaDev)! - Link and resolve branches from git
+
 ## 0.1.3
 
 ### Patch Changes

@@ -82,7 +82,7 @@ describe('codegen', () => {
 
     await command.run();
 
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalled();
     expect(fetchMock.mock.calls[0][0]).toEqual('https://test-r5vcv5.xata.sh/db/test:main');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 

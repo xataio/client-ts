@@ -14,6 +14,39 @@ export function listRemotes() {
   });
 }
 
+export function currentGitBranch() {
+  const out = run('git', ['branch', '--show-current']);
+  return out === '' ? null : out;
+}
+
+export function listBranches(): { name: string; local: boolean; remotes: string[] }[] {
+  const out = run('git', ['for-each-ref', '--format', '%(refname)']);
+  const items = out.split('\n').filter(Boolean);
+
+  const branches = items.reduce((acc, item) => {
+    const [_prefix, type, ...rest] = item.split(/\//);
+
+    switch (type) {
+      case 'heads': {
+        const name = rest.join('/');
+        acc[name] = { name, local: true, remotes: acc[name]?.remotes ?? [] };
+        break;
+      }
+      case 'remotes': {
+        const [remote, ...parts] = rest;
+        const name = parts.join('/');
+        const prev = acc[name] ?? { local: false, remotes: [] };
+        acc[name] = { name, local: prev.local, remotes: [...prev.remotes, remote] };
+        break;
+      }
+    }
+
+    return acc;
+  }, {} as Record<string, { name: string; local: boolean; remotes: string[] }>);
+
+  return Object.values(branches);
+}
+
 export function defaultGitBranch(remote?: string) {
   if (!remote) {
     const remotes = listRemotes();

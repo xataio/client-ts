@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.10.1
+
+### Patch Changes
+
+- [#271](https://github.com/xataio/client-ts/pull/271) [`0bb17b8`](https://github.com/xataio/client-ts/commit/0bb17b88d49f1c8be32d2d6b0b3a5918890876cb) Thanks [@SferaDev](https://github.com/SferaDev)! - Link and resolve branches from git
+
 ## 0.10.0
 
 ### Minor Changes
