@@ -65,5 +65,5 @@ const isDraft = (operation: unknown) => {
     return false;
   }
 
-  return operation['x-internal'] === true;
+  return operation['x-draft'] === true;
 };
