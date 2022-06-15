@@ -27,6 +27,7 @@ export function handler(privateKey: string, passphrase: string, callback: (apiKe
         .toString('utf8');
       res.writeHead(200);
       res.end('You are all set! You can close this tab now');
+      req.destroy();
       callback(apiKey);
     } catch (err) {
       res.writeHead(500);

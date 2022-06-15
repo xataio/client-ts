@@ -1,7 +1,7 @@
 import prompts from 'prompts';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
-import { readAPIKeyFromFile, writeAPIKey } from '../../key.js';
+import { getProfile, setProfile } from '../../credentials.js';
 
 export default class Login extends BaseCommand {
   static description = 'Authenticate with Xata';
@@ -13,8 +13,8 @@ export default class Login extends BaseCommand {
   static args = [];
 
   async run(): Promise<void> {
-    const existingKey = await readAPIKeyFromFile();
-    if (existingKey) {
+    const existingProfile = await getProfile(true);
+    if (existingProfile) {
       const { overwrite } = await prompts({
         type: 'confirm',
         name: 'overwrite',
@@ -38,7 +38,7 @@ export default class Login extends BaseCommand {
 
     await this.verifyAPIKey(key);
 
-    await writeAPIKey(key);
+    await setProfile({ apiKey: key });
 
     this.log('All set! you can now start using xata');
   }

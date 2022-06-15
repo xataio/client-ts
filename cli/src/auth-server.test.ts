@@ -111,7 +111,8 @@ describe('handler', () => {
 
     const req = {
       method: 'GET',
-      url: `/?key=${encodeURIComponent(encryptedKey.toString('base64'))}`
+      url: `/?key=${encodeURIComponent(encryptedKey.toString('base64'))}`,
+      destroy: vi.fn()
     } as unknown as IncomingMessage;
     const res = {
       writeHead: vi.fn(),
@@ -122,6 +123,7 @@ describe('handler', () => {
 
     expect(res.writeHead).toHaveBeenCalledWith(200);
     expect(res.end).toHaveBeenCalledWith('You are all set! You can close this tab now');
+    expect(req.destroy).toHaveBeenCalled();
     expect(callback).toHaveBeenCalledWith(apiKey);
   });
 });
