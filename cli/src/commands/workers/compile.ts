@@ -65,6 +65,7 @@ export default class WorkersCompile extends BaseCommand {
                     const code = path.toString();
                     const id = crypto.createHash('sha1').update(code).digest('hex').substring(0, 7);
 
+                    // TODO: Read old name, remove old hash, add new hash
                     functions[id] = { code, argsSize: args.length };
                   }
                 }
@@ -94,6 +95,9 @@ export default class WorkersCompile extends BaseCommand {
       });
 
       const { output } = await bundle.generate({});
+
+      // Update worker name to match `name-prefix-${hash}`
+      // Save in CF KV or in Xata-in-Xata: [name-prefix-${hash}, bundle]
 
       console.log({
         id,
