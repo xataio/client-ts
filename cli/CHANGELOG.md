@@ -22,10 +22,6 @@
 
 * [#271](https://github.com/xataio/client-ts/pull/271) [`0bb17b8`](https://github.com/xataio/client-ts/commit/0bb17b88d49f1c8be32d2d6b0b3a5918890876cb) Thanks [@SferaDev](https://github.com/SferaDev)! - Link and resolve branches from git
 
-* Updated dependencies [[`7a020de`](https://github.com/xataio/client-ts/commit/7a020decd283e07d4cd3ae12cbab98566b9b096a), [`0bb17b8`](https://github.com/xataio/client-ts/commit/0bb17b88d49f1c8be32d2d6b0b3a5918890876cb)]:
-  - @xata.io/codegen@0.10.1
-  - @xata.io/client@0.10.1
-
 ## 0.1.3
 
 ### Patch Changes
