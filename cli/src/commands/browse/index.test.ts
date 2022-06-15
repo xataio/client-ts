@@ -1,4 +1,5 @@
 import { Config } from '@oclif/core';
+import fetch from 'node-fetch';
 import open from 'open';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
@@ -17,10 +18,24 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 const openMock = open as unknown as ReturnType<typeof vi.fn>;
 
 describe('browse', () => {
   test('works with a branch defined by the context', async () => {
+    fetchMock.mockReturnValue({
+      ok: true,
+      json: async () => ({
+        branches: [
+          {
+            name: 'main',
+            createdAt: '2020-01-01T00:00:00.000Z'
+          }
+        ],
+        mapping: []
+      })
+    });
+
     const config = await Config.load();
     const command = new Browse([], config as Config);
     command.projectConfig = {
