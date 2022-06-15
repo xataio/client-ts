@@ -19,6 +19,8 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
+    "@babel/core": "^7.18.5",
+    "@babel/types": "^7.18.4",
     "@faker-js/faker": "^7.2.0",
     "@oclif/core": "^1.9.0",
     "@oclif/plugin-help": "^5",
@@ -31,6 +33,7 @@
     "@xata.io/shell": "^0.1.4",
     "ansi-regex": "^6.0.1",
     "chalk": "^5.0.1",
+    "chokidar": "^3.5.3",
     "clipboardy": "^3.0.0",
     "cosmiconfig": "^7.0.1",
     "deepmerge": "^4.2.2",
@@ -49,6 +52,7 @@
     "zod": "^3.17.3"
   },
   "devDependencies": {
+    "@types/babel__core": "^7.1.19",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7",
     "@types/relaxed-json": "^1.0.1",
