@@ -12,7 +12,7 @@ import RJSON from 'relaxed-json';
 import repl from 'repl';
 import { fileURLToPath } from 'url';
 import { BaseCommand } from '../../base.js';
-import { readAPIKey } from '../../key.js';
+import { getProfile } from '../../credentials.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -31,7 +31,7 @@ export default class Shell extends BaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Shell);
-    const apiKey = await readAPIKey();
+    const apiKey = (await getProfile())?.apiKey;
     if (!apiKey)
       this.error('No API key found. Either use the XATA_API_KEY environment variable or run `xata auth login`');
     const { protocol, host, databaseURL } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);

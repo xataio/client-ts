@@ -1,6 +1,7 @@
 import prompts from 'prompts';
+import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
-import { readAPIKeyFromFile, writeAPIKey } from '../../key.js';
+import { getProfile, setProfile } from '../../credentials.js';
 
 export default class Login extends BaseCommand {
   static description = 'Authenticate with Xata';
@@ -12,8 +13,8 @@ export default class Login extends BaseCommand {
   static args = [];
 
   async run(): Promise<void> {
-    const existingKey = await readAPIKeyFromFile();
-    if (existingKey) {
+    const existingProfile = await getProfile(true);
+    if (existingProfile) {
       const { overwrite } = await prompts({
         type: 'confirm',
         name: 'overwrite',
@@ -22,20 +23,37 @@ export default class Login extends BaseCommand {
       if (!overwrite) this.exit(2);
     }
 
-    this.log(
-      'You can generate a new API key at https://app.xata.io. You can learn more about API keys on our documentation site: https://docs.xata.io/concepts/api-keys'
-    );
-    const { key } = await prompts({
-      type: 'password',
-      name: 'key',
-      message: 'Introduce your API key:'
+    const { decision } = await prompts({
+      type: 'select',
+      name: 'decision',
+      message: 'Do you want to use an existing API key or create a new API key?',
+      choices: [
+        { title: 'Create a new API key opening a browser', value: 'create' },
+        { title: 'Existing API key', value: 'existing' }
+      ]
     });
-    if (!key) this.exit(2);
+    if (!decision) this.exit(2);
+
+    const key = await this.obtainKey(decision);
 
     await this.verifyAPIKey(key);
 
-    await writeAPIKey(key);
+    await setProfile({ apiKey: key });
 
     this.log('All set! you can now start using xata');
+  }
+
+  async obtainKey(decision: 'create' | 'existing') {
+    if (decision === 'create') {
+      return createAPIKeyThroughWebUI();
+    } else if (decision === 'existing') {
+      const { key } = await prompts({
+        type: 'password',
+        name: 'key',
+        message: 'Introduce your API key:'
+      });
+      if (!key) this.exit(2);
+      return key;
+    }
   }
 }

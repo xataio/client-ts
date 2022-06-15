@@ -7,7 +7,7 @@ import path from 'path';
 import prompts from 'prompts';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
-import { readAPIKey } from '../../key.js';
+import { getProfile } from '../../credentials.js';
 import { xataDatabaseSchema } from '../../schema.js';
 import Codegen from '../codegen/index.js';
 import EditSchema from '../schema/edit.js';
@@ -56,7 +56,7 @@ export default class Init extends BaseCommand {
 
     if (flags.schema) {
       const branch = await getCurrentBranchName();
-      await this.deploySchema(workspace, database, branch, flags.schema);
+      await this.readAndDeploySchema(workspace, database, branch, flags.schema);
     } else {
       await EditSchema.run([]);
     }
@@ -170,7 +170,7 @@ export default class Init extends BaseCommand {
 
   async writeEnvFile() {
     // TODO: generate a database-scoped API key
-    const apiKey = await readAPIKey();
+    const apiKey = (await getProfile())?.apiKey;
 
     let content = '';
     try {
@@ -183,93 +183,10 @@ export default class Init extends BaseCommand {
     await writeFile('.env', content);
   }
 
-  async deploySchema(workspace: string, database: string, branch: string, file: string) {
+  async readAndDeploySchema(workspace: string, database: string, branch: string, file: string) {
     this.log('Reading schema file...');
     const schema = await this.parseSchema(file);
-    const xata = await this.getXataClient();
-    const plan = await xata.branches.getBranchMigrationPlan(workspace, database, branch, schema);
-
-    const { newTables, removedTables, renamedTables, tableMigrations } = plan.migration;
-
-    function isEmpty(obj?: object) {
-      if (obj == null) return true;
-      if (Array.isArray(obj)) return obj.length === 0;
-      return Object.keys(obj).length === 0;
-    }
-
-    if (isEmpty(newTables) && isEmpty(removedTables) && isEmpty(renamedTables) && isEmpty(tableMigrations)) {
-      this.log('Your schema is up to date');
-    } else {
-      this.printMigration(plan.migration);
-
-      const { confirm } = await prompts({
-        type: 'confirm',
-        name: 'confirm',
-        message: `Apply the above migration?`,
-        initial: true
-      });
-      if (!confirm) return this.exit(1);
-
-      await xata.branches.executeBranchMigrationPlan(workspace, database, branch, plan);
-    }
-  }
-
-  printMigration(migration: Awaited<ReturnType<typeof getBranchMigrationPlan>>['migration']) {
-    if (migration.title) {
-      this.log(`* ${migration.title} [status: ${migration.status}]`);
-    }
-    if (migration.id) {
-      this.log(`ID: ${migration.id}`);
-    }
-    if (migration.lastGitRevision) {
-      this.log(`git commit sha: ${migration.lastGitRevision}`);
-      if (migration.localChanges) {
-        this.log(' + local changes');
-      }
-      this.log();
-    }
-    if (migration.createdAt) {
-      this.log(`Date ${this.formatDate(migration.createdAt)}`);
-    }
-
-    if (migration.newTables) {
-      for (const tableName of Object.keys(migration.newTables)) {
-        this.log(` ${chalk.bgWhite.blue('CREATE table ')} ${tableName}`);
-      }
-    }
-
-    if (migration.removedTables) {
-      for (const tableName of Object.keys(migration.removedTables)) {
-        this.log(` ${chalk.bgWhite.red('DELETE table ')} ${tableName}`);
-      }
-    }
-
-    if (migration.renamedTables) {
-      for (const tableName of Object.keys(migration.renamedTables)) {
-        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${tableName}`);
-      }
-    }
-
-    if (migration.tableMigrations) {
-      for (const [tableName, tableMigration] of Object.entries(migration.tableMigrations)) {
-        this.log(`Table ${tableName}:`);
-        if (tableMigration.newColumns) {
-          for (const columnName of Object.keys(tableMigration.newColumns)) {
-            this.log(` ${chalk.bgWhite.blue('ADD column ')} ${columnName}`);
-          }
-        }
-        if (tableMigration.removedColumns) {
-          for (const columnName of Object.keys(tableMigration.removedColumns)) {
-            this.log(` ${chalk.bgWhite.red('DELETE column ')} ${columnName}`);
-          }
-        }
-        if (tableMigration.modifiedColumns) {
-          for (const [, columnMigration] of Object.entries(tableMigration.modifiedColumns)) {
-            this.log(` ${chalk.bgWhite.red('MODIFY column ')} ${columnMigration.old.name}`);
-          }
-        }
-      }
-    }
+    await this.deploySchema(workspace, database, branch, schema);
   }
 
   async parseSchema(file: string) {

@@ -5,8 +5,9 @@ import { clearEnvVariables } from '../utils.test.js';
 import Login from './login.js';
 import prompts from 'prompts';
 import * as fs from 'fs/promises';
-import { keyPath } from '../../key.js';
+import { credentialsPath } from '../../credentials.js';
 import { dirname } from 'path';
+import ini from 'ini';
 
 vi.mock('node-fetch');
 vi.mock('prompts');
@@ -26,17 +27,17 @@ const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 
 describe('auth login', () => {
-  test('checks if a key exists and exists if the user does not want to overwrite', async () => {
+  test('checks if the profile exists and exits if the user does not want to overwrite', async () => {
     const config = await Config.load();
     const command = new Login([], config as Config);
 
-    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue('1234abcdef');
+    const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue(ini.stringify({ default: { apiKey: '1234abcdef' } }));
 
     promptsMock.mockReturnValue({ confirm: false });
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 2]');
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -49,7 +50,7 @@ describe('auth login', () => {
     `);
   });
 
-  test('exists if the user does not provide an API key', async () => {
+  test('exits if the user does not provide an API key', async () => {
     const config = await Config.load();
     const command = new Login([], config as Config);
     vi.spyOn(command, 'log').mockReturnValue(undefined); // silence output
@@ -62,20 +63,30 @@ describe('auth login', () => {
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 2]');
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
         {
-          "message": "Introduce your API key:",
-          "name": "key",
-          "type": "password",
+          "choices": [
+            {
+              "title": "Create a new API key opening a browser",
+              "value": "create",
+            },
+            {
+              "title": "Existing API key",
+              "value": "existing",
+            },
+          ],
+          "message": "Do you want to use an existing API key or create a new API key?",
+          "name": "decision",
+          "type": "select",
         },
       ]
     `);
   });
 
-  test('validates the API key and writes it to a file', async () => {
+  test('validates the API key and writes it to the credentials file', async () => {
     const config = await Config.load();
     const command = new Login([], config as Config);
     vi.spyOn(command, 'log').mockReturnValue(undefined); // silence output
@@ -84,7 +95,8 @@ describe('auth login', () => {
       throw new Error('ENOENT');
     });
 
-    promptsMock.mockReturnValue({ key: '1234abcdef' });
+    // We are mocking a response that is valid for the two prompts that will be rendered
+    promptsMock.mockReturnValue({ decision: 'existing', key: '1234abcdef' });
 
     fetchMock.mockReturnValue({
       ok: true,
@@ -93,9 +105,28 @@ describe('auth login', () => {
 
     await command.run();
 
-    expect(readFile).toHaveBeenCalledWith(keyPath, 'utf-8');
-    expect(promptsMock).toHaveBeenCalledOnce();
+    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
+    expect(promptsMock).toHaveBeenCalledTimes(2);
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
+      [
+        {
+          "choices": [
+            {
+              "title": "Create a new API key opening a browser",
+              "value": "create",
+            },
+            {
+              "title": "Existing API key",
+              "value": "existing",
+            },
+          ],
+          "message": "Do you want to use an existing API key or create a new API key?",
+          "name": "decision",
+          "type": "select",
+        },
+      ]
+    `);
+    expect(promptsMock.mock.calls[1]).toMatchInlineSnapshot(`
       [
         {
           "message": "Introduce your API key:",
@@ -108,7 +139,9 @@ describe('auth login', () => {
     expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 
-    expect(fs.mkdir).toHaveBeenCalledWith(dirname(keyPath), { recursive: true });
-    expect(fs.writeFile).toHaveBeenCalledWith(keyPath, '1234abcdef', { mode: 0o600 });
+    expect(fs.mkdir).toHaveBeenCalledWith(dirname(credentialsPath), { recursive: true });
+    expect(fs.writeFile).toHaveBeenCalledWith(credentialsPath, ini.stringify({ default: { apiKey: '1234abcdef' } }), {
+      mode: 0o600
+    });
   });
 });

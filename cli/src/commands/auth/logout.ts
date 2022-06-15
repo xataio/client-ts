@@ -1,6 +1,6 @@
 import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
-import { readAPIKeyFromFile, removeAPIKey } from '../../key.js';
+import { getProfile, removeProfile } from '../../credentials.js';
 
 export default class Logout extends BaseCommand {
   static description = 'Logout from Xata';
@@ -12,8 +12,8 @@ export default class Logout extends BaseCommand {
   static args = [];
 
   async run(): Promise<void> {
-    const existingKey = await readAPIKeyFromFile();
-    if (!existingKey) {
+    const existingProfile = await getProfile(true);
+    if (!existingProfile) {
       return this.error('You are not logged in');
     }
     const { confirm } = await prompts({
@@ -23,7 +23,7 @@ export default class Logout extends BaseCommand {
     });
     if (!confirm) this.exit(2);
 
-    await removeAPIKey();
+    await removeProfile();
 
     this.log('Logged out correctly');
   }

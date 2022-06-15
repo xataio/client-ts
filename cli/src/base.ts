@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { getCurrentBranchName, XataApiClient } from '@xata.io/client';
+import { getCurrentBranchName, Schemas, XataApiClient, XataApiClientOptions } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { cosmiconfigSync } from 'cosmiconfig';
@@ -11,7 +11,7 @@ import prompts from 'prompts';
 import slugify from 'slugify';
 import table from 'text-table';
 import { z, ZodError } from 'zod';
-import { readAPIKey } from './key.js';
+import { getProfile } from './credentials.js';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -70,9 +70,26 @@ export abstract class BaseCommand extends Command {
   async getXataClient(apiKey?: string | null) {
     if (this.#xataClient) return this.#xataClient;
 
-    apiKey = apiKey || (await readAPIKey());
-    if (!apiKey) this.error('Could not instantiate Xata client. No API key found.'); // TODO: give suggested next steps
-    this.#xataClient = new XataApiClient({ apiKey, fetch });
+    const profile = apiKey ? undefined : await getProfile();
+
+    apiKey = apiKey || profile?.apiKey;
+    if (!apiKey)
+      this.error(
+        'Could not instantiate Xata client. No API key found. Please run `xata auth login` or configure a project with `xata init`.'
+      );
+
+    let host: XataApiClientOptions['host'];
+    if (profile?.api) {
+      if (profile.api === 'staging') {
+        host = 'staging';
+      } else {
+        host = {
+          main: profile.api,
+          workspaces: profile.api
+        };
+      }
+    }
+    this.#xataClient = new XataApiClient({ apiKey, fetch, host });
     return this.#xataClient;
   }
 
@@ -285,16 +302,18 @@ export abstract class BaseCommand extends Command {
 
   async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, branchFlag?: string, allowCreate?: boolean) {
     const info = await this.getParsedDatabaseURL(databaseURLFlag, allowCreate);
+    const profile = await getProfile();
 
     let branch = '';
 
     if (branchFlag) {
       branch = branchFlag;
     } else if (info.source === 'config') {
+      // TODO: pass host information
       branch = await getCurrentBranchName({
         fetchImpl: fetch,
         databaseURL: info.databaseURL,
-        apiKey: (await readAPIKey()) ?? undefined
+        apiKey: profile?.apiKey ?? undefined
       });
     } else if (process.env.XATA_BRANCH !== undefined) {
       branch = process.env.XATA_BRANCH;
@@ -316,6 +335,95 @@ export abstract class BaseCommand extends Command {
       await writeFile(fullPath, JSON.stringify(content, null, 2));
     } else {
       await writeFile(fullPath, JSON.stringify(this.projectConfig, null, 2));
+    }
+  }
+
+  async deploySchema(workspace: string, database: string, branch: string, schema: Schemas.Schema) {
+    const xata = await this.getXataClient();
+    const plan = await xata.branches.getBranchMigrationPlan(workspace, database, branch, schema);
+
+    const { newTables, removedTables, renamedTables, tableMigrations } = plan.migration;
+
+    function isEmpty(obj?: object) {
+      if (obj == null) return true;
+      if (Array.isArray(obj)) return obj.length === 0;
+      return Object.keys(obj).length === 0;
+    }
+
+    if (isEmpty(newTables) && isEmpty(removedTables) && isEmpty(renamedTables) && isEmpty(tableMigrations)) {
+      this.log('Your schema is up to date');
+    } else {
+      this.printMigration(plan.migration);
+      this.log();
+
+      const { confirm } = await prompts({
+        type: 'confirm',
+        name: 'confirm',
+        message: `Do you want to apply the above migration into the ${branch} branch?`,
+        initial: true
+      });
+      if (!confirm) return this.exit(1);
+
+      await xata.branches.executeBranchMigrationPlan(workspace, database, branch, plan);
+    }
+  }
+
+  printMigration(migration: Schemas.BranchMigration) {
+    if (migration.title) {
+      this.log(`* ${migration.title} [status: ${migration.status}]`);
+    }
+    if (migration.id) {
+      this.log(`ID: ${migration.id}`);
+    }
+    if (migration.lastGitRevision) {
+      this.log(`git commit sha: ${migration.lastGitRevision}`);
+      if (migration.localChanges) {
+        this.log(' + local changes');
+      }
+      this.log();
+    }
+    if (migration.createdAt) {
+      this.log(`Date ${this.formatDate(migration.createdAt)}`);
+    }
+
+    if (migration.newTables) {
+      for (const tableName of Object.keys(migration.newTables)) {
+        this.log(` ${chalk.bgWhite.blue('CREATE table ')} ${tableName}`);
+      }
+    }
+
+    if (migration.removedTables) {
+      for (const tableName of Object.keys(migration.removedTables)) {
+        this.log(` ${chalk.bgWhite.red('DELETE table ')} ${tableName}`);
+      }
+    }
+
+    if (migration.renamedTables) {
+      for (const tableName of Object.keys(migration.renamedTables)) {
+        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${tableName}`);
+      }
+    }
+
+    if (migration.tableMigrations) {
+      for (const [tableName, tableMigration] of Object.entries(migration.tableMigrations)) {
+        this.log();
+        this.log(`Table ${tableName}:`);
+        if (tableMigration.newColumns) {
+          for (const columnName of Object.keys(tableMigration.newColumns)) {
+            this.log(` ${chalk.bgWhite.blue('ADD column ')} ${columnName}`);
+          }
+        }
+        if (tableMigration.removedColumns) {
+          for (const columnName of Object.keys(tableMigration.removedColumns)) {
+            this.log(` ${chalk.bgWhite.red('DELETE column ')} ${columnName}`);
+          }
+        }
+        if (tableMigration.modifiedColumns) {
+          for (const [, columnMigration] of Object.entries(tableMigration.modifiedColumns)) {
+            this.log(` ${chalk.bgWhite.red('MODIFY column ')} ${columnMigration.old.name}`);
+          }
+        }
+      }
     }
   }
 
