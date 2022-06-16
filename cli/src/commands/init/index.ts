@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { getBranchMigrationPlan, getCurrentBranchName } from '@xata.io/client';
+import { getCurrentBranchName } from '@xata.io/client';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { access, readFile, writeFile } from 'fs/promises';
@@ -155,15 +155,7 @@ export default class Init extends BaseCommand {
   async writeConfig() {
     // Reuse location when using --force
     if (!this.projectConfigLocation) {
-      const { location } = await prompts({
-        type: 'select',
-        name: 'location',
-        message: 'Select where to store your configuration',
-        choices: this.searchPlaces.map((place) => ({ title: place, value: place }))
-      });
-      if (!location) return this.error('You must select a location for the configuration file');
-
-      this.projectConfigLocation = path.join(process.cwd(), location);
+      this.projectConfigLocation = path.join(process.cwd(), this.searchPlaces[0]);
     }
     await this.updateConfig();
   }

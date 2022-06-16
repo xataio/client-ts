@@ -37,8 +37,9 @@ export abstract class BaseCommand extends Command {
 
   #xataClient?: XataApiClient;
 
+  // The first place is the one used by default when running `xata init`
   // In the future we can support YAML
-  searchPlaces = ['package.json', `.${moduleName}rc`, `.${moduleName}rc.json`];
+  searchPlaces = [`.${moduleName}rc`, `.${moduleName}rc.json`, 'package.json'];
 
   static databaseURLFlag = Flags.string({
     name: 'databaseurl',
