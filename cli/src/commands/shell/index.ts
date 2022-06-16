@@ -158,7 +158,11 @@ function postProcess(result: any, options: { table: boolean }, callback: (err: E
   const { table } = options;
   return callback(
     null,
-    table ? console.table(result) : console.log(util.inspect(result, { showHidden: false, depth: null, colors: true }))
+    table
+      ? console.table(result)
+      : typeof result === 'object'
+      ? console.log(util.inspect(result, { showHidden: false, depth: null, colors: true }))
+      : result
   );
 }
 
