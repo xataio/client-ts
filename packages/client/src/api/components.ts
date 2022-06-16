@@ -2713,11 +2713,17 @@ export type QueryTableVariables = {
  * {
  *   "filter": {
  *     "<column_name>": {
- *       "$pattern": "v*alue*"
+ *       "$pattern": "v*alu?"
  *     }
  *   }
  * }
  * ```
+ *
+ * The `$pattern` operator accepts two wildcard characters:
+ * * `*` matches zero or more characters
+ * * `?` matches exactly one character
+ *
+ * If you want to match a string that contains a wildcard character, you can escape them using a backslash (`\`). You can escape a backslash by usign another backslash.
  *
  * We could also have `$endsWith` and `$startsWith` operators:
  *
@@ -3031,6 +3037,63 @@ export const queryTable = (variables: QueryTableVariables) =>
     ...variables
   });
 
+export type SearchTablePathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /*
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+};
+
+export type SearchTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type SearchTableRequestBody = {
+  /*
+   * The query string.
+   *
+   * @minLength 1
+   */
+  query: string;
+  fuzziness?: Schemas.FuzzinessExpression;
+  filter?: Schemas.FilterExpression;
+};
+
+export type SearchTableVariables = {
+  body: SearchTableRequestBody;
+  pathParams: SearchTablePathParams;
+} & FetcherExtraProps;
+
+/**
+ * Run a free text search operation in a particular table.
+ *
+ * The endpoint accepts a `query` parameter that is used for the free text search and a set of structured filters (via the `filter` parameter) that are applied before the search. The `filter` parameter uses the same syntax as the [query endpoint](/api-reference/db/db_branch_name/tables/table_name/) with the following exceptions:
+ * * filters `$contains`, `$startsWith`, `$endsWith` don't work on columns of type `text`
+ * * filtering on columns of type `multiple` is currently unsupported
+ */
+export const searchTable = (variables: SearchTableVariables) =>
+  fetch<Responses.SearchResponse, SearchTableError, SearchTableRequestBody, {}, {}, SearchTablePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/search',
+    method: 'post',
+    ...variables
+  });
+
 export type SearchBranchPathParams = {
   /*
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -3065,17 +3128,7 @@ export type SearchBranchRequestBody = {
    * @minLength 1
    */
   query: string;
-  /*
-   * Maximum [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) for the search terms. The Levenshtein
-   * distance is the number of one charcter changes needed to make two strings equal. The default is 1, meaning that single
-   * character typos per word are tollerated by search. You can set it to 0 to remove the typo tollerance or set it to 2
-   * to allow two typos in a word.
-   *
-   * @default 1
-   * @maximum 2
-   * @minimum 0
-   */
-  fuzziness?: number;
+  fuzziness?: Schemas.FuzzinessExpression;
 };
 
 export type SearchBranchVariables = {
@@ -3151,6 +3204,7 @@ export const operationsByTag = {
     getRecord,
     bulkInsertTableRecords,
     queryTable,
+    searchTable,
     searchBranch
   }
 };
