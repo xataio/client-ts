@@ -7,7 +7,8 @@ import {
   insertRecord,
   insertRecordWithID,
   queryTable,
-  searchBranch,
+  Schemas,
+  searchTable,
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
@@ -17,6 +18,7 @@ import { XataPluginOptions } from '../plugins';
 import { isObject, isString } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { CacheImpl } from './cache';
+import { Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
@@ -146,7 +148,10 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param options The options to search with (like: fuzziness)
    * @returns The found records.
    */
-  abstract search(query: string, options?: { fuzziness?: number }): Promise<SelectedPick<Record, ['*']>[]>;
+  abstract search(
+    query: string,
+    options?: { fuzziness?: number; filter?: Filter<Record> }
+  ): Promise<SelectedPick<Record, ['*']>[]>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -453,12 +458,19 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
   }
 
-  async search(query: string, options: { fuzziness?: number } = {}): Promise<SelectedPick<Record, ['*']>[]> {
+  async search(
+    query: string,
+    options: { fuzziness?: number; filter?: Filter<Record> } = {}
+  ): Promise<SelectedPick<Record, ['*']>[]> {
     const fetchProps = await this.#getFetchProps();
 
-    const { records } = await searchBranch({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
-      body: { tables: [this.#table], query, fuzziness: options.fuzziness },
+    const { records } = await searchTable({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+      body: {
+        query,
+        fuzziness: options.fuzziness,
+        filter: options.filter as Schemas.FilterExpression
+      },
       ...fetchProps
     });
 
