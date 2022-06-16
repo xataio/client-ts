@@ -96,7 +96,7 @@ export default class Shell extends BaseCommand {
           if (['get', 'post', 'patch', 'put', 'delete'].includes(verb.toLowerCase())) {
             const body = rest.join(' ');
             return fetchApi(verb, path, body).then((result) => {
-              return postProcess(result, { table }, callback);
+              return postProcess(result, { table, deep: true }, callback);
             });
           }
 
@@ -154,13 +154,17 @@ function getDefaultEval() {
   return defaultEval;
 }
 
-function postProcess(result: any, options: { table: boolean }, callback: (err: Error | null, result: any) => void) {
+function postProcess(
+  result: any,
+  options: { table: boolean; deep?: boolean },
+  callback: (err: Error | null, result: any) => void
+) {
   const { table } = options;
   return callback(
     null,
     table
       ? console.table(result)
-      : typeof result === 'object'
+      : typeof result === 'object' && options.deep
       ? console.log(util.inspect(result, { showHidden: false, depth: null, colors: true }))
       : result
   );
