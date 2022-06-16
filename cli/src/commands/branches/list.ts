@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { BaseCommand } from '../../base.js';
-import { currentGitBranch, listBranches } from '../../git.js';
+import { currentGitBranch, isGitRepo, listBranches } from '../../git.js';
 export default class BranchesList extends BaseCommand {
   static description = 'List branches';
 
@@ -22,8 +22,10 @@ export default class BranchesList extends BaseCommand {
     const xata = await this.getXataClient();
     const { branches } = await xata.branches.getBranchList(workspace, database);
     const { mapping } = await xata.databases.getGitBranchesMapping(workspace, database);
-    const gitBranches = listBranches();
-    const current = currentGitBranch();
+
+    const git = isGitRepo();
+    const gitBranches = git ? listBranches() : [];
+    const current = git ? currentGitBranch() : null;
 
     const data = branches.map((branch) => {
       const { gitBranch } = mapping.find(({ xataBranch }) => xataBranch === branch.name) ?? {};
