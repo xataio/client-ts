@@ -11,6 +11,7 @@ import path, { dirname } from 'path';
 import RJSON from 'relaxed-json';
 import repl from 'repl';
 import { fileURLToPath } from 'url';
+import util from 'util';
 import { BaseCommand } from '../../base.js';
 import { getProfile } from '../../credentials.js';
 
@@ -155,7 +156,10 @@ function getDefaultEval() {
 
 function postProcess(result: any, options: { table: boolean }, callback: (err: Error | null, result: any) => void) {
   const { table } = options;
-  return callback(null, table ? console.table(result) : result);
+  return callback(
+    null,
+    table ? console.table(result) : console.log(util.inspect(result, { showHidden: false, depth: null, colors: true }))
+  );
 }
 
 async function setupHistory(replServer: repl.REPLServer) {
