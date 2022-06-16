@@ -10,7 +10,6 @@ import { BaseCommand } from '../../base.js';
 import { getProfile } from '../../credentials.js';
 import { xataDatabaseSchema } from '../../schema.js';
 import Codegen from '../codegen/index.js';
-import EditSchema from '../schema/edit.js';
 
 export default class Init extends BaseCommand {
   static description = 'Configure your working directory to work with a Xata database';
@@ -27,9 +26,7 @@ export default class Init extends BaseCommand {
     })
   };
 
-  static args = [
-    // TODO: add an arg for initial schema
-  ];
+  static args = [];
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Init);
@@ -57,13 +54,17 @@ export default class Init extends BaseCommand {
     if (flags.schema) {
       const branch = await getCurrentBranchName();
       await this.readAndDeploySchema(workspace, database, branch, flags.schema);
-    } else {
-      await EditSchema.run([]);
     }
 
     await Codegen.runIfConfigured(this.projectConfig);
 
     this.log('Done. You are all set!');
+
+    this.log(
+      `Run ${chalk.bold('xata browse')} to edit the schema via UI, or ${chalk.bold(
+        'xata schema edit'
+      )} to edit the schema in the shell.`
+    );
   }
 
   async installSDK() {
