@@ -2,4 +2,4 @@
 '@xata.io/cli': patch
 ---
 
-Pretty print objects of all depths
+Shell: Pretty print objects of all depths
