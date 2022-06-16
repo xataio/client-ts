@@ -11,6 +11,7 @@ import path, { dirname } from 'path';
 import RJSON from 'relaxed-json';
 import repl from 'repl';
 import { fileURLToPath } from 'url';
+import util from 'util';
 import { BaseCommand } from '../../base.js';
 import { getProfile } from '../../credentials.js';
 
@@ -57,6 +58,14 @@ export default class Shell extends BaseCommand {
       // TODO: Add support for staging, how?
       const baseUrl = path.startsWith('/db') ? `${protocol}//${host}` : 'https://api.xata.io';
 
+      const parse = () => {
+        try {
+          return JSON.stringify(RJSON.parse(body));
+        } catch (error) {
+          return undefined;
+        }
+      };
+
       try {
         const response = await fetch(`${baseUrl}${path}`, {
           method,
@@ -64,7 +73,7 @@ export default class Shell extends BaseCommand {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiKey}`
           },
-          body: body ? JSON.stringify(RJSON.parse(body)) : undefined
+          body: parse()
         });
 
         return response.json();
@@ -111,6 +120,11 @@ export default class Shell extends BaseCommand {
 
     replServer.context.xata = new XataClient({ fetch, apiKey });
     replServer.context.api = new XataApiClient({ fetch, apiKey });
+    replServer.context.api.GET = (path: string) => fetchApi('GET', path);
+    replServer.context.api.POST = (path: string, body?: any) => fetchApi('POST', path, JSON.stringify(body));
+    replServer.context.api.PATCH = (path: string, body?: any) => fetchApi('PATCH', path, JSON.stringify(body));
+    replServer.context.api.PUT = (path: string, body?: any) => fetchApi('PUT', path, JSON.stringify(body));
+    replServer.context.api.DELETE = (path: string) => fetchApi('DELETE', path);
 
     await setupHistory(replServer);
 
@@ -142,7 +156,14 @@ function getDefaultEval() {
 
 function postProcess(result: any, options: { table: boolean }, callback: (err: Error | null, result: any) => void) {
   const { table } = options;
-  return callback(null, table ? console.table(result) : result);
+  return callback(
+    null,
+    table
+      ? console.table(result)
+      : typeof result === 'object'
+      ? console.log(util.inspect(result, { showHidden: false, depth: null, colors: true }))
+      : result
+  );
 }
 
 async function setupHistory(replServer: repl.REPLServer) {
