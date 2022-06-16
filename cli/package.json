@@ -78,7 +78,10 @@
       "hello": {
         "description": "Say hello to the world and others"
       }
-    }
+    },
+    "additionalHelpFlags": [
+      "-h"
+    ]
   },
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
