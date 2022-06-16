@@ -394,14 +394,14 @@ export abstract class BaseCommand extends Command {
     }
 
     if (migration.removedTables) {
-      for (const tableName of Object.keys(migration.removedTables)) {
+      for (const tableName of migration.removedTables) {
         this.log(` ${chalk.bgWhite.red('DELETE table ')} ${tableName}`);
       }
     }
 
     if (migration.renamedTables) {
-      for (const tableName of Object.keys(migration.renamedTables)) {
-        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${tableName}`);
+      for (const renamedTable of migration.renamedTables) {
+        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${renamedTable.oldName} to ${renamedTable.newName}`);
       }
     }
 
@@ -415,12 +415,12 @@ export abstract class BaseCommand extends Command {
           }
         }
         if (tableMigration.removedColumns) {
-          for (const columnName of Object.keys(tableMigration.removedColumns)) {
+          for (const columnName of tableMigration.removedColumns) {
             this.log(` ${chalk.bgWhite.red('DELETE column ')} ${columnName}`);
           }
         }
         if (tableMigration.modifiedColumns) {
-          for (const [, columnMigration] of Object.entries(tableMigration.modifiedColumns)) {
+          for (const columnMigration of tableMigration.modifiedColumns) {
             this.log(` ${chalk.bgWhite.red('MODIFY column ')} ${columnMigration.old.name}`);
           }
         }

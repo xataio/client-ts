@@ -38,6 +38,8 @@ export default class Init extends BaseCommand {
         );
       } else {
         this.warn(`Will overwrite ${this.projectConfigLocation} because ${chalk.bold('--force')} is being used`);
+        // Clean up the project ocnfiugration so the user is asked for workspace and database again
+        this.projectConfig = undefined;
       }
     }
 
@@ -58,10 +60,8 @@ export default class Init extends BaseCommand {
 
     await Codegen.runIfConfigured(this.projectConfig);
 
-    this.log('Done. You are all set!');
-
     this.log(
-      `Run ${chalk.bold('xata browse')} to edit the schema via UI, or ${chalk.bold(
+      `You are all set! Run ${chalk.bold('xata browse')} to edit the schema via UI, or ${chalk.bold(
         'xata schema edit'
       )} to edit the schema in the shell.`
     );
