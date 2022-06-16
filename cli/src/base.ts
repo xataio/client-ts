@@ -289,6 +289,14 @@ export abstract class BaseCommand extends Command {
   async getParsedDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
     const { databaseURL, source } = await this.getDatabaseURL(databaseURLFlag, allowCreate);
 
+    const info = this.parseDatabaseURL(databaseURL);
+    return {
+      ...info,
+      source
+    };
+  }
+
+  parseDatabaseURL(databaseURL: string) {
     const [protocol, , host, , database] = databaseURL.split('/');
     const [workspace] = (host || '').split('.');
     return {
@@ -296,8 +304,7 @@ export abstract class BaseCommand extends Command {
       protocol,
       host,
       database,
-      workspace,
-      source
+      workspace
     };
   }
 
