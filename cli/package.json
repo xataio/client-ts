@@ -75,10 +75,28 @@
     ],
     "topicSeparator": " ",
     "topics": {
-      "hello": {
-        "description": "Say hello to the world and others"
+      "auth": {
+        "description": "Authenticate with Xata.io, logout or check the status of your auth configuration"
+      },
+      "branches": {
+        "description": "Create, list or delete branches"
+      },
+      "config": {
+        "description": "Get or set configuration values"
+      },
+      "dbs": {
+        "description": "Create, list or delete databases"
+      },
+      "schema": {
+        "description": "Edit the schema interactively or dump it to a JSON file"
+      },
+      "workspaces": {
+        "description": "Create, list or delete workspaces"
       }
-    }
+    },
+    "additionalHelpFlags": [
+      "-h"
+    ]
   },
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",

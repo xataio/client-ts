@@ -37,8 +37,9 @@ export abstract class BaseCommand extends Command {
 
   #xataClient?: XataApiClient;
 
+  // The first place is the one used by default when running `xata init`
   // In the future we can support YAML
-  searchPlaces = ['package.json', `.${moduleName}rc`, `.${moduleName}rc.json`];
+  searchPlaces = [`.${moduleName}rc`, `.${moduleName}rc.json`, 'package.json'];
 
   static databaseURLFlag = Flags.string({
     name: 'databaseurl',
@@ -288,6 +289,14 @@ export abstract class BaseCommand extends Command {
   async getParsedDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
     const { databaseURL, source } = await this.getDatabaseURL(databaseURLFlag, allowCreate);
 
+    const info = this.parseDatabaseURL(databaseURL);
+    return {
+      ...info,
+      source
+    };
+  }
+
+  parseDatabaseURL(databaseURL: string) {
     const [protocol, , host, , database] = databaseURL.split('/');
     const [workspace] = (host || '').split('.');
     return {
@@ -295,8 +304,7 @@ export abstract class BaseCommand extends Command {
       protocol,
       host,
       database,
-      workspace,
-      source
+      workspace
     };
   }
 
@@ -393,14 +401,14 @@ export abstract class BaseCommand extends Command {
     }
 
     if (migration.removedTables) {
-      for (const tableName of Object.keys(migration.removedTables)) {
+      for (const tableName of migration.removedTables) {
         this.log(` ${chalk.bgWhite.red('DELETE table ')} ${tableName}`);
       }
     }
 
     if (migration.renamedTables) {
-      for (const tableName of Object.keys(migration.renamedTables)) {
-        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${tableName}`);
+      for (const renamedTable of migration.renamedTables) {
+        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${renamedTable.oldName} to ${renamedTable.newName}`);
       }
     }
 
@@ -414,12 +422,12 @@ export abstract class BaseCommand extends Command {
           }
         }
         if (tableMigration.removedColumns) {
-          for (const columnName of Object.keys(tableMigration.removedColumns)) {
+          for (const columnName of tableMigration.removedColumns) {
             this.log(` ${chalk.bgWhite.red('DELETE column ')} ${columnName}`);
           }
         }
         if (tableMigration.modifiedColumns) {
-          for (const [, columnMigration] of Object.entries(tableMigration.modifiedColumns)) {
+          for (const columnMigration of tableMigration.modifiedColumns) {
             this.log(` ${chalk.bgWhite.red('MODIFY column ')} ${columnMigration.old.name}`);
           }
         }

@@ -1,5 +1,15 @@
 import { spawnSync } from 'child_process';
 
+export function isGitRepo() {
+  try {
+    run('git', ['status', '--porcelain=v1']);
+    return true;
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('not a git repository')) return false;
+    throw err;
+  }
+}
+
 export function isWorkingDirClean() {
   const out = run('git', ['status', '--porcelain=v1']);
   return out === '';
