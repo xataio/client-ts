@@ -29,6 +29,8 @@ export default class WorkersCompile extends BaseCommand {
       ignored: [/(^|[/\\])\../, 'dist/*', 'node_modules/*']
     });
 
+    // npx wrangler dev node_modules/@xata.io/client/xata-workers.ts --local --port 8987
+
     watcher
       .on('add', (path) => this.#compile(path))
       .on('change', (path) => this.#compile(path))
