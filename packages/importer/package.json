@@ -32,12 +32,12 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
-    "@xata.io/client": "^0.10.0",
+    "@xata.io/client": "^0.10.1",
     "camelcase": "^7.0.0",
     "commander": "^9.3.0",
     "cross-fetch": "^3.1.5",
     "csvtojson": "^2.0.10",
-    "inquirer": "^8.2.4",
+    "inquirer": "^9.0.0",
     "ora": "^6.1.0",
     "transliteration": "^2.2.0",
     "zod": "^3.17.3"
