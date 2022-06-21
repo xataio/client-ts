@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.10.2
+
+### Patch Changes
+
+- [#312](https://github.com/xataio/client-ts/pull/312) [`0edf1af`](https://github.com/xataio/client-ts/commit/0edf1af2205c4761d53a02c74ddaab3168d69775) Thanks [@SferaDev](https://github.com/SferaDev)! - Add filtering to search by table
+
+* [#312](https://github.com/xataio/client-ts/pull/312) [`66ad7cc`](https://github.com/xataio/client-ts/commit/66ad7cc0365046c5d039c37117feac04428d8373) Thanks [@SferaDev](https://github.com/SferaDev)! - Add new API method for searching in a given table
+
 ## 0.10.1
 
 ### Patch Changes

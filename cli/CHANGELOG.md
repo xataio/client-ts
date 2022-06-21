@@ -1,5 +1,17 @@
 # @xata.io/cli
 
+## 0.2.1
+
+### Patch Changes
+
+- [#309](https://github.com/xataio/client-ts/pull/309) [`0b87c1a`](https://github.com/xataio/client-ts/commit/0b87c1a802ccf3ea04547d3d4c570b66f7af3887) Thanks [@SferaDev](https://github.com/SferaDev)! - Shell: Pretty print objects of all depths
+
+* [#309](https://github.com/xataio/client-ts/pull/309) [`c03fef8`](https://github.com/xataio/client-ts/commit/c03fef8164f12ce6e4a2045864a1b9c19542545b) Thanks [@SferaDev](https://github.com/SferaDev)! - Shell: Fix empty body sent
+
+- [#311](https://github.com/xataio/client-ts/pull/311) [`0d74b5a`](https://github.com/xataio/client-ts/commit/0d74b5a3469e7ea468afea0b3d99fe62de71c252) Thanks [@gimenete](https://github.com/gimenete)! - Some fixes to the xata init and merge commands
+
+* [#309](https://github.com/xataio/client-ts/pull/309) [`b643d61`](https://github.com/xataio/client-ts/commit/b643d61050c0c22887a6adf8d75e6d0867d66023) Thanks [@SferaDev](https://github.com/SferaDev)! - Shell: Add HTTP operations to api.\*
+
 ## 0.2.0
 
 ### Minor Changes
