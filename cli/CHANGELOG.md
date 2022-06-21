@@ -12,9 +12,6 @@
 
 * [#309](https://github.com/xataio/client-ts/pull/309) [`b643d61`](https://github.com/xataio/client-ts/commit/b643d61050c0c22887a6adf8d75e6d0867d66023) Thanks [@SferaDev](https://github.com/SferaDev)! - Shell: Add HTTP operations to api.\*
 
-* Updated dependencies [[`0edf1af`](https://github.com/xataio/client-ts/commit/0edf1af2205c4761d53a02c74ddaab3168d69775), [`66ad7cc`](https://github.com/xataio/client-ts/commit/66ad7cc0365046c5d039c37117feac04428d8373)]:
-  - @xata.io/client@0.10.2
-
 ## 0.2.0
 
 ### Minor Changes
