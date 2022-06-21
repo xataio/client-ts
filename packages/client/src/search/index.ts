@@ -2,14 +2,22 @@ import { getBranchDetails, searchBranch } from '../api';
 import { Schema } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
+import { Filter } from '../schema/filters';
 import { BaseData, XataRecord } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
-import { GetArrayInnerType, StringKeys, Values } from '../util/types';
+import { GetArrayInnerType, StringKeys, UnionToIntersection, Values } from '../util/types';
 
 export type SearchOptions<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = {
   fuzziness?: number;
   tables?: Tables[];
+  filter?: UnionToIntersection<
+    Values<{
+      [Model in GetArrayInnerType<NonNullable<NonNullable<Tables[]>>>]: {
+        [Key in Model]?: Filter<Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>>;
+      };
+    }>
+  >;
 };
 
 export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
@@ -88,7 +96,7 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
   async #search<Tables extends StringKeys<Schemas>>(
     query: string,
-    options: { fuzziness?: number; tables?: Tables[] },
+    options: SearchOptions<Schemas, Tables>,
     getFetchProps: XataPluginOptions['getFetchProps']
   ) {
     const fetchProps = await getFetchProps();
