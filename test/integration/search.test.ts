@@ -169,16 +169,16 @@ describe('search', () => {
 
   test.skip('search all with filters', async () => {
     const results = await client.search.all('fruits', {
-      filter: { users: { full_name: 'Team fruits' } }
+      filter: { teams: { name: 'Team fruits' } }
     });
 
-    for (const result of results) {
-      expect(result.table).toBe('users');
-      if (result.table === 'users') {
-        expect(result.record.id).toBeDefined();
-        expect(result.record.read).toBeDefined();
-        expect(result.record.full_name?.includes('fruits')).toBeTruthy();
-      }
+    expect(results.length).toBe(1);
+    expect(results[0].table).toBe('teams');
+
+    if (results[0].table === 'teams') {
+      expect(results[0].record.id).toBeDefined();
+      expect(results[0].record.read).toBeDefined();
+      expect(results[0].record.name?.includes('fruits')).toBeTruthy();
     }
   });
 });
