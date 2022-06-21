@@ -28,10 +28,7 @@ describe('API Client Integration Tests', () => {
 
     await client.workspaces.deleteWorkspace(workspace.id);
 
-    await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toHaveProperty(
-      'message',
-      'no access to the workspace'
-    );
+    await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toHaveProperty('message');
   });
 
   test('Create workspace with database, branch, table and records', async () => {
