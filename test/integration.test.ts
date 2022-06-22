@@ -796,6 +796,39 @@ describe('record create or update', () => {
   });
 });
 
+describe('record read', () => {
+  test('read single team with id', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    const copy = await client.db.teams.read(team.id);
+    expect(copy).toBeDefined();
+    expect(copy?.id).toBe(team.id);
+  });
+
+  test('read multiple teams with id list', async () => {
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    const copies = await client.db.teams.read(teams.map((team) => team.id));
+    expect(copies).toHaveLength(2);
+    expect(copies[0]?.id).toBe(teams[0].id);
+    expect(copies[1]?.id).toBe(teams[1].id);
+  });
+
+  test("read single and return null if team doesn't exist", async () => {
+    const copy = await client.db.teams.read('does-not-exist');
+    expect(copy).toBeNull();
+  });
+
+  test("read multiple teams with id list and ignores a team if doesn't exist", async () => {
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    const copies = await client.db.teams.read(teams.map((team) => team.id).concat(['does-not-exist']));
+    expect(copies).toHaveLength(2);
+    expect(copies[0]?.id).toBe(teams[0].id);
+    expect(copies[1]?.id).toBe(teams[1].id);
+  });
+});
+
 describe('getBranch', () => {
   const envValues = { ...process.env };
   const gitBranch = execSync('git branch --show-current', { encoding: 'utf-8' }).trim();

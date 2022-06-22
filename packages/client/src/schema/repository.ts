@@ -64,6 +64,13 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract read(id: string): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
 
   /**
+   * Queries multiple records from the table given their unique id.
+   * @param ids The unique ids array.
+   * @returns The persisted records for the given ids (if a record could not be found it is not returned).
+   */
+  abstract read(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+
+  /**
    * Partially update a single record.
    * @param object An object with its id and the columns to be updated.
    * @returns The full persisted record.
@@ -287,26 +294,36 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
-  async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
-    const cacheRecord = await this.#getCacheRecord(recordId);
-    if (cacheRecord) return cacheRecord;
+  async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null>;
+  async read(recordIds: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async read(a: string | string[]) {
+    // Read many records
+    if (Array.isArray(a)) {
+      return this.getAll({ filter: { id: { $any: a } } });
+    }
 
-    const fetchProps = await this.#getFetchProps();
+    // Read one record
+    if (isString(a)) {
+      const cacheRecord = await this.#getCacheRecord(a);
+      if (cacheRecord) return cacheRecord;
 
-    try {
-      const response = await getRecord({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-        ...fetchProps
-      });
+      const fetchProps = await this.#getFetchProps();
 
-      const schema = await this.#getSchema();
-      return initObject(this.db, schema, this.#table, response);
-    } catch (e) {
-      if (isObject(e) && e.status === 404) {
-        return null;
+      try {
+        const response = await getRecord({
+          pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId: a },
+          ...fetchProps
+        });
+
+        const schema = await this.#getSchema();
+        return initObject(this.db, schema, this.#table, response);
+      } catch (e) {
+        if (isObject(e) && e.status === 404) {
+          return null;
+        }
+
+        throw e;
       }
-
-      throw e;
     }
   }
 
