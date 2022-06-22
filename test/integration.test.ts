@@ -2,16 +2,15 @@ import { execSync } from 'child_process';
 import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../packages/client/src';
-import { FetchImpl } from '../packages/client/src/api/fetcher';
-import { getCurrentBranchName } from '../packages/client/src/util/config';
 import {
   Paginable,
   PAGINATION_DEFAULT_SIZE,
   PAGINATION_MAX_OFFSET,
   PAGINATION_MAX_SIZE
 } from '../packages/client/src/schema/pagination';
+import { getCurrentBranchName } from '../packages/client/src/util/config';
 import { User, UserRecord, XataClient } from '../packages/codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from './mock_data';
 
@@ -266,7 +265,7 @@ describe('integration tests', () => {
     expect(page2And3.records).toEqual([...page2.records, ...page3.records]);
   });
 
-  test('fails if sending cursor with sorting', async () => {
+  test('we ignore sorting if sending it with cursor', async () => {
     const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
     const { records: records1, meta } = page1;
     const page2 = await page1.nextPage();
@@ -300,7 +299,7 @@ describe('integration tests', () => {
         pagination: { after: meta.page.cursor },
         sort: { column: 'full_name', direction: 'asc' }
       })
-    ).rejects.toThrow();
+    ).resolves.toBeDefined();
   });
 
   test('repository implements pagination', async () => {

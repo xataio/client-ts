@@ -19,7 +19,7 @@ import { isObject, isString } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { CacheImpl } from './cache';
 import { Filter } from './filters';
-import { Page } from './pagination';
+import { isCursorPaginationOptions, Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectedPick } from './selection';
@@ -484,9 +484,14 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     const data = query.getQueryOptions();
 
+    const filter = Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined;
+    const sort = data.sort !== undefined ? buildSortFilter(data.sort) : undefined;
+    // Ignore filters and sorting when doing cursor pagination
+    const isCursorPagination = isCursorPaginationOptions(data.pagination);
+
     const body = {
-      filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
-      sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
+      filter: isCursorPagination ? undefined : filter,
+      sort: isCursorPagination ? undefined : sort,
       page: data.pagination,
       columns: data.columns
     };

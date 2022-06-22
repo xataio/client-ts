@@ -217,16 +217,17 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     options: QueryOptions<Record> & { batchSize?: number } = {}
   ): AsyncGenerator<Result[]> {
     const { batchSize = 1 } = options;
-    let offset = 0;
-    let end = false;
 
-    while (!end) {
-      const { records, meta } = await this.getPaginated({ ...options, pagination: { size: batchSize, offset } });
-      // Method overloading does not provide type inference for the return type.
-      yield records as unknown as Result[];
+    let page = await this.getPaginated({ ...options, pagination: { size: batchSize, offset: 0 } });
+    let more = page.hasNextPage();
 
-      offset += batchSize;
-      end = !meta.page.more;
+    yield page.records as unknown as Result[];
+
+    while (more) {
+      page = await page.nextPage();
+      more = page.hasNextPage();
+
+      yield page.records as unknown as Result[];
     }
   }
 
