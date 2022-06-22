@@ -6,6 +6,7 @@ import { access, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import prompts from 'prompts';
 import which from 'which';
+import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
 import { getProfile } from '../../credentials.js';
 import { xataDatabaseSchema } from '../../schema.js';
@@ -51,7 +52,7 @@ export default class Init extends BaseCommand {
 
     await this.writeConfig();
 
-    await this.writeEnvFile();
+    await this.writeEnvFile(workspace, database);
 
     if (flags.schema) {
       const branch = await getCurrentBranchName();
@@ -161,9 +162,20 @@ export default class Init extends BaseCommand {
     await this.updateConfig();
   }
 
-  async writeEnvFile() {
+  async writeEnvFile(workspace: string, database: string) {
     // TODO: generate a database-scoped API key
-    const apiKey = (await getProfile())?.apiKey;
+    let apiKey = (await getProfile())?.apiKey;
+
+    if (!apiKey) {
+      apiKey = await createAPIKeyThroughWebUI();
+    }
+
+    const fallbackBranch = await this.getBranch(workspace, database, {
+      allowEmpty: true,
+      allowCreate: true,
+      title:
+        'Choose a default development branch. This will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitely)'
+    });
 
     let content = '';
     try {
@@ -172,7 +184,11 @@ export default class Init extends BaseCommand {
     } catch (err) {
       // ignore
     }
-    content += `\n\nXATA_API_KEY=${apiKey}`;
+    content += '\n\n';
+    content += `XATA_API_KEY=${apiKey}\n`;
+    if (fallbackBranch) {
+      content += `XATA_FALLBACK_BRANCH=${fallbackBranch}\n`;
+    }
     await writeFile('.env', content);
   }
 
