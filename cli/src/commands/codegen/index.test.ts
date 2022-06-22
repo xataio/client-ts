@@ -43,7 +43,7 @@ describe('codegen', () => {
     });
 
     const config = await Config.load();
-    const command = new Codegen(['xata.ts'], config as Config);
+    const command = new Codegen(['--out', 'xata.ts'], config as Config);
     command.projectConfig = {
       databaseURL: 'https://test-r5vcv5.xata.sh/db/test',
       codegen: {
@@ -69,7 +69,7 @@ describe('codegen', () => {
     });
 
     const config = await Config.load();
-    const command = new Codegen([`src/xata.${ext}`], config as Config);
+    const command = new Codegen(['--out', `src/xata.${ext}`], config as Config);
     command.projectConfig = {
       databaseURL: 'https://test-r5vcv5.xata.sh/db/test',
       codegen: {
