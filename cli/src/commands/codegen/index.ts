@@ -25,6 +25,7 @@ export default class Codegen extends BaseCommand {
       default: false
     }),
     out: Flags.string({
+      char: 'o',
       description: 'Output file path'
     })
   };
