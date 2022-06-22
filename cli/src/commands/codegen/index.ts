@@ -1,4 +1,5 @@
-import { generateFromContext } from '@xata.io/codegen';
+import { Flags } from '@oclif/core';
+import { generateFromContext, Language } from '@xata.io/codegen';
 import chalk from 'chalk';
 import { mkdir, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
@@ -17,13 +18,23 @@ export default class Codegen extends BaseCommand {
   static examples = [];
 
   static flags = {
-    ...this.commonFlags
+    ...this.commonFlags,
+    watch: Flags.boolean({
+      char: 'w',
+      description: 'Watch for changes and recompile',
+      default: false
+    }),
+    out: Flags.string({
+      description: 'Output file path'
+    })
   };
 
   static args = [];
 
   async run(): Promise<void> {
-    const output = this.projectConfig?.codegen?.output;
+    const { flags } = await this.parse(Codegen);
+
+    const output = flags.out ?? this.projectConfig?.codegen?.output;
 
     if (!output) {
       return this.error(
@@ -45,17 +56,35 @@ export default class Codegen extends BaseCommand {
     }
 
     const { databaseURL } = await this.getDatabaseURL();
-    const result = await generateFromContext(language, { fetchImpl: fetch, databaseURL });
-    const code = result.transpiled;
-    const declarations = result.declarations;
+
+    if (flags.watch) {
+      this.log(`Running codegen in watch mode updating your XataClient at ./${relative(process.cwd(), output)}`);
+
+      // TODO: Implement a web-socket based watcher (not ready in the backend yet)
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        await this.generate({ databaseURL, language, dir, output });
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    } else {
+      await this.generate({ databaseURL, language, dir, output });
+      this.log(`Your XataClient is generated at ./${relative(process.cwd(), output)}`);
+    }
+  }
+
+  async generate(options: { databaseURL: string; language: Language; dir: string; output: string }): Promise<void> {
+    const { databaseURL, language, dir, output } = options;
+
+    const { transpiled: code, declarations } = await generateFromContext(language, {
+      fetchImpl: fetch,
+      databaseURL
+    });
 
     await mkdir(dir, { recursive: true });
     await writeFile(output, code);
     if (declarations && this.projectConfig?.codegen?.declarations) {
       await writeFile(path.join(dir, 'types.d.ts'), declarations);
     }
-
-    this.log(`Your XataClient is generated at ./${relative(process.cwd(), output)}`);
   }
 
   static async runIfConfigured(projectConfig?: ProjectConfig) {
