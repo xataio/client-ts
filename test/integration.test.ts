@@ -639,6 +639,11 @@ describe('record creation', () => {
       })
     ).rejects.toMatchInlineSnapshot(`[Error: Invalid arguments for create method]`);
   });
+
+  test("create multiple with empty array doesn't create anything", async () => {
+    const teams = await client.db.teams.create([]);
+    expect(teams).toHaveLength(0);
+  });
 });
 
 describe('record update', () => {
@@ -681,6 +686,11 @@ describe('record update', () => {
 
     expect(updatedTeam.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
+  });
+
+  test("update many with empty array doesn't update anything", async () => {
+    const updatedTeams = await client.db.teams.update([]);
+    expect(updatedTeams).toHaveLength(0);
   });
 });
 
@@ -794,6 +804,11 @@ describe('record create or update', () => {
     expect(apiTeams[0].name).toBe('Team boats');
     expect(apiTeams[1].name).toBe('Team boats');
   });
+
+  test("create or update many with empty array doesn't create or update anything", async () => {
+    const updatedTeams = await client.db.teams.createOrUpdate([]);
+    expect(updatedTeams).toHaveLength(0);
+  });
 });
 
 describe('record read', () => {
@@ -826,6 +841,16 @@ describe('record read', () => {
     expect(copies).toHaveLength(2);
     expect(copies[0]?.id).toBe(teams[0].id);
     expect(copies[1]?.id).toBe(teams[1].id);
+  });
+
+  test('read multiple with empty array', async () => {
+    const copies = await client.db.teams.read([]);
+    expect(copies).toHaveLength(0);
+  });
+
+  test('read multiple with falsy values, throws', async () => {
+    // @ts-ignore
+    expect(client.db.teams.read([null, undefined, false, 0, ''])).rejects.toThrow();
   });
 });
 

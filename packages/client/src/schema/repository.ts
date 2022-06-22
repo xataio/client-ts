@@ -191,6 +191,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Create many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       const records = await this.#bulkInsertTableRecords(a);
       await Promise.all(records.map((record) => this.#setCacheRecord(record)));
 
@@ -299,6 +301,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async read(a: string | string[]) {
     // Read many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       return this.getAll({ filter: { id: { $any: a } } });
     }
 
@@ -336,6 +340,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Update many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       if (a.length > 100) {
         // TODO: Implement bulk update when API has support for it
         console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
@@ -393,6 +399,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Create or update many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       if (a.length > 100) {
         // TODO: Implement bulk update when API has support for it
         console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
@@ -440,6 +448,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async delete(a: string | Identifiable | Array<string | Identifiable>): Promise<void> {
     // Delete many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return;
+
       if (a.length > 100) {
         // TODO: Implement bulk delete when API has support for it
         console.warn('Bulk delete operation is not optimized in the Xata API yet, this request might be slow');
