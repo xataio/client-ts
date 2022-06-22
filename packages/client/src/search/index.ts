@@ -13,7 +13,7 @@ export type SearchOptions<Schemas extends Record<string, BaseData>, Tables exten
   tables?: Tables[];
   filter?: UnionToIntersection<
     Values<{
-      [Model in GetArrayInnerType<NonNullable<NonNullable<Tables[]>>>]: {
+      [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
         [Key in Model]?: Filter<Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>>;
       };
     }>
