@@ -1,7 +1,6 @@
-import { generateFromContext } from '@xata.io/codegen';
+import { generate } from '@xata.io/codegen';
 import chalk from 'chalk';
 import { mkdir, writeFile } from 'fs/promises';
-import fetch from 'node-fetch';
 import path, { dirname, extname, relative } from 'path';
 import { BaseCommand, ProjectConfig } from '../../base.js';
 
@@ -44,8 +43,13 @@ export default class Codegen extends BaseCommand {
       );
     }
 
-    const { databaseURL } = await this.getDatabaseURL();
-    const result = await generateFromContext(language, { fetchImpl: fetch, databaseURL });
+    const xata = await this.getXataClient();
+    const { workspace, database, branch, databaseURL } = await this.getParsedDatabaseURLWithBranch();
+    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+    const { schema } = branchDetails;
+
+    // TODO: remove formatVersion
+    const result = await generate({ schema: { formatVersion: '1.0', ...schema }, databaseURL, language });
     const code = result.transpiled;
     const declarations = result.declarations;
 
