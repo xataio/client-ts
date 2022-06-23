@@ -1,3 +1,4 @@
+import { Flags } from '@oclif/core';
 import { generate } from '@xata.io/codegen';
 import chalk from 'chalk';
 import { mkdir, writeFile } from 'fs/promises';
@@ -16,17 +17,29 @@ export default class Codegen extends BaseCommand {
   static examples = [];
 
   static flags = {
-    ...this.commonFlags
+    ...this.commonFlags,
+    databaseURL: this.databaseURLFlag,
+    branch: this.branchFlag,
+    output: Flags.string({
+      name: 'output',
+      description: 'Output file. Overwrites your project configuration setting'
+    }),
+    declarations: Flags.boolean({
+      name: 'declarations',
+      description:
+        'Whether or not the declarations file should be generated. Overwrites your project configuration setting'
+    })
   };
 
   static args = [];
 
   async run(): Promise<void> {
-    const output = this.projectConfig?.codegen?.output;
+    const { flags } = await this.parse(Codegen);
+    const output = flags.output || this.projectConfig?.codegen?.output;
 
     if (!output) {
       return this.error(
-        `Please, specify an output file in your project configuration file first with ${chalk.bold(
+        `Please, specify an output file as a flag or in your project configuration file first with ${chalk.bold(
           'xata config set codegen.output <path>'
         )}`
       );
@@ -44,7 +57,10 @@ export default class Codegen extends BaseCommand {
     }
 
     const xata = await this.getXataClient();
-    const { workspace, database, branch, databaseURL } = await this.getParsedDatabaseURLWithBranch();
+    const { workspace, database, branch, databaseURL } = await this.getParsedDatabaseURLWithBranch(
+      flags.databaseURL,
+      flags.branch
+    );
     const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
     const { schema } = branchDetails;
 
@@ -55,7 +71,7 @@ export default class Codegen extends BaseCommand {
 
     await mkdir(dir, { recursive: true });
     await writeFile(output, code);
-    if (declarations && this.projectConfig?.codegen?.declarations) {
+    if (declarations && (flags.declarations || this.projectConfig?.codegen?.declarations)) {
       await writeFile(path.join(dir, 'types.d.ts'), declarations);
     }
 
