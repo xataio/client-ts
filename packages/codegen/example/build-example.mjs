@@ -21,7 +21,7 @@ async function main() {
 }
 
 function replaceImport(source) {
-  return source.replace('@xata.io/client', '../../client/src');
+  return source.replaceAll('@xata.io/client', '../../client/src');
 }
 
 main().catch(console.error);

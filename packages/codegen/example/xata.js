@@ -1,6 +1,6 @@
 import { buildClient } from '../../client/src';
 const tables = ['teams', 'users'];
-/** @type { import('@xata.io/client').ClientConstructor<{}> } */
+/** @type { import('../../client/src').ClientConstructor<{}> } */
 const DatabaseClient = buildClient();
 /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
 /** @extends DatabaseClient<DatabaseSchema> */
