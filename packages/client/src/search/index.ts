@@ -6,17 +6,18 @@ import { Filter } from '../schema/filters';
 import { BaseData, XataRecord } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
-import { GetArrayInnerType, StringKeys, UnionToIntersection, Values } from '../util/types';
+import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
 export type SearchOptions<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = {
   fuzziness?: number;
-  tables?: Tables[];
-  filter?: UnionToIntersection<
-    Values<{
-      [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
-        [Key in Model]?: Filter<Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>>;
-      };
-    }>
+  tables?: Array<
+    | Tables
+    | Values<{
+        [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
+          table: Model;
+          filter?: Filter<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
+        };
+      }>
   >;
 };
 
@@ -26,7 +27,11 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
     options?: SearchOptions<Schemas, Tables>
   ) => Promise<
     Values<{
-      [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]: {
+      [Model in ExtractTables<
+        Schemas,
+        Tables,
+        GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
+      >]: {
         table: Model;
         record: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
       };
@@ -36,9 +41,11 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
     query: string,
     options?: SearchOptions<Schemas, Tables>
   ) => Promise<{
-    [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]?: Awaited<
-      SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]
-    >;
+    [Model in ExtractTables<
+      Schemas,
+      Tables,
+      GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
+    >]?: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]>;
   }>;
 };
 
@@ -51,17 +58,7 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
   build({ getFetchProps }: XataPluginOptions): SearchPluginResult<Schemas> {
     return {
-      all: async <Tables extends StringKeys<Schemas>>(
-        query: string,
-        options: SearchOptions<Schemas, Tables> = {}
-      ): Promise<
-        Values<{
-          [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]: {
-            table: Model;
-            record: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
-          };
-        }>[]
-      > => {
+      all: async <Tables extends StringKeys<Schemas>>(query: string, options: SearchOptions<Schemas, Tables> = {}) => {
         const records = await this.#search(query, options, getFetchProps);
         const schema = await this.#getSchema(getFetchProps);
 
@@ -74,11 +71,7 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
       byTable: async <Tables extends StringKeys<Schemas>>(
         query: string,
         options: SearchOptions<Schemas, Tables> = {}
-      ): Promise<{
-        [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]?: Awaited<
-          SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]
-        >;
-      }> => {
+      ) => {
         const records = await this.#search(query, options, getFetchProps);
         const schema = await this.#getSchema(getFetchProps);
 
@@ -104,6 +97,7 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
     const { records } = await searchBranch({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
+      // @ts-ignore Backend support not there yet
       body: { tables, query, fuzziness },
       ...fetchProps
     });
@@ -126,3 +120,13 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 }
 
 type SearchXataRecord = XataRecord & { xata: { table: string } };
+
+type ExtractTables<
+  Schemas extends Record<string, BaseData>,
+  Tables extends StringKeys<Schemas>,
+  TableOptions extends GetArrayInnerType<NonNullable<NonNullable<SearchOptions<Schemas, Tables>>['tables']>>
+> = TableOptions extends `${infer Table extends Tables}`
+  ? Table
+  : TableOptions extends { table: infer Table extends Tables }
+  ? Table
+  : never;
