@@ -16,7 +16,7 @@ async function main() {
   writeFileSync(join(__dirname, 'xata.ts'), replaceImport(ts.transpiled));
   writeFileSync(join(__dirname, 'xata.js'), replaceImport(js.transpiled));
   if (js.declarations) {
-    writeFileSync(join(__dirname, 'types.d.ts'), js.declarations);
+    writeFileSync(join(__dirname, 'types.d.ts'), replaceImport(js.declarations));
   }
 }
 
