@@ -1,4 +1,4 @@
-import { BaseClientOptions, XataRecord } from '@xata.io/client';
+import { BaseClientOptions, XataRecord } from '../../client/src';
 export interface Team {
   name?: string | null;
   labels?: string[] | null;
