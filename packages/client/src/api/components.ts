@@ -3119,9 +3119,18 @@ export type SearchBranchError = Fetcher.ErrorWrapper<
 
 export type SearchBranchRequestBody = {
   /*
-   * An array with the tables in which to search. By default, all tables are included.
+   * An array with the tables in which to search. By default, all tables are included. Optionally, filters can be included that apply to each table.
    */
-  tables?: string[];
+  tables?: (
+    | string
+    | {
+        /*
+         * The name of the table.
+         */
+        table: string;
+        filter?: Schemas.FilterExpression;
+      }
+  )[];
   /*
    * The query string.
    *
