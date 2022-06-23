@@ -265,7 +265,7 @@ describe('integration tests', () => {
     expect(page2And3.records).toEqual([...page2.records, ...page3.records]);
   });
 
-  test('we ignore sorting if sending it with cursor', async () => {
+  test('fails if sending cursor with sorting', async () => {
     const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
     const { records: records1, meta } = page1;
     const page2 = await page1.nextPage();
@@ -299,7 +299,7 @@ describe('integration tests', () => {
         pagination: { after: meta.page.cursor },
         sort: { column: 'full_name', direction: 'asc' }
       })
-    ).resolves.toBeDefined();
+    ).rejects.toThrow();
   });
 
   test('repository implements pagination', async () => {
