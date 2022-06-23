@@ -17,10 +17,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepack": "npm run build",
-    "prebuild": "node ../../scripts/add-version-file.mjs",
-    "build": "rimraf dist && rollup -c",
-    "example-ts": "npm run build && node dist/cli.js example/xata -o example/xata.ts && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.ts",
-    "example-js": "npm run build && node dist/cli.js example/xata -o example/xata.js && sed -i '' 's|@xata.io/client|../../client/src|' example/xata.js example/types.d.ts"
+    "build": "rimraf dist && rollup -c"
   },
   "repository": {
     "type": "git",
@@ -35,29 +32,13 @@
   "homepage": "https://github.com/xataio/client-ts/blob/main/codegen/README.md",
   "dependencies": {
     "@xata.io/client": "^0.10.1",
-    "case": "^1.6.3",
-    "chalk": "5.0.1",
-    "command-exists": "^1.2.9",
-    "commander": "^9.3.0",
-    "cross-fetch": "^3.1.5",
-    "dotenv": "^16.0.1",
-    "inquirer": "^9.0.0",
-    "ora": "6.1.0",
     "pluralize": "^8.0.0",
     "prettier": "^2.7.1",
-    "tar": "^6.1.11",
     "typescript": "^4.7.4",
-    "unzipper": "^0.10.11",
     "zod": "^3.17.3"
   },
   "devDependencies": {
-    "@types/command-exists": "^1.2.0",
-    "@types/inquirer": "^8.2.1",
-    "@types/node-fetch": "^2.6.2",
     "@types/pluralize": "^0.0.29",
-    "@types/prettier": "^2.6.3",
-    "@types/tar": "^6.1.1",
-    "@types/unzipper": "^0.10.5",
-    "@types/yargs": "^17.0.10"
+    "@types/prettier": "^2.6.3"
   }
 }

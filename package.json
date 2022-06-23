@@ -11,8 +11,7 @@
     "postinstall": "lerna bootstrap",
     "build": "lerna run build",
     "size": "npm run build && size-limit",
-    "openapi-gen": "openapi-codegen xatabase",
-    "build-example": "cd packages/codegen && npm run example-ts && npm run example-js && cd .."
+    "openapi-gen": "openapi-codegen xatabase"
   },
   "repository": {
     "type": "git",
