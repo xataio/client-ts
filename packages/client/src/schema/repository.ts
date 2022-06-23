@@ -19,7 +19,7 @@ import { isObject, isString } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { CacheImpl } from './cache';
 import { Filter } from './filters';
-import { isCursorPaginationOptions, Page } from './pagination';
+import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectedPick } from './selection';
