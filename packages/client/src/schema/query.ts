@@ -4,6 +4,7 @@ import { NonEmptyArray, OmitBy, RequiredBy } from '../util/types';
 import { Filter } from './filters';
 import {
   CursorNavigationOptions,
+  isCursorPaginationOptions,
   OffsetNavigationOptions,
   Page,
   Paginable,
@@ -53,7 +54,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     repository: Repository<Record> | null,
     table: string,
     data: Partial<QueryOptions<Record>>,
-    parent?: Partial<QueryOptions<Record>>
+    rawParent?: Partial<QueryOptions<Record>>
   ) {
     this.#table = table;
 
@@ -62,6 +63,9 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     } else {
       this.#repository = this as any;
     }
+
+    // Clean parent query options if new query is cursor based
+    const parent = cleanParent(data, rawParent);
 
     this.#data.filter = data.filter ?? parent?.filter ?? {};
     this.#data.filter.$any = data.filter?.$any ?? parent?.filter?.$any;
@@ -217,16 +221,17 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     options: QueryOptions<Record> & { batchSize?: number } = {}
   ): AsyncGenerator<Result[]> {
     const { batchSize = 1 } = options;
-    let offset = 0;
-    let end = false;
 
-    while (!end) {
-      const { records, meta } = await this.getPaginated({ ...options, pagination: { size: batchSize, offset } });
-      // Method overloading does not provide type inference for the return type.
-      yield records as unknown as Result[];
+    let page = await this.getPaginated({ ...options, pagination: { size: batchSize, offset: 0 } });
+    let more = page.hasNextPage();
 
-      offset += batchSize;
-      end = !meta.page.more;
+    yield page.records as unknown as Result[];
+
+    while (more) {
+      page = await page.nextPage();
+      more = page.hasNextPage();
+
+      yield page.records as unknown as Result[];
     }
   }
 
@@ -315,4 +320,17 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   hasNextPage(): boolean {
     return this.meta.page.more;
   }
+}
+
+// When using cursor based pagination, it is not allowed to send new sorting/filtering
+// We removed the sorting/filtering from the query options to avoid the error from the API
+function cleanParent<Record extends XataRecord>(
+  data: Partial<QueryOptions<Record>>,
+  parent?: Partial<QueryOptions<Record>>
+) {
+  if (isCursorPaginationOptions(data.pagination)) {
+    return { ...parent, sorting: undefined, filter: undefined };
+  }
+
+  return parent;
 }
