@@ -27,6 +27,9 @@ export default class ImportCSV extends BaseCommand {
     }),
     force: Flags.boolean({
       description: 'Whether confirmation should be asked when creating the table or columns'
+    }),
+    'no-column-name-normalization': Flags.boolean({
+      description: 'Avoid changing column names in a normalized way'
     })
   };
 
@@ -35,7 +38,15 @@ export default class ImportCSV extends BaseCommand {
   async run(): Promise<void> {
     const { flags, args } = await this.parse(ImportCSV);
     const { file } = args;
-    const { table, types, columns, 'no-header': noHeader, create, force } = flags;
+    const {
+      table,
+      types,
+      columns,
+      'no-header': noHeader,
+      create,
+      force,
+      'no-column-name-normalization': ignoreColumnNormalization
+    } = flags;
 
     const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
 
@@ -56,6 +67,7 @@ export default class ImportCSV extends BaseCommand {
       types: splitCommas(types),
       columns: splitCommas(columns),
       noheader: Boolean(noHeader),
+      ignoreColumnNormalization,
       shouldContinue: async (compare) => {
         return Boolean(await this.shouldContinue(compare, table, create, force));
       },
