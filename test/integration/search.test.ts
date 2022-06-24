@@ -169,7 +169,7 @@ describe('search', () => {
 
   test.skip('search all with filters', async () => {
     const results = await client.search.all('fruits', {
-      filter: { teams: { name: 'Team fruits' } }
+      tables: [{ table: 'teams', filter: { name: 'Team fruits' } }, 'users']
     });
 
     expect(results.length).toBe(1);
