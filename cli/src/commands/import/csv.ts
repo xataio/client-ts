@@ -11,7 +11,8 @@ export default class ImportCSV extends BaseCommand {
     databaseURL: this.databaseURLFlag,
     branch: this.branchFlag,
     table: Flags.string({
-      description: 'The table where the CSV file has to be imported to'
+      description: 'The table where the CSV file has to be imported to',
+      required: true
     }),
     types: Flags.string({
       description: 'Column types separated by commas'
@@ -49,10 +50,6 @@ export default class ImportCSV extends BaseCommand {
     } = flags;
 
     const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
-
-    if (typeof table !== 'string') {
-      return this.error('The table name is a required flag');
-    }
 
     const xata = await this.getXataClient();
 
