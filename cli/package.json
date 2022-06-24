@@ -28,6 +28,7 @@
     "@types/prompts": "^2.0.14",
     "@xata.io/client": "^0.10.2",
     "@xata.io/codegen": "^0.10.1",
+    "@xata.io/importer": "^0.1.4",
     "@xata.io/shell": "^0.1.4",
     "ansi-regex": "^6.0.1",
     "chalk": "^5.0.1",
