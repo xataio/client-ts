@@ -58,7 +58,7 @@ export function guessType(value: string) {
     return 'float';
   } else if (['true', 'false'].includes(value)) {
     return 'bool';
-  } else if (value.match(/\S+@\S+.\S+/)) {
+  } else if (value.match(/^\S+@\S+\.\S+$/)) {
     return 'email';
   } else if (parseArray(value)) {
     return 'multiple';
