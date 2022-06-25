@@ -8,7 +8,8 @@ export default class ImportCSV extends BaseCommand {
 
   static examples = [
     '$ xata import csv users.csv --table=users',
-    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email'
+    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email',
+    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email --create'
   ];
 
   static flags = {
