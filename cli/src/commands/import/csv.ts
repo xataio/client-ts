@@ -19,7 +19,7 @@ export default class ImportCSV extends BaseCommand {
   ];
 
   static flags = {
-    ...this.commonFlags,
+    'no-input': this.noInputFlag,
     databaseURL: this.databaseURLFlag,
     branch: this.branchFlag,
     table: Flags.string({
