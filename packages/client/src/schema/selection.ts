@@ -31,7 +31,11 @@ export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
   : P extends `${infer K}.${infer V}`
   ? K extends keyof O
     ? Values<
-        O[K] extends XataRecord ? (V extends SelectableColumn<O[K]> ? { V: ValueAtColumn<O[K], V> } : never) : O[K]
+        NonNullable<O[K]> extends Record<string, any>
+          ? V extends SelectableColumn<NonNullable<O[K]>>
+            ? { V: ValueAtColumn<NonNullable<O[K]>, V> }
+            : never
+          : O[K]
       >
     : never
   : never;
