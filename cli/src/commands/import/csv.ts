@@ -1,5 +1,6 @@
 import { Flags } from '@oclif/core';
 import { CompareSchemaResult, createProcessor, parseCSVFile, parseCSVStream, TableInfo } from '@xata.io/importer';
+import chalk from 'chalk';
 import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
 
@@ -7,9 +8,14 @@ export default class ImportCSV extends BaseCommand {
   static description = 'Import a CSV file';
 
   static examples = [
+    'Import a CSV file using the column names of the CSV header',
     '$ xata import csv users.csv --table=users',
+    'Specify the column names and types. They must follow the order they appear in the CSV file',
     '$ xata import csv users.csv --table=users --columns=name,email --types=string,email',
-    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email --create'
+    'Create the table or any missing column if needed without asking',
+    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email --create',
+    'Specify "-" as file name to use the stdin to read the data from',
+    chalk.dim('$ command-that-outputs-csv | xata import csv - --table=users --create')
   ];
 
   static flags = {
