@@ -6,12 +6,17 @@ import { BaseCommand } from '../../base.js';
 export default class ImportCSV extends BaseCommand {
   static description = 'Import a CSV file';
 
+  static examples = [
+    '$ xata import csv users.csv --table=users',
+    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email'
+  ];
+
   static flags = {
     ...this.commonFlags,
     databaseURL: this.databaseURLFlag,
     branch: this.branchFlag,
     table: Flags.string({
-      description: 'The table where the CSV file has to be imported to',
+      description: 'The table where the CSV file will be imported to',
       required: true
     }),
     types: Flags.string({
@@ -20,7 +25,7 @@ export default class ImportCSV extends BaseCommand {
     columns: Flags.string({
       description: 'Column names separated by commas'
     }),
-    'no-header': Flags.string({
+    'no-header': Flags.boolean({
       description: 'Specify that the CSV file has no header'
     }),
     create: Flags.boolean({
