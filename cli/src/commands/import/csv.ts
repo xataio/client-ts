@@ -29,10 +29,7 @@ export default class ImportCSV extends BaseCommand {
       description: 'Specify that the CSV file has no header'
     }),
     create: Flags.boolean({
-      description: "Whether the table or columns should be created if they don't exist"
-    }),
-    force: Flags.boolean({
-      description: 'Whether confirmation should be asked when creating the table or columns'
+      description: "Whether the table or columns should be created if they don't exist without asking"
     }),
     'no-column-name-normalization': Flags.boolean({
       description: 'Avoid changing column names in a normalized way'
@@ -50,7 +47,6 @@ export default class ImportCSV extends BaseCommand {
       columns,
       'no-header': noHeader,
       create,
-      force,
       'no-column-name-normalization': ignoreColumnNormalization
     } = flags;
 
@@ -71,7 +67,7 @@ export default class ImportCSV extends BaseCommand {
       noheader: Boolean(noHeader),
       ignoreColumnNormalization,
       shouldContinue: async (compare) => {
-        return Boolean(await this.shouldContinue(compare, table, create, force));
+        return Boolean(await this.shouldContinue(compare, table, create));
       },
       onBatchProcessed: async (rows) => {
         this.log(`${rows} rows processed`);
@@ -86,12 +82,7 @@ export default class ImportCSV extends BaseCommand {
     this.log('Finished');
   }
 
-  async shouldContinue(
-    compare: CompareSchemaResult,
-    table: string,
-    create: unknown,
-    force: unknown
-  ): Promise<boolean | void> {
+  async shouldContinue(compare: CompareSchemaResult, table: string, create: boolean): Promise<boolean | void> {
     let error = false;
     compare.columnTypes.forEach((type) => {
       if (type.error) {
@@ -105,34 +96,25 @@ export default class ImportCSV extends BaseCommand {
       return process.exit(1);
     }
 
-    if (!create) {
-      if (compare.missingTable) {
-        return this.error(`Table ${table} does not exist. Use --create to create it`);
+    if (compare.missingTable) {
+      if (!create) {
+        const response = await prompts({
+          type: 'confirm',
+          name: 'confirm',
+          message: `Table ${table} does not exist. Do you want to create it?`,
+          initial: false
+        });
+        if (!response.confirm) return false;
       }
-      if (compare.missingColumns.length > 0) {
-        return this.error(`These columns are missing: ${missingColumnsList(compare)}. Use --create to create them`);
-      }
-    } else {
-      if (compare.missingTable) {
-        if (!force) {
-          const response = await prompts({
-            type: 'confirm',
-            name: 'confirm',
-            message: `Table ${table} does not exist. Do you want to create it?`,
-            initial: false
-          });
-          if (!response.confirm) return false;
-        }
-      } else if (compare.missingColumns.length > 0) {
-        if (!force) {
-          const response = await prompts({
-            type: 'confirm',
-            name: 'confirm',
-            message: `These columns are missing: ${missingColumnsList(compare)}. Do you want to create them?`,
-            initial: false
-          });
-          if (!response.confirm) return false;
-        }
+    } else if (compare.missingColumns.length > 0) {
+      if (!create) {
+        const response = await prompts({
+          type: 'confirm',
+          name: 'confirm',
+          message: `These columns are missing: ${missingColumnsList(compare)}. Do you want to create them?`,
+          initial: false
+        });
+        if (!response.confirm) return false;
       }
     }
 
