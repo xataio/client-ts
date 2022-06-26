@@ -63,7 +63,6 @@ To run it (and assuming you have configured the project with `xata init`):
 xata codegen
 ```
 
-If you want to override the output file, you can pass the ``--out`` flag with the path to the output file.
 
 ```bash
 xata codegen --out src/xata.ts
