@@ -97,7 +97,7 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
     const { records } = await searchBranch({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
-      // @ts-ignore Backend support not there yet
+      // @ts-ignore https://github.com/xataio/client-ts/issues/313
       body: { tables, query, fuzziness },
       ...fetchProps
     });
