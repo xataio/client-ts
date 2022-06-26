@@ -52,6 +52,19 @@ export abstract class BaseCommand extends Command {
     description: 'Branch name to use'
   });
 
+  static noInputFlag = Flags.boolean({
+    description: 'Will not prompt interactively for missing values'
+  });
+
+  static jsonFlag = Flags.boolean({
+    description: 'Print the output in JSON format'
+  });
+
+  static commonFlags = {
+    json: this.jsonFlag,
+    'no-input': this.noInputFlag
+  };
+
   async init() {
     dotenv.config();
 
@@ -469,13 +482,4 @@ export abstract class BaseCommand extends Command {
       this.warn(`  [${error.code}] ${error.message} at "${error.path.join('.')}"`);
     }
   }
-
-  static commonFlags = {
-    json: Flags.boolean({
-      description: 'Print the output in JSON format'
-    }),
-    'no-input': Flags.boolean({
-      description: 'Will not prompt interactively for missing values'
-    })
-  };
 }

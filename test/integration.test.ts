@@ -174,6 +174,16 @@ describe('integration tests', () => {
     expect(teams[1].name).toBe('Team animals');
   });
 
+  test('filter on nullable property', async () => {
+    const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getFirst();
+    if (!ownerAnimals) throw new Error('Could not find owner of team animals');
+
+    // Regression test on filtering on nullable property
+    const team = await client.db.teams.filter('owner.id', ownerAnimals.id).getFirst();
+
+    expect(team?.owner?.id).toEqual(ownerAnimals.id);
+  });
+
   test('filter on object', async () => {
     const users = await client.db.users
       .filter({
