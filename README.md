@@ -63,11 +63,6 @@ To run it (and assuming you have configured the project with `xata init`):
 xata codegen
 ```
 
-
-```bash
-xata codegen --out src/xata.ts
-```
-
 In a TypeScript file start using the generated code:
 
 ```ts
