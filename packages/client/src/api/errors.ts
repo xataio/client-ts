@@ -1,7 +1,17 @@
 import { Responses } from '.';
 import { isObject, isString } from '../util/lang';
 
-export class FetcherError extends Error {
+// Polyfill for TypeScript < 4.6
+class ErrorWithCause extends Error {
+  cause?: Error;
+
+  constructor(message?: string, options?: { cause?: Error }) {
+    // @ts-ignore - Options didn't exist before 4.6
+    super(message, options);
+  }
+}
+
+export class FetcherError extends ErrorWithCause {
   public status: number | string;
   public errors: Responses.BulkError['errors'] | undefined;
 
@@ -13,7 +23,7 @@ export class FetcherError extends Error {
 
     if (data instanceof Error) {
       this.stack = data.stack;
-      this.cause = data.cause;
+      this.cause = (data as ErrorWithCause).cause;
     }
   }
 }
