@@ -1,15 +1,25 @@
 import { getBranchDetails, searchBranch } from '../api';
-import { Schema } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, Schema } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
+import { Filter } from '../schema/filters';
 import { BaseData, XataRecord } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
 export type SearchOptions<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = {
-  fuzziness?: number;
-  tables?: Tables[];
+  fuzziness?: FuzzinessExpression;
+  highlight?: HighlightExpression;
+  tables?: Array<
+    | Tables
+    | Values<{
+        [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
+          table: Model;
+          filter?: Filter<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
+        };
+      }>
+  >;
 };
 
 export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
@@ -18,7 +28,11 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
     options?: SearchOptions<Schemas, Tables>
   ) => Promise<
     Values<{
-      [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]: {
+      [Model in ExtractTables<
+        Schemas,
+        Tables,
+        GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
+      >]: {
         table: Model;
         record: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
       };
@@ -28,9 +42,11 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
     query: string,
     options?: SearchOptions<Schemas, Tables>
   ) => Promise<{
-    [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]?: Awaited<
-      SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]
-    >;
+    [Model in ExtractTables<
+      Schemas,
+      Tables,
+      GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
+    >]?: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]>;
   }>;
 };
 
@@ -43,17 +59,7 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
   build({ getFetchProps }: XataPluginOptions): SearchPluginResult<Schemas> {
     return {
-      all: async <Tables extends StringKeys<Schemas>>(
-        query: string,
-        options: SearchOptions<Schemas, Tables> = {}
-      ): Promise<
-        Values<{
-          [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]: {
-            table: Model;
-            record: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
-          };
-        }>[]
-      > => {
+      all: async <Tables extends StringKeys<Schemas>>(query: string, options: SearchOptions<Schemas, Tables> = {}) => {
         const records = await this.#search(query, options, getFetchProps);
         const schema = await this.#getSchema(getFetchProps);
 
@@ -66,11 +72,7 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
       byTable: async <Tables extends StringKeys<Schemas>>(
         query: string,
         options: SearchOptions<Schemas, Tables> = {}
-      ): Promise<{
-        [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]?: Awaited<
-          SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]
-        >;
-      }> => {
+      ) => {
         const records = await this.#search(query, options, getFetchProps);
         const schema = await this.#getSchema(getFetchProps);
 
@@ -88,15 +90,16 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
   async #search<Tables extends StringKeys<Schemas>>(
     query: string,
-    options: { fuzziness?: number; tables?: Tables[] },
+    options: SearchOptions<Schemas, Tables>,
     getFetchProps: XataPluginOptions['getFetchProps']
   ) {
     const fetchProps = await getFetchProps();
-    const { tables, fuzziness } = options ?? {};
+    const { tables, fuzziness, highlight } = options ?? {};
 
     const { records } = await searchBranch({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
-      body: { tables, query, fuzziness },
+      // @ts-ignore https://github.com/xataio/client-ts/issues/313
+      body: { tables, query, fuzziness, highlight },
       ...fetchProps
     });
 
@@ -117,4 +120,33 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
   }
 }
 
-type SearchXataRecord = XataRecord & { xata: { table: string } };
+type SearchXataRecord = XataRecord & {
+  xata: {
+    /*
+     * The record's table name. APIs that return records from multiple tables will set this field accordingly.
+     */
+    table?: string;
+    /*
+     * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
+     */
+    highlight?: {
+      [key: string]:
+        | string[]
+        | {
+            [key: string]: any;
+          };
+    };
+  };
+};
+
+type ReturnTable<Table, Tables> = Table extends Tables ? Table : never;
+
+type ExtractTables<
+  Schemas extends Record<string, BaseData>,
+  Tables extends StringKeys<Schemas>,
+  TableOptions extends GetArrayInnerType<NonNullable<NonNullable<SearchOptions<Schemas, Tables>>['tables']>>
+> = TableOptions extends `${infer Table}`
+  ? ReturnTable<Table, Tables>
+  : TableOptions extends { table: infer Table }
+  ? ReturnTable<Table, Tables>
+  : never;

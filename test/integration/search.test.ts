@@ -166,6 +166,21 @@ describe('search', () => {
       }
     }
   });
+
+  test.skip('search all with filters', async () => {
+    const results = await client.search.all('fruits', {
+      tables: [{ table: 'teams', filter: { name: 'Team fruits' } }, 'users']
+    });
+
+    expect(results.length).toBe(1);
+    expect(results[0].table).toBe('teams');
+
+    if (results[0].table === 'teams') {
+      expect(results[0].record.id).toBeDefined();
+      expect(results[0].record.read).toBeDefined();
+      expect(results[0].record.name?.includes('fruits')).toBeTruthy();
+    }
+  });
 });
 
 async function waitForSearchIndexing(): Promise<void> {
