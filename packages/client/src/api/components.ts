@@ -3139,13 +3139,6 @@ export type SearchBranchRequestBody = {
    */
   query: string;
   fuzziness?: Schemas.FuzzinessExpression;
-  /*
-   * Table level filters. This is a map where the top level key must be the table names and
-   * the values filter objects as documented for the [query endpoint](/api-reference/db/db_branch_name/tables/table_name/).
-   */
-  filter?: {
-    [key: string]: Schemas.FilterExpression;
-  };
   highlight?: Schemas.HighlightExpression;
 };
 
