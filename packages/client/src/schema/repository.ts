@@ -13,7 +13,7 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
-import { RecordsMetadata, Schema } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, RecordsMetadata, Schema } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { isObject, isString } from '../util/lang';
 import { Dictionary } from '../util/types';
@@ -150,7 +150,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    */
   abstract search(
     query: string,
-    options?: { fuzziness?: number; filter?: Filter<Record> }
+    options?: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> }
   ): Promise<SelectedPick<Record, ['*']>[]>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
@@ -460,7 +460,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
   async search(
     query: string,
-    options: { fuzziness?: number; filter?: Filter<Record> } = {}
+    options: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> } = {}
   ): Promise<SelectedPick<Record, ['*']>[]> {
     const fetchProps = await this.#getFetchProps();
 
@@ -469,6 +469,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       body: {
         query,
         fuzziness: options.fuzziness,
+        highlight: options.highlight,
         filter: options.filter as Schemas.FilterExpression
       },
       ...fetchProps
