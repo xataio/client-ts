@@ -43,7 +43,9 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
     columns: string[] | undefined,
     count: number
   ) => {
-    const columnNames = (options.columns || columns || []).map(normalizeColumnName);
+    const columnNames =
+      options.columns || (options.ignoreColumnNormalization ? columns : columns?.map(normalizeColumnName)) || [];
+
     if (columnNames.length === 0) {
       throw new Error(
         'Cannot calculate column names. A file header was not specified and no custom columns were specified either'
