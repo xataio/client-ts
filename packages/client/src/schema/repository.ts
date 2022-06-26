@@ -64,6 +64,13 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract read(id: string): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
 
   /**
+   * Queries multiple records from the table given their unique id.
+   * @param ids The unique ids array.
+   * @returns The persisted records for the given ids (if a record could not be found it is not returned).
+   */
+  abstract read(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+
+  /**
    * Partially update a single record.
    * @param object An object with its id and the columns to be updated.
    * @returns The full persisted record.
@@ -184,6 +191,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Create many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       const records = await this.#bulkInsertTableRecords(a);
       await Promise.all(records.map((record) => this.#setCacheRecord(record)));
 
@@ -287,26 +296,38 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
-  async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
-    const cacheRecord = await this.#getCacheRecord(recordId);
-    if (cacheRecord) return cacheRecord;
+  async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null>;
+  async read(recordIds: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async read(a: string | string[]) {
+    // Read many records
+    if (Array.isArray(a)) {
+      if (a.length === 0) return [];
 
-    const fetchProps = await this.#getFetchProps();
+      return this.getAll({ filter: { id: { $any: a } } });
+    }
 
-    try {
-      const response = await getRecord({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-        ...fetchProps
-      });
+    // Read one record
+    if (isString(a)) {
+      const cacheRecord = await this.#getCacheRecord(a);
+      if (cacheRecord) return cacheRecord;
 
-      const schema = await this.#getSchema();
-      return initObject(this.db, schema, this.#table, response);
-    } catch (e) {
-      if (isObject(e) && e.status === 404) {
-        return null;
+      const fetchProps = await this.#getFetchProps();
+
+      try {
+        const response = await getRecord({
+          pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId: a },
+          ...fetchProps
+        });
+
+        const schema = await this.#getSchema();
+        return initObject(this.db, schema, this.#table, response);
+      } catch (e) {
+        if (isObject(e) && e.status === 404) {
+          return null;
+        }
+
+        throw e;
       }
-
-      throw e;
     }
   }
 
@@ -319,6 +340,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Update many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       if (a.length > 100) {
         // TODO: Implement bulk update when API has support for it
         console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
@@ -376,6 +399,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Create or update many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       if (a.length > 100) {
         // TODO: Implement bulk update when API has support for it
         console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
@@ -423,6 +448,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async delete(a: string | Identifiable | Array<string | Identifiable>): Promise<void> {
     // Delete many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return;
+
       if (a.length > 100) {
         // TODO: Implement bulk delete when API has support for it
         console.warn('Bulk delete operation is not optimized in the Xata API yet, this request might be slow');

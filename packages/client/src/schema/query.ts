@@ -153,8 +153,8 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    *
    * @returns A new Query object.
    */
-  filter(filters: Filter<Record>): Query<Record, Result>;
   filter<F extends SelectableColumn<Record>>(column: F, value: Filter<ValueAtColumn<Record, F>>): Query<Record, Result>;
+  filter(filters: Filter<Record>): Query<Record, Result>;
   filter(a: any, b?: any): Query<Record, Result> {
     if (arguments.length === 1) {
       const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));

@@ -174,6 +174,16 @@ describe('integration tests', () => {
     expect(teams[1].name).toBe('Team animals');
   });
 
+  test('filter on nullable property', async () => {
+    const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getFirst();
+    if (!ownerAnimals) throw new Error('Could not find owner of team animals');
+
+    // Regression test on filtering on nullable property
+    const team = await client.db.teams.filter('owner.id', ownerAnimals.id).getFirst();
+
+    expect(team?.owner?.id).toEqual(ownerAnimals.id);
+  });
+
   test('filter on object', async () => {
     const users = await client.db.users
       .filter({
@@ -638,6 +648,11 @@ describe('record creation', () => {
       })
     ).rejects.toMatchInlineSnapshot(`[Error: Invalid arguments for create method]`);
   });
+
+  test("create multiple with empty array doesn't create anything", async () => {
+    const teams = await client.db.teams.create([]);
+    expect(teams).toHaveLength(0);
+  });
 });
 
 describe('record update', () => {
@@ -680,6 +695,11 @@ describe('record update', () => {
 
     expect(updatedTeam.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
+  });
+
+  test("update many with empty array doesn't update anything", async () => {
+    const updatedTeams = await client.db.teams.update([]);
+    expect(updatedTeams).toHaveLength(0);
   });
 });
 
@@ -792,6 +812,54 @@ describe('record create or update', () => {
 
     expect(apiTeams[0].name).toBe('Team boats');
     expect(apiTeams[1].name).toBe('Team boats');
+  });
+
+  test("create or update many with empty array doesn't create or update anything", async () => {
+    const updatedTeams = await client.db.teams.createOrUpdate([]);
+    expect(updatedTeams).toHaveLength(0);
+  });
+});
+
+describe('record read', () => {
+  test('read single team with id', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    const copy = await client.db.teams.read(team.id);
+    expect(copy).toBeDefined();
+    expect(copy?.id).toBe(team.id);
+  });
+
+  test('read multiple teams with id list', async () => {
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    const copies = await client.db.teams.read(teams.map((team) => team.id));
+    expect(copies).toHaveLength(2);
+    expect(copies[0]?.id).toBe(teams[0].id);
+    expect(copies[1]?.id).toBe(teams[1].id);
+  });
+
+  test("read single and return null if team doesn't exist", async () => {
+    const copy = await client.db.teams.read('does-not-exist');
+    expect(copy).toBeNull();
+  });
+
+  test("read multiple teams with id list and ignores a team if doesn't exist", async () => {
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    const copies = await client.db.teams.read(teams.map((team) => team.id).concat(['does-not-exist']));
+    expect(copies).toHaveLength(2);
+    expect(copies[0]?.id).toBe(teams[0].id);
+    expect(copies[1]?.id).toBe(teams[1].id);
+  });
+
+  test('read multiple with empty array', async () => {
+    const copies = await client.db.teams.read([]);
+    expect(copies).toHaveLength(0);
+  });
+
+  test('read multiple with falsy values, throws', async () => {
+    // @ts-ignore
+    expect(client.db.teams.read([null, undefined, false, 0, ''])).rejects.toThrow();
   });
 });
 
