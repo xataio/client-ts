@@ -119,7 +119,24 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
   }
 }
 
-type SearchXataRecord = XataRecord & { xata: { table: string } };
+type SearchXataRecord = XataRecord & {
+  xata: {
+    /*
+     * The record's table name. APIs that return records from multiple tables will set this field accordingly.
+     */
+    table?: string;
+    /*
+     * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
+     */
+    highlight?: {
+      [key: string]:
+        | string[]
+        | {
+            [key: string]: any;
+          };
+    };
+  };
+};
 
 type ReturnTable<Table, Tables> = Table extends Tables ? Table : never;
 
