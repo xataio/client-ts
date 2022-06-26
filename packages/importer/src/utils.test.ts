@@ -28,6 +28,7 @@ describe('guessType', () => {
     expect(guessType('foo')).toBe('string');
     expect(guessType('foo\nbar')).toBe('text');
     expect(guessType('foo@example.com')).toBe('email');
+    expect(guessType('not an email, even though it contains foo@bar.com')).toBe('string');
     expect(guessType('[1,2,3]')).toBe('multiple');
     expect(guessType('true')).toBe('bool');
     expect(guessType('false')).toBe('bool');
