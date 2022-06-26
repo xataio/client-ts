@@ -3073,6 +3073,7 @@ export type SearchTableRequestBody = {
   query: string;
   fuzziness?: Schemas.FuzzinessExpression;
   filter?: Schemas.FilterExpression;
+  highlight?: Schemas.HighlightExpression;
 };
 
 export type SearchTableVariables = {
@@ -3145,6 +3146,7 @@ export type SearchBranchRequestBody = {
   filter?: {
     [key: string]: Schemas.FilterExpression;
   };
+  highlight?: Schemas.HighlightExpression;
 };
 
 export type SearchBranchVariables = {
