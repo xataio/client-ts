@@ -121,12 +121,14 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
 type SearchXataRecord = XataRecord & { xata: { table: string } };
 
+type ReturnTable<Table, Tables> = Table extends Tables ? Table : never;
+
 type ExtractTables<
   Schemas extends Record<string, BaseData>,
   Tables extends StringKeys<Schemas>,
   TableOptions extends GetArrayInnerType<NonNullable<NonNullable<SearchOptions<Schemas, Tables>>['tables']>>
-> = TableOptions extends `${infer Table extends Tables}`
-  ? Table
-  : TableOptions extends { table: infer Table extends Tables }
-  ? Table
+> = TableOptions extends `${infer Table}`
+  ? ReturnTable<Table, Tables>
+  : TableOptions extends { table: infer Table }
+  ? ReturnTable<Table, Tables>
   : never;
