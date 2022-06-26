@@ -1,3 +1,4 @@
+import { isDefined } from '../util/lang';
 import { Query } from './query';
 import { XataRecord } from './record';
 
@@ -92,3 +93,12 @@ export const PAGINATION_MAX_SIZE = 200;
 export const PAGINATION_DEFAULT_SIZE = 200;
 export const PAGINATION_MAX_OFFSET = 800;
 export const PAGINATION_DEFAULT_OFFSET = 0;
+
+export function isCursorPaginationOptions(
+  options: Record<string, unknown> | undefined | null
+): options is CursorNavigationOptions {
+  return (
+    isDefined(options) &&
+    (isDefined(options.first) || isDefined(options.last) || isDefined(options.after) || isDefined(options.before))
+  );
+}
