@@ -1,5 +1,20 @@
 # @xata.io/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- [#339](https://github.com/xataio/client-ts/pull/339) [`aeafe54`](https://github.com/xataio/client-ts/commit/aeafe54b53e203cf9357b4f4cfd648fa303be38a) Thanks [@gimenete](https://github.com/gimenete)! - Move importer command to CLI
+
+* [#316](https://github.com/xataio/client-ts/pull/316) [`345d31c`](https://github.com/xataio/client-ts/commit/345d31c2bce1581355c665d295505d20c41c95d8) Thanks [@gimenete](https://github.com/gimenete)! - Xata init will ask for an API key and a fallback branch
+
+### Patch Changes
+
+- Updated dependencies [[`505257c`](https://github.com/xataio/client-ts/commit/505257c0c42ca0c8beaf5c0f638037c576dcc43c), [`aeafe54`](https://github.com/xataio/client-ts/commit/aeafe54b53e203cf9357b4f4cfd648fa303be38a), [`bcfad72`](https://github.com/xataio/client-ts/commit/bcfad722e26aac6010f3994d3b1b1f7df21f2c76), [`ff7e5c6`](https://github.com/xataio/client-ts/commit/ff7e5c6f211913196d8c28600d7a7675ed261688), [`bf64cb8`](https://github.com/xataio/client-ts/commit/bf64cb885d55a0271e966314384324f02ded084e), [`ce07601`](https://github.com/xataio/client-ts/commit/ce07601e4ddf9f75e20249d479dc04a63795ca96), [`bc64c28`](https://github.com/xataio/client-ts/commit/bc64c28fbfbb000c7190ac8092e2ef6a261df86f), [`12f1ce3`](https://github.com/xataio/client-ts/commit/12f1ce362f6cda27dfdb3afab0800282bddc8b5e), [`a73a2a2`](https://github.com/xataio/client-ts/commit/a73a2a2014c44cf88eaef42196ba1dba9d516b4a)]:
+  - @xata.io/client@0.11.0
+  - @xata.io/importer@0.2.0
+  - @xata.io/codegen@0.11.0
+
 ## 0.2.1
 
 ### Patch Changes
