@@ -398,7 +398,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   }
 
   /**
-   * Next page of records
+   * Retrieve next page of records
    *
    * @returns A new page object.
    */
@@ -407,7 +407,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   }
 
   /**
-   * Previous page of records
+   * Retrieve previous page of records
    *
    * @returns A new page object
    */
@@ -416,7 +416,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   }
 
   /**
-   * First page of records
+   * Retrieve first page of records
    *
    * @returns A new page object
    */
@@ -425,7 +425,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   }
 
   /**
-   * Last page of records
+   * Retrieve last page of records
    *
    * @returns A new page object
    */
