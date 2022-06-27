@@ -609,11 +609,11 @@ export const initObject = <T>(db: Record<string, Repository<any>>, schema: Schem
 
     switch (column.type) {
       case 'datetime': {
-        const date = new Date(value as string | number);
+        const date = value !== undefined ? new Date(value as string) : undefined;
 
-        if (isNaN(date.getTime())) {
+        if (date && isNaN(date.getTime())) {
           console.error(`Failed to parse date ${value} for field ${column.name}`);
-        } else {
+        } else if (date) {
           result[column.name] = date;
         }
 

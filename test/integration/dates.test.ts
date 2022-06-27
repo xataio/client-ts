@@ -69,11 +69,17 @@ afterAll(async () => {
 });
 
 describe('dates', () => {
-  test.skip('add a record with a date', async () => {
+  test('add a record with a date', async () => {
     const date = new Date();
     const record = await xata.db.datetime.create({ date });
 
     expect(record.date instanceof Date).toEqual(true);
     expect(record.date?.toISOString()).toEqual(date.toISOString());
+  });
+
+  test('add a record without a date (optional)', async () => {
+    const record = await xata.db.datetime.create({});
+
+    expect(record.date).toBeUndefined();
   });
 });
