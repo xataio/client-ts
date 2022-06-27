@@ -47,7 +47,7 @@ export default class RandomData extends BaseCommand {
       this.log(`Inserted ${flags.records} random records in table ${table.name}`);
     }
 
-    this.log(`Done. Inserted ${tables.length * flags.records} random records across ${tables.length} tables`);
+    this.log(`Inserted ${tables.length * flags.records} random records across ${tables.length} tables.`);
   }
 
   randomRecord(columns: Column[]) {
