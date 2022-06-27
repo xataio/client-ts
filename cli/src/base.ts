@@ -152,7 +152,7 @@ export abstract class BaseCommand extends Command {
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
-      this.log(`You only have a workspace, using it by default: ${workspace}"`);
+      this.log(`You only have a workspace, using it by default: ${workspace}`);
       return workspace;
     }
 
