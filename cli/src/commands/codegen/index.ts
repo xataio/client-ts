@@ -21,7 +21,7 @@ export default class Codegen extends BaseCommand {
     databaseURL: this.databaseURLFlag,
     branch: this.branchFlag,
     output: Flags.string({
-      name: 'output',
+      char: 'o',
       description: 'Output file. Overwrites your project configuration setting'
     }),
     declarations: Flags.boolean({
