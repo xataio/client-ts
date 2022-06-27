@@ -34,6 +34,11 @@ export default class RandomData extends BaseCommand {
     }
 
     const { tables } = branchDetails.schema;
+    if (tables.length === 0) {
+      this.warn(
+        'Your database has no tables. To create one, use `xata schema edit`. Once your database has at least one table, running this command again will generate random data for you.'
+      );
+    }
 
     for (const table of tables) {
       if (flags.table && !flags.table.includes(table.name)) continue;
