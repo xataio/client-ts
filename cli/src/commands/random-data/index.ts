@@ -33,7 +33,9 @@ export default class RandomData extends BaseCommand {
       this.error('Could not resolve the current branch');
     }
 
-    for (const table of branchDetails.schema.tables) {
+    const { tables } = branchDetails.schema;
+
+    for (const table of tables) {
       if (flags.table && !flags.table.includes(table.name)) continue;
 
       const records: Record<string, unknown>[] = [];
@@ -44,6 +46,8 @@ export default class RandomData extends BaseCommand {
 
       this.log(`Inserted ${flags.records} random records in table ${table.name}`);
     }
+
+    this.log(`Done. Inserted ${tables.length * flags.records} random records across ${tables.length} tables`);
   }
 
   randomRecord(columns: Column[]) {
