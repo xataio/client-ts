@@ -177,7 +177,7 @@ const users = await xata.db.users.filter('email', 'foo@example.com').getMany();
 const users = await xata.db.users.sort('full_name', 'asc').getMany();
 ```
 
-Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getMany()` or `getFirst()`. Pagination with limit/offet and cursors will be available in the next release.
+Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getAll()`, `getFirst()`, `getMany()` or `getPaginated()`.
 
 ```ts
 // Operators that combine multiple conditions can be deconstructed
@@ -196,6 +196,27 @@ await admins.getMany(); // still returns all admins
 // Finally fetch the results of the query
 const users = await query.getMany();
 const firstUser = await query.getFirst();
+
+// Also you can paginate the results
+const page = await query.getPaginated();
+const hasPage2 = page.hasNextPage();
+const page2 = await page.nextPage();
+```
+
+If you want to use an iterator, both the Repository and the Query classes implement an AsyncIterable. Alternatively you can use `getIterator()` and customize the batch size of the iterator:
+
+```ts
+for await (const record of xata.db.users) {
+  console.log(record);
+}
+
+for await (const record of xata.db.users.filter('team.id', teamId)) {
+  console.log(record);
+}
+
+for await (const records of xata.db.users.getIterator({ batchSize: 100 })) {
+  console.log(records);
+}
 ```
 
 **Updating objects**
