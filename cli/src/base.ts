@@ -88,10 +88,14 @@ export abstract class BaseCommand extends Command {
     const profile = apiKey ? undefined : await getProfile();
 
     apiKey = apiKey || profile?.apiKey;
-    if (!apiKey)
-      this.error(
-        'Could not instantiate Xata client. No API key found. Please run `xata auth login` or configure a project with `xata init`.'
-      );
+    if (!apiKey) {
+      this.error('Could not instantiate Xata client. No API key found.', {
+        suggestions: [
+          'Run `xata auth login`',
+          'Configure a project with `xata init --databaseURL=https://{workspace}.xata.sh/db/{database}`'
+        ]
+      });
+    }
 
     let host: XataApiClientOptions['host'];
     if (profile?.api) {
