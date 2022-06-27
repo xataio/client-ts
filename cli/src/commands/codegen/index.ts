@@ -25,7 +25,6 @@ export default class Codegen extends BaseCommand {
       description: 'Output file. Overwrites your project configuration setting'
     }),
     declarations: Flags.boolean({
-      name: 'declarations',
       description:
         'Whether or not the declarations file should be generated. Overwrites your project configuration setting'
     })
