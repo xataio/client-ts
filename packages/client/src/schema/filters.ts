@@ -79,8 +79,8 @@ type ValueTypeFilters<T> = T | T extends string
     ],
 }
 */
-type AggregatorFilter<Record> = {
-  [key in '$all' | '$any' | '$not' | '$none']?: SingleOrArray<Filter<Record>>;
+type AggregatorFilter<T> = {
+  [key in '$all' | '$any' | '$not' | '$none']?: SingleOrArray<Filter<T>>;
 };
 
 /**
@@ -98,8 +98,8 @@ type BaseApiFilter<Record> = PropertyAccessFilter<Record> | AggregatorFilter<Rec
  * Injects the Api filters on nested properties
  * Example: { filter: { settings: { plan: { $any: ['free', 'trial'] } } } }
  */
-type NestedApiFilter<T> = T extends Record<string, any>
-  ? { [key in keyof T]?: T[key] extends Record<string, any> ? SingleOrArray<Filter<T[key]>> : PropertyFilter<T[key]> }
-  : PropertyFilter<T>;
+type NestedApiFilter<T> = {
+  [key in keyof T]?: T[key] extends Record<string, any> ? SingleOrArray<Filter<T[key]>> : PropertyFilter<T[key]>;
+};
 
-export type Filter<Record> = BaseApiFilter<Record> | NestedApiFilter<Record>;
+export type Filter<T> = T extends Record<string, any> ? BaseApiFilter<T> | NestedApiFilter<T> : PropertyFilter<T>;

@@ -1,5 +1,13 @@
 # @xata.io/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- [#339](https://github.com/xataio/client-ts/pull/339) [`aeafe54`](https://github.com/xataio/client-ts/commit/aeafe54b53e203cf9357b4f4cfd648fa303be38a) Thanks [@gimenete](https://github.com/gimenete)! - Move importer command to CLI
+
+* [#316](https://github.com/xataio/client-ts/pull/316) [`345d31c`](https://github.com/xataio/client-ts/commit/345d31c2bce1581355c665d295505d20c41c95d8) Thanks [@gimenete](https://github.com/gimenete)! - Xata init will ask for an API key and a fallback branch
+
 ## 0.2.1
 
 ### Patch Changes

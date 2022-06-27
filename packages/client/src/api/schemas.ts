@@ -317,6 +317,17 @@ export type FilterExpression = {
   [key: string]: FilterColumn;
 };
 
+export type HighlightExpression = {
+  /*
+   * Set to `false` to disable highlighting. By default it is `true`.
+   */
+  enabled?: boolean;
+  /*
+   * Set to `false` to disable HTML encoding in highlight snippets. By default it is `true`.
+   */
+  encodeHTML?: boolean;
+};
+
 export type FilterList = FilterExpression | FilterExpression[];
 
 export type FilterColumn = FilterColumnIncludes | FilterPredicate | FilterList;
@@ -452,9 +463,19 @@ export type XataRecord = {
      */
     version: number;
     /*
-     * The record's table name. APIs that return records from multiple tables will set _table accordingly.
+     * The record's table name. APIs that return records from multiple tables will set this field accordingly.
      */
     table?: string;
+    /*
+     * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
+     */
+    highlight?: {
+      [key: string]:
+        | string[]
+        | {
+            [key: string]: any;
+          };
+    };
     /*
      * Encoding/Decoding errors
      */
