@@ -1,6 +1,6 @@
 import { Flags } from '@oclif/core';
 import { XataApiClient } from '@xata.io/client';
-import { generateFromContext } from '@xata.io/codegen';
+import { generate } from '@xata.io/codegen';
 import chalk from 'chalk';
 import EventEmitter from 'events';
 import { createWriteStream } from 'fs';
@@ -35,13 +35,25 @@ export default class Shell extends BaseCommand {
     const apiKey = (await getProfile())?.apiKey;
     if (!apiKey)
       this.error('No API key found. Either use the XATA_API_KEY environment variable or run `xata auth login`');
-    const { protocol, host, databaseURL } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
+    const { protocol, host, databaseURL, workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(
+      flags.databaseURL,
+      flags.branch
+    );
 
     // Generate the file in the same dir than this package's code so it
     // can import @xata.io/client
     const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
     try {
-      const { transpiled } = await generateFromContext('javascript', { apiKey, databaseURL });
+      const xata = await this.getXataClient();
+      const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+      const { schema } = branchDetails;
+
+      // TODO: remove formatVersion
+      const { transpiled } = await generate({
+        language: 'javascript',
+        databaseURL,
+        schema: { formatVersion: '1.0', ...schema }
+      });
       await fs.writeFile(tempFile, transpiled);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

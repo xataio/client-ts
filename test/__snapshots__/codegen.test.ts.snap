@@ -1,5 +1,67 @@
 // Vitest Snapshot v1
 
+exports[`generate > should respect case naming 1`] = `
+"import { buildClient, BaseClientOptions, XataRecord } from \\"@xata.io/client\\";
+
+export interface TeamsLike {
+  \\"name-test\\"?: string | null;
+  labels_Test?: string[] | null;
+  ownerFoo?: UsersFooRecord | null;
+}
+
+export type TeamsLikeRecord = TeamsLike & XataRecord;
+
+export interface UsersFoo {
+  \\"email-random\\"?: string | null;
+  full_name?: string | null;
+  teamLike?: TeamsLikeRecord | null;
+}
+
+export type UsersFooRecord = UsersFoo & XataRecord;
+
+export type DatabaseSchema = {
+  teams_Like: TeamsLike;
+  \\"users-foo\\": UsersFoo;
+};
+
+const tables = [\\"teams_Like\\", \\"users-foo\\"];
+
+const DatabaseClient = buildClient();
+
+export class XataClient extends DatabaseClient<DatabaseSchema> {
+  constructor(options?: BaseClientOptions) {
+    super({ databaseURL: \\"\\", ...options }, tables);
+  }
+}
+"
+`;
+
+exports[`generate > should respect numbers in names 1`] = `
+"import { buildClient, BaseClientOptions, XataRecord } from \\"@xata.io/client\\";
+
+export interface $1teamsCase {
+  \\"2nameCase\\"?: string | null;
+  \\"3Labels\\"?: string[] | null;
+}
+
+export type $1teamsCaseRecord = $1teamsCase & XataRecord;
+
+export type DatabaseSchema = {
+  \\"1teams-case\\": $1teamsCase;
+};
+
+const tables = [\\"1teams-case\\"];
+
+const DatabaseClient = buildClient();
+
+export class XataClient extends DatabaseClient<DatabaseSchema> {
+  constructor(options?: BaseClientOptions) {
+    super({ databaseURL: \\"\\", ...options }, tables);
+  }
+}
+"
+`;
+
 exports[`generateFromLocalFiles > should generate correct JavaScript 1`] = `
 [
   "import { buildClient } from \\"@xata.io/client\\";
