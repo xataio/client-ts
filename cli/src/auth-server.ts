@@ -44,7 +44,7 @@ function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse) 
   res.writeHead(200, {
     'Content-Type': 'text/html'
   });
-  res.end(readFileSync(path.join(__dirname, 'api-key-success.html')));
+  res.end(readFileSync(path.join(__dirname, 'api-key-success.html'), 'utf-8'));
 }
 
 export function generateURL(port: number, publicKey: string, privateKey: string, passphrase: string) {
