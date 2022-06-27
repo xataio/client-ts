@@ -10,7 +10,7 @@ Install the dependencies
 
 ```
 npm install @xata.io/client
-npm install @xata.io/codegen -D
+npm install @xata.io/cli -g
 ```
 
 ## Usage
@@ -55,20 +55,12 @@ await client.workspaces.deleteWorkspace(workspace);
 
 ### Schema-generated Client
 
-First of all, add an npm script to your package.json file to invoke `xata-codegen`. You can customize the location of the schema file and the generated output file. For example:
+To use the schema-generated client, you need to run the code generator utility that comes with our CLI.
 
-```json
-{
-  "scripts": {
-    "xata-codegen": "xata-codegen xata -o src/xata.ts"
-  }
-}
-```
-
-Run it (this is assuming your Xata directory is in `./xata` and it was created by the `xata` cli application)
+To run it (and assuming you have configured the project with `xata init`):
 
 ```bash
-npm run xata-codegen
+xata codegen
 ```
 
 In a TypeScript file start using the generated code:

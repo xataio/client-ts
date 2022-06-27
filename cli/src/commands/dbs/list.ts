@@ -19,7 +19,10 @@ export default class DatabasesList extends BaseCommand {
 
   async run(): Promise<any> {
     const { flags } = await this.parse(DatabasesList);
-    const workspace = flags.workspace || (await this.getWorkspace());
+    const workspace =
+      flags.workspace ||
+      this.parseDatabaseURL(this.projectConfig?.databaseURL ?? '').workspace ||
+      (await this.getWorkspace());
 
     const xata = await this.getXataClient();
     const databaseList = await xata.databases.getDatabaseList(workspace);

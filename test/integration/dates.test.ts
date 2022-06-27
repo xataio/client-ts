@@ -21,7 +21,7 @@ const DatabaseClient = buildClient();
 
 class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
-    super(options, {});
+    super(options, ['datetime']);
   }
 }
 

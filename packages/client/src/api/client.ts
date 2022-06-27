@@ -667,6 +667,20 @@ class RecordsApi {
     });
   }
 
+  public searchTable(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    tableName: Schemas.TableName,
+    query: Types.SearchTableRequestBody
+  ): Promise<Responses.SearchResponse> {
+    return operationsByTag.records.searchTable({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
+      body: query,
+      ...this.extraProps
+    });
+  }
+
   public searchBranch(
     workspace: Schemas.WorkspaceID,
     database: Schemas.DBName,

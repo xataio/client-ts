@@ -16,8 +16,12 @@ export function isObject(value: any): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+export function isDefined<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
+
 export function isString(value: any): value is string {
-  return value !== undefined && value !== null && typeof value === 'string';
+  return isDefined(value) && typeof value === 'string';
 }
 
 export function toBase64(value: string): string {

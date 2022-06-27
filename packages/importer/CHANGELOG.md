@@ -1,5 +1,15 @@
 # @xata.io/importer
 
+## 0.2.0
+
+### Minor Changes
+
+- [#339](https://github.com/xataio/client-ts/pull/339) [`aeafe54`](https://github.com/xataio/client-ts/commit/aeafe54b53e203cf9357b4f4cfd648fa303be38a) Thanks [@gimenete](https://github.com/gimenete)! - Move importer command to CLI
+
+### Patch Changes
+
+- [#344](https://github.com/xataio/client-ts/pull/344) [`bcfad72`](https://github.com/xataio/client-ts/commit/bcfad722e26aac6010f3994d3b1b1f7df21f2c76) Thanks [@gimenete](https://github.com/gimenete)! - Fix too permissive regular expression in importer package
+
 ## 0.1.4
 
 ### Patch Changes

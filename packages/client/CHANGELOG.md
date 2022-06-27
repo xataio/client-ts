@@ -1,5 +1,33 @@
 # @xata.io/client
 
+## 0.11.0
+
+### Minor Changes
+
+- [#322](https://github.com/xataio/client-ts/pull/322) [`bc64c28`](https://github.com/xataio/client-ts/commit/bc64c28fbfbb000c7190ac8092e2ef6a261df86f) Thanks [@SferaDev](https://github.com/SferaDev)! - Add filter support for cross-table search operations
+
+### Patch Changes
+
+- [#327](https://github.com/xataio/client-ts/pull/327) [`505257c`](https://github.com/xataio/client-ts/commit/505257c0c42ca0c8beaf5c0f638037c576dcc43c) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow reading multiple uids at the same time
+
+* [#346](https://github.com/xataio/client-ts/pull/346) [`ff7e5c6`](https://github.com/xataio/client-ts/commit/ff7e5c6f211913196d8c28600d7a7675ed261688) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix compat with TS 4.8
+
+- [#345](https://github.com/xataio/client-ts/pull/345) [`bf64cb8`](https://github.com/xataio/client-ts/commit/bf64cb885d55a0271e966314384324f02ded084e) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix bug with nullable record filters inferred as never
+
+* [#334](https://github.com/xataio/client-ts/pull/334) [`ce07601`](https://github.com/xataio/client-ts/commit/ce07601e4ddf9f75e20249d479dc04a63795ca96) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for TS 4.5
+
+- [#325](https://github.com/xataio/client-ts/pull/325) [`12f1ce3`](https://github.com/xataio/client-ts/commit/12f1ce362f6cda27dfdb3afab0800282bddc8b5e) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix offset errors with operations that affect many rows
+
+* [#345](https://github.com/xataio/client-ts/pull/345) [`a73a2a2`](https://github.com/xataio/client-ts/commit/a73a2a2014c44cf88eaef42196ba1dba9d516b4a) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix issue with Filter<T> not narrowing down type on object properties
+
+## 0.10.2
+
+### Patch Changes
+
+- [#312](https://github.com/xataio/client-ts/pull/312) [`0edf1af`](https://github.com/xataio/client-ts/commit/0edf1af2205c4761d53a02c74ddaab3168d69775) Thanks [@SferaDev](https://github.com/SferaDev)! - Add filtering to search by table
+
+* [#312](https://github.com/xataio/client-ts/pull/312) [`66ad7cc`](https://github.com/xataio/client-ts/commit/66ad7cc0365046c5d039c37117feac04428d8373) Thanks [@SferaDev](https://github.com/SferaDev)! - Add new API method for searching in a given table
+
 ## 0.10.1
 
 ### Patch Changes

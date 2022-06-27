@@ -1,16 +1,16 @@
 import { Flags } from '@oclif/core';
-import { getBranchMigrationPlan, getCurrentBranchName } from '@xata.io/client';
+import { getCurrentBranchName } from '@xata.io/client';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { access, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import prompts from 'prompts';
 import which from 'which';
+import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
 import { getProfile } from '../../credentials.js';
 import { xataDatabaseSchema } from '../../schema.js';
 import Codegen from '../codegen/index.js';
-import EditSchema from '../schema/edit.js';
 
 export default class Init extends BaseCommand {
   static description = 'Configure your working directory to work with a Xata database';
@@ -27,9 +27,7 @@ export default class Init extends BaseCommand {
     })
   };
 
-  static args = [
-    // TODO: add an arg for initial schema
-  ];
+  static args = [];
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Init);
@@ -41,6 +39,8 @@ export default class Init extends BaseCommand {
         );
       } else {
         this.warn(`Will overwrite ${this.projectConfigLocation} because ${chalk.bold('--force')} is being used`);
+        // Clean up the project ocnfiugration so the user is asked for workspace and database again
+        this.projectConfig = undefined;
       }
     }
 
@@ -52,18 +52,20 @@ export default class Init extends BaseCommand {
 
     await this.writeConfig();
 
-    await this.writeEnvFile();
+    await this.writeEnvFile(workspace, database);
 
     if (flags.schema) {
       const branch = await getCurrentBranchName();
       await this.readAndDeploySchema(workspace, database, branch, flags.schema);
-    } else {
-      await EditSchema.run([]);
     }
 
     await Codegen.runIfConfigured(this.projectConfig);
 
-    this.log('Done. You are all set!');
+    this.log(
+      `You are all set! Run ${chalk.bold('xata browse')} to edit the schema via UI, or ${chalk.bold(
+        'xata schema edit'
+      )} to edit the schema in the shell.`
+    );
   }
 
   async installSDK() {
@@ -155,22 +157,25 @@ export default class Init extends BaseCommand {
   async writeConfig() {
     // Reuse location when using --force
     if (!this.projectConfigLocation) {
-      const { location } = await prompts({
-        type: 'select',
-        name: 'location',
-        message: 'Select where to store your configuration',
-        choices: this.searchPlaces.map((place) => ({ title: place, value: place }))
-      });
-      if (!location) return this.error('You must select a location for the configuration file');
-
-      this.projectConfigLocation = path.join(process.cwd(), location);
+      this.projectConfigLocation = path.join(process.cwd(), this.searchPlaces[0]);
     }
     await this.updateConfig();
   }
 
-  async writeEnvFile() {
+  async writeEnvFile(workspace: string, database: string) {
     // TODO: generate a database-scoped API key
-    const apiKey = (await getProfile())?.apiKey;
+    let apiKey = (await getProfile())?.apiKey;
+
+    if (!apiKey) {
+      apiKey = await createAPIKeyThroughWebUI();
+    }
+
+    const fallbackBranch = await this.getBranch(workspace, database, {
+      allowEmpty: true,
+      allowCreate: true,
+      title:
+        'Choose a default development branch. This will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitely)'
+    });
 
     let content = '';
     try {
@@ -179,7 +184,11 @@ export default class Init extends BaseCommand {
     } catch (err) {
       // ignore
     }
-    content += `\n\nXATA_API_KEY=${apiKey}`;
+    content += '\n\n';
+    content += `XATA_API_KEY=${apiKey}\n`;
+    if (fallbackBranch) {
+      content += `XATA_FALLBACK_BRANCH=${fallbackBranch}\n`;
+    }
     await writeFile('.env', content);
   }
 

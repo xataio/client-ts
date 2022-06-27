@@ -7,16 +7,18 @@ import {
   insertRecord,
   insertRecordWithID,
   queryTable,
-  searchBranch,
+  Schemas,
+  searchTable,
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
-import { RecordsMetadata, Schema } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, RecordsMetadata, Schema } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { isObject, isString } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { CacheImpl } from './cache';
+import { Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
@@ -60,6 +62,13 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @returns The persisted record for the given id or null if the record could not be found.
    */
   abstract read(id: string): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
+
+  /**
+   * Queries multiple records from the table given their unique id.
+   * @param ids The unique ids array.
+   * @returns The persisted records for the given ids (if a record could not be found it is not returned).
+   */
+  abstract read(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 
   /**
    * Partially update a single record.
@@ -146,7 +155,10 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param options The options to search with (like: fuzziness)
    * @returns The found records.
    */
-  abstract search(query: string, options?: { fuzziness?: number }): Promise<SelectedPick<Record, ['*']>[]>;
+  abstract search(
+    query: string,
+    options?: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> }
+  ): Promise<SelectedPick<Record, ['*']>[]>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -179,6 +191,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Create many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       const records = await this.#bulkInsertTableRecords(a);
       await Promise.all(records.map((record) => this.#setCacheRecord(record)));
 
@@ -282,26 +296,38 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
-  async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null> {
-    const cacheRecord = await this.#getCacheRecord(recordId);
-    if (cacheRecord) return cacheRecord;
+  async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null>;
+  async read(recordIds: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async read(a: string | string[]) {
+    // Read many records
+    if (Array.isArray(a)) {
+      if (a.length === 0) return [];
 
-    const fetchProps = await this.#getFetchProps();
+      return this.getAll({ filter: { id: { $any: a } } });
+    }
 
-    try {
-      const response = await getRecord({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-        ...fetchProps
-      });
+    // Read one record
+    if (isString(a)) {
+      const cacheRecord = await this.#getCacheRecord(a);
+      if (cacheRecord) return cacheRecord;
 
-      const schema = await this.#getSchema();
-      return initObject(this.db, schema, this.#table, response);
-    } catch (e) {
-      if (isObject(e) && e.status === 404) {
-        return null;
+      const fetchProps = await this.#getFetchProps();
+
+      try {
+        const response = await getRecord({
+          pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId: a },
+          ...fetchProps
+        });
+
+        const schema = await this.#getSchema();
+        return initObject(this.db, schema, this.#table, response);
+      } catch (e) {
+        if (isObject(e) && e.status === 404) {
+          return null;
+        }
+
+        throw e;
       }
-
-      throw e;
     }
   }
 
@@ -314,6 +340,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Update many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       if (a.length > 100) {
         // TODO: Implement bulk update when API has support for it
         console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
@@ -371,6 +399,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
     // Create or update many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return [];
+
       if (a.length > 100) {
         // TODO: Implement bulk update when API has support for it
         console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
@@ -418,6 +448,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async delete(a: string | Identifiable | Array<string | Identifiable>): Promise<void> {
     // Delete many records
     if (Array.isArray(a)) {
+      if (a.length === 0) return;
+
       if (a.length > 100) {
         // TODO: Implement bulk delete when API has support for it
         console.warn('Bulk delete operation is not optimized in the Xata API yet, this request might be slow');
@@ -453,12 +485,20 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
   }
 
-  async search(query: string, options: { fuzziness?: number } = {}): Promise<SelectedPick<Record, ['*']>[]> {
+  async search(
+    query: string,
+    options: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> } = {}
+  ): Promise<SelectedPick<Record, ['*']>[]> {
     const fetchProps = await this.#getFetchProps();
 
-    const { records } = await searchBranch({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
-      body: { tables: [this.#table], query, fuzziness: options.fuzziness },
+    const { records } = await searchTable({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+      body: {
+        query,
+        fuzziness: options.fuzziness,
+        highlight: options.highlight,
+        filter: options.filter as Schemas.FilterExpression
+      },
       ...fetchProps
     });
 

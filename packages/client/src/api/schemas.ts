@@ -292,6 +292,18 @@ export type SortExpression =
 export type SortOrder = 'asc' | 'desc';
 
 /**
+ * Maximum [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) for the search terms. The Levenshtein
+ * distance is the number of one charcter changes needed to make two strings equal. The default is 1, meaning that single
+ * character typos per word are tollerated by search. You can set it to 0 to remove the typo tollerance or set it to 2
+ * to allow two typos in a word.
+ *
+ * @default 1
+ * @maximum 2
+ * @minimum 0
+ */
+export type FuzzinessExpression = number;
+
+/**
  * @minProperties 1
  */
 export type FilterExpression = {
@@ -303,6 +315,17 @@ export type FilterExpression = {
   $not?: FilterList;
 } & {
   [key: string]: FilterColumn;
+};
+
+export type HighlightExpression = {
+  /*
+   * Set to `false` to disable highlighting. By default it is `true`.
+   */
+  enabled?: boolean;
+  /*
+   * Set to `false` to disable HTML encoding in highlight snippets. By default it is `true`.
+   */
+  encodeHTML?: boolean;
 };
 
 export type FilterList = FilterExpression | FilterExpression[];
@@ -440,9 +463,19 @@ export type XataRecord = {
      */
     version: number;
     /*
-     * The record's table name. APIs that return records from multiple tables will set _table accordingly.
+     * The record's table name. APIs that return records from multiple tables will set this field accordingly.
      */
     table?: string;
+    /*
+     * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
+     */
+    highlight?: {
+      [key: string]:
+        | string[]
+        | {
+            [key: string]: any;
+          };
+    };
     /*
      * Encoding/Decoding errors
      */

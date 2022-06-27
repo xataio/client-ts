@@ -11,6 +11,7 @@ import prompts from 'prompts';
 import slugify from 'slugify';
 import table from 'text-table';
 import { z, ZodError } from 'zod';
+import { createAPIKeyThroughWebUI } from './auth-server.js';
 import { getProfile } from './credentials.js';
 
 export const projectConfigSchema = z.object({
@@ -37,8 +38,9 @@ export abstract class BaseCommand extends Command {
 
   #xataClient?: XataApiClient;
 
+  // The first place is the one used by default when running `xata init`
   // In the future we can support YAML
-  searchPlaces = ['package.json', `.${moduleName}rc`, `.${moduleName}rc.json`];
+  searchPlaces = [`.${moduleName}rc`, `.${moduleName}rc.json`, 'package.json'];
 
   static databaseURLFlag = Flags.string({
     name: 'databaseurl',
@@ -49,6 +51,19 @@ export abstract class BaseCommand extends Command {
     name: 'branch',
     description: 'Branch name to use'
   });
+
+  static noInputFlag = Flags.boolean({
+    description: 'Will not prompt interactively for missing values'
+  });
+
+  static jsonFlag = Flags.boolean({
+    description: 'Print the output in JSON format'
+  });
+
+  static commonFlags = {
+    json: this.jsonFlag,
+    'no-input': this.noInputFlag
+  };
 
   async init() {
     dotenv.config();
@@ -198,6 +213,9 @@ export abstract class BaseCommand extends Command {
     const xata = await this.getXataClient();
     const { branches = [] } = await xata.branches.getBranchList(workspace, database);
 
+    const EMPTY_CHOICE = '$empty';
+    const CREATE_CHOICE = '$create';
+
     if (branches.length > 0) {
       const choices = branches.map((db) => ({
         title: db.name,
@@ -205,11 +223,11 @@ export abstract class BaseCommand extends Command {
       }));
 
       if (options.allowEmpty) {
-        choices.splice(0, 0, { title: '<None>', value: 'empty' });
+        choices.splice(0, 0, { title: '<None>', value: EMPTY_CHOICE });
       }
 
       if (options.allowCreate) {
-        choices.splice(0, 0, { title: '<Create a new branch>', value: 'create' });
+        choices.splice(0, 0, { title: '<Create a new branch>', value: CREATE_CHOICE });
       }
 
       const {
@@ -219,9 +237,9 @@ export abstract class BaseCommand extends Command {
       const { branch } = await prompts({ type: 'select', name: 'branch', message: title, choices });
 
       if (!branch) return this.error('No branch selected');
-      if (branch === 'create') {
+      if (branch === CREATE_CHOICE) {
         return this.createBranch(workspace, database);
-      } else if (branch === 'empty') {
+      } else if (branch === EMPTY_CHOICE) {
         return '';
       } else {
         return branch;
@@ -288,6 +306,14 @@ export abstract class BaseCommand extends Command {
   async getParsedDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
     const { databaseURL, source } = await this.getDatabaseURL(databaseURLFlag, allowCreate);
 
+    const info = this.parseDatabaseURL(databaseURL);
+    return {
+      ...info,
+      source
+    };
+  }
+
+  parseDatabaseURL(databaseURL: string) {
     const [protocol, , host, , database] = databaseURL.split('/');
     const [workspace] = (host || '').split('.');
     return {
@@ -295,8 +321,7 @@ export abstract class BaseCommand extends Command {
       protocol,
       host,
       database,
-      workspace,
-      source
+      workspace
     };
   }
 
@@ -335,6 +360,31 @@ export abstract class BaseCommand extends Command {
       await writeFile(fullPath, JSON.stringify(content, null, 2));
     } else {
       await writeFile(fullPath, JSON.stringify(this.projectConfig, null, 2));
+    }
+  }
+
+  async obtainKey() {
+    const { decision } = await prompts({
+      type: 'select',
+      name: 'decision',
+      message: 'Do you want to use an existing API key or create a new API key?',
+      choices: [
+        { title: 'Create a new API key opening a browser', value: 'create' },
+        { title: 'Existing API key', value: 'existing' }
+      ]
+    });
+    if (!decision) this.exit(2);
+
+    if (decision === 'create') {
+      return createAPIKeyThroughWebUI();
+    } else if (decision === 'existing') {
+      const { key } = await prompts({
+        type: 'password',
+        name: 'key',
+        message: 'Introduce your API key:'
+      });
+      if (!key) this.exit(2);
+      return key;
     }
   }
 
@@ -393,14 +443,14 @@ export abstract class BaseCommand extends Command {
     }
 
     if (migration.removedTables) {
-      for (const tableName of Object.keys(migration.removedTables)) {
+      for (const tableName of migration.removedTables) {
         this.log(` ${chalk.bgWhite.red('DELETE table ')} ${tableName}`);
       }
     }
 
     if (migration.renamedTables) {
-      for (const tableName of Object.keys(migration.renamedTables)) {
-        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${tableName}`);
+      for (const renamedTable of migration.renamedTables) {
+        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${renamedTable.oldName} to ${renamedTable.newName}`);
       }
     }
 
@@ -414,12 +464,12 @@ export abstract class BaseCommand extends Command {
           }
         }
         if (tableMigration.removedColumns) {
-          for (const columnName of Object.keys(tableMigration.removedColumns)) {
+          for (const columnName of tableMigration.removedColumns) {
             this.log(` ${chalk.bgWhite.red('DELETE column ')} ${columnName}`);
           }
         }
         if (tableMigration.modifiedColumns) {
-          for (const [, columnMigration] of Object.entries(tableMigration.modifiedColumns)) {
+          for (const columnMigration of tableMigration.modifiedColumns) {
             this.log(` ${chalk.bgWhite.red('MODIFY column ')} ${columnMigration.old.name}`);
           }
         }
@@ -432,13 +482,4 @@ export abstract class BaseCommand extends Command {
       this.warn(`  [${error.code}] ${error.message} at "${error.path.join('.')}"`);
     }
   }
-
-  static commonFlags = {
-    json: Flags.boolean({
-      description: 'Print the output in JSON format'
-    }),
-    'no-input': Flags.boolean({
-      description: 'Will not prompt interactively for missing values'
-    })
-  };
 }

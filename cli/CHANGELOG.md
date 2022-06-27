@@ -1,5 +1,25 @@
 # @xata.io/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- [#339](https://github.com/xataio/client-ts/pull/339) [`aeafe54`](https://github.com/xataio/client-ts/commit/aeafe54b53e203cf9357b4f4cfd648fa303be38a) Thanks [@gimenete](https://github.com/gimenete)! - Move importer command to CLI
+
+* [#316](https://github.com/xataio/client-ts/pull/316) [`345d31c`](https://github.com/xataio/client-ts/commit/345d31c2bce1581355c665d295505d20c41c95d8) Thanks [@gimenete](https://github.com/gimenete)! - Xata init will ask for an API key and a fallback branch
+
+## 0.2.1
+
+### Patch Changes
+
+- [#309](https://github.com/xataio/client-ts/pull/309) [`0b87c1a`](https://github.com/xataio/client-ts/commit/0b87c1a802ccf3ea04547d3d4c570b66f7af3887) Thanks [@SferaDev](https://github.com/SferaDev)! - Shell: Pretty print objects of all depths
+
+* [#309](https://github.com/xataio/client-ts/pull/309) [`c03fef8`](https://github.com/xataio/client-ts/commit/c03fef8164f12ce6e4a2045864a1b9c19542545b) Thanks [@SferaDev](https://github.com/SferaDev)! - Shell: Fix empty body sent
+
+- [#311](https://github.com/xataio/client-ts/pull/311) [`0d74b5a`](https://github.com/xataio/client-ts/commit/0d74b5a3469e7ea468afea0b3d99fe62de71c252) Thanks [@gimenete](https://github.com/gimenete)! - Some fixes to the xata init and merge commands
+
+* [#309](https://github.com/xataio/client-ts/pull/309) [`b643d61`](https://github.com/xataio/client-ts/commit/b643d61050c0c22887a6adf8d75e6d0867d66023) Thanks [@SferaDev](https://github.com/SferaDev)! - Shell: Add HTTP operations to api.\*
+
 ## 0.2.0
 
 ### Minor Changes

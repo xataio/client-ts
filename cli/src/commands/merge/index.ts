@@ -1,7 +1,6 @@
-import { getCurrentBranchDetails, Schemas } from '@xata.io/client';
-import fetch from 'node-fetch';
-import { BaseCommand } from '../../base.js';
+import { Schemas } from '@xata.io/client';
 import deepmerge from 'deepmerge';
+import { BaseCommand } from '../../base.js';
 import Codegen from '../codegen/index.js';
 
 export default class Merge extends BaseCommand {

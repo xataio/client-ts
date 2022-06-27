@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/importer",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Importer for xata.io",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -32,18 +32,13 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
-    "@xata.io/client": "^0.10.0",
+    "@xata.io/client": "^0.11.0",
     "camelcase": "^7.0.0",
-    "commander": "^9.3.0",
     "cross-fetch": "^3.1.5",
     "csvtojson": "^2.0.10",
-    "inquirer": "^8.2.4",
-    "ora": "^6.1.0",
-    "transliteration": "^2.2.0",
-    "zod": "^3.17.3"
+    "transliteration": "^2.2.0"
   },
   "devDependencies": {
-    "@types/csvtojson": "^2.0.0",
-    "@types/inquirer": "^8.2.1"
+    "@types/csvtojson": "^2.0.0"
   }
 }
