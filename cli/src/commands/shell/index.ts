@@ -26,6 +26,7 @@ export default class Shell extends BaseCommand {
     databaseURL: this.databaseURLFlag,
     branch: this.branchFlag,
     code: Flags.string({
+      char: 'c',
       description: 'Fragment of code to be executed in the shell immediately after starting it'
     })
   };
