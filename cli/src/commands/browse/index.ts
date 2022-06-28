@@ -1,4 +1,3 @@
-import { Flags } from '@oclif/core';
 import open from 'open';
 import { BaseCommand } from '../../base.js';
 import { getProfile } from '../../credentials.js';
@@ -10,9 +9,7 @@ export default class Browse extends BaseCommand {
   static flags = {
     ...this.commonFlags,
     ...this.databaseURLFlag,
-    branch: Flags.string({
-      description: 'Branch to be browsed'
-    })
+    branch: this.branchFlag
   };
 
   static args = [];

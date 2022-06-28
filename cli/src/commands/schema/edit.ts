@@ -96,6 +96,7 @@ export default class EditSchema extends BaseCommand {
     const schema: SelectChoice = {
       name: { type: 'schema' },
       message: 'Tables',
+      role: 'heading',
       choices: tableChoices
     };
     choices.push(schema);

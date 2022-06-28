@@ -23,6 +23,7 @@ export default class Init extends BaseCommand {
       description: 'Initializes a new database or updates an existing one with the given schema'
     }),
     force: Flags.boolean({
+      char: 'f',
       description: 'Overwrite existing project configuration'
     })
   };
