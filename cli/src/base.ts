@@ -99,7 +99,7 @@ export abstract class BaseCommand extends Command {
       this.error('Could not instantiate Xata client. No API key found.', {
         suggestions: [
           'Run `xata auth login`',
-          'Configure a project with `xata init --databaseURL=https://{workspace}.xata.sh/db/{database}`'
+          'Configure a project with `xata init --db=https://{workspace}.xata.sh/db/{database}`'
         ]
       });
     }
