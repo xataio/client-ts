@@ -43,7 +43,6 @@ export abstract class BaseCommand extends Command {
   searchPlaces = [`.${moduleName}rc`, `.${moduleName}rc.json`, 'package.json'];
 
   static databaseURLFlag = Flags.string({
-    char: 'u',
     description: 'URL of the database in the format https://{workspace}.xata.sh/db/{database}'
   });
 
