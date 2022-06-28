@@ -27,6 +27,8 @@ const partialProjectConfig = projectConfigSchema.deepPartial();
 export type ProjectConfig = z.infer<typeof partialProjectConfig>;
 
 const moduleName = 'xata';
+const commonFlagsHelpGroup = 'Common';
+
 export abstract class BaseCommand extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
   // By default this will use the system locale and timezone.
@@ -51,14 +53,17 @@ export abstract class BaseCommand extends Command {
 
   static branchFlag = Flags.string({
     char: 'b',
+    helpValue: '<branch-name>',
     description: 'Branch name to use'
   });
 
   static noInputFlag = Flags.boolean({
+    helpGroup: commonFlagsHelpGroup,
     description: 'Will not prompt interactively for missing values'
   });
 
   static jsonFlag = Flags.boolean({
+    helpGroup: commonFlagsHelpGroup,
     description: 'Print the output in JSON format'
   });
 
