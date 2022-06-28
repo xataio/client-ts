@@ -37,7 +37,7 @@ This command will ask you a few questions and will run a few operations:
 - It will create or update your `.env` file to store a database-scoped API key. (At the time of writing these docs it'll actually store a personal API key, but this will change soon).
 - It will ask you if you want to install the SDK and/or use the TypeScript/JavaScript code generator.
 
-## Code generation
+## Code generation
 
 You can use the Xata SDK (`@xata.io/client`) directly or with code generation. The benefit of using code generation is that you'll have a Xata client with specific types and classes for your database schema. This is great for TypeScript because it ensures type safety, but also for JavaScript because you can benefit from its type definitions if you use development tools such as IDEs or text editors that support them.
 
