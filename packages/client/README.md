@@ -80,7 +80,7 @@ It works the same way as the code-generated `XataClient` but doesn't provide typ
 
 You can read more on the methods available below, under the `API Design` section.
 
-## API Design
+### API Design
 
 The Xata SDK to create/read/update/delete records follows the repository pattern. Each table will have a repository object available at `xata.db.[table-name]`.
 
@@ -208,7 +208,7 @@ await user.delete();
 await xata.db.users.delete('rec_1234abcdef');
 ```
 
-## Deno support
+#### Deno support
 
 Right now we are still not publishing the client on deno.land or have support for deno in the codegen.
 
