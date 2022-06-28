@@ -8,7 +8,7 @@ export default class BranchesDelete extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    databaseURL: this.databaseURLFlag
+    ...this.databaseURLFlag
   };
 
   static args = [{ name: 'branch', description: 'Branch name to delete', required: true }];
@@ -17,7 +17,7 @@ export default class BranchesDelete extends BaseCommand {
 
   async run(): Promise<void | unknown> {
     const { flags, args } = await this.parse(BranchesDelete);
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
+    const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
     const branch = args.branch;
 
     const xata = await this.getXataClient();

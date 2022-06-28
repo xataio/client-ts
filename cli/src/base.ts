@@ -42,10 +42,11 @@ export abstract class BaseCommand extends Command {
   // In the future we can support YAML
   searchPlaces = [`.${moduleName}rc`, `.${moduleName}rc.json`, 'package.json'];
 
-  static databaseURLFlag = Flags.string({
-    name: 'databaseurl',
-    description: 'URL of the database in the format https://{workspace}.xata.sh/db/{database}'
-  });
+  static databaseURLFlag = {
+    db: Flags.string({
+      description: 'URL of the database in the format https://{workspace}.xata.sh/db/{database}'
+    })
+  };
 
   static branchFlag = Flags.string({
     name: 'branch',

@@ -18,7 +18,7 @@ export default class Init extends BaseCommand {
   static examples = [];
 
   static flags = {
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     schema: Flags.string({
       description: 'Initializes a new database or updates an existing one with the given schema'
     }),
@@ -44,7 +44,7 @@ export default class Init extends BaseCommand {
       }
     }
 
-    const { workspace, database, databaseURL } = await this.getParsedDatabaseURL(flags.databaseURL, true);
+    const { workspace, database, databaseURL } = await this.getParsedDatabaseURL(flags.db, true);
 
     this.projectConfig = { databaseURL };
 

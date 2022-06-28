@@ -9,7 +9,7 @@ export default class SchemaDump extends BaseCommand {
   static examples = [];
 
   static flags = {
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     branch: this.branchFlag,
     file: Flags.string({ char: 'f', description: 'File to write the schma to' })
   };
@@ -19,7 +19,7 @@ export default class SchemaDump extends BaseCommand {
   async run(): Promise<Schemas.Schema | undefined> {
     const { flags } = await this.parse(SchemaDump);
 
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
 
     const xata = await this.getXataClient();
     const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);

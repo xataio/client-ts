@@ -58,7 +58,7 @@ export default class EditSchema extends BaseCommand {
   static examples = [];
 
   static flags = {
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     branch: this.branchFlag
   };
 
@@ -73,7 +73,7 @@ export default class EditSchema extends BaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(EditSchema);
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     this.workspace = workspace;
     this.database = database;
 
