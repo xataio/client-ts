@@ -44,6 +44,7 @@ export abstract class BaseCommand extends Command {
 
   static databaseURLFlag = {
     db: Flags.string({
+      helpValue: 'https://{workspace}.xata.sh/db/{database}',
       description: 'URL of the database in the format https://{workspace}.xata.sh/db/{database}'
     })
   };
