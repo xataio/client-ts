@@ -6,8 +6,6 @@ It also works in browsers for the same reason. But this is strongly discouraged 
 
 ## Installing
 
-Install the dependencies
-
 ```bash
 npm install @xata.io/client
 ```
@@ -16,45 +14,13 @@ npm install @xata.io/client
 
 There are three ways to use the SDK:
 
-- **API Client**: SDK to interact with the whole Xata API and all its endpoints.
 - **Schema-generated Client**: SDK to create/read/update/delete records in a given database following a schema file (with type-safety).
 - **Schema-less Client**: SDK to create/read/update/delete records in any database without schema validation (with partial type-safety).
-
-### API Client
-
-One of the main features of the SDK is the ability to interact with the whole Xata API and perform administrative operations such as creating/reading/updating/deleting workspaces, databases, tables, branches...
-
-To communicate with the SDK we provide a constructor called `XataApiClient` that accepts an API token and an optional fetch implementation method.
-
-```ts
-const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY });
-```
-
-Once you have initialized the API client, the operations are organized following the same hiearchy as in the [official documentation](https://docs.xata.io). You have different namespaces for each entity (ie. `workspaces`, `databases`, `tables`, `branches`, `users`, `records`...).
-
-```ts
-const { id: workspace } = await client.workspaces.createWorkspace({ name: 'example', slug: 'example' });
-
-const { databaseName } = await client.databases.createDatabase(workspace, 'database');
-
-await client.branches.createBranch(workspace, databaseName, 'branch');
-await client.tables.createTable(workspace, databaseName, 'branch', 'table');
-await client.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
-  columns: [{ name: 'email', type: 'string' }]
-});
-
-const { id: recordId } = await client.records.insertRecord(workspace, databaseName, 'branch', 'table', {
-  email: 'example@foo.bar'
-});
-
-const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
-
-await client.workspaces.deleteWorkspace(workspace);
-```
+- **API Client**: SDK to interact with the whole Xata API and all its endpoints.
 
 ### Schema-generated Client
 
-To use the schema-generated client, you need to run the code generator utility that comes with our CLI.
+To use the schema-generated client, you need to run the code generator utility that comes with [our CLI](../../cli/README.md).
 
 To run it (and assuming you have configured the project with `xata init`):
 
@@ -68,15 +34,13 @@ In a TypeScript file start using the generated code:
 import { XataClient } from './xata';
 
 const xata = new XataClient({
-  branch: 'branchname',
-  apiKey: 'xau_1234abcdef',
   fetch: fetchImplementation // Required if your runtime doesn't provide a global `fetch` function.
 });
 ```
 
-The import above will differ if you chose to genreate the types in a different location.
+The import above will differ if you chose to genreate the code in a different location.
 
-`XataClient` only has two required arguments: `branch` and `apiKey`. `fetch` is required only if your runtime doesn't provide a global `fetch` function. There's also a `databaseURL` argument that by default will contain a URL pointing to your database (e.g. `https://myworkspace-123abc.xata.sh/db/databasename`), it can be specified in the constructor to overwrite that value if for whatever reason you need to connect to a different workspace or database.
+The `fetch` paramter is required only if your runtime doesn't provide a global `fetch` function. There's also a `databaseURL` argument that by default will contain a URL pointing to your database (e.g. `https://myworkspace-123abc.xata.sh/db/databasename`), it can be specified in the constructor to overwrite that value if for whatever reason you need to connect to a different workspace or database.
 
 The code generator will create two TypeScript types for each schema entity. The base one will be an `Identifiable` entity with the internal properties your entity has and the `Record` one will extend it with a set of operations (update, delete, etc...) and some schema metadata (xata version).
 
@@ -128,7 +92,7 @@ Invoke the `create()` method in the repository. Example:
 
 ```ts
 const user = await xata.db.users.create({
-  full_name: 'John Smith'
+  fullName: 'John Smith'
 });
 ```
 
@@ -173,7 +137,7 @@ const users = await xata.db.users.select('email', 'profile').getMany();
 const users = await xata.db.users.filter('email', 'foo@example.com').getMany();
 
 // Sorting
-const users = await xata.db.users.sort('full_name', 'asc').getMany();
+const users = await xata.db.users.sort('fullName', 'asc').getMany();
 ```
 
 Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getAll()`, `getFirst()`, `getMany()` or `getPaginated()`.
@@ -225,12 +189,12 @@ Updating an object leaves the existing instance unchanged, but returns a new obj
 ```ts
 // Using an existing object
 const updatedUser = await user.update({
-  full_name: 'John Smith Jr.'
+  fullName: 'John Smith Jr.'
 });
 
 // Using an object's id
 const updatedUser = await xata.db.users.update('rec_1234abcdef', {
-  full_name: 'John Smith Jr.'
+  fullName: 'John Smith Jr.'
 });
 ```
 
@@ -259,4 +223,36 @@ import {
   XataClientOptions,
   XataRecord
 } from 'https://esm.sh/@xata.io/client@<version>/dist/schema?target=deno';
+```
+
+### API Client
+
+One of the main features of the SDK is the ability to interact with the whole Xata API and perform administrative operations such as creating/reading/updating/deleting workspaces, databases, tables, branches...
+
+To communicate with the SDK we provide a constructor called `XataApiClient` that accepts an API token and an optional fetch implementation method.
+
+```ts
+const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY });
+```
+
+Once you have initialized the API client, the operations are organized following the same hiearchy as in the [official documentation](https://docs.xata.io). You have different namespaces for each entity (ie. `workspaces`, `databases`, `tables`, `branches`, `users`, `records`...).
+
+```ts
+const { id: workspace } = await client.workspaces.createWorkspace({ name: 'example', slug: 'example' });
+
+const { databaseName } = await client.databases.createDatabase(workspace, 'database');
+
+await client.branches.createBranch(workspace, databaseName, 'branch');
+await client.tables.createTable(workspace, databaseName, 'branch', 'table');
+await client.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
+  columns: [{ name: 'email', type: 'string' }]
+});
+
+const { id: recordId } = await client.records.insertRecord(workspace, databaseName, 'branch', 'table', {
+  email: 'example@foo.bar'
+});
+
+const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
+
+await client.workspaces.deleteWorkspace(workspace);
 ```

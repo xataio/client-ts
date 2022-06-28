@@ -9,5 +9,5 @@ This is the repository where we develop:
 
 There's also other pacakges that we use internally that might be of your interest:
 
-- [@xata.io/importer](./packages/importer/README.md)
-- [@xata.io/codegen](./packages/codegen/README.md)
+- [@xata.io/importer](./packages/importer)
+- [@xata.io/codegen](./packages/codegen)
