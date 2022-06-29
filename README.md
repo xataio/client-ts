@@ -200,7 +200,7 @@ const firstUser = await query.getFirst();
 
 The `getPaginable()` method will return a `Page` object. It's a wrapper that internally uses cursor based pagination.
 
-````ts
+```ts
 page.records; // Array of records
 page.hasNextPage(); // Boolean
 
@@ -268,4 +268,3 @@ import {
   XataRecord
 } from 'https://esm.sh/@xata.io/client@<version>/dist/schema?target=deno';
 ```
-````
