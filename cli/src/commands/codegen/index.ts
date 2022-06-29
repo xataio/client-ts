@@ -18,7 +18,7 @@ export default class Codegen extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     branch: this.branchFlag,
     output: Flags.string({
       char: 'o',
@@ -57,7 +57,7 @@ export default class Codegen extends BaseCommand {
 
     const xata = await this.getXataClient();
     const { workspace, database, branch, databaseURL } = await this.getParsedDatabaseURLWithBranch(
-      flags.databaseURL,
+      flags.db,
       flags.branch
     );
     const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);

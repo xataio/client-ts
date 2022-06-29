@@ -27,6 +27,8 @@ const partialProjectConfig = projectConfigSchema.deepPartial();
 export type ProjectConfig = z.infer<typeof partialProjectConfig>;
 
 const moduleName = 'xata';
+const commonFlagsHelpGroup = 'Common';
+
 export abstract class BaseCommand extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
   // By default this will use the system locale and timezone.
@@ -42,20 +44,26 @@ export abstract class BaseCommand extends Command {
   // In the future we can support YAML
   searchPlaces = [`.${moduleName}rc`, `.${moduleName}rc.json`, 'package.json'];
 
-  static databaseURLFlag = Flags.string({
-    description: 'URL of the database in the format https://{workspace}.xata.sh/db/{database}'
-  });
+  static databaseURLFlag = {
+    db: Flags.string({
+      helpValue: 'https://{workspace}.xata.sh/db/{database}',
+      description: 'URL of the database'
+    })
+  };
 
   static branchFlag = Flags.string({
     char: 'b',
+    helpValue: '<branch-name>',
     description: 'Branch name to use'
   });
 
   static noInputFlag = Flags.boolean({
+    helpGroup: commonFlagsHelpGroup,
     description: 'Will not prompt interactively for missing values'
   });
 
   static jsonFlag = Flags.boolean({
+    helpGroup: commonFlagsHelpGroup,
     description: 'Print the output in JSON format'
   });
 
@@ -91,7 +99,7 @@ export abstract class BaseCommand extends Command {
       this.error('Could not instantiate Xata client. No API key found.', {
         suggestions: [
           'Run `xata auth login`',
-          'Configure a project with `xata init --databaseURL=https://{workspace}.xata.sh/db/{database}`'
+          'Configure a project with `xata init --db=https://{workspace}.xata.sh/db/{database}`'
         ]
       });
     }

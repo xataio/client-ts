@@ -20,7 +20,7 @@ export default class ImportCSV extends BaseCommand {
 
   static flags = {
     'no-input': this.noInputFlag,
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     branch: this.branchFlag,
     table: Flags.string({
       description: 'The table where the CSV file will be imported to',
@@ -57,7 +57,7 @@ export default class ImportCSV extends BaseCommand {
       'no-column-name-normalization': ignoreColumnNormalization
     } = flags;
 
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
 
     const xata = await this.getXataClient();
 

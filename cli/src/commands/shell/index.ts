@@ -23,7 +23,7 @@ export default class Shell extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     branch: this.branchFlag,
     code: Flags.string({
       char: 'c',
@@ -37,7 +37,7 @@ export default class Shell extends BaseCommand {
     if (!apiKey)
       this.error('No API key found. Either use the XATA_API_KEY environment variable or run `xata auth login`');
     const { protocol, host, databaseURL, workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(
-      flags.databaseURL,
+      flags.db,
       flags.branch
     );
 
