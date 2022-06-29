@@ -8,7 +8,6 @@ import {
   OffsetNavigationOptions,
   Page,
   Paginable,
-  PaginationQueryMeta,
   PAGINATION_MAX_SIZE,
   RecordArray
 } from './pagination';
