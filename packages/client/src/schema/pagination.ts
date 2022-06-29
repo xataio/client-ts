@@ -106,8 +106,8 @@ export function isCursorPaginationOptions(
 export class RecordArray<Result extends XataRecord> extends Array<Result> {
   #page: Page<Result, Result>;
 
-  constructor(page: Page<any, Result>, records: Result[]) {
-    super(...records);
+  constructor(page: Page<any, Result>, overrideRecords?: Result[]) {
+    super(...(overrideRecords ?? page.records));
     this.#page = page;
   }
 
@@ -118,7 +118,7 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
    */
   async nextPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
     const newPage = await this.#page.nextPage(size, offset);
-    return new RecordArray(newPage, newPage.records);
+    return new RecordArray(newPage);
   }
 
   /**
@@ -128,7 +128,7 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
    */
   async previousPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
     const newPage = await this.#page.previousPage(size, offset);
-    return new RecordArray(newPage, newPage.records);
+    return new RecordArray(newPage);
   }
 
   /**
@@ -138,7 +138,7 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
    */
   async firstPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
     const newPage = await this.#page.firstPage(size, offset);
-    return new RecordArray(newPage, newPage.records);
+    return new RecordArray(newPage);
   }
 
   /**
@@ -148,7 +148,7 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
    */
   async lastPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
     const newPage = await this.#page.lastPage(size, offset);
-    return new RecordArray(newPage, newPage.records);
+    return new RecordArray(newPage);
   }
 
   /**
