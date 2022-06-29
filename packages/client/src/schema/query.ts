@@ -8,6 +8,7 @@ import {
   OffsetNavigationOptions,
   Page,
   Paginable,
+  PaginationQueryMeta,
   PAGINATION_MAX_SIZE,
   RecordArray
 } from './pagination';
@@ -41,12 +42,14 @@ export type QueryOptions<T extends XataRecord> = BaseOptions<T> & (CursorQueryOp
  * Query objects are immutable. Any method that adds more constraints or options to the query will return
  * a new Query object containing the both the previous and the new constraints and options.
  */
-export class Query<Record extends XataRecord, Result extends XataRecord = Record>
-  implements Omit<Paginable<Record, Result>, 'records' | 'meta'>
-{
+export class Query<Record extends XataRecord, Result extends XataRecord = Record> implements Paginable<Record, Result> {
   #table: string;
   #repository: Repository<Record>;
   #data: QueryOptions<Record> = { filter: {} };
+
+  // Implements pagination
+  readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true } };
+  readonly records: RecordArray<Result> = new RecordArray<Result>(this, []);
 
   constructor(
     repository: Repository<Record> | null,
@@ -435,7 +438,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns Boolean indicating if there is a next page
    */
   hasNextPage(): boolean {
-    return true;
+    return this.meta.page.more;
   }
 }
 
