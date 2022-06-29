@@ -2,4 +2,4 @@
 '@xata.io/client': minor
 ---
 
-Remove getPaginated method in favour of new getMany implementation
+Return paginable object in getPaginable

@@ -212,7 +212,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    *
    * @returns A page of results
    */
-  getMany(): Promise<Page<Record, Result>>;
+  getPaginable(): Promise<Page<Record, Result>>;
 
   /**
    * Get paginated results
@@ -220,7 +220,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Pagination options
    * @returns A page of results
    */
-  getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<Page<Record, Result>>;
+  getPaginable(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<Page<Record, Result>>;
 
   /**
    * Get paginated results
@@ -228,11 +228,11 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Pagination options
    * @returns A page of results
    */
-  getMany<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
+  getPaginable<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
   ): Promise<Page<Record, SelectedPick<Record, typeof options['columns']>>>;
 
-  getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Page<Record, Result>> {
+  getPaginable<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Page<Record, Result>> {
     const query = new Query<Record, Result>(this.#repository, this.#table, options, this.#data);
     return this.#repository.query(query);
   }
@@ -281,7 +281,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   ): AsyncGenerator<Result[]> {
     const { batchSize = 1 } = options;
 
-    let page = await this.getMany({ ...options, pagination: { size: batchSize, offset: 0 } });
+    let page = await this.getPaginable({ ...options, pagination: { size: batchSize, offset: 0 } });
     let more = page.hasNextPage();
 
     yield page.records as unknown as Result[];
@@ -298,26 +298,26 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * Performs the query in the database and returns a set of results.
    * @returns An array of records from the database.
    */
-  getRecords(): Promise<RecordArray<Result>>;
+  getMany(): Promise<RecordArray<Result>>;
 
   /**
    * Performs the query in the database and returns a set of results.
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getRecords(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<RecordArray<Result>>;
+  getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<RecordArray<Result>>;
 
   /**
    * Performs the query in the database and returns a set of results.
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getRecords<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
+  getMany<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
   ): Promise<RecordArray<SelectedPick<Record, typeof options['columns']>>>;
 
-  async getRecords<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<RecordArray<Result>> {
-    const { records } = await this.getMany(options);
+  async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<RecordArray<Result>> {
+    const { records } = await this.getPaginable(options);
     // Method overloading does not provide type inference for the return type.
     return records as unknown as RecordArray<Result>;
   }
@@ -384,7 +384,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   ): Promise<SelectedPick<Record, typeof options['columns']> | null>;
 
   async getFirst<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
-    const records = await this.getRecords({ ...options, pagination: { size: 1 } });
+    const records = await this.getMany({ ...options, pagination: { size: 1 } });
     // Method overloading does not provide type inference for the return type.
     return (records[0] as unknown as Result) ?? null;
   }
@@ -422,7 +422,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns A new page object
    */
   firstPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.getMany({ pagination: { size, offset } });
+    return this.getPaginable({ pagination: { size, offset } });
   }
 
   /**
@@ -431,7 +431,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns A new page object
    */
   lastPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.getMany({ pagination: { size, offset, before: 'end' } });
+    return this.getPaginable({ pagination: { size, offset, before: 'end' } });
   }
 
   /**

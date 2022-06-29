@@ -44,7 +44,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
    * @returns The next page or results.
    */
   async nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.#query.getMany({ pagination: { size, offset, after: this.meta.page.cursor } });
+    return this.#query.getPaginable({ pagination: { size, offset, after: this.meta.page.cursor } });
   }
 
   /**
@@ -54,7 +54,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
    * @returns The previous page or results.
    */
   async previousPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.#query.getMany({ pagination: { size, offset, before: this.meta.page.cursor } });
+    return this.#query.getPaginable({ pagination: { size, offset, before: this.meta.page.cursor } });
   }
 
   /**
@@ -64,7 +64,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
    * @returns The first page or results.
    */
   async firstPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.#query.getMany({ pagination: { size, offset, first: this.meta.page.cursor } });
+    return this.#query.getPaginable({ pagination: { size, offset, first: this.meta.page.cursor } });
   }
 
   /**
@@ -74,7 +74,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
    * @returns The last page or results.
    */
   async lastPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.#query.getMany({ pagination: { size, offset, last: this.meta.page.cursor } });
+    return this.#query.getPaginable({ pagination: { size, offset, last: this.meta.page.cursor } });
   }
 
   /**

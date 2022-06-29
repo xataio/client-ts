@@ -157,7 +157,7 @@ describe('client options', () => {
     });
 
     await users.getFirst();
-    await users.getRecords();
+    await users.getMany();
 
     expect(branchGetter).toHaveBeenCalledTimes(1);
   });
@@ -208,7 +208,7 @@ describe('request', () => {
       } as Response;
     });
 
-    await users.getRecords({ pagination: { size: 20 } });
+    await users.getMany({ pagination: { size: 20 } });
 
     expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -285,12 +285,12 @@ async function expectRequest(
 }
 
 describe('query', () => {
-  describe('getRecords', () => {
+  describe('getMany', () => {
     test('simple query', async () => {
       const { fetch, users } = buildClient();
 
       const expected = { method: 'POST', path: '/tables/users/query', body: {} };
-      const result = await expectRequest(fetch, expected, () => users.getRecords(), {
+      const result = await expectRequest(fetch, expected, () => users.getMany(), {
         records: [],
         meta: { page: { cursor: '', more: false } }
       });
@@ -329,7 +329,7 @@ describe('query', () => {
       const { fetch, users } = buildClient();
 
       const expected = { method: 'POST', path: '/tables/users/query', body: { filter: { $all: [{ name: 'foo' }] } } };
-      const result = await expectRequest(fetch, expected, () => users.filter('name', 'foo').getRecords(), {
+      const result = await expectRequest(fetch, expected, () => users.filter('name', 'foo').getMany(), {
         records: [],
         meta: { page: { cursor: '', more: false } }
       });
