@@ -84,14 +84,14 @@ afterAll(async () => {
 
 describe('integration tests', () => {
   test('equal filter', async () => {
-    const teams = await client.db.teams.filter('name', 'Team fruits').getMany();
+    const teams = await client.db.teams.filter('name', 'Team fruits').getAll();
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Team fruits');
   });
 
   test('operator filter', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).getMany({ sort: ['name'] });
+    const teams = await client.db.teams.filter('name', contains('fruits')).getAll({ sort: ['name'] });
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -99,7 +99,7 @@ describe('integration tests', () => {
   });
 
   test.skip('operator filter on multiple column', async () => {
-    const teams = await client.db.teams.filter('labels', ['banana']).getMany();
+    const teams = await client.db.teams.filter('labels', ['banana']).getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -107,14 +107,14 @@ describe('integration tests', () => {
   });
 
   test('multiple filter', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).filter('name', contains('Mixed')).getMany();
+    const teams = await client.db.teams.filter('name', contains('fruits')).filter('name', contains('Mixed')).getAll();
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
   });
 
   test('sort ascending', async () => {
-    const teams = await client.db.teams.sort('name', 'asc').getMany();
+    const teams = await client.db.teams.sort('name', 'asc').getAll();
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -123,7 +123,7 @@ describe('integration tests', () => {
   });
 
   test('sort descending', async () => {
-    const teams = await client.db.teams.sort('name', 'desc').getMany();
+    const teams = await client.db.teams.sort('name', 'desc').getAll();
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Team fruits');
@@ -132,7 +132,7 @@ describe('integration tests', () => {
   });
 
   test('single filter and sort ascending', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'asc').getMany();
+    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'asc').getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -140,15 +140,15 @@ describe('integration tests', () => {
   });
 
   test('single filter and sort descending', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'desc').getMany();
+    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'desc').getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Team fruits');
     expect(teams[1].name).toBe('Mixed team fruits & animals');
   });
 
-  test('sort ascending in getMany', async () => {
-    const teams = await client.db.teams.getMany({ sort: 'name' });
+  test('sort ascending in getAll', async () => {
+    const teams = await client.db.teams.getAll({ sort: 'name' });
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -156,8 +156,8 @@ describe('integration tests', () => {
     expect(teams[2].name).toBe('Team fruits');
   });
 
-  test('sort descending in getMany', async () => {
-    const teams = await client.db.teams.getMany({ sort: { column: 'name', direction: 'desc' } });
+  test('sort descending in getAll', async () => {
+    const teams = await client.db.teams.getAll({ sort: { column: 'name', direction: 'desc' } });
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Team fruits');
@@ -167,7 +167,7 @@ describe('integration tests', () => {
 
   test('negative filter', async () => {
     const repository = client.db.teams;
-    const teams = await repository.not(repository.filter('name', 'Team fruits')).sort('name', 'asc').getMany();
+    const teams = await repository.not(repository.filter('name', 'Team fruits')).sort('name', 'asc').getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -185,39 +185,21 @@ describe('integration tests', () => {
   });
 
   test('filter on object', async () => {
-    const users = await client.db.users
-      .filter({
-        address: {
-          zipcode: 100
-        }
-      })
-      .getMany();
+    const users = await client.db.users.filter({ address: { zipcode: 100 } }).getAll();
 
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
   });
 
   test('filter on object with operator', async () => {
-    const users = await client.db.users
-      .filter({
-        address: {
-          zipcode: lt(150)
-        }
-      })
-      .getMany();
+    const users = await client.db.users.filter({ address: { zipcode: lt(150) } }).getAll();
 
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
   });
 
   test('filter on link', async () => {
-    const teams = await client.db.teams
-      .filter({
-        owner: {
-          full_name: 'Owner of team fruits'
-        }
-      })
-      .getMany();
+    const teams = await client.db.teams.filter({ owner: { full_name: 'Owner of team fruits' } }).getAll();
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Team fruits');
@@ -229,8 +211,8 @@ describe('integration tests', () => {
   });
 
   test('returns many records with offset/size', async () => {
-    const page1 = await client.db.users.getMany({ pagination: { size: 10 } });
-    const page2 = await client.db.users.getMany({ pagination: { size: 10, offset: 10 } });
+    const page1 = await client.db.users.getRecords({ pagination: { size: 10 } });
+    const page2 = await client.db.users.getRecords({ pagination: { size: 10, offset: 10 } });
 
     expect(page1).not.toEqual(page2);
     expect(page1).toHaveLength(10);
@@ -241,7 +223,7 @@ describe('integration tests', () => {
     const size = Math.floor(mockUsers.length / 1.5);
     const lastPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
 
-    const page1 = await client.db.users.getPaginated({ pagination: { size } });
+    const page1 = await client.db.users.getMany({ pagination: { size } });
     const page2 = await page1.nextPage();
     const page3 = await page2.nextPage();
     const firstPage = await page3.firstPage();
@@ -262,7 +244,7 @@ describe('integration tests', () => {
   });
 
   test('returns many records with cursor passing a offset/size', async () => {
-    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
+    const page1 = await client.db.users.getMany({ pagination: { size: 5 } });
     const page2 = await page1.nextPage(10);
     const page3 = await page2.nextPage(10);
     const page2And3 = await page1.nextPage(20);
@@ -276,7 +258,7 @@ describe('integration tests', () => {
   });
 
   test('fails if sending cursor with sorting', async () => {
-    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
+    const page1 = await client.db.users.getMany({ pagination: { size: 5 } });
     const { records: records1, meta } = page1;
     const page2 = await page1.nextPage();
 
@@ -284,7 +266,7 @@ describe('integration tests', () => {
     expect(meta.page.cursor).toBeDefined();
     expect(records1).toHaveLength(5);
 
-    const { records: records2, meta: meta2 } = await client.db.users.getPaginated({
+    const { records: records2, meta: meta2 } = await client.db.users.getMany({
       pagination: { after: meta.page.cursor }
     });
 
@@ -293,7 +275,7 @@ describe('integration tests', () => {
     expect(records2).toHaveLength(5);
     expect(records2).toEqual(page2.records);
 
-    const { records: records3, meta: meta3 } = await client.db.users.getPaginated({
+    const { records: records3, meta: meta3 } = await client.db.users.getMany({
       pagination: { after: meta.page.cursor },
       columns: ['full_name']
     });
@@ -304,7 +286,7 @@ describe('integration tests', () => {
     expect(records3).not.toEqual(page2.records);
 
     expect(
-      client.db.users.getPaginated({
+      client.db.users.getMany({
         // @ts-expect-error
         pagination: { after: meta.page.cursor },
         sort: { column: 'full_name', direction: 'asc' }
@@ -314,7 +296,7 @@ describe('integration tests', () => {
 
   test('repository implements pagination', async () => {
     const loadUsers = async (repository: Repository<User>) => {
-      return repository.getPaginated({ pagination: { size: 10 } });
+      return repository.getMany({ pagination: { size: 10 } });
     };
 
     const users = await loadUsers(client.db.users);
@@ -462,14 +444,14 @@ describe('integration tests', () => {
   });
 
   test('Pagination size limit', async () => {
-    expect(client.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
+    expect(client.db.users.getMany({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
       'message',
       'page size exceeds max limit of 200'
     );
   });
 
   test('Pagination offset limit', async () => {
-    expect(client.db.users.getPaginated({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
+    expect(client.db.users.getMany({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
       'message',
       'page offset must not exceed 800'
     );
@@ -484,7 +466,7 @@ describe('integration tests', () => {
     const planes = Array(250).map((_, index) => ({ name: `Plane ${index}` }));
 
     const createdPlanes = await schemaLessclient.db.planes.create(planes);
-    const queriedPlanes = await schemaLessclient.db.planes.getPaginated();
+    const queriedPlanes = await schemaLessclient.db.planes.getMany();
 
     expect(createdPlanes).toHaveLength(250);
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
@@ -677,7 +659,7 @@ describe('record update', () => {
 
     expect(updatedTeams).toHaveLength(2);
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(2);
     expect(apiTeams[0].name).toBe('Team boats');
@@ -723,7 +705,7 @@ describe('record deletion', () => {
 
     await client.db.teams.delete(teams.map((team) => team.id));
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(0);
   });
@@ -747,7 +729,7 @@ describe('record deletion', () => {
 
     await client.db.teams.delete(teams);
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(0);
   });
@@ -806,7 +788,7 @@ describe('record create or update', () => {
     expect(updatedTeams).toHaveLength(2);
     expect(updatedTeams[0].read).toBeDefined();
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(2);
 

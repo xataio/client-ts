@@ -160,24 +160,24 @@ const user = await xata.db.users.read('rec_1234abcdef');
 
 ```ts
 // Query objects selecting all fields.
-const users = await xata.db.users.select().getMany();
+const page = await xata.db.users.select().getMany();
 const user = await xata.db.users.select().getFirst();
 
 // You can also use `xata.db.users` directly, since it's an immutable Query too!
-const users = await xata.db.users.getMany();
+const page = await xata.db.users.getMany();
 const user = await xata.db.users.getFirst();
 
 // Query objects selecting just one or more fields
-const users = await xata.db.users.select('email', 'profile').getMany();
+const page = await xata.db.users.select('email', 'profile').getMany();
 
 // Apply constraints
-const users = await xata.db.users.filter('email', 'foo@example.com').getMany();
+const page = await xata.db.users.filter('email', 'foo@example.com').getMany();
 
 // Sorting
-const users = await xata.db.users.sort('full_name', 'asc').getMany();
+const page = await xata.db.users.sort('full_name', 'asc').getMany();
 ```
 
-Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getAll()`, `getFirst()`, `getMany()` or `getPaginated()`.
+Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getMany()`, `getRecords()`, `getAll()`, or `getFirst()`.
 
 ```ts
 // Operators that combine multiple conditions can be deconstructed
@@ -191,16 +191,23 @@ filter('email', startsWith('username')).not(filter('created_at', gt(somePastDate
 // Queries are immutable objects. This is useful to derive queries from other queries
 const admins = filter('admin', true);
 const spaniardsAdmins = admins.filter('country', 'Spain');
-await admins.getMany(); // still returns all admins
+await admins.getAll(); // still returns all admins
 
 // Finally fetch the results of the query
-const users = await query.getMany();
+const users = await query.getAll();
 const firstUser = await query.getFirst();
+```
 
-// Also you can paginate the results
-const page = await query.getPaginated();
-const hasPage2 = page.hasNextPage();
-const page2 = await page.nextPage();
+The `getMany()` method will return a `Page` object. It's a wrapper that internally uses cursor based pagination.
+
+````ts
+page.records; // Array of records
+page.hasNextPage(); // Boolean
+
+const nextPage = await page.nextPage(); // Page object
+const previousPage = await page.previousPage(); // Page object
+const firstPage = await page.firstPage(); // Page object
+const lastPage = await page.lastPage(); // Page object
 ```
 
 If you want to use an iterator, both the Repository and the Query classes implement an AsyncIterable. Alternatively you can use `getIterator()` and customize the batch size of the iterator:
@@ -261,3 +268,4 @@ import {
   XataRecord
 } from 'https://esm.sh/@xata.io/client@<version>/dist/schema?target=deno';
 ```
+````
