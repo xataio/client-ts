@@ -219,6 +219,17 @@ describe('integration tests', () => {
     expect(page2).toHaveLength(10);
   });
 
+  test('returns many records and implements extended array object', async () => {
+    const page1 = await client.db.users.getRecords({ pagination: { size: 10 } });
+    const hasPage2 = page1.hasNextPage();
+    const page2 = await page1.nextPage();
+
+    expect(page1).not.toEqual(page2);
+    expect(hasPage2).toBe(true);
+    expect(page1).toHaveLength(10);
+    expect(page2).toHaveLength(10);
+  });
+
   test('returns many records with cursor', async () => {
     const size = Math.floor(mockUsers.length / 1.5);
     const lastPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
