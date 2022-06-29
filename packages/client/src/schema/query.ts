@@ -316,9 +316,14 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
 
   async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result[]> {
-    const { records } = await this.getPaginated(options);
+    const page = await this.getPaginated(options);
+    if (page.hasNextPage()) {
+      console.trace(
+        'An invocation to getMany() did not return all results for a query. Use getPaginated() or getAll() to avoid that.'
+      );
+    }
     // Method overloading does not provide type inference for the return type.
-    return records as unknown as Result[];
+    return page.records as unknown as Result[];
   }
 
   /**
