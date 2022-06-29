@@ -20,14 +20,9 @@ export interface BaseData {
  */
 export interface XataRecord extends Identifiable {
   /**
-   * Metadata of this record.
+   * Get metadata of this record.
    */
-  xata: {
-    /**
-     * Number that is increased every time the record is updated.
-     */
-    version: number;
-  };
+  getMetadata(): XataRecordMetadata;
 
   /**
    * Retrieves a refreshed copy of the current record from the database.
@@ -67,6 +62,19 @@ export type Link<Record extends XataRecord> = Omit<XataRecord, 'read' | 'update'
   update(
     partialUpdate: Partial<EditableData<Omit<Record, keyof XataRecord>>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+};
+
+export type XataRecordMetadata = {
+  xata: {
+    /**
+     * Number that is increased every time the record is updated.
+     */
+    version: number;
+    /*
+     * Encoding/Decoding errors
+     */
+    warnings?: string[];
+  };
 };
 
 export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
