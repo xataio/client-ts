@@ -160,24 +160,24 @@ const user = await xata.db.users.read('rec_1234abcdef');
 
 ```ts
 // Query objects selecting all fields.
-const page = await xata.db.users.select().getPaginable();
+const page = await xata.db.users.select().getPaginated();
 const user = await xata.db.users.select().getFirst();
 
 // You can also use `xata.db.users` directly, since it's an immutable Query too!
-const page = await xata.db.users.getPaginable();
+const page = await xata.db.users.getPaginated();
 const user = await xata.db.users.getFirst();
 
 // Query objects selecting just one or more fields
-const page = await xata.db.users.select('email', 'profile').getPaginable();
+const page = await xata.db.users.select('email', 'profile').getPaginated();
 
 // Apply constraints
-const page = await xata.db.users.filter('email', 'foo@example.com').getPaginable();
+const page = await xata.db.users.filter('email', 'foo@example.com').getPaginated();
 
 // Sorting
-const page = await xata.db.users.sort('full_name', 'asc').getPaginable();
+const page = await xata.db.users.sort('full_name', 'asc').getPaginated();
 ```
 
-Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getPaginable()`, `getMany()`, `getAll()`, or `getFirst()`.
+Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getPaginated()`, `getMany()`, `getAll()`, or `getFirst()`.
 
 ```ts
 // Operators that combine multiple conditions can be deconstructed
@@ -198,7 +198,7 @@ const users = await query.getAll();
 const firstUser = await query.getFirst();
 ```
 
-The `getPaginable()` method will return a `Page` object. It's a wrapper that internally uses cursor based pagination.
+The `getPaginated()` method will return a `Page` object. It's a wrapper that internally uses cursor based pagination.
 
 ```ts
 page.records; // Array of records

@@ -234,7 +234,7 @@ describe('integration tests', () => {
     const size = Math.floor(mockUsers.length / 1.5);
     const lastPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
 
-    const page1 = await client.db.users.getPaginable({ pagination: { size } });
+    const page1 = await client.db.users.getPaginated({ pagination: { size } });
     const page2 = await page1.nextPage();
     const page3 = await page2.nextPage();
     const firstPage = await page3.firstPage();
@@ -255,7 +255,7 @@ describe('integration tests', () => {
   });
 
   test('returns many records with cursor passing a offset/size', async () => {
-    const page1 = await client.db.users.getPaginable({ pagination: { size: 5 } });
+    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
     const page2 = await page1.nextPage(10);
     const page3 = await page2.nextPage(10);
     const page2And3 = await page1.nextPage(20);
@@ -269,7 +269,7 @@ describe('integration tests', () => {
   });
 
   test('fails if sending cursor with sorting', async () => {
-    const page1 = await client.db.users.getPaginable({ pagination: { size: 5 } });
+    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
     const { records: records1, meta } = page1;
     const page2 = await page1.nextPage();
 
@@ -277,7 +277,7 @@ describe('integration tests', () => {
     expect(meta.page.cursor).toBeDefined();
     expect(records1).toHaveLength(5);
 
-    const { records: records2, meta: meta2 } = await client.db.users.getPaginable({
+    const { records: records2, meta: meta2 } = await client.db.users.getPaginated({
       pagination: { after: meta.page.cursor }
     });
 
@@ -286,7 +286,7 @@ describe('integration tests', () => {
     expect(records2).toHaveLength(5);
     expect(records2).toEqual(page2.records);
 
-    const { records: records3, meta: meta3 } = await client.db.users.getPaginable({
+    const { records: records3, meta: meta3 } = await client.db.users.getPaginated({
       pagination: { after: meta.page.cursor },
       columns: ['full_name']
     });
@@ -297,7 +297,7 @@ describe('integration tests', () => {
     expect(records3).not.toEqual(page2.records);
 
     expect(
-      client.db.users.getPaginable({
+      client.db.users.getPaginated({
         // @ts-expect-error
         pagination: { after: meta.page.cursor },
         sort: { column: 'full_name', direction: 'asc' }
@@ -307,7 +307,7 @@ describe('integration tests', () => {
 
   test('repository implements pagination', async () => {
     const loadUsers = async (repository: Repository<User>) => {
-      return repository.getPaginable({ pagination: { size: 10 } });
+      return repository.getPaginated({ pagination: { size: 10 } });
     };
 
     const users = await loadUsers(client.db.users);
@@ -455,14 +455,14 @@ describe('integration tests', () => {
   });
 
   test('Pagination size limit', async () => {
-    expect(client.db.users.getPaginable({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
+    expect(client.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
       'message',
       'page size exceeds max limit of 200'
     );
   });
 
   test('Pagination offset limit', async () => {
-    expect(client.db.users.getPaginable({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
+    expect(client.db.users.getPaginated({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
       'message',
       'page offset must not exceed 800'
     );
@@ -477,7 +477,7 @@ describe('integration tests', () => {
     const planes = Array(250).map((_, index) => ({ name: `Plane ${index}` }));
 
     const createdPlanes = await schemaLessclient.db.planes.create(planes);
-    const queriedPlanes = await schemaLessclient.db.planes.getPaginable();
+    const queriedPlanes = await schemaLessclient.db.planes.getPaginated();
 
     expect(createdPlanes).toHaveLength(250);
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);

@@ -212,7 +212,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    *
    * @returns A page of results
    */
-  getPaginable(): Promise<Page<Record, Result>>;
+  getPaginated(): Promise<Page<Record, Result>>;
 
   /**
    * Get paginated results
@@ -220,7 +220,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Pagination options
    * @returns A page of results
    */
-  getPaginable(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<Page<Record, Result>>;
+  getPaginated(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<Page<Record, Result>>;
 
   /**
    * Get paginated results
@@ -228,11 +228,11 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Pagination options
    * @returns A page of results
    */
-  getPaginable<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
+  getPaginated<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
   ): Promise<Page<Record, SelectedPick<Record, typeof options['columns']>>>;
 
-  getPaginable<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Page<Record, Result>> {
+  getPaginated<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Page<Record, Result>> {
     const query = new Query<Record, Result>(this.#repository, this.#table, options, this.#data);
     return this.#repository.query(query);
   }
@@ -281,7 +281,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   ): AsyncGenerator<Result[]> {
     const { batchSize = 1 } = options;
 
-    let page = await this.getPaginable({ ...options, pagination: { size: batchSize, offset: 0 } });
+    let page = await this.getPaginated({ ...options, pagination: { size: batchSize, offset: 0 } });
     let more = page.hasNextPage();
 
     yield page.records as unknown as Result[];
@@ -317,7 +317,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   ): Promise<RecordArray<SelectedPick<Record, typeof options['columns']>>>;
 
   async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<RecordArray<Result>> {
-    const { records } = await this.getPaginable(options);
+    const { records } = await this.getPaginated(options);
     // Method overloading does not provide type inference for the return type.
     return records as unknown as RecordArray<Result>;
   }
@@ -422,7 +422,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns A new page object
    */
   firstPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.getPaginable({ pagination: { size, offset } });
+    return this.getPaginated({ pagination: { size, offset } });
   }
 
   /**
@@ -431,7 +431,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns A new page object
    */
   lastPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.getPaginable({ pagination: { size, offset, before: 'end' } });
+    return this.getPaginated({ pagination: { size, offset, before: 'end' } });
   }
 
   /**

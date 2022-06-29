@@ -2,4 +2,4 @@
 '@xata.io/client': minor
 ---
 
-Return paginable object in getPaginable
+Return paginable object in getPaginated
