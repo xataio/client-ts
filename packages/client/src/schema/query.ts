@@ -320,7 +320,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     const page = await this.getPaginated(options);
 
     if (page.hasNextPage() && options.pagination?.size === undefined) {
-      console.debug('Calling getMany does not return all results. Paginate to get all results or call getAll.');
+      console.trace('Calling getMany does not return all results. Paginate to get all results or call getAll.');
     }
 
     // Method overloading does not provide type inference for the return type.
