@@ -56,8 +56,10 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
           If<
             IsObject<RemoveNullable<O[K]>>,
             RemoveNullable<O[K]> extends XataRecord
-              ? SelectableColumn<RemoveNullable<O[K]>, [...RecursivePath, O[K]]> extends string
-                ? K | `${K}.${SelectableColumn<RemoveNullable<O[K]>, [...RecursivePath, O[K]]>}`
+              ? SelectableColumn<RemoveNullable<O[K]>, [...RecursivePath, O[K]]> extends infer Column
+                ? Column extends string
+                  ? K | `${K}.${Column}`
+                  : never
                 : never
               : `${K}.${StringKeys<RemoveNullable<O[K]>> | '*'}`, // This allows usage of objects that are not links
             K
