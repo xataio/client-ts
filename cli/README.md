@@ -41,7 +41,11 @@ This command will ask you a few questions and will run a few operations:
 
 You can use the Xata SDK (`@xata.io/client`) directly or with code generation. The benefit of using code generation is that you'll have a Xata client with specific types and classes for your database schema. This is great for TypeScript because it ensures type safety, but also for JavaScript because you can benefit from its type definitions if you use development tools such as IDEs or text editors that support them.
 
-Code generation will be executed automatically in some cases, such as when creating a new Xata branch, but you can also invoke it directly with `xata codegen` if you've done change to the schema through the UI or the REST API and you want to update your local generated code.
+Code generation will be executed automatically in some cases by the CLI (such as when creating a new Xata branch). You can always invoke it directly with `xata codegen`.
+
+If you make changes to the schema through the UI or the REST API, you will need to run `xata codegen` to update your local generated code with the new changes.
+
+The codegen command completely overwrites the contents of the output file. Any changes you make to the client file will be likely lost in a code generation change.
 
 ## Git integration
 
