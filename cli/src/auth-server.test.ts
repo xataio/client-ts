@@ -125,7 +125,7 @@ describe('handler', () => {
     expect(res.writeHead).toHaveBeenCalledWith(200, {
       'Content-Type': 'text/html'
     });
-    expect(end.mock.calls[0][0]).toContain('You are all set! You can close this tab now');
+    expect(end.mock.calls[0][0]).toContain('Congratulations, you are all set!');
     expect(req.destroy).toHaveBeenCalled();
     expect(callback).toHaveBeenCalledWith(apiKey);
   });
