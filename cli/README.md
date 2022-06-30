@@ -59,7 +59,7 @@ graph TD
     E --> |yes| C
     E --> |no| G(Is there a fallback branch?)
     G --> |yes| C
-    G --> |no| I(No, use the default branch)
+    G --> |no| I(Use the default branch)
 ```
 
 As you can see, the current git branch is used in the first two cases in the algorithm:
