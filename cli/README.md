@@ -21,7 +21,7 @@ npm install @xata.io/cli --save-dev
 Almost all commands can work in two different modes: globally or scoped to a project. You can configure a project with `xata init`. This will create a `.xatarc` file (although `.xatarc.json` and `package.json` are also supported) and an `.env` file.
 
 - The project configuration file contains some preferences and information, including the `databaseURL`.
-- The `.env` file contains an API key and optionally a fallback branch name. More about this later.
+- The `.env` file contains an API key and optionally a fallback branch name (more about the fallback branch in the [Git integration](#git-integration) section).
 
 When working in _global mode_, commands won't know which database you want to use, because there's no project configuration file, and thus, no `databaseURL` configured. So, you can either pass a `--db` flag to specify the database URL, or just don't pass any argument and you will be prompted interactively to select a workspace, then a database, and depending on the command, a branch name.
 
