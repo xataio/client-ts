@@ -8,7 +8,7 @@ export default class BranchesCreate extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     from: Flags.string({
       description: 'Branch name to branch off from'
     }),
@@ -29,7 +29,7 @@ export default class BranchesCreate extends BaseCommand {
       return this.error('Please, specify a branch name');
     }
 
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
+    const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
 

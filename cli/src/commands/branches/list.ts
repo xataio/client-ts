@@ -8,7 +8,7 @@ export default class BranchesList extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    databaseURL: this.databaseURLFlag
+    ...this.databaseURLFlag
   };
 
   static args = [];
@@ -17,7 +17,7 @@ export default class BranchesList extends BaseCommand {
 
   async run(): Promise<any> {
     const { flags } = await this.parse(BranchesList);
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
+    const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
     const { branches } = await xata.branches.getBranchList(workspace, database);

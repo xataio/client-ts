@@ -9,7 +9,7 @@ export default class BranchesCreate extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     git: Flags.string({
       description: 'Git branch name'
     }),
@@ -29,7 +29,7 @@ export default class BranchesCreate extends BaseCommand {
       this.error('Git cannot be found. Please install it to link branches.');
     }
 
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
+    const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
 
