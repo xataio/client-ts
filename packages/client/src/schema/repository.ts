@@ -597,9 +597,15 @@ const transformObjectLinks = (object: any) => {
   }, {});
 };
 
-export const initObject = <T>(db: Record<string, Repository<any>>, schema: Schema, table: string, object: object) => {
+export const initObject = <T>(
+  db: Record<string, Repository<any>>,
+  schema: Schema,
+  table: string,
+  object: Record<string, unknown>
+) => {
   const result: Dictionary<unknown> = {};
-  Object.assign(result, object);
+  const { xata, ...rest } = object ?? {};
+  Object.assign(result, rest);
 
   const { columns } = schema.tables.find(({ name }) => name === table) ?? {};
   if (!columns) console.error(`Table ${table} not found in schema`);
@@ -638,14 +644,20 @@ export const initObject = <T>(db: Record<string, Repository<any>>, schema: Schem
   result.read = function () {
     return db[table].read(result['id'] as string);
   };
+
   result.update = function (data: any) {
     return db[table].update(result['id'] as string, data);
   };
+
   result.delete = function () {
     return db[table].delete(result['id'] as string);
   };
 
-  for (const prop of ['read', 'update', 'delete']) {
+  result.getMetadata = function () {
+    return xata;
+  };
+
+  for (const prop of ['read', 'update', 'delete', 'getMetadata']) {
     Object.defineProperty(result, prop, { enumerable: false });
   }
 
