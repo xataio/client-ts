@@ -205,6 +205,12 @@ describe('integration tests', () => {
     expect(teams[0].name).toBe('Team fruits');
   });
 
+  test('filter returns nothing', async () => {
+    const teams = await client.db.teams.filter('name', 'Not even possible').getAll();
+
+    expect(teams).toHaveLength(0);
+  });
+
   test('returns single record', async () => {
     const user = await client.db.users.getFirst();
     expect(user).toBeDefined();
