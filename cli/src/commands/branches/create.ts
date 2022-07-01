@@ -25,10 +25,6 @@ export default class BranchesCreate extends BaseCommand {
     const { args, flags } = await this.parse(BranchesCreate);
     const { branch } = args;
 
-    if (!branch) {
-      return this.error('Please, specify a branch name');
-    }
-
     const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
