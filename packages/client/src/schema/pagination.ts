@@ -90,7 +90,7 @@ export type CursorNavigationOptions = { first?: string } | { last?: string } | {
 export type OffsetNavigationOptions = { size?: number; offset?: number };
 
 export const PAGINATION_MAX_SIZE = 200;
-export const PAGINATION_DEFAULT_SIZE = 200;
+export const PAGINATION_DEFAULT_SIZE = 20;
 export const PAGINATION_MAX_OFFSET = 800;
 export const PAGINATION_DEFAULT_OFFSET = 0;
 
