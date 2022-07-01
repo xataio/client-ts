@@ -1,5 +1,4 @@
 import { Flags } from '@oclif/core';
-import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
 
 export default class DatabasesDelete extends BaseCommand {
@@ -9,6 +8,7 @@ export default class DatabasesDelete extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
+    ...BaseCommand.forceFlag(),
     workspace: Flags.string({
       description: 'Workspace id the database to delete belongs to'
     })
@@ -29,7 +29,7 @@ export default class DatabasesDelete extends BaseCommand {
       type: 'confirm',
       name: 'confirm',
       message: `Are you sure you want to delete database ${workspace}/${database}?`,
-      initial: true
+      initial: false
     });
     if (!confirm) return this.exit(1);
 

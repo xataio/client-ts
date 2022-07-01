@@ -1,3 +1,4 @@
+import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { getProfile, setProfile } from '../../credentials.js';
 
@@ -6,7 +7,9 @@ export default class Login extends BaseCommand {
 
   static examples = [];
 
-  static flags = {};
+  static flags = {
+    ...BaseCommand.forceFlag('Overwrite existing credentials if they exist')
+  };
 
   static args = [];
 

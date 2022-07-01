@@ -76,6 +76,15 @@ export abstract class BaseCommand extends Command {
     ...this.noInputFlag
   };
 
+  static forceFlag(description?: string) {
+    return {
+      force: Flags.boolean({
+        char: 'f',
+        description: description || 'Do not ask for confirmation'
+      })
+    };
+  }
+
   async init() {
     dotenv.config();
 
@@ -498,18 +507,36 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  async prompt<name extends string>(options: prompts.PromptObject<name>): Promise<prompts.Answers<name>> {
-    if (!process.stdout.isTTY) {
-      this.error(
-        `The current command requires interactivity, but you are not running it in a TTY. Use --help to check if you can pass arguments instead.`
-      );
+  async prompt<name extends string>(
+    options: prompts.PromptObject<name>,
+    flagValue?: boolean | string
+  ): Promise<prompts.Answers<name>> {
+    // If there's a flag, use the value of the flag
+    if (flagValue != null) return { [String(options.name)]: flagValue } as prompts.Answers<name>;
+
+    const { flags } = await this.parse({ flags: { ...BaseCommand.noInputFlag, force: Flags.boolean() } }, this.argv);
+    const { 'no-input': noInput, force } = flags;
+
+    if (force && options.initial != null && typeof options.initial !== 'function') {
+      return { [String(options.name)]: options.initial } as prompts.Answers<name>;
     }
 
-    const { flags } = await this.parse({ flags: { ...BaseCommand.noInputFlag } }, this.argv);
-    const noInput = flags['no-input'];
-    if (noInput) {
+    let reason = '';
+
+    if (!process.stdout.isTTY) {
+      reason = 'you are not running it in a TTY';
+    } else if (noInput) {
+      reason = 'the --no-input flag is being used';
+    }
+
+    if (reason) {
+      if (options.type === 'confirm') {
+        this.error(
+          `The current command required interactivity, but ${reason}. Use --force to execute it without asking for confirmations.`
+        );
+      }
       this.error(
-        `The current command requires interactivity, but the --no-input flag is being used. Use --help to check if you can pass arguments instead.`
+        `The current command required interactivity, but ${reason}. Use --help to check if you can pass arguments instead.`
       );
     }
 

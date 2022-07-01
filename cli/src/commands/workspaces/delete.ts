@@ -1,5 +1,4 @@
 import { Flags } from '@oclif/core';
-import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
 
 export default class WorkspacesDelete extends BaseCommand {
@@ -9,6 +8,7 @@ export default class WorkspacesDelete extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
+    ...BaseCommand.forceFlag(),
     workspace: Flags.string({
       description: 'Workspace id to delete'
     })
@@ -28,7 +28,7 @@ export default class WorkspacesDelete extends BaseCommand {
       type: 'confirm',
       name: 'confirm',
       message: `Are you sure you want to delete workspace ${workspace}?`,
-      initial: true
+      initial: false
     });
     if (!confirm) return this.exit(1);
 

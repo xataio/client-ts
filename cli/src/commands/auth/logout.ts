@@ -1,4 +1,3 @@
-import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
 import { getProfile, removeProfile } from '../../credentials.js';
 
@@ -7,7 +6,9 @@ export default class Logout extends BaseCommand {
 
   static examples = [];
 
-  static flags = {};
+  static flags = {
+    ...BaseCommand.forceFlag()
+  };
 
   static args = [];
 
@@ -19,7 +20,8 @@ export default class Logout extends BaseCommand {
     const { confirm } = await this.prompt({
       type: 'confirm',
       name: 'confirm',
-      message: 'Are you sure you want to logout of Xata?'
+      message: 'Are you sure you want to logout of Xata?',
+      initial: true
     });
     if (!confirm) this.exit(2);
 

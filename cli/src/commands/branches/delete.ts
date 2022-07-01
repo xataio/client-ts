@@ -1,4 +1,3 @@
-import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
 
 export default class BranchesDelete extends BaseCommand {
@@ -8,7 +7,8 @@ export default class BranchesDelete extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    ...this.databaseURLFlag
+    ...this.databaseURLFlag,
+    ...BaseCommand.forceFlag()
   };
 
   static args = [{ name: 'branch', description: 'Branch name to delete', required: true }];
@@ -26,7 +26,7 @@ export default class BranchesDelete extends BaseCommand {
       type: 'confirm',
       name: 'confirm',
       message: `Are you sure you want to delete the branch ${database}:${branch} in the ${workspace} workspace?`,
-      initial: true
+      initial: false
     });
     if (!confirm) return this.exit(1);
 

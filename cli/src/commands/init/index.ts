@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { access, readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import prompts from 'prompts';
 import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
@@ -19,12 +18,19 @@ export default class Init extends BaseCommand {
 
   static flags = {
     ...this.databaseURLFlag,
+    ...BaseCommand.forceFlag('Overwrite existing project configuration'),
+    sdk: Flags.boolean({
+      description: 'Install the TypeScript/JavaScript SDK'
+    }),
+    codegen: Flags.string({
+      description:
+        'Output file where to generate a TypeScript/JavaScript client strictly typed for your database schema'
+    }),
+    declarations: Flags.boolean({
+      description: 'Whether or not to generate type declarations for JavaScript code geneartion'
+    }),
     schema: Flags.string({
       description: 'Initializes a new database or updates an existing one with the given schema'
-    }),
-    force: Flags.boolean({
-      char: 'f',
-      description: 'Overwrite existing project configuration'
     })
   };
 
@@ -70,12 +76,16 @@ export default class Init extends BaseCommand {
   }
 
   async installSDK() {
-    const { confirm } = await this.prompt({
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Do you want to install the TypeScript/JavaScript SDK?',
-      initial: true
-    });
+    const { flags } = await this.parse(Init);
+    const { confirm } = await this.prompt(
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Do you want to install the TypeScript/JavaScript SDK?',
+        initial: true
+      },
+      flags.sdk
+    );
     if (confirm === undefined) return this.exit(1);
     if (!confirm) return;
 
@@ -85,34 +95,43 @@ export default class Init extends BaseCommand {
   }
 
   async configureCodegen() {
-    const { confirm } = await this.prompt({
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Do you want to use the TypeScript/JavaScript code generator?',
-      initial: true
-    });
-    if (confirm === undefined) return this.exit(1);
-    if (!confirm) return;
+    const { flags } = await this.parse(Init);
+    if (!flags.codegen) {
+      const { confirm } = await this.prompt({
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Do you want to use the TypeScript/JavaScript code generator?',
+        initial: true
+      });
+      if (confirm === undefined) return this.exit(1);
+      if (!confirm) return;
+    }
 
     this.projectConfig = this.projectConfig || {};
     this.projectConfig.codegen = {};
 
-    const { output } = await this.prompt({
-      type: 'text',
-      name: 'output',
-      message: 'Choose where the output file for the code generator',
-      initial: 'src/xata.ts'
-    });
+    const { output } = await this.prompt(
+      {
+        type: 'text',
+        name: 'output',
+        message: 'Choose where the output file for the code generator',
+        initial: 'src/xata.ts'
+      },
+      flags.codegen
+    );
     if (!output) return this.error('You must provide an output file');
 
     this.projectConfig.codegen.output = output;
 
     if (!output.endsWith('.ts')) {
-      const { declarations } = await this.prompt({
-        type: 'confirm',
-        name: 'declarations',
-        message: 'Do you want to generate the TypeScript declarations?'
-      });
+      const { declarations } = await this.prompt(
+        {
+          type: 'confirm',
+          name: 'declarations',
+          message: 'Do you want to generate the TypeScript declarations?'
+        },
+        flags.declarations
+      );
 
       if (declarations) {
         this.projectConfig.codegen.declarations = true;
