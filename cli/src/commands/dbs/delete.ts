@@ -25,7 +25,7 @@ export default class DatabasesDelete extends BaseCommand {
 
     const xata = await this.getXataClient();
 
-    const { confirm } = await prompts({
+    const { confirm } = await this.prompt({
       type: 'confirm',
       name: 'confirm',
       message: `Are you sure you want to delete database ${workspace}/${database}?`,

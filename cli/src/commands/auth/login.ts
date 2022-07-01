@@ -1,4 +1,3 @@
-import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
 import { getProfile, setProfile } from '../../credentials.js';
 
@@ -14,7 +13,7 @@ export default class Login extends BaseCommand {
   async run(): Promise<void> {
     const existingProfile = await getProfile(true);
     if (existingProfile) {
-      const { overwrite } = await prompts({
+      const { overwrite } = await this.prompt({
         type: 'confirm',
         name: 'overwrite',
         message: 'Authentication is already configured, do you want to overwrite it?'

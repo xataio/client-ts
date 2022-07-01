@@ -16,7 +16,7 @@ export default class Logout extends BaseCommand {
     if (!existingProfile) {
       return this.error('You are not logged in');
     }
-    const { confirm } = await prompts({
+    const { confirm } = await this.prompt({
       type: 'confirm',
       name: 'confirm',
       message: 'Are you sure you want to logout of Xata?'

@@ -70,7 +70,7 @@ export default class Init extends BaseCommand {
   }
 
   async installSDK() {
-    const { confirm } = await prompts({
+    const { confirm } = await this.prompt({
       type: 'confirm',
       name: 'confirm',
       message: 'Do you want to install the TypeScript/JavaScript SDK?',
@@ -85,7 +85,7 @@ export default class Init extends BaseCommand {
   }
 
   async configureCodegen() {
-    const { confirm } = await prompts({
+    const { confirm } = await this.prompt({
       type: 'confirm',
       name: 'confirm',
       message: 'Do you want to use the TypeScript/JavaScript code generator?',
@@ -97,7 +97,7 @@ export default class Init extends BaseCommand {
     this.projectConfig = this.projectConfig || {};
     this.projectConfig.codegen = {};
 
-    const { output } = await prompts({
+    const { output } = await this.prompt({
       type: 'text',
       name: 'output',
       message: 'Choose where the output file for the code generator',
@@ -108,7 +108,7 @@ export default class Init extends BaseCommand {
     this.projectConfig.codegen.output = output;
 
     if (!output.endsWith('.ts')) {
-      const { declarations } = await prompts({
+      const { declarations } = await this.prompt({
         type: 'confirm',
         name: 'declarations',
         message: 'Do you want to generate the TypeScript declarations?'

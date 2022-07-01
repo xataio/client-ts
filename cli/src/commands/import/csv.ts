@@ -19,7 +19,7 @@ export default class ImportCSV extends BaseCommand {
   ];
 
   static flags = {
-    'no-input': this.noInputFlag,
+    ...this.noInputFlag,
     ...this.databaseURLFlag,
     branch: this.branchFlag,
     table: Flags.string({
@@ -105,7 +105,7 @@ export default class ImportCSV extends BaseCommand {
 
     if (compare.missingTable) {
       if (!create) {
-        const response = await prompts({
+        const response = await this.prompt({
           type: 'confirm',
           name: 'confirm',
           message: `Table ${table} does not exist. Do you want to create it?`,
@@ -115,7 +115,7 @@ export default class ImportCSV extends BaseCommand {
       }
     } else if (compare.missingColumns.length > 0) {
       if (!create) {
-        const response = await prompts({
+        const response = await this.prompt({
           type: 'confirm',
           name: 'confirm',
           message: `These columns are missing: ${missingColumnsList(compare)}. Do you want to create them?`,
