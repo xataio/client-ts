@@ -16,6 +16,9 @@
     "build": "rimraf dist && rollup -c",
     "prepack": "npm run build"
   },
+  "peerDependencies": {
+    "typescript": ">=4.5"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xataio/client-ts.git"

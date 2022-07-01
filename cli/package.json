@@ -19,11 +19,8 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@babel/core": "^7.18.5",
-    "@babel/preset-typescript": "^7.17.12",
-    "@babel/types": "^7.18.4",
-    "@faker-js/faker": "^7.2.0",
-    "@oclif/core": "^1.9.3",
+    "@faker-js/faker": "^7.3.0",
+    "@oclif/core": "^1.9.5",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-not-found": "^2.3.1",
     "@oclif/plugin-plugins": "^2.1.0",
@@ -113,7 +110,7 @@
     ]
   },
   "scripts": {
-    "build": "shx rm -rf dist && tsc -b",
+    "build": "shx rm -rf dist && tsc -b && cp src/*.html dist",
     "lint": "eslint . --ext .ts --config .eslintrc",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "yarn lint",

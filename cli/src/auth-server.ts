@@ -1,8 +1,13 @@
+import crypto from 'crypto';
+import { readFileSync } from 'fs';
 import http from 'http';
 import { AddressInfo } from 'net';
 import open from 'open';
-import url from 'url';
-import crypto from 'crypto';
+import path, { dirname } from 'path';
+import url, { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export function handler(privateKey: string, passphrase: string, callback: (apiKey: string) => void) {
   return (req: http.IncomingMessage, res: http.ServerResponse) => {
@@ -25,8 +30,7 @@ export function handler(privateKey: string, passphrase: string, callback: (apiKe
       const apiKey = crypto
         .privateDecrypt(privKey, Buffer.from(String(parsedURL.query.key).replace(/ /g, '+'), 'base64'))
         .toString('utf8');
-      res.writeHead(200);
-      res.end('You are all set! You can close this tab now');
+      renderSuccessPage(req, res);
       req.destroy();
       callback(apiKey);
     } catch (err) {
@@ -34,6 +38,13 @@ export function handler(privateKey: string, passphrase: string, callback: (apiKe
       res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
+}
+
+function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse) {
+  res.writeHead(200, {
+    'Content-Type': 'text/html'
+  });
+  res.end(readFileSync(path.join(__dirname, 'api-key-success.html'), 'utf-8'));
 }
 
 export function generateURL(port: number, publicKey: string, privateKey: string, passphrase: string) {

@@ -9,7 +9,7 @@ export default class RandomData extends BaseCommand {
   static examples = [];
 
   static flags = {
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     branch: this.branchFlag,
     records: Flags.integer({
       description: 'Number of records to generate per table',
@@ -26,14 +26,21 @@ export default class RandomData extends BaseCommand {
   async run(): Promise<void> {
     const { flags } = await this.parse(RandomData);
 
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
     const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
     if (!branchDetails) {
       this.error('Could not resolve the current branch');
     }
 
-    for (const table of branchDetails.schema.tables) {
+    const { tables } = branchDetails.schema;
+    if (tables.length === 0) {
+      this.warn(
+        'Your database has no tables. To create one, use `xata schema edit`. Once your database has at least one table, running this command again will generate random data for you.\n'
+      );
+    }
+
+    for (const table of tables) {
       if (flags.table && !flags.table.includes(table.name)) continue;
 
       const records: Record<string, unknown>[] = [];
@@ -44,6 +51,8 @@ export default class RandomData extends BaseCommand {
 
       this.log(`Inserted ${flags.records} random records in table ${table.name}`);
     }
+
+    this.log(`Inserted ${tables.length * flags.records} random records across ${tables.length} tables.`);
   }
 
   randomRecord(columns: Column[]) {

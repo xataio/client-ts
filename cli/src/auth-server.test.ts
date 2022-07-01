@@ -109,6 +109,7 @@ describe('handler', () => {
     const apiKey = 'abcdef1234';
     const encryptedKey = crypto.publicEncrypt(publicKey, Buffer.from(apiKey));
 
+    const end = vi.fn();
     const req = {
       method: 'GET',
       url: `/?key=${encodeURIComponent(encryptedKey.toString('base64'))}`,
@@ -116,13 +117,15 @@ describe('handler', () => {
     } as unknown as IncomingMessage;
     const res = {
       writeHead: vi.fn(),
-      end: vi.fn()
+      end
     } as unknown as ServerResponse;
 
     httpHandler(req, res);
 
-    expect(res.writeHead).toHaveBeenCalledWith(200);
-    expect(res.end).toHaveBeenCalledWith('You are all set! You can close this tab now');
+    expect(res.writeHead).toHaveBeenCalledWith(200, {
+      'Content-Type': 'text/html'
+    });
+    expect(end.mock.calls[0][0]).toContain('Congratulations, you are all set!');
     expect(req.destroy).toHaveBeenCalled();
     expect(callback).toHaveBeenCalledWith(apiKey);
   });
