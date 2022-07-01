@@ -96,7 +96,7 @@ export function createBranch(name: string, base: string) {
 }
 
 function run(command: string, args: string[]) {
-  const result = spawnSync(command, args, { encoding: 'utf-8' });
+  const result = spawnSync(command, args, { encoding: 'utf-8', shell: true });
   if (result.error) throw result.error;
   if (result.status && result.status > 0) throw new Error(result.output.filter(Boolean).join('\n'));
   return result.output.filter(Boolean).join('\n').trim();
