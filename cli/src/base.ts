@@ -514,7 +514,10 @@ export abstract class BaseCommand extends Command {
     // If there's a flag, use the value of the flag
     if (flagValue != null) return { [String(options.name)]: flagValue } as prompts.Answers<name>;
 
-    const { flags } = await this.parse({ flags: { ...BaseCommand.noInputFlag, force: Flags.boolean() } }, this.argv);
+    const { flags } = await this.parse(
+      { strict: false, flags: { ...BaseCommand.noInputFlag, force: Flags.boolean() } },
+      this.argv
+    );
     const { 'no-input': noInput, force } = flags;
 
     if (force && options.initial != null && typeof options.initial !== 'function') {
@@ -523,7 +526,7 @@ export abstract class BaseCommand extends Command {
 
     let reason = '';
 
-    if (!process.stdout.isTTY) {
+    if (!process.stdout.isTTY && process.env.NODE_ENV !== 'test') {
       reason = 'you are not running it in a TTY';
     } else if (noInput) {
       reason = 'the --no-input flag is being used';
