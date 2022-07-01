@@ -18,16 +18,12 @@ export interface BaseData {
 /**
  * Represents a persisted record from the database.
  */
-export interface XataRecord extends Identifiable {
+export interface XataRecord<ExtraMetadata extends Record<string, unknown> = Record<string, unknown>>
+  extends Identifiable {
   /**
-   * Metadata of this record.
+   * Get metadata of this record.
    */
-  xata: {
-    /**
-     * Number that is increased every time the record is updated.
-     */
-    version: number;
-  };
+  getMetadata(): XataRecordMetadata & ExtraMetadata;
 
   /**
    * Retrieves a refreshed copy of the current record from the database.
@@ -37,7 +33,7 @@ export interface XataRecord extends Identifiable {
   /**
    * Performs a partial update of the current record. On success a new object is
    * returned and the current object is not mutated.
-   * @param data The columns and their values that have to be updated.
+   * @param partialUpdate The columns and their values that have to be updated.
    * @returns A new record containing the latest values for all the columns of the current record.
    */
   update(
@@ -61,7 +57,7 @@ export type Link<Record extends XataRecord> = Omit<XataRecord, 'read' | 'update'
   /**
    * Performs a partial update of the current record. On success a new object is
    * returned and the current object is not mutated.
-   * @param data The columns and their values that have to be updated.
+   * @param partialUpdate The columns and their values that have to be updated.
    * @returns A new record containing the latest values for all the columns of the current record.
    */
   update(
@@ -69,14 +65,26 @@ export type Link<Record extends XataRecord> = Omit<XataRecord, 'read' | 'update'
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 };
 
+export type XataRecordMetadata = {
+  /**
+   * Number that is increased every time the record is updated.
+   */
+  version: number;
+  /*
+   * Encoding/Decoding errors
+   */
+  warnings?: string[];
+};
+
 export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
   return isObject(x) && isString((x as Partial<Identifiable>)?.id);
 }
 
 export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> {
-  return (
-    isIdentifiable(x) && typeof x?.xata === 'object' && typeof (x?.xata as XataRecord['xata'])?.version === 'number'
-  );
+  const record = x as XataRecord & Record<string, unknown>;
+  const metadata = record?.getMetadata();
+
+  return isIdentifiable(x) && isObject(metadata) && typeof metadata.version === 'number';
 }
 
 export type EditableData<O extends BaseData> = {
