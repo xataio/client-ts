@@ -30,6 +30,6 @@ export default class Merge extends BaseCommand {
 
     await Codegen.runIfConfigured(this.projectConfig);
 
-    this.log('Done. You are all set!');
+    this.success('Done. You are all set!');
   }
 }
