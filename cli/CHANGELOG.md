@@ -1,5 +1,22 @@
 # @xata.io/cli
 
+## 0.4.0
+
+### Minor Changes
+
+- [#368](https://github.com/xataio/client-ts/pull/368) [`20be1af`](https://github.com/xataio/client-ts/commit/20be1afa24e8cd8571541ec532bb537524561b2a) Thanks [@gimenete](https://github.com/gimenete)! - Changed --databaseURL flag to --db
+
+### Patch Changes
+
+- [#385](https://github.com/xataio/client-ts/pull/385) [`11745fa`](https://github.com/xataio/client-ts/commit/11745fa05b6b83a2591c09fcf4e29d815e60fae7) Thanks [@gimenete](https://github.com/gimenete)! - Added autocomplete to some prompts
+
+* [#367](https://github.com/xataio/client-ts/pull/367) [`d861608`](https://github.com/xataio/client-ts/commit/d86160803f317a9e72e55121afb42573b574c20e) Thanks [@gimenete](https://github.com/gimenete)! - Some fixes, including adding a missing dependency for codegen
+
+* Updated dependencies [[`db3c88e`](https://github.com/xataio/client-ts/commit/db3c88e1f2bee6d308afb8d6e95b7c090a87e7a7), [`1cde95f`](https://github.com/xataio/client-ts/commit/1cde95f05a6b9fbf0564ea05400140f0cef41a3a), [`8bc84f1`](https://github.com/xataio/client-ts/commit/8bc84f17a3ad1cc66aa6c9c9cfe4898e284d37ce), [`57bf0e2`](https://github.com/xataio/client-ts/commit/57bf0e2e049ed0498683ff42d287983f295342b7), [`d861608`](https://github.com/xataio/client-ts/commit/d86160803f317a9e72e55121afb42573b574c20e)]:
+  - @xata.io/client@0.12.0
+  - @xata.io/codegen@0.12.0
+  - @xata.io/importer@0.2.1
+
 ## 0.3.0
 
 ### Minor Changes
