@@ -1,5 +1,17 @@
 # @xata.io/client
 
+## 0.12.0
+
+### Minor Changes
+
+- [#376](https://github.com/xataio/client-ts/pull/376) [`db3c88e`](https://github.com/xataio/client-ts/commit/db3c88e1f2bee6d308afb8d6e95b7c090a87e7a7) Thanks [@SferaDev](https://github.com/SferaDev)! - Hide xata object and expose getMetadata method
+
+### Patch Changes
+
+- [#364](https://github.com/xataio/client-ts/pull/364) [`1cde95f`](https://github.com/xataio/client-ts/commit/1cde95f05a6b9fbf0564ea05400140f0cef41a3a) Thanks [@SferaDev](https://github.com/SferaDev)! - Add peer dep of TS 4.5+
+
+* [#362](https://github.com/xataio/client-ts/pull/362) [`57bf0e2`](https://github.com/xataio/client-ts/commit/57bf0e2e049ed0498683ff42d287983f295342b7) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not show error if date is not defined
+
 ## 0.11.0
 
 ### Minor Changes
