@@ -65,6 +65,8 @@ export default class Init extends BaseCommand {
 
     this.projectConfig = { databaseURL };
 
+    await this.configureCodegen();
+
     await this.installSDK();
 
     await this.writeConfig();
@@ -78,7 +80,10 @@ export default class Init extends BaseCommand {
 
     await Codegen.runIfConfigured(this.projectConfig);
 
-    const bullet = chalk.green('»');
+    this.log();
+    this.success('Project configured successfully.');
+    this.info(`Next steps? Here's a list of useful commands above. Use ${chalk.bold('xata --help')} to list them all.`);
+    const bullet = chalk.magenta('»');
     this.printTable(
       [],
       [
@@ -91,13 +96,24 @@ export default class Init extends BaseCommand {
     );
 
     this.log();
-    this.info(
-      `Next steps? There's a list of useful commands above. Use ${chalk.bold('xata --help')} to list them all.`
-    );
     this.success('You are all set!');
   }
 
   async installSDK() {
+    // If codegen is configured, the SDK is already installed
+    if (this.projectConfig?.codegen) return;
+
+    this.info('Do you want to install the SDK? The SDK gives access to the whole REST API. Example:');
+    this.printCode([
+      "import { XataApiClient } from '@xata.io/client';",
+      '',
+      '// Initialize the client',
+      'const api = new XataApiClient();',
+      '',
+      '// Usage example',
+      "const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);"
+    ]);
+
     const { confirm } = await prompts({
       type: 'confirm',
       name: 'confirm',
@@ -108,15 +124,13 @@ export default class Init extends BaseCommand {
     if (!confirm) return;
 
     await this.installPackage('@xata.io/client');
-
-    await this.configureCodegen();
   }
 
   async configureCodegen() {
     this.info(
       'Do you want to use the code generator? The code generator will allow you to use your database with type safety and autocompletion. Example:'
     );
-    const code = [
+    this.printCode([
       "import { XataClient } from './xata';",
       '',
       '// Initialize the client',
@@ -124,11 +138,7 @@ export default class Init extends BaseCommand {
       '',
       '// Query a table with a simple filter',
       'const { records } = await xata.db.tableName().filter("column", value).getPaginated();'
-    ].map((line) => `\t${line}`);
-    const highlighted = highlight(code.join('\n'), { language: 'typescript' });
-    this.log();
-    this.log(highlighted);
-    this.log();
+    ]);
 
     const { confirm } = await prompts({
       type: 'confirm',
@@ -163,6 +173,16 @@ export default class Init extends BaseCommand {
         this.projectConfig.codegen.declarations = true;
       }
     }
+
+    await this.installPackage('@xata.io/client');
+  }
+
+  printCode(lines: string[]) {
+    const code = lines.map((line) => `\t${line}`).join('\n');
+    const highlighted = highlight(code, { language: 'typescript' });
+    this.log();
+    this.log(highlighted);
+    this.log();
   }
 
   async getPackageManager() {
@@ -239,15 +259,14 @@ export default class Init extends BaseCommand {
       // ignore
     }
     if (content) content += '\n\n';
-    content += '# API key used by the CLI and the SDK';
-    content += '# Make sure your framework/tooling load this file on startup to have it available for the SDK';
+    content += '# API key used by the CLI and the SDK\n';
+    content += '# Make sure your framework/tooling load this file on startup to have it available for the SDK\n';
     content += `XATA_API_KEY=${apiKey}\n`;
     if (fallbackBranch) {
-      content += "# Xata branch that will be used if there's not a xata branch with the same name as your git branch";
+      content += "# Xata branch that will be used if there's not a xata branch with the same name as your git branch\n";
       content += `XATA_FALLBACK_BRANCH=${fallbackBranch}\n`;
     }
     await writeFile('.env', content);
-    this.info(envExists ? 'The .env file has been updated' : 'The .env file has been created');
 
     await this.ignoreEnvFile();
   }
