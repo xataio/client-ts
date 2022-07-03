@@ -12,7 +12,11 @@ import { BaseCommand } from '../../base.js';
 import { getProfile } from '../../credentials.js';
 import { isIgnored } from '../../git.js';
 import { xataDatabaseSchema } from '../../schema.js';
+import Browse from '../browse/index.js';
 import Codegen from '../codegen/index.js';
+import RandomData from '../random-data/index.js';
+import EditSchema from '../schema/edit.js';
+import Shell from '../shell/index.js';
 
 export default class Init extends BaseCommand {
   static description = 'Configure your working directory to work with a Xata database';
@@ -74,11 +78,23 @@ export default class Init extends BaseCommand {
 
     await Codegen.runIfConfigured(this.projectConfig);
 
-    this.success(
-      `You are all set! Run ${chalk.bold('xata browse')} to edit the schema via UI, or ${chalk.bold(
-        'xata schema edit'
-      )} to edit the schema in the shell.`
+    const bullet = chalk.green('»');
+    this.printTable(
+      [],
+      [
+        [bullet + ' xata shell', chalk.dim(Shell.description)],
+        [bullet + ' xata browse', chalk.dim(Browse.description)],
+        [bullet + ' xata schema edit', chalk.dim(EditSchema.description)],
+        [bullet + ' xata codegen', chalk.dim(Codegen.description)],
+        [bullet + ' xata random-data', chalk.dim(RandomData.description)]
+      ]
     );
+
+    this.log();
+    this.info(
+      `Next steps? There's a list of useful commands above. Use ${chalk.bold('xata --help')} to list them all.`
+    );
+    this.success('You are all set!');
   }
 
   async installSDK() {
