@@ -1,42 +1,75 @@
 import babel, { NodePath, PluginItem } from '@babel/core';
 import { CallExpression, FunctionDeclaration } from '@babel/types';
-import { Flags } from '@oclif/core';
+import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
 import chokidar from 'chokidar';
 import crypto from 'crypto';
+import http from 'http';
+import { AddressInfo } from 'net';
 import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
 import { virtualFs } from 'rollup-plugin-virtual-fs';
+import url from 'url';
 import { BaseCommand } from '../../base.js';
-import auto from '@rollup/plugin-auto-install';
-import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
 
 export default class WorkersCompile extends BaseCommand {
   static description = 'Extract and compile xata workers';
 
-  static flags = {
-    watch: Flags.boolean({
-      char: 'w',
-      description: 'Watch for changes and recompile',
-      default: false
-    })
-  };
+  static flags = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(WorkersCompile);
-
     const watcher = chokidar.watch('./**/*.ts', {
       ignored: [/(^|[/\\])\../, 'dist/*', 'node_modules/*']
     });
-
-    // npx wrangler dev node_modules/@xata.io/client/xata-workers.ts --local --port 8987
 
     watcher
       .on('add', (path) => this.#compile(path))
       .on('change', (path) => this.#compile(path))
       .on('ready', async () => {
-        if (!flags.watch) await watcher.close();
+        //if (!flags.watch) await watcher.close();
       });
+
+    const server = http.createServer(async (req: http.IncomingMessage, res: http.ServerResponse) => {
+      try {
+        if (req.method !== 'POST') {
+          res.writeHead(405);
+          return res.end();
+        }
+
+        const parsedURL = url.parse(req.url ?? '', true);
+        if (parsedURL.pathname !== '/') {
+          res.writeHead(404);
+          return res.end();
+        }
+
+        // Read and parse body (JSON)
+        const body = await new Promise((resolve, reject) => {
+          const chunks: Buffer[] = [];
+          req.on('data', (chunk) => chunks.push(chunk));
+          req.on('end', () => {
+            try {
+              resolve(JSON.parse(Buffer.concat(chunks).toString()));
+            } catch (e) {
+              reject(e);
+            }
+          });
+          req.on('error', reject);
+        });
+
+        console.log(body);
+
+        res.writeHead(200);
+        res.end();
+      } catch (err) {
+        res.writeHead(500);
+        res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    });
+
+    server.listen(64749, () => {
+      const { port } = server.address() as AddressInfo;
+      console.log(`Server listening on port ${port}`);
+    });
   }
 
   async #compile(file: string): Promise<void> {
@@ -89,7 +122,6 @@ export default class WorkersCompile extends BaseCommand {
               [`./${file}`]: `${external.join('\n')}\nexport default ${worker.code};`
             }
           }),
-          auto(),
           resolve(),
           commonjs(),
           esbuild()
