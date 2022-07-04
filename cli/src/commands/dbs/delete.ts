@@ -29,7 +29,7 @@ export default class DatabasesDelete extends BaseCommand {
       {
         type: 'confirm',
         name: 'confirm',
-        message: `Are you sure you want to delete database ${workspace}/${database}?`,
+        message: `Are you sure you want to delete database ${database} in the ${workspace} workspace?`,
         initial: false
       },
       flags.force

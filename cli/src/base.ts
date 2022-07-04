@@ -515,7 +515,7 @@ export abstract class BaseCommand extends Command {
     if (flagValue != null) return { [String(options.name)]: flagValue } as prompts.Answers<name>;
 
     const { flags } = await this.parse(
-      { strict: false, flags: { ...BaseCommand.noInputFlag, force: Flags.boolean() } },
+      { strict: false, flags: { ...BaseCommand.noInputFlag, ...BaseCommand.forceFlag() } },
       this.argv
     );
     const { 'no-input': noInput, force } = flags;

@@ -28,7 +28,7 @@ export default class WorkspacesDelete extends BaseCommand {
       {
         type: 'confirm',
         name: 'confirm',
-        message: `Are you sure you want to delete workspace ${workspace}?`,
+        message: `Are you sure you want to delete the ${workspace} workspace?`,
         initial: false
       },
       flags.force

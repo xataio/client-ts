@@ -1,4 +1,3 @@
-import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { getProfile, setProfile } from '../../credentials.js';
 

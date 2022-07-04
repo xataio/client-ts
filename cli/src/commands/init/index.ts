@@ -24,7 +24,7 @@ export default class Init extends BaseCommand {
     }),
     codegen: Flags.string({
       description:
-        'Output file where to generate a TypeScript/JavaScript client strictly typed for your database schema'
+        'Output file to generate a TypeScript/JavaScript client with types for your database schema'
     }),
     declarations: Flags.boolean({
       description: 'Whether or not to generate type declarations for JavaScript code geneartion'
@@ -114,7 +114,7 @@ export default class Init extends BaseCommand {
       {
         type: 'text',
         name: 'output',
-        message: 'Choose where the output file for the code generator',
+        message: 'Choose the output file for the code generator',
         initial: 'src/xata.ts'
       },
       flags.codegen
