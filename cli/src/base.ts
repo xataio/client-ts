@@ -155,6 +155,14 @@ export abstract class BaseCommand extends Command {
     });
   }
 
+  info(message: string) {
+    this.log(`${chalk.blueBright('i')} ${message}`);
+  }
+
+  success(message: string) {
+    this.log(`${chalk.greenBright('✔')} ${message}`);
+  }
+
   async verifyAPIKey(key: string) {
     this.log('Checking access to the API...');
     const xata = await this.getXataClient(key);

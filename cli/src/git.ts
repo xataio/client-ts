@@ -95,6 +95,15 @@ export function createBranch(name: string, base: string) {
   run('git', ['checkout', '-b', name, base]);
 }
 
+export function isIgnored(path: string) {
+  try {
+    run('git', ['check-ignore', path]);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
 function run(command: string, args: string[]) {
   const result = spawnSync(command, args, { encoding: 'utf-8' });
   if (result.error) throw result.error;
