@@ -7,7 +7,7 @@ This is the repository where we develop:
 - The [Xata SDK and ORM](./packages/client/README.md)
 - The [Xata CLI](./cli/README.md)
 
-There's also other pacakges that we use internally that might be of your interest:
+There's also other packages that we use internally that might be of your interest:
 
 - [@xata.io/importer](./packages/importer)
 - [@xata.io/codegen](./packages/codegen)
