@@ -5,7 +5,6 @@ import { spawn } from 'child_process';
 import { highlight } from 'cli-highlight';
 import { access, readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import prompts from 'prompts';
 import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
@@ -32,12 +31,19 @@ export default class Init extends BaseCommand {
 
   static flags = {
     ...this.databaseURLFlag,
+    ...BaseCommand.forceFlag('Overwrite existing project configuration'),
+    ...BaseCommand.yesFlag,
+    sdk: Flags.boolean({
+      description: 'Install the TypeScript/JavaScript SDK'
+    }),
+    codegen: Flags.string({
+      description: 'Output file to generate a TypeScript/JavaScript client with types for your database schema'
+    }),
+    declarations: Flags.boolean({
+      description: 'Whether or not to generate type declarations for JavaScript code geneartion'
+    }),
     schema: Flags.string({
       description: 'Initializes a new database or updates an existing one with the given schema'
-    }),
-    force: Flags.boolean({
-      char: 'f',
-      description: 'Overwrite existing project configuration'
     })
   };
 
@@ -114,12 +120,16 @@ export default class Init extends BaseCommand {
       "const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);"
     ]);
 
-    const { confirm } = await prompts({
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Do you want to install the TypeScript/JavaScript SDK?',
-      initial: true
-    });
+    const { flags } = await this.parse(Init);
+    const { confirm } = await this.prompt(
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Do you want to install the TypeScript/JavaScript SDK?',
+        initial: true
+      },
+      flags.sdk
+    );
     if (confirm === undefined) return this.exit(1);
     if (!confirm) return;
 
@@ -140,34 +150,43 @@ export default class Init extends BaseCommand {
       'const { records } = await xata.db.tableName().filter("column", value).getPaginated();'
     ]);
 
-    const { confirm } = await prompts({
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Do you want to use the TypeScript/JavaScript code generator?',
-      initial: true
-    });
-    if (confirm === undefined) return this.exit(1);
-    if (!confirm) return;
+    const { flags } = await this.parse(Init);
+    if (!flags.codegen) {
+      const { confirm } = await this.prompt({
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Do you want to use the TypeScript/JavaScript code generator?',
+        initial: true
+      });
+      if (confirm === undefined) return this.exit(1);
+      if (!confirm) return;
+    }
 
     this.projectConfig = this.projectConfig || {};
     this.projectConfig.codegen = {};
 
-    const { output } = await prompts({
-      type: 'text',
-      name: 'output',
-      message: 'Choose where the output file for the code generator',
-      initial: 'src/xata.ts'
-    });
+    const { output } = await this.prompt(
+      {
+        type: 'text',
+        name: 'output',
+        message: 'Choose the output file for the code generator',
+        initial: 'src/xata.ts'
+      },
+      flags.codegen
+    );
     if (!output) return this.error('You must provide an output file');
 
     this.projectConfig.codegen.output = output;
 
     if (!output.endsWith('.ts')) {
-      const { declarations } = await prompts({
-        type: 'confirm',
-        name: 'declarations',
-        message: 'Do you want to generate the TypeScript declarations?'
-      });
+      const { declarations } = await this.prompt(
+        {
+          type: 'confirm',
+          name: 'declarations',
+          message: 'Do you want to generate the TypeScript declarations?'
+        },
+        flags.declarations
+      );
 
       if (declarations) {
         this.projectConfig.codegen.declarations = true;
@@ -213,7 +232,7 @@ export default class Init extends BaseCommand {
   runCommand(command: string, args: string[]) {
     this.log(`Running ${command} ${args.join(' ')}`);
     return new Promise((resolve, reject) => {
-      spawn(command, args, { stdio: 'inherit' }).on('exit', (code) => {
+      spawn(which.sync(command), args, { stdio: 'inherit' }).on('exit', (code) => {
         if (code && code > 0) return reject(new Error('Command failed'));
         resolve(undefined);
       });
@@ -277,7 +296,7 @@ export default class Init extends BaseCommand {
 
     const exists = await this.access('.gitignore');
 
-    const { confirm } = await prompts({
+    const { confirm } = await this.prompt({
       type: 'confirm',
       name: 'confirm',
       message: exists

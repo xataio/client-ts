@@ -123,24 +123,24 @@ const user = await xata.db.users.read('rec_1234abcdef');
 
 ```ts
 // Query objects selecting all fields.
-const users = await xata.db.users.select().getMany();
+const page = await xata.db.users.select().getPaginated();
 const user = await xata.db.users.select().getFirst();
 
 // You can also use `xata.db.users` directly, since it's an immutable Query too!
-const users = await xata.db.users.getMany();
+const page = await xata.db.users.getPaginated();
 const user = await xata.db.users.getFirst();
 
 // Query objects selecting just one or more fields
-const users = await xata.db.users.select('email', 'profile').getMany();
+const page = await xata.db.users.select('email', 'profile').getPaginated();
 
 // Apply constraints
-const users = await xata.db.users.filter('email', 'foo@example.com').getMany();
+const page = await xata.db.users.filter('email', 'foo@example.com').getPaginated();
 
 // Sorting
-const users = await xata.db.users.sort('fullName', 'asc').getMany();
+const page = await xata.db.users.sort('full_name', 'asc').getPaginated();
 ```
 
-Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getAll()`, `getFirst()`, `getMany()` or `getPaginated()`.
+Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getPaginated()`, `getMany()`, `getAll()`, or `getFirst()`.
 
 ```ts
 // Operators that combine multiple conditions can be deconstructed
@@ -154,16 +154,23 @@ filter('email', startsWith('username')).not(filter('created_at', gt(somePastDate
 // Queries are immutable objects. This is useful to derive queries from other queries
 const admins = filter('admin', true);
 const spaniardsAdmins = admins.filter('country', 'Spain');
-await admins.getMany(); // still returns all admins
+await admins.getAll(); // still returns all admins
 
 // Finally fetch the results of the query
-const users = await query.getMany();
+const users = await query.getAll();
 const firstUser = await query.getFirst();
+```
 
-// Also you can paginate the results
-const page = await query.getPaginated();
-const hasPage2 = page.hasNextPage();
-const page2 = await page.nextPage();
+The `getPaginated()` method will return a `Page` object. It's a wrapper that internally uses cursor based pagination.
+
+```ts
+page.records; // Array of records
+page.hasNextPage(); // Boolean
+
+const nextPage = await page.nextPage(); // Page object
+const previousPage = await page.previousPage(); // Page object
+const firstPage = await page.firstPage(); // Page object
+const lastPage = await page.lastPage(); // Page object
 ```
 
 If you want to use an iterator, both the Repository and the Query classes implement an AsyncIterable. Alternatively you can use `getIterator()` and customize the batch size of the iterator:
@@ -208,23 +215,6 @@ await user.delete();
 await xata.db.users.delete('rec_1234abcdef');
 ```
 
-#### Deno support
-
-Right now we are still not publishing the client on deno.land or have support for deno in the codegen.
-
-However you can already use it with your preferred node CDN with the following import in the auto-generated `xata.ts` file:
-
-```ts
-import {
-  BaseClient,
-  Query,
-  Repository,
-  RestRespositoryFactory,
-  XataClientOptions,
-  XataRecord
-} from 'https://esm.sh/@xata.io/client@<version>/dist/schema?target=deno';
-```
-
 ### API Client
 
 One of the main features of the SDK is the ability to interact with the whole Xata API and perform administrative operations such as creating/reading/updating/deleting workspaces, databases, tables, branches...
@@ -255,4 +245,21 @@ const { id: recordId } = await client.records.insertRecord(workspace, databaseNa
 const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
 
 await client.workspaces.deleteWorkspace(workspace);
+```
+
+## Deno support
+
+Right now we are still not publishing the client on deno.land or have support for deno in the codegen.
+
+However you can already use it with your preferred node CDN with the following import in the auto-generated `xata.ts` file:
+
+```ts
+import {
+  BaseClient,
+  Query,
+  Repository,
+  RestRespositoryFactory,
+  XataClientOptions,
+  XataRecord
+} from 'https://esm.sh/@xata.io/client@<version>/dist/schema?target=deno';
 ```
