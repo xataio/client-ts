@@ -198,11 +198,19 @@ export type Table = {
  */
 export type Column = {
   name: string;
-  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
+  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime' | 'enum';
   link?: {
     table: string;
   };
+  ['enum']?: {
+    values?: string[];
+  };
   columns?: Column[];
+};
+
+export type CheckConstraint = {
+  operator: string;
+  value: any[] | string | number | boolean;
 };
 
 export type RevLink = {

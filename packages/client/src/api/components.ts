@@ -1889,11 +1889,14 @@ export type UpdateColumnRequestBody = {
   /*
    * @minLength 1
    */
-  name: string;
+  name?: string;
+  constraints?: {
+    check?: Schemas.CheckConstraint;
+  };
 };
 
 export type UpdateColumnVariables = {
-  body: UpdateColumnRequestBody;
+  body?: UpdateColumnRequestBody;
   pathParams: UpdateColumnPathParams;
 } & FetcherExtraProps;
 
