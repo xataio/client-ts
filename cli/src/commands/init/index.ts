@@ -263,7 +263,6 @@ export default class Init extends BaseCommand {
     this.info(
       'The fallback branch will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitly)'
     );
-    );
 
     const fallbackBranch = await this.getBranch(workspace, database, {
       allowEmpty: true,
