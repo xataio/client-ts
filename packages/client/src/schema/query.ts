@@ -9,7 +9,8 @@ import {
   Page,
   Paginable,
   PaginationQueryMeta,
-  PAGINATION_MAX_SIZE
+  PAGINATION_MAX_SIZE,
+  RecordArray
 } from './pagination';
 import { XataRecord } from './record';
 import { Repository } from './repository';
@@ -48,7 +49,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
   // Implements pagination
   readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true } };
-  readonly records: Result[] = [];
+  readonly records: RecordArray<Result> = new RecordArray<Result>(this, []);
 
   constructor(
     repository: Repository<Record> | null,
@@ -297,14 +298,14 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * Performs the query in the database and returns a set of results.
    * @returns An array of records from the database.
    */
-  getMany(): Promise<Result[]>;
+  getMany(): Promise<RecordArray<Result>>;
 
   /**
    * Performs the query in the database and returns a set of results.
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<Result[]>;
+  getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<RecordArray<Result>>;
 
   /**
    * Performs the query in the database and returns a set of results.
@@ -313,12 +314,17 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    */
   getMany<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
-  ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
+  ): Promise<RecordArray<SelectedPick<Record, typeof options['columns']>>>;
 
-  async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result[]> {
-    const { records } = await this.getPaginated(options);
+  async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<RecordArray<Result>> {
+    const page = await this.getPaginated(options);
+
+    if (page.hasNextPage() && options.pagination?.size === undefined) {
+      console.trace('Calling getMany does not return all results. Paginate to get all results or call getAll.');
+    }
+
     // Method overloading does not provide type inference for the return type.
-    return records as unknown as Result[];
+    return page.records as unknown as RecordArray<Result>;
   }
 
   /**
