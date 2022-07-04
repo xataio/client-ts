@@ -33,7 +33,7 @@ jobs:
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
         id: find-comment-1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -44,7 +44,7 @@ jobs:
       - name: Update existing comment with stale state of npm release
         uses: peter-evans/create-or-update-comment@v1
         id: update-existing
-        if: ${{ github.event_name == 'pull_request' && steps.find-comment-1.outputs.comment-id != '' }}
+        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' && steps.find-comment-1.outputs.comment-id != '' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.find-comment-1.outputs.comment-id }}
@@ -69,17 +69,18 @@ jobs:
         run: npm run build
 
       - name: Configure npm registry token
+        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
         run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish build
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
         run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --exact --no-verify-access --yes
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
         id: find-comment-2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -89,7 +90,7 @@ jobs:
 
       - name: Create or update comment of npm release
         uses: peter-evans/create-or-update-comment@v1
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.find-comment-2.outputs.comment-id }}
@@ -107,6 +108,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    if: github.repository == 'xataio/client-ts'
 
     steps:
       - uses: actions/checkout@v3
