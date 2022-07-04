@@ -141,6 +141,7 @@ export default class Init extends BaseCommand {
       'Do you want to use the code generator? The code generator will allow you to use your database with type safety and autocompletion. Example:'
     );
     this.printCode([
+      '// Import the generated code',
       "import { XataClient } from './xata';",
       '',
       '// Initialize the client',
