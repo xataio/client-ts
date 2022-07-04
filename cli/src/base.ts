@@ -189,7 +189,7 @@ export abstract class BaseCommand extends Command {
     }
 
     const { workspace } = await this.prompt({
-      type: 'select',
+      type: 'autocomplete',
       name: 'workspace',
       message: 'Select a workspace',
       choices: workspaces.workspaces.map((workspace) => ({
@@ -219,7 +219,7 @@ export abstract class BaseCommand extends Command {
       }
 
       const { database } = await this.prompt({
-        type: 'select',
+        type: 'autocomplete',
         name: 'database',
         message: dbs.length > 0 && options.allowCreate ? 'Select a database or create a new one' : 'Select a database',
         choices
@@ -267,11 +267,11 @@ export abstract class BaseCommand extends Command {
       } = options;
 
       const { branch } = await this.prompt({
-        type: 'select',
+        type: 'autocomplete',
         name: 'branch',
         message: title,
         choices,
-        initial: EMPTY_CHOICE
+        initial: options.allowEmpty ? EMPTY_CHOICE : undefined
       });
 
       if (!branch) return this.error('No branch selected');

@@ -167,7 +167,7 @@ export default class Init extends BaseCommand {
   runCommand(command: string, args: string[]) {
     this.log(`Running ${command} ${args.join(' ')}`);
     return new Promise((resolve, reject) => {
-      spawn(command, args, { stdio: 'inherit' }).on('exit', (code) => {
+      spawn(which.sync(command), args, { stdio: 'inherit' }).on('exit', (code) => {
         if (code && code > 0) return reject(new Error('Command failed'));
         resolve(undefined);
       });
