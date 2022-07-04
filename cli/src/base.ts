@@ -266,7 +266,13 @@ export abstract class BaseCommand extends Command {
         title = branches.length > 0 && options.allowCreate ? 'Select a branch or create a new one' : 'Select a branch'
       } = options;
 
-      const { branch } = await this.prompt({ type: 'select', name: 'branch', message: title, choices });
+      const { branch } = await this.prompt({
+        type: 'select',
+        name: 'branch',
+        message: title,
+        choices,
+        initial: EMPTY_CHOICE
+      });
 
       if (!branch) return this.error('No branch selected');
       if (branch === CREATE_CHOICE) {
