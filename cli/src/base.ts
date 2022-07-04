@@ -57,20 +57,41 @@ export abstract class BaseCommand extends Command {
     description: 'Branch name to use'
   });
 
-  static noInputFlag = Flags.boolean({
-    helpGroup: commonFlagsHelpGroup,
-    description: 'Will not prompt interactively for missing values'
-  });
+  static noInputFlag = {
+    'no-input': Flags.boolean({
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Will not prompt interactively for missing values'
+    })
+  };
 
-  static jsonFlag = Flags.boolean({
-    helpGroup: commonFlagsHelpGroup,
-    description: 'Print the output in JSON format'
-  });
+  static yesFlag = {
+    yes: Flags.boolean({
+      char: 'y',
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Will use the default answers for any interactive question'
+    })
+  };
+
+  static jsonFlag = {
+    json: Flags.boolean({
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Print the output in JSON format'
+    })
+  };
 
   static commonFlags = {
-    json: this.jsonFlag,
-    'no-input': this.noInputFlag
+    ...this.jsonFlag,
+    ...this.noInputFlag
   };
+
+  static forceFlag(description?: string) {
+    return {
+      force: Flags.boolean({
+        char: 'f',
+        description: description || 'Do not ask for confirmation'
+      })
+    };
+  }
 
   async init() {
     dotenv.config();
@@ -134,6 +155,14 @@ export abstract class BaseCommand extends Command {
     });
   }
 
+  info(message: string) {
+    this.log(`${chalk.blueBright('i')} ${message}`);
+  }
+
+  success(message: string) {
+    this.log(`${chalk.greenBright('✔')} ${message}`);
+  }
+
   async verifyAPIKey(key: string) {
     this.log('Checking access to the API...');
     const xata = await this.getXataClient(key);
@@ -153,7 +182,7 @@ export abstract class BaseCommand extends Command {
         return this.error('No workspaces found, please create one first');
       }
 
-      const { name } = await prompts({
+      const { name } = await this.prompt({
         type: 'text',
         name: 'name',
         message: 'New workspace name'
@@ -167,7 +196,7 @@ export abstract class BaseCommand extends Command {
       return workspace;
     }
 
-    const { workspace } = await prompts({
+    const { workspace } = await this.prompt({
       type: 'autocomplete',
       name: 'workspace',
       message: 'Select a workspace',
@@ -197,7 +226,7 @@ export abstract class BaseCommand extends Command {
         choices.splice(0, 0, { title: '<Create a new database>', value: 'create' });
       }
 
-      const { database } = await prompts({
+      const { database } = await this.prompt({
         type: 'autocomplete',
         name: 'database',
         message: dbs.length > 0 && options.allowCreate ? 'Select a database or create a new one' : 'Select a database',
@@ -245,7 +274,13 @@ export abstract class BaseCommand extends Command {
         title = branches.length > 0 && options.allowCreate ? 'Select a branch or create a new one' : 'Select a branch'
       } = options;
 
-      const { branch } = await prompts({ type: 'autocomplete', name: 'branch', message: title, choices });
+      const { branch } = await this.prompt({
+        type: 'autocomplete',
+        name: 'branch',
+        message: title,
+        choices,
+        initial: options.allowEmpty ? EMPTY_CHOICE : undefined
+      });
 
       if (!branch) return this.error('No branch selected');
       if (branch === CREATE_CHOICE) {
@@ -264,7 +299,7 @@ export abstract class BaseCommand extends Command {
 
   async createDatabase(workspace: string) {
     const xata = await this.getXataClient();
-    const { name } = await prompts({
+    const { name } = await this.prompt({
       type: 'text',
       name: 'name',
       message: 'New database name',
@@ -279,7 +314,7 @@ export abstract class BaseCommand extends Command {
 
   async createBranch(workspace: string, database: string): Promise<string> {
     const xata = await this.getXataClient();
-    const { name } = await prompts({
+    const { name } = await this.prompt({
       type: 'text',
       name: 'name',
       message: 'New branch name'
@@ -375,7 +410,7 @@ export abstract class BaseCommand extends Command {
   }
 
   async obtainKey() {
-    const { decision } = await prompts({
+    const { decision } = await this.prompt({
       type: 'select',
       name: 'decision',
       message: 'Do you want to use an existing API key or create a new API key?',
@@ -389,7 +424,7 @@ export abstract class BaseCommand extends Command {
     if (decision === 'create') {
       return createAPIKeyThroughWebUI();
     } else if (decision === 'existing') {
-      const { key } = await prompts({
+      const { key } = await this.prompt({
         type: 'password',
         name: 'key',
         message: 'Introduce your API key:'
@@ -417,7 +452,7 @@ export abstract class BaseCommand extends Command {
       this.printMigration(plan.migration);
       this.log();
 
-      const { confirm } = await prompts({
+      const { confirm } = await this.prompt({
         type: 'confirm',
         name: 'confirm',
         message: `Do you want to apply the above migration into the ${branch} branch?`,
@@ -492,5 +527,39 @@ export abstract class BaseCommand extends Command {
     for (const error of err.errors) {
       this.warn(`  [${error.code}] ${error.message} at "${error.path.join('.')}"`);
     }
+  }
+
+  async prompt<name extends string>(
+    options: prompts.PromptObject<name>,
+    flagValue?: boolean | string
+  ): Promise<prompts.Answers<name>> {
+    // If there's a flag, use the value of the flag
+    if (flagValue != null) return { [String(options.name)]: flagValue } as prompts.Answers<name>;
+
+    const { flags } = await this.parse(
+      { strict: false, flags: { ...BaseCommand.noInputFlag, ...BaseCommand.yesFlag } },
+      this.argv
+    );
+    const { 'no-input': noInput, yes } = flags;
+
+    if (yes && options.initial != null && typeof options.initial !== 'function') {
+      return { [String(options.name)]: options.initial } as prompts.Answers<name>;
+    }
+
+    let reason = '';
+
+    if (!process.stdout.isTTY && process.env.NODE_ENV !== 'test') {
+      reason = 'you are not running it in a TTY';
+    } else if (noInput) {
+      reason = 'the --no-input flag is being used';
+    }
+
+    if (reason) {
+      this.error(
+        `The current command required interactivity, but ${reason}. Use --help to check if you can pass arguments instead or --yes to use the default answers for all questions.`
+      );
+    }
+
+    return prompts(options);
   }
 }
