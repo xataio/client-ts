@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.4.1
+
+### Patch Changes
+
+- [#383](https://github.com/xataio/client-ts/pull/383) [`0756bfe`](https://github.com/xataio/client-ts/commit/0756bfe2f60ad76ba9df55b9b66687c4cf96e9bb) Thanks [@gimenete](https://github.com/gimenete)! - Fix executing npm/yarn on Windows
+
 ## 0.4.0
 
 ### Minor Changes
@@ -97,3 +103,4 @@
   - @xata.io/shell@0.1.3
   - @xata.io/client@0.9.0
   - @xata.io/codegen@0.9.0
+
