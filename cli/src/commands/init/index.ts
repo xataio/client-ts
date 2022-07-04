@@ -19,12 +19,12 @@ export default class Init extends BaseCommand {
   static flags = {
     ...this.databaseURLFlag,
     ...BaseCommand.forceFlag('Overwrite existing project configuration'),
+    ...BaseCommand.yesFlag,
     sdk: Flags.boolean({
       description: 'Install the TypeScript/JavaScript SDK'
     }),
     codegen: Flags.string({
-      description:
-        'Output file to generate a TypeScript/JavaScript client with types for your database schema'
+      description: 'Output file to generate a TypeScript/JavaScript client with types for your database schema'
     }),
     declarations: Flags.boolean({
       description: 'Whether or not to generate type declarations for JavaScript code geneartion'

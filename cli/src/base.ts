@@ -64,6 +64,14 @@ export abstract class BaseCommand extends Command {
     })
   };
 
+  static yesFlag = {
+    yes: Flags.boolean({
+      char: 'y',
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Will use the default answers for any interactive question'
+    })
+  };
+
   static jsonFlag = {
     json: Flags.boolean({
       helpGroup: commonFlagsHelpGroup,
@@ -515,12 +523,12 @@ export abstract class BaseCommand extends Command {
     if (flagValue != null) return { [String(options.name)]: flagValue } as prompts.Answers<name>;
 
     const { flags } = await this.parse(
-      { strict: false, flags: { ...BaseCommand.noInputFlag, ...BaseCommand.forceFlag() } },
+      { strict: false, flags: { ...BaseCommand.noInputFlag, ...BaseCommand.yesFlag } },
       this.argv
     );
-    const { 'no-input': noInput, force } = flags;
+    const { 'no-input': noInput, yes } = flags;
 
-    if (force && options.initial != null && typeof options.initial !== 'function') {
+    if (yes && options.initial != null && typeof options.initial !== 'function') {
       return { [String(options.name)]: options.initial } as prompts.Answers<name>;
     }
 
@@ -533,13 +541,8 @@ export abstract class BaseCommand extends Command {
     }
 
     if (reason) {
-      if (options.type === 'confirm') {
-        this.error(
-          `The current command required interactivity, but ${reason}. Use --force to execute it without asking for confirmations.`
-        );
-      }
       this.error(
-        `The current command required interactivity, but ${reason}. Use --help to check if you can pass arguments instead.`
+        `The current command required interactivity, but ${reason}. Use --help to check if you can pass arguments instead or --yes to use the default answers for all questions.`
       );
     }
 

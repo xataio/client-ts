@@ -13,13 +13,17 @@ export default class Login extends BaseCommand {
   static args = [];
 
   async run(): Promise<void> {
+    const { flags } = await this.parse(Login);
     const existingProfile = await getProfile(true);
     if (existingProfile) {
-      const { overwrite } = await this.prompt({
-        type: 'confirm',
-        name: 'overwrite',
-        message: 'Authentication is already configured, do you want to overwrite it?'
-      });
+      const { overwrite } = await this.prompt(
+        {
+          type: 'confirm',
+          name: 'overwrite',
+          message: 'Authentication is already configured, do you want to overwrite it?'
+        },
+        flags.force
+      );
       if (!overwrite) this.exit(2);
     }
 
