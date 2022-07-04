@@ -20,7 +20,7 @@ export default class ImportCSV extends BaseCommand {
   static flags = {
     ...this.noInputFlag,
     ...this.databaseURLFlag,
-    ...BaseCommand.forceFlag('Update the schema database schema if necessary without asking'),
+    ...BaseCommand.forceFlag('Update the database schema if necessary without asking'),
     branch: this.branchFlag,
     table: Flags.string({
       description: 'The table where the CSV file will be imported to',
