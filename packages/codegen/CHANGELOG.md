@@ -1,5 +1,15 @@
 # @xata.io/codegen
 
+## 0.12.0
+
+### Minor Changes
+
+- [#341](https://github.com/xataio/client-ts/pull/341) [`8bc84f1`](https://github.com/xataio/client-ts/commit/8bc84f17a3ad1cc66aa6c9c9cfe4898e284d37ce) Thanks [@gimenete](https://github.com/gimenete)! - Deprecate codegen CLI
+
+### Patch Changes
+
+- [#367](https://github.com/xataio/client-ts/pull/367) [`d861608`](https://github.com/xataio/client-ts/commit/d86160803f317a9e72e55121afb42573b574c20e) Thanks [@gimenete](https://github.com/gimenete)! - Some fixes, including adding a missing dependency for codegen
+
 ## 0.11.0
 
 ### Patch Changes
