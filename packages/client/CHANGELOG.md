@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.13.0
+
+### Minor Changes
+
+- [#375](https://github.com/xataio/client-ts/pull/375) [`c9f34ad`](https://github.com/xataio/client-ts/commit/c9f34ad37d75203083a1dec2fac2b03e096521af) Thanks [@SferaDev](https://github.com/SferaDev)! - Change default pagination size to 20
+
+* [#375](https://github.com/xataio/client-ts/pull/375) [`5f82e43`](https://github.com/xataio/client-ts/commit/5f82e4394010f40dcbf3faf2d0bdb58a6fc1c37a) Thanks [@SferaDev](https://github.com/SferaDev)! - Return a paginable object in getPaginated
+
 ## 0.12.0
 
 ### Minor Changes

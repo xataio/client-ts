@@ -84,14 +84,14 @@ afterAll(async () => {
 
 describe('integration tests', () => {
   test('equal filter', async () => {
-    const teams = await client.db.teams.filter('name', 'Team fruits').getMany();
+    const teams = await client.db.teams.filter('name', 'Team fruits').getAll();
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Team fruits');
   });
 
   test('operator filter', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).getMany({ sort: ['name'] });
+    const teams = await client.db.teams.filter('name', contains('fruits')).getAll({ sort: ['name'] });
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -99,7 +99,7 @@ describe('integration tests', () => {
   });
 
   test.skip('operator filter on multiple column', async () => {
-    const teams = await client.db.teams.filter('labels', ['banana']).getMany();
+    const teams = await client.db.teams.filter('labels', ['banana']).getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -107,14 +107,14 @@ describe('integration tests', () => {
   });
 
   test('multiple filter', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).filter('name', contains('Mixed')).getMany();
+    const teams = await client.db.teams.filter('name', contains('fruits')).filter('name', contains('Mixed')).getAll();
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
   });
 
   test('sort ascending', async () => {
-    const teams = await client.db.teams.sort('name', 'asc').getMany();
+    const teams = await client.db.teams.sort('name', 'asc').getAll();
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -123,7 +123,7 @@ describe('integration tests', () => {
   });
 
   test('sort descending', async () => {
-    const teams = await client.db.teams.sort('name', 'desc').getMany();
+    const teams = await client.db.teams.sort('name', 'desc').getAll();
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Team fruits');
@@ -132,7 +132,7 @@ describe('integration tests', () => {
   });
 
   test('single filter and sort ascending', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'asc').getMany();
+    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'asc').getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -140,15 +140,15 @@ describe('integration tests', () => {
   });
 
   test('single filter and sort descending', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'desc').getMany();
+    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'desc').getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Team fruits');
     expect(teams[1].name).toBe('Mixed team fruits & animals');
   });
 
-  test('sort ascending in getMany', async () => {
-    const teams = await client.db.teams.getMany({ sort: 'name' });
+  test('sort ascending in getAll', async () => {
+    const teams = await client.db.teams.getAll({ sort: 'name' });
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -156,8 +156,8 @@ describe('integration tests', () => {
     expect(teams[2].name).toBe('Team fruits');
   });
 
-  test('sort descending in getMany', async () => {
-    const teams = await client.db.teams.getMany({ sort: { column: 'name', direction: 'desc' } });
+  test('sort descending in getAll', async () => {
+    const teams = await client.db.teams.getAll({ sort: { column: 'name', direction: 'desc' } });
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Team fruits');
@@ -167,7 +167,7 @@ describe('integration tests', () => {
 
   test('negative filter', async () => {
     const repository = client.db.teams;
-    const teams = await repository.not(repository.filter('name', 'Team fruits')).sort('name', 'asc').getMany();
+    const teams = await repository.not(repository.filter('name', 'Team fruits')).sort('name', 'asc').getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -185,42 +185,30 @@ describe('integration tests', () => {
   });
 
   test('filter on object', async () => {
-    const users = await client.db.users
-      .filter({
-        address: {
-          zipcode: 100
-        }
-      })
-      .getMany();
+    const users = await client.db.users.filter({ address: { zipcode: 100 } }).getAll();
 
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
   });
 
   test('filter on object with operator', async () => {
-    const users = await client.db.users
-      .filter({
-        address: {
-          zipcode: lt(150)
-        }
-      })
-      .getMany();
+    const users = await client.db.users.filter({ address: { zipcode: lt(150) } }).getAll();
 
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
   });
 
   test('filter on link', async () => {
-    const teams = await client.db.teams
-      .filter({
-        owner: {
-          full_name: 'Owner of team fruits'
-        }
-      })
-      .getMany();
+    const teams = await client.db.teams.filter({ owner: { full_name: 'Owner of team fruits' } }).getAll();
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Team fruits');
+  });
+
+  test('filter returns nothing', async () => {
+    const teams = await client.db.teams.filter('name', 'Not even possible').getAll();
+
+    expect(teams).toHaveLength(0);
   });
 
   test('returns single record', async () => {
@@ -229,12 +217,23 @@ describe('integration tests', () => {
   });
 
   test('returns many records with offset/size', async () => {
-    const page1 = await client.db.users.getMany({ pagination: { size: 10 } });
-    const page2 = await client.db.users.getMany({ pagination: { size: 10, offset: 10 } });
+    const records1 = await client.db.users.getMany({ pagination: { size: 10 } });
+    const records2 = await client.db.users.getMany({ pagination: { size: 10, offset: 10 } });
 
-    expect(page1).not.toEqual(page2);
-    expect(page1).toHaveLength(10);
-    expect(page2).toHaveLength(10);
+    expect(records1).not.toEqual(records2);
+    expect(records1).toHaveLength(10);
+    expect(records2).toHaveLength(10);
+  });
+
+  test('returns many records and implements extended array object', async () => {
+    const records1 = await client.db.users.getMany({ pagination: { size: 10 } });
+    const hasPage2 = records1.hasNextPage();
+    const records2 = await records1.nextPage();
+
+    expect(records1).not.toEqual(records2);
+    expect(hasPage2).toBe(true);
+    expect(records1).toHaveLength(10);
+    expect(records2).toHaveLength(10);
   });
 
   test('returns many records with cursor', async () => {
@@ -677,7 +676,7 @@ describe('record update', () => {
 
     expect(updatedTeams).toHaveLength(2);
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(2);
     expect(apiTeams[0].name).toBe('Team boats');
@@ -723,7 +722,7 @@ describe('record deletion', () => {
 
     await client.db.teams.delete(teams.map((team) => team.id));
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(0);
   });
@@ -747,7 +746,7 @@ describe('record deletion', () => {
 
     await client.db.teams.delete(teams);
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(0);
   });
@@ -806,7 +805,7 @@ describe('record create or update', () => {
     expect(updatedTeams).toHaveLength(2);
     expect(updatedTeams[0].read).toBeDefined();
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getMany();
+    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(2);
 

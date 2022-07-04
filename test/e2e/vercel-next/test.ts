@@ -28,8 +28,8 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
   const team = await xata.db.teams.create({ name: 'Team 1' });
   await xata.db.users.create({ full_name: 'User 1', team });
 
-  const users = await xata.db.users.getMany();
-  const teams = await xata.db.teams.getMany();
+  const users = await xata.db.users.getAll();
+  const teams = await xata.db.teams.getAll();
 
   await api.databases.deleteDatabase(workspace, databaseName);
 
