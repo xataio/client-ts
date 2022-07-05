@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/plugin-client-cache",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -20,10 +20,10 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@xata.io/client": "^0.12.0"
+    "@xata.io/client": "^0.13.0"
   },
   "devDependencies": {
-    "lru-cache": "^7.10.2"
+    "lru-cache": "^7.12.0"
   },
   "peerDependencies": {
     "lru-cache": "^7"

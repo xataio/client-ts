@@ -1,7 +1,6 @@
 import { Flags } from '@oclif/core';
 import { CompareSchemaResult, createProcessor, parseCSVFile, parseCSVStream, TableInfo } from '@xata.io/importer';
 import chalk from 'chalk';
-import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
 
 export default class ImportCSV extends BaseCommand {
@@ -19,8 +18,9 @@ export default class ImportCSV extends BaseCommand {
   ];
 
   static flags = {
-    'no-input': this.noInputFlag,
+    ...this.noInputFlag,
     ...this.databaseURLFlag,
+    ...BaseCommand.forceFlag('Update the database schema if necessary without asking'),
     branch: this.branchFlag,
     table: Flags.string({
       description: 'The table where the CSV file will be imported to',
@@ -105,7 +105,7 @@ export default class ImportCSV extends BaseCommand {
 
     if (compare.missingTable) {
       if (!create) {
-        const response = await prompts({
+        const response = await this.prompt({
           type: 'confirm',
           name: 'confirm',
           message: `Table ${table} does not exist. Do you want to create it?`,
@@ -115,7 +115,7 @@ export default class ImportCSV extends BaseCommand {
       }
     } else if (compare.missingColumns.length > 0) {
       if (!create) {
-        const response = await prompts({
+        const response = await this.prompt({
           type: 'confirm',
           name: 'confirm',
           message: `These columns are missing: ${missingColumnsList(compare)}. Do you want to create them?`,

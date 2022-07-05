@@ -4,7 +4,7 @@ export function clearEnvVariables() {
   const env = { ...process.env };
 
   beforeEach(() => {
-    process.env = {};
+    process.env = { NODE_ENV: 'test' };
   });
 
   afterAll(() => {

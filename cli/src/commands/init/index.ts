@@ -2,29 +2,48 @@ import { Flags } from '@oclif/core';
 import { getCurrentBranchName } from '@xata.io/client';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
+import { highlight } from 'cli-highlight';
 import { access, readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import prompts from 'prompts';
 import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
 import { getProfile } from '../../credentials.js';
+import { isIgnored } from '../../git.js';
 import { xataDatabaseSchema } from '../../schema.js';
+import Browse from '../browse/index.js';
 import Codegen from '../codegen/index.js';
+import RandomData from '../random-data/index.js';
+import EditSchema from '../schema/edit.js';
+import Shell from '../shell/index.js';
 
 export default class Init extends BaseCommand {
   static description = 'Configure your working directory to work with a Xata database';
 
-  static examples = [];
+  static examples = [
+    'Initialize a new project',
+    'xata init --db https://workspace-1234.xata.sh/db/database-name',
+    'Initialize a new project using a schema dump',
+    'xata init --db https://workspace-1234.xata.sh/db/database-name --schema schema.json',
+    'Initialize a new project without flags. The workspace and database will be asked interactively',
+    'xata init'
+  ];
 
   static flags = {
     ...this.databaseURLFlag,
+    ...BaseCommand.forceFlag('Overwrite existing project configuration'),
+    ...BaseCommand.yesFlag,
+    sdk: Flags.boolean({
+      description: 'Install the TypeScript/JavaScript SDK'
+    }),
+    codegen: Flags.string({
+      description: 'Output file to generate a TypeScript/JavaScript client with types for your database schema'
+    }),
+    declarations: Flags.boolean({
+      description: 'Whether or not to generate type declarations for JavaScript code geneartion'
+    }),
     schema: Flags.string({
       description: 'Initializes a new database or updates an existing one with the given schema'
-    }),
-    force: Flags.boolean({
-      char: 'f',
-      description: 'Overwrite existing project configuration'
     })
   };
 
@@ -32,6 +51,9 @@ export default class Init extends BaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Init);
+
+    this.log('🦋 Initializing project... We will ask you some questions.');
+    this.log();
 
     if (this.projectConfigLocation) {
       if (!flags.force) {
@@ -49,6 +71,8 @@ export default class Init extends BaseCommand {
 
     this.projectConfig = { databaseURL };
 
+    await this.configureCodegen();
+
     await this.installSDK();
 
     await this.writeConfig();
@@ -62,62 +86,123 @@ export default class Init extends BaseCommand {
 
     await Codegen.runIfConfigured(this.projectConfig);
 
-    this.log(
-      `You are all set! Run ${chalk.bold('xata browse')} to edit the schema via UI, or ${chalk.bold(
-        'xata schema edit'
-      )} to edit the schema in the shell.`
+    this.log();
+    this.success('Project configured successfully.');
+    this.info(`Next steps? Here's a list of useful commands above. Use ${chalk.bold('xata --help')} to list them all.`);
+    const bullet = chalk.magenta('»');
+    this.printTable(
+      [],
+      [
+        [bullet + ' xata shell', chalk.dim(Shell.description)],
+        [bullet + ' xata browse', chalk.dim(Browse.description)],
+        [bullet + ' xata schema edit', chalk.dim(EditSchema.description)],
+        [bullet + ' xata codegen', chalk.dim(Codegen.description)],
+        [bullet + ' xata random-data', chalk.dim(RandomData.description)]
+      ]
     );
+
+    this.log();
+    this.success('You are all set!');
   }
 
   async installSDK() {
-    const { confirm } = await prompts({
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Do you want to install the TypeScript/JavaScript SDK?',
-      initial: true
-    });
+    // If codegen is configured, the SDK is already installed
+    if (this.projectConfig?.codegen) return;
+
+    this.info('Do you want to install the SDK? The SDK gives access to the whole REST API. Example:');
+    this.printCode([
+      "import { XataApiClient } from '@xata.io/client';",
+      '',
+      '// Initialize the client',
+      'const api = new XataApiClient();',
+      '',
+      '// Usage example',
+      "const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);"
+    ]);
+
+    const { flags } = await this.parse(Init);
+    const { confirm } = await this.prompt(
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Do you want to install the TypeScript/JavaScript SDK?',
+        initial: true
+      },
+      flags.sdk
+    );
     if (confirm === undefined) return this.exit(1);
     if (!confirm) return;
 
     await this.installPackage('@xata.io/client');
-
-    await this.configureCodegen();
   }
 
   async configureCodegen() {
-    const { confirm } = await prompts({
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Do you want to use the TypeScript/JavaScript code generator?',
-      initial: true
-    });
-    if (confirm === undefined) return this.exit(1);
-    if (!confirm) return;
+    this.info(
+      'Do you want to use the code generator? The code generator will allow you to use your database with type safety and autocompletion. Example:'
+    );
+    this.printCode([
+      '// Import the generated code',
+      "import { XataClient } from './xata';",
+      '',
+      '// Initialize the client',
+      'const xata = new XataClient();',
+      '',
+      '// Query a table with a simple filter',
+      'const { records } = await xata.db.tableName().filter("column", value).getPaginated();'
+    ]);
+
+    const { flags } = await this.parse(Init);
+    if (!flags.codegen) {
+      const { confirm } = await this.prompt({
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Do you want to use the TypeScript/JavaScript code generator?',
+        initial: true
+      });
+      if (confirm === undefined) return this.exit(1);
+      if (!confirm) return;
+    }
 
     this.projectConfig = this.projectConfig || {};
     this.projectConfig.codegen = {};
 
-    const { output } = await prompts({
-      type: 'text',
-      name: 'output',
-      message: 'Choose where the output file for the code generator',
-      initial: 'src/xata.ts'
-    });
+    const { output } = await this.prompt(
+      {
+        type: 'text',
+        name: 'output',
+        message: 'Choose the output file for the code generator',
+        initial: 'src/xata.ts'
+      },
+      flags.codegen
+    );
     if (!output) return this.error('You must provide an output file');
 
     this.projectConfig.codegen.output = output;
 
     if (!output.endsWith('.ts')) {
-      const { declarations } = await prompts({
-        type: 'confirm',
-        name: 'declarations',
-        message: 'Do you want to generate the TypeScript declarations?'
-      });
+      const { declarations } = await this.prompt(
+        {
+          type: 'confirm',
+          name: 'declarations',
+          message: 'Do you want to generate the TypeScript declarations?'
+        },
+        flags.declarations
+      );
 
       if (declarations) {
         this.projectConfig.codegen.declarations = true;
       }
     }
+
+    await this.installPackage('@xata.io/client');
+  }
+
+  printCode(lines: string[]) {
+    const code = lines.map((line) => `\t${line}`).join('\n');
+    const highlighted = highlight(code, { language: 'typescript' });
+    this.log();
+    this.log(highlighted);
+    this.log();
   }
 
   async getPackageManager() {
@@ -164,18 +249,25 @@ export default class Init extends BaseCommand {
   }
 
   async writeEnvFile(workspace: string, database: string) {
+    const envExists = await this.access('.env');
+    const message = envExists ? 'update your .env file' : 'create an .env file in your project';
+
+    this.info(`We are going to ${message}. This file will contain an API key and optionally your fallback branch.`);
+
     // TODO: generate a database-scoped API key
     let apiKey = (await getProfile())?.apiKey;
 
     if (!apiKey) {
       apiKey = await createAPIKeyThroughWebUI();
     }
+    this.info(
+      'The fallback branch will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitly)'
+    );
 
     const fallbackBranch = await this.getBranch(workspace, database, {
       allowEmpty: true,
       allowCreate: true,
-      title:
-        'Choose a default development branch. This will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitely)'
+      title: 'Choose a default development branch (fallback branch).'
     });
 
     let content = '';
@@ -185,16 +277,54 @@ export default class Init extends BaseCommand {
     } catch (err) {
       // ignore
     }
-    content += '\n\n';
+    if (content) content += '\n\n';
+    content += '# API key used by the CLI and the SDK\n';
+    content += '# Make sure your framework/tooling load this file on startup to have it available for the SDK\n';
     content += `XATA_API_KEY=${apiKey}\n`;
     if (fallbackBranch) {
+      content += "# Xata branch that will be used if there's not a xata branch with the same name as your git branch\n";
       content += `XATA_FALLBACK_BRANCH=${fallbackBranch}\n`;
     }
     await writeFile('.env', content);
+
+    await this.ignoreEnvFile();
+  }
+
+  async ignoreEnvFile() {
+    const ignored = await isIgnored('.env');
+    if (ignored) return;
+
+    const exists = await this.access('.gitignore');
+
+    const { confirm } = await this.prompt({
+      type: 'confirm',
+      name: 'confirm',
+      message: exists
+        ? 'Do you want to add .env to your .gitignore?'
+        : 'Do you want to create a .gitignore file and ignore the .env file?',
+      initial: true
+    });
+    if (confirm === undefined) return this.exit(1);
+    if (!confirm) {
+      this.warn('You can add .env to your .gitignore later');
+      return;
+    }
+
+    let content = '';
+    try {
+      content = await readFile('.gitignore', 'utf-8');
+    } catch (err) {
+      // Ignore
+    }
+    if (content) content += '\n\n';
+    content += '.env\n';
+    await writeFile('.gitignore', content);
+
+    this.info(`Added .env to .gitignore`);
   }
 
   async readAndDeploySchema(workspace: string, database: string, branch: string, file: string) {
-    this.log('Reading schema file...');
+    this.info('Reading schema file...');
     const schema = await this.parseSchema(file);
     await this.deploySchema(workspace, database, branch, schema);
   }
