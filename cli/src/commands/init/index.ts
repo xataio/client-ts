@@ -80,7 +80,7 @@ export default class Init extends BaseCommand {
     await this.writeEnvFile(workspace, database);
 
     if (flags.schema) {
-      const branch = await getCurrentBranchName();
+      const branch = await this.getCurrentBranchName(databaseURL);
       await this.readAndDeploySchema(workspace, database, branch, flags.schema);
     }
 
