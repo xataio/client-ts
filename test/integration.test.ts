@@ -480,12 +480,12 @@ describe('integration tests', () => {
       columns: [{ name: 'name', type: 'string' }]
     });
 
-    const planes = Array(250).map((_, index) => ({ name: `Plane ${index}` }));
+    const planes = Array.from({ length: PAGINATION_DEFAULT_SIZE + 50 }, (_, index) => ({ name: `Plane ${index}` }));
 
     const createdPlanes = await schemaLessclient.db.planes.create(planes);
     const queriedPlanes = await schemaLessclient.db.planes.getPaginated();
 
-    expect(createdPlanes).toHaveLength(250);
+    expect(createdPlanes).toHaveLength(PAGINATION_DEFAULT_SIZE + 50);
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
   });
 
@@ -651,6 +651,18 @@ describe('record creation', () => {
   test("create multiple with empty array doesn't create anything", async () => {
     const teams = await client.db.teams.create([]);
     expect(teams).toHaveLength(0);
+  });
+
+  test('create multiple some with id and others without id', async () => {
+    const teams = await client.db.teams.create([{ id: 'team_cars', name: 'Team cars' }, { name: 'Team planes' }]);
+
+    expect(teams).toHaveLength(2);
+    expect(teams[0].id).toBe('team_cars');
+    expect(teams[0].name).toBe('Team cars');
+    expect(teams[0].read).toBeDefined();
+    expect(teams[1].id).toBeDefined();
+    expect(teams[1].name).toBe('Team planes');
+    expect(teams[1].read).toBeDefined();
   });
 });
 
