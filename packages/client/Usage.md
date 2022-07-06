@@ -151,6 +151,65 @@ const users = await xata.db.users.delete([object1, object2]);
 
 ## Page
 
+Some methods of the `Query` interface provide a `Page` object as a return value that can be used to paginate the results.
+
+The `Page` object can be used to get the queries records of a table in pages. It is an abstraction of cursor-based pagination.
+
+It contains:
+
+- `records`: Array of `XataRecord` objects.
+- `hasNextPage`: Function that returns a boolean indicating if there is a next page.
+- `nextPage`: Async function that can be used to get the next page.
+- `previousPage`: Async function that can be used to get the previous page.
+- `firstPage`: Async function that can be used to get the first page.
+- `lastPage`: Async function that can be used to get the last page.
+- `meta`: Information about the current page and its cursor.
+
+```ts
+const page = await xata.db.users.getPaginated();
+page.records; // Array of `XataRecord` objects.
+page.hasNextPage();
+
+const page2 = await page.nextPage();
+page2.records; // Array of `XataRecord` objects.
+
+const page1 = await page2.previousPage();
+page1.records; // Array of `XataRecord` objects.
+
+const firstPage = await page1.firstPage();
+firstPage.records; // Array of `XataRecord` objects.
+```
+
+The Array of `XataRecord` objects also implements the `Page` interface.
+
+```ts
+const { records } = await xata.db.users.getPaginated();
+records.hasNextPage();
+const { records: page2Records } = await records.nextPage();
+```
+
+Optionally you can provide offset and size parameters to the pagination and override the default values.
+
+```ts
+const page = await xata.db.users.getPaginated();
+page.records; // Array of `XataRecord` objects.
+
+// A second page with size 50
+const page2 = await page.nextPage(50);
+
+// A third page with size 10 but an offset of 60
+const page3 = await page2.nextPage(10, 60);
+```
+
+We expose some helper variables of the API limits when paginating:
+
+- `PAGINATION_MAX_SIZE`: Maximum page size.
+- `PAGINATION_DEFAULT_SIZE`: Default page size.
+- `PAGINATION_MAX_OFFSET`: Maximum offset.
+- `PAGINATION_DEFAULT_OFFSET`: Default offset.
+
+You can use these variables if you implement your own pagination mechanism, as they will be updated when the API limits are updated.
+
 ## XataRecord
 
 Every row in a table is represented by an `XataRecord` object.
