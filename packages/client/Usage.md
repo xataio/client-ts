@@ -80,9 +80,72 @@ users[0].id; // 'rec_1234abcdef'
 users[1].id; // 'user_admin'
 ```
 
+For the `createOrUpdate()` method, it beaves the same way as `create()` but you will always need to provide an id.
+
+```ts
+const user1 = await xata.db.users.createOrUpdate('user_admin', { fullName: 'John Smith' });
+const user2 = await xata.db.users.createOrUpdate({ id: 'user_manager', fullName: 'Jane Doe' });
+const users = await xata.db.users.createOrUpdate([
+  { id: 'user_admin', fullName: 'John Smith' },
+  { id: 'user_manager', fullName: 'Jane Doe' }
+]);
+```
+
 ### Updating records
 
+The `update()` method can be used to update an existing record. It will fail if the record cannot be found.
+
+```ts
+const user = await xata.db.users.update('rec_1234abcdef', { fullName: 'John Smith' });
+```
+
+The `id` property can also be sent in the object update.
+
+```ts
+const user = await xata.db.users.update({ id: 'user_admin', fullName: 'John Smith' });
+```
+
+You can update multiple records at once by providing an array of objects.
+
+```ts
+const users = await xata.db.users.update([
+  { id: 'rec_1234abcdef', fullName: 'John Smith' },
+  { id: 'user_admin', fullName: 'Jane Doe' }
+]);
+```
+
 ### Deleting records
+
+The `delete()` method can be used to delete an existing record. It will fail if the record cannot be found.
+
+```ts
+const user = await xata.db.users.delete('rec_1234abcdef');
+```
+
+You can delete multiple records at once by providing an array of ids.
+
+```ts
+const users = await xata.db.users.delete(['rec_1234abcdef', 'user_admin']);
+```
+
+You can delete records coming from an object that contains an `id` property.
+
+```ts
+const object1 = { id: 'rec_1234abcdef' };
+
+const user = await xata.db.users.delete(object1);
+```
+
+You can delete records coming from an array of objects that contain an `id` property.
+
+```ts
+const object1 = { id: 'rec_1234abcdef' };
+const object2 = { id: 'user_admin' };
+
+const users = await xata.db.users.delete([object1, object2]);
+```
+
+### Searching records
 
 ## Query
 

@@ -207,7 +207,6 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (Array.isArray(a)) {
       if (a.length === 0) return [];
 
-      // Reduce into to arrays
       const [itemsWithoutIds, itemsWithIds, order] = a.reduce(
         ([accWithoutIds, accWithIds, accOrder], item) => {
           const condition = isString(item.id);
