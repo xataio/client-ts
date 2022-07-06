@@ -1,5 +1,4 @@
 import { Flags } from '@oclif/core';
-import { getCurrentBranchName } from '@xata.io/client';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { highlight } from 'cli-highlight';
