@@ -10,20 +10,32 @@ import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
 import { virtualFs } from 'rollup-plugin-virtual-fs';
 import url from 'url';
+import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
+import { EdgeRuntime } from 'edge-runtime';
+import { BaseClient } from '@xata.io/client';
+import fetch from 'node-fetch';
 
 export default class WorkersCompile extends BaseCommand {
   static description = 'Extract and compile xata workers';
 
   static flags = {};
 
+  #workers: Map<string, any> = new Map();
+
   async run(): Promise<void> {
-    const watcher = chokidar.watch('./**/*.ts', {
-      ignored: [/(^|[/\\])\../, 'dist/*', 'node_modules/*']
+    console.log(process.cwd());
+
+    const watcher = chokidar.watch(['./**/*.ts', './*.ts'], {
+      ignored: [/(^|[/\\])\../, 'dist/*', 'node_modules/*'],
+      cwd: process.cwd()
     });
 
     watcher
-      .on('add', (path) => this.#compile(path))
+      .on('add', async (path) => {
+        console.log(`File ${path} has been added`);
+        await this.#compile(path);
+      })
       .on('change', (path) => this.#compile(path))
       .on('ready', async () => {
         //if (!flags.watch) await watcher.close();
@@ -56,13 +68,48 @@ export default class WorkersCompile extends BaseCommand {
           req.on('error', reject);
         });
 
-        console.log(body);
+        const val = await bodySchema.parseAsync(body);
+        const workerFound = this.#workers.get(val.name);
 
-        res.writeHead(200);
-        res.end();
-      } catch (err) {
-        res.writeHead(500);
-        res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
+        const runtime = new EdgeRuntime({
+          extend: (context) => {
+            context.xata = new BaseClient({
+              databaseURL: 'https://sdk-integration-tests-19v8n2.xata.sh/db/sdk-integration-test-20098',
+              branch: 'main',
+              fetch,
+              apiKey:
+                'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3hhdGEuaW8iLCJzdWIiOiJ1c3Jfb2ZmajJmdXAxOTZzbGVnZ2NvbmI1NXAzczgiLCJleHAiOjE2NTcwMTM2NzksImlhdCI6MTY1NzAxMjc3OSwid29ya3NwYWNlcyI6eyIxMmUwMGEiOnsicm9sZSI6Im1haW50YWluZXIifSwiMTl2OG4yIjp7InJvbGUiOiJvd25lciJ9LCJlYzI0NDQiOnsicm9sZSI6Im93bmVyIn0sImZ2bWV0MyI6eyJyb2xlIjoib3duZXIifSwidXEyZDU3Ijp7InJvbGUiOiJvd25lciJ9LCJ2aDA3ZzEiOnsicm9sZSI6Im1haW50YWluZXIifX19.r0mpm8hmq31PCuX23g3XgZBisIh2Xa44xxqiUQyH4n-gKEnLFweXHesamZ8fwQGp28VmJvAFmxiq6Dt6PPv5Dg'
+            });
+            return context;
+          }
+        });
+
+        console.log(workerFound);
+        const result = await runtime.evaluate(
+          workerFound.bundle.replace(
+            'export { worker };',
+            `const xata = new BaseClient({
+              databaseURL: 'https://sdk-integration-tests-19v8n2.xata.sh/db/sdk-integration-test-20098',
+              branch: 'main',
+              fetch,
+              apiKey:
+                'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3hhdGEuaW8iLCJzdWIiOiJ1c3Jfb2ZmajJmdXAxOTZzbGVnZ2NvbmI1NXAzczgiLCJleHAiOjE2NTcwMTM2NzksImlhdCI6MTY1NzAxMjc3OSwid29ya3NwYWNlcyI6eyIxMmUwMGEiOnsicm9sZSI6Im1haW50YWluZXIifSwiMTl2OG4yIjp7InJvbGUiOiJvd25lciJ9LCJlYzI0NDQiOnsicm9sZSI6Im93bmVyIn0sImZ2bWV0MyI6eyJyb2xlIjoib3duZXIifSwidXEyZDU3Ijp7InJvbGUiOiJvd25lciJ9LCJ2aDA3ZzEiOnsicm9sZSI6Im1haW50YWluZXIifX19.r0mpm8hmq31PCuX23g3XgZBisIh2Xa44xxqiUQyH4n-gKEnLFweXHesamZ8fwQGp28VmJvAFmxiq6Dt6PPv5Dg'
+            });worker(xata, ${val.payload.join(', ')})`
+          )
+        );
+
+        // Return JSON response
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            body: val,
+            workerFound,
+            result
+          })
+        );
+      } catch (error: any) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: error.toString() }));
       }
     });
 
@@ -95,13 +142,18 @@ export default class WorkersCompile extends BaseCommand {
               Function: {
                 enter(path) {
                   if (isXataWorker(path)) {
-                    const args = (path.parent as CallExpression).arguments;
+                    const args = (path.parent as CallExpression).arguments as any[];
 
                     const code = path.toString();
                     const id = crypto.createHash('sha1').update(code).digest('hex').substring(0, 7);
 
                     // TODO: Read old name, remove old hash, add new hash
-                    functions[id] = { code, argsSize: args.length };
+                    functions[args[0]?.value ?? id] = {
+                      id,
+                      code,
+                      argsSize: args.length,
+                      hash: Buffer.from(code.toString()).toString('base64')
+                    };
                   }
                 }
               }
@@ -119,12 +171,12 @@ export default class WorkersCompile extends BaseCommand {
           virtualFs({
             memoryOnly: false,
             files: {
-              [`./${file}`]: `${external.join('\n')}\nexport default ${worker.code};`
+              [`./${file}`]: `${external.join('\n')}\n const worker = ${worker.code}; export { worker };`
             }
           }),
           resolve(),
           commonjs(),
-          esbuild()
+          esbuild({ target: 'es2022' })
         ]
       });
 
@@ -138,6 +190,8 @@ export default class WorkersCompile extends BaseCommand {
         code: worker.code,
         bundle: output.map((item) => (item as OutputChunk).code).join('\n')
       });
+
+      this.#workers.set(id, { ...worker, bundle: output.map((item) => (item as OutputChunk).code).join('\n') });
     }
   }
 }
@@ -149,3 +203,5 @@ function isXataWorker(path: NodePath): path is NodePath<FunctionDeclaration> {
   if (!('name' in parent.callee)) return false;
   return parent.callee.name === 'xataWorker';
 }
+
+const bodySchema = z.any();

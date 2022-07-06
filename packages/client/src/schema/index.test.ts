@@ -3,9 +3,9 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { BaseClient, BaseClientOptions } from '..';
 import { server } from '../../../../test/mock_server';
-import { XataRecord } from './record';
 import realFetch from 'cross-fetch';
-interface User extends XataRecord {
+interface User {
+  id: string;
   name: string;
 }
 

@@ -1,4 +1,5 @@
 import { buildClient, BaseClientOptions, XataRecord } from '@xata.io/client';
+import fetch from 'node-fetch';
 
 export interface Team {
   name?: string | null;
@@ -34,15 +35,22 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
 
 type XataWorkerContext = { xata: XataClient; req: Request; res: Response };
 
-export function xataWorker<T extends (ctx: XataWorkerContext, ...args: any[]) => any>(name: string, callback: T) {
-  // If env is development: return a fn qthat call http://localhost:8080/workers?worker=name-prefix-1241hg2&args=${b}
-  // If env is production: return a fn that calls https://workers.xata.io?worker=name-prefix-1241hg2&args=${b}
+type RemoveFirst<T> = T extends [any, ...infer U] ? U : never;
 
-  if (process.env.NODE_ENV === 'development') {
-  } else {
-  }
+export function xataWorker<T extends (ctx: XataWorkerContext, ...args: any[]) => any>(name: string, _worker: T) {
+  return async (...args: RemoveFirst<Parameters<T>>) => {
+    const result = await fetch('http://localhost:64749', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      // TODO: Improve serialization
+      body: JSON.stringify({
+        name,
+        payload: args
+      })
+    });
+
+    return result.json();
+  };
 }
-
-xataWorker('name-prefix', ({ xata }, name: string) => {
-  return xata.db.teams.filter('name', name).getAll();
-});

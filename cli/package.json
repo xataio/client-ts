@@ -41,6 +41,7 @@
     "cosmiconfig": "^7.0.1",
     "deepmerge": "^4.2.2",
     "dotenv": "^16.0.1",
+    "edge-runtime": "^1.1.0-beta.11",
     "enquirer": "^2.3.6",
     "ini": "^3.0.0",
     "lodash": "^4.17.21",
