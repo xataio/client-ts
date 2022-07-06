@@ -2,10 +2,10 @@
 
 There're four types of objects in the Xata TypeScript SDK:
 
-    * `Repository`: a table representation that can be used to create, read, update, and delete records.
-    * `Query`: a combination of filters and other parameters to retrieve a collection of records.
-    * `XataRecord`: a row in a table.
-    * `Page`: a collection of records that can be paginated.
+- `Repository`: a table representation that can be used to create, read, update, and delete records.
+- `Query`: a combination of filters and other parameters to retrieve a collection of records.
+- `XataRecord`: a row in a table.
+- `Page`: a collection of records that can be paginated.
 
 ## Repository
 
@@ -19,8 +19,8 @@ It also implements the `Query` and `Page` interfaces, so you can use it to query
 
 The `read()` method can be used to read a records by their ids:
 
-    * If the object cannot be found, the method will return `null`.
-    * If the object can be found, the method will return a `XataRecord` object.
+- If the object cannot be found, the method will return `null`.
+- If the object can be found, the method will return a `XataRecord` object.
 
 You can read a single record by its id.
 
@@ -48,8 +48,8 @@ const users = await xata.db.users.read([object1, object2]);
 
 Both the `create()` and `createOrUpdate()` methods can be used to create a new record.
 
-    * The `create()` method will create a new record and fail if the provided id already exists.
-    * The `createOrUpdate()` method will create a new record if the provided id doesn't exist, or update an existing record if it does.
+- The `create()` method will create a new record and fail if the provided id already exists.
+- The `createOrUpdate()` method will create a new record if the provided id doesn't exist, or update an existing record if it does.
 
 You can create a record without providing an id, and the id will be generated automatically.
 
@@ -75,9 +75,9 @@ user.id; // 'user_admin'
 You can create multiple records at once by providing an array of objects.
 
 ```ts
-const users = await xata.db.users.create([{ fullName: 'John Smith' }, { fullName: 'Jane Doe' }]);
+const users = await xata.db.users.create([{ fullName: 'John Smith' }, { id: 'user_admin', fullName: 'Jane Doe' }]);
 users[0].id; // 'rec_1234abcdef'
-users[1].id; // 'rec_5678defgh'
+users[1].id; // 'user_admin'
 ```
 
 ### Updating records
