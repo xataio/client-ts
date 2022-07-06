@@ -1,5 +1,4 @@
 import { Flags } from '@oclif/core';
-import { getCurrentBranchName } from '@xata.io/client';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { highlight } from 'cli-highlight';
@@ -80,7 +79,7 @@ export default class Init extends BaseCommand {
     await this.writeEnvFile(workspace, database);
 
     if (flags.schema) {
-      const branch = await getCurrentBranchName();
+      const branch = await this.getCurrentBranchName(databaseURL);
       await this.readAndDeploySchema(workspace, database, branch, flags.schema);
     }
 

@@ -346,7 +346,17 @@ export abstract class BaseCommand extends Command {
 
     const workspace = await this.getWorkspace({ allowCreate });
     const database = await this.getDatabase(workspace, { allowCreate });
-    return { databaseURL: `https://${workspace}.xata.sh/db/${database}`, source: 'interactive' };
+    const profile = await getProfile();
+    let host = 'xata.sh';
+    // TODO: unify logic somewhere
+    if (profile?.api) {
+      if (profile.api === 'staging') {
+        host = 'staging.xatabase.co';
+      } else {
+        host = profile.api.split('/')[2];
+      }
+    }
+    return { databaseURL: `https://${workspace}.${host}/db/${database}`, source: 'interactive' };
   }
 
   async getParsedDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
@@ -373,19 +383,13 @@ export abstract class BaseCommand extends Command {
 
   async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, branchFlag?: string, allowCreate?: boolean) {
     const info = await this.getParsedDatabaseURL(databaseURLFlag, allowCreate);
-    const profile = await getProfile();
 
     let branch = '';
 
     if (branchFlag) {
       branch = branchFlag;
     } else if (info.source === 'config') {
-      // TODO: pass host information
-      branch = await getCurrentBranchName({
-        fetchImpl: fetch,
-        databaseURL: info.databaseURL,
-        apiKey: profile?.apiKey ?? undefined
-      });
+      branch = await this.getCurrentBranchName(info.databaseURL);
     } else if (process.env.XATA_BRANCH !== undefined) {
       branch = process.env.XATA_BRANCH;
     } else {
@@ -393,6 +397,15 @@ export abstract class BaseCommand extends Command {
     }
 
     return { ...info, branch };
+  }
+
+  async getCurrentBranchName(databaseURL: string) {
+    const profile = await getProfile();
+    return getCurrentBranchName({
+      fetchImpl: fetch,
+      databaseURL,
+      apiKey: profile?.apiKey ?? undefined
+    });
   }
 
   async updateConfig() {
