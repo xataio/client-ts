@@ -31,3 +31,9 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
     super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, tables);
   }
 }
+
+const xata = new XataClient();
+
+for await (const users of xata.db.users.getIterator({ batchSize: 50 })) {
+  console.log(users);
+}

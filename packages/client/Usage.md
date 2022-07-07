@@ -1,4 +1,4 @@
-# Xata TypeScript SDK
+# TypeScript SDK
 
 There're four types of objects in the Xata TypeScript SDK:
 
@@ -147,7 +147,60 @@ const users = await xata.db.users.delete([object1, object2]);
 
 ### Searching records
 
+The `search()` method can be used to search for records and an array of records is returned.
+
+```ts
+const results = await xata.db.users.search('John');
+```
+
+Also you can customize the results with an `options` object that includes `fuzziness`, `filter` and all the other options the API supports.
+
+```ts
+const results = await xata.db.users.search('John', { fuzziness: 1, filter: { 'team.name': 'Marketing' } });
+```
+
 ## Query
+
+To get a collection of records, you can use the `Query` object.
+
+It provides the following methods:
+
+- `getFirst()`: returns the first record in the query results.
+- `getPaginated()`: returns a page of records in the query results.
+- `getAll()`: returns all the records in the query results.
+- `getMany()`: returns an array of some records in the query results.
+
+Since the `Repository` class implements the `Query` interface, you can use it to query and paginate the records in the table too.
+
+```ts
+const user = xata.db.users.getFirst();
+```
+
+### Column selection
+
+The `Query` object can be used to select columns to be returned in the results.
+
+You can pick multiple columns by providing an array of column names, or you can pick all the columns by providing `*`.
+
+The dot notation is supported to select columns from nested objects.
+
+```ts
+const user = xata.db.users.select(['*', 'team.*']).getFirst();
+```
+
+### Sorting
+
+The `Query` object can be used to sort the order of the results.
+
+You can sort the results by providing a column name and an `asc` or `desc` string.
+
+```ts
+const user = xata.db.users.orderBy('fullName', 'asc').getFirst();
+```
+
+### Filtering
+
+### Combining queries
 
 ## Page
 
@@ -200,6 +253,26 @@ const page2 = await page.nextPage(50);
 // A third page with size 10 but an offset of 60
 const page3 = await page2.nextPage(10, 60);
 ```
+
+### Iterators and generators
+
+The `Query` object can be used to iterate over the results as a way to paginate the results.
+
+```ts
+for await (const user of xata.db.users) {
+  await user.update({ full_name: 'John Doe' });
+}
+```
+
+Also if you want to retrieve more than one record at a time in the iterator, you can use the `getIterator()` method.
+
+```ts
+for await (const users of xata.db.users.getIterator({ batchSize: 50 })) {
+  console.log(users);
+}
+```
+
+### Helper variables
 
 We expose some helper variables of the API limits when paginating:
 
