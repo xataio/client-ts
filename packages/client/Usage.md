@@ -200,7 +200,58 @@ const user = xata.db.users.orderBy('fullName', 'asc').getFirst();
 
 ### Filtering
 
+You can filter the results by providing the column and the value to filter.
+
+```ts
+const user = xata.db.users.filter('fullName', 'John').getFirst();
+```
+
+To combine multiple filters in an 'AND' clause, you can pipe the filters together.
+
+```ts
+const user = xata.db.users.filter('fullName', 'John').filter('team.name', 'Marketing').getFirst();
+```
+
+Also you can filter the results by providing a `filter` object.
+
+```ts
+const user = xata.db.users.filter({ fullName: 'John', 'team.name': 'Marketing' }).getFirst();
+```
+
+We offer some helper functions to build the filter values, like: `gt`, `ge`, `gte`, `lt`, `le`, `lte`, `exists`, `notExists`, `startsWith`, `endsWith`, `pattern`, `is`, `isNot`, `contains`, `includes`, and others specific to the type of the column.
+
+```ts
+const user = xata.db.users.filter('name', startsWith('Bar')).getFirst();
+```
+
+If you prefer to directly use the filter operators as in the API, you can add them in the `filter` object.
+
+```ts
+xata.db.users.filter({ full_name: { $startsWith: 'foo' } }).getFirst();
+```
+
 ### Combining queries
+
+Queries can be stored in variables and can be combined with other queries.
+
+```ts
+const johnQuery = xata.db.users.filter('fullName', 'John');
+const janeQuery = xata.db.users.filter('fullName', 'Jane');
+
+const johns = await johnQuery.getAll();
+const janes = await janeQuery.getAll();
+
+const users = await xata.db.users.any(johnQuery, janeQuery).getAll();
+```
+
+We offer several helper methods to combine queries:
+
+- `any()`: returns the records that match any of the queries.
+- `all()`: returns the records that match all of the queries.
+- `none()`: returns the records that match none of the queries.
+- `not()`: returns the records that don't match the given query.
+
+You can read more about the query operators in the API section for the query table endpoint.
 
 ## Page
 
@@ -233,7 +284,14 @@ const firstPage = await page1.firstPage();
 firstPage.records; // Array of `XataRecord` objects.
 ```
 
-The Array of `XataRecord` objects also implements the `Page` interface.
+The `Repository` class implements the `Query` interface, so you can use it to paginate the records in the table too.
+
+```ts
+const page = await xata.db.users.firstPage();
+page.records; // Array of `XataRecord` objects.
+```
+
+The array returned in `records` also implements the `Page` interface.
 
 ```ts
 const { records } = await xata.db.users.getPaginated();
