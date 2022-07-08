@@ -80,7 +80,7 @@ In case you use the Xata CLI _outside_ of a project, where no `.xatarc` is prese
 
 We strongly recommend using the CLI to generate your Xata fetcher (sometimes called a _client_) for you. This will help make your queries to Xata predictable and safe, while also providing autocomplete and safety.
 
-Once you have a generated fetcher, you can use import it into your project and using it. The `.` character (object property access in JavaScript) will provide autocompletion hints. You can now also use the [SDK Playground](https://docs.xata.io/sdk/playground) in the Xata web interface to test out your queries and then copy and paste them into your applications.
+Once you have a generated Xata client, you can import it into your project and use it. The [SDK Playground](https://docs.xata.io/sdk/playground) in the Xata web interface can serve as a companion for you to build and test out your queries. Once you're happy with them, you copy and paste them into your project.
 
 As your schema changes, running `xata codegen` will consistently refresh your auto-generated Xata client with the latest schema for your database branch.
 
