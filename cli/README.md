@@ -42,7 +42,7 @@ iwr https://xata.io/install.ps1 -useb | iex
 
 ## Authentication
 
-To authenticate your CLI installation, run `xata auth login`. Here, you will be presented with a couple of options:
+The Xata CLI authenticates with Xata using an environment variable called `XATA_API_KEY`, usually stored in a `.env` file in your project. If your project doesn't have one, running `xata auth login` will give you options to set one up. Specifically, you'll have these options:
 
 - **Create a new API Key** will open your browser and, when you're logged in to Xata, allow you to create a new [API key](https://docs.xata.io/concepts/api-keys) for use with the CLI.
 - **Use an existing API Key** will prompt for an existing key you have, which you can paste into your terminal. We recommend isolating keys per use-case, so creating a new one might be a good idea here.
