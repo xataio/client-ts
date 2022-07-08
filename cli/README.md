@@ -18,7 +18,7 @@ npm i --location=global @xata.io/cli
 
 This will install the Xata CLI. We recommend installing it globally because it becomes much more convenient to work with: you can invoke a `xata` command from anywhere, instead of the more convoluted variant with a project-scoped installation (`npm run xata`), or an npx-based installation (`npx @xata.io/cli`). These alternative approaches also work according to your preference, but we recommend a global installation.
 
-### Installing the Binary without npm
+<!-- ### Installing the Binary without npm
 
 Our CLI can also be installed as a cross-platform binary for our users who do not have `npm` installed on their systems. Depending on your platform of choice, here are installation instructions to get you started.
 
@@ -34,11 +34,11 @@ This command fetches the latest CLI install script and runs it in your shell. Pi
 
 #### Windows
 
-Paste the following command into your terminal and hit Enter.
+Paste the following command into your terminal and hit enter.
 
 ```powershell
 iwr https://xata.io/install.ps1 -useb | iex
-```
+``` -->
 
 ## Authentication
 
