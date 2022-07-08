@@ -49,7 +49,7 @@ The Xata CLI authenticates with Xata using an environment variable called `XATA_
 
 ## Initializing a Project
 
-To initialize a new database, run `xata init` in your project's directory.
+To initialize a new project, run `xata init` in your project's directory.
 
 - if you don't have a [workspace](https://docs.xata.io/concepts/workspaces), you will be prompted to create one.
 - if you have workspaces, you'll be asked to choose one, or to create a new one.
