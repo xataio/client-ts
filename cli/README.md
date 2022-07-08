@@ -54,7 +54,11 @@ To initialize a new project, run `xata init` in your project's directory.
 - if you don't have a [workspace](https://docs.xata.io/concepts/workspaces), you will be prompted to create one.
 - if you have workspaces, you'll be asked to choose one, or to create a new one.
 
-A workspace is a logical grouping of databases, usually analogous to an organization or team, so this is the first step. Once you've chosen a workspace, you will be given the option to either create a new one, or use an existing one for your project. After choosing a workspace and a database, you're ready to go: the CLI will walk you through next steps, ultimately leading you to code generation.
+A workspace is a logical grouping of databases, usually analogous to an organization or team, so this is the first step. Once you've chosen a workspace, you will be given the option to either create a new one, or use an existing one for your project. After choosing a workspace and a database, you're ready to go: the CLI will walk you through next steps. Specifically, it will:
+
+- create a project configuration file in your current working directory (`.xatarc`).
+- create or update your `.env` file to store a database-scoped API key. (At the time of writing these docs it'll actually store a personal API key, but this will change soon).
+- ask you if you'd like to install the SDK and/or use the TypeScript/JavaScript code generator.
 
 When you have a project set up, the Xata CLI will now be aware of your project's configuration, namely which workspace, database, and branch you've chosen. It will know this information by reading it from a new set of files created in your current working directory: `.xatarc` and `.env`. Let's discuss these briefly.
 
