@@ -54,9 +54,23 @@ To initialize a new project, run `xata init` in your project's directory.
 - if you don't have a [workspace](https://docs.xata.io/concepts/workspaces), you will be prompted to create one.
 - if you have workspaces, you'll be asked to choose one, or to create a new one.
 
-A workspace is a logical grouping of databases, usually analogous to an organization or team, so this is the first step. Once you've chosen a workspace, you will be given the option to either create a new one, or use an existing one for your project.
+A workspace is a logical grouping of databases, usually analogous to an organization or team, so this is the first step. Once you've chosen a workspace, you will be given the option to either create a new one, or use an existing one for your project. After choosing a workspace and a database, you're ready to go: the CLI will walk you through next steps, ultimately leading you to code generation.
 
-After choosing a workspace and a database, you're ready to go: the CLI will walk you through next steps, ultimately leading you to code generation.
+When you have a project set up, the Xata CLI will now be aware of your project's configuration, namely which workspace, database, and branch you've chosen. It will know this information by reading it from a new set of files created in your current working directory: `.xatarc` and `.env`. Let's discuss these briefly.
+
+### `.xatarc`
+
+This file contains information about your current Xata project, specifically its database URL, and preferred output path of the [generated XataClient]() that you can use to interact with your database if you've chosen to use it. More about this in [code generation](#code-generation).
+
+We recommend checking this file in to your version control system (Git, SVN, etc.) so that you can easily share your project's configuration among your team.
+
+### `.env`
+
+This file contains sensitive information and secrets that ought not be committed to version control. It is recommended that you keep this file in your project's root directory, so that it is not accidentally committed to version control, and add it to `.gitignore`. The Xata CLI appends secrets to this file, namely your API key and fallback branch. More on branches in the [git](#git-integration) section.
+
+### Global Mode
+
+In case you use the Xata CLI _outside_ of a project, where no `.xatarc` is present, you'll be using it in _global mode_. When using the CLI in global mode, you'll have to manually tell it which database you'd like it to work with. You can do this using the `--db [url]` flag. If you omit this flag, you will be interactively prompted to choose a database.
 
 ## Code Generation
 
