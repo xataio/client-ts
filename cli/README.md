@@ -16,7 +16,7 @@ To install the Xata CLI globally, run the following command:
 npm i --location=global @xata.io/cli
 ```
 
-This will install the Xata CLI. We recommend installing it globally because it becomes much more convenient to work with, having you invoke a `xata` command instead of the more convoluted alternative with a project-scoped installation (`npm run xata`), or an npx-based installation (`npx @xata.io/cli`). The alternative approaches also work depending on your preference.
+This will install the Xata CLI. We recommend installing it globally because it becomes much more convenient to work with, having you invoke a `xata` command instead of the more convoluted variant with a project-scoped installation (`npm run xata`), or an npx-based installation (`npx @xata.io/cli`). Theses alternative approaches also work according to your preference.
 
 ### Installing the Binary without npm
 
