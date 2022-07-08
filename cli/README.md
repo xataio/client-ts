@@ -34,7 +34,7 @@ This command fetches the latest CLI install script and runs it in your shell. Pi
 
 #### Windows
 
-Paste the following command into your terminal and hit enter.
+Paste the following command into your terminal and hit Enter.
 
 ```powershell
 iwr https://xata.io/install.ps1 -useb | iex
