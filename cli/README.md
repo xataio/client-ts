@@ -4,7 +4,7 @@ Xata provides a CLI as a convenience for developers. It is intended to provide f
 
 ## Installation
 
-Our CLI is distributed both as an **[npm](https://www.npmjs.com/package/@xata.io/cli) package** for developers who work with Node.js, and a **cross-platform binary** for those who don't. Below, you'll find commands that you can copy and paste into your platform's shell that will help you install the CLI on your specific platform.
+Our CLI is distributed as an **[npm](https://www.npmjs.com/package/@xata.io/cli) package** and can be installed using npm if you've got [Node.js](https://nodejs.org/) installed. We will publish a more universal binary for Windows, macOS and Linux in the near future.
 
 ![Installing the Xata CLI](/screenshots/CliInstall.gif)
 
