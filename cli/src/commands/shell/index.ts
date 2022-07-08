@@ -33,7 +33,8 @@ export default class Shell extends BaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Shell);
-    const apiKey = (await getProfile())?.apiKey;
+    const profile = await getProfile();
+    const apiKey = profile?.apiKey;
     if (!apiKey)
       this.error('No API key found. Either use the XATA_API_KEY environment variable or run `xata auth login`');
     const { protocol, host, databaseURL, workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(
@@ -68,8 +69,8 @@ export default class Shell extends BaseCommand {
     );
 
     const fetchApi = async (method: string, path: string, body?: any) => {
-      // TODO: Add support for staging, how?
-      const baseUrl = path.startsWith('/db') ? `${protocol}//${host}` : 'https://api.xata.io';
+      const mainHost = profile.api === 'staging' ? 'https://staging.xatabase.co' : 'https://api.xata.io';
+      const baseUrl = path.startsWith('/db') ? `${protocol}//${host}` : mainHost;
 
       const parse = () => {
         try {
@@ -131,7 +132,7 @@ export default class Shell extends BaseCommand {
     const { XataClient } = await import(tempFile);
     await fs.unlink(tempFile);
 
-    replServer.context.xata = new XataClient({ fetch, apiKey });
+    replServer.context.xata = new XataClient({ fetch, apiKey, host: profile.api });
     replServer.context.api = new XataApiClient({ fetch, apiKey });
     replServer.context.api.GET = (path: string) => fetchApi('GET', path);
     replServer.context.api.POST = (path: string, body?: any) => fetchApi('POST', path, JSON.stringify(body));
