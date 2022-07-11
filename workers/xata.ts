@@ -1,4 +1,4 @@
-import { buildClient, BaseClientOptions, XataRecord } from '@xata.io/client';
+import { buildClient, BaseClientOptions, XataRecord } from '../packages/client';
 import fetch from 'node-fetch';
 
 export interface Team {
