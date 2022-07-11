@@ -7,9 +7,10 @@ import { Repository, RestRepository } from './repository';
 export * from './cache';
 export * from './operators';
 export * from './pagination';
+export * from './inference';
 export { Query } from './query';
 export { isIdentifiable, isXataRecord } from './record';
-export type { BaseData, EditableData, Identifiable, XataRecord } from './record';
+export type { BaseData, EditableData, Identifiable, XataRecord, Link } from './record';
 export { Repository, RestRepository } from './repository';
 export * from './selection';
 

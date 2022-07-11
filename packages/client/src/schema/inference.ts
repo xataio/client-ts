@@ -1,6 +1,7 @@
 import { Schemas } from '../api';
+import { XataRecord } from './record';
 
-type BaseSchema = {
+export type BaseSchema = {
   name: string;
   columns: readonly (
     | {
@@ -24,7 +25,7 @@ type TableType<Tables, TableName> = Tables & { name: TableName } extends infer T
   ? Table extends { name: string; columns: infer Columns }
     ? Columns extends readonly unknown[]
       ? Columns[number] extends { name: string; type: string }
-        ? { [K in Columns[number]['name']]: PropertyType<Tables, Columns[number], K> }
+        ? { [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> } & XataRecord
         : never
       : never
     : never
@@ -37,22 +38,26 @@ type PropertyType<Tables, Properties, PropertyName> = Properties & { name: Prope
       link?: { table: infer LinkedTable };
       columns?: infer ObjectColumns;
     }
-    ? Type extends 'string' | 'email'
-      ? string
-      : Type extends 'int'
-      ? number
-      : Type extends 'date'
-      ? Date
-      : Type extends 'multiple'
-      ? string[]
-      : Type extends 'object'
-      ? ObjectColumns extends readonly unknown[]
-        ? ObjectColumns[number] extends { name: string; type: string }
-          ? { [K in ObjectColumns[number]['name']]: PropertyType<Tables, ObjectColumns[number], K> }
-          : never
-        : never
-      : Type extends 'link'
-      ? TableType<Tables, LinkedTable>
-      : never
+    ?
+        | (Type extends 'string' | 'text' | 'email'
+            ? string
+            : Type extends 'int' | 'float'
+            ? number
+            : Type extends 'bool'
+            ? boolean
+            : Type extends 'datetime'
+            ? Date
+            : Type extends 'multiple'
+            ? string[]
+            : Type extends 'object'
+            ? ObjectColumns extends readonly unknown[]
+              ? ObjectColumns[number] extends { name: string; type: string }
+                ? { [K in ObjectColumns[number]['name']]: PropertyType<Tables, ObjectColumns[number], K> }
+                : never
+              : never
+            : Type extends 'link'
+            ? TableType<Tables, LinkedTable> & XataRecord
+            : never)
+        | null // TODO: Types shouldn't be always nullable
     : never
   : never;

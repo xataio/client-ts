@@ -1,8 +1,7 @@
 import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { XataPlugin, XataPluginOptions } from './plugins';
-import { SchemaPlugin, SchemaPluginResult } from './schema';
+import { BaseSchema, SchemaInference, SchemaPlugin, SchemaPluginResult } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
-import { BaseData } from './schema/record';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
@@ -116,10 +115,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
   // eslint-disable-next-line @typescript-eslint/ban-types
-  new <Schemas extends Record<string, BaseData> = {}>(options?: Partial<BaseClientOptions>, tables?: string[]): Omit<
+  new <T extends readonly BaseSchema[]>(tables: T, options?: Partial<BaseClientOptions>): Omit<
     {
-      db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
-      search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
+      db: Awaited<ReturnType<SchemaPlugin<SchemaInference<typeof tables>>['build']>>;
+      search: Awaited<ReturnType<SearchPlugin<SchemaInference<typeof tables>>['build']>>;
     },
     keyof Plugins
   > & {
@@ -127,4 +126,4 @@ export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
   };
 }
 
-export class BaseClient extends buildClient()<Record<string, any>> {}
+export class BaseClient extends buildClient()<[]> {}
