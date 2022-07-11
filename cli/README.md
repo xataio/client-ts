@@ -18,27 +18,33 @@ npm i --location=global @xata.io/cli
 
 This will install the Xata CLI. We recommend installing it globally because it becomes much more convenient to work with: you can invoke a `xata` command from anywhere, instead of the more convoluted variant with a project-scoped installation (`npm run xata`), or an npx-based installation (`npx @xata.io/cli`). These alternative approaches also work according to your preference, but we recommend a global installation.
 
-## Authentication
+## Usage
 
-The Xata CLI authenticates two ways: scoped to a project (**project mode**), or globally (**global mode**).
+To use the Xata CLI, you'll have to **authenticate** with it to access your workspaces and databases. You can do this in two ways: scoped to a project (**project mode**), or globally (**global mode**).
 
-### Project Mode
+### Global Mode
 
-In project mode, the CLI references an environment variable called `XATA_API_KEY`, usually stored in a `.env` file in your project. If your project doesn't have one, running `xata auth login` will give you options to set one up. Specifically, you'll have these options:
+To authenticate globally, across your entire system, run `xata auth login`. This will give you two options:
 
 - **Create a new API Key**. This will open your browser and, when you're logged in to Xata, allow you to create a new [API key](https://docs.xata.io/concepts/api-keys) for use with the CLI.
 
-- **Use an existing API Key**. This will prompt for an existing key you have, which you can paste into your terminal. We recommend isolating keys per use-case, so creating a new one might be a good idea here.
+- **Use an existing API Key**. This will prompt for an existing key you have, which you can paste into your terminal. We recommend isolating keys per use-case, so creating a new one might be a good idea instead.
 
-#### Initializing a Project
+Once you supply an API key one way or another, your CLI will be configured globally.
 
-To initialize a new project, run `xata init` in the root of your project's directory.
+From now on, when you use the Xata CLI _outside_ of a project (i.e, _globally_) for database operations, you'll have to explicitly use a flag to indicate which database you'd like to work with. You can do this using the `--db [url]` flag. If you omit this flag, you will be interactively prompted to choose a database.
+
+Working with workspaces globally does not require any further flags.
+
+### Project Mode
+
+To authenticate in a specific project, run `xata init --db=[databaseUrl]`. You can get your database URL from the [workspace configuration](https://docs.xata.io/concepts/workspaces#configuring-a-workspace) page in the web UI. This will create some configuration files in your project that the CLI will reference when working with Xata. Here's what happens when you initialize a project:
 
 - If you don't have a [workspace](https://docs.xata.io/concepts/workspaces), you will be prompted to create one.
 
 - If you have workspaces, you'll be asked to choose one, or to create a new one.
 
-A workspace is a logical grouping of databases, usually analogous to an organization or team, so this is the first step. Once you've chosen a workspace, you will be given the option to either create a new one, or use an existing one for your project. After choosing a workspace and a database, you're ready to go: the CLI will walk you through next steps. Specifically, it will:
+A workspace is a logical grouping of databases, usually analogous to an organization or team, so this is the first step. Once you've chosen a workspace, you will be given the option to either create a new database, or use an existing one for your project. After choosing a workspace and a database, you're ready to go: the CLI will walk you through next steps. Specifically, it will:
 
 - Create a project configuration file in your current working directory (`.xatarc`).
 
@@ -57,14 +63,6 @@ We recommend checking this file in to your version control system (Git, SVN, etc
 ### `.env`
 
 This file contains sensitive information and secrets that ought not be committed to version control. It is recommended that you add this file to `.gitignore`, so that it is not accidentally committed to version control. The Xata CLI appends secrets to this file, namely your API key and fallback branch. More on branches in the [git](#git-integration) section.
-
-### Global Mode
-
-In case you use the Xata CLI _outside_ of a project, where no `.xatarc` is present, you'll be using it in _global mode_.
-
-When using the CLI for database operations in global mode, you'll have to manually tell it which database you'd like it to work with. You can do this using the `--db [url]` flag. If you omit this flag, you will be interactively prompted to choose a database.
-
-Working with workspaces in global mode does not require any further flags.
 
 ## Code Generation
 
