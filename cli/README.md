@@ -85,7 +85,7 @@ The current git branch is used in the first two cases in the algorithm:
 - if a git branch has been explicitly mapped to a Xata branch with `xata branches link` for example, the associated branch is used
 - otherwise, if a Xata branch with the same name as the git branch exists, we use that.
 
-If none of them apply, the **fallback branch** is used. This is a safety measure to avoid connecting to your production database. If you are developing a feature that doesn't require schema changes, you'll have a git branch, but not an associated Xata branch. In this case to prevent using the default Xata branch–which could be production–we allow specifying a `XATA_FALLBACK_BRANCH` in your local `.env` file. You can have a personal branch with your username for example.
+If none of them apply, the **fallback branch** is used. This is a safety measure to avoid connecting to your production database. If you are developing a feature that doesn't require schema changes, you'll have a git branch, but not an associated Xata branch. In this case to prevent using the default Xata branch—which could be production—we allow specifying a `XATA_FALLBACK_BRANCH` in your local `.env` file. You can have a personal branch with your username for example.
 
 If none of the above apply, the default Xata branch is used.
 
