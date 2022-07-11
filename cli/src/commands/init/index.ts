@@ -149,7 +149,7 @@ export default class Init extends BaseCommand {
       'const xata = new XataClient();',
       '',
       '// Query a table with a simple filter',
-      'const { records } = await xata.db.tableName().filter("column", value).getPaginated();'
+      'const { records } = await xata.db.tableName.filter("column", value).getPaginated();'
     ]);
 
     const { flags } = await this.parse(Init);
