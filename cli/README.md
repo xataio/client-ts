@@ -20,13 +20,17 @@ This will install the Xata CLI. We recommend installing it globally because it b
 
 ## Authentication
 
-The Xata CLI authenticates with Xata using an environment variable called `XATA_API_KEY`, usually stored in a `.env` file in your project. If your project doesn't have one, running `xata auth login` will give you options to set one up. Specifically, you'll have these options:
+The Xata CLI authenticates two ways: scoped to a project (**project mode**), or globally (**global mode**).
+
+### Project Mode
+
+In project mode, the CLI references an environment variable called `XATA_API_KEY`, usually stored in a `.env` file in your project. If your project doesn't have one, running `xata auth login` will give you options to set one up. Specifically, you'll have these options:
 
 - **Create a new API Key**. This will open your browser and, when you're logged in to Xata, allow you to create a new [API key](https://docs.xata.io/concepts/api-keys) for use with the CLI.
 
 - **Use an existing API Key**. This will prompt for an existing key you have, which you can paste into your terminal. We recommend isolating keys per use-case, so creating a new one might be a good idea here.
 
-## Initializing a Project
+#### Initializing a Project
 
 To initialize a new project, run `xata init` in the root of your project's directory.
 
