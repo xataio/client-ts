@@ -43,7 +43,7 @@ A workspace is a logical grouping of databases, usually analogous to an organiza
 - create or update your `.env` file to store a database-scoped API key. (At the time of writing these docs it'll actually store a personal API key, but this will change soon).
 - ask you if you'd like to install the SDK and/or use the TypeScript/JavaScript code generator.
 
-When you have a project set up, the Xata CLI will now be aware of your project's configuration, namely which workspace, database, and branch you've chosen. It will know this information by reading it from a new set of files created in your current working directory: `.xatarc` and `.env`. Let's discuss these briefly.
+When you have a project set up, the Xata CLI will now be aware of your project's configuration, namely which workspace, database, and fallback branch you've chosen. It will know this information by reading it from a new set of files created in your current working directory: `.xatarc` and `.env`. Let's discuss these briefly.
 
 ### `.xatarc`
 
