@@ -22,8 +22,9 @@ This will install the Xata CLI. We recommend installing it globally because it b
 
 The Xata CLI authenticates with Xata using an environment variable called `XATA_API_KEY`, usually stored in a `.env` file in your project. If your project doesn't have one, running `xata auth login` will give you options to set one up. Specifically, you'll have these options:
 
-- **Create a new API Key** will open your browser and, when you're logged in to Xata, allow you to create a new [API key](https://docs.xata.io/concepts/api-keys) for use with the CLI.
-- **Use an existing API Key** will prompt for an existing key you have, which you can paste into your terminal. We recommend isolating keys per use-case, so creating a new one might be a good idea here.
+- **Create a new API Key**. This will open your browser and, when you're logged in to Xata, allow you to create a new [API key](https://docs.xata.io/concepts/api-keys) for use with the CLI.
+
+- **Use an existing API Key**. This will prompt for an existing key you have, which you can paste into your terminal. We recommend isolating keys per use-case, so creating a new one might be a good idea here.
 
 ## Initializing a Project
 
@@ -42,13 +43,13 @@ When you have a project set up, the Xata CLI will now be aware of your project's
 
 ### `.xatarc`
 
-This file contains information about your current Xata project, specifically its database URL, and preferred output path of the [generated XataClient]() that you can use to interact with your database if you've chosen to use it. More about this in [code generation](#code-generation).
+This file contains information about your current Xata project, specifically its database URL, and preferred output path of the [generated Xata client](#code-generation) that you can use to interact with your database if you've chosen to use it. More about this in [code generation](#code-generation).
 
 We recommend checking this file in to your version control system (Git, SVN, etc.) so that you can easily share your project's configuration among your team.
 
 ### `.env`
 
-This file contains sensitive information and secrets that ought not be committed to version control. It is recommended that you keep this file in your project's root directory, so that it is not accidentally committed to version control, and add it to `.gitignore`. The Xata CLI appends secrets to this file, namely your API key and fallback branch. More on branches in the [git](#git-integration) section.
+This file contains sensitive information and secrets that ought not be committed to version control. It is recommended that you add this file to `.gitignore`, so that it is not accidentally committed to version control. The Xata CLI appends secrets to this file, namely your API key and fallback branch. More on branches in the [git](#git-integration) section.
 
 ### Global Mode
 
@@ -62,7 +63,9 @@ Once you have a generated Xata client, you can import it into your project and u
 
 As your schema changes, running `xata codegen` will consistently refresh your auto-generated Xata client with the latest schema for your database branch.
 
-## Git Integration
+## Branches & Git Integration
+
+Xata is a _branchable_ database. Developers can checkout new branches of their database schemas, make changes safely, and merge them into their main branch. This triggers a zero-downtime migration. To learn more about branches, see the [branches](https://docs.xata.io/concepts/branches) section.
 
 Some commands are integrated with git. Specifically, those related to branching. Xata uses the following algorithm in development in order to calculate which xata branch needs to be used:
 
@@ -94,4 +97,4 @@ If you edit the schema in the CLI, the code generator will be used if it's confi
 
 ## Next Steps
 
-Now that your project is set up with the Xata CLI, and if you've opted to use code generation (recommended), we recommend exploring the [TypeScript/JavaScript SDK](https://docs.xata.io/sdk/getting-started) section of the documentation to get up to speed using it.
+Now that your project is set up with the Xata CLI, and if you've opted to use code generation (recommended), we suggest exploring the [TypeScript/JavaScript SDK](https://docs.xata.io/sdk/getting-started) section of the documentation to get up to speed using it.
