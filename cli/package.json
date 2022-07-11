@@ -97,6 +97,9 @@
     },
     "additionalHelpFlags": [
       "-h"
+    ],
+    "additionalVersionFlags": [
+      "-v"
     ]
   },
   "scripts": {
