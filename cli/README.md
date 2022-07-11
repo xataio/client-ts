@@ -29,7 +29,7 @@ To authenticate globally, across your entire system, run `xata auth login`. This
 - **Create a new API Key**. This will open your browser and, when you're logged in to Xata, allow you to create a new [API key](https://docs.xata.io/concepts/api-keys) for use with the CLI.
 - **Use an existing API Key**. This will prompt for an existing key you have, which you can paste into your terminal. We recommend isolating keys per use-case, so creating a new one might be a good idea instead.
 
-Once you supply an API key one way or another, your CLI will be configured globally.
+Once you supply an API key one way or another, your CLI will be configured globally: we'll store your API key in `~/.config/xata/credentials`.
 
 From now on, when you use the Xata CLI _outside_ of a project (i.e, _globally_) for database operations, you'll have to explicitly use a flag to indicate which database you'd like to work with. You can do this using the `--db [url]` flag. If you omit this flag, you will be interactively prompted to choose a database.
 
