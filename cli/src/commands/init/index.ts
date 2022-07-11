@@ -258,6 +258,8 @@ export default class Init extends BaseCommand {
 
     if (!apiKey) {
       apiKey = await createAPIKeyThroughWebUI();
+      // Any following API call must use this API key
+      process.env.XATA_API_KEY = apiKey;
     }
     this.info(
       'The fallback branch will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitly)'
