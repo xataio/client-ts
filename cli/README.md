@@ -58,7 +58,7 @@ We recommend checking this file in to your version control system (Git, SVN, etc
 
 ### `.env`
 
-This file contains sensitive information and secrets that ought not be committed to version control. It is recommended that you add this file to `.gitignore`, so that it is not accidentally committed to version control. The Xata CLI appends secrets to this file, namely your API key and fallback branch. More on branches in the [git](#git-integration) section.
+This file contains sensitive information and secrets that ought not be committed to version control. It is recommended that you add this file to `.gitignore`, so that it is not accidentally committed to version control. The Xata CLI appends secrets to this file, namely your API key and fallback branch. More on branches in the [git](#branches--git-integration) section.
 
 ## Code Generation
 
