@@ -57,7 +57,11 @@ This file contains sensitive information and secrets that ought not be committed
 
 ### Global Mode
 
-In case you use the Xata CLI _outside_ of a project, where no `.xatarc` is present, you'll be using it in _global mode_. When using the CLI in global mode, you'll have to manually tell it which database you'd like it to work with. You can do this using the `--db [url]` flag. If you omit this flag, you will be interactively prompted to choose a database.
+In case you use the Xata CLI _outside_ of a project, where no `.xatarc` is present, you'll be using it in _global mode_.
+
+When using the CLI for database operations in global mode, you'll have to manually tell it which database you'd like it to work with. You can do this using the `--db [url]` flag. If you omit this flag, you will be interactively prompted to choose a database.
+
+Working with workspaces in global mode does not require any further flags.
 
 ## Code Generation
 
