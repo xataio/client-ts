@@ -12,7 +12,7 @@ const languages: Record<string, 'javascript' | 'typescript'> = {
 };
 
 export default class Codegen extends BaseCommand {
-  static description = 'Generate code form the current database schema';
+  static description = 'Generate code from the current database schema';
 
   static examples = [];
 
