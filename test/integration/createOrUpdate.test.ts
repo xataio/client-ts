@@ -21,7 +21,7 @@ const api = new XataApiClient({ apiKey, fetch });
 beforeAll(async () => {
   const id = Math.round(Math.random() * 100000);
 
-  const database = await api.databases.createDatabase(workspace, `sdk-integration-test-update-${id}`);
+  const database = await api.databases.createDatabase(workspace, `sdk-integration-test-createOrUpdate-${id}`);
   databaseName = database.databaseName;
 
   client = new XataClient({
