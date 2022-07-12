@@ -138,4 +138,16 @@ describe('record creation', () => {
     const teams = await client.db.teams.create([]);
     expect(teams).toHaveLength(0);
   });
+
+  test('create multiple some with id and others without id', async () => {
+    const teams = await client.db.teams.create([{ id: 'team_cars', name: 'Team cars' }, { name: 'Team planes' }]);
+
+    expect(teams).toHaveLength(2);
+    expect(teams[0].id).toBe('team_cars');
+    expect(teams[0].name).toBe('Team cars');
+    expect(teams[0].read).toBeDefined();
+    expect(teams[1].id).toBeDefined();
+    expect(teams[1].name).toBe('Team planes');
+    expect(teams[1].read).toBeDefined();
+  });
 });

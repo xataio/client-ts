@@ -478,12 +478,12 @@ describe('integration tests', () => {
       columns: [{ name: 'name', type: 'string' }]
     });
 
-    const planes = Array(250).map((_, index) => ({ name: `Plane ${index}` }));
+    const planes = Array.from({ length: PAGINATION_DEFAULT_SIZE + 50 }, (_, index) => ({ name: `Plane ${index}` }));
 
     const createdPlanes = await schemaLessclient.db.planes.create(planes);
     const queriedPlanes = await schemaLessclient.db.planes.getPaginated();
 
-    expect(createdPlanes).toHaveLength(250);
+    expect(createdPlanes).toHaveLength(PAGINATION_DEFAULT_SIZE + 50);
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
   });
 
