@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.5.0
+
+### Minor Changes
+
+- [#382](https://github.com/xataio/client-ts/pull/382) [`5620f59`](https://github.com/xataio/client-ts/commit/5620f5938dabb29ccb83eac9894b6f6478656fc1) Thanks [@gimenete](https://github.com/gimenete)! - Support for --no-input flag. Better support for --force flag and added more flags to some commands
+
+### Patch Changes
+
+- [#388](https://github.com/xataio/client-ts/pull/388) [`551f6cb`](https://github.com/xataio/client-ts/commit/551f6cb1441adde099e0f78a6fb163fc0b35132a) Thanks [@gimenete](https://github.com/gimenete)! - Improves xata init experience
+
 ## 0.4.2
 
 ### Patch Changes
@@ -111,3 +121,4 @@
   - @xata.io/shell@0.1.3
   - @xata.io/client@0.9.0
   - @xata.io/codegen@0.9.0
+

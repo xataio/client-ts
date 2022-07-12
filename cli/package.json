@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/cli",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Xata.io CLI",
   "author": "Xata Inc.",
   "bin": {
@@ -97,6 +97,9 @@
     },
     "additionalHelpFlags": [
       "-h"
+    ],
+    "additionalVersionFlags": [
+      "-v"
     ]
   },
   "scripts": {

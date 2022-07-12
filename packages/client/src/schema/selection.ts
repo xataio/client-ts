@@ -61,6 +61,8 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
                   ? K | `${K}.${Column}`
                   : never
                 : never
+              : RemoveNullable<O[K]> extends Date
+              ? K
               : `${K}.${StringKeys<RemoveNullable<O[K]>> | '*'}`, // This allows usage of objects that are not links
             K
           >
