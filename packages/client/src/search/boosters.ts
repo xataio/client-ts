@@ -1,5 +1,5 @@
 import { XataRecord, SelectableColumn, ValueAtColumn } from '../schema';
-import { Values } from '../util/types';
+import { ExclusiveOr, Values } from '../util/types';
 
 type DateBooster = {
   /*
@@ -41,7 +41,10 @@ export type Boosters<O extends XataRecord> = Values<{
   [K in SelectableColumn<O>]: NonNullable<ValueAtColumn<O, K>> extends Date
     ? { dateBooster: { column: K } & DateBooster }
     : NonNullable<ValueAtColumn<O, K>> extends number
-    ? { numericBooster?: { column: K } & NumericBooster; valueBooster?: { column: K } & ValueBooster<number> }
+    ? ExclusiveOr<
+        { numericBooster?: { column: K } & NumericBooster },
+        { valueBooster?: { column: K } & ValueBooster<number> }
+      >
     : NonNullable<ValueAtColumn<O, K>> extends string | boolean
     ? { valueBooster: { column: K } & ValueBooster<NonNullable<ValueAtColumn<O, K>>> }
     : never;

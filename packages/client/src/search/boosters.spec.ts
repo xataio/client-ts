@@ -14,14 +14,30 @@ type Record = {
   createdAt?: Date | null;
 } & XataRecord;
 
-const validBoosters: Boosters<Record>[] = [
-  { numericBooster: { column: 'upvotes', factor: 10 } },
-  { numericBooster: { column: 'obj.score', factor: 10 } },
-  { dateBooster: { column: 'createdAt', origin: '2020-01-21T00:00:00Z', scale: '1d', decay: 0.2 } },
-  { valueBooster: { column: 'name', value: 'r4', factor: 100 } },
-  { valueBooster: { column: 'name', value: 'r3', factor: 75 } },
+const validBoosters1: Boosters<Record>[] = [{ numericBooster: { column: 'upvotes', factor: 10 } }];
+
+const validBoosters2: Boosters<Record>[] = [{ numericBooster: { column: 'obj.score', factor: 10 } }];
+
+const validBoosters3: Boosters<Record>[] = [{ numericBooster: { column: 'obj.score', factor: 10 } }];
+
+const validBoosters4: Boosters<Record>[] = [
+  { dateBooster: { column: 'createdAt', origin: '2020-01-21T00:00:00Z', scale: '1d', decay: 0.2 } }
+];
+
+const validBoosters5: Boosters<Record>[] = [
   { valueBooster: { column: 'upvotes', value: 10, factor: 100 } },
-  { valueBooster: { column: 'upvotes', value: 20, factor: 75 }, numericBooster: { column: 'upvotes', factor: 10 } }
+  { numericBooster: { column: 'upvotes', factor: 10 } }
+];
+
+const validBoosters6: Boosters<Record>[] = [
+  { valueBooster: { column: 'name', value: 'r4', factor: 100 } },
+  { valueBooster: { column: 'name', value: 'r3', factor: 75 } }
+];
+
+const validBoosters7: Boosters<Record>[] = [
+  { valueBooster: { column: 'name', value: 'r4', factor: 100 } },
+  // @ts-expect-error
+  { valueBooster: { column: 'upvotes', value: 10, factor: 75 }, numericBooster: { column: 'upvotes', factor: 100 } }
 ];
 
 test('fake test', () => {
