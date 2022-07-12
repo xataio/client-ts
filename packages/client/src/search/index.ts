@@ -7,6 +7,7 @@ import { BaseData, XataRecord } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
+import { Boosters } from './boosters';
 
 export type SearchOptions<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = {
   fuzziness?: FuzzinessExpression;
@@ -17,6 +18,7 @@ export type SearchOptions<Schemas extends Record<string, BaseData>, Tables exten
         [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
           table: Model;
           filter?: Filter<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
+          boosters?: Boosters<Schemas[Model] & SearchXataRecord>[];
         };
       }>
   >;
