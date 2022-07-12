@@ -80,7 +80,7 @@ users[0].id; // 'rec_1234abcdef'
 users[1].id; // 'user_admin'
 ```
 
-For the `createOrUpdate()` method, it beaves the same way as `create()` but you will always need to provide an id.
+The `createOrUpdate()` method beaves the same way as `create()` but you will always need to provide an id.
 
 ```ts
 const user1 = await xata.db.users.createOrUpdate('user_admin', { fullName: 'John Smith' });
