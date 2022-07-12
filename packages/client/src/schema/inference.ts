@@ -13,7 +13,9 @@ export type BaseSchema = {
   )[];
 };
 
-export type SchemaInference<T extends readonly BaseSchema[]> = T extends readonly unknown[]
+export type SchemaInference<T extends readonly BaseSchema[]> = T extends never[]
+  ? Record<string, Record<string, any>>
+  : T extends readonly unknown[]
   ? T[number] extends { name: string; columns: readonly unknown[] }
     ? {
         [K in T[number]['name']]: TableType<T[number], K>;
