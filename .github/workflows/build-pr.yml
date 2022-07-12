@@ -103,6 +103,11 @@ jobs:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
+            ```
+
+            To test the CLI, run:
+
+            ```
             npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 

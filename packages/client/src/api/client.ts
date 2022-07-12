@@ -274,11 +274,12 @@ class DatabaseApi {
   public resolveBranch(
     workspace: Schemas.WorkspaceID,
     dbName: Schemas.DBName,
-    gitBranch: string
+    gitBranch?: string,
+    fallbackBranch?: string
   ): Promise<Types.ResolveBranchResponse> {
     return operationsByTag.database.resolveBranch({
       pathParams: { workspace, dbName },
-      queryParams: { gitBranch },
+      queryParams: { gitBranch, fallbackBranch },
       ...this.extraProps
     });
   }
