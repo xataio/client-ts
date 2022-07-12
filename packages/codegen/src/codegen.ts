@@ -33,16 +33,25 @@ export async function generate({
   const code = `
     import { BaseClientOptions, buildClient, SchemaInference } from '@xata.io/client';
 
+    ${
+      language === 'javascript'
+        ? `/** @typedef { import('./types').SchemaTables } SchemaTables */
+           /** @type { SchemaTables } */`
+        : ''
+    }
     const tables = ${JSON.stringify(tables)} as const;
 
-    export type DatabaseSchema = SchemaInference<typeof tables>;
+    export type SchemaTables = typeof tables;
+    export type DatabaseSchema = SchemaInference<SchemaTables>;
 
     export type TeamRecord = DatabaseSchema['teams'];
     export type UserRecord = DatabaseSchema['users'];
 
+    ${language === 'javascript' ? `/** @type { import('@xata.io/client').ClientConstructor<{}> } */` : ''}
     const DatabaseClient = buildClient();
 
-    export class XataClient extends DatabaseClient<typeof tables> {
+    ${language === 'javascript' ? `/** @extends DatabaseClient<SchemaTables> */` : ''}
+    export class XataClient extends DatabaseClient<SchemaTables> {
       constructor(options?: BaseClientOptions) {
         super({ databaseURL: "${databaseURL}", ...options}, tables);
       }

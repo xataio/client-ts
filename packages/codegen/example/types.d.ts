@@ -57,11 +57,12 @@ declare const tables: readonly [
     ];
   }
 ];
-export declare type DatabaseSchema = SchemaInference<typeof tables>;
+export declare type SchemaTables = typeof tables;
+export declare type DatabaseSchema = SchemaInference<SchemaTables>;
 export declare type TeamRecord = DatabaseSchema['teams'];
 export declare type UserRecord = DatabaseSchema['users'];
 declare const DatabaseClient: any;
-export declare class XataClient extends DatabaseClient<typeof tables> {
+export declare class XataClient extends DatabaseClient<SchemaTables> {
   constructor(options?: BaseClientOptions);
 }
 export {};

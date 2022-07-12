@@ -1,4 +1,6 @@
 import { buildClient } from '../../client/src';
+/** @typedef { import('./types').SchemaTables } SchemaTables */
+/** @type { SchemaTables } */
 const tables = [
   {
     name: 'teams',
@@ -30,7 +32,9 @@ const tables = [
     ]
   }
 ];
+/** @type { import('../../client/src').ClientConstructor<{}> } */
 const DatabaseClient = buildClient();
+/** @extends DatabaseClient<SchemaTables> */
 export class XataClient extends DatabaseClient {
   constructor(options) {
     super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, tables);

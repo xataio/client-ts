@@ -32,14 +32,15 @@ const tables = [
   }
 ] as const;
 
-export type DatabaseSchema = SchemaInference<typeof tables>;
+export type SchemaTables = typeof tables;
+export type DatabaseSchema = SchemaInference<SchemaTables>;
 
 export type TeamRecord = DatabaseSchema['teams'];
 export type UserRecord = DatabaseSchema['users'];
 
 const DatabaseClient = buildClient();
 
-export class XataClient extends DatabaseClient<typeof tables> {
+export class XataClient extends DatabaseClient<SchemaTables> {
   constructor(options?: BaseClientOptions) {
     super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, tables);
   }
