@@ -15,6 +15,7 @@ import {
 import { FetcherExtraProps } from '../api/fetcher';
 import { FuzzinessExpression, HighlightExpression, RecordsMetadata, Schema } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
+import { Boosters } from '../search/boosters';
 import { isObject, isString } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { CacheImpl } from './cache';
@@ -157,7 +158,12 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    */
   abstract search(
     query: string,
-    options?: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> }
+    options?: {
+      fuzziness?: FuzzinessExpression;
+      highlight?: HighlightExpression;
+      filter?: Filter<Record>;
+      boosters?: Boosters<Record>[];
+    }
   ): Promise<SelectedPick<Record, ['*']>[]>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
@@ -487,7 +493,12 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
   async search(
     query: string,
-    options: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> } = {}
+    options: {
+      fuzziness?: FuzzinessExpression;
+      highlight?: HighlightExpression;
+      filter?: Filter<Record>;
+      boosters?: Boosters<Record>[];
+    } = {}
   ): Promise<SelectedPick<Record, ['*']>[]> {
     const fetchProps = await this.#getFetchProps();
 
@@ -497,7 +508,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         query,
         fuzziness: options.fuzziness,
         highlight: options.highlight,
-        filter: options.filter as Schemas.FilterExpression
+        filter: options.filter as Schemas.FilterExpression,
+        boosters: options.boosters as Schemas.BoosterExpression[]
       },
       ...fetchProps
     });
