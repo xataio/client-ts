@@ -59,7 +59,7 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
               If<
                 IsObject<Item>,
                 Item extends XataRecord
-                  ? SelectableColumn<Item, [...RecursivePath, O[K]]> extends infer Column
+                  ? SelectableColumn<Item, [...RecursivePath, Item]> extends infer Column
                     ? Column extends string
                       ? K | `${K}.${Column}`
                       : never
