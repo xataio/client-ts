@@ -44,7 +44,7 @@ export async function generate({
 
     export class XataClient extends DatabaseClient<typeof tables> {
       constructor(options?: BaseClientOptions) {
-        super(tables, { databaseURL: "${databaseURL}", ...options});
+        super({ databaseURL: "${databaseURL}", ...options}, tables);
       }
     }
   `;

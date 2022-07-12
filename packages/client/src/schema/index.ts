@@ -1,3 +1,4 @@
+import { Schemas } from '../api';
 import { XataRecord } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isString } from '../util/lang';
@@ -5,12 +6,12 @@ import { BaseData } from './record';
 import { Repository, RestRepository } from './repository';
 
 export * from './cache';
+export * from './inference';
 export * from './operators';
 export * from './pagination';
-export * from './inference';
 export { Query } from './query';
 export { isIdentifiable, isXataRecord } from './record';
-export type { BaseData, EditableData, Identifiable, XataRecord, Link } from './record';
+export type { BaseData, EditableData, Identifiable, Link, XataRecord } from './record';
 export { Repository, RestRepository } from './repository';
 export * from './selection';
 
@@ -24,9 +25,12 @@ export type SchemaPluginResult<Schemas extends Record<string, BaseData>> = {
 
 export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
   #tables: Record<string, Repository<any>> = {};
+  #schemaTables?: Schemas.Table[];
 
-  constructor(private tableNames?: string[]) {
+  constructor(schemaTables?: Schemas.Table[]) {
     super();
+
+    this.#schemaTables = schemaTables;
   }
 
   build(pluginOptions: XataPluginOptions): SchemaPluginResult<Schemas> {
@@ -45,8 +49,9 @@ export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends Xata
     );
 
     // Inject generated tables for shell to auto-complete
-    for (const table of this.tableNames ?? []) {
-      db[table] = new RestRepository({ db, pluginOptions, table });
+    const tableNames = this.#schemaTables?.map(({ name }) => name) ?? [];
+    for (const table of tableNames) {
+      db[table] = new RestRepository({ db, pluginOptions, table, schemaTables: this.#schemaTables });
     }
 
     return db;

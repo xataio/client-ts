@@ -30,9 +30,13 @@ const tables = [
   }
 ] as const;
 
-declare const team: SchemaInference<typeof tables>['teams'];
+function simpleTeam(team: SchemaInference<typeof tables>['teams']) {
+  team.owner?.address?.zipcode;
+  team.owner?.address?.zipcode?.toString();
 
-team.owner.address.zipcode;
+  team.getMetadata();
+  team.owner?.getMetadata();
+}
 
 test('fake test', () => {
   // This is a fake test to make sure that the type definitions in this file are working

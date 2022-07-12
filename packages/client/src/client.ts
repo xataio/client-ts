@@ -1,3 +1,4 @@
+import { Schemas } from './api';
 import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaInference, SchemaPlugin, SchemaPluginResult } from './schema';
@@ -24,15 +25,15 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
 
-    constructor(options: BaseClientOptions = {}, tables?: string[]) {
+    constructor(options: BaseClientOptions = {}, schemaTables?: Schemas.Table[]) {
       const safeOptions = this.#parseOptions(options);
       const pluginOptions: XataPluginOptions = {
         getFetchProps: () => this.#getFetchProps(safeOptions),
         cache: safeOptions.cache
       };
 
-      const db = new SchemaPlugin(tables).build(pluginOptions);
-      const search = new SearchPlugin(db).build(pluginOptions);
+      const db = new SchemaPlugin(schemaTables).build(pluginOptions);
+      const search = new SearchPlugin(db, schemaTables).build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
       this.db = db;
@@ -114,11 +115,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   } as unknown as ClientConstructor<Plugins>;
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  new <T extends readonly BaseSchema[]>(tables: T, options?: Partial<BaseClientOptions>): Omit<
+  new <T extends readonly BaseSchema[]>(options?: Partial<BaseClientOptions>, schemaTables?: T): Omit<
     {
-      db: Awaited<ReturnType<SchemaPlugin<SchemaInference<typeof tables>>['build']>>;
-      search: Awaited<ReturnType<SearchPlugin<SchemaInference<typeof tables>>['build']>>;
+      db: Awaited<ReturnType<SchemaPlugin<SchemaInference<NonNullable<typeof schemaTables>>>['build']>>;
+      search: Awaited<ReturnType<SearchPlugin<SchemaInference<NonNullable<typeof schemaTables>>>['build']>>;
     },
     keyof Plugins
   > & {

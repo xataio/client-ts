@@ -33,9 +33,6 @@ const tables = [
 const DatabaseClient = buildClient();
 export class XataClient extends DatabaseClient {
   constructor(options) {
-    super(tables, {
-      databaseURL: 'https://test-r5vcv5.xata.sh/db/test',
-      ...options
-    });
+    super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, tables);
   }
 }
