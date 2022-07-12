@@ -1,5 +1,23 @@
 # @xata.io/client
 
+## 0.13.1
+
+### Patch Changes
+
+- [#417](https://github.com/xataio/client-ts/pull/417) [`86a14ec`](https://github.com/xataio/client-ts/commit/86a14eccbca94f572252327c9c0306577a1c3ebd) Thanks [@SferaDev](https://github.com/SferaDev)! - Update User-Agent
+
+* [#422](https://github.com/xataio/client-ts/pull/422) [`2896418`](https://github.com/xataio/client-ts/commit/289641844e5b2752197dbbbf3a93ef6068b684e4) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow sending link as string id
+
+- [#420](https://github.com/xataio/client-ts/pull/420) [`301b21f`](https://github.com/xataio/client-ts/commit/301b21f4784f755a8694ca21a0f2fd48e1b16df4) Thanks [@SferaDev](https://github.com/SferaDev)! - Exclude date internal columns in selection
+
+* [#399](https://github.com/xataio/client-ts/pull/399) [`dd4b2ef`](https://github.com/xataio/client-ts/commit/dd4b2effed2251ac8afbfb2909c21a9deb35bef1) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow create many objects mixed some with ids others without
+
+- [#425](https://github.com/xataio/client-ts/pull/425) [`00279ff`](https://github.com/xataio/client-ts/commit/00279ff985793020237f8098cba97dfec7738f82) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not send falsy values to query string
+
+* [#399](https://github.com/xataio/client-ts/pull/399) [`8e66998`](https://github.com/xataio/client-ts/commit/8e6699867a1aa1968d12db4ced80c13d4b951f88) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing identifiable objects to `read()` operations
+
+- [#425](https://github.com/xataio/client-ts/pull/425) [`8a4e019`](https://github.com/xataio/client-ts/commit/8a4e019031e678d946cf9dfb0e4803906fad9b5f) Thanks [@SferaDev](https://github.com/SferaDev)! - Add fallback branch to `api.databases.resolveBranch`
+
 ## 0.13.0
 
 ### Minor Changes
