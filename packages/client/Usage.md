@@ -93,7 +93,7 @@ const users = await xata.db.users.createOrUpdate([
 
 ### Updating records
 
-The `update()` method can be used to update an existing record. It will fail if the record cannot be found.
+The `update()` method can be used to update an existing record. It will throw an Error if the record cannot be found.
 
 ```ts
 const user = await xata.db.users.update('rec_1234abcdef', { fullName: 'John Smith' });
@@ -116,7 +116,7 @@ const users = await xata.db.users.update([
 
 ### Deleting records
 
-The `delete()` method can be used to delete an existing record. It will fail if the record cannot be found.
+The `delete()` method can be used to delete an existing record. It will throw an Error if the record cannot be found.
 
 ```ts
 const user = await xata.db.users.delete('rec_1234abcdef');
@@ -147,7 +147,7 @@ const users = await xata.db.users.delete([object1, object2]);
 
 ### Searching records
 
-The `search()` method can be used to search for records and an array of records is returned.
+The `search()` method can be used to search records. It returns an array of records.
 
 ```ts
 const results = await xata.db.users.search('John');
@@ -178,7 +178,7 @@ const user = xata.db.users.getFirst();
 
 ### Column selection
 
-The `Query` object can be used to select columns to be returned in the results.
+The `Query` object can be used to select the columns that will be returned in the results.
 
 You can pick multiple columns by providing an array of column names, or you can pick all the columns by providing `*`.
 
@@ -244,7 +244,7 @@ const janes = await janeQuery.getAll();
 const users = await xata.db.users.any(johnQuery, janeQuery).getAll();
 ```
 
-We offer several helper methods to combine queries:
+We offer the following helper methods to combine queries:
 
 - `any()`: returns the records that match any of the queries.
 - `all()`: returns the records that match all of the queries.
@@ -257,7 +257,7 @@ You can read more about the query operators in the API section for the query tab
 
 Some methods of the `Query` interface provide a `Page` object as a return value that can be used to paginate the results.
 
-The `Page` object can be used to get the queries records of a table in pages. It is an abstraction of cursor-based pagination.
+The `Page` object can be used to get the queried records of a table in pages. It is an abstraction of cursor-based pagination.
 
 It contains:
 
@@ -299,7 +299,7 @@ records.hasNextPage();
 const { records: page2Records } = await records.nextPage();
 ```
 
-Optionally you can provide offset and size parameters to the pagination and override the default values.
+Optionally you can provide `offset` and `size` parameters to the pagination and override the default values.
 
 ```ts
 const page = await xata.db.users.getPaginated();
