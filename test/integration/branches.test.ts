@@ -1,13 +1,15 @@
 import { execSync } from 'child_process';
-import fetch from 'cross-fetch';
+import realFetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { XataApiClient } from '../../packages/client/src';
 import { getCurrentBranchName } from '../../packages/client/src/util/config';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
+
+const fetch = vi.fn(realFetch);
 
 let databaseName: string;
 
@@ -77,6 +79,8 @@ describe('getBranch', () => {
 
     await api.branches.createBranch(workspace, databaseName, gitBranch);
 
+    fetch.mockClear();
+
     const branch = await getCurrentBranchName({
       apiKey,
       databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
@@ -84,5 +88,28 @@ describe('getBranch', () => {
     });
 
     expect(branch).toEqual(gitBranch);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0].toString().endsWith(`/resolveBranch?gitBranch=${gitBranch}`)).toBeTruthy();
+  });
+
+  test('Strips null and undefined values from qs', async () => {
+    fetch.mockClear();
+
+    // @ts-expect-error
+    const resolveBranch = await api.databases.resolveBranch(workspace, databaseName, undefined, null);
+
+    expect(resolveBranch).toMatchInlineSnapshot(`
+      {
+        "branch": "main",
+        "reason": {
+          "code": "DEFAULT_BRANCH",
+          "message": "Default branch for this database",
+        },
+      }
+    `);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0].toString().endsWith('/resolveBranch')).toBeTruthy();
   });
 });
