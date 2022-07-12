@@ -87,7 +87,7 @@ export default class Init extends BaseCommand {
 
     this.log();
     this.success('Project configured successfully.');
-    this.info(`Next steps? Here's a list of useful commands above. Use ${chalk.bold('xata --help')} to list them all.`);
+    this.info(`Next steps? Here's a list of useful commands below. Use ${chalk.bold('xata --help')} to list them all.`);
     const bullet = chalk.magenta('»');
     this.printTable(
       [],
@@ -108,7 +108,9 @@ export default class Init extends BaseCommand {
     // If codegen is configured, the SDK is already installed
     if (this.projectConfig?.codegen) return;
 
-    this.info('Do you want to install the SDK? The SDK gives access to the whole REST API. Example:');
+    this.info(
+      'We recommend generating a Xata client to help you use your database predictably and safely with autocompletion. Like this:'
+    );
     this.printCode([
       "import { XataApiClient } from '@xata.io/client';",
       '',
@@ -147,7 +149,7 @@ export default class Init extends BaseCommand {
       'const xata = new XataClient();',
       '',
       '// Query a table with a simple filter',
-      'const { records } = await xata.db.tableName().filter("column", value).getPaginated();'
+      'const { records } = await xata.db.tableName.filter("column", value).getPaginated();'
     ]);
 
     const { flags } = await this.parse(Init);
@@ -258,6 +260,8 @@ export default class Init extends BaseCommand {
 
     if (!apiKey) {
       apiKey = await createAPIKeyThroughWebUI();
+      // Any following API call must use this API key
+      process.env.XATA_API_KEY = apiKey;
     }
     this.info(
       'The fallback branch will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitly)'

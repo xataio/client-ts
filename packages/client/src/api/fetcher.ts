@@ -1,3 +1,4 @@
+import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
@@ -89,6 +90,7 @@ export async function fetch<
     body: body ? JSON.stringify(body) : undefined,
     headers: {
       'Content-Type': 'application/json',
+      'User-Agent': `Xata client-ts/${VERSION}`,
       ...headers,
       ...hostHeader(fullUrl),
       Authorization: `Bearer ${apiKey}`

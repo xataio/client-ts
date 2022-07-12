@@ -86,10 +86,7 @@ async function getDatabaseBranch(branch: string, options?: BranchResolutionOptio
       apiUrl: databaseURL,
       fetchImpl: getFetchImplementation(options?.fetchImpl),
       workspacesApiUrl: `${protocol}//${host}`,
-      pathParams: {
-        dbBranchName,
-        workspace
-      }
+      pathParams: { dbBranchName, workspace }
     });
   } catch (err) {
     if (isObject(err) && err.status === 404) return null;

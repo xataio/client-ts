@@ -106,3 +106,4 @@ dist
 
 # NPM config
 .npmrc
+.DS_Store
