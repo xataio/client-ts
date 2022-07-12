@@ -1,9 +1,11 @@
 import { XataApiClient } from '../../../packages/client/src';
 import { XataClient } from '../../../packages/codegen/example/xata';
 import { teamColumns, userColumns } from '../../mock_data';
+import { isObject } from '../shared';
 
-async function main() {
+async function handleResponse() {
   const workspace = process.env.XATA_WORKSPACE;
+  if (!workspace) throw new Error('XATA_WORKSPACE environment variable is not set');
 
   const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY });
 
@@ -33,12 +35,33 @@ async function main() {
   return { users, teams };
 }
 
-// @ts-ignore
-Bun.serve({
-  async fetch() {
-    const response = await main();
+async function main() {
+  // @ts-ignore
+  const server = Bun.serve({
+    async fetch() {
+      const response = await handleResponse();
 
-    return new Response(JSON.stringify(response));
-  },
-  port: 12345
-});
+      return new Response(JSON.stringify(response));
+    },
+    port: 12345
+  });
+
+  const response = await fetch('http://localhost:12345');
+  const body = await response.json();
+
+  if (
+    isObject(body) &&
+    Array.isArray(body.users) &&
+    Array.isArray(body.teams) &&
+    body.users.length > 0 &&
+    body.teams.length > 0
+  ) {
+    console.log('Successfully fetched data from bun http server');
+  } else {
+    throw new Error('Failed to fetch data from bun http server');
+  }
+
+  server.stop();
+}
+
+main();

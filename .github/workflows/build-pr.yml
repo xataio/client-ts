@@ -170,6 +170,9 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      - name: ⎔ Setup bun
+        uses: antongolub/action-setup-bun@v1
+
       - name: 📥 Install dependencies
         uses: bahmutov/npm-install@v1
         with:
