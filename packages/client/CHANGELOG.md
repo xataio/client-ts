@@ -14,7 +14,7 @@
 
 - [#425](https://github.com/xataio/client-ts/pull/425) [`00279ff`](https://github.com/xataio/client-ts/commit/00279ff985793020237f8098cba97dfec7738f82) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not send falsy values to query string
 
-* [#399](https://github.com/xataio/client-ts/pull/399) [`8e66998`](https://github.com/xataio/client-ts/commit/8e6699867a1aa1968d12db4ced80c13d4b951f88) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing objects to `read()` operations
+* [#399](https://github.com/xataio/client-ts/pull/399) [`8e66998`](https://github.com/xataio/client-ts/commit/8e6699867a1aa1968d12db4ced80c13d4b951f88) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing identifiable objects to `read()` operations
 
 - [#425](https://github.com/xataio/client-ts/pull/425) [`8a4e019`](https://github.com/xataio/client-ts/commit/8a4e019031e678d946cf9dfb0e4803906fad9b5f) Thanks [@SferaDev](https://github.com/SferaDev)! - Add fallback branch to `api.databases.resolveBranch`
 
