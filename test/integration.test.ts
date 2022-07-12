@@ -553,6 +553,17 @@ describe('integration tests', () => {
     expect(team.owner?.id).toEqual(owner.id);
     expect(updated.owner?.id).toEqual(owner2.id);
   });
+
+  test('Update link with linked object (string)', async () => {
+    const owner = await client.db.users.create({ full_name: 'Example User' });
+    const owner2 = await client.db.users.create({ full_name: 'Example User 2' });
+
+    const team = await client.db.teams.create({ name: 'Example Team', owner: owner.id });
+    const updated = await team.update({ owner: owner2.id });
+
+    expect(team.owner?.id).toEqual(owner.id);
+    expect(updated.owner?.id).toEqual(owner2.id);
+  });
 });
 
 describe('record creation', () => {
