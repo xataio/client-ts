@@ -2,7 +2,13 @@ import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
-  const query = new URLSearchParams(queryParams).toString();
+  // Remove nulls and undefineds from query params
+  const cleanQueryParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
+    if (value === undefined || value === null) return acc;
+    return { ...acc, [key]: value };
+  }, {} as Record<string, any>);
+
+  const query = new URLSearchParams(cleanQueryParams).toString();
   const queryString = query.length > 0 ? `?${query}` : '';
   return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
 };
