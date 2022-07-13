@@ -67,13 +67,7 @@ describe('client options', () => {
       body: fetch.mock.calls[0][1]?.body
     };
 
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-        "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
-      }
-    `);
+    expect(result).toMatchSnapshot();
   });
 
   test('provide branch as an array', async () => {
@@ -99,13 +93,7 @@ describe('client options', () => {
       body: fetch.mock.calls[0][1]?.body
     };
 
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-        "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
-      }
-    `);
+    expect(result).toMatchSnapshot();
   });
 
   test('provide branch as a function', async () => {
@@ -129,13 +117,7 @@ describe('client options', () => {
       body: fetch.mock.calls[0][1]?.body
     };
 
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-        "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
-      }
-    `);
+    expect(result).toMatchSnapshot();
   });
 
   test('ensure branch resolution is memoized', async () => {
@@ -182,13 +164,7 @@ describe('request', () => {
       body: fetch.mock.calls[0][1]?.body
     };
 
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-        "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
-      }
-    `);
+    expect(result).toMatchSnapshot();
   });
 
   test('builds the right arguments for a POST request', async () => {
@@ -212,13 +188,7 @@ describe('request', () => {
       body: fetch.mock.calls[0][1]?.body
     };
 
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
-        "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
-      }
-    `);
+    expect(result).toMatchSnapshot();
   });
 
   test('throws if the response is not ok', async () => {
@@ -294,20 +264,7 @@ describe('query', () => {
         meta: { page: { cursor: '', more: false } }
       });
 
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "body": "{\\"columns\\":[\\"*\\"]}",
-            "method": "POST",
-            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
-          },
-          {
-            "body": undefined,
-            "method": "GET",
-            "url": "https://mock.xata.sh/db/xata:main",
-          },
-        ]
-      `);
+      expect(result).toMatchSnapshot();
     });
 
     test('query with one filter', async () => {
@@ -319,20 +276,7 @@ describe('query', () => {
         meta: { page: { cursor: '', more: false } }
       });
 
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
-            "method": "POST",
-            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
-          },
-          {
-            "body": undefined,
-            "method": "GET",
-            "url": "https://mock.xata.sh/db/xata:main",
-          },
-        ]
-      `);
+      expect(result).toMatchSnapshot();
     });
   });
 
@@ -352,20 +296,7 @@ describe('query', () => {
         resultBody
       );
 
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-            "method": "POST",
-            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
-          },
-          {
-            "body": undefined,
-            "method": "GET",
-            "url": "https://mock.xata.sh/db/xata:main",
-          },
-        ]
-      `);
+      expect(result).toMatchSnapshot();
     });
 
     test('returns null if no objects are returned', async () => {
@@ -382,20 +313,7 @@ describe('query', () => {
         { records: [], meta: { page: { cursor: '', more: false } } }
       );
 
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-            "method": "POST",
-            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
-          },
-          {
-            "body": undefined,
-            "method": "GET",
-            "url": "https://mock.xata.sh/db/xata:main",
-          },
-        ]
-      `);
+      expect(result).toMatchSnapshot();
     });
   });
 });
@@ -444,25 +362,7 @@ describe('Repository.update', () => {
       { id: object.id }
     );
 
-    expect(result).toMatchInlineSnapshot(`
-      [
-        {
-          "body": "{\\"id\\":\\"rec_1234\\",\\"name\\":\\"Ada\\"}",
-          "method": "PATCH",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
-        },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
-        },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main",
-        },
-      ]
-    `);
+    expect(result).toMatchSnapshot();
   });
 });
 
@@ -514,24 +414,6 @@ describe('create', () => {
       created
     );
 
-    expect(result).toMatchInlineSnapshot(`
-      [
-        {
-          "body": "{\\"name\\":\\"Ada\\"}",
-          "method": "POST",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data",
-        },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
-        },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main",
-        },
-      ]
-    `);
+    expect(result).toMatchSnapshot();
   });
 });

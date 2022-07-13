@@ -1,5 +1,6 @@
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
+import { gzip } from '../util/pako';
 
 const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
   // Remove nulls and undefineds from query params
@@ -16,7 +17,7 @@ const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathPara
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
 export type FetchImpl = (
   url: string,
-  init?: { body?: string; headers?: Record<string, string>; method?: string }
+  init?: { body?: string | Uint8Array; headers?: Record<string, string>; method?: string }
 ) => Promise<{
   ok: boolean;
   status: number;
@@ -100,9 +101,10 @@ export async function fetch<
 
   const response = await fetchImpl(url, {
     method: method.toUpperCase(),
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? gzip(JSON.stringify(body)) : undefined,
     headers: {
       'Content-Type': 'application/json',
+      'Content-Encoding': body ? 'gzip' : '',
       'User-Agent': `Xata client-ts/${VERSION}`,
       ...headers,
       ...hostHeader(fullUrl),
