@@ -113,8 +113,8 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
 
   static parseConstructorParams(...args: any[]) {
     // new <T>(arrayLength: number): T[]
-    if (typeof args[0] === 'number') {
-      return [];
+    if (args.length === 1 && typeof args[0] === 'number') {
+      return new Array(args[0]);
     }
 
     // new RecordArray<T>(page: Page, overrideRecords: Array | undefined): T[>]
