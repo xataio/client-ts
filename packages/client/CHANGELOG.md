@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [#431](https://github.com/xataio/client-ts/pull/431) [`8f62024`](https://github.com/xataio/client-ts/commit/8f62024101028b981dc31a68fb258e89110d45dc) Thanks [@SferaDev](https://github.com/SferaDev)! - Include request ids in error response
+- [#431](https://github.com/xataio/client-ts/pull/431) [`8f62024`](https://github.com/xataio/client-ts/commit/8f62024101028b981dc31a68fb258e89110d45dc) Thanks [@SferaDev](https://github.com/SferaDev)! - Include request ids in the error response
 
 * [#429](https://github.com/xataio/client-ts/pull/429) [`bb102b4`](https://github.com/xataio/client-ts/commit/bb102b46b722d0a61996c42cda991c9f0080e464) Thanks [@SferaDev](https://github.com/SferaDev)! - Avoid detection of `Buffer` in edge runtime middleware
 
