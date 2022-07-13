@@ -3072,6 +3072,7 @@ export type SearchTableRequestBody = {
    */
   query: string;
   fuzziness?: Schemas.FuzzinessExpression;
+  prefix?: Schemas.PrefixExpression;
   filter?: Schemas.FilterExpression;
   highlight?: Schemas.HighlightExpression;
 };
