@@ -1,5 +1,15 @@
 # @xata.io/client
 
+## 0.13.2
+
+### Patch Changes
+
+- [#431](https://github.com/xataio/client-ts/pull/431) [`8f62024`](https://github.com/xataio/client-ts/commit/8f62024101028b981dc31a68fb258e89110d45dc) Thanks [@SferaDev](https://github.com/SferaDev)! - Include request ids in the error response
+
+* [#429](https://github.com/xataio/client-ts/pull/429) [`bb102b4`](https://github.com/xataio/client-ts/commit/bb102b46b722d0a61996c42cda991c9f0080e464) Thanks [@SferaDev](https://github.com/SferaDev)! - Avoid detection of `Buffer` in edge runtime middleware
+
+- [#428](https://github.com/xataio/client-ts/pull/428) [`06740ca`](https://github.com/xataio/client-ts/commit/06740cad216831216f0be8cf9de7e354c0ef9191) Thanks [@SferaDev](https://github.com/SferaDev)! - Improve selection types to make them more readable
+
 ## 0.13.1
 
 ### Patch Changes
