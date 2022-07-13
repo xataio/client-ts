@@ -1,4 +1,4 @@
-import { isDefined } from '../util/lang';
+import { isDefined, isObject } from '../util/lang';
 import { Query } from './query';
 import { XataRecord } from './record';
 
@@ -117,11 +117,10 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
       return [];
     }
 
-    console.log('DEBUG', args.length, JSON.stringify(args), args);
-
-    // new RecordArray(page, [])
-    if (args.length <= 2 && Array.isArray(args[0].records) && Array.isArray(args[1] ?? [])) {
-      return new Array(...(args[0].records ?? args[1]));
+    // new RecordArray<T>(page: Page, overrideRecords: Array | undefined): T[>]
+    if (args.length <= 2 && isObject(args[0]?.meta) && Array.isArray(args[1] ?? [])) {
+      const result = args[1] ?? args[0].records ?? [];
+      return new Array(...result);
     }
 
     // <T>(...items: T[]): T[]
