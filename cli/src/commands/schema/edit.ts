@@ -14,7 +14,7 @@ type Table = Schema['tables'][0];
 type Column = Table['columns'][0];
 
 type EditableColumn = Column & {
-  added?: string;
+  added?: boolean;
   deleted?: boolean;
   initialName?: string;
   description?: string;
@@ -362,17 +362,25 @@ export default class EditSchema extends BaseCommand {
 
     try {
       const answer = await snippet.run();
+      const { values } = answer;
+      const col: Column = {
+        name: values.name,
+        type: values.type,
+        link: values.link && values.type === 'link' ? { table: values.link } : undefined
+        // TODO: add description once the backend supports it
+        // description: values.description
+      };
       if (column) {
-        if (!column.initialName && !column.added && column.name !== answer.values.name) {
+        if (!column.initialName && !column.added && column.name !== values.name) {
           column.initialName = column.name;
         }
-        Object.assign(column, answer.values);
+        Object.assign(column, col);
         if (column.name === column.initialName) {
           delete column.initialName;
         }
       } else {
         table.columns.push({
-          ...answer.values,
+          ...col,
           added: true
         });
         // Override the variable to use it when redefining this.selectItem below
@@ -546,7 +554,6 @@ export default class EditSchema extends BaseCommand {
 
       for (const column of table.columns) {
         if (table.added || column.added) {
-          this.log(`Creating column ${table.name}.${column.name}`);
           await xata.tables.addTableColumn(workspace, database, branch, table.name, {
             name: column.name,
             type: column.type,
