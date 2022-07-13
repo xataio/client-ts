@@ -107,14 +107,23 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
   #page: Paginable<Result, Result>;
 
   constructor(page: Paginable<any, Result>, overrideRecords?: Result[]) {
-    super(...(overrideRecords ?? page.records ?? []));
-    if (typeof page === 'number') {
-      const error = new Error();
-      console.log(error.stack);
-    } else {
-      console.log('Valid', JSON.stringify(page));
-    }
+    super(...RecordArray.parseConstructorParams(page, overrideRecords));
     this.#page = page;
+  }
+
+  static parseConstructorParams(...args: any[]) {
+    // new <T>(arrayLength: number): T[]
+    if (typeof args[0] === 'number') {
+      return [];
+    }
+
+    // new RecordArray(page, [])
+    if (args.length <= 2 && Array.isArray(args[0].records) && Array.isArray(args[1] ?? [])) {
+      return new Array(...(args[0].records ?? args[1]));
+    }
+
+    // <T>(...items: T[]): T[]
+    return new Array(...args);
   }
 
   /**
