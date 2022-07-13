@@ -341,8 +341,8 @@ export abstract class BaseCommand extends Command {
     allowCreate?: boolean
   ): Promise<{ databaseURL: string; source: 'flag' | 'config' | 'env' | 'interactive' }> {
     if (databaseURLFlag) return { databaseURL: databaseURLFlag, source: 'flag' };
-    if (this.projectConfig?.databaseURL) return { databaseURL: this.projectConfig.databaseURL, source: 'config' };
     if (process.env.XATA_DATABASE_URL) return { databaseURL: process.env.XATA_DATABASE_URL, source: 'env' };
+    if (this.projectConfig?.databaseURL) return { databaseURL: this.projectConfig.databaseURL, source: 'config' };
 
     const workspace = await this.getWorkspace({ allowCreate });
     const database = await this.getDatabase(workspace, { allowCreate });
