@@ -103,6 +103,11 @@ jobs:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
+            ```
+
+            To test the CLI, run:
+
+            ```
             npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 
@@ -169,6 +174,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
+
+      - name: ⎔ Setup bun
+        uses: antongolub/action-setup-bun@v1
 
       - name: 📥 Install dependencies
         uses: bahmutov/npm-install@v1

@@ -1,4 +1,4 @@
-import { isDefined } from '../util/lang';
+import { isDefined, isObject } from '../util/lang';
 import { Query } from './query';
 import { XataRecord } from './record';
 
@@ -107,8 +107,24 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
   #page: Paginable<Result, Result>;
 
   constructor(page: Paginable<any, Result>, overrideRecords?: Result[]) {
-    super(...(overrideRecords ?? page.records));
+    super(...RecordArray.parseConstructorParams(page, overrideRecords));
     this.#page = page;
+  }
+
+  static parseConstructorParams(...args: any[]) {
+    // new <T>(arrayLength: number): T[]
+    if (args.length === 1 && typeof args[0] === 'number') {
+      return new Array(args[0]);
+    }
+
+    // new RecordArray<T>(page: Page, overrideRecords: Array | undefined): T[>]
+    if (args.length <= 2 && isObject(args[0]?.meta) && Array.isArray(args[1] ?? [])) {
+      const result = args[1] ?? args[0].records ?? [];
+      return new Array(...result);
+    }
+
+    // <T>(...items: T[]): T[]
+    return new Array(...args);
   }
 
   /**
