@@ -28,7 +28,7 @@ export function toBase64(value: string): string {
   try {
     return btoa(value);
   } catch (err) {
-    const buf = Buffer;
+    const buf = Buffer; // Avoid "A Node.js API is used which is not supported in the Edge Runtime" in Vercel Edge middleware
     return buf.from(value).toString('base64');
   }
 }
