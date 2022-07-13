@@ -28,6 +28,7 @@ export function toBase64(value: string): string {
   try {
     return btoa(value);
   } catch (err) {
-    return Buffer.from(value).toString('base64');
+    const buf = Buffer;
+    return buf.from(value).toString('base64');
   }
 }
