@@ -17,7 +17,14 @@ const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathPara
 export type FetchImpl = (
   url: string,
   init?: { body?: string; headers?: Record<string, string>; method?: string }
-) => Promise<{ ok: boolean; status: number; json(): Promise<any> }>;
+) => Promise<{
+  ok: boolean;
+  status: number;
+  json(): Promise<any>;
+  headers?: {
+    get(name: string): string | null;
+  };
+}>;
 
 export type WorkspaceApiUrlBuilder = (path: string, pathParams: Record<string, string>) => string;
 
@@ -108,6 +115,8 @@ export async function fetch<
     return {} as unknown as TData;
   }
 
+  const requestId = response.headers?.get('x-request-id') ?? undefined;
+
   try {
     const jsonResponse = await response.json();
 
@@ -115,8 +124,8 @@ export async function fetch<
       return jsonResponse;
     }
 
-    throw new FetcherError(response.status, jsonResponse as TError['payload']);
+    throw new FetcherError(response.status, jsonResponse as TError['payload'], requestId);
   } catch (error) {
-    throw new FetcherError(response.status, error as Error);
+    throw new FetcherError(response.status, error, requestId);
   }
 }
