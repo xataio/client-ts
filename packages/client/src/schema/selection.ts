@@ -31,11 +31,13 @@ export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
   : P extends `${infer K}.${infer V}`
   ? K extends keyof O
     ? Values<
-        RemoveNullable<O[K]> extends Record<string, any>
-          ? V extends SelectableColumn<RemoveNullable<O[K]>>
-            ? { V: ValueAtColumn<RemoveNullable<O[K]>, V> }
-            : never
-          : O[K]
+        NonNullable<O[K]> extends infer Item
+          ? Item extends Record<string, any>
+            ? V extends SelectableColumn<Item>
+              ? { V: ValueAtColumn<Item, V> }
+              : never
+            : O[K]
+          : never
       >
     : never
   : never;
@@ -50,23 +52,25 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
   : If<
       IsObject<O>,
       Values<{
-        [K in DataProps<O>]: If<
-          IsArray<RemoveNullable<O[K]>>,
-          K, // If the property is an array, we stop recursion. We don't support object arrays yet
-          If<
-            IsObject<RemoveNullable<O[K]>>,
-            RemoveNullable<O[K]> extends XataRecord
-              ? SelectableColumn<RemoveNullable<O[K]>, [...RecursivePath, O[K]]> extends infer Column
-                ? Column extends string
-                  ? K | `${K}.${Column}`
-                  : never
-                : never
-              : RemoveNullable<O[K]> extends Date
-              ? K
-              : `${K}.${StringKeys<RemoveNullable<O[K]>> | '*'}`, // This allows usage of objects that are not links
-            K
-          >
-        >;
+        [K in DataProps<O>]: NonNullable<O[K]> extends infer Item
+          ? If<
+              IsArray<Item>,
+              K, // If the property is an array, we stop recursion. We don't support object arrays yet
+              If<
+                IsObject<Item>,
+                Item extends XataRecord
+                  ? SelectableColumn<Item, [...RecursivePath, Item]> extends infer Column
+                    ? Column extends string
+                      ? K | `${K}.${Column}`
+                      : never
+                    : never
+                  : Item extends Date
+                  ? K
+                  : `${K}.${StringKeys<Item> | '*'}`, // This allows usage of objects that are not links
+                K
+              >
+            >
+          : never;
       }>,
       never
     >;
@@ -81,26 +85,25 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
   Key extends `${infer N}.${infer M}`
     ? N extends DataProps<O>
       ? {
-          [K in N]: M extends SelectableColumn<RemoveNullable<O[K]>>
-            ? RemoveNullable<O[K]> extends XataRecord
-              ? ForwardNullable<O[K], NestedValueAtColumn<RemoveNullable<O[K]>, M> & XataRecord>
-              : ForwardNullable<O[K], NestedValueAtColumn<RemoveNullable<O[K]>, M>>
+          [K in N]: M extends SelectableColumn<NonNullable<O[K]>>
+            ? NonNullable<O[K]> extends XataRecord
+              ? ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M> & XataRecord>
+              : ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M>>
             : unknown; //`Property ${M} is not selectable on type ${K}`
         }
       : unknown //`Property ${N} is not a property of type ${O}`
     : Key extends DataProps<O>
     ? {
-        [K in Key]: RemoveNullable<O[K]> extends XataRecord
-          ? ForwardNullable<O[K], SelectedPick<RemoveNullable<O[K]>, ['*']>>
+        [K in Key]: NonNullable<O[K]> extends XataRecord
+          ? ForwardNullable<O[K], SelectedPick<NonNullable<O[K]>, ['*']>>
           : O[K];
       }
     : Key extends '*'
     ? {
-        [K in StringKeys<O>]: RemoveNullable<O[K]> extends XataRecord
-          ? ForwardNullable<O[K], Link<RemoveNullable<O[K]>>> // Link forwards read/update method signatures to avoid loosing the internal type
+        [K in StringKeys<O>]: NonNullable<O[K]> extends XataRecord
+          ? ForwardNullable<O[K], Link<NonNullable<O[K]>>> // Link forwards read/update method signatures to avoid loosing the internal type
           : O[K];
       }
     : unknown; //`Property ${Key} is invalid`;
 
-type RemoveNullable<T> = T extends null | undefined ? never : T;
-type ForwardNullable<T, R> = T extends RemoveNullable<T> ? R : R | null;
+type ForwardNullable<T, R> = T extends NonNullable<T> ? R : R | null;
