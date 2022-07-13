@@ -117,6 +117,8 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
       return [];
     }
 
+    console.log('DEBUG', args.length, JSON.stringify(args), args);
+
     // new RecordArray(page, [])
     if (args.length <= 2 && Array.isArray(args[0].records) && Array.isArray(args[1] ?? [])) {
       return new Array(...(args[0].records ?? args[1]));
