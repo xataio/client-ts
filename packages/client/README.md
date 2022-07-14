@@ -56,7 +56,7 @@ const xata = new XataClient();
 
 The import above will differ if you chose to generate the code in a different location.
 
-The constructor `XataClient` accepts an object with configuration options, like the `fetch` parameter, which is required only if your runtime doesn't provide a global `fetch` function. There's also a `databaseURL` argument that by default will contain a URL pointing to your database (e.g. `https://myworkspace-123abc.xata.sh/db/databasename`). It can be specified in the constructor to overwrite that value if for whatever reason you need to connect to a different workspace or database.
+The `XataClient` constructor accepts an object with configuration options, like the `fetch` parameter, which is required only if your runtime doesn't provide a global `fetch` function. There's also a `databaseURL` argument that by default will contain a URL pointing to your database (e.g. `https://myworkspace-123abc.xata.sh/db/databasename`). It can be specified in the constructor to overwrite that value if for whatever reason you need to connect to a different workspace or database.
 
 The code generator will create two TypeScript types for each schema entity. The base one will be an `Identifiable` entity with the internal properties your entity has and the `Record` one will extend it with a set of operations (update, delete, etc...) and some schema metadata (xata version).
 
