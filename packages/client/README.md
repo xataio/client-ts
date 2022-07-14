@@ -264,7 +264,7 @@ await client.workspaces.deleteWorkspace(workspace);
 
 ## Deno support
 
-Right now we are still not publishing the client on deno.land or have support for deno in the codegen. However you can already use it with your preferred Node.js CDN with the following import in the auto-generated `xata.ts` file:
+Right now we are still not publishing the client on [deno.land](https://deno.land) or have support for deno in the codegen. However you can already use it with your preferred Node.js CDN with the following import in the auto-generated `xata.ts` file:
 
 ```ts
 import {
