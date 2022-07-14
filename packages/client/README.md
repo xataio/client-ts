@@ -1,10 +1,26 @@
 # Xata SDK for TypeScript and JavaScript
 
-This SDK has zero dependencies, so it can be used in many JavaScript runtimes including Node.js, Cloudflare workers, Deno, Electron, etc.
+This SDK has zero dependencies, so it can be used in many JavaScript runtimes including Node.js, Cloudflare workers, Deno, Electron, etc. It also works in browsers for the same reason. But this is strongly discouraged because you can easily leak your API keys from browsers.
 
-It also works in browsers for the same reason. But this is strongly discouraged because the API token would be leaked.
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-## Installing
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Schema-generated Client](#schema-generated-client)
+  - [Schema-less Client](#schema-less-client)
+  - [API Design](#api-design)
+    - [Creating Objects](#creating-objects)
+    - [Query a Single Object by its ID](#query-a-single-object-by-its-id)
+    - [Querying Multiple Objects](#querying-multiple-objects)
+    - [Updating Objects](#updating-objects)
+    - [Deleting Objects](#deleting-objects)
+  - [API Client](#api-client)
+- [Deno support](#deno-support)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Installation
 
 ```bash
 npm install @xata.io/client
@@ -20,7 +36,7 @@ There are three ways to use the SDK:
 
 ### Schema-generated Client
 
-To use the schema-generated client, you need to run the code generator utility that comes with [our CLI](../../cli/README.md).
+To use the schema-generated client, you need to run the code generator utility that comes with [our CLI](https://docs.xata.io/cli/getting-started).
 
 To run it (and assuming you have configured the project with `xata init`):
 
@@ -28,19 +44,17 @@ To run it (and assuming you have configured the project with `xata init`):
 xata codegen
 ```
 
-In a TypeScript file start using the generated code:
+In a TypeScript file, start using the generated code like this:
 
 ```ts
-import { XataClient } from './xata';
+import { XataClient } from './xata'; // or wherever you chose to generate the client
 
-const xata = new XataClient({
-  fetch: fetchImplementation // Required if your runtime doesn't provide a global `fetch` function.
-});
+const xata = new XataClient();
 ```
 
-The import above will differ if you chose to genreate the code in a different location.
+The import above will differ if you chose to generate the code in a different location.
 
-The `fetch` paramter is required only if your runtime doesn't provide a global `fetch` function. There's also a `databaseURL` argument that by default will contain a URL pointing to your database (e.g. `https://myworkspace-123abc.xata.sh/db/databasename`), it can be specified in the constructor to overwrite that value if for whatever reason you need to connect to a different workspace or database.
+The constructor `XataClient` accepts an object with configuration options, like the `fetch` parameter, which is required only if your runtime doesn't provide a global `fetch` function. There's also a `databaseURL` argument that by default will contain a URL pointing to your database (e.g. `https://myworkspace-123abc.xata.sh/db/databasename`). It can be specified in the constructor to overwrite that value if for whatever reason you need to connect to a different workspace or database.
 
 The code generator will create two TypeScript types for each schema entity. The base one will be an `Identifiable` entity with the internal properties your entity has and the `Record` one will extend it with a set of operations (update, delete, etc...) and some schema metadata (xata version).
 
@@ -60,7 +74,7 @@ await admin.update({ email: 'admin@foo.bar' });
 await admin.delete();
 ```
 
-You will learn more about the available operations below, under the `API Design` section.
+You will learn more about the available operations below, under the [`API Design`](#api-design) section.
 
 ### Schema-less Client
 
@@ -78,15 +92,15 @@ const xata = new BaseClient({
 
 It works the same way as the code-generated `XataClient` but doesn't provide type-safety for your model.
 
-You can read more on the methods available below, under the `API Design` section.
+You can read more on the methods available below, in the next section.
 
 ### API Design
 
-The Xata SDK to create/read/update/delete records follows the repository pattern. Each table will have a repository object available at `xata.db.[table-name]`.
+The Xata SDK to create/read/update/delete records follows the [repository pattern](https://lyz-code.github.io/blue-book/architecture/repository_pattern/). Each table will have a repository object available at `xata.db.[table-name]`.
 
-For example if you have a `users` table there'll be a repository at `xata.db.users`. If you're using the schema-less client, you can also use the `xata.db.[table-name]` syntax to access the repository but without TypeScript auto-completion.
+For example if you have a `users` table, there'll be a repository at `xata.db.users`. If you're using the schema-less client, you can also use the `xata.db.[table-name]` syntax to access the repository but without TypeScript auto-completion.
 
-**Creating objects**
+#### Creating Objects
 
 Invoke the `create()` method in the repository. Example:
 
@@ -112,14 +126,14 @@ const user = await client.db.users.updateOrInsert('user_admin', {
 });
 ```
 
-**Query a single object by its id**
+#### Query a Single Object by its ID
 
 ```ts
 // `user` will be null if the object cannot be found
 const user = await xata.db.users.read('rec_1234abcdef');
 ```
 
-**Querying multiple objects**
+#### Querying Multiple Objects
 
 ```ts
 // Query objects selecting all fields.
@@ -140,7 +154,7 @@ const page = await xata.db.users.filter('email', 'foo@example.com').getPaginated
 const page = await xata.db.users.sort('full_name', 'asc').getPaginated();
 ```
 
-Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, sort, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getPaginated()`, `getMany()`, `getAll()`, or `getFirst()`.
+Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, `sort`, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getPaginated()`, `getMany()`, `getAll()`, or `getFirst()`.
 
 ```ts
 // Operators that combine multiple conditions can be deconstructed
@@ -173,7 +187,7 @@ const firstPage = await page.firstPage(); // Page object
 const lastPage = await page.lastPage(); // Page object
 ```
 
-If you want to use an iterator, both the Repository and the Query classes implement an AsyncIterable. Alternatively you can use `getIterator()` and customize the batch size of the iterator:
+If you want to use an iterator, both the Repository and the Query classes implement an `AsyncIterable`. Alternatively you can use `getIterator()` and customize the batch size of the iterator:
 
 ```ts
 for await (const record of xata.db.users) {
@@ -189,7 +203,7 @@ for await (const records of xata.db.users.getIterator({ batchSize: 100 })) {
 }
 ```
 
-**Updating objects**
+#### Updating Objects
 
 Updating an object leaves the existing instance unchanged, but returns a new object with the updated values.
 
@@ -205,7 +219,7 @@ const updatedUser = await xata.db.users.update('rec_1234abcdef', {
 });
 ```
 
-**Deleting objects**
+#### Deleting Objects
 
 ```ts
 // Using an existing object
@@ -217,7 +231,7 @@ await xata.db.users.delete('rec_1234abcdef');
 
 ### API Client
 
-One of the main features of the SDK is the ability to interact with the whole Xata API and perform administrative operations such as creating/reading/updating/deleting workspaces, databases, tables, branches...
+One of the main features of the SDK is the ability to interact with the whole Xata API and perform administrative operations such as creating/reading/updating/deleting [workspaces](https://docs.xata.io/concepts/workspaces), databases, tables, branches...
 
 To communicate with the SDK we provide a constructor called `XataApiClient` that accepts an API token and an optional fetch implementation method.
 
@@ -229,7 +243,6 @@ Once you have initialized the API client, the operations are organized following
 
 ```ts
 const { id: workspace } = await client.workspaces.createWorkspace({ name: 'example', slug: 'example' });
-
 const { databaseName } = await client.databases.createDatabase(workspace, 'database');
 
 await client.branches.createBranch(workspace, databaseName, 'branch');
@@ -249,9 +262,7 @@ await client.workspaces.deleteWorkspace(workspace);
 
 ## Deno support
 
-Right now we are still not publishing the client on deno.land or have support for deno in the codegen.
-
-However you can already use it with your preferred node CDN with the following import in the auto-generated `xata.ts` file:
+Right now we are still not publishing the client on deno.land or have support for deno in the codegen. However you can already use it with your preferred Node.js CDN with the following import in the auto-generated `xata.ts` file:
 
 ```ts
 import {
