@@ -361,8 +361,7 @@ export default class EditSchema extends BaseCommand {
     });
 
     try {
-      const answer = await snippet.run();
-      const { values } = answer;
+      const { values } = await snippet.run();
       const col: Column = {
         name: values.name,
         type: values.type,
