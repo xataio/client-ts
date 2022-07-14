@@ -2,6 +2,8 @@
 
 This SDK has zero dependencies, so it can be used in many JavaScript runtimes including Node.js, Cloudflare workers, Deno, Electron, etc. It also works in browsers for the same reason. But this is strongly discouraged because you can easily leak your API keys from browsers.
 
+## Table of Contents
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
