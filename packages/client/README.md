@@ -264,7 +264,7 @@ await client.workspaces.deleteWorkspace(workspace);
 
 ## Deno support
 
-We publish the client on [deno.land](https://deno.land/x/xata), you can use it with the following import in the auto-generated `xata.ts` file:
+We publish the client on [deno.land](https://deno.land/x/xata). You can use it with the following import in the auto-generated `xata.ts` file:
 
 ```ts
 import { buildClient, BaseClientOptions, XataRecord } from 'https://deno.land/x/xata/mod.ts';
