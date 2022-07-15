@@ -1,29 +1,29 @@
 import { buildClient, BaseClientOptions, XataRecord } from '../packages/client';
 import fetch from 'node-fetch';
 
-export interface Team {
-  name?: string | null;
+export interface Blog {
+  title?: string | null;
   labels?: string[] | null;
   owner?: UserRecord | null;
 }
 
-export type TeamRecord = Team & XataRecord;
+export type BlogRecord = Blog & XataRecord;
 
 export interface User {
   email?: string | null;
   full_name?: string | null;
   address?: { street?: string | null; zipcode?: number | null } | null;
-  team?: TeamRecord | null;
+  team?: BlogRecord | null;
 }
 
 export type UserRecord = User & XataRecord;
 
 export type DatabaseSchema = {
-  teams: Team;
+  blogs: Blog;
   users: User;
 };
 
-const tables = ['teams', 'users'];
+const tables = ['blogs', 'users'];
 
 const DatabaseClient = buildClient();
 
@@ -38,7 +38,7 @@ type XataWorkerContext = { xata: XataClient; req: Request; res: Response };
 type RemoveFirst<T> = T extends [any, ...infer U] ? U : never;
 
 export function xataWorker<T extends (ctx: XataWorkerContext, ...args: any[]) => any>(name: string, _worker: T) {
-  return async (...args: RemoveFirst<Parameters<T>>) => {
+  return async (...args: RemoveFirst<Parameters<T>>): Promise<Awaited<ReturnType<typeof _worker>>> => {
     const result = await fetch('http://localhost:64749', {
       method: 'POST',
       headers: {
@@ -51,6 +51,6 @@ export function xataWorker<T extends (ctx: XataWorkerContext, ...args: any[]) =>
       })
     });
 
-    return result.json();
+    return result.json() as any;
   };
 }
