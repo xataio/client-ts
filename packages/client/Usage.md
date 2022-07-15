@@ -1,23 +1,134 @@
-# TypeScript SDK
+# Xata SDK Reference
 
-There're four types of objects in the Xata TypeScript SDK:
+There are four types of objects in the Xata TypeScript SDK:
 
-- `Repository`: a table representation that can be used to create, read, update, and delete records.
 - `Query`: a combination of filters and other parameters to retrieve a collection of records.
+- `Repository`: a table representation that can be used to create, read, update, and delete records.
 - `XataRecord`: a row in a table.
 - `Page`: a collection of records that can be paginated.
 
+Let's explore them below.
+
+## Table of Contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Query](#query)
+  - [Column selection](#column-selection)
+  - [Sorting](#sorting)
+  - [Filtering](#filtering)
+  - [Combining queries](#combining-queries)
+- [Repository](#repository)
+  - [Reading records](#reading-records)
+  - [Creating records](#creating-records)
+  - [Updating records](#updating-records)
+  - [Deleting records](#deleting-records)
+  - [Searching records](#searching-records)
+- [Page](#page)
+  - [Iterators and generators](#iterators-and-generators)
+  - [Helper variables](#helper-variables)
+- [XataRecord](#xatarecord)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Query
+
+To get a collection of records, you can use the `Query` object. It provides the following methods:
+
+- `getFirst()`: returns the first record in the query results.
+- `getPaginated()`: returns a page of records in the query results.
+- `getAll()`: returns all the records in the query results.
+- `getMany()`: returns an array of some records in the query results.
+
+Since the [`Repository`](#repository) class implements the `Query` interface, you can use it to query and paginate the records in the table too.
+
+```ts
+const user = xata.db.users.getFirst();
+```
+
+### Column selection
+
+The `Query` object can be used to select the columns that will be returned in the results. You can pick multiple columns by providing an array of column names, or you can pick all the columns by providing `*`.
+
+The dot notation is supported to select columns from nested objects.
+
+```ts
+const user = xata.db.users.select(['*', 'team.*']).getFirst();
+```
+
+### Sorting
+
+The `Query` object can be used to sort the order of the results. You can sort the results by providing a column name and an `asc` or `desc` string.
+
+```ts
+const user = xata.db.users.orderBy('fullName', 'asc').getFirst();
+```
+
+### Filtering
+
+You can filter the results by providing the column and the value to filter.
+
+```ts
+const user = xata.db.users.filter('fullName', 'John').getFirst();
+```
+
+To combine multiple filters in an 'AND' clause, you can pipe the filters together.
+
+```ts
+const user = xata.db.users.filter('fullName', 'John').filter('team.name', 'Marketing').getFirst();
+```
+
+Also you can filter the results by providing a `filter` object.
+
+```ts
+const user = xata.db.users.filter({ fullName: 'John', 'team.name': 'Marketing' }).getFirst();
+```
+
+We offer some helper functions to build the filter values, like: `gt`, `ge`, `gte`, `lt`, `le`, `lte`, `exists`, `notExists`, `startsWith`, `endsWith`, `pattern`, `is`, `isNot`, `contains`, `includes`, and others specific to the type of the column.
+
+```ts
+const user = xata.db.users.filter('name', startsWith('Bar')).getFirst();
+```
+
+If you prefer to directly use the filter operators as in the API, you can add them in the `filter` object.
+
+```ts
+xata.db.users.filter({ full_name: { $startsWith: 'foo' } }).getFirst();
+```
+
+### Combining Queries
+
+Queries can be stored in variables and can be combined with other queries.
+
+```ts
+const johnQuery = xata.db.users.filter('fullName', 'John');
+const janeQuery = xata.db.users.filter('fullName', 'Jane');
+
+const johns = await johnQuery.getAll();
+const janes = await janeQuery.getAll();
+
+const users = await xata.db.users.any(johnQuery, janeQuery).getAll();
+```
+
+We offer the following helper methods to combine queries:
+
+- `any()`: returns the records that match any of the queries.
+- `all()`: returns the records that match all of the queries.
+- `none()`: returns the records that match none of the queries.
+- `not()`: returns the records that don't match the given query.
+
+You can read more about the query operators in the API section for the query table endpoint.
+
 ## Repository
 
-Any table in the database can be represented by a `Repository` object.
+Any table in the database can be represented by a `Repository` object. A repository is an object that can be used to create, read, update, and delete records in the table it represents. It also implements the `Query` and `Page` interfaces, so you can use it to query and paginate the records in the table too.
 
-A repository is an object that can be used to create, read, update, and delete records in the table it represents.
-
-It also implements the `Query` and `Page` interfaces, so you can use it to query and paginate the records in the table too. We'll see how to use these objects in the next section.
+We'll see how to use these objects in the next section.
 
 ### Reading records
 
-The `read()` method can be used to read a records by their ids:
+The `read()` method can be used to read records by their ids:
 
 - If the object cannot be found, the method will return `null`.
 - If the object can be found, the method will return a `XataRecord` object.
@@ -44,7 +155,7 @@ const user = await xata.db.users.read(object1);
 const users = await xata.db.users.read([object1, object2]);
 ```
 
-### Creating records
+### Creating Records
 
 Both the `create()` and `createOrUpdate()` methods can be used to create a new record.
 
@@ -93,7 +204,7 @@ const users = await xata.db.users.createOrUpdate([
 
 ### Updating records
 
-The `update()` method can be used to update an existing record. It will throw an Error if the record cannot be found.
+The `update()` method can be used to update an existing record. It will throw an `Error` if the record cannot be found.
 
 ```ts
 const user = await xata.db.users.update('rec_1234abcdef', { fullName: 'John Smith' });
@@ -114,9 +225,9 @@ const users = await xata.db.users.update([
 ]);
 ```
 
-### Deleting records
+### Deleting Records
 
-The `delete()` method can be used to delete an existing record. It will throw an Error if the record cannot be found.
+The `delete()` method can be used to delete an existing record. It will throw an `Error` if the record cannot be found.
 
 ```ts
 const user = await xata.db.users.delete('rec_1234abcdef');
@@ -145,7 +256,7 @@ const object2 = { id: 'user_admin' };
 const users = await xata.db.users.delete([object1, object2]);
 ```
 
-### Searching records
+### Searching Records
 
 The `search()` method can be used to search records. It returns an array of records.
 
@@ -159,105 +270,9 @@ Also you can customize the results with an `options` object that includes `fuzzi
 const results = await xata.db.users.search('John', { fuzziness: 1, filter: { 'team.name': 'Marketing' } });
 ```
 
-## Query
-
-To get a collection of records, you can use the `Query` object.
-
-It provides the following methods:
-
-- `getFirst()`: returns the first record in the query results.
-- `getPaginated()`: returns a page of records in the query results.
-- `getAll()`: returns all the records in the query results.
-- `getMany()`: returns an array of some records in the query results.
-
-Since the `Repository` class implements the `Query` interface, you can use it to query and paginate the records in the table too.
-
-```ts
-const user = xata.db.users.getFirst();
-```
-
-### Column selection
-
-The `Query` object can be used to select the columns that will be returned in the results.
-
-You can pick multiple columns by providing an array of column names, or you can pick all the columns by providing `*`.
-
-The dot notation is supported to select columns from nested objects.
-
-```ts
-const user = xata.db.users.select(['*', 'team.*']).getFirst();
-```
-
-### Sorting
-
-The `Query` object can be used to sort the order of the results.
-
-You can sort the results by providing a column name and an `asc` or `desc` string.
-
-```ts
-const user = xata.db.users.orderBy('fullName', 'asc').getFirst();
-```
-
-### Filtering
-
-You can filter the results by providing the column and the value to filter.
-
-```ts
-const user = xata.db.users.filter('fullName', 'John').getFirst();
-```
-
-To combine multiple filters in an 'AND' clause, you can pipe the filters together.
-
-```ts
-const user = xata.db.users.filter('fullName', 'John').filter('team.name', 'Marketing').getFirst();
-```
-
-Also you can filter the results by providing a `filter` object.
-
-```ts
-const user = xata.db.users.filter({ fullName: 'John', 'team.name': 'Marketing' }).getFirst();
-```
-
-We offer some helper functions to build the filter values, like: `gt`, `ge`, `gte`, `lt`, `le`, `lte`, `exists`, `notExists`, `startsWith`, `endsWith`, `pattern`, `is`, `isNot`, `contains`, `includes`, and others specific to the type of the column.
-
-```ts
-const user = xata.db.users.filter('name', startsWith('Bar')).getFirst();
-```
-
-If you prefer to directly use the filter operators as in the API, you can add them in the `filter` object.
-
-```ts
-xata.db.users.filter({ full_name: { $startsWith: 'foo' } }).getFirst();
-```
-
-### Combining queries
-
-Queries can be stored in variables and can be combined with other queries.
-
-```ts
-const johnQuery = xata.db.users.filter('fullName', 'John');
-const janeQuery = xata.db.users.filter('fullName', 'Jane');
-
-const johns = await johnQuery.getAll();
-const janes = await janeQuery.getAll();
-
-const users = await xata.db.users.any(johnQuery, janeQuery).getAll();
-```
-
-We offer the following helper methods to combine queries:
-
-- `any()`: returns the records that match any of the queries.
-- `all()`: returns the records that match all of the queries.
-- `none()`: returns the records that match none of the queries.
-- `not()`: returns the records that don't match the given query.
-
-You can read more about the query operators in the API section for the query table endpoint.
-
 ## Page
 
-Some methods of the `Query` interface provide a `Page` object as a return value that can be used to paginate the results.
-
-The `Page` object can be used to get the queried records of a table in pages. It is an abstraction of cursor-based pagination.
+Some methods of the `Query` interface provide a `Page` object as a return value that can be used to paginate the results. The `Page` object can be used to get the queried records of a table in pages. It is an abstraction of cursor-based pagination.
 
 It contains:
 
@@ -299,7 +314,7 @@ records.hasNextPage();
 const { records: page2Records } = await records.nextPage();
 ```
 
-Optionally you can provide `offset` and `size` parameters to the pagination and override the default values.
+Optionally, you can provide `offset` and `size` parameters to the pagination and override the default values.
 
 ```ts
 const page = await xata.db.users.getPaginated();
@@ -312,7 +327,7 @@ const page2 = await page.nextPage(50);
 const page3 = await page2.nextPage(10, 60);
 ```
 
-### Iterators and generators
+### Iterators and Generators
 
 The `Query` object can be used to iterate over the results as a way to paginate the results.
 
@@ -330,7 +345,7 @@ for await (const users of xata.db.users.getIterator({ batchSize: 50 })) {
 }
 ```
 
-### Helper variables
+### Helper Variables
 
 We expose some helper variables of the API limits when paginating:
 
@@ -339,7 +354,7 @@ We expose some helper variables of the API limits when paginating:
 - `PAGINATION_MAX_OFFSET`: Maximum offset.
 - `PAGINATION_DEFAULT_OFFSET`: Default offset.
 
-You can use these variables if you implement your own pagination mechanism, as they will be updated when the API limits are updated.
+You can use these variables if you implement your own pagination mechanism, as they will be updated when our API limits are updated.
 
 ## XataRecord
 
