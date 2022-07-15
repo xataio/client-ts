@@ -131,3 +131,4 @@
   - @xata.io/shell@0.1.3
   - @xata.io/client@0.9.0
   - @xata.io/codegen@0.9.0
+
