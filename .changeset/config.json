@@ -3,7 +3,7 @@
   "changelog": ["@changesets/changelog-github", { "repo": "xataio/client-ts" }],
   "commit": false,
   "linked": [["@xata.io/client", "@xata.io/codegen"]],
-  "access": "restricted",
+  "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch"
 }
