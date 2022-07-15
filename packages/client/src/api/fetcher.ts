@@ -21,6 +21,7 @@ export type FetchImpl = (
   ok: boolean;
   status: number;
   json(): Promise<any>;
+  text(): Promise<string>;
   headers?: {
     get(name: string): string | null;
   };
@@ -116,16 +117,17 @@ export async function fetch<
   }
 
   const requestId = response.headers?.get('x-request-id') ?? undefined;
+  const payload = await parsePayload(response);
+  if (response.ok) return payload;
 
+  const error = payload ?? 'Unknown error';
+  throw new FetcherError(response.status, error as TError['payload'], requestId);
+}
+
+async function parsePayload(response: { json: () => any; text: () => any }) {
   try {
-    const jsonResponse = await response.json();
-
-    if (response.ok) {
-      return jsonResponse;
-    }
-
-    throw new FetcherError(response.status, jsonResponse as TError['payload'], requestId);
+    return response.json();
   } catch (error) {
-    throw new FetcherError(response.status, error, requestId);
+    return response.text();
   }
 }
