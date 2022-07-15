@@ -1,9 +1,9 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@1.7.0/schema.json",
   "changelog": ["@changesets/changelog-github", { "repo": "xataio/client-ts" }],
-  "commit": true,
+  "commit": false,
   "linked": [["@xata.io/client", "@xata.io/codegen"]],
-  "access": "restricted",
+  "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch"
 }
