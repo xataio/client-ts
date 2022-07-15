@@ -117,17 +117,20 @@ export async function fetch<
   }
 
   const requestId = response.headers?.get('x-request-id') ?? undefined;
-  const payload = await parsePayload(response);
-  if (response.ok) return payload;
+  const payload = await response.text();
+  const json = safeJSONParse(payload);
 
-  const error = payload ?? 'Unknown error';
-  throw new FetcherError(response.status, error as TError['payload'], requestId);
+  if (response.ok) {
+    return json ?? {};
+  }
+
+  throw new FetcherError(response.status, (json ?? payload) as TError['payload'], requestId);
 }
 
-async function parsePayload(response: { json: () => any; text: () => any }) {
+function safeJSONParse(json: string) {
   try {
-    return response.json();
-  } catch (error) {
-    return response.text();
+    return JSON.parse(json);
+  } catch (e) {
+    return null;
   }
 }
