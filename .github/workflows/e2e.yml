@@ -2,6 +2,7 @@ name: E2E Test
 
 on:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   e2e-test:
