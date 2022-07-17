@@ -50,7 +50,7 @@ export default class RandomData extends BaseCommand {
       }
       await xata.records.bulkInsertTableRecords(workspace, database, branch, table.name, records);
 
-      this.log(`Inserted ${flags.records} random records in table ${table.name}`);
+      this.log(`Inserted ${flags.records} random ${pluralize('record', flags.records)} in table ${table.name}`);
     }
 
     this.log(
