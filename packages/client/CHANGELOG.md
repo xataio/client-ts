@@ -1,5 +1,17 @@
 # @xata.io/client
 
+## 0.13.4
+
+### Patch Changes
+
+- [#444](https://github.com/xataio/client-ts/pull/444) [`3c3a5af`](https://github.com/xataio/client-ts/commit/3c3a5afb1d5fb3295fd8cf6c2b66709a5c047507) Thanks [@SferaDev](https://github.com/SferaDev)! - Publish xata client on deno.land
+
+## 0.13.3
+
+### Patch Changes
+
+- [#434](https://github.com/xataio/client-ts/pull/434) [`b82383d`](https://github.com/xataio/client-ts/commit/b82383d7541d19ae71ad7e047fd100901981f28b) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix problem with SSR `RecordArray` in Next.js
+
 ## 0.13.2
 
 ### Patch Changes
