@@ -47,7 +47,12 @@ export function getEnvironment(): Environment {
       return {
         apiKey: Deno.env.get('XATA_API_KEY') ?? fallbackValues.apiKey,
         databaseURL: Deno.env.get('XATA_DATABASE_URL') ?? fallbackValues.databaseURL,
-        branch: Deno.env.get('XATA_BRANCH') ?? fallbackValues.branch,
+        branch:
+          Deno.env.get('XATA_BRANCH') ??
+          Deno.env.get('VERCEL_GIT_COMMIT_REF') ??
+          Deno.env.get('CF_PAGES_BRANCH') ??
+          Deno.env.get('BRANCH') ??
+          fallbackValues.branch,
         fallbackBranch: Deno.env.get('XATA_FALLBACK_BRANCH') ?? fallbackValues.fallbackBranch
       };
     }
