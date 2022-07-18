@@ -1,5 +1,45 @@
 # @xata.io/client
 
+## 0.13.4
+
+### Patch Changes
+
+- [#444](https://github.com/xataio/client-ts/pull/444) [`3c3a5af`](https://github.com/xataio/client-ts/commit/3c3a5afb1d5fb3295fd8cf6c2b66709a5c047507) Thanks [@SferaDev](https://github.com/SferaDev)! - Publish xata client on deno.land
+
+## 0.13.3
+
+### Patch Changes
+
+- [#434](https://github.com/xataio/client-ts/pull/434) [`b82383d`](https://github.com/xataio/client-ts/commit/b82383d7541d19ae71ad7e047fd100901981f28b) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix problem with SSR `RecordArray` in Next.js
+
+## 0.13.2
+
+### Patch Changes
+
+- [#431](https://github.com/xataio/client-ts/pull/431) [`8f62024`](https://github.com/xataio/client-ts/commit/8f62024101028b981dc31a68fb258e89110d45dc) Thanks [@SferaDev](https://github.com/SferaDev)! - Include request ids in the error response
+
+* [#429](https://github.com/xataio/client-ts/pull/429) [`bb102b4`](https://github.com/xataio/client-ts/commit/bb102b46b722d0a61996c42cda991c9f0080e464) Thanks [@SferaDev](https://github.com/SferaDev)! - Avoid detection of `Buffer` in edge runtime middleware
+
+- [#428](https://github.com/xataio/client-ts/pull/428) [`06740ca`](https://github.com/xataio/client-ts/commit/06740cad216831216f0be8cf9de7e354c0ef9191) Thanks [@SferaDev](https://github.com/SferaDev)! - Improve selection types to make them more readable
+
+## 0.13.1
+
+### Patch Changes
+
+- [#417](https://github.com/xataio/client-ts/pull/417) [`86a14ec`](https://github.com/xataio/client-ts/commit/86a14eccbca94f572252327c9c0306577a1c3ebd) Thanks [@SferaDev](https://github.com/SferaDev)! - Update User-Agent
+
+* [#422](https://github.com/xataio/client-ts/pull/422) [`2896418`](https://github.com/xataio/client-ts/commit/289641844e5b2752197dbbbf3a93ef6068b684e4) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow sending link as string id
+
+- [#420](https://github.com/xataio/client-ts/pull/420) [`301b21f`](https://github.com/xataio/client-ts/commit/301b21f4784f755a8694ca21a0f2fd48e1b16df4) Thanks [@SferaDev](https://github.com/SferaDev)! - Exclude date internal columns in selection
+
+* [#399](https://github.com/xataio/client-ts/pull/399) [`dd4b2ef`](https://github.com/xataio/client-ts/commit/dd4b2effed2251ac8afbfb2909c21a9deb35bef1) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow create many objects mixed some with ids others without
+
+- [#425](https://github.com/xataio/client-ts/pull/425) [`00279ff`](https://github.com/xataio/client-ts/commit/00279ff985793020237f8098cba97dfec7738f82) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not send falsy values to query string
+
+* [#399](https://github.com/xataio/client-ts/pull/399) [`8e66998`](https://github.com/xataio/client-ts/commit/8e6699867a1aa1968d12db4ced80c13d4b951f88) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing identifiable objects to `read()` operations
+
+- [#425](https://github.com/xataio/client-ts/pull/425) [`8a4e019`](https://github.com/xataio/client-ts/commit/8a4e019031e678d946cf9dfb0e4803906fad9b5f) Thanks [@SferaDev](https://github.com/SferaDev)! - Add fallback branch to `api.databases.resolveBranch`
+
 ## 0.13.0
 
 ### Minor Changes

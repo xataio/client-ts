@@ -1,5 +1,25 @@
 # @xata.io/cli
 
+## 0.6.0
+
+### Minor Changes
+
+- [#437](https://github.com/xataio/client-ts/pull/437) [`c5312f4`](https://github.com/xataio/client-ts/commit/c5312f4b89e9d3b6597ba2649b96d337019b8442) Thanks [@fabien0102](https://github.com/fabien0102)! - Re-order config values priority
+
+### Patch Changes
+
+- [#435](https://github.com/xataio/client-ts/pull/435) [`12c1f1a`](https://github.com/xataio/client-ts/commit/12c1f1a0dbb70a9355560e1690fcce2e535ff808) Thanks [@gimenete](https://github.com/gimenete)! - Fix error creating link columns with xata schema edit
+
+## 0.5.0
+
+### Minor Changes
+
+- [#382](https://github.com/xataio/client-ts/pull/382) [`5620f59`](https://github.com/xataio/client-ts/commit/5620f5938dabb29ccb83eac9894b6f6478656fc1) Thanks [@gimenete](https://github.com/gimenete)! - Support for --no-input flag. Better support for --force flag and added more flags to some commands
+
+### Patch Changes
+
+- [#388](https://github.com/xataio/client-ts/pull/388) [`551f6cb`](https://github.com/xataio/client-ts/commit/551f6cb1441adde099e0f78a6fb163fc0b35132a) Thanks [@gimenete](https://github.com/gimenete)! - Improves xata init experience
+
 ## 0.4.2
 
 ### Patch Changes

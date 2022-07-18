@@ -61,19 +61,18 @@ describe('client options', () => {
 
     await users.getFirst();
 
-    expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      [
-        "https://mock.xata.sh/db/xata:branch/tables/users/query",
-        {
-          "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-          "headers": {
-            "Authorization": "Bearer 1234",
-            "Content-Type": "application/json",
-            "Host": "mock.xata.sh",
-          },
-          "method": "POST",
-        },
-      ]
+    const result = {
+      url: fetch.mock.calls[0][0],
+      method: fetch.mock.calls[0][1]?.method,
+      body: fetch.mock.calls[0][1]?.body
+    };
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+        "method": "POST",
+        "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
+      }
     `);
   });
 
@@ -94,19 +93,18 @@ describe('client options', () => {
 
     await users.getFirst();
 
-    expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      [
-        "https://mock.xata.sh/db/xata:branch/tables/users/query",
-        {
-          "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-          "headers": {
-            "Authorization": "Bearer 1234",
-            "Content-Type": "application/json",
-            "Host": "mock.xata.sh",
-          },
-          "method": "POST",
-        },
-      ]
+    const result = {
+      url: fetch.mock.calls[0][0],
+      method: fetch.mock.calls[0][1]?.method,
+      body: fetch.mock.calls[0][1]?.body
+    };
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+        "method": "POST",
+        "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
+      }
     `);
   });
 
@@ -125,19 +123,18 @@ describe('client options', () => {
 
     await users.getFirst();
 
-    expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      [
-        "https://mock.xata.sh/db/xata:branch/tables/users/query",
-        {
-          "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-          "headers": {
-            "Authorization": "Bearer 1234",
-            "Content-Type": "application/json",
-            "Host": "mock.xata.sh",
-          },
-          "method": "POST",
-        },
-      ]
+    const result = {
+      url: fetch.mock.calls[0][0],
+      method: fetch.mock.calls[0][1]?.method,
+      body: fetch.mock.calls[0][1]?.body
+    };
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+        "method": "POST",
+        "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
+      }
     `);
   });
 
@@ -179,19 +176,18 @@ describe('request', () => {
 
     await users.getFirst();
 
-    expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      [
-        "https://mock.xata.sh/db/xata:main/tables/users/query",
-        {
-          "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-          "headers": {
-            "Authorization": "Bearer 1234",
-            "Content-Type": "application/json",
-            "Host": "mock.xata.sh",
-          },
-          "method": "POST",
-        },
-      ]
+    const result = {
+      url: fetch.mock.calls[0][0],
+      method: fetch.mock.calls[0][1]?.method,
+      body: fetch.mock.calls[0][1]?.body
+    };
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+        "method": "POST",
+        "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+      }
     `);
   });
 
@@ -210,19 +206,18 @@ describe('request', () => {
 
     await users.getMany({ pagination: { size: 20 } });
 
-    expect(fetch.mock.calls[0]).toMatchInlineSnapshot(`
-      [
-        "https://mock.xata.sh/db/xata:main/tables/users/query",
-        {
-          "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
-          "headers": {
-            "Authorization": "Bearer 1234",
-            "Content-Type": "application/json",
-            "Host": "mock.xata.sh",
-          },
-          "method": "POST",
-        },
-      ]
+    const result = {
+      url: fetch.mock.calls[0][0],
+      method: fetch.mock.calls[0][1]?.method,
+      body: fetch.mock.calls[0][1]?.body
+    };
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
+        "method": "POST",
+        "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+      }
     `);
   });
 
@@ -281,7 +276,11 @@ async function expectRequest(
   await callback();
 
   const { calls } = fetch.mock;
-  return calls;
+  return calls.map((call) => ({
+    url: call[0],
+    method: call[1]?.method,
+    body: call[1]?.body
+  }));
 }
 
 describe('query', () => {
@@ -297,30 +296,16 @@ describe('query', () => {
 
       expect(result).toMatchInlineSnapshot(`
         [
-          [
-            "https://mock.xata.sh/db/xata:main/tables/users/query",
-            {
-              "body": "{\\"columns\\":[\\"*\\"]}",
-              "headers": {
-                "Authorization": "Bearer 1234",
-                "Content-Type": "application/json",
-                "Host": "mock.xata.sh",
-              },
-              "method": "POST",
-            },
-          ],
-          [
-            "https://mock.xata.sh/db/xata:main",
-            {
-              "body": undefined,
-              "headers": {
-                "Authorization": "Bearer 1234",
-                "Content-Type": "application/json",
-                "Host": "mock.xata.sh",
-              },
-              "method": "GET",
-            },
-          ],
+          {
+            "body": "{\\"columns\\":[\\"*\\"]}",
+            "method": "POST",
+            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+          },
+          {
+            "body": undefined,
+            "method": "GET",
+            "url": "https://mock.xata.sh/db/xata:main",
+          },
         ]
       `);
     });
@@ -336,30 +321,16 @@ describe('query', () => {
 
       expect(result).toMatchInlineSnapshot(`
         [
-          [
-            "https://mock.xata.sh/db/xata:main/tables/users/query",
-            {
-              "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
-              "headers": {
-                "Authorization": "Bearer 1234",
-                "Content-Type": "application/json",
-                "Host": "mock.xata.sh",
-              },
-              "method": "POST",
-            },
-          ],
-          [
-            "https://mock.xata.sh/db/xata:main",
-            {
-              "body": undefined,
-              "headers": {
-                "Authorization": "Bearer 1234",
-                "Content-Type": "application/json",
-                "Host": "mock.xata.sh",
-              },
-              "method": "GET",
-            },
-          ],
+          {
+            "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
+            "method": "POST",
+            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+          },
+          {
+            "body": undefined,
+            "method": "GET",
+            "url": "https://mock.xata.sh/db/xata:main",
+          },
         ]
       `);
     });
@@ -383,30 +354,16 @@ describe('query', () => {
 
       expect(result).toMatchInlineSnapshot(`
         [
-          [
-            "https://mock.xata.sh/db/xata:main/tables/users/query",
-            {
-              "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-              "headers": {
-                "Authorization": "Bearer 1234",
-                "Content-Type": "application/json",
-                "Host": "mock.xata.sh",
-              },
-              "method": "POST",
-            },
-          ],
-          [
-            "https://mock.xata.sh/db/xata:main",
-            {
-              "body": undefined,
-              "headers": {
-                "Authorization": "Bearer 1234",
-                "Content-Type": "application/json",
-                "Host": "mock.xata.sh",
-              },
-              "method": "GET",
-            },
-          ],
+          {
+            "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+            "method": "POST",
+            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+          },
+          {
+            "body": undefined,
+            "method": "GET",
+            "url": "https://mock.xata.sh/db/xata:main",
+          },
         ]
       `);
     });
@@ -427,30 +384,16 @@ describe('query', () => {
 
       expect(result).toMatchInlineSnapshot(`
         [
-          [
-            "https://mock.xata.sh/db/xata:main/tables/users/query",
-            {
-              "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-              "headers": {
-                "Authorization": "Bearer 1234",
-                "Content-Type": "application/json",
-                "Host": "mock.xata.sh",
-              },
-              "method": "POST",
-            },
-          ],
-          [
-            "https://mock.xata.sh/db/xata:main",
-            {
-              "body": undefined,
-              "headers": {
-                "Authorization": "Bearer 1234",
-                "Content-Type": "application/json",
-                "Host": "mock.xata.sh",
-              },
-              "method": "GET",
-            },
-          ],
+          {
+            "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+            "method": "POST",
+            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+          },
+          {
+            "body": undefined,
+            "method": "GET",
+            "url": "https://mock.xata.sh/db/xata:main",
+          },
         ]
       `);
     });
@@ -467,30 +410,16 @@ describe('read', () => {
 
     expect(result).toMatchInlineSnapshot(`
       [
-        [
-          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
-          {
-            "body": undefined,
-            "headers": {
-              "Authorization": "Bearer 1234",
-              "Content-Type": "application/json",
-              "Host": "mock.xata.sh",
-            },
-            "method": "GET",
-          },
-        ],
-        [
-          "https://mock.xata.sh/db/xata:main",
-          {
-            "body": undefined,
-            "headers": {
-              "Authorization": "Bearer 1234",
-              "Content-Type": "application/json",
-              "Host": "mock.xata.sh",
-            },
-            "method": "GET",
-          },
-        ],
+        {
+          "body": undefined,
+          "method": "GET",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
+        },
+        {
+          "body": undefined,
+          "method": "GET",
+          "url": "https://mock.xata.sh/db/xata:main",
+        },
       ]
     `);
   });
@@ -500,7 +429,7 @@ describe('Repository.update', () => {
   test('updates an object successfully', async () => {
     const { fetch, users } = buildClient();
 
-    const object = { id: 'rec_1234', xata: { version: 1 }, name: 'Ada' } as User;
+    const object = { id: 'rec_1234', xata: { version: 1 }, name: 'Ada' };
     const expected = [
       { method: 'PUT', path: `/tables/users/data/${object.id}`, body: object },
       { method: 'GET', path: `/tables/users/data/${object.id}` }
@@ -517,42 +446,21 @@ describe('Repository.update', () => {
 
     expect(result).toMatchInlineSnapshot(`
       [
-        [
-          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
-          {
-            "body": "{\\"id\\":\\"rec_1234\\",\\"name\\":\\"Ada\\"}",
-            "headers": {
-              "Authorization": "Bearer 1234",
-              "Content-Type": "application/json",
-              "Host": "mock.xata.sh",
-            },
-            "method": "PATCH",
-          },
-        ],
-        [
-          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
-          {
-            "body": undefined,
-            "headers": {
-              "Authorization": "Bearer 1234",
-              "Content-Type": "application/json",
-              "Host": "mock.xata.sh",
-            },
-            "method": "GET",
-          },
-        ],
-        [
-          "https://mock.xata.sh/db/xata:main",
-          {
-            "body": undefined,
-            "headers": {
-              "Authorization": "Bearer 1234",
-              "Content-Type": "application/json",
-              "Host": "mock.xata.sh",
-            },
-            "method": "GET",
-          },
-        ],
+        {
+          "body": "{\\"id\\":\\"rec_1234\\",\\"name\\":\\"Ada\\"}",
+          "method": "PATCH",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
+        },
+        {
+          "body": undefined,
+          "method": "GET",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
+        },
+        {
+          "body": undefined,
+          "method": "GET",
+          "url": "https://mock.xata.sh/db/xata:main",
+        },
       ]
     `);
   });
@@ -571,18 +479,11 @@ describe('Repository.delete', () => {
 
     expect(result).toMatchInlineSnapshot(`
       [
-        [
-          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
-          {
-            "body": undefined,
-            "headers": {
-              "Authorization": "Bearer 1234",
-              "Content-Type": "application/json",
-              "Host": "mock.xata.sh",
-            },
-            "method": "DELETE",
-          },
-        ],
+        {
+          "body": undefined,
+          "method": "DELETE",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
+        },
       ]
     `);
   });
@@ -615,42 +516,21 @@ describe('create', () => {
 
     expect(result).toMatchInlineSnapshot(`
       [
-        [
-          "https://mock.xata.sh/db/xata:main/tables/users/data",
-          {
-            "body": "{\\"name\\":\\"Ada\\"}",
-            "headers": {
-              "Authorization": "Bearer 1234",
-              "Content-Type": "application/json",
-              "Host": "mock.xata.sh",
-            },
-            "method": "POST",
-          },
-        ],
-        [
-          "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
-          {
-            "body": undefined,
-            "headers": {
-              "Authorization": "Bearer 1234",
-              "Content-Type": "application/json",
-              "Host": "mock.xata.sh",
-            },
-            "method": "GET",
-          },
-        ],
-        [
-          "https://mock.xata.sh/db/xata:main",
-          {
-            "body": undefined,
-            "headers": {
-              "Authorization": "Bearer 1234",
-              "Content-Type": "application/json",
-              "Host": "mock.xata.sh",
-            },
-            "method": "GET",
-          },
-        ],
+        {
+          "body": "{\\"name\\":\\"Ada\\"}",
+          "method": "POST",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data",
+        },
+        {
+          "body": undefined,
+          "method": "GET",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
+        },
+        {
+          "body": undefined,
+          "method": "GET",
+          "url": "https://mock.xata.sh/db/xata:main",
+        },
       ]
     `);
   });
