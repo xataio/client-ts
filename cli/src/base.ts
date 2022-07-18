@@ -2,6 +2,7 @@ import { Command, Flags } from '@oclif/core';
 import { getCurrentBranchName, Schemas, XataApiClient, XataApiClientOptions } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
+import { spawn } from 'child_process';
 import { cosmiconfigSync } from 'cosmiconfig';
 import dotenv from 'dotenv';
 import { readFile, writeFile } from 'fs/promises';
@@ -10,6 +11,7 @@ import path from 'path';
 import prompts from 'prompts';
 import slugify from 'slugify';
 import table from 'text-table';
+import which from 'which';
 import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
 import { getProfile } from './credentials.js';
@@ -574,5 +576,15 @@ export abstract class BaseCommand extends Command {
     }
 
     return prompts(options);
+  }
+
+  runCommand(command: string, args: string[]) {
+    this.log(`Running ${command} ${args.join(' ')}`);
+    return new Promise((resolve, reject) => {
+      spawn(which.sync(command), args, { stdio: 'inherit' }).on('exit', (code) => {
+        if (code && code > 0) return reject(new Error('Command failed'));
+        resolve(undefined);
+      });
+    });
   }
 }

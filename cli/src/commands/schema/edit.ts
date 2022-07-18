@@ -5,6 +5,11 @@ import clipboardy from 'clipboardy';
 import enquirer from 'enquirer';
 import { BaseCommand } from '../../base.js';
 import Codegen from '../codegen/index.js';
+import { defaultEditor, getEditor, allEditors } from 'env-editor';
+import { Flags } from '@oclif/core';
+import tmp from 'tmp';
+import { readFile, writeFile } from 'fs/promises';
+import { parseSchemaFile } from '../../schema.js';
 
 // The enquirer library has type definitions but they are very poor
 const { Select, Snippet, Confirm } = enquirer as any;
@@ -59,7 +64,10 @@ export default class EditSchema extends BaseCommand {
 
   static flags = {
     ...this.databaseURLFlag,
-    branch: this.branchFlag
+    branch: this.branchFlag,
+    source: Flags.boolean({
+      description: 'Edit the schema as a JSON document in your default editor'
+    })
   };
 
   static args = [];
@@ -68,6 +76,7 @@ export default class EditSchema extends BaseCommand {
   tables: EditableTable[] = [];
   workspace!: string;
   database!: string;
+  branch!: string;
 
   selectItem: EditableColumn | EditableTable | null = null;
 
@@ -76,10 +85,43 @@ export default class EditSchema extends BaseCommand {
     const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     this.workspace = workspace;
     this.database = database;
+    this.branch = branch;
 
     const xata = await this.getXataClient();
-    this.branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
-    if (!this.branchDetails) this.error('Could not get the schema from the current branch');
+    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+    if (!branchDetails) this.error('Could not get the schema from the current branch');
+
+    if (flags.source) {
+      await this.showSourceEditing(branchDetails);
+    } else {
+      await this.showInteractiveEditing(branchDetails);
+    }
+  }
+
+  async showSourceEditing(branchDetails: Schemas.DBBranch) {
+    // TODO: try-catch this, and in case of en error loop allEditors() and try to find one that exists with which.
+    const info = await defaultEditor();
+
+    const tmpobj = tmp.fileSync({ prefix: 'schema-', postfix: 'source.json' });
+    await writeFile(tmpobj.name, JSON.stringify(branchDetails.schema, null, 2));
+
+    // TODO: check other flags from other editors
+    const args = info.binary === 'code' ? ['-w', tmpobj.name] : [tmpobj.name];
+
+    await this.runCommand(info.binary, args);
+
+    const newSchema = await readFile(tmpobj.name, 'utf8');
+    const result = parseSchemaFile(newSchema);
+    if (!result.success) {
+      this.printZodError(result.error);
+      this.error('The schema is not valid. See the errors above');
+    }
+
+    await this.deploySchema(this.workspace, this.database, this.branch, result.data);
+  }
+
+  async showInteractiveEditing(branchDetails: Schemas.DBBranch) {
+    this.branchDetails = branchDetails;
     this.tables = this.branchDetails.schema.tables;
     await this.showSchema();
   }
