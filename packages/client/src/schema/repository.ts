@@ -73,6 +73,20 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract read(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 
   /**
+   * Queries a single record from the table by the id in the object.
+   * @param object Object containing the id of the record.
+   * @returns The persisted record for the given id or null if the record could not be found.
+   */
+  abstract read(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
+
+  /**
+   * Queries multiple records from the table by the ids in the objects.
+   * @param objects Array of objects containing the ids of the records.
+   * @returns The persisted records for the given ids (if a record could not be found it is not returned).
+   */
+  abstract read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+
+  /**
    * Partially update a single record.
    * @param object An object with its id and the columns to be updated.
    * @returns The full persisted record.
@@ -200,10 +214,42 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     if (Array.isArray(a)) {
       if (a.length === 0) return [];
 
-      const records = await this.#bulkInsertTableRecords(a);
-      await Promise.all(records.map((record) => this.#setCacheRecord(record)));
+      const [itemsWithoutIds, itemsWithIds, order] = a.reduce(
+        ([accWithoutIds, accWithIds, accOrder], item) => {
+          const condition = isString(item.id);
+          accOrder.push(condition);
 
-      return records;
+          if (condition) {
+            accWithIds.push(item);
+          } else {
+            accWithoutIds.push(item);
+          }
+
+          return [accWithoutIds, accWithIds, accOrder];
+        },
+        [[], [], []] as [EditableData<Data>[], EditableData<Data>[], boolean[]]
+      );
+
+      const recordsWithoutId = await this.#bulkInsertTableRecords(itemsWithoutIds);
+      await Promise.all(recordsWithoutId.map((record) => this.#setCacheRecord(record)));
+
+      if (itemsWithIds.length > 100) {
+        // TODO: Implement bulk update when API has support for it
+        console.warn('Bulk create operation with id is not optimized in the Xata API yet, this request might be slow');
+      }
+
+      // https://github.com/xataio/xata/issues/586
+      const recordsWithId = await Promise.all(itemsWithIds.map((object) => this.create(object)));
+
+      return order
+        .map((condition) => {
+          if (condition) {
+            return recordsWithId.shift();
+          } else {
+            return recordsWithoutId.shift();
+          }
+        })
+        .filter((record) => !!record) as SelectedPick<Record, ['*']>[];
     }
 
     // Create one record with id as param
@@ -283,7 +329,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return finalObject;
   }
 
-  async #bulkInsertTableRecords(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]> {
+  async #bulkInsertTableRecords(objects: EditableData<Data>[]): Promise<Readonly<SelectedPick<Record, ['*']>>[]> {
     const fetchProps = await this.#getFetchProps();
 
     const records = objects.map((object) => transformObjectLinks(object));
@@ -294,7 +340,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const finalObjects = await this.any(...response.recordIDs.map((id) => this.filter('id', id))).getAll();
+    const finalObjects = await this.read(response.recordIDs);
     if (finalObjects.length !== objects.length) {
       throw new Error('The server failed to save some records');
     }
@@ -305,24 +351,29 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
   async read(recordId: string): Promise<SelectedPick<Record, ['*']> | null>;
   async read(recordIds: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
-  async read(a: string | string[]) {
+  async read(object: Identifiable): Promise<SelectedPick<Record, ['*']> | null>;
+  async read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async read(a: string | string[] | Identifiable | Identifiable[]) {
     // Read many records
     if (Array.isArray(a)) {
       if (a.length === 0) return [];
 
-      return this.getAll({ filter: { id: { $any: a } } });
+      const ids = a.map((item) => (isString(item) ? item : item.id)).filter((id) => isString(id));
+
+      return this.getAll({ filter: { id: { $any: ids } } });
     }
 
     // Read one record
-    if (isString(a)) {
-      const cacheRecord = await this.#getCacheRecord(a);
+    const id = isString(a) ? a : a.id;
+    if (isString(id)) {
+      const cacheRecord = await this.#getCacheRecord(id);
       if (cacheRecord) return cacheRecord;
 
       const fetchProps = await this.#getFetchProps();
 
       try {
         const response = await getRecord({
-          pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId: a },
+          pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId: id },
           ...fetchProps
         });
 
@@ -558,7 +609,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     }
   }
 
-  async #setCacheRecord(record: SelectedPick<Record, ['*']>): Promise<void> {
+  async #setCacheRecord(record: Readonly<SelectedPick<Record, ['*']>>): Promise<void> {
     if (!this.#cache.cacheRecords) return;
     await this.#cache.set(`rec_${this.#table}:${record.id}`, record);
   }
