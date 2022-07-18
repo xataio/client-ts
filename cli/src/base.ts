@@ -579,7 +579,7 @@ export abstract class BaseCommand extends Command {
   }
 
   runCommand(command: string, args: string[]) {
-    this.log(`Running ${command} ${args.join(' ')}`);
+    this.info(`Running ${command} ${args.join(' ')}`);
     return new Promise((resolve, reject) => {
       spawn(which.sync(command), args, { stdio: 'inherit' }).on('exit', (code) => {
         if (code && code > 0) return reject(new Error('Command failed'));

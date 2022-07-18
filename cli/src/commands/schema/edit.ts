@@ -82,6 +82,19 @@ export default class EditSchema extends BaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(EditSchema);
+
+    if (flags.source) {
+      this.warn(
+        `This way of editing the schema doesn't detect renames of tables or columns. They are interpreted as deleting/adding tables and columns.
+Beware that this can lead to ${chalk.bold(
+          'data loss'
+        )}. Other ways of editing the schema that do not have this limitation are:
+* run the command without ${chalk.bold('--source')}
+* edit the schema in the Web UI. Use ${chalk.bold('xata browse')} to open the Web UI in your browser.`
+      );
+      this.log();
+    }
+
     const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     this.workspace = workspace;
     this.database = database;
