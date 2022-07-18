@@ -17,8 +17,8 @@ export type SearchOptions<Schemas extends Record<string, BaseData>, Tables exten
     | Values<{
         [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
           table: Model;
-          filter?: Filter<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
-          boosters?: Boosters<Schemas[Model] & SearchXataRecord>[];
+          filter?: Filter<SelectedPick<Schemas[Model] & XataRecord, ['*']>>;
+          boosters?: Boosters<Schemas[Model] & XataRecord>[];
         };
       }>
   >;
@@ -36,7 +36,7 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
         GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
       >]: {
         table: Model;
-        record: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
+        record: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>>;
       };
     }>[]
   >;
@@ -48,7 +48,7 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
       Schemas,
       Tables,
       GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
-    >]?: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]>;
+    >]?: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>[]>;
   }>;
 };
 
@@ -122,7 +122,7 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
   }
 }
 
-type SearchXataRecord = XataRecord<SearchExtraProperties>;
+export type SearchXataRecord<T extends XataRecord> = Omit<T, 'getMetadata'> & XataRecord<SearchExtraProperties>;
 
 type SearchExtraProperties = {
   /*
@@ -139,6 +139,10 @@ type SearchExtraProperties = {
           [key: string]: any;
         };
   };
+  /*
+   * The record's relevancy score. This is returned by the search APIs.
+   */
+  score?: number;
 };
 
 type ReturnTable<Table, Tables> = Table extends Tables ? Table : never;
