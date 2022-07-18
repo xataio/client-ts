@@ -116,6 +116,7 @@ Beware that this can lead to ${chalk.bold(
     const info = await defaultEditor();
 
     const tmpobj = tmp.fileSync({ prefix: 'schema-', postfix: 'source.json' });
+    // TODO: add a $schema to the document to allow autocomplete in editors such as vscode
     await writeFile(tmpobj.name, JSON.stringify(branchDetails.schema, null, 2));
 
     // TODO: check other flags from other editors
