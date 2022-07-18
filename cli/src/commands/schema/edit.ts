@@ -5,6 +5,12 @@ import clipboardy from 'clipboardy';
 import enquirer from 'enquirer';
 import { BaseCommand } from '../../base.js';
 import Codegen from '../codegen/index.js';
+import { defaultEditor, getEditor, allEditors } from 'env-editor';
+import { Flags } from '@oclif/core';
+import tmp from 'tmp';
+import { readFile, writeFile } from 'fs/promises';
+import { parseSchemaFile } from '../../schema.js';
+import which from 'which';
 
 // The enquirer library has type definitions but they are very poor
 const { Select, Snippet, Confirm } = enquirer as any;
@@ -30,6 +36,18 @@ type EditableTable = Table & {
 const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime'];
 const typesList = types.join(', ');
 const identifier = /^[a-zA-Z0-9-_~]+$/;
+
+const waitFlags: Record<string, string> = {
+  code: '-w',
+  'code-insiders': '-w',
+  vscodium: '-w',
+  sublime: '-w',
+  textmate: '-w',
+  atom: '--wait',
+  webstorm: '--wait',
+  intellij: '--wait',
+  xcode: '-w'
+};
 
 type SelectChoice = {
   name:
@@ -59,7 +77,10 @@ export default class EditSchema extends BaseCommand {
 
   static flags = {
     ...this.databaseURLFlag,
-    branch: this.branchFlag
+    branch: this.branchFlag,
+    source: Flags.boolean({
+      description: 'Edit the schema as a JSON document in your default editor'
+    })
   };
 
   static args = [];
@@ -68,18 +89,87 @@ export default class EditSchema extends BaseCommand {
   tables: EditableTable[] = [];
   workspace!: string;
   database!: string;
+  branch!: string;
 
   selectItem: EditableColumn | EditableTable | null = null;
 
   async run(): Promise<void> {
     const { flags } = await this.parse(EditSchema);
+
+    if (flags.source) {
+      this.warn(
+        `This way of editing the schema doesn't detect renames of tables or columns. They are interpreted as deleting/adding tables and columns.
+Beware that this can lead to ${chalk.bold(
+          'data loss'
+        )}. Other ways of editing the schema that do not have this limitation are:
+* run the command without ${chalk.bold('--source')}
+* edit the schema in the Web UI. Use ${chalk.bold('xata browse')} to open the Web UI in your browser.`
+      );
+      this.log();
+    }
+
     const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     this.workspace = workspace;
     this.database = database;
+    this.branch = branch;
 
     const xata = await this.getXataClient();
-    this.branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
-    if (!this.branchDetails) this.error('Could not get the schema from the current branch');
+    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+    if (!branchDetails) this.error('Could not get the schema from the current branch');
+
+    if (flags.source) {
+      await this.showSourceEditing(branchDetails);
+    } else {
+      await this.showInteractiveEditing(branchDetails);
+    }
+  }
+
+  async showSourceEditing(branchDetails: Schemas.DBBranch) {
+    const env = process.env.EDITOR || process.env.VISUAL;
+    if (!env) {
+      this.error(
+        `Could not find an editor. Please set the environment variable ${chalk.bold('EDITOR')} or ${chalk.bold(
+          'VISUAL'
+        )}`
+      );
+    }
+
+    const info = await getEditor(env);
+    // This honors the env value. For `code-insiders` for example, we don't want `code` to be used instead.
+    const binary = which.sync(env, { nothrow: true }) ? env : info.binary;
+
+    const tmpobj = tmp.fileSync({ prefix: 'schema-', postfix: 'source.json' });
+    // TODO: add a $schema to the document to allow autocomplete in editors such as vscode
+    await writeFile(tmpobj.name, JSON.stringify(branchDetails.schema, null, 2));
+
+    const waitFlag = waitFlags[info.id] || waitFlags[env];
+
+    if (!info.isTerminalEditor && !waitFlag) {
+      this.error(`The editor ${chalk.bold(env)} is a graphical editor that is not supported.`, {
+        suggestions: [
+          `Set the ${chalk.bold('EDITOR')} or ${chalk.bold('VISUAL')} variables to a different editor`,
+          `Open an issue at https://github.com/xataio/client-ts/issues/new?title=${encodeURIComponent(
+            `Support \`${info.binary}\` for schema editing`
+          )}`
+        ]
+      });
+    }
+
+    const args = [waitFlag, tmpobj.name].filter(Boolean);
+    await this.runCommand(binary, args);
+
+    const newSchema = await readFile(tmpobj.name, 'utf8');
+    const result = parseSchemaFile(newSchema);
+    if (!result.success) {
+      this.printZodError(result.error);
+      this.error('The schema is not valid. See the errors above');
+    }
+
+    await this.deploySchema(this.workspace, this.database, this.branch, result.data);
+  }
+
+  async showInteractiveEditing(branchDetails: Schemas.DBBranch) {
+    this.branchDetails = branchDetails;
     this.tables = this.branchDetails.schema.tables;
     await this.showSchema();
   }
