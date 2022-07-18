@@ -304,6 +304,11 @@ export type SortOrder = 'asc' | 'desc';
 export type FuzzinessExpression = number;
 
 /**
+ * If the prefix type is set to "disabled" (the default), the search only matches full words. If the prefix type is set to "phrase", the search will return results that match prefixes of the search phrase.
+ */
+export type PrefixExpression = 'phrase' | 'disabled';
+
+/**
  * @minProperties 1
  */
 export type FilterExpression = {

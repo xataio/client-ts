@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.13.4
+
+### Patch Changes
+
+- [#444](https://github.com/xataio/client-ts/pull/444) [`3c3a5af`](https://github.com/xataio/client-ts/commit/3c3a5afb1d5fb3295fd8cf6c2b66709a5c047507) Thanks [@SferaDev](https://github.com/SferaDev)! - Publish xata client on deno.land
+
 ## 0.13.3
 
 ### Patch Changes
