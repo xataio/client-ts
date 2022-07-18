@@ -2,4 +2,4 @@
 '@xata.io/client': patch
 ---
 
-Add search boosters
+Add search boosters and allow prefix search
