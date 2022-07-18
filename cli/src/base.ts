@@ -580,8 +580,12 @@ export abstract class BaseCommand extends Command {
 
   runCommand(command: string, args: string[]) {
     this.info(`Running ${command} ${args.join(' ')}`);
+    const fullPath = which.sync(command, { nothrow: true });
+    if (!fullPath) {
+      this.error(`Could not find binary ${command} in your PATH`);
+    }
     return new Promise((resolve, reject) => {
-      spawn(which.sync(command), args, { stdio: 'inherit' }).on('exit', (code) => {
+      spawn(fullPath, args, { stdio: 'inherit' }).on('exit', (code) => {
         if (code && code > 0) return reject(new Error('Command failed'));
         resolve(undefined);
       });

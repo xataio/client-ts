@@ -10,6 +10,7 @@ import { Flags } from '@oclif/core';
 import tmp from 'tmp';
 import { readFile, writeFile } from 'fs/promises';
 import { parseSchemaFile } from '../../schema.js';
+import which from 'which';
 
 // The enquirer library has type definitions but they are very poor
 const { Select, Snippet, Confirm } = enquirer as any;
@@ -35,6 +36,18 @@ type EditableTable = Table & {
 const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime'];
 const typesList = types.join(', ');
 const identifier = /^[a-zA-Z0-9-_~]+$/;
+
+const waitFlags: Record<string, string> = {
+  code: '-w',
+  'code-insiders': '-w',
+  vscodium: '-w',
+  sublime: '-w',
+  textmate: '-w',
+  atom: '--wait',
+  webstorm: '--wait',
+  intellij: '--wait',
+  xcode: '-w'
+};
 
 type SelectChoice = {
   name:
@@ -112,17 +125,38 @@ Beware that this can lead to ${chalk.bold(
   }
 
   async showSourceEditing(branchDetails: Schemas.DBBranch) {
-    // TODO: try-catch this, and in case of en error loop allEditors() and try to find one that exists with which.
-    const info = await defaultEditor();
+    const env = process.env.EDITOR || process.env.VISUAL;
+    if (!env) {
+      this.error(
+        `Could not find an editor. Please set the environment variable ${chalk.bold('EDITOR')} or ${chalk.bold(
+          'VISUAL'
+        )}`
+      );
+    }
+
+    const info = await getEditor(env);
+    // This honors the env value. For `code-insiders` for example, we don't want `code` to be used instead.
+    const binary = which.sync(env, { nothrow: true }) ? env : info.binary;
 
     const tmpobj = tmp.fileSync({ prefix: 'schema-', postfix: 'source.json' });
     // TODO: add a $schema to the document to allow autocomplete in editors such as vscode
     await writeFile(tmpobj.name, JSON.stringify(branchDetails.schema, null, 2));
 
-    // TODO: check other flags from other editors
-    const args = info.binary === 'code' ? ['-w', tmpobj.name] : [tmpobj.name];
+    const waitFlag = waitFlags[info.id] || waitFlags[env];
 
-    await this.runCommand(info.binary, args);
+    if (!info.isTerminalEditor && !waitFlag) {
+      this.error(`The editor ${chalk.bold(env)} is a graphical editor that is not supported.`, {
+        suggestions: [
+          `Set the ${chalk.bold('EDITOR')} or ${chalk.bold('VISUAL')} variables to a different editor`,
+          `Open an issue at https://github.com/xataio/client-ts/issues/new?title=${encodeURIComponent(
+            `Support \`${info.binary}\` for schema editing`
+          )}`
+        ]
+      });
+    }
+
+    const args = [waitFlag, tmpobj.name].filter(Boolean);
+    await this.runCommand(binary, args);
 
     const newSchema = await readFile(tmpobj.name, 'utf8');
     const result = parseSchemaFile(newSchema);
