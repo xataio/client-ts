@@ -1,5 +1,5 @@
 import { getBranchDetails, searchBranch } from '../api';
-import { FuzzinessExpression, HighlightExpression, Schema } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, PrefixExpression, Schema } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';
@@ -11,6 +11,7 @@ import { Boosters } from './boosters';
 
 export type SearchOptions<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = {
   fuzziness?: FuzzinessExpression;
+  prefix?: PrefixExpression;
   highlight?: HighlightExpression;
   tables?: Array<
     | Tables
@@ -96,12 +97,12 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
     getFetchProps: XataPluginOptions['getFetchProps']
   ) {
     const fetchProps = await getFetchProps();
-    const { tables, fuzziness, highlight } = options ?? {};
+    const { tables, fuzziness, highlight, prefix } = options ?? {};
 
     const { records } = await searchBranch({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
       // @ts-ignore https://github.com/xataio/client-ts/issues/313
-      body: { tables, query, fuzziness, highlight },
+      body: { tables, query, fuzziness, prefix, highlight },
       ...fetchProps
     });
 

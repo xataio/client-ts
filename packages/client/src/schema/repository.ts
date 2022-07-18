@@ -13,7 +13,7 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
-import { FuzzinessExpression, HighlightExpression, RecordsMetadata, Schema } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, PrefixExpression, RecordsMetadata, Schema } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
@@ -175,6 +175,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
     query: string,
     options?: {
       fuzziness?: FuzzinessExpression;
+      prefix?: PrefixExpression;
       highlight?: HighlightExpression;
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
@@ -547,6 +548,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     query: string,
     options: {
       fuzziness?: FuzzinessExpression;
+      prefix?: PrefixExpression;
       highlight?: HighlightExpression;
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
@@ -559,6 +561,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       body: {
         query,
         fuzziness: options.fuzziness,
+        prefix: options.prefix,
         highlight: options.highlight,
         filter: options.filter as Schemas.FilterExpression,
         boosters: options.boosters as Schemas.BoosterExpression[]
