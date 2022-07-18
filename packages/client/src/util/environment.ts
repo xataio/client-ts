@@ -15,6 +15,7 @@ interface Environment {
 }
 
 export function getEnvironment(): Environment {
+  // Fallback values read from global variables
   const fallbackValues = {
     apiKey: XATA_API_KEY,
     databaseURL: XATA_DATABASE_URL,
