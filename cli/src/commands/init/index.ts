@@ -1,6 +1,5 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
-import { spawn } from 'child_process';
 import { highlight } from 'cli-highlight';
 import { access, readFile, writeFile } from 'fs/promises';
 import path from 'path';
@@ -229,16 +228,6 @@ export default class Init extends BaseCommand {
     const command = await this.getPackageManager();
     const subcommand = command === 'yarn' ? 'add' : 'install';
     await this.runCommand(command, [subcommand, pkg]);
-  }
-
-  runCommand(command: string, args: string[]) {
-    this.log(`Running ${command} ${args.join(' ')}`);
-    return new Promise((resolve, reject) => {
-      spawn(which.sync(command), args, { stdio: 'inherit' }).on('exit', (code) => {
-        if (code && code > 0) return reject(new Error('Command failed'));
-        resolve(undefined);
-      });
-    });
   }
 
   async writeConfig() {
