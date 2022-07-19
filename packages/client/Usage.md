@@ -1,6 +1,6 @@
 # Xata SDK Reference
 
-There are four types of objects in the Xata TypeScript SDK:
+There are four types of objects in the Xata TypeScript SDK. In this document, we will understand them deeper to better work with the Xata SDK.
 
 - `Query`: a combination of filters and other parameters to retrieve a collection of records.
 - `Repository`: a table representation that can be used to create, read, update, and delete records.

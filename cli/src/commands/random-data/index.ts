@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import { Flags } from '@oclif/core';
 import { Column } from '@xata.io/codegen';
 import { BaseCommand } from '../../base.js';
+import { pluralize } from '../../utils.js';
 
 export default class RandomData extends BaseCommand {
   static description = 'Insert random data in the database';
@@ -49,10 +50,15 @@ export default class RandomData extends BaseCommand {
       }
       await xata.records.bulkInsertTableRecords(workspace, database, branch, table.name, records);
 
-      this.log(`Inserted ${flags.records} random records in table ${table.name}`);
+      this.log(`Inserted ${flags.records} random ${pluralize('record', flags.records)} in table ${table.name}`);
     }
 
-    this.log(`Inserted ${tables.length * flags.records} random records across ${tables.length} tables.`);
+    this.log(
+      `Inserted ${tables.length * flags.records} random records across ${tables.length} ${pluralize(
+        'table',
+        tables.length
+      )}.`
+    );
   }
 
   randomRecord(columns: Column[]) {

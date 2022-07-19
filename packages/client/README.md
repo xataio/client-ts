@@ -264,15 +264,8 @@ await client.workspaces.deleteWorkspace(workspace);
 
 ## Deno support
 
-Right now we are still not publishing the client on [deno.land](https://deno.land) or have support for deno in the codegen. However you can already use it with your preferred Node.js CDN with the following import in the auto-generated `xata.ts` file:
+We publish the client on [deno.land](https://deno.land/x/xata). You can use it by changing the import in the auto-generated `xata.ts` file:
 
 ```ts
-import {
-  BaseClient,
-  Query,
-  Repository,
-  RestRespositoryFactory,
-  XataClientOptions,
-  XataRecord
-} from 'https://esm.sh/@xata.io/client@<version>/dist/schema?target=deno';
+import { buildClient, BaseClientOptions, XataRecord } from 'https://deno.land/x/xata/mod.ts';
 ```
