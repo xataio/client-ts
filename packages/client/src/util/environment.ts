@@ -15,27 +15,19 @@ interface Environment {
 }
 
 export function getEnvironment(): Environment {
-  // Fallback values read from global variables
-  const fallbackValues = {
-    apiKey: XATA_API_KEY,
-    databaseURL: XATA_DATABASE_URL,
-    branch: XATA_BRANCH ?? VERCEL_GIT_COMMIT_REF ?? CF_PAGES_BRANCH ?? BRANCH,
-    fallbackBranch: XATA_FALLBACK_BRANCH
-  };
-
   // Node.js: process.env
   try {
     if (isObject(process) && isObject(process.env)) {
       return {
-        apiKey: process.env.XATA_API_KEY ?? fallbackValues.apiKey,
-        databaseURL: process.env.XATA_DATABASE_URL ?? fallbackValues.databaseURL,
+        apiKey: process.env.XATA_API_KEY ?? getGlobalApiKey(),
+        databaseURL: process.env.XATA_DATABASE_URL ?? getGlobalDatabaseURL(),
         branch:
           process.env.XATA_BRANCH ??
           process.env.VERCEL_GIT_COMMIT_REF ??
           process.env.CF_PAGES_BRANCH ??
           process.env.BRANCH ??
-          fallbackValues.branch,
-        fallbackBranch: process.env.XATA_FALLBACK_BRANCH ?? fallbackValues.fallbackBranch
+          getGlobalBranch(),
+        fallbackBranch: process.env.XATA_FALLBACK_BRANCH ?? getGlobalFallbackBranch()
       };
     }
   } catch (err) {
@@ -46,22 +38,59 @@ export function getEnvironment(): Environment {
     // Deno: Deno.env.get
     if (isObject(Deno) && isObject(Deno.env)) {
       return {
-        apiKey: Deno.env.get('XATA_API_KEY') ?? fallbackValues.apiKey,
-        databaseURL: Deno.env.get('XATA_DATABASE_URL') ?? fallbackValues.databaseURL,
+        apiKey: Deno.env.get('XATA_API_KEY') ?? getGlobalApiKey(),
+        databaseURL: Deno.env.get('XATA_DATABASE_URL') ?? getGlobalDatabaseURL(),
         branch:
           Deno.env.get('XATA_BRANCH') ??
           Deno.env.get('VERCEL_GIT_COMMIT_REF') ??
           Deno.env.get('CF_PAGES_BRANCH') ??
           Deno.env.get('BRANCH') ??
-          fallbackValues.branch,
-        fallbackBranch: Deno.env.get('XATA_FALLBACK_BRANCH') ?? fallbackValues.fallbackBranch
+          getGlobalBranch(),
+        fallbackBranch: Deno.env.get('XATA_FALLBACK_BRANCH') ?? getGlobalFallbackBranch()
       };
     }
   } catch (err) {
     // Ignore: Will fail if not using --allow-env
   }
 
-  return fallbackValues;
+  return {
+    apiKey: getGlobalApiKey(),
+    databaseURL: getGlobalDatabaseURL(),
+    branch: getGlobalBranch(),
+    fallbackBranch: getGlobalFallbackBranch()
+  };
+}
+
+function getGlobalApiKey(): string | undefined {
+  try {
+    return XATA_API_KEY;
+  } catch (err) {
+    return undefined;
+  }
+}
+
+function getGlobalDatabaseURL(): string | undefined {
+  try {
+    return XATA_DATABASE_URL;
+  } catch (err) {
+    return undefined;
+  }
+}
+
+function getGlobalBranch(): string | undefined {
+  try {
+    return XATA_BRANCH;
+  } catch (err) {
+    return undefined;
+  }
+}
+
+function getGlobalFallbackBranch(): string | undefined {
+  try {
+    return XATA_FALLBACK_BRANCH;
+  } catch (err) {
+    return undefined;
+  }
 }
 
 export async function getGitBranch(): Promise<string | undefined> {

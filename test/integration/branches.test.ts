@@ -7,7 +7,7 @@ import { XataApiClient } from '../../packages/client/src';
 import { getCurrentBranchName } from '../../packages/client/src/util/config';
 
 // Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.envrc') });
+dotenv.config({ path: join(process.cwd(), '.env') });
 
 const fetch = vi.fn(realFetch);
 
