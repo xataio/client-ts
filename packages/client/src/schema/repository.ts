@@ -295,18 +295,24 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     const records = objects.map((object) => transformObjectLinks(object));
 
-    const response = await bulkInsertTableRecords({
+    const { recordIDs } = await bulkInsertTableRecords({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
       body: { records },
       ...fetchProps
     });
 
-    const finalObjects = await this.read(response.recordIDs);
+    const finalObjects = await this.read(recordIDs);
     if (finalObjects.length !== objects.length) {
       throw new Error('The server failed to save some records');
     }
 
-    return finalObjects;
+    // Maintain order of objects
+    const dictionary = finalObjects.reduce((acc, object) => {
+      acc[object.id] = object;
+      return acc;
+    }, {} as Dictionary<Readonly<SelectedPick<Record, ['*']>>>);
+
+    return recordIDs.map((id) => dictionary[id]);
   }
 
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
