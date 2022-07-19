@@ -2242,6 +2242,10 @@ export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
 >;
 
 export type BulkInsertTableRecordsResponse = {
