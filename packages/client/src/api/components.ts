@@ -3075,6 +3075,7 @@ export type SearchTableRequestBody = {
   prefix?: Schemas.PrefixExpression;
   filter?: Schemas.FilterExpression;
   highlight?: Schemas.HighlightExpression;
+  boosters?: Schemas.BoosterExpression[];
 };
 
 export type SearchTableVariables = {
@@ -3131,6 +3132,7 @@ export type SearchBranchRequestBody = {
          */
         table: string;
         filter?: Schemas.FilterExpression;
+        boosters?: Schemas.BoosterExpression[];
       }
   )[];
   /*
