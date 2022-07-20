@@ -333,63 +333,79 @@ export type HighlightExpression = {
   encodeHTML?: boolean;
 };
 
-export type BoosterExpression = {
+/**
+ * Booster Expression
+ *
+ * @x-go-type xata.BoosterExpression
+ */
+export type BoosterExpression =
+  | {
+      valueBooster?: ValueBooster;
+    }
+  | {
+      numericBooster?: NumericBooster;
+    }
+  | {
+      dateBooster?: DateBooster;
+    };
+
+/**
+ * Boost records with a particular value for a column.
+ */
+export type ValueBooster = {
   /*
-   * Boost records with a particular value for a column.
+   * The column in which to look for the value.
    */
-  valueBooster?: {
-    /*
-     * The column in which to look for the value.
-     */
-    column: string;
-    /*
-     * The exact value to boost.
-     */
-    value: string | number | boolean;
-    /*
-     * The factor with which to multiply the score of the record.
-     */
-    factor: number;
-  };
+  column: string;
   /*
-   * Boost records based on the value of a numeric column.
+   * The exact value to boost.
    */
-  numericBooster?: {
-    /*
-     * The column in which to look for the value.
-     */
-    column: string;
-    /*
-     * The factor with which to multiply the value of the column before adding it to the item score.
-     */
-    factor: number;
-  };
+  value: string | number | boolean;
   /*
-   * Boost records based on the value of a datetime column. It is configured via "origin", "scale", and "decay". The further away from the "origin",
-   * the more the score is decayed. The decay function uses an exponential function. For example if origin is "now", and scale is 10 days and decay is 0.5, it
-   * should be interpreted as: a record with a date 10 days before/after origin will score 2 times less than a record with the date at origin.
+   * The factor with which to multiply the score of the record.
    */
-  dateBooster?: {
-    /*
-     * The column in which to look for the value.
-     */
-    column: string;
-    /*
-     * The datetime (formatted as RFC3339) from where to apply the score decay function. The maximum boost will be applied for records with values at this time.
-     * If it is not specified, the current date and time is used.
-     */
-    origin?: string;
-    /*
-     * The duration at which distance from origin the score is decayed with factor, using an exponential function. It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
-     *
-     * @pattern ^(\d+)(d|h|m|s|ms)$
-     */
-    scale: string;
-    /*
-     * The decay factor to expect at "scale" distance from the "origin".
-     */
-    decay: number;
-  };
+  factor: number;
+};
+
+/**
+ * Boost records based on the value of a numeric column.
+ */
+export type NumericBooster = {
+  /*
+   * The column in which to look for the value.
+   */
+  column: string;
+  /*
+   * The factor with which to multiply the value of the column before adding it to the item score.
+   */
+  factor: number;
+};
+
+/**
+ * Boost records based on the value of a datetime column. It is configured via "origin", "scale", and "decay". The further away from the "origin",
+ * the more the score is decayed. The decay function uses an exponential function. For example if origin is "now", and scale is 10 days and decay is 0.5, it
+ * should be interpreted as: a record with a date 10 days before/after origin will score 2 times less than a record with the date at origin.
+ */
+export type DateBooster = {
+  /*
+   * The column in which to look for the value.
+   */
+  column: string;
+  /*
+   * The datetime (formatted as RFC3339) from where to apply the score decay function. The maximum boost will be applied for records with values at this time.
+   * If it is not specified, the current date and time is used.
+   */
+  origin?: string;
+  /*
+   * The duration at which distance from origin the score is decayed with factor, using an exponential function. It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
+   *
+   * @pattern ^(\d+)(d|h|m|s|ms)$
+   */
+  scale: string;
+  /*
+   * The decay factor to expect at "scale" distance from the "origin".
+   */
+  decay: number;
 };
 
 export type FilterList = FilterExpression | FilterExpression[];

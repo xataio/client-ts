@@ -13,7 +13,7 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
-import { FuzzinessExpression, HighlightExpression, PrefixExpression, RecordsMetadata, Schema } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, PrefixExpression, RecordsMetadata } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
@@ -193,64 +193,38 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   #getFetchProps: () => Promise<FetcherExtraProps>;
   db: SchemaPluginResult<any>;
   #cache: CacheImpl;
-  #schema?: Schema;
+  #schemaTables?: Schemas.Table[];
 
-  constructor(options: { table: string; db: SchemaPluginResult<any>; pluginOptions: XataPluginOptions }) {
+  constructor(options: {
+    table: string;
+    db: SchemaPluginResult<any>;
+    pluginOptions: XataPluginOptions;
+    schemaTables?: Schemas.Table[];
+  }) {
     super(null, options.table, {});
 
     this.#table = options.table;
     this.#getFetchProps = options.pluginOptions.getFetchProps;
     this.db = options.db;
     this.#cache = options.pluginOptions.cache;
+    this.#schemaTables = options.schemaTables;
   }
 
-  async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
-  async create(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
-  async create(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]>;
+  async create(object: EditableData<Data>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create(recordId: string, object: EditableData<Data>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create(objects: EditableData<Data>[]): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async create(
     a: string | EditableData<Data> | EditableData<Data>[],
     b?: EditableData<Data>
-  ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
+  ): Promise<Readonly<SelectedPick<Record, ['*']>> | Readonly<SelectedPick<Record, ['*']>>[]> {
     // Create many records
     if (Array.isArray(a)) {
       if (a.length === 0) return [];
 
-      const [itemsWithoutIds, itemsWithIds, order] = a.reduce(
-        ([accWithoutIds, accWithIds, accOrder], item) => {
-          const condition = isString(item.id);
-          accOrder.push(condition);
+      const records = await this.#bulkInsertTableRecords(a);
+      await Promise.all(records.map((record) => this.#setCacheRecord(record)));
 
-          if (condition) {
-            accWithIds.push(item);
-          } else {
-            accWithoutIds.push(item);
-          }
-
-          return [accWithoutIds, accWithIds, accOrder];
-        },
-        [[], [], []] as [EditableData<Data>[], EditableData<Data>[], boolean[]]
-      );
-
-      const recordsWithoutId = await this.#bulkInsertTableRecords(itemsWithoutIds);
-      await Promise.all(recordsWithoutId.map((record) => this.#setCacheRecord(record)));
-
-      if (itemsWithIds.length > 100) {
-        // TODO: Implement bulk update when API has support for it
-        console.warn('Bulk create operation with id is not optimized in the Xata API yet, this request might be slow');
-      }
-
-      // https://github.com/xataio/xata/issues/586
-      const recordsWithId = await Promise.all(itemsWithIds.map((object) => this.create(object)));
-
-      return order
-        .map((condition) => {
-          if (condition) {
-            return recordsWithId.shift();
-          } else {
-            return recordsWithoutId.shift();
-          }
-        })
-        .filter((record) => !!record) as SelectedPick<Record, ['*']>[];
+      return records;
     }
 
     // Create one record with id as param
@@ -335,18 +309,24 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     const records = objects.map((object) => transformObjectLinks(object));
 
-    const response = await bulkInsertTableRecords({
+    const { recordIDs } = await bulkInsertTableRecords({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
       body: { records },
       ...fetchProps
     });
 
-    const finalObjects = await this.read(response.recordIDs);
+    const finalObjects = await this.read(recordIDs);
     if (finalObjects.length !== objects.length) {
       throw new Error('The server failed to save some records');
     }
 
-    return finalObjects;
+    // Maintain order of objects
+    const dictionary = finalObjects.reduce((acc, object) => {
+      acc[object.id] = object;
+      return acc;
+    }, {} as Dictionary<Readonly<SelectedPick<Record, ['*']>>>);
+
+    return recordIDs.map((id) => dictionary[id]);
   }
 
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
@@ -378,8 +358,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
           ...fetchProps
         });
 
-        const schema = await this.#getSchema();
-        return initObject(this.db, schema, this.#table, response);
+        const schemaTables = await this.#getSchemaTables();
+        return initObject(this.db, schemaTables, this.#table, response);
       } catch (e) {
         if (isObject(e) && e.status === 404) {
           return null;
@@ -569,8 +549,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const schema = await this.#getSchema();
-    return records.map((item) => initObject(this.db, schema, this.#table, item)) as any;
+    const schemaTables = await this.#getSchemaTables();
+    return records.map((item) => initObject(this.db, schemaTables, this.#table, item)) as any;
   }
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
@@ -593,8 +573,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const schema = await this.#getSchema();
-    const records = objects.map((record) => initObject<Result>(this.db, schema, this.#table, record));
+    const schemaTables = await this.#getSchemaTables();
+    const records = objects.map((record) => initObject<Result>(this.db, schemaTables, this.#table, record));
     await this.#setCacheQuery(query, meta, records);
 
     return new Page<Record, Result>(query, meta, records);
@@ -640,8 +620,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     return hasExpired ? null : result;
   }
 
-  async #getSchema(): Promise<Schema> {
-    if (this.#schema) return this.#schema;
+  async #getSchemaTables(): Promise<Schemas.Table[]> {
+    if (this.#schemaTables) return this.#schemaTables;
     const fetchProps = await this.#getFetchProps();
 
     const { schema } = await getBranchDetails({
@@ -649,8 +629,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    this.#schema = schema;
-    return schema;
+    this.#schemaTables = schema.tables;
+    return schema.tables;
   }
 }
 
@@ -666,7 +646,7 @@ const transformObjectLinks = (object: any) => {
 
 export const initObject = <T>(
   db: Record<string, Repository<any>>,
-  schema: Schema,
+  schemaTables: Schemas.Table[],
   table: string,
   object: Record<string, unknown>
 ) => {
@@ -674,7 +654,7 @@ export const initObject = <T>(
   const { xata, ...rest } = object ?? {};
   Object.assign(result, rest);
 
-  const { columns } = schema.tables.find(({ name }) => name === table) ?? {};
+  const { columns } = schemaTables.find(({ name }) => name === table) ?? {};
   if (!columns) console.error(`Table ${table} not found in schema`);
 
   for (const column of columns ?? []) {
@@ -698,7 +678,7 @@ export const initObject = <T>(
         if (!linkTable) {
           console.error(`Failed to parse link for field ${column.name}`);
         } else if (isObject(value)) {
-          result[column.name] = initObject(db, schema, linkTable, value);
+          result[column.name] = initObject(db, schemaTables, linkTable, value);
         }
 
         break;
