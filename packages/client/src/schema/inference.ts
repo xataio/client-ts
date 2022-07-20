@@ -27,7 +27,7 @@ type TableType<Tables, TableName> = Tables & { name: TableName } extends infer T
   ? Table extends { name: string; columns: infer Columns }
     ? Columns extends readonly unknown[]
       ? Columns[number] extends { name: string; type: string }
-        ? { [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> } & XataRecord
+        ? { [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> }
         : never
       : never
     : never
@@ -54,7 +54,7 @@ type PropertyType<Tables, Properties, PropertyName> = Properties & { name: Prope
             : Type extends 'object'
             ? ObjectColumns extends readonly unknown[]
               ? ObjectColumns[number] extends { name: string; type: string }
-                ? { [K in ObjectColumns[number]['name']]: PropertyType<Tables, ObjectColumns[number], K> }
+                ? { [K in ObjectColumns[number]['name']]?: PropertyType<Tables, ObjectColumns[number], K> }
                 : never
               : never
             : Type extends 'link'

@@ -1,4 +1,4 @@
-import { BaseClientOptions, buildClient, SchemaInference } from '../../client/src';
+import { BaseClientOptions, buildClient, SchemaInference, XataRecord } from '../../client/src';
 
 const tables = [
   {
@@ -35,8 +35,11 @@ const tables = [
 export type SchemaTables = typeof tables;
 export type DatabaseSchema = SchemaInference<SchemaTables>;
 
-export type TeamRecord = DatabaseSchema['teams'];
-export type UserRecord = DatabaseSchema['users'];
+export type Team = DatabaseSchema['teams'];
+export type TeamRecord = Team & XataRecord;
+
+export type User = DatabaseSchema['users'];
+export type UserRecord = User & XataRecord;
 
 const DatabaseClient = buildClient();
 

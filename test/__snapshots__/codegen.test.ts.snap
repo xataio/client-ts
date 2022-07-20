@@ -5,6 +5,7 @@ exports[`generate > should respect case naming 1`] = `
   BaseClientOptions,
   buildClient,
   SchemaInference,
+  XataRecord,
 } from \\"@xata.io/client\\";
 
 const tables = [
@@ -29,8 +30,11 @@ const tables = [
 export type SchemaTables = typeof tables;
 export type DatabaseSchema = SchemaInference<SchemaTables>;
 
-export type TeamRecord = DatabaseSchema[\\"teams\\"];
-export type UserRecord = DatabaseSchema[\\"users\\"];
+export type TeamsLike = DatabaseSchema[\\"teams_Like\\"];
+export type TeamsLikeRecord = TeamsLike & XataRecord;
+
+export type UsersFoo = DatabaseSchema[\\"users-foo\\"];
+export type UsersFooRecord = UsersFoo & XataRecord;
 
 const DatabaseClient = buildClient();
 
@@ -47,6 +51,7 @@ exports[`generate > should respect numbers in names 1`] = `
   BaseClientOptions,
   buildClient,
   SchemaInference,
+  XataRecord,
 } from \\"@xata.io/client\\";
 
 const tables = [
@@ -62,8 +67,8 @@ const tables = [
 export type SchemaTables = typeof tables;
 export type DatabaseSchema = SchemaInference<SchemaTables>;
 
-export type TeamRecord = DatabaseSchema[\\"teams\\"];
-export type UserRecord = DatabaseSchema[\\"users\\"];
+export type $1teamsCase = DatabaseSchema[\\"1teams-case\\"];
+export type $1teamsCaseRecord = $1teamsCase & XataRecord;
 
 const DatabaseClient = buildClient();
 
