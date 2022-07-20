@@ -9,8 +9,8 @@ import {
   PAGINATION_MAX_OFFSET,
   PAGINATION_MAX_SIZE
 } from '../../packages/client/src/schema/pagination';
-import { User, UserRecord, XataClient } from '../../packages/codegen/example/xata';
-import { mockUsers, teamColumns, userColumns } from '../mock_data';
+import { UserRecord, XataClient } from '../../packages/codegen/example/xata';
+import { animalUsers, fruitUsers, mockUsers, ownerAnimals, ownerFruits, teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.envrc') });
@@ -50,30 +50,30 @@ beforeAll(async () => {
   await api.tables.setTableSchema(workspace, databaseName, 'main', 'teams', { columns: teamColumns });
   await api.tables.setTableSchema(workspace, databaseName, 'main', 'users', { columns: userColumns });
 
-  await client.db.users.create(mockUsers);
+  const { id: ownerAnimalsId } = await client.db.users.create(ownerAnimals);
+  const { id: ownerFruitsId } = await client.db.users.create(ownerFruits);
 
-  const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getFirst();
-  const ownerFruits = await client.db.users.filter('full_name', 'Owner of team fruits').getFirst();
-  if (!ownerAnimals || !ownerFruits) {
-    throw new Error('Could not find owner of team animals or owner of team fruits');
-  }
-
-  await client.db.teams.create({
+  const fruitsTeam = await client.db.teams.create({
     name: 'Team fruits',
     labels: ['apple', 'banana', 'orange'],
-    owner: ownerFruits
+    owner: ownerFruitsId
   });
 
-  await client.db.teams.create({
+  const animalsTeam = await client.db.teams.create({
     name: 'Team animals',
     labels: ['monkey', 'lion', 'eagle', 'dolphin'],
-    owner: ownerAnimals
+    owner: ownerAnimalsId
   });
 
   await client.db.teams.create({
     name: 'Mixed team fruits & animals',
     labels: ['monkey', 'banana', 'apple', 'dolphin']
   });
+
+  await client.db.users.create([
+    ...animalUsers.map((item) => ({ ...item, team: animalsTeam })),
+    ...fruitUsers.map((item) => ({ ...item, team: fruitsTeam }))
+  ]);
 });
 
 afterAll(async () => {
@@ -234,6 +234,14 @@ describe('integration tests', () => {
     expect(records2).toHaveLength(10);
   });
 
+  test('returns many records extended array map works as expected', async () => {
+    const records1 = await client.db.users.filter('team.name', 'Team fruits').getMany();
+    const records2 = records1.map((item) => ({ ...item }));
+
+    expect(records1.length).toBeGreaterThan(0);
+    expect(records1.length).toBe(records2.length);
+  });
+
   test('returns many records with cursor', async () => {
     const size = Math.floor(mockUsers.length / 1.5);
     const lastPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
@@ -310,7 +318,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements pagination', async () => {
-    const loadUsers = async (repository: Repository<User>) => {
+    const loadUsers = async (repository: Repository<UserRecord>) => {
       return repository.getPaginated({ pagination: { size: 10 } });
     };
 
@@ -488,7 +496,7 @@ describe('integration tests', () => {
   });
 
   test('multiple errors in one response', async () => {
-    const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as User[];
+    const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as UserRecord[];
 
     expect(client.db.users.create(invalidUsers)).rejects.toHaveProperty('status', 400);
   });

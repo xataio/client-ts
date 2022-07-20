@@ -106,9 +106,10 @@ export function isCursorPaginationOptions(
 export class RecordArray<Result extends XataRecord> extends Array<Result> {
   #page: Paginable<Result, Result>;
 
-  constructor(page: Paginable<any, Result>, overrideRecords?: Result[]) {
-    super(...RecordArray.parseConstructorParams(page, overrideRecords));
-    this.#page = page;
+  constructor(page: Paginable<any, Result>, overrideRecords?: Result[]);
+  constructor(...args: any[]) {
+    super(...RecordArray.parseConstructorParams(...args));
+    this.#page = args[0];
   }
 
   static parseConstructorParams(...args: any[]) {
