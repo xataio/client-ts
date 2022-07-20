@@ -1,3 +1,5 @@
+import Case from 'case';
+import pluralize from 'pluralize';
 import prettier, { BuiltInParserName } from 'prettier';
 import * as parserJavascript from 'prettier/parser-babel.js';
 import * as parserTypeScript from 'prettier/parser-typescript.js';
@@ -20,6 +22,16 @@ export type GenerateOutput = {
 export type Language = 'typescript' | 'javascript';
 export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
+function getTypeName(tableName: string) {
+  const pascal = Case.pascal(tableName);
+  const name = pluralize.singular(pascal);
+
+  // If table starts with a number, prepend a $ sign
+  if (name.match(/^\d/)) return `$${name}`;
+
+  return name;
+}
+
 export async function generate({
   schema,
   databaseURL,
@@ -31,7 +43,7 @@ export async function generate({
   const parser = prettierParsers[language];
 
   const code = `
-    import { BaseClientOptions, buildClient, SchemaInference } from '@xata.io/client';
+    import { BaseClientOptions, buildClient, SchemaInference, XataRecord } from '@xata.io/client';
 
     ${
       language === 'javascript'
@@ -44,8 +56,15 @@ export async function generate({
     export type SchemaTables = typeof tables;
     export type DatabaseSchema = SchemaInference<SchemaTables>;
 
-    export type TeamRecord = DatabaseSchema['teams'];
-    export type UserRecord = DatabaseSchema['users'];
+    ${tables
+      .map(
+        (table) =>
+          `
+            export type ${getTypeName(table.name)} = DatabaseSchema['${table.name}'];
+            export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;
+          `
+      )
+      .join('\n')}
 
     ${language === 'javascript' ? `/** @type { import('@xata.io/client').ClientConstructor<{}> } */` : ''}
     const DatabaseClient = buildClient();
