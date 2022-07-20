@@ -13,7 +13,7 @@ import { User, UserRecord, XataClient } from '../../packages/codegen/example/xat
 import { mockUsers, teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.envrc') });
+dotenv.config({ path: join(process.cwd(), '.env') });
 
 let client: XataClient;
 let schemaLessclient: BaseClient;

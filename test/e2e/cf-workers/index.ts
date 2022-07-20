@@ -18,7 +18,7 @@ async function main() {
   const deploymentUrl = `https://${appName}.${accountDomain}.workers.dev`;
 
   // Install client
-  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG} --no-save`, { cwd: __dirname });
+  execSync(`npm install file:../../../packages/client --no-save`, { cwd: __dirname });
 
   try {
     // Publish the app to CF

@@ -7,7 +7,7 @@ import { XataClient } from '../../packages/codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.envrc') });
+dotenv.config({ path: join(process.cwd(), '.env') });
 
 let client: XataClient;
 let databaseName: string;

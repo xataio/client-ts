@@ -6,7 +6,7 @@ import { BaseClientOptions, buildClient, SchemaInference, XataApiClient } from '
 import { Column } from '../../packages/client/src/api/schemas';
 
 // Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.envrc') });
+dotenv.config({ path: join(process.cwd(), '.env') });
 
 const DatabaseClient = buildClient();
 
