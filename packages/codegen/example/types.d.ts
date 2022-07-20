@@ -1,26 +1,68 @@
-import { BaseClientOptions, XataRecord } from '../../client/src';
-export interface Team {
-  name?: string | null;
-  labels?: string[] | null;
-  owner?: UserRecord | null;
-}
-export declare type TeamRecord = Team & XataRecord;
-export interface User {
-  email?: string | null;
-  full_name?: string | null;
-  address?: {
-    street?: string | null;
-    zipcode?: number | null;
-  } | null;
-  team?: TeamRecord | null;
-}
-export declare type UserRecord = User & XataRecord;
-export declare type DatabaseSchema = {
-  teams: Team;
-  users: User;
-};
+import { BaseClientOptions, SchemaInference } from '../../client/src';
+declare const tables: readonly [
+  {
+    readonly name: 'teams';
+    readonly columns: readonly [
+      {
+        readonly name: 'name';
+        readonly type: 'string';
+        readonly unique: true;
+        readonly description: 'Name of the team';
+      },
+      {
+        readonly name: 'labels';
+        readonly type: 'multiple';
+      },
+      {
+        readonly name: 'owner';
+        readonly type: 'link';
+        readonly link: {
+          readonly table: 'users';
+        };
+      }
+    ];
+  },
+  {
+    readonly name: 'users';
+    readonly columns: readonly [
+      {
+        readonly name: 'email';
+        readonly type: 'email';
+      },
+      {
+        readonly name: 'full_name';
+        readonly type: 'string';
+      },
+      {
+        readonly name: 'address';
+        readonly type: 'object';
+        readonly columns: readonly [
+          {
+            readonly name: 'street';
+            readonly type: 'string';
+          },
+          {
+            readonly name: 'zipcode';
+            readonly type: 'int';
+          }
+        ];
+      },
+      {
+        readonly name: 'team';
+        readonly type: 'link';
+        readonly link: {
+          readonly table: 'teams';
+        };
+      }
+    ];
+  }
+];
+export declare type SchemaTables = typeof tables;
+export declare type DatabaseSchema = SchemaInference<SchemaTables>;
+export declare type TeamRecord = DatabaseSchema['teams'];
+export declare type UserRecord = DatabaseSchema['users'];
 declare const DatabaseClient: any;
-export declare class XataClient extends DatabaseClient<DatabaseSchema> {
+export declare class XataClient extends DatabaseClient<SchemaTables> {
   constructor(options?: BaseClientOptions);
 }
 export {};

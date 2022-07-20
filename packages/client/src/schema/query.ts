@@ -305,16 +305,16 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<RecordArray<Result>>;
+  getMany<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
+    options: Options
+  ): Promise<RecordArray<SelectedPick<Record, typeof options['columns']>>>;
 
   /**
    * Performs the query in the database and returns a set of results.
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getMany<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
-    options: Options
-  ): Promise<RecordArray<SelectedPick<Record, typeof options['columns']>>>;
+  getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<RecordArray<Result>>;
 
   async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<RecordArray<Result>> {
     const page = await this.getPaginated(options);
@@ -340,7 +340,9 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getAll(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'> & { batchSize?: number }): Promise<Result[]>;
+  getAll<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'> & { batchSize?: number }>(
+    options: Options
+  ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
 
   /**
    * Performs the query in the database and returns all the results.
@@ -348,9 +350,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getAll<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'> & { batchSize?: number }>(
-    options: Options
-  ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
+  getAll(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'> & { batchSize?: number }): Promise<Result[]>;
 
   async getAll<Result extends XataRecord>(
     options: QueryOptions<Record> & { batchSize?: number } = {}
@@ -377,16 +377,16 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns The first record that matches the query, or null if no record matched the query.
    */
-  getFirst(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'>): Promise<Result | null>;
+  getFirst<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'>>(
+    options: Options
+  ): Promise<SelectedPick<Record, typeof options['columns']> | null>;
 
   /**
    * Performs the query in the database and returns the first result.
    * @param options Additional options to be used when performing the query.
    * @returns The first record that matches the query, or null if no record matched the query.
    */
-  getFirst<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'>>(
-    options: Options
-  ): Promise<SelectedPick<Record, typeof options['columns']> | null>;
+  getFirst(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'>): Promise<Result | null>;
 
   async getFirst<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
     const records = await this.getMany({ ...options, pagination: { size: 1 } });
