@@ -1,34 +1,44 @@
 // Vitest Snapshot v1
 
 exports[`generate > should respect case naming 1`] = `
-"import { buildClient, BaseClientOptions, XataRecord } from \\"@xata.io/client\\";
+"import {
+  BaseClientOptions,
+  buildClient,
+  SchemaInference,
+  XataRecord,
+} from \\"@xata.io/client\\";
 
-export interface TeamsLike {
-  \\"name-test\\"?: string | null;
-  labels_Test?: string[] | null;
-  ownerFoo?: UsersFooRecord | null;
-}
+const tables = [
+  {
+    name: \\"teams_Like\\",
+    columns: [
+      { name: \\"name-test\\", type: \\"string\\" },
+      { name: \\"labels_Test\\", type: \\"multiple\\" },
+      { name: \\"ownerFoo\\", type: \\"link\\", link: { table: \\"users-foo\\" } },
+    ],
+  },
+  {
+    name: \\"users-foo\\",
+    columns: [
+      { name: \\"email-random\\", type: \\"email\\" },
+      { name: \\"full_name\\", type: \\"string\\" },
+      { name: \\"teamLike\\", type: \\"link\\", link: { table: \\"teams_Like\\" } },
+    ],
+  },
+] as const;
 
+export type SchemaTables = typeof tables;
+export type DatabaseSchema = SchemaInference<SchemaTables>;
+
+export type TeamsLike = DatabaseSchema[\\"teams_Like\\"];
 export type TeamsLikeRecord = TeamsLike & XataRecord;
 
-export interface UsersFoo {
-  \\"email-random\\"?: string | null;
-  full_name?: string | null;
-  teamLike?: TeamsLikeRecord | null;
-}
-
+export type UsersFoo = DatabaseSchema[\\"users-foo\\"];
 export type UsersFooRecord = UsersFoo & XataRecord;
-
-export type DatabaseSchema = {
-  teams_Like: TeamsLike;
-  \\"users-foo\\": UsersFoo;
-};
-
-const tables = [\\"teams_Like\\", \\"users-foo\\"];
 
 const DatabaseClient = buildClient();
 
-export class XataClient extends DatabaseClient<DatabaseSchema> {
+export class XataClient extends DatabaseClient<SchemaTables> {
   constructor(options?: BaseClientOptions) {
     super({ databaseURL: \\"\\", ...options }, tables);
   }
@@ -37,24 +47,32 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
 `;
 
 exports[`generate > should respect numbers in names 1`] = `
-"import { buildClient, BaseClientOptions, XataRecord } from \\"@xata.io/client\\";
+"import {
+  BaseClientOptions,
+  buildClient,
+  SchemaInference,
+  XataRecord,
+} from \\"@xata.io/client\\";
 
-export interface $1teamsCase {
-  \\"2nameCase\\"?: string | null;
-  \\"3Labels\\"?: string[] | null;
-}
+const tables = [
+  {
+    name: \\"1teams-case\\",
+    columns: [
+      { name: \\"2nameCase\\", type: \\"string\\" },
+      { name: \\"3Labels\\", type: \\"multiple\\" },
+    ],
+  },
+] as const;
 
+export type SchemaTables = typeof tables;
+export type DatabaseSchema = SchemaInference<SchemaTables>;
+
+export type $1teamsCase = DatabaseSchema[\\"1teams-case\\"];
 export type $1teamsCaseRecord = $1teamsCase & XataRecord;
-
-export type DatabaseSchema = {
-  \\"1teams-case\\": $1teamsCase;
-};
-
-const tables = [\\"1teams-case\\"];
 
 const DatabaseClient = buildClient();
 
-export class XataClient extends DatabaseClient<DatabaseSchema> {
+export class XataClient extends DatabaseClient<SchemaTables> {
   constructor(options?: BaseClientOptions) {
     super({ databaseURL: \\"\\", ...options }, tables);
   }

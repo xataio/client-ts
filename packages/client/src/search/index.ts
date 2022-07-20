@@ -1,5 +1,5 @@
-import { getBranchDetails, searchBranch } from '../api';
-import { FuzzinessExpression, HighlightExpression, Schema } from '../api/schemas';
+import { getBranchDetails, Schemas, searchBranch } from '../api';
+import { FuzzinessExpression, HighlightExpression } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';
@@ -51,22 +51,23 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
 };
 
 export class SearchPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
-  #schema?: Schema;
+  #schemaTables?: Schemas.Table[];
 
-  constructor(private db: SchemaPluginResult<Schemas>) {
+  constructor(private db: SchemaPluginResult<Schemas>, schemaTables?: Schemas.Table[]) {
     super();
+    this.#schemaTables = schemaTables;
   }
 
   build({ getFetchProps }: XataPluginOptions): SearchPluginResult<Schemas> {
     return {
       all: async <Tables extends StringKeys<Schemas>>(query: string, options: SearchOptions<Schemas, Tables> = {}) => {
         const records = await this.#search(query, options, getFetchProps);
-        const schema = await this.#getSchema(getFetchProps);
+        const schemaTables = await this.#getSchemaTables(getFetchProps);
 
         return records.map((record) => {
           const { table = 'orphan' } = record.xata;
 
-          return { table, record: initObject(this.db, schema, table, record) } as any;
+          return { table, record: initObject(this.db, schemaTables, table, record) } as any;
         });
       },
       byTable: async <Tables extends StringKeys<Schemas>>(
@@ -74,13 +75,13 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
         options: SearchOptions<Schemas, Tables> = {}
       ) => {
         const records = await this.#search(query, options, getFetchProps);
-        const schema = await this.#getSchema(getFetchProps);
+        const schemaTables = await this.#getSchemaTables(getFetchProps);
 
         return records.reduce((acc, record) => {
           const { table = 'orphan' } = record.xata;
 
           const items = acc[table] ?? [];
-          const item = initObject(this.db, schema, table, record);
+          const item = initObject(this.db, schemaTables, table, record);
 
           return { ...acc, [table]: [...items, item] };
         }, {} as any);
@@ -106,8 +107,8 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
     return records;
   }
 
-  async #getSchema(getFetchProps: XataPluginOptions['getFetchProps']): Promise<Schema> {
-    if (this.#schema) return this.#schema;
+  async #getSchemaTables(getFetchProps: XataPluginOptions['getFetchProps']): Promise<Schemas.Table[]> {
+    if (this.#schemaTables) return this.#schemaTables;
     const fetchProps = await getFetchProps();
 
     const { schema } = await getBranchDetails({
@@ -115,8 +116,8 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
       ...fetchProps
     });
 
-    this.#schema = schema;
-    return schema;
+    this.#schemaTables = schema.tables;
+    return schema.tables;
   }
 }
 

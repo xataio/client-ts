@@ -32,7 +32,6 @@
     "@changesets/cli": "^2.23.2",
     "@openapi-codegen/cli": "^1.5.2",
     "@openapi-codegen/typescript": "^4.0.1",
-    "@rollup/plugin-node-resolve": "^13.3.0",
     "@size-limit/preset-small-lib": "^7.0.8",
     "@types/node": "^18.0.6",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
