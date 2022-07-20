@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import compact from 'lodash.compact';
 import { BaseCommand } from '../../base.js';
 import { currentGitBranch, isGitRepo, listBranches } from '../../git.js';
 export default class BranchesList extends BaseCommand {
@@ -48,7 +48,7 @@ export default class BranchesList extends BaseCommand {
     const rows = data.map((b) => [
       b.name,
       this.formatDate(b.createdAt),
-      _.compact([
+      compact([
         b.mapping ?? b.git.found ? b.name : '-',
         b.git.current
           ? '(Current)'
