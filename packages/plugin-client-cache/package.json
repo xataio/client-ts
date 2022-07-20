@@ -20,10 +20,10 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@xata.io/client": "^0.13.0"
+    "@xata.io/client": "^0.13.4"
   },
   "devDependencies": {
-    "lru-cache": "^7.12.0"
+    "lru-cache": "^7.13.1"
   },
   "peerDependencies": {
     "lru-cache": "^7"

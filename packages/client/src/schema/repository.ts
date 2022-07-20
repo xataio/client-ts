@@ -202,53 +202,21 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     this.#schemaTables = options.schemaTables;
   }
 
-  async create(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
-  async create(recordId: string, object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
-  async create(objects: EditableData<Data>[]): Promise<SelectedPick<Record, ['*']>[]>;
+  async create(object: EditableData<Data>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create(recordId: string, object: EditableData<Data>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create(objects: EditableData<Data>[]): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async create(
     a: string | EditableData<Data> | EditableData<Data>[],
     b?: EditableData<Data>
-  ): Promise<SelectedPick<Record, ['*']> | SelectedPick<Record, ['*']>[]> {
+  ): Promise<Readonly<SelectedPick<Record, ['*']>> | Readonly<SelectedPick<Record, ['*']>>[]> {
     // Create many records
     if (Array.isArray(a)) {
       if (a.length === 0) return [];
 
-      const [itemsWithoutIds, itemsWithIds, order] = a.reduce(
-        ([accWithoutIds, accWithIds, accOrder], item) => {
-          const condition = isString(item.id);
-          accOrder.push(condition);
+      const records = await this.#bulkInsertTableRecords(a);
+      await Promise.all(records.map((record) => this.#setCacheRecord(record)));
 
-          if (condition) {
-            accWithIds.push(item);
-          } else {
-            accWithoutIds.push(item);
-          }
-
-          return [accWithoutIds, accWithIds, accOrder];
-        },
-        [[], [], []] as [EditableData<Data>[], EditableData<Data>[], boolean[]]
-      );
-
-      const recordsWithoutId = await this.#bulkInsertTableRecords(itemsWithoutIds);
-      await Promise.all(recordsWithoutId.map((record) => this.#setCacheRecord(record)));
-
-      if (itemsWithIds.length > 100) {
-        // TODO: Implement bulk update when API has support for it
-        console.warn('Bulk create operation with id is not optimized in the Xata API yet, this request might be slow');
-      }
-
-      // https://github.com/xataio/xata/issues/586
-      const recordsWithId = await Promise.all(itemsWithIds.map((object) => this.create(object)));
-
-      return order
-        .map((condition) => {
-          if (condition) {
-            return recordsWithId.shift();
-          } else {
-            return recordsWithoutId.shift();
-          }
-        })
-        .filter((record) => !!record) as SelectedPick<Record, ['*']>[];
+      return records;
     }
 
     // Create one record with id as param
@@ -333,18 +301,24 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     const records = objects.map((object) => transformObjectLinks(object));
 
-    const response = await bulkInsertTableRecords({
+    const { recordIDs } = await bulkInsertTableRecords({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
       body: { records },
       ...fetchProps
     });
 
-    const finalObjects = await this.read(response.recordIDs);
+    const finalObjects = await this.read(recordIDs);
     if (finalObjects.length !== objects.length) {
       throw new Error('The server failed to save some records');
     }
 
-    return finalObjects;
+    // Maintain order of objects
+    const dictionary = finalObjects.reduce((acc, object) => {
+      acc[object.id] = object;
+      return acc;
+    }, {} as Dictionary<Readonly<SelectedPick<Record, ['*']>>>);
+
+    return recordIDs.map((id) => dictionary[id]);
   }
 
   // TODO: Add column support: https://github.com/xataio/openapi/issues/139
