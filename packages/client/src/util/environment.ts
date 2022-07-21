@@ -90,16 +90,19 @@ function getGlobalFallbackBranch(): string | undefined {
 export async function getGitBranch(): Promise<string | undefined> {
   const cmd = ['git', 'branch', '--show-current'];
 
+  // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
+  const nodeModule = ['child', 'process'].join('_');
+
   // Node.js: child_process.execSync
   try {
     // CJS
     if (typeof require === 'function') {
-      const req = require; // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
-      return req('child_process').execSync(cmd.join(' '), { encoding: 'utf-8' }).trim();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      return require(nodeModule).execSync(cmd.join(' '), { encoding: 'utf-8' }).trim();
     }
 
     // ESM
-    const { execSync } = await import('child_process');
+    const { execSync } = await import(nodeModule);
     return execSync(cmd.join(' '), { encoding: 'utf-8' }).toString().trim();
   } catch (err) {
     // Ignore
