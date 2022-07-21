@@ -39,6 +39,7 @@
     "enquirer": "^2.3.6",
     "env-editor": "^1.1.0",
     "ini": "^3.0.0",
+    "lodash.compact": "^3.0.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "node-fetch": "^3.2.9",
@@ -52,13 +53,13 @@
     "zod": "^3.17.9"
   },
   "devDependencies": {
+    "@types/lodash.compact": "^3.0.7",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7",
     "@types/relaxed-json": "^1.0.1",
     "@types/text-table": "^0.2.2",
     "@types/tmp": "^0.2.3",
     "@types/which": "^2.0.1",
-    "chai": "^4.3.6",
     "eslint": "^8.20.0",
     "eslint-config-oclif": "^4",
     "eslint-config-oclif-typescript": "^1.0.2",
