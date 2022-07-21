@@ -234,12 +234,20 @@ describe('integration tests', () => {
     expect(records2).toHaveLength(10);
   });
 
-  test('returns many records extended array map works as expected', async () => {
+  test('returns many records extended array map converts to a normal array', async () => {
     const records1 = await client.db.users.filter('team.name', 'Team fruits').getMany();
     const records2 = records1.map((item) => ({ ...item }));
 
     expect(records1.length).toBeGreaterThan(0);
     expect(records1.length).toBe(records2.length);
+
+    expect(records1.hasNextPage).toBeDefined();
+    // @ts-expect-error
+    expect(records2.hasNextPage).not.toBeDefined();
+
+    for (const [index, item] of records1.entries()) {
+      expect(item).toEqual(records2[index]);
+    }
   });
 
   test('returns many records with cursor', async () => {

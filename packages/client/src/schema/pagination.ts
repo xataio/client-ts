@@ -109,7 +109,9 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
   constructor(page: Paginable<any, Result>, overrideRecords?: Result[]);
   constructor(...args: any[]) {
     super(...RecordArray.parseConstructorParams(...args));
-    this.#page = args[0];
+
+    // In the case of serialization/deserialization, the page might be lost
+    this.#page = isObject(args[0]?.meta) ? args[0] : { meta: { page: { cursor: '', more: false } }, records: [] };
   }
 
   static parseConstructorParams(...args: any[]) {
@@ -126,6 +128,14 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
 
     // <T>(...items: T[]): T[]
     return new Array(...args);
+  }
+
+  toArray(): Result[] {
+    return new Array(...this);
+  }
+
+  map<U>(callbackfn: (value: Result, index: number, array: Result[]) => U, thisArg?: any): U[] {
+    return this.toArray().map(callbackfn, thisArg);
   }
 
   /**
