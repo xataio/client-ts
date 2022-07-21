@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import crypto from 'crypto';
 import { readFileSync } from 'fs';
 import http from 'http';
@@ -88,9 +89,19 @@ export async function createAPIKeyThroughWebUI() {
     server.listen(() => {
       const { port } = server.address() as AddressInfo;
       const openURL = generateURL(port, publicKey, privateKey, passphrase);
-      open(openURL).catch(() => {
-        console.log(`Please open ${openURL} in your browser`);
-      });
+      const printURL = () => {
+        console.log(
+          `We are opening your default browser. If your browser doesn't open automatically, please copy and paste the following URL into your browser:`,
+          chalk.bold(openURL)
+        );
+      };
+
+      // Wait so we can get an exitCode. If the proces is still running exitCode is null
+      open(openURL, { wait: true })
+        .then((proc) => {
+          if (proc.exitCode !== null && proc.exitCode > 0) printURL();
+        })
+        .catch(printURL);
     });
   });
 }
