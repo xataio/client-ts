@@ -88,12 +88,19 @@ function getGlobalFallbackBranch(): string | undefined {
 }
 
 export async function getGitBranch(): Promise<string | undefined> {
+  const cmd = ['git', 'branch', '--show-current'];
+
   // Node.js: child_process.execSync
   try {
+    // CJS
     if (typeof require === 'function') {
       const req = require; // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
-      return req('child_process').execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
+      return req('child_process').execSync(cmd.join(' '), { encoding: 'utf-8' }).trim();
     }
+
+    // ESM
+    const { execSync } = await import('child_process');
+    return execSync(cmd.join(' '), { encoding: 'utf-8' }).toString().trim();
   } catch (err) {
     // Ignore
   }
@@ -101,11 +108,7 @@ export async function getGitBranch(): Promise<string | undefined> {
   // Deno: Deno.run
   try {
     if (isObject(Deno)) {
-      const process = Deno.run({
-        cmd: ['git', 'branch', '--show-current'],
-        stdout: 'piped',
-        stderr: 'piped'
-      });
+      const process = Deno.run({ cmd, stdout: 'piped', stderr: 'piped' });
       return new TextDecoder().decode(await process.output()).trim();
     }
   } catch (err) {
