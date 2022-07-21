@@ -11,6 +11,7 @@ export type GenerateOptions = {
   databaseURL: string;
   language: Language;
   javascriptTarget?: JavascriptTarget;
+  branch?: string;
 };
 
 export type GenerateOutput = {
@@ -36,11 +37,17 @@ export async function generate({
   schema,
   databaseURL,
   language,
-  javascriptTarget
+  javascriptTarget,
+  branch
 }: GenerateOptions): Promise<GenerateOutput> {
   const { tables } = schema;
 
   const parser = prettierParsers[language];
+
+  const defaultOptions: Record<string, unknown> = {
+    databaseURL,
+    branch
+  };
 
   const code = `
     import { BaseClientOptions, buildClient, SchemaInference, XataRecord } from '@xata.io/client';
@@ -69,10 +76,12 @@ export async function generate({
     ${language === 'javascript' ? `/** @type { import('@xata.io/client').ClientConstructor<{}> } */` : ''}
     const DatabaseClient = buildClient();
 
+    const defaultOptions = ${JSON.stringify(defaultOptions)};
+
     ${language === 'javascript' ? `/** @extends DatabaseClient<SchemaTables> */` : ''}
     export class XataClient extends DatabaseClient<SchemaTables> {
       constructor(options?: BaseClientOptions) {
-        super({ databaseURL: "${databaseURL}", ...options}, tables);
+        super({ ...defaultOptions, ...options}, tables);
       }
     }
   `;

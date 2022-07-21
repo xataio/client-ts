@@ -21,7 +21,7 @@ describe('generate', () => {
         ]
       },
       language: 'typescript',
-      databaseURL: ''
+      databaseURL: 'https://workspace-1234.xata.sh/db/dbname'
     });
 
     expect(output.transpiled).toMatchSnapshot();
@@ -51,7 +51,26 @@ describe('generate', () => {
         ]
       },
       language: 'typescript',
-      databaseURL: ''
+      databaseURL: 'https://workspace-1234.xata.sh/db/dbname'
+    });
+
+    expect(output.transpiled).toMatchSnapshot();
+  });
+
+  it('should inject branch if passed', async () => {
+    const output = await generate({
+      schema: {
+        formatVersion: '1.0',
+        tables: [
+          {
+            name: 'users',
+            columns: [{ name: 'name', type: 'string' }]
+          }
+        ]
+      },
+      language: 'typescript',
+      databaseURL: 'https://workspace-1234.xata.sh/db/dbname',
+      branch: 'feature-branch'
     });
 
     expect(output.transpiled).toMatchSnapshot();
