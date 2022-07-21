@@ -1,5 +1,5 @@
 import { Schemas } from '../api';
-import { XataRecord } from './record';
+import { Identifiable, XataRecord } from './record';
 
 export type BaseSchema = {
   name: string;
@@ -27,7 +27,7 @@ type TableType<Tables, TableName> = Tables & { name: TableName } extends infer T
   ? Table extends { name: string; columns: infer Columns }
     ? Columns extends readonly unknown[]
       ? Columns[number] extends { name: string; type: string }
-        ? { [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> }
+        ? Identifiable & { [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> }
         : never
       : never
     : never
