@@ -9,12 +9,12 @@ import { readFile, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path from 'path';
 import prompts from 'prompts';
-import slugify from 'slugify';
 import table from 'text-table';
 import which from 'which';
 import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
 import { getProfile } from './credentials.js';
+import { slug } from './utils.js';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -190,7 +190,7 @@ export abstract class BaseCommand extends Command {
         message: 'New workspace name'
       });
       if (!name) return this.error('No workspace name provided');
-      const workspace = await xata.workspaces.createWorkspace({ name, slug: slugify(name) });
+      const workspace = await xata.workspaces.createWorkspace({ name, slug: slug(name) });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
