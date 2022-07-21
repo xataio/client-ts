@@ -1,5 +1,38 @@
 // Vitest Snapshot v1
 
+exports[`generate > should inject branch if passed 1`] = `
+"import {
+  BaseClientOptions,
+  buildClient,
+  SchemaInference,
+  XataRecord,
+} from \\"@xata.io/client\\";
+
+const tables = [
+  { name: \\"users\\", columns: [{ name: \\"name\\", type: \\"string\\" }] },
+] as const;
+
+export type SchemaTables = typeof tables;
+export type DatabaseSchema = SchemaInference<SchemaTables>;
+
+export type User = DatabaseSchema[\\"users\\"];
+export type UserRecord = User & XataRecord;
+
+const DatabaseClient = buildClient();
+
+const defaultOptions = {
+  databaseURL: \\"https://workspace-1234.xata.sh/db/dbname\\",
+  branch: \\"feature-branch\\",
+};
+
+export class XataClient extends DatabaseClient<SchemaTables> {
+  constructor(options?: BaseClientOptions) {
+    super({ ...defaultOptions, ...options }, tables);
+  }
+}
+"
+`;
+
 exports[`generate > should respect case naming 1`] = `
 "import {
   BaseClientOptions,
@@ -38,9 +71,13 @@ export type UsersFooRecord = UsersFoo & XataRecord;
 
 const DatabaseClient = buildClient();
 
+const defaultOptions = {
+  databaseURL: \\"https://workspace-1234.xata.sh/db/dbname\\",
+};
+
 export class XataClient extends DatabaseClient<SchemaTables> {
   constructor(options?: BaseClientOptions) {
-    super({ databaseURL: \\"\\", ...options }, tables);
+    super({ ...defaultOptions, ...options }, tables);
   }
 }
 "
@@ -72,9 +109,13 @@ export type $1teamsCaseRecord = $1teamsCase & XataRecord;
 
 const DatabaseClient = buildClient();
 
+const defaultOptions = {
+  databaseURL: \\"https://workspace-1234.xata.sh/db/dbname\\",
+};
+
 export class XataClient extends DatabaseClient<SchemaTables> {
   constructor(options?: BaseClientOptions) {
-    super({ databaseURL: \\"\\", ...options }, tables);
+    super({ ...defaultOptions, ...options }, tables);
   }
 }
 "
