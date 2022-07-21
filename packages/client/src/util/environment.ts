@@ -11,6 +11,7 @@ interface Environment {
   apiKey: string | undefined;
   databaseURL: string | undefined;
   branch: string | undefined;
+  envBranch: string | undefined;
   fallbackBranch: string | undefined;
 }
 
@@ -21,12 +22,8 @@ export function getEnvironment(): Environment {
       return {
         apiKey: process.env.XATA_API_KEY ?? getGlobalApiKey(),
         databaseURL: process.env.XATA_DATABASE_URL ?? getGlobalDatabaseURL(),
-        branch:
-          process.env.XATA_BRANCH ??
-          process.env.VERCEL_GIT_COMMIT_REF ??
-          process.env.CF_PAGES_BRANCH ??
-          process.env.BRANCH ??
-          getGlobalBranch(),
+        branch: process.env.XATA_BRANCH ?? getGlobalBranch(),
+        envBranch: process.env.VERCEL_GIT_COMMIT_REF ?? process.env.CF_PAGES_BRANCH ?? process.env.BRANCH,
         fallbackBranch: process.env.XATA_FALLBACK_BRANCH ?? getGlobalFallbackBranch()
       };
     }
@@ -40,12 +37,8 @@ export function getEnvironment(): Environment {
       return {
         apiKey: Deno.env.get('XATA_API_KEY') ?? getGlobalApiKey(),
         databaseURL: Deno.env.get('XATA_DATABASE_URL') ?? getGlobalDatabaseURL(),
-        branch:
-          Deno.env.get('XATA_BRANCH') ??
-          Deno.env.get('VERCEL_GIT_COMMIT_REF') ??
-          Deno.env.get('CF_PAGES_BRANCH') ??
-          Deno.env.get('BRANCH') ??
-          getGlobalBranch(),
+        branch: Deno.env.get('XATA_BRANCH') ?? getGlobalBranch(),
+        envBranch: Deno.env.get('VERCEL_GIT_COMMIT_REF') ?? Deno.env.get('CF_PAGES_BRANCH') ?? Deno.env.get('BRANCH'),
         fallbackBranch: Deno.env.get('XATA_FALLBACK_BRANCH') ?? getGlobalFallbackBranch()
       };
     }
@@ -57,6 +50,7 @@ export function getEnvironment(): Environment {
     apiKey: getGlobalApiKey(),
     databaseURL: getGlobalDatabaseURL(),
     branch: getGlobalBranch(),
+    envBranch: undefined,
     fallbackBranch: getGlobalFallbackBranch()
   };
 }

@@ -12,7 +12,7 @@ type BranchResolutionOptions = {
 };
 
 export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string> {
-  const { branch } = getEnvironment();
+  const { branch, envBranch } = getEnvironment();
 
   if (branch) {
     const details = await getDatabaseBranch(branch, options);
@@ -21,7 +21,7 @@ export async function getCurrentBranchName(options?: BranchResolutionOptions): P
     console.warn(`Branch ${branch} not found in Xata. Ignoring...`);
   }
 
-  const gitBranch = await getGitBranch();
+  const gitBranch = envBranch || (await getGitBranch());
   return resolveXataBranch(gitBranch, options);
 }
 
