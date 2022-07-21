@@ -10,7 +10,7 @@ import url, { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export function handler(privateKey: string, passphrase: string, callback: (apiKey: string) => void) {
+export function handler(publicKey: string, privateKey: string, passphrase: string, callback: (apiKey: string) => void) {
   return (req: http.IncomingMessage, res: http.ServerResponse) => {
     try {
       if (req.method !== 'GET') {
@@ -19,6 +19,15 @@ export function handler(privateKey: string, passphrase: string, callback: (apiKe
       }
 
       const parsedURL = url.parse(req.url ?? '', true);
+      if (parsedURL.pathname === '/new') {
+        const port = +(parsedURL.port || 80);
+        res.writeHead(302, {
+          location: generateURL(port, publicKey, privateKey, passphrase)
+        });
+        res.end();
+        return;
+      }
+
       if (parsedURL.pathname !== '/') {
         res.writeHead(404);
         return res.end();
@@ -81,7 +90,7 @@ export async function createAPIKeyThroughWebUI() {
 
   return new Promise<string>((resolve) => {
     const server = http.createServer(
-      handler(privateKey, passphrase, (apiKey) => {
+      handler(publicKey, privateKey, passphrase, (apiKey) => {
         resolve(apiKey);
         server.close();
       })
@@ -89,19 +98,12 @@ export async function createAPIKeyThroughWebUI() {
     server.listen(() => {
       const { port } = server.address() as AddressInfo;
       const openURL = generateURL(port, publicKey, privateKey, passphrase);
-      const printURL = () => {
-        console.log(
-          `We are opening your default browser. If your browser doesn't open automatically, please copy and paste the following URL into your browser:`,
-          chalk.bold(openURL)
-        );
-      };
-
-      // Wait so we can get an exitCode. If the proces is still running exitCode is null
-      open(openURL, { wait: true })
-        .then((proc) => {
-          if (proc.exitCode !== null && proc.exitCode > 0) printURL();
-        })
-        .catch(printURL);
+      console.log(
+        `We are opening your default browser. If your browser doesn't open automatically, please copy and paste the following URL into your browser: ${chalk.bold(
+          `http://localhost:${port}/new`
+        )}`
+      );
+      open(openURL).catch(console.error);
     });
   });
 }
