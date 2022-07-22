@@ -33,7 +33,7 @@ async function main() {
   execSync('npm install', { cwd: projectDir });
 
   // Install client
-  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG}`, { cwd: projectDir });
+  execSync(`npm install file:../../../../packages/client`, { cwd: projectDir });
 
   // Copy route
   execSync('cp ../test.ts app/routes/test.ts', { cwd: projectDir });

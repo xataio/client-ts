@@ -1,8 +1,9 @@
-import { getEnvVariable } from './environment';
+import { getEnvironment } from './environment';
 
 export function getAPIKey() {
   try {
-    return getEnvVariable('XATA_API_KEY') ?? XATA_API_KEY;
+    const { apiKey } = getEnvironment();
+    return apiKey;
   } catch (err) {
     return undefined;
   }

@@ -4,13 +4,14 @@ import prettier, { BuiltInParserName } from 'prettier';
 import * as parserJavascript from 'prettier/parser-babel.js';
 import * as parserTypeScript from 'prettier/parser-typescript.js';
 import ts from 'typescript';
-import { Column, Table, XataDatabaseSchema } from './schema';
+import { XataDatabaseSchema } from './schema';
 
 export type GenerateOptions = {
   schema: XataDatabaseSchema;
   databaseURL: string;
   language: Language;
   javascriptTarget?: JavascriptTarget;
+  branch?: string;
 };
 
 export type GenerateOutput = {
@@ -18,6 +19,9 @@ export type GenerateOutput = {
   transpiled: string;
   declarations?: string;
 };
+
+export type Language = 'typescript' | 'javascript';
+export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
 function getTypeName(tableName: string) {
   const pascal = Case.pascal(tableName);
@@ -29,88 +33,55 @@ function getTypeName(tableName: string) {
   return name;
 }
 
-function generateTableTypes(tables: Table[]) {
-  const types = tables.map((table) => {
-    const { columns } = table;
-
-    return `export interface ${getTypeName(table.name)} {
-    ${columns.map((column) => generateColumnType(column)).join('\n')}
-  };
-
-  export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;
-  `;
-  });
-
-  const schema = `export type DatabaseSchema = {
-    ${tables.map((table) => `"${table.name}": ${getTypeName(table.name)};`).join('\n')}
-  }`;
-
-  return [...types, schema].join('\n');
-}
-
-// Gotchas:
-// - Add commas to the name, to support kebab-case
-// - We have a "?: | null" because we don't have constraints yet, to be improved
-function generateColumnType(column: Column) {
-  return `"${column.name}"?: ${getTypeScriptType(column)} | null`;
-}
-
-function getTypeScriptType(column: Column): string {
-  if (column.type === 'email') return 'string';
-  if (column.type === 'text') return 'string';
-  if (column.type === 'string') return 'string';
-  if (column.type === 'multiple') return 'string[]';
-  if (column.type === 'bool') return 'boolean';
-  if (column.type === 'int') return 'number';
-  if (column.type === 'float') return 'number';
-  if (column.type === 'datetime') return 'Date';
-  if (column.type === 'link') {
-    if (!column.link?.table) return 'object';
-    return `${getTypeName(column.link.table)}Record`;
-  }
-  if (column.type === 'object') {
-    const columns = column.columns || [];
-    return `{ ${columns.map((column) => generateColumnType(column)).join('; ')} }`;
-  }
-  return 'unknown';
-}
-
-export type Language = 'typescript' | 'javascript';
-export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
-
 export async function generate({
   schema,
   databaseURL,
   language,
-  javascriptTarget
+  javascriptTarget,
+  branch
 }: GenerateOptions): Promise<GenerateOutput> {
   const { tables } = schema;
 
   const parser = prettierParsers[language];
 
+  const defaultOptions: Record<string, unknown> = {
+    databaseURL,
+    branch
+  };
+
   const code = `
-    import {
-      buildClient,
-      BaseClientOptions,
-      XataRecord
-    } from '@xata.io/client';
+    import { BaseClientOptions, buildClient, SchemaInference, XataRecord } from '@xata.io/client';
 
-    ${generateTableTypes(tables)}
+    ${
+      language === 'javascript'
+        ? `/** @typedef { import('./types').SchemaTables } SchemaTables */
+           /** @type { SchemaTables } */`
+        : ''
+    }
+    const tables = ${JSON.stringify(tables)} as const;
 
-    const tables = [${tables.map((table) => `'${table.name}'`).join(', ')}];
+    export type SchemaTables = typeof tables;
+    export type DatabaseSchema = SchemaInference<SchemaTables>;
+
+    ${tables
+      .map(
+        (table) =>
+          `
+            export type ${getTypeName(table.name)} = DatabaseSchema['${table.name}'];
+            export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;
+          `
+      )
+      .join('\n')}
 
     ${language === 'javascript' ? `/** @type { import('@xata.io/client').ClientConstructor<{}> } */` : ''}
     const DatabaseClient = buildClient();
 
-    ${
-      language === 'javascript'
-        ? `/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
-           /** @extends DatabaseClient<DatabaseSchema> */`
-        : ''
-    }
-    export class XataClient extends DatabaseClient<DatabaseSchema> {
+    const defaultOptions = ${JSON.stringify(defaultOptions)};
+
+    ${language === 'javascript' ? `/** @extends DatabaseClient<SchemaTables> */` : ''}
+    export class XataClient extends DatabaseClient<SchemaTables> {
       constructor(options?: BaseClientOptions) {
-        super({ databaseURL: "${databaseURL}", ...options}, tables);
+        super({ ...defaultOptions, ...options}, tables);
       }
     }
   `;
