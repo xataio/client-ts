@@ -35,7 +35,7 @@ const fruits = [
   'Watermelon'
 ];
 
-const ownerFruits = {
+export const ownerFruits = {
   full_name: 'Owner of team fruits',
   email: 'owner.fruits@example.com',
   address: {
@@ -44,7 +44,7 @@ const ownerFruits = {
   }
 };
 
-const ownerAnimals = {
+export const ownerAnimals = {
   full_name: 'Owner of team animals',
   email: 'owner.animals@example.com',
   address: {
@@ -53,7 +53,7 @@ const ownerAnimals = {
   }
 };
 
-const animalUsers = animals.map((animal) => ({
+export const animalUsers = animals.map((animal) => ({
   full_name: animal,
   email: `${animal.toLowerCase().replace(' ', '_')}@zoo.example.com`,
   address: {
@@ -62,7 +62,7 @@ const animalUsers = animals.map((animal) => ({
   }
 }));
 
-const fruitUsers = fruits.map((fruit) => ({
+export const fruitUsers = fruits.map((fruit) => ({
   full_name: fruit,
   email: `${fruit.toLowerCase().replace(' ', '_')}@macedonia.example.com`,
   address: {

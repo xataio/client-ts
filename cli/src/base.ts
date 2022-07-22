@@ -2,17 +2,19 @@ import { Command, Flags } from '@oclif/core';
 import { getCurrentBranchName, Schemas, XataApiClient, XataApiClientOptions } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
+import { spawn } from 'child_process';
 import { cosmiconfigSync } from 'cosmiconfig';
 import dotenv from 'dotenv';
 import { readFile, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path from 'path';
 import prompts from 'prompts';
-import slugify from 'slugify';
 import table from 'text-table';
+import which from 'which';
 import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
 import { getProfile } from './credentials.js';
+import { slug } from './utils.js';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -188,7 +190,7 @@ export abstract class BaseCommand extends Command {
         message: 'New workspace name'
       });
       if (!name) return this.error('No workspace name provided');
-      const workspace = await xata.workspaces.createWorkspace({ name, slug: slugify(name) });
+      const workspace = await xata.workspaces.createWorkspace({ name, slug: slug(name) });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
@@ -574,5 +576,19 @@ export abstract class BaseCommand extends Command {
     }
 
     return prompts(options);
+  }
+
+  runCommand(command: string, args: string[]) {
+    this.info(`Running ${command} ${args.join(' ')}`);
+    const fullPath = which.sync(command, { nothrow: true });
+    if (!fullPath) {
+      this.error(`Could not find binary ${command} in your PATH`);
+    }
+    return new Promise((resolve, reject) => {
+      spawn(fullPath, args, { stdio: 'inherit' }).on('exit', (code) => {
+        if (code && code > 0) return reject(new Error('Command failed'));
+        resolve(undefined);
+      });
+    });
   }
 }

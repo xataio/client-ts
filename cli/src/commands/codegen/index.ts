@@ -27,6 +27,10 @@ export default class Codegen extends BaseCommand {
     declarations: Flags.boolean({
       description:
         'Whether or not the declarations file should be generated. Overwrites your project configuration setting'
+    }),
+    'inject-branch': Flags.boolean({
+      description:
+        'Inject the branch name into the generated code. Useful if you have a build step and the branch name is not available at runtime'
     })
   };
 
@@ -63,8 +67,14 @@ export default class Codegen extends BaseCommand {
     const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
     const { schema } = branchDetails;
 
+    const codegenBranch = flags['inject-branch'] ? branch : undefined;
     // TODO: remove formatVersion
-    const result = await generate({ schema: { formatVersion: '1.0', ...schema }, databaseURL, language });
+    const result = await generate({
+      schema: { formatVersion: '1.0', ...schema },
+      databaseURL,
+      language,
+      branch: codegenBranch
+    });
     const code = result.transpiled;
     const declarations = result.declarations;
 

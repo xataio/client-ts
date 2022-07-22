@@ -5,12 +5,9 @@ import { describe, expect, test } from 'vitest';
 import { XataApiClient } from '../packages/client/src';
 
 // Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.envrc') });
+dotenv.config({ path: join(process.cwd(), '.env') });
 
-const client = new XataApiClient({
-  fetch,
-  apiKey: process.env.XATA_API_KEY || ''
-});
+const client = new XataApiClient({ fetch, apiKey: process.env.XATA_API_KEY });
 
 describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace', async () => {

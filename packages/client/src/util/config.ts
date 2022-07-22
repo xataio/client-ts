@@ -1,16 +1,9 @@
 import { getBranchDetails, resolveBranch } from '../api';
 import { FetchImpl } from '../api/fetcher';
 import { getAPIKey } from './apiKey';
-import { getEnvVariable, getGitBranch } from './environment';
+import { getEnvironment, getGitBranch } from './environment';
 import { getFetchImplementation } from './fetch';
 import { isObject } from './lang';
-
-const envBranchNames = [
-  'XATA_BRANCH',
-  'VERCEL_GIT_COMMIT_REF', // Vercel
-  'CF_PAGES_BRANCH', // Cloudflare Pages
-  'BRANCH' // Netlify. Putting it the last one because it is more ambiguous
-];
 
 type BranchResolutionOptions = {
   databaseURL?: string;
@@ -19,15 +12,16 @@ type BranchResolutionOptions = {
 };
 
 export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string> {
-  const env = getBranchByEnvVariable();
-  if (env) {
-    const details = await getDatabaseBranch(env, options);
-    if (details) return env;
+  const { branch, envBranch } = getEnvironment();
 
-    console.warn(`Branch ${env} not found in Xata. Ignoring...`);
+  if (branch) {
+    const details = await getDatabaseBranch(branch, options);
+    if (details) return branch;
+
+    console.warn(`Branch ${branch} not found in Xata. Ignoring...`);
   }
 
-  const gitBranch = await getGitBranch();
+  const gitBranch = envBranch || (await getGitBranch());
   return resolveXataBranch(gitBranch, options);
 }
 
@@ -51,6 +45,7 @@ async function resolveXataBranch(gitBranch: string | undefined, options?: Branch
 
   const [protocol, , host, , dbName] = databaseURL.split('/');
   const [workspace] = host.split('.');
+  const { fallbackBranch } = getEnvironment();
 
   const { branch } = await resolveBranch({
     apiKey,
@@ -58,7 +53,7 @@ async function resolveXataBranch(gitBranch: string | undefined, options?: Branch
     fetchImpl: getFetchImplementation(options?.fetchImpl),
     workspacesApiUrl: `${protocol}//${host}`,
     pathParams: { dbName, workspace },
-    queryParams: { gitBranch, fallbackBranch: getEnvVariable('XATA_FALLBACK_BRANCH') }
+    queryParams: { gitBranch, fallbackBranch }
   });
 
   return branch;
@@ -94,23 +89,10 @@ async function getDatabaseBranch(branch: string, options?: BranchResolutionOptio
   }
 }
 
-function getBranchByEnvVariable(): string | undefined {
-  for (const name of envBranchNames) {
-    const value = getEnvVariable(name);
-    if (value) {
-      return value;
-    }
-  }
-  try {
-    return XATA_BRANCH;
-  } catch (err) {
-    // Ignore ReferenceError. Only CloudFlare workers set env variables as global variables
-  }
-}
-
 export function getDatabaseURL() {
   try {
-    return getEnvVariable('XATA_DATABASE_URL') ?? XATA_DATABASE_URL;
+    const { databaseURL } = getEnvironment();
+    return databaseURL;
   } catch (err) {
     return undefined;
   }

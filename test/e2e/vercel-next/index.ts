@@ -19,7 +19,7 @@ async function main() {
   execSync(`npx create-next-app app --ts --use-npm`, { cwd: __dirname });
 
   // Install npm dependencies
-  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG}`, { cwd: projectDir });
+  execSync(`npm install file:../../../../packages/client`, { cwd: projectDir });
 
   // Copy route
   execSync('cp ../test.ts pages/api/test.ts', { cwd: projectDir });

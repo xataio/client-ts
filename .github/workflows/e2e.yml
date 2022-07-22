@@ -8,12 +8,12 @@ jobs:
   e2e-test:
     name: E2E Test
     runs-on: ubuntu-latest
-    if: github.head_ref == 'changeset-release/main'
+    if: ${{ github.event_name == 'workflow_dispatch' || github.head_ref == 'changeset-release/main' }}
 
     strategy:
       fail-fast: false
       matrix:
-        target: ['cf-workers', 'cf-pages', 'edge-runtime', 'vercel-next']
+        target: ['cf-workers', 'cf-pages', 'edge-runtime', 'vercel-next', 'bun-http']
 
     steps:
       - name: 🛑 Cancel Previous Runs
