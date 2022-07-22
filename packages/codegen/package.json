@@ -10,10 +10,6 @@
     "import": "./dist/index.mjs",
     "require": "./dist/index.cjs"
   },
-  "bin": {
-    "codegen": "./dist/cli.js",
-    "xata-codegen": "./dist/cli.js"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepack": "npm run build",
@@ -26,7 +22,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
