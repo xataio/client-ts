@@ -12,5 +12,6 @@ export * from './plugins';
 export * from './client';
 export * from './schema';
 export * from './search';
+export * from './serializer';
 export * from './util/config';
 export * from './util/apiKey';

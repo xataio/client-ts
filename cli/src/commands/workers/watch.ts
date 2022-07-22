@@ -1,19 +1,13 @@
-import babel, { NodePath, PluginItem } from '@babel/core';
-import { CallExpression, FunctionDeclaration } from '@babel/types';
-import commonjs from '@rollup/plugin-commonjs';
-import resolve from '@rollup/plugin-node-resolve';
 import { BaseClient } from '@xata.io/client';
 import chokidar from 'chokidar';
 import { EdgeRuntime } from 'edge-runtime';
 import http from 'http';
 import { AddressInfo } from 'net';
 import fetch from 'node-fetch';
-import { rollup } from 'rollup';
-import esbuild from 'rollup-plugin-esbuild';
-import { virtualFs } from 'rollup-plugin-virtual-fs';
 import url from 'url';
 import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
+import { compileWorkers } from '../../workers.js';
 
 export default class WorkersCompile extends BaseCommand {
   static description = 'Extract and compile xata workers';
@@ -105,78 +99,12 @@ export default class WorkersCompile extends BaseCommand {
   }
 
   async #compile(file: string): Promise<void> {
-    const external: string[] = [];
-    const functions: Record<string, string> = {};
+    const compiledWorkers = await compileWorkers(file);
 
-    babel.transformFileSync(file, {
-      presets: ['@babel/preset-typescript'],
-      plugins: [
-        (): PluginItem => {
-          return {
-            visitor: {
-              ImportDeclaration: {
-                enter(path) {
-                  external.push(path.toString());
-                }
-              },
-              VariableDeclaration: {
-                enter(path) {
-                  // external.push(path.toString());
-                }
-              },
-              Function: {
-                enter(path) {
-                  if (isXataWorker(path)) {
-                    const args = (path.parent as CallExpression).arguments as any[];
-                    const workerName = args[0]?.value;
-                    if (!workerName || typeof workerName !== 'string') {
-                      console.error(`Found a worker without a name in file ${file}`);
-                    } else {
-                      functions[workerName] = path.toString();
-                    }
-                  }
-                }
-              }
-            }
-          };
-        }
-      ]
-    });
-
-    for (const [name, worker] of Object.entries(functions)) {
-      console.log('worker', name, worker);
-      try {
-        const bundle = await rollup({
-          input: `file://./${file}`,
-          output: { file: `file://bundle.js`, format: 'es' },
-          plugins: [
-            virtualFs({
-              memoryOnly: false,
-              files: {
-                [`./${file}`]: `${external.join('\n')}\n const xataWorker = ${worker}; export { xataWorker };`
-              }
-            }),
-            resolve(),
-            commonjs(),
-            esbuild({ target: 'es2022' })
-          ]
-        });
-
-        const { output } = await bundle.generate({});
-        this.#workers.set(name, output[0].code);
-      } catch (error) {
-        console.error(error);
-      }
+    for (const [name, worker] of Object.entries(compiledWorkers)) {
+      this.#workers.set(name, worker.modules[0].code);
     }
   }
-}
-
-function isXataWorker(path: NodePath): path is NodePath<FunctionDeclaration> {
-  if (!path.parentPath?.isCallExpression()) return false;
-  const parent = path.parent as CallExpression;
-  if (!('callee' in parent)) return false;
-  if (!('name' in parent.callee)) return false;
-  return parent.callee.name === 'xataWorker';
 }
 
 const bodySchema = z.any();
