@@ -43,8 +43,10 @@ export type UserRecord = User & XataRecord;
 
 const DatabaseClient = buildClient();
 
+const defaultOptions = { databaseURL: 'https://test-r5vcv5.xata.sh/db/test' };
+
 export class XataClient extends DatabaseClient<SchemaTables> {
   constructor(options?: BaseClientOptions) {
-    super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, tables);
+    super({ ...defaultOptions, ...options }, tables);
   }
 }
