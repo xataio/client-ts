@@ -46,18 +46,19 @@ export async function compileWorkers(file: string) {
   });
 
   const compiledWorkers = [];
+  const defaultWorkerFileName = './_defaultWorker.ts';
 
   for (const [name, worker] of Object.entries(functions)) {
     try {
       const bundle = await rollup({
-        input: `file://./${file}`,
+        input: `file://${defaultWorkerFileName}`,
         output: { file: `file://bundle.js`, format: 'es' },
         plugins: [
           virtualFs({
             memoryOnly: false,
             files: {
-              // TODO: Compile real CF Worker here too
-              [`./${file}`]: `${external.join('\n')}\n const xataWorker = ${worker}; export { xataWorker };`
+              [defaultWorkerFileName]: defaultWorker(file),
+              [`./${file}`]: `${external.join('\n')}\n const xataWorker = ${worker}; export default xataWorker;`
             }
           }),
           resolve(),
@@ -87,4 +88,34 @@ function isXataWorker(path: NodePath): path is NodePath<FunctionDeclaration> {
   if (!('callee' in parent)) return false;
   if (!('name' in parent.callee)) return false;
   return parent.callee.name === 'xataWorker';
+}
+
+function defaultWorker(main: string) {
+  return `
+import { BaseClient } from "@xata.io/client";
+
+export interface Environment {
+  XATA_API_KEY: string;
+  XATA_DATABASE_URL: string;
+}
+
+export default {
+  async fetch(request: Request, environment: Environment): Promise<Response> {
+    const { default: xataWorker } = await import("./${main}");
+
+    const {
+      XATA_API_KEY: apiKey,
+      XATA_DATABASE_URL: databaseURL,
+      ...env
+    } = environment;
+
+    const xata = new BaseClient({ databaseURL, apiKey });
+    const result = await xataWorker({ xata, env, request });
+
+    return result instanceof Response
+      ? result
+      : new Response(JSON.stringify(result));
+  },
+};
+`;
 }
