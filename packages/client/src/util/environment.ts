@@ -88,12 +88,22 @@ function getGlobalFallbackBranch(): string | undefined {
 }
 
 export async function getGitBranch(): Promise<string | undefined> {
+  const cmd = ['git', 'branch', '--show-current'];
+
+  // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
+  const nodeModule = ['child', 'process'].join('_');
+
   // Node.js: child_process.execSync
   try {
+    // CJS
     if (typeof require === 'function') {
-      const req = require; // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
-      return req('child_process').execSync('git branch --show-current', { encoding: 'utf-8' }).trim();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      return require(nodeModule).execSync(cmd.join(' '), { encoding: 'utf-8' }).trim();
     }
+
+    // ESM
+    const { execSync } = await import(nodeModule);
+    return execSync(cmd.join(' '), { encoding: 'utf-8' }).toString().trim();
   } catch (err) {
     // Ignore
   }
@@ -101,11 +111,7 @@ export async function getGitBranch(): Promise<string | undefined> {
   // Deno: Deno.run
   try {
     if (isObject(Deno)) {
-      const process = Deno.run({
-        cmd: ['git', 'branch', '--show-current'],
-        stdout: 'piped',
-        stderr: 'piped'
-      });
+      const process = Deno.run({ cmd, stdout: 'piped', stderr: 'piped' });
       return new TextDecoder().decode(await process.output()).trim();
     }
   } catch (err) {
