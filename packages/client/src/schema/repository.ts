@@ -37,7 +37,9 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(object: EditableData<Data> & Partial<Identifiable>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  abstract create(
+    object: Omit<EditableData<Data>, 'id'> & Partial<Identifiable>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates a single record in the table with a unique id.
@@ -45,7 +47,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(id: string, object: EditableData<Data>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  abstract create(id: string, object: Omit<EditableData<Data>, 'id'>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates multiple records in the table.
@@ -53,7 +55,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @returns Array of the persisted records.
    */
   abstract create(
-    objects: Array<EditableData<Data> & Partial<Identifiable>>
+    objects: Array<Omit<EditableData<Data>, 'id'> & Partial<Identifiable>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
   /**
@@ -123,7 +125,10 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
-  abstract createOrUpdate(id: string, object: EditableData<Data>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  abstract createOrUpdate(
+    id: string,
+    object: Omit<EditableData<Data>, 'id'>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
