@@ -864,12 +864,12 @@ export const initObject = <T>(
     }
   }
 
-  result.read = function () {
-    return db[table].read(result['id'] as string);
+  result.read = function (columns?: any) {
+    return db[table].read(result['id'] as string, columns);
   };
 
-  result.update = function (data: any) {
-    return db[table].update(result['id'] as string, data);
+  result.update = function (data: any, columns?: any) {
+    return db[table].update(result['id'] as string, data, columns);
   };
 
   result.delete = function () {
