@@ -620,10 +620,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const item = await this.read(response.id);
-    if (!item) throw new Error('The server failed to save the record');
-
-    return item as any;
+    const schemaTables = await this.#getSchemaTables();
+    return initObject(this.db, schemaTables, this.#table, response) as any;
   }
 
   async createOrUpdate(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
@@ -690,10 +688,8 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
-    const item = await this.read(response.id);
-    if (!item) throw new Error('The server failed to save the record');
-
-    return item as any;
+    const schemaTables = await this.#getSchemaTables();
+    return initObject(this.db, schemaTables, this.#table, response) as any;
   }
 
   async delete(a: string | Identifiable | Array<string | Identifiable>): Promise<void> {
