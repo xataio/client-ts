@@ -1,6 +1,6 @@
 import { FilterExpression } from '../api/schemas';
 import { compact, toBase64 } from '../util/lang';
-import { NonEmptyArray, OmitBy, RequiredBy } from '../util/types';
+import { OmitBy, RequiredBy } from '../util/types';
 import { Filter } from './filters';
 import {
   CursorNavigationOptions,
@@ -18,7 +18,7 @@ import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
 import { SortDirection, SortFilter } from './sorting';
 
 type BaseOptions<T extends XataRecord> = {
-  columns?: NonEmptyArray<SelectableColumn<T>>;
+  columns?: SelectableColumn<T>[];
   cache?: number;
 };
 
@@ -198,7 +198,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param columns Array of column names to be returned by the query.
    * @returns A new Query object.
    */
-  select<K extends SelectableColumn<Record>>(columns: NonEmptyArray<K>) {
+  select<K extends SelectableColumn<Record>>(columns: K[]) {
     return new Query<Record, SelectedPick<Record, typeof columns>>(
       this.#repository,
       this.#table,

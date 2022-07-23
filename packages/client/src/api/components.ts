@@ -2290,7 +2290,8 @@ export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
 >;
 
 export type BulkInsertTableRecordsResponse = {
-  recordIDs: string[];
+  recordIDs?: string[];
+  records?: Record<string, any>[];
 };
 
 export type BulkInsertTableRecordsRequestBody = {
