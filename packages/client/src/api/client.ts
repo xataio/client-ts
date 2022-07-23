@@ -550,10 +550,12 @@ class RecordsApi {
     database: Schemas.DBName,
     branch: Schemas.BranchName,
     tableName: Schemas.TableName,
-    record: Record<string, any>
+    record: Record<string, any>,
+    options: Types.InsertRecordQueryParams = {}
   ): Promise<Types.InsertRecordResponse> {
     return operationsByTag.records.insertRecord({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
+      queryParams: options,
       body: record,
       ...this.extraProps
     });
@@ -615,10 +617,12 @@ class RecordsApi {
     database: Schemas.DBName,
     branch: Schemas.BranchName,
     tableName: Schemas.TableName,
-    recordId: Schemas.RecordID
+    recordId: Schemas.RecordID,
+    options: Types.DeleteRecordQueryParams = {}
   ): Promise<void> {
     return operationsByTag.records.deleteRecord({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName, recordId },
+      queryParams: options,
       ...this.extraProps
     });
   }
@@ -629,13 +633,11 @@ class RecordsApi {
     branch: Schemas.BranchName,
     tableName: Schemas.TableName,
     recordId: Schemas.RecordID,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    options: Types.GetRecordRequestBody = {}
+    options: Types.GetRecordQueryParams = {}
   ): Promise<Schemas.XataRecord> {
     return operationsByTag.records.getRecord({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName, recordId },
-      // TODO: FIXME https://github.com/xataio/openapi/issues/139
-      //body: options,
+      queryParams: options,
       ...this.extraProps
     });
   }
@@ -645,10 +647,12 @@ class RecordsApi {
     database: Schemas.DBName,
     branch: Schemas.BranchName,
     tableName: Schemas.TableName,
-    records: Record<string, any>[]
+    records: Record<string, any>[],
+    options: Types.BulkInsertTableRecordsQueryParams = {}
   ): Promise<Types.BulkInsertTableRecordsResponse> {
     return operationsByTag.records.bulkInsertTableRecords({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
+      queryParams: options,
       body: { records },
       ...this.extraProps
     });
