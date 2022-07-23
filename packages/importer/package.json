@@ -10,15 +10,10 @@
     "import": "./dist/index.mjs",
     "require": "./dist/index.cjs"
   },
-  "bin": {
-    "importer": "./dist/cli.js",
-    "xata-importer": "./dist/cli.js"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf dist && rollup -c",
-    "prepack": "npm run build",
-    "prebuild": "node ../../scripts/add-version-file.mjs"
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -26,7 +21,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
