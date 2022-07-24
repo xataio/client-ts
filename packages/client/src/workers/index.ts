@@ -1,0 +1,38 @@
+import { BaseClient } from '../client';
+
+type XataWorkerContext<XataClient> = { xata: XataClient; request: Request; env: Record<string, string | undefined> };
+
+type RemoveFirst<T> = T extends [any, ...infer U] ? U : never;
+
+type WorkerRunnerConfig = {
+  worker: string;
+  publicKey: string;
+};
+
+export function buildWorkerRunner<XataClient extends BaseClient>(config: WorkerRunnerConfig) {
+  return function xataWorker<WorkerFunction extends (ctx: XataWorkerContext<XataClient>, ...args: any[]) => any>(
+    name: string,
+    _worker: WorkerFunction
+  ) {
+    return async (...args: RemoveFirst<Parameters<WorkerFunction>>): Promise<Awaited<ReturnType<typeof _worker>>> => {
+      // Get an instance of crypto in browser, no need for cross compat, crypto subtle it is
+
+      // TODO: Call PROD too
+      const result = await fetch('http://localhost:64749', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // TODO: Encrypt this
+        // TODO: Add serializer
+        body: JSON.stringify({
+          name,
+          payload: args
+        })
+      });
+
+      // TODO: Detect if not compiled yet (+ errors)
+
+      // TODO: Add deserializer
+      return result.json() as any;
+    };
+  };
+}
