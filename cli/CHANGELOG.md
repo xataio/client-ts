@@ -1,5 +1,22 @@
 # @xata.io/cli
 
+## 0.7.0
+
+### Minor Changes
+
+- [#457](https://github.com/xataio/client-ts/pull/457) [`0584a5b`](https://github.com/xataio/client-ts/commit/0584a5b207a21dbc36ddc1d44b276f1d5bb60dc5) Thanks [@SferaDev](https://github.com/SferaDev)! - Load env variables so that code analysis detects them
+
+* [#455](https://github.com/xataio/client-ts/pull/455) [`cfa7cab`](https://github.com/xataio/client-ts/commit/cfa7cab134ca9bbcc0a3a841fd37c86bb630dce6) Thanks [@gimenete](https://github.com/gimenete)! - Allow editing the schema from source with xata schema edit --source
+
+- [#475](https://github.com/xataio/client-ts/pull/475) [`b6fa1b1`](https://github.com/xataio/client-ts/commit/b6fa1b11c27163c25bb9973697daae658b1a12e9) Thanks [@gimenete](https://github.com/gimenete)! - Allow injecting the branch name in codegen
+
+### Patch Changes
+
+- Updated dependencies [[`7547b7e`](https://github.com/xataio/client-ts/commit/7547b7edbc9a95c6620784cc5348316f27502c73), [`5f83ad1`](https://github.com/xataio/client-ts/commit/5f83ad176e0833bf43b26fcb085e43de44891dc7), [`8812380`](https://github.com/xataio/client-ts/commit/881238062b5eeac2dc8b9ba156720e0acc22c5c5), [`0584a5b`](https://github.com/xataio/client-ts/commit/0584a5b207a21dbc36ddc1d44b276f1d5bb60dc5), [`8d8a912`](https://github.com/xataio/client-ts/commit/8d8a9129e36452266c4c12fe35b421f66e572498), [`e99010c`](https://github.com/xataio/client-ts/commit/e99010c9ab9d355abadcfbcf98b5a3fcc80c307a), [`c4be404`](https://github.com/xataio/client-ts/commit/c4be404a3ecb34df9b1ef4501c92f5bdc221f19c), [`b6fa1b1`](https://github.com/xataio/client-ts/commit/b6fa1b11c27163c25bb9973697daae658b1a12e9)]:
+  - @xata.io/client@0.14.0
+  - @xata.io/codegen@0.14.0
+  - @xata.io/importer@0.2.3
+
 ## 0.6.0
 
 ### Minor Changes
@@ -131,4 +148,3 @@
   - @xata.io/shell@0.1.3
   - @xata.io/client@0.9.0
   - @xata.io/codegen@0.9.0
-
