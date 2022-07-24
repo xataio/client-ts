@@ -509,10 +509,6 @@ export type InviteWorkspaceMemberError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
-  | {
-      status: 409;
-      payload: Responses.SimpleError;
-    }
 >;
 
 export type InviteWorkspaceMemberRequestBody = {
@@ -521,12 +517,6 @@ export type InviteWorkspaceMemberRequestBody = {
    */
   email: string;
   role: Schemas.Role;
-  /*
-   * If set, Xata checks for invites already sent to the provided email address. If the caller gives a
-   * different role than the one invited prior (i.e. if the previous invite was for a maintainer account,
-   * and the new one is for an owner account), Xata will remove the old invite and create a new one.
-   */
-  overwrite_old?: boolean;
 };
 
 export type InviteWorkspaceMemberVariables = {
