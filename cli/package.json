@@ -7,7 +7,7 @@
     "xata": "./bin/run.js"
   },
   "homepage": "https://github.com/xataio/client-ts",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "type": "module",
@@ -32,7 +32,6 @@
     "ansi-regex": "^6.0.1",
     "chalk": "^5.0.1",
     "cli-highlight": "^2.1.11",
-    "clipboardy": "^3.0.0",
     "cosmiconfig": "^7.0.1",
     "deepmerge": "^4.2.2",
     "dotenv": "^16.0.1",
