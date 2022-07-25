@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.7.0
+
+### Minor Changes
+
+- [#457](https://github.com/xataio/client-ts/pull/457) [`0584a5b`](https://github.com/xataio/client-ts/commit/0584a5b207a21dbc36ddc1d44b276f1d5bb60dc5) Thanks [@SferaDev](https://github.com/SferaDev)! - Load env variables so that code analysis detects them
+
+* [#455](https://github.com/xataio/client-ts/pull/455) [`cfa7cab`](https://github.com/xataio/client-ts/commit/cfa7cab134ca9bbcc0a3a841fd37c86bb630dce6) Thanks [@gimenete](https://github.com/gimenete)! - Allow editing the schema from source with xata schema edit --source
+
+- [#475](https://github.com/xataio/client-ts/pull/475) [`b6fa1b1`](https://github.com/xataio/client-ts/commit/b6fa1b11c27163c25bb9973697daae658b1a12e9) Thanks [@gimenete](https://github.com/gimenete)! - Allow injecting the branch name in codegen
+
 ## 0.6.0
 
 ### Minor Changes
@@ -131,4 +141,3 @@
   - @xata.io/shell@0.1.3
   - @xata.io/client@0.9.0
   - @xata.io/codegen@0.9.0
-
