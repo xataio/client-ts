@@ -170,6 +170,7 @@ export type DBBranch = {
   metadata?: BranchMetadata;
   startedFrom?: StartedFromMetadata;
   schema: Schema;
+  usagePlan?: UsagePlan;
 };
 
 export type StartedFromMetadata = {
@@ -455,6 +456,19 @@ export type RecordsMetadata = {
      */
     more: boolean;
   };
+};
+
+export type UsagePlan = {
+  /*
+   * @minLength 3
+   */
+  dbBranchID: string;
+  unitCount: number;
+  /*
+   * @format date-time
+   */
+  activeSince: string;
+  assignedBy: string;
 };
 
 /**
