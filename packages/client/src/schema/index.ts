@@ -1,4 +1,4 @@
-import { Schemas } from '../api';
+import type { Schemas } from '../api';
 import { XataRecord } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isString } from '../util/lang';
