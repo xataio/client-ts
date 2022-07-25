@@ -521,12 +521,6 @@ export type InviteWorkspaceMemberRequestBody = {
    */
   email: string;
   role: Schemas.Role;
-  /*
-   * If set, Xata checks for invites already sent to the provided email address. If the caller gives a
-   * different role than the one invited prior (i.e. if the previous invite was for a maintainer account,
-   * and the new one is for an owner account), Xata will remove the old invite and create a new one.
-   */
-  overwrite_old?: boolean;
 };
 
 export type InviteWorkspaceMemberVariables = {
@@ -546,6 +540,59 @@ export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables)
     {},
     InviteWorkspaceMemberPathParams
   >({ url: '/workspaces/{workspaceId}/invites', method: 'post', ...variables });
+
+export type UpdateWorkspaceMemberInvitePathParams = {
+  /*
+   * Workspace name
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /*
+   * Invite identifier
+   */
+  inviteId: Schemas.InviteID;
+};
+
+export type UpdateWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateWorkspaceMemberInviteRequestBody = {
+  role: Schemas.Role;
+};
+
+export type UpdateWorkspaceMemberInviteVariables = {
+  body: UpdateWorkspaceMemberInviteRequestBody;
+  pathParams: UpdateWorkspaceMemberInvitePathParams;
+} & FetcherExtraProps;
+
+/**
+ * This operation provides a way to update an existing invite. Updates are performed in-place; they do not
+ * change the invite link, the expiry time, nor do they re-notify the recipient of the invite.
+ */
+export const updateWorkspaceMemberInvite = (variables: UpdateWorkspaceMemberInviteVariables) =>
+  fetch<
+    Schemas.WorkspaceInvite,
+    UpdateWorkspaceMemberInviteError,
+    UpdateWorkspaceMemberInviteRequestBody,
+    {},
+    {},
+    UpdateWorkspaceMemberInvitePathParams
+  >({ url: '/workspaces/{workspaceId}/invites/{inviteId}', method: 'patch', ...variables });
 
 export type CancelWorkspaceMemberInvitePathParams = {
   /*
@@ -3184,6 +3231,7 @@ export const operationsByTag = {
     updateWorkspaceMemberRole,
     removeWorkspaceMember,
     inviteWorkspaceMember,
+    updateWorkspaceMemberInvite,
     cancelWorkspaceMemberInvite,
     resendWorkspaceMemberInvite,
     acceptWorkspaceMemberInvite
