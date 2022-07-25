@@ -186,6 +186,18 @@ class WorkspaceApi {
     });
   }
 
+  public updateWorkspaceMemberInvite(
+    workspaceId: Schemas.WorkspaceID,
+    inviteId: Schemas.InviteID,
+    role: Schemas.Role
+  ): Promise<Schemas.WorkspaceInvite> {
+    return operationsByTag.workspaces.updateWorkspaceMemberInvite({
+      pathParams: { workspaceId, inviteId },
+      body: { role },
+      ...this.extraProps
+    });
+  }
+
   public cancelWorkspaceMemberInvite(workspaceId: Schemas.WorkspaceID, inviteId: Schemas.InviteID): Promise<void> {
     return operationsByTag.workspaces.cancelWorkspaceMemberInvite({
       pathParams: { workspaceId, inviteId },
