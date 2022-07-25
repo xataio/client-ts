@@ -89,21 +89,24 @@ function getGlobalFallbackBranch(): string | undefined {
 
 export async function getGitBranch(): Promise<string | undefined> {
   const cmd = ['git', 'branch', '--show-current'];
+  const fullCmd = cmd.join(' ');
 
   // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
   const nodeModule = ['child', 'process'].join('_');
+
+  const execOptions = { encoding: 'utf-6', stdio: 'ignore' };
 
   // Node.js: child_process.execSync
   try {
     // CJS
     if (typeof require === 'function') {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      return require(nodeModule).execSync(cmd.join(' '), { encoding: 'utf-8' }).trim();
+      return require(nodeModule).execSync(fullCmd, execOptions).trim();
     }
 
     // ESM
     const { execSync } = await import(nodeModule);
-    return execSync(cmd.join(' '), { encoding: 'utf-8' }).toString().trim();
+    return execSync(fullCmd, execOptions).toString().trim();
   } catch (err) {
     // Ignore
   }
@@ -111,7 +114,7 @@ export async function getGitBranch(): Promise<string | undefined> {
   // Deno: Deno.run
   try {
     if (isObject(Deno)) {
-      const process = Deno.run({ cmd, stdout: 'piped', stderr: 'piped' });
+      const process = Deno.run({ cmd, stdout: 'null', stderr: 'null' });
       return new TextDecoder().decode(await process.output()).trim();
     }
   } catch (err) {
