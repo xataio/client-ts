@@ -102,7 +102,8 @@ export async function getGitBranch(): Promise<string | undefined> {
     }
 
     // ESM
-    const { execSync } = await import(child_process);
+    const imp = (mod: string) => import(mod);
+    const { execSync } = await imp('child_process');
     return execSync(cmd.join(' '), { encoding: 'utf-8' }).toString().trim();
   } catch (err) {
     // Ignore
