@@ -97,8 +97,8 @@ export async function getGitBranch(): Promise<string | undefined> {
   try {
     // CJS
     if (typeof require === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      return require(nodeModule).execSync(cmd.join(' '), { encoding: 'utf-8' }).trim();
+      const req = require;
+      return req(nodeModule).execSync(cmd.join(' '), { encoding: 'utf-8' }).trim();
     }
 
     // ESM
