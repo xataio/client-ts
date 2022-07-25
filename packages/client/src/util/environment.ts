@@ -91,19 +91,18 @@ export async function getGitBranch(): Promise<string | undefined> {
   const cmd = ['git', 'branch', '--show-current'];
 
   // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
-  const nodeModule = ['child', 'process'].join('_');
+  const child_process = ['child', 'process'].join('_');
 
   // Node.js: child_process.execSync
   try {
     // CJS
     if (typeof require === 'function') {
-      const req = require;
-      return req(nodeModule).execSync(cmd.join(' '), { encoding: 'utf-8' }).trim();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      return require(child_process).execSync(cmd.join(' '), { encoding: 'utf-8' }).trim();
     }
 
     // ESM
-    const imp = (mod: string) => import(mod);
-    const { execSync } = await imp(nodeModule);
+    const { execSync } = await import(child_process);
     return execSync(cmd.join(' '), { encoding: 'utf-8' }).toString().trim();
   } catch (err) {
     // Ignore
