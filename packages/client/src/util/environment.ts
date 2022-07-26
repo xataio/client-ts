@@ -94,7 +94,7 @@ export async function getGitBranch(): Promise<string | undefined> {
   // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
   const nodeModule = ['child', 'process'].join('_');
 
-  const execOptions = { encoding: 'utf-8', stdio: 'ignore' };
+  const execOptions = { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] };
 
   // Node.js: child_process.execSync
   try {
@@ -114,7 +114,7 @@ export async function getGitBranch(): Promise<string | undefined> {
   // Deno: Deno.run
   try {
     if (isObject(Deno)) {
-      const process = Deno.run({ cmd, stdout: 'null', stderr: 'null' });
+      const process = Deno.run({ cmd, stdout: 'piped', stderr: 'null' });
       return new TextDecoder().decode(await process.output()).trim();
     }
   } catch (err) {
