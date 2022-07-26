@@ -141,7 +141,7 @@ export abstract class BaseCommand extends Command {
           suggestions = [`Run ${chalk.bold('xata auth login --force')} to override the existing API key`];
           break;
         case 'new':
-          message = 'a newly gerated API key';
+          message = 'a newly generated API key';
           suggestions = [
             `This is likely a bug in our end. Please report it at ${reportBugURL('Newly created API key is invalid')}`
           ];
