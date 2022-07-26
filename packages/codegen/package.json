@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/codegen",
-  "version": "0.12.0",
+  "version": "0.14.0",
   "description": "Generates types based on a Xata.io database schema. Meant to be used with @xata.io/client",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -9,10 +9,6 @@
   "exports": {
     "import": "./dist/index.mjs",
     "require": "./dist/index.cjs"
-  },
-  "bin": {
-    "codegen": "./dist/cli.js",
-    "xata-codegen": "./dist/cli.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -26,7 +22,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
@@ -36,7 +32,7 @@
     "pluralize": "^8.0.0",
     "prettier": "^2.7.1",
     "typescript": "^4.7.4",
-    "zod": "^3.17.9"
+    "zod": "^3.17.10"
   },
   "devDependencies": {
     "@types/pluralize": "^0.0.29",

@@ -1,4 +1,5 @@
-import { getBranchDetails, Schemas, searchBranch } from '../api';
+import type { Schemas } from '../api';
+import { getBranchDetails, searchBranch } from '../api';
 import { FuzzinessExpression, HighlightExpression } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
