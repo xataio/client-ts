@@ -147,7 +147,7 @@ export abstract class BaseCommand extends Command {
           ];
           break;
       }
-      this.error(`${err.message}. When using ${message}`, { suggestions });
+      this.error(`${err.message}, when using ${message}`, { suggestions });
     } else {
       throw err;
     }
