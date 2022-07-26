@@ -1,5 +1,4 @@
 import { BaseClient } from '@xata.io/client';
-import chokidar from 'chokidar';
 import { EdgeRuntime } from 'edge-runtime';
 import http from 'http';
 import { AddressInfo } from 'net';
@@ -7,27 +6,27 @@ import fetch from 'node-fetch';
 import url from 'url';
 import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
-import { compileWorkers } from '../../workers.js';
+import { buildWatcher, compileWorkers, WorkerScript } from '../../workers.js';
+
+export const WATCH_PORT = 64749;
 
 export default class WorkersCompile extends BaseCommand {
   static description = 'Extract and compile xata workers';
 
   static flags = {};
 
-  #workers: Map<string, string> = new Map();
-
   async run(): Promise<void> {
-    const watcher = chokidar.watch(['./**/*.ts', './*.ts'], {
-      ignored: [/(^|[/\\])\../, 'dist/*', 'node_modules/*'],
-      cwd: process.cwd()
-    });
+    const workers: Map<string, WorkerScript> = new Map();
 
-    watcher
-      .on('add', async (path) => this.#compile(path))
-      .on('change', async (path) => this.#compile(path))
-      .on('ready', async () => {
-        //if (!flags.watch) await watcher.close();
-      });
+    buildWatcher({
+      action: async (path) => {
+        const compiledWorkers = await compileWorkers(path);
+
+        for (const [name, worker] of Object.entries(compiledWorkers)) {
+          workers.set(name, worker);
+        }
+      }
+    });
 
     const server = http.createServer(async (req: http.IncomingMessage, res: http.ServerResponse) => {
       try {
@@ -57,13 +56,13 @@ export default class WorkersCompile extends BaseCommand {
         });
 
         const val = await bodySchema.parseAsync(body);
-        const workerFound = this.#workers.get(val.name);
+        const workerFound = workers.get(val.name);
         if (!workerFound) {
           res.writeHead(404, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ error: `Worker ${val.name} not found` }));
         }
 
-        const runtime = new EdgeRuntime({
+        new EdgeRuntime({
           extend: (context) => {
             context.args = val.payload ?? [];
             context.xata = new BaseClient({
@@ -79,9 +78,10 @@ export default class WorkersCompile extends BaseCommand {
 
         console.log('args', val.payload);
 
-        const result = await runtime.evaluate(
+        // TODO: Fix runtime.evaluate()
+        const result = ''; /**await runtime.evaluate(
           workerFound.replace('export { xataWorker };', `xataWorker({ xata }, ...args);`)
-        );
+        );**/
 
         // Return JSON response
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -92,18 +92,10 @@ export default class WorkersCompile extends BaseCommand {
       }
     });
 
-    server.listen(64749, () => {
+    server.listen(WATCH_PORT, () => {
       const { port } = server.address() as AddressInfo;
       console.log(`Server listening on port ${port}`);
     });
-  }
-
-  async #compile(file: string): Promise<void> {
-    const compiledWorkers = await compileWorkers(file);
-
-    for (const [name, worker] of Object.entries(compiledWorkers)) {
-      this.#workers.set(name, worker.modules[0].code);
-    }
   }
 }
 

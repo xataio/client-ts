@@ -2,9 +2,39 @@ import babel, { NodePath, PluginItem } from '@babel/core';
 import { CallExpression, FunctionDeclaration } from '@babel/types';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+import chokidar from 'chokidar';
 import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
 import { virtualFs } from 'rollup-plugin-virtual-fs';
+import { z } from 'zod';
+
+type BuildWatcherOptions = {
+  action: (path: string) => void;
+  watch?: boolean;
+};
+
+const watcherIncludePaths = ['./**/*.ts', './*.ts'];
+const watcherIgnorePaths = [/(^|[/\\])\../, 'dist/*', 'node_modules/*'];
+
+export function buildWatcher({ action, watch = true }: BuildWatcherOptions) {
+  const watcher = chokidar.watch(watcherIncludePaths, { ignored: watcherIgnorePaths, cwd: process.cwd() });
+
+  watcher
+    .on('add', async (path) => action(path))
+    .on('change', async (path) => action(path))
+    .on('ready', async () => {
+      if (!watch) await watcher.close();
+    });
+
+  return watcher;
+}
+
+export function waitForWatcher(watcher: chokidar.FSWatcher): Promise<void> {
+  return new Promise((resolve, reject) => {
+    watcher.on('close', resolve);
+    watcher.on('error', reject);
+  });
+}
 
 export async function compileWorkers(file: string) {
   const external: string[] = [];
@@ -45,7 +75,7 @@ export async function compileWorkers(file: string) {
     ]
   });
 
-  const compiledWorkers = [];
+  const compiledWorkers: WorkerScript[] = [];
   const defaultWorkerFileName = './_defaultWorker.ts';
 
   for (const [name, worker] of Object.entries(functions)) {
@@ -72,7 +102,7 @@ export async function compileWorkers(file: string) {
       compiledWorkers.push({
         name,
         main: output[0].fileName,
-        modules: output.map((o) => ({ name: o.fileName, code: (o as OutputChunk).code }))
+        modules: output.map((o) => ({ name: o.fileName, content: (o as OutputChunk).code }))
       });
     } catch (error) {
       console.error(error);
@@ -119,3 +149,16 @@ export default {
 };
 `;
 }
+
+export const workerScriptSchema = z.object({
+  name: z.string(),
+  main: z.string(),
+  modules: z.array(
+    z.object({
+      name: z.string(),
+      content: z.string()
+    })
+  )
+});
+
+export type WorkerScript = z.infer<typeof workerScriptSchema>;
