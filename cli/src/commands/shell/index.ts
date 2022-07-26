@@ -13,7 +13,6 @@ import repl from 'repl';
 import { fileURLToPath } from 'url';
 import util from 'util';
 import { BaseCommand } from '../../base.js';
-import { getProfile } from '../../credentials.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -33,7 +32,7 @@ export default class Shell extends BaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Shell);
-    const apiKey = (await getProfile())?.apiKey;
+    const apiKey = (await this.getProfile())?.apiKey;
     if (!apiKey)
       this.error('No API key found. Either use the XATA_API_KEY environment variable or run `xata auth login`');
     const { protocol, host, databaseURL, workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(
