@@ -84,6 +84,14 @@ export async function generate({
         super({ ...defaultOptions, ...options}, tables);
       }
     }
+
+    let instance: XataClient | undefined = undefined;
+    export const getXataClient = () => {
+      if (instance) return instance;
+
+      instance = new XataClient();
+      return instance;
+    };
   `;
 
   const transpiled = transpile(code, language, javascriptTarget);
