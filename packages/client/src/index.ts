@@ -15,3 +15,4 @@ export * from './search';
 export * from './serializer';
 export * from './util/config';
 export * from './util/apiKey';
+export * from './workers';
