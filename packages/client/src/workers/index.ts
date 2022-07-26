@@ -10,7 +10,7 @@ type WorkerRunnerConfig = {
   publicKey: string;
 };
 
-export function buildWorkerRunner<XataClient extends ClientConstructor>(config: WorkerRunnerConfig) {
+export function buildWorkerRunner<XataClient extends ClientConstructor<any>>(config: WorkerRunnerConfig) {
   return function xataWorker<WorkerFunction extends (ctx: XataWorkerContext<XataClient>, ...args: any[]) => any>(
     name: string,
     _worker: WorkerFunction
