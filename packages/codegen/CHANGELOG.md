@@ -1,5 +1,15 @@
 # @xata.io/codegen
 
+## 0.15.0
+
+### Minor Changes
+
+- [#501](https://github.com/xataio/client-ts/pull/501) [`ad9817f`](https://github.com/xataio/client-ts/commit/ad9817fc4191158c7beaeb292bb8cd4f55a5ec6d) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not pluralize table names
+
+### Patch Changes
+
+- [#498](https://github.com/xataio/client-ts/pull/498) [`65abca8`](https://github.com/xataio/client-ts/commit/65abca8be59f00b307e576b945c3cccffc3820af) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose singleton of xata client
+
 ## 0.14.0
 
 ### Minor Changes

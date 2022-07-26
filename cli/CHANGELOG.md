@@ -1,5 +1,20 @@
 # @xata.io/cli
 
+## 0.8.0
+
+### Minor Changes
+
+- [#501](https://github.com/xataio/client-ts/pull/501) [`ad9817f`](https://github.com/xataio/client-ts/commit/ad9817fc4191158c7beaeb292bb8cd4f55a5ec6d) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not pluralize table names
+
+### Patch Changes
+
+- [#502](https://github.com/xataio/client-ts/pull/502) [`7e4837d`](https://github.com/xataio/client-ts/commit/7e4837d3820157d47d222fb05c18417178dcda22) Thanks [@gimenete](https://github.com/gimenete)! - Provide feedback when the API key is invalid
+
+- Updated dependencies [[`65abca8`](https://github.com/xataio/client-ts/commit/65abca8be59f00b307e576b945c3cccffc3820af), [`e923d11`](https://github.com/xataio/client-ts/commit/e923d11fe357519dc4ca3ae722670e6e70ccd1c6), [`ad9817f`](https://github.com/xataio/client-ts/commit/ad9817fc4191158c7beaeb292bb8cd4f55a5ec6d), [`599b52c`](https://github.com/xataio/client-ts/commit/599b52c3090222eedef85d1ad1e907874cd3e801)]:
+  - @xata.io/codegen@0.15.0
+  - @xata.io/client@0.15.0
+  - @xata.io/importer@0.2.4
+
 ## 0.7.0
 
 ### Minor Changes
