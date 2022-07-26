@@ -1,4 +1,4 @@
-import { BaseClient } from '../client';
+import { ClientConstructor } from '../client';
 import { Request } from '../util/request';
 
 type XataWorkerContext<XataClient> = { xata: XataClient; request: Request; env: Record<string, string | undefined> };
@@ -10,7 +10,7 @@ type WorkerRunnerConfig = {
   publicKey: string;
 };
 
-export function buildWorkerRunner<XataClient extends BaseClient>(config: WorkerRunnerConfig) {
+export function buildWorkerRunner<XataClient extends ClientConstructor>(config: WorkerRunnerConfig) {
   return function xataWorker<WorkerFunction extends (ctx: XataWorkerContext<XataClient>, ...args: any[]) => any>(
     name: string,
     _worker: WorkerFunction
