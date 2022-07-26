@@ -35,12 +35,16 @@ export type BranchMigrationPlan = {
   migration: Schemas.BranchMigration;
 };
 
-export type RecordUpdateResponse = {
-  id: string;
-  xata: {
-    version: number;
-  };
-};
+export type RecordResponse = Schemas.XataRecord;
+
+export type RecordUpdateResponse =
+  | Schemas.XataRecord
+  | {
+      id: string;
+      xata: {
+        version: number;
+      };
+    };
 
 export type QueryResponse = {
   records: Schemas.XataRecord[];

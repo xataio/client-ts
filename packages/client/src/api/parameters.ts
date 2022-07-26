@@ -19,6 +19,8 @@ export type ColumnFilterParam = Schemas.ColumnsFilter;
 
 export type ColumnNameParam = Schemas.ColumnName;
 
+export type ColumnsFilterParam = Schemas.ColumnsFilter;
+
 export type DBBranchNameParam = Schemas.DBBranchName;
 
 export type DBNameParam = Schemas.DBName;

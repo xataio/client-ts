@@ -1941,13 +1941,6 @@ export type InsertRecordError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type InsertRecordResponse = {
-  id: string;
-  xata: {
-    version: number;
-  };
-};
-
 export type InsertRecordVariables = {
   body?: Record<string, any>;
   pathParams: InsertRecordPathParams;
@@ -1959,7 +1952,7 @@ export type InsertRecordVariables = {
  */
 export const insertRecord = (variables: InsertRecordVariables) =>
   fetch<
-    InsertRecordResponse,
+    Responses.RecordUpdateResponse,
     InsertRecordError,
     Record<string, any>,
     {},
@@ -2192,7 +2185,7 @@ export type DeleteRecordVariables = {
 } & FetcherExtraProps;
 
 export const deleteRecord = (variables: DeleteRecordVariables) =>
-  fetch<undefined, DeleteRecordError, undefined, {}, DeleteRecordQueryParams, DeleteRecordPathParams>({
+  fetch<Responses.RecordResponse, DeleteRecordError, undefined, {}, DeleteRecordQueryParams, DeleteRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
     method: 'delete',
     ...variables
@@ -2245,7 +2238,7 @@ export type GetRecordVariables = {
  * Retrieve record by ID
  */
 export const getRecord = (variables: GetRecordVariables) =>
-  fetch<Schemas.XataRecord, GetRecordError, undefined, {}, GetRecordQueryParams, GetRecordPathParams>({
+  fetch<Responses.RecordResponse, GetRecordError, undefined, {}, GetRecordQueryParams, GetRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
     method: 'get',
     ...variables
@@ -2283,16 +2276,7 @@ export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
-  | {
-      status: 422;
-      payload: Responses.SimpleError;
-    }
 >;
-
-export type BulkInsertTableRecordsResponse = {
-  recordIDs?: string[];
-  records?: Record<string, any>[];
-};
 
 export type BulkInsertTableRecordsRequestBody = {
   records: Record<string, any>[];
@@ -2309,7 +2293,12 @@ export type BulkInsertTableRecordsVariables = {
  */
 export const bulkInsertTableRecords = (variables: BulkInsertTableRecordsVariables) =>
   fetch<
-    BulkInsertTableRecordsResponse,
+    | {
+        recordIDs: string[];
+      }
+    | {
+        records: Schemas.XataRecord[];
+      },
     BulkInsertTableRecordsError,
     BulkInsertTableRecordsRequestBody,
     {},
