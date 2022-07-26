@@ -35,11 +35,11 @@ const tables = [
 export type SchemaTables = typeof tables;
 export type DatabaseSchema = SchemaInference<SchemaTables>;
 
-export type Team = DatabaseSchema['teams'];
-export type TeamRecord = Team & XataRecord;
+export type Teams = DatabaseSchema['teams'];
+export type TeamsRecord = Teams & XataRecord;
 
-export type User = DatabaseSchema['users'];
-export type UserRecord = User & XataRecord;
+export type Users = DatabaseSchema['users'];
+export type UsersRecord = Users & XataRecord;
 
 const DatabaseClient = buildClient();
 
