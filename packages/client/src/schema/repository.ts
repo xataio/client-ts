@@ -471,6 +471,10 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       ...fetchProps
     });
 
+    if (!isResponseWithRecords(response)) {
+      throw new Error("Request included columns but server didn't include them");
+    }
+
     const schemaTables = await this.#getSchemaTables();
     return response.records?.map((item) => initObject(this.db, schemaTables, this.#table, item)) as any;
   }
@@ -900,4 +904,8 @@ function getIds(value: any): string[] {
     .flat();
 
   return isString(value.id) ? [value.id, ...nestedIds] : nestedIds;
+}
+
+function isResponseWithRecords(value: any): value is { records: Schemas.XataRecord[] } {
+  return isObject(value) && Array.isArray(value.records);
 }

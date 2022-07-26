@@ -564,7 +564,7 @@ class RecordsApi {
     tableName: Schemas.TableName,
     record: Record<string, any>,
     options: Types.InsertRecordQueryParams = {}
-  ): Promise<Types.InsertRecordResponse> {
+  ): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.insertRecord({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
       queryParams: options,
@@ -631,7 +631,7 @@ class RecordsApi {
     tableName: Schemas.TableName,
     recordId: Schemas.RecordID,
     options: Types.DeleteRecordQueryParams = {}
-  ): Promise<void> {
+  ): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.deleteRecord({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName, recordId },
       queryParams: options,
@@ -661,7 +661,14 @@ class RecordsApi {
     tableName: Schemas.TableName,
     records: Record<string, any>[],
     options: Types.BulkInsertTableRecordsQueryParams = {}
-  ): Promise<Types.BulkInsertTableRecordsResponse> {
+  ): Promise<
+    | {
+        recordIDs: string[];
+      }
+    | {
+        records: Schemas.XataRecord[];
+      }
+  > {
     return operationsByTag.records.bulkInsertTableRecords({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
       queryParams: options,
