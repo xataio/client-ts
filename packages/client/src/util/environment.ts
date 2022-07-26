@@ -94,7 +94,7 @@ export async function getGitBranch(): Promise<string | undefined> {
   // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
   const nodeModule = ['child', 'process'].join('_');
 
-  const execOptions = { encoding: 'utf-6', stdio: 'ignore' };
+  const execOptions = { encoding: 'utf-8', stdio: 'ignore' };
 
   // Node.js: child_process.execSync
   try {
