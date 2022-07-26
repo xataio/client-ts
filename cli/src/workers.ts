@@ -1,4 +1,5 @@
 import babel, { NodePath, PluginItem } from '@babel/core';
+// @ts-ignore
 import presetTypeScript from '@babel/preset-typescript';
 import type { CallExpression, FunctionDeclaration } from '@babel/types';
 import commonjs from '@rollup/plugin-commonjs';
