@@ -1,5 +1,5 @@
 import babel, { NodePath, PluginItem } from '@babel/core';
-import { CallExpression, FunctionDeclaration } from '@babel/types';
+import type { CallExpression, FunctionDeclaration } from '@babel/types';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import chokidar from 'chokidar';
