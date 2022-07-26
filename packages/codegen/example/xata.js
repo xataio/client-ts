@@ -41,3 +41,9 @@ export class XataClient extends DatabaseClient {
     super({ ...defaultOptions, ...options }, tables);
   }
 }
+let instance = undefined;
+export const getXataClient = () => {
+  if (instance) return instance;
+  instance = new XataClient();
+  return instance;
+};
