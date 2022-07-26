@@ -1,4 +1,5 @@
 import { BaseClient } from '../client';
+import { Request } from '../util/request';
 
 type XataWorkerContext<XataClient> = { xata: XataClient; request: Request; env: Record<string, string | undefined> };
 
@@ -18,6 +19,8 @@ export function buildWorkerRunner<XataClient extends BaseClient>(config: WorkerR
       // Get an instance of crypto in browser, no need for cross compat, crypto subtle it is
 
       // TODO: Call PROD too
+
+      // @ts-ignore - This is a browser only feature - fetch will be defined in the browser
       const result = await fetch('http://localhost:64749', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
