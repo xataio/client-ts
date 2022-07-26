@@ -1,4 +1,5 @@
 import babel, { NodePath, PluginItem } from '@babel/core';
+import presetTypeScript from '@babel/preset-typescript';
 import type { CallExpression, FunctionDeclaration } from '@babel/types';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
@@ -41,7 +42,7 @@ export async function compileWorkers(file: string) {
   const functions: Record<string, string> = {};
 
   babel.transformFileSync(file, {
-    presets: ['@babel/preset-typescript'],
+    presets: [presetTypeScript],
     plugins: [
       (): PluginItem => {
         return {
