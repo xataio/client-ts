@@ -1,4 +1,4 @@
-import fetch from 'cross-fetch';
+import fetch from 'node-fetch';
 import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
 import { getProfile } from '../../credentials.js';
