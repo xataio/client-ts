@@ -9,7 +9,7 @@ import {
   PAGINATION_MAX_OFFSET,
   PAGINATION_MAX_SIZE
 } from '../../packages/client/src/schema/pagination';
-import { UserRecord, XataClient } from '../../packages/codegen/example/xata';
+import { UsersRecord, XataClient } from '../../packages/codegen/example/xata';
 import { animalUsers, fruitUsers, mockUsers, ownerAnimals, ownerFruits, teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
@@ -326,7 +326,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements pagination', async () => {
-    const loadUsers = async (repository: Repository<UserRecord>) => {
+    const loadUsers = async (repository: Repository<UsersRecord>) => {
       return repository.getPaginated({ pagination: { size: 10 } });
     };
 
@@ -335,7 +335,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements paginable', async () => {
-    async function foo(page: Paginable<UserRecord>): Promise<UserRecord[]> {
+    async function foo(page: Paginable<UsersRecord>): Promise<UsersRecord[]> {
       const nextPage = page.hasNextPage() ? await foo(await page.nextPage()) : [];
       return [...page.records, ...nextPage];
     }
@@ -504,7 +504,7 @@ describe('integration tests', () => {
   });
 
   test('multiple errors in one response', async () => {
-    const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as UserRecord[];
+    const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as UsersRecord[];
 
     expect(client.db.users.create(invalidUsers)).rejects.toHaveProperty('status', 400);
   });
