@@ -2,9 +2,9 @@ import { Flags } from '@oclif/core';
 import fetch from 'node-fetch';
 import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
-import { buildWatcher, compileWorkers, waitForWatcher, WorkerScript, workerScriptSchema } from '../../workers.js';
+import { buildWatcher, compileWorkers, WorkerScript, workerScriptSchema } from '../../workers.js';
 
-const UPLOAD_ENDPOINT = 'http://localhost:3000/api/workers';
+const UPLOAD_ENDPOINT = 'https://xata-app-git-workers-xata.vercel.app/api/workers';
 
 export default class Upload extends BaseCommand {
   static description = 'Compile and upload xata workers';
@@ -49,12 +49,9 @@ export default class Upload extends BaseCommand {
           workers.set(name, worker);
         }
       },
-      watch: false,
       included: include?.split(','),
       ignored: ignore?.split(',')
     });
-
-    await waitForWatcher(watcher);
 
     this.log(`Uploading ${workers.size} workers`);
 
@@ -75,10 +72,15 @@ export default class Upload extends BaseCommand {
       body: JSON.stringify(body)
     });
 
-    const { id: worker, createdAt: compileTime, publicKey } = responseSchema.parse(await response.json());
+    const json = await response.json();
+    console.log(json);
+
+    const { id: worker, createdAt: compileTime, publicKey } = responseSchema.parse(json);
 
     // TODO: Update codegen file and save
     console.log({ worker, workspace, compileTime, publicKey });
+
+    await watcher.close();
   }
 }
 

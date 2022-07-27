@@ -10,12 +10,10 @@ import virtual from '@rollup/plugin-virtual';
 import chokidar from 'chokidar';
 import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
-import { virtualFs } from 'rollup-plugin-virtual-fs';
 import { z } from 'zod';
 
 type BuildWatcherOptions = {
   action: (path: string) => void;
-  watch?: boolean;
   included?: Array<string>;
   ignored?: Array<string | RegExp>;
 };
@@ -34,7 +32,6 @@ const watcherIgnorePaths = [/(^|[/\\])\../, 'dist/*', 'node_modules/*'];
 
 export function buildWatcher({
   action,
-  watch = true,
   included = watcherIncludePaths,
   ignored = watcherIgnorePaths
 }: BuildWatcherOptions) {
@@ -48,10 +45,6 @@ export function buildWatcher({
     .on('change', async (path) => {
       console.log(`Changed ${path}`);
       action(path);
-    })
-    .on('ready', async () => {
-      console.log('Watcher ready');
-      if (!watch) await watcher.close();
     });
 
   return watcher;
@@ -164,15 +157,10 @@ function workerCode(code: string, external: string[]) {
 import { BaseClient } from "@xata.io/client";
 ${external.join('\n')}
 
-export interface Environment {
-  XATA_API_KEY: string;
-  XATA_DATABASE_URL: string;
-}
-
 const xataWorker = ${code};
 
 export default {
-  async fetch(request: Request, environment: Environment): Promise<Response> {
+  async fetch(request, environment) {
     const {
       XATA_API_KEY: apiKey,
       XATA_DATABASE_URL: databaseURL,
