@@ -1,26 +1,36 @@
+import { Flags } from '@oclif/core';
 import fetch from 'node-fetch';
 import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
-import { getProfile } from '../../credentials.js';
 import { buildWatcher, compileWorkers, waitForWatcher, WorkerScript, workerScriptSchema } from '../../workers.js';
 
 const UPLOAD_ENDPOINT = 'http://localhost:3000/api/workers';
 
-export default class WorkersCompile extends BaseCommand {
+export default class Upload extends BaseCommand {
   static description = 'Compile and upload xata workers';
 
-  static flags = {};
+  static flags = {
+    include: Flags.string({
+      description: 'Include a glob pattern of files to compile'
+    }),
+    ignore: Flags.string({
+      description: 'Exclude a glob pattern of files to compile'
+    })
+  };
 
   async run(): Promise<void> {
-    const profile = await getProfile();
+    const { flags } = await this.parse(Upload);
+
+    const profile = await this.getProfile();
     if (!profile) this.error('No profile found');
 
-    const workspace = await this.getWorkspace({ allowCreate: true });
-    const database = await this.getDatabase(workspace, { allowCreate: true });
+    const { workspace, databaseURL } = await this.getParsedDatabaseURL();
 
     // TODO: Ask which local environment variables to include
     // TODO: Read and parse local environment variables to include as secrets
     const environment = {};
+
+    const { include, ignore } = flags;
 
     const workers: Map<string, WorkerScript> = new Map();
 
@@ -35,7 +45,9 @@ export default class WorkersCompile extends BaseCommand {
 
           workers.set(name, worker);
         }
-      }
+      },
+      included: include?.split(','),
+      ignored: ignore?.split(',')
     });
 
     await waitForWatcher(watcher);
@@ -43,8 +55,7 @@ export default class WorkersCompile extends BaseCommand {
     const body: Body = {
       workspace,
       connection: {
-        // TODO: Add support for multiple hosts
-        databaseUrl: `https://${workspace}.xata.sh/db/${database}`,
+        databaseUrl: databaseURL,
         // TODO: Database scoped service API Key (backend generated maybe)
         apiKey: profile.apiKey
       },

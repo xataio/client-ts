@@ -13,18 +13,32 @@ import { z } from 'zod';
 type BuildWatcherOptions = {
   action: (path: string) => void;
   watch?: boolean;
+  included?: Array<string>;
+  ignored?: Array<string | RegExp>;
 };
 
 const watcherIncludePaths = ['./**/*.ts', './*.ts'];
 const watcherIgnorePaths = [/(^|[/\\])\../, 'dist/*', 'node_modules/*'];
 
-export function buildWatcher({ action, watch = true }: BuildWatcherOptions) {
-  const watcher = chokidar.watch(watcherIncludePaths, { ignored: watcherIgnorePaths, cwd: process.cwd() });
+export function buildWatcher({
+  action,
+  watch = true,
+  included = watcherIncludePaths,
+  ignored = watcherIgnorePaths
+}: BuildWatcherOptions) {
+  const watcher = chokidar.watch(included, { ignored, cwd: process.cwd() });
 
   watcher
-    .on('add', async (path) => action(path))
-    .on('change', async (path) => action(path))
+    .on('add', async (path) => {
+      console.log(`Added ${path}`);
+      action(path);
+    })
+    .on('change', async (path) => {
+      console.log(`Changed ${path}`);
+      action(path);
+    })
     .on('ready', async () => {
+      console.log('Watcher ready');
       if (!watch) await watcher.close();
     });
 
