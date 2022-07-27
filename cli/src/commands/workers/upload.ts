@@ -30,6 +30,7 @@ export default class Upload extends BaseCommand {
     // TODO: Read and parse local environment variables to include as secrets
     const environment = {};
 
+    // TODO: Load them from .xatarc too
     const { include, ignore } = flags;
     console.log(`Including: ${include}`);
     console.log(`Ignoring: ${ignore}`);
