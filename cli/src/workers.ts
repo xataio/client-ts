@@ -11,7 +11,6 @@ import extensionResolver from 'babel-plugin-module-extension-resolver';
 import chokidar from 'chokidar';
 import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
-import styles from 'rollup-plugin-styles';
 import { virtualFs } from 'rollup-plugin-virtual-fs';
 import { z } from 'zod';
 
@@ -126,6 +125,8 @@ export async function compileWorkers(file: string) {
   const compiledWorkers: WorkerScript[] = [];
   const defaultWorkerFileName = './_defaultWorker.ts';
 
+  console.log('Compiling workers...', file);
+
   for (const [name, worker] of Object.entries(functions)) {
     try {
       const bundle = await rollup({
@@ -134,12 +135,11 @@ export async function compileWorkers(file: string) {
         plugins: [
           resolve(),
           commonjs(),
-          styles(),
           virtualFs({
             memoryOnly: true, // FIXME: this is a hack to make the plugin work
             files: {
               [defaultWorkerFileName]: defaultWorker(file),
-              [`./${file}`]: `${external.join('\n')}\n export const xataWorker = ${worker};`
+              [file]: `${external.join('\n')}\n export const xataWorker = ${worker};`
             }
           }),
           esbuild({ target: 'es2022' })
