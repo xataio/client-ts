@@ -76,9 +76,6 @@ export async function compileWorkers(file: string) {
           visitor: {
             ImportDeclaration: {
               enter(path, state) {
-                const options = state.opts as Record<string, unknown>;
-                const root = String(options['root']);
-
                 for (const specifier of path.node.specifiers) {
                   const binding = path.scope.getBinding(specifier.local.name);
                   if (!binding) continue;
@@ -89,9 +86,9 @@ export async function compileWorkers(file: string) {
                       return isXataWorker(path);
                     });
 
-                    if (usedInWorker) external.push(path.toString());
-
-                    console.log(`[${path.toString()}] ${specifier.local.name} used: ${usedInWorker}`);
+                    if (usedInWorker) {
+                      external.push(path.toString());
+                    }
                   }
                 }
               }

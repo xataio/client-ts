@@ -49,6 +49,7 @@ export default class Upload extends BaseCommand {
           workers.set(name, worker);
         }
       },
+      watch: false,
       included: include?.split(','),
       ignored: ignore?.split(',')
     });
