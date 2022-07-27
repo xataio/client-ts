@@ -31,6 +31,8 @@ export default class Upload extends BaseCommand {
     const environment = {};
 
     const { include, ignore } = flags;
+    console.log(`Including: ${include}`);
+    console.log(`Ignoring: ${ignore}`);
 
     const workers: Map<string, WorkerScript> = new Map();
 

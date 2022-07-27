@@ -17,7 +17,16 @@ type BuildWatcherOptions = {
   ignored?: Array<string | RegExp>;
 };
 
-const watcherIncludePaths = ['./**/*.ts', './*.ts'];
+const watcherIncludePaths = [
+  './**/*.ts',
+  './*.ts',
+  './**/*.js',
+  './*.js',
+  './**/*.tsx',
+  './*.tsx',
+  './**/*.jsx',
+  './*.jsx'
+];
 const watcherIgnorePaths = [/(^|[/\\])\../, 'dist/*', 'node_modules/*'];
 
 export function buildWatcher({
