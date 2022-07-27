@@ -56,6 +56,8 @@ export default class Upload extends BaseCommand {
 
     await waitForWatcher(watcher);
 
+    this.log(`Uploading ${workers.size} workers`);
+
     const body: Body = {
       workspace,
       connection: {

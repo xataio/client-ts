@@ -58,9 +58,8 @@ export function buildWatcher({
 }
 
 export function waitForWatcher(watcher: chokidar.FSWatcher): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     watcher.on('close', resolve);
-    watcher.on('error', reject);
   });
 }
 
