@@ -117,10 +117,10 @@ export async function compileWorkers(file: string) {
           styles(),
           virtualFs({
             memoryOnly: false,
-            extensions: ['.ts', '.tsx', '.js', '/index.js'],
+            extensions: ['.ts', '.tsx', '.js'],
             files: {
               [defaultWorkerFileName]: defaultWorker(file),
-              [`./${file}`]: `${external.join('\n')}\n const xataWorker = ${worker}; export default xataWorker;`
+              [`./_${file}`]: `${external.join('\n')}\n export const xataWorker = ${worker};`
             }
           }),
           esbuild({ target: 'es2022' })
@@ -161,7 +161,7 @@ export interface Environment {
 
 export default {
   async fetch(request: Request, environment: Environment): Promise<Response> {
-    const { default: xataWorker } = await import("./${main}");
+    const { xataWorker } = await import("./_${main}");
 
     const {
       XATA_API_KEY: apiKey,
