@@ -4,12 +4,13 @@ import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers, WorkerScript, workerScriptSchema } from '../../workers.js';
 
-const UPLOAD_ENDPOINT = 'https://xata-app-git-workers-xata.vercel.app/api/workers';
+const UPLOAD_ENDPOINT = 'http://localhost:3000/api/workers';
 
 export default class Upload extends BaseCommand {
   static description = 'Compile and upload xata workers';
 
   static flags = {
+    ...this.databaseURLFlag,
     include: Flags.string({
       description: 'Include a glob pattern of files to compile'
     }),
@@ -19,21 +20,17 @@ export default class Upload extends BaseCommand {
   };
 
   async run(): Promise<void> {
+    // TODO: Load them from .xatarc too
     const { flags } = await this.parse(Upload);
 
     const profile = await this.getProfile();
     if (!profile) this.error('No profile found');
 
-    const { workspace, databaseURL } = await this.getParsedDatabaseURL();
+    const { workspace, databaseURL } = await this.getParsedDatabaseURL(flags.db);
 
     // TODO: Ask which local environment variables to include
     // TODO: Read and parse local environment variables to include as secrets
     const environment = {};
-
-    // TODO: Load them from .xatarc too
-    const { include, ignore } = flags;
-    console.log(`Including: ${include}`);
-    console.log(`Ignoring: ${ignore}`);
 
     const workers: Map<string, WorkerScript> = new Map();
 
@@ -49,8 +46,8 @@ export default class Upload extends BaseCommand {
           workers.set(name, worker);
         }
       },
-      included: include?.split(','),
-      ignored: ignore?.split(',')
+      included: flags.include?.split(','),
+      ignored: flags.ignore?.split(',')
     });
 
     this.log(`Uploading ${workers.size} workers`);
