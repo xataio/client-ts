@@ -9,6 +9,7 @@ import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
 import { parseSchemaFile } from '../../schema.js';
+import { reportBugURL } from '../../utils.js';
 import Codegen from '../codegen/index.js';
 
 // The enquirer library has type definitions but they are very poor
@@ -147,9 +148,7 @@ Beware that this can lead to ${chalk.bold(
       this.error(`The editor ${chalk.bold(env)} is a graphical editor that is not supported.`, {
         suggestions: [
           `Set the ${chalk.bold('EDITOR')} or ${chalk.bold('VISUAL')} variables to a different editor`,
-          `Open an issue at https://github.com/xataio/client-ts/issues/new?title=${encodeURIComponent(
-            `Support \`${info.binary}\` for schema editing`
-          )}`
+          `Open an issue at ${reportBugURL(`Support \`${info.binary}\` editor for schema editing`)}`
         ]
       });
     }

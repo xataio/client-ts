@@ -1,5 +1,4 @@
 import Case from 'case';
-import pluralize from 'pluralize';
 import prettier, { BuiltInParserName } from 'prettier';
 import * as parserJavascript from 'prettier/parser-babel.js';
 import * as parserTypeScript from 'prettier/parser-typescript.js';
@@ -24,8 +23,7 @@ export type Language = 'typescript' | 'javascript';
 export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
 function getTypeName(tableName: string) {
-  const pascal = Case.pascal(tableName);
-  const name = pluralize.singular(pascal);
+  const name = Case.pascal(tableName);
 
   // If table starts with a number, prepend a $ sign
   if (name.match(/^\d/)) return `$${name}`;
@@ -84,6 +82,14 @@ export async function generate({
         super({ ...defaultOptions, ...options}, tables);
       }
     }
+
+    let instance: XataClient | undefined = undefined;
+    export const getXataClient = () => {
+      if (instance) return instance;
+
+      instance = new XataClient();
+      return instance;
+    };
   `;
 
   const transpiled = transpile(code, language, javascriptTarget);

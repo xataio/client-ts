@@ -6,7 +6,6 @@ import path from 'path';
 import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
-import { getProfile } from '../../credentials.js';
 import { isIgnored } from '../../git.js';
 import { xataDatabaseSchema } from '../../schema.js';
 import Browse from '../browse/index.js';
@@ -245,7 +244,7 @@ export default class Init extends BaseCommand {
     this.info(`We are going to ${message}. This file will contain an API key and optionally your fallback branch.`);
 
     // TODO: generate a database-scoped API key
-    let apiKey = (await getProfile())?.apiKey;
+    let apiKey = (await this.getProfile())?.apiKey;
 
     if (!apiKey) {
       apiKey = await createAPIKeyThroughWebUI();
