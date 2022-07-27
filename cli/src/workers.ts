@@ -9,6 +9,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import chokidar from 'chokidar';
 import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
+import styles from 'rollup-plugin-styles';
 import { virtualFs } from 'rollup-plugin-virtual-fs';
 import { z } from 'zod';
 
@@ -113,6 +114,7 @@ export async function compileWorkers(file: string) {
         plugins: [
           resolve(),
           commonjs(),
+          styles(),
           virtualFs({
             memoryOnly: false,
             extensions: ['.ts', '.tsx', '.js', '/index.js'],
