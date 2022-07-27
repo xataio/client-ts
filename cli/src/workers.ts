@@ -13,7 +13,7 @@ import esbuild from 'rollup-plugin-esbuild';
 import { z } from 'zod';
 
 type BuildWatcherOptions = {
-  action: (path: string) => void;
+  action: (path: string) => Promise<void>;
   included?: Array<string>;
   ignored?: Array<string | RegExp>;
 };
@@ -34,26 +34,26 @@ export function buildWatcher({
   action,
   included = watcherIncludePaths,
   ignored = watcherIgnorePaths
-}: BuildWatcherOptions) {
-  const watcher = chokidar.watch(included, { ignored, cwd: process.cwd() });
-
-  watcher
-    .on('add', async (path) => {
-      console.log(`Added ${path}`);
-      action(path);
-    })
-    .on('change', async (path) => {
-      console.log(`Changed ${path}`);
-      action(path);
-    });
-
-  return watcher;
-}
-
-export function waitForWatcher(watcher: chokidar.FSWatcher): Promise<void> {
+}: BuildWatcherOptions): Promise<chokidar.FSWatcher> {
   return new Promise((resolve, reject) => {
-    watcher.on('close', resolve);
-    watcher.on('error', reject);
+    const watcher = chokidar.watch(included, { ignored, cwd: process.cwd() });
+
+    const init: Promise<void>[] = [];
+
+    watcher
+      .on('add', (path) => {
+        console.log(`Added ${path}`);
+        init.push(action(path));
+      })
+      .on('change', async (path) => {
+        console.log(`Changed ${path}`);
+        await action(path);
+      })
+      .on('error', () => reject(new Error('Watcher error')))
+      .on('ready', async () => {
+        console.log('Watcher ready');
+        await Promise.all(init).then(() => resolve(watcher));
+      });
   });
 }
 
@@ -68,7 +68,7 @@ export async function compileWorkers(file: string) {
         return {
           visitor: {
             ImportDeclaration: {
-              enter(path, state) {
+              enter(path) {
                 for (const specifier of path.node.specifiers) {
                   const binding = path.scope.getBinding(specifier.local.name);
                   if (!binding) continue;

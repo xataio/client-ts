@@ -34,16 +34,18 @@ export default class Upload extends BaseCommand {
 
     const workers: Map<string, WorkerScript> = new Map();
 
-    const watcher = buildWatcher({
+    const watcher = await buildWatcher({
       action: async (path) => {
         const compiledWorkers = await compileWorkers(path);
+        console.log(`Compiled ${compiledWorkers.length} workers`);
 
-        for (const [name, worker] of Object.entries(compiledWorkers)) {
-          if (workers.has(name)) {
-            this.error(`Worker ${name} already exists. Worker names must be unique.`);
+        for (const worker of compiledWorkers) {
+          if (workers.has(worker.name)) {
+            this.error(`Worker ${worker.name} already exists. Worker names must be unique.`);
           }
 
-          workers.set(name, worker);
+          console.log('Saving worker', worker.name);
+          workers.set(worker.name, worker);
         }
       },
       included: flags.include?.split(','),
