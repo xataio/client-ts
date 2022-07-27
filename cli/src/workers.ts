@@ -6,6 +6,8 @@ import presetReact from '@babel/preset-react';
 import type { CallExpression, FunctionDeclaration } from '@babel/types';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+// @ts-ignore
+import extensionResolver from 'babel-plugin-module-extension-resolver';
 import chokidar from 'chokidar';
 import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
@@ -71,6 +73,10 @@ export async function compileWorkers(file: string) {
   babel.transformFileSync(file, {
     presets: [presetTypeScript, presetReact],
     plugins: [
+      [
+        extensionResolver,
+        { extensionsToKeep: ['.js', '.jsx', '.cjs', '.mjs', '.es', '.es6', '.ts', '.tsx', '.node', '.json'] }
+      ],
       (): PluginItem => {
         return {
           visitor: {
@@ -129,7 +135,6 @@ export async function compileWorkers(file: string) {
           resolve(),
           commonjs(),
           styles(),
-          esbuild({ target: 'es2022' }),
           virtualFs({
             memoryOnly: false,
             extensions: ['.ts', '.tsx', '.js'],
@@ -137,7 +142,8 @@ export async function compileWorkers(file: string) {
               [defaultWorkerFileName]: defaultWorker(file),
               [`./${file}`]: `${external.join('\n')}\n export const xataWorker = ${worker};`
             }
-          })
+          }),
+          esbuild({ target: 'es2022' })
         ]
       });
 

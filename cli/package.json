@@ -37,6 +37,7 @@
     "@xata.io/codegen": "^0.14.0",
     "@xata.io/importer": "^0.2.3",
     "ansi-regex": "^6.0.1",
+    "babel-plugin-module-extension-resolver": "^1.0.0-rc.2",
     "chalk": "^5.0.1",
     "chokidar": "^3.5.3",
     "cli-highlight": "^2.1.11",
