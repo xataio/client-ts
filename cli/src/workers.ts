@@ -136,8 +136,7 @@ export async function compileWorkers(file: string) {
           commonjs(),
           styles(),
           virtualFs({
-            memoryOnly: false,
-            extensions: ['.ts', '.tsx', '.js'],
+            memoryOnly: true, // FIXME: this is a hack to make the plugin work
             files: {
               [defaultWorkerFileName]: defaultWorker(file),
               [`./${file}`]: `${external.join('\n')}\n export const xataWorker = ${worker};`
