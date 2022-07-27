@@ -19,7 +19,7 @@ export type ColumnFilterParam = Schemas.ColumnsFilter;
 
 export type ColumnNameParam = Schemas.ColumnName;
 
-export type ColumnsFilterParam = Schemas.ColumnsFilter;
+export type ColumnsProjectionParam = Schemas.ColumnsProjection;
 
 export type DBBranchNameParam = Schemas.DBBranchName;
 

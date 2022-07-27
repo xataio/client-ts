@@ -577,8 +577,7 @@ export type UpdateWorkspaceMemberInviteVariables = {
 } & FetcherExtraProps;
 
 /**
- * This operation provides a way to update an existing invite. Updates are performed in-place; they do not
- * change the invite link, the expiry time, nor do they re-notify the recipient of the invite.
+ * This operation provides a way to update an existing invite. Updates are performed in-place; they do not change the invite link, the expiry time, nor do they re-notify the recipient of the invite.
  */
 export const updateWorkspaceMemberInvite = (variables: UpdateWorkspaceMemberInviteVariables) =>
   fetch<
@@ -1976,7 +1975,7 @@ export type InsertRecordQueryParams = {
   /*
    * Column filters
    */
-  columns?: Schemas.ColumnsFilter;
+  columns?: Schemas.ColumnsProjection;
 };
 
 export type InsertRecordError = Fetcher.ErrorWrapper<
@@ -2033,7 +2032,7 @@ export type InsertRecordWithIDQueryParams = {
   /*
    * Column filters
    */
-  columns?: Schemas.ColumnsFilter;
+  columns?: Schemas.ColumnsProjection;
   createOnly?: boolean;
   ifVersion?: number;
 };
@@ -2096,7 +2095,7 @@ export type UpdateRecordWithIDQueryParams = {
   /*
    * Column filters
    */
-  columns?: Schemas.ColumnsFilter;
+  columns?: Schemas.ColumnsProjection;
   ifVersion?: number;
 };
 
@@ -2155,7 +2154,7 @@ export type UpsertRecordWithIDQueryParams = {
   /*
    * Column filters
    */
-  columns?: Schemas.ColumnsFilter;
+  columns?: Schemas.ColumnsProjection;
   ifVersion?: number;
 };
 
@@ -2214,7 +2213,7 @@ export type DeleteRecordQueryParams = {
   /*
    * Column filters
    */
-  columns?: Schemas.ColumnsFilter;
+  columns?: Schemas.ColumnsProjection;
 };
 
 export type DeleteRecordError = Fetcher.ErrorWrapper<
@@ -2264,7 +2263,7 @@ export type GetRecordQueryParams = {
   /*
    * Column filters
    */
-  columns?: Schemas.ColumnsFilter;
+  columns?: Schemas.ColumnsProjection;
 };
 
 export type GetRecordError = Fetcher.ErrorWrapper<
@@ -2313,7 +2312,7 @@ export type BulkInsertTableRecordsQueryParams = {
   /*
    * Column filters
    */
-  columns?: Schemas.ColumnsFilter;
+  columns?: Schemas.ColumnsProjection;
 };
 
 export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
@@ -2346,12 +2345,7 @@ export type BulkInsertTableRecordsVariables = {
  */
 export const bulkInsertTableRecords = (variables: BulkInsertTableRecordsVariables) =>
   fetch<
-    | {
-        recordIDs: string[];
-      }
-    | {
-        records: Schemas.XataRecord[];
-      },
+    Responses.BulkInsertResponse,
     BulkInsertTableRecordsError,
     BulkInsertTableRecordsRequestBody,
     {},
@@ -2390,7 +2384,7 @@ export type QueryTableRequestBody = {
   filter?: Schemas.FilterExpression;
   sort?: Schemas.SortExpression;
   page?: Schemas.PageConfig;
-  columns?: Schemas.ColumnsFilter;
+  columns?: Schemas.ColumnsProjection;
 };
 
 export type QueryTableVariables = {

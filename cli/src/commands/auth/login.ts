@@ -1,5 +1,5 @@
 import { BaseCommand } from '../../base.js';
-import { getProfile, setProfile } from '../../credentials.js';
+import { setProfile } from '../../credentials.js';
 
 export default class Login extends BaseCommand {
   static description = 'Authenticate with Xata';
@@ -14,7 +14,7 @@ export default class Login extends BaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Login);
-    const existingProfile = await getProfile(true);
+    const existingProfile = await this.getProfile(true);
     if (existingProfile) {
       const { overwrite } = await this.prompt(
         {

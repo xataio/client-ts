@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.15.0
+
+### Patch Changes
+
+- [#496](https://github.com/xataio/client-ts/pull/496) [`e923d11`](https://github.com/xataio/client-ts/commit/e923d11fe357519dc4ca3ae722670e6e70ccd1c6) Thanks [@gimenete](https://github.com/gimenete)! - Ignore git output in Xata client
+
+* [#481](https://github.com/xataio/client-ts/pull/481) [`599b52c`](https://github.com/xataio/client-ts/commit/599b52c3090222eedef85d1ad1e907874cd3e801) Thanks [@xata-bot](https://github.com/xata-bot)! - Add updateWorkspaceMemberInvite API method
+
 ## 0.14.0
 
 ### Minor Changes

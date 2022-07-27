@@ -1,4 +1,3 @@
-import { getAPIKey } from '@xata.io/client';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import ini from 'ini';
 import { homedir } from 'os';
@@ -17,14 +16,6 @@ export type Profile = z.infer<typeof profileSchema>;
 export type Credentials = z.infer<typeof credentialsSchema>;
 
 export const credentialsPath = path.join(homedir(), '.config', 'xata', 'credentials');
-
-export async function getProfile(ignoreEnv?: boolean): Promise<Profile | undefined> {
-  const apiKey = getAPIKey();
-  if (!ignoreEnv && !process.env.XATA_PROFILE && apiKey) return { apiKey };
-
-  const credentials = await readCredentials();
-  return credentials[getProfileName()];
-}
 
 export async function readCredentials(): Promise<Credentials> {
   const content = await readCredentialsFile();

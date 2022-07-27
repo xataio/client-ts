@@ -1,5 +1,5 @@
 import { BaseCommand } from '../../base.js';
-import { getProfile, removeProfile } from '../../credentials.js';
+import { removeProfile } from '../../credentials.js';
 
 export default class Logout extends BaseCommand {
   static description = 'Logout from Xata';
@@ -14,7 +14,7 @@ export default class Logout extends BaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Logout);
-    const existingProfile = await getProfile(true);
+    const existingProfile = await this.getProfile(true);
     if (!existingProfile) {
       return this.error('You are not logged in');
     }
