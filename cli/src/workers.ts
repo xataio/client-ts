@@ -6,8 +6,7 @@ import presetReact from '@babel/preset-react';
 import type { CallExpression, FunctionDeclaration } from '@babel/types';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
-// @ts-ignore
-import extensionResolver from 'babel-plugin-module-extension-resolver';
+import virtual from '@rollup/plugin-virtual';
 import chokidar from 'chokidar';
 import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
@@ -119,24 +118,20 @@ export async function compileWorkers(file: string) {
   });
 
   const compiledWorkers: WorkerScript[] = [];
-  const defaultWorkerFileName = './_defaultWorker.ts';
 
   console.log('Compiling workers...', file);
 
   for (const [name, worker] of Object.entries(functions)) {
     try {
       const bundle = await rollup({
-        input: `file://${defaultWorkerFileName}`,
+        input: 'entry',
         output: { file: `file://bundle.js`, format: 'es' },
         plugins: [
+          virtual({
+            entry: workerCode(worker, external)
+          }),
           resolve(),
           commonjs(),
-          virtualFs({
-            memoryOnly: true, // FIXME: this is a hack to make the plugin work
-            files: {
-              [defaultWorkerFileName]: workerCode(worker, external)
-            }
-          }),
           esbuild({ target: 'es2022' })
         ]
       });
