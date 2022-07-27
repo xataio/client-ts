@@ -11,7 +11,6 @@ import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
 import { virtualFs } from 'rollup-plugin-virtual-fs';
 import { z } from 'zod';
-import css from 'rollup-plugin-import-css';
 
 type BuildWatcherOptions = {
   action: (path: string) => void;
@@ -114,12 +113,12 @@ export async function compileWorkers(file: string) {
         plugins: [
           virtualFs({
             memoryOnly: false,
+            extensions: ['.ts', '.tsx', '.js', '/index.js'],
             files: {
               [defaultWorkerFileName]: defaultWorker(file),
               [`./${file}`]: `${external.join('\n')}\n const xataWorker = ${worker}; export default xataWorker;`
             }
           }),
-          css(),
           resolve(),
           commonjs(),
           esbuild({ target: 'es2022' })
