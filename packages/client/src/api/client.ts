@@ -661,14 +661,7 @@ class RecordsApi {
     tableName: Schemas.TableName,
     records: Record<string, any>[],
     options: Types.BulkInsertTableRecordsQueryParams = {}
-  ): Promise<
-    | {
-        recordIDs: string[];
-      }
-    | {
-        records: Schemas.XataRecord[];
-      }
-  > {
+  ): Promise<Responses.BulkInsertResponse> {
     return operationsByTag.records.bulkInsertTableRecords({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
       queryParams: options,
