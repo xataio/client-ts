@@ -75,8 +75,25 @@ export async function compileWorkers(file: string) {
         return {
           visitor: {
             ImportDeclaration: {
-              enter(path) {
+              enter(path, state) {
                 external.push(path.toString());
+
+                const options = state.opts as Record<string, unknown>;
+                const root = String(options['root']);
+
+                for (const specifier of path.node.specifiers) {
+                  const binding = path.scope.getBinding(specifier.local.name);
+                  if (!binding) continue;
+                  const refPaths = binding.referencePaths;
+                  for (const refPath of refPaths) {
+                    const usedInWorker = refPath.find((path) => {
+                      if (!path.isFunction()) return false;
+                      return isXataWorker(path);
+                    });
+
+                    console.log(`[path.toString()] ${specifier.local.name} used: ${usedInWorker}`);
+                  }
+                }
               }
             },
             VariableDeclaration: {
@@ -120,7 +137,7 @@ export async function compileWorkers(file: string) {
             extensions: ['.ts', '.tsx', '.js'],
             files: {
               [defaultWorkerFileName]: defaultWorker(file),
-              [`./_${file}`]: `${external.join('\n')}\n export const xataWorker = ${worker};`
+              [`./${file}`]: `${external.join('\n')}\n export const xataWorker = ${worker};`
             }
           }),
           esbuild({ target: 'es2022' })
@@ -161,7 +178,7 @@ export interface Environment {
 
 export default {
   async fetch(request: Request, environment: Environment): Promise<Response> {
-    const { xataWorker } = await import("./_${main}");
+    const { xataWorker } = await import("./${main}");
 
     const {
       XATA_API_KEY: apiKey,
