@@ -72,10 +72,6 @@ export async function compileWorkers(file: string) {
   babel.transformFileSync(file, {
     presets: [presetTypeScript, presetReact],
     plugins: [
-      [
-        extensionResolver,
-        { extensionsToKeep: ['.js', '.jsx', '.cjs', '.mjs', '.es', '.es6', '.ts', '.tsx', '.node', '.json'] }
-      ],
       (): PluginItem => {
         return {
           visitor: {
@@ -138,8 +134,7 @@ export async function compileWorkers(file: string) {
           virtualFs({
             memoryOnly: true, // FIXME: this is a hack to make the plugin work
             files: {
-              [defaultWorkerFileName]: defaultWorker(file),
-              [file]: `${external.join('\n')}\n export const xataWorker = ${worker};`
+              [defaultWorkerFileName]: workerCode(worker, external)
             }
           }),
           esbuild({ target: 'es2022' })
@@ -169,19 +164,20 @@ function isXataWorker(path: NodePath): path is NodePath<FunctionDeclaration> {
   return parent.callee.name === 'xataWorker';
 }
 
-function defaultWorker(main: string) {
+function workerCode(code: string, external: string[]) {
   return `
 import { BaseClient } from "@xata.io/client";
+${external.join('\n')}
 
 export interface Environment {
   XATA_API_KEY: string;
   XATA_DATABASE_URL: string;
 }
 
+const xataWorker = ${code};
+
 export default {
   async fetch(request: Request, environment: Environment): Promise<Response> {
-    const { xataWorker } = await import("./${main}");
-
     const {
       XATA_API_KEY: apiKey,
       XATA_DATABASE_URL: databaseURL,
