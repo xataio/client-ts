@@ -58,8 +58,9 @@ export function buildWatcher({
 }
 
 export function waitForWatcher(watcher: chokidar.FSWatcher): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     watcher.on('close', resolve);
+    watcher.on('error', reject);
   });
 }
 
@@ -128,6 +129,7 @@ export async function compileWorkers(file: string) {
           resolve(),
           commonjs(),
           styles(),
+          esbuild({ target: 'es2022' }),
           virtualFs({
             memoryOnly: false,
             extensions: ['.ts', '.tsx', '.js'],
@@ -135,8 +137,7 @@ export async function compileWorkers(file: string) {
               [defaultWorkerFileName]: defaultWorker(file),
               [`./${file}`]: `${external.join('\n')}\n export const xataWorker = ${worker};`
             }
-          }),
-          esbuild({ target: 'es2022' })
+          })
         ]
       });
 
