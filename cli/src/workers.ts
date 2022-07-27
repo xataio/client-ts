@@ -111,6 +111,8 @@ export async function compileWorkers(file: string) {
         input: `file://${defaultWorkerFileName}`,
         output: { file: `file://bundle.js`, format: 'es' },
         plugins: [
+          resolve(),
+          commonjs(),
           virtualFs({
             memoryOnly: false,
             extensions: ['.ts', '.tsx', '.js', '/index.js'],
@@ -119,8 +121,6 @@ export async function compileWorkers(file: string) {
               [`./${file}`]: `${external.join('\n')}\n const xataWorker = ${worker}; export default xataWorker;`
             }
           }),
-          resolve(),
-          commonjs(),
           esbuild({ target: 'es2022' })
         ]
       });
