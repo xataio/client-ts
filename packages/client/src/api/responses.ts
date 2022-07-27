@@ -30,17 +30,29 @@ export type BulkError = {
   }[];
 };
 
+export type BulkInsertResponse =
+  | {
+      recordIDs: string[];
+    }
+  | {
+      records: Schemas.XataRecord[];
+    };
+
 export type BranchMigrationPlan = {
   version: number;
   migration: Schemas.BranchMigration;
 };
 
-export type RecordUpdateResponse = {
-  id: string;
-  xata: {
-    version: number;
-  };
-};
+export type RecordResponse = Schemas.XataRecord;
+
+export type RecordUpdateResponse =
+  | Schemas.XataRecord
+  | {
+      id: string;
+      xata: {
+        version: number;
+      };
+    };
 
 export type QueryResponse = {
   records: Schemas.XataRecord[];
