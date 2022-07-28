@@ -144,9 +144,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Typecheck
-        run: npx tsc
-
       - name: Test
         run: |
           npm test
