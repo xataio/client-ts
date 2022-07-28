@@ -15,8 +15,6 @@ export type UserIDParam = Schemas.UserID;
 
 export type WorkspaceIDParam = Schemas.WorkspaceID;
 
-export type ColumnFilterParam = Schemas.ColumnsFilter;
-
 export type ColumnNameParam = Schemas.ColumnName;
 
 export type ColumnsProjectionParam = Schemas.ColumnsProjection;
