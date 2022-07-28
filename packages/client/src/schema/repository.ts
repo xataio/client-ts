@@ -15,6 +15,7 @@ import {
 import { FetcherExtraProps } from '../api/fetcher';
 import { FuzzinessExpression, HighlightExpression, RecordsMetadata } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
+import { SearchXataRecord } from '../search';
 import { isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { CacheImpl } from './cache';
@@ -329,7 +330,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   abstract search(
     query: string,
     options?: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> }
-  ): Promise<SelectedPick<Record, ['*']>[]>;
+  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -737,7 +738,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async search(
     query: string,
     options: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> } = {}
-  ): Promise<SelectedPick<Record, ['*']>[]> {
+  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]> {
     const fetchProps = await this.#getFetchProps();
 
     const { records } = await searchTable({

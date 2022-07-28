@@ -18,34 +18,48 @@ export interface BaseData {
 /**
  * Represents a persisted record from the database.
  */
-export interface XataRecord<ExtraMetadata extends Record<string, unknown> = Record<string, unknown>>
-  extends Identifiable {
+export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<any>> extends Identifiable {
   /**
    * Get metadata of this record.
    */
-  getMetadata(): XataRecordMetadata & ExtraMetadata;
+  getMetadata(): XataRecordMetadata;
 
   /**
    * Retrieves a refreshed copy of the current record from the database.
    * @param columns The columns to retrieve. If not specified, all first level properties are retrieved.
+   * @returns The persisted record with the selected columns.
    */
-  read<K extends SelectableColumn<this>>(
-    columns?: K[]
-  ): Promise<Readonly<
-    SelectedPick<this, typeof columns extends SelectableColumn<this>[] ? typeof columns : ['*']>
-  > | null>;
+  read<K extends SelectableColumn<OriginalRecord>>(
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>> | null>;
+
+  /**
+   * Retrieves a refreshed copy of the current record from the database.
+   * @returns The persisted record with all first level properties.
+   */
+  read(): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 
   /**
    * Performs a partial update of the current record. On success a new object is
    * returned and the current object is not mutated.
    * @param partialUpdate The columns and their values that have to be updated.
    * @param columns The columns to retrieve. If not specified, all first level properties are retrieved.
-   * @returns A new record containing the latest values for all the columns of the current record.
+   * @returns The persisted record with the selected columns.
    */
-  update<K extends SelectableColumn<this>>(
-    partialUpdate: Partial<EditableData<Omit<this, keyof XataRecord>>>,
-    columns?: K[]
-  ): Promise<Readonly<SelectedPick<this, typeof columns extends SelectableColumn<this>[] ? typeof columns : ['*']>>>;
+  update<K extends SelectableColumn<OriginalRecord>>(
+    partialUpdate: Partial<EditableData<Omit<OriginalRecord, keyof XataRecord>>>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>>>;
+
+  /**
+   * Performs a partial update of the current record. On success a new object is
+   * returned and the current object is not mutated.
+   * @param partialUpdate The columns and their values that have to be updated.
+   * @returns The persisted record with all first level properties.
+   */
+  update(
+    partialUpdate: Partial<EditableData<Omit<OriginalRecord, keyof XataRecord>>>
+  ): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>>>;
 
   /**
    * Performs a deletion of the current record in the database.

@@ -4,7 +4,7 @@ import { FuzzinessExpression, HighlightExpression } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';
-import { BaseData, XataRecord } from '../schema/record';
+import { BaseData, XataRecord, XataRecordMetadata } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
@@ -17,7 +17,7 @@ export type SearchOptions<Schemas extends Record<string, BaseData>, Tables exten
     | Values<{
         [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
           table: Model;
-          filter?: Filter<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
+          filter?: Filter<SelectedPick<Schemas[Model] & XataRecord, ['*']>>;
         };
       }>
   >;
@@ -35,7 +35,7 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
         GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
       >]: {
         table: Model;
-        record: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
+        record: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>>;
       };
     }>[]
   >;
@@ -47,7 +47,7 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
       Schemas,
       Tables,
       GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
-    >]?: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]>;
+    >]?: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>[]>;
   }>;
 };
 
@@ -122,7 +122,9 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
   }
 }
 
-type SearchXataRecord = XataRecord<SearchExtraProperties>;
+export type SearchXataRecord<Record extends XataRecord> = Omit<Record, 'getMetadata'> & {
+  getMetadata: () => XataRecordMetadata & SearchExtraProperties;
+};
 
 type SearchExtraProperties = {
   /*
