@@ -26,7 +26,7 @@ export default class Upload extends BaseCommand {
     const profile = await this.getProfile();
     if (!profile) this.error('No profile found');
 
-    const { workspace, databaseURL } = await this.getParsedDatabaseURL(flags.db);
+    const { workspace, database, databaseURL } = await this.getParsedDatabaseURL(flags.db);
 
     // TODO: Ask which local environment variables to include
     // TODO: Read and parse local environment variables to include as secrets
@@ -56,6 +56,7 @@ export default class Upload extends BaseCommand {
 
     const body: Body = {
       workspace,
+      database,
       connection: {
         databaseUrl: databaseURL,
         // TODO: Database scoped service API Key (backend generated maybe)
@@ -85,6 +86,7 @@ export default class Upload extends BaseCommand {
 
 const bodySchema = z.object({
   workspace: z.string(),
+  database: z.string(),
   connection: z.object({
     databaseUrl: z.string(),
     apiKey: z.string()
