@@ -1,3 +1,4 @@
+import Case from 'case';
 import prettier, { BuiltInParserName } from 'prettier';
 import * as parserJavascript from 'prettier/parser-babel.js';
 import * as parserTypeScript from 'prettier/parser-typescript.js';
@@ -9,6 +10,7 @@ export type GenerateOptions = {
   databaseURL: string;
   language: Language;
   javascriptTarget?: JavascriptTarget;
+  branch?: string;
 };
 
 export type GenerateOutput = {
@@ -20,18 +22,33 @@ export type GenerateOutput = {
 export type Language = 'typescript' | 'javascript';
 export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
+function getTypeName(tableName: string) {
+  const name = Case.pascal(tableName);
+
+  // If table starts with a number, prepend a $ sign
+  if (name.match(/^\d/)) return `$${name}`;
+
+  return name;
+}
+
 export async function generate({
   schema,
   databaseURL,
   language,
-  javascriptTarget
+  javascriptTarget,
+  branch
 }: GenerateOptions): Promise<GenerateOutput> {
   const { tables } = schema;
 
   const parser = prettierParsers[language];
 
+  const defaultOptions: Record<string, unknown> = {
+    databaseURL,
+    branch
+  };
+
   const code = `
-    import { BaseClientOptions, buildClient, SchemaInference } from '@xata.io/client';
+    import { BaseClientOptions, buildClient, SchemaInference, XataRecord } from '@xata.io/client';
 
     ${
       language === 'javascript'
@@ -44,18 +61,35 @@ export async function generate({
     export type SchemaTables = typeof tables;
     export type DatabaseSchema = SchemaInference<SchemaTables>;
 
-    export type TeamRecord = DatabaseSchema['teams'];
-    export type UserRecord = DatabaseSchema['users'];
+    ${tables
+      .map(
+        (table) =>
+          `
+            export type ${getTypeName(table.name)} = DatabaseSchema['${table.name}'];
+            export type ${getTypeName(table.name)}Record = ${getTypeName(table.name)} & XataRecord;
+          `
+      )
+      .join('\n')}
 
     ${language === 'javascript' ? `/** @type { import('@xata.io/client').ClientConstructor<{}> } */` : ''}
     const DatabaseClient = buildClient();
 
+    const defaultOptions = ${JSON.stringify(defaultOptions)};
+
     ${language === 'javascript' ? `/** @extends DatabaseClient<SchemaTables> */` : ''}
     export class XataClient extends DatabaseClient<SchemaTables> {
       constructor(options?: BaseClientOptions) {
-        super({ databaseURL: "${databaseURL}", ...options}, tables);
+        super({ ...defaultOptions, ...options}, tables);
       }
     }
+
+    let instance: XataClient | undefined = undefined;
+    export const getXataClient = () => {
+      if (instance) return instance;
+
+      instance = new XataClient();
+      return instance;
+    };
   `;
 
   const transpiled = transpile(code, language, javascriptTarget);

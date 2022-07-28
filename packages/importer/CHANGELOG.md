@@ -1,5 +1,21 @@
 # @xata.io/importer
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [[`e923d11`](https://github.com/xataio/client-ts/commit/e923d11fe357519dc4ca3ae722670e6e70ccd1c6), [`599b52c`](https://github.com/xataio/client-ts/commit/599b52c3090222eedef85d1ad1e907874cd3e801)]:
+  - @xata.io/client@0.15.0
+
+## 0.2.3
+
+### Patch Changes
+
+- [#482](https://github.com/xataio/client-ts/pull/482) [`5f83ad1`](https://github.com/xataio/client-ts/commit/5f83ad176e0833bf43b26fcb085e43de44891dc7) Thanks [@gimenete](https://github.com/gimenete)! - Deleted deprecated binaries
+
+- Updated dependencies [[`7547b7e`](https://github.com/xataio/client-ts/commit/7547b7edbc9a95c6620784cc5348316f27502c73), [`8812380`](https://github.com/xataio/client-ts/commit/881238062b5eeac2dc8b9ba156720e0acc22c5c5), [`0584a5b`](https://github.com/xataio/client-ts/commit/0584a5b207a21dbc36ddc1d44b276f1d5bb60dc5), [`8d8a912`](https://github.com/xataio/client-ts/commit/8d8a9129e36452266c4c12fe35b421f66e572498), [`e99010c`](https://github.com/xataio/client-ts/commit/e99010c9ab9d355abadcfbcf98b5a3fcc80c307a), [`c4be404`](https://github.com/xataio/client-ts/commit/c4be404a3ecb34df9b1ef4501c92f5bdc221f19c)]:
+  - @xata.io/client@0.14.0
+
 ## 0.2.2
 
 ### Patch Changes

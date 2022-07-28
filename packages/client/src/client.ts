@@ -59,7 +59,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
       const apiKey = options?.apiKey || getAPIKey();
-      const cache = options?.cache ?? new SimpleCache({ cacheRecords: false, defaultQueryTTL: 0 });
+      const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const branch = async () =>
         options?.branch !== undefined
           ? await this.#evaluateBranch(options.branch)

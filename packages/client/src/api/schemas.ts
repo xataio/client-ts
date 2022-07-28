@@ -495,7 +495,42 @@ export type PageConfig = {
   offset?: number;
 };
 
-export type ColumnsFilter = string[];
+export type ColumnsProjection = string[];
+
+/**
+ * Xata Table Record Metadata
+ */
+export type RecordMeta = {
+  id: RecordID;
+  xata: {
+    /*
+     * The record's version. Can be used for optimistic concurrency control.
+     */
+    version: number;
+    /*
+     * The record's table name. APIs that return records from multiple tables will set this field accordingly.
+     */
+    table?: string;
+    /*
+     * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
+     */
+    highlight?: {
+      [key: string]:
+        | string[]
+        | {
+            [key: string]: any;
+          };
+    };
+    /*
+     * The record's relevancy score. This is returned by the search APIs.
+     */
+    score?: number;
+    /*
+     * Encoding/Decoding errors
+     */
+    warnings?: string[];
+  };
+};
 
 /**
  * @pattern [a-zA-Z0-9_-~:]+
@@ -533,38 +568,8 @@ export type RecordsMetadata = {
 };
 
 /**
- * Xata Table Record
+ * Xata Table Record Metadata
  */
-export type XataRecord = {
-  id: RecordID;
-  xata: {
-    /*
-     * The record's version. Can be used for optimistic concurrency control.
-     */
-    version: number;
-    /*
-     * The record's table name. APIs that return records from multiple tables will set this field accordingly.
-     */
-    table?: string;
-    /*
-     * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
-     */
-    highlight?: {
-      [key: string]:
-        | string[]
-        | {
-            [key: string]: any;
-          };
-    };
-    /*
-     * The record's relevancy score. This is returned by the search APIs.
-     */
-    score?: number;
-    /*
-     * Encoding/Decoding errors
-     */
-    warnings?: string[];
-  };
-} & {
+export type XataRecord = RecordMeta & {
   [key: string]: any;
 };

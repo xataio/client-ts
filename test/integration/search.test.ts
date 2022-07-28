@@ -7,7 +7,7 @@ import { XataClient } from '../../packages/codegen/example/xata';
 import { mockUsers, teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.envrc') });
+dotenv.config({ path: join(process.cwd(), '.env') });
 
 let client: XataClient;
 let databaseName: string;
@@ -80,6 +80,7 @@ describe('search', () => {
     expect(owners[0].full_name?.includes('Owner')).toBeTruthy();
     expect(owners[0].read).toBeDefined();
     expect(owners[0].getMetadata().score).toBeDefined();
+    expect(owners[0].getMetadata().table).toBe('users');
   });
 
   test('search in table with filtering', async () => {
@@ -137,10 +138,12 @@ describe('search', () => {
         expect(result.record.read).toBeDefined();
         expect(result.record.name?.includes('fruits')).toBeTruthy();
         expect(result.record.getMetadata().score).toBeDefined();
+        expect(result.record.getMetadata().table).toBe('teams');
       } else {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
         expect(result.record.full_name?.includes('fruits')).toBeTruthy();
+        expect(result.record.getMetadata().table).toBe('users');
         expect(result.record.getMetadata().score).toBeDefined();
       }
     }

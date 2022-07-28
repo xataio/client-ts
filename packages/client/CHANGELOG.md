@@ -1,5 +1,31 @@
 # @xata.io/client
 
+## 0.15.0
+
+### Patch Changes
+
+- [#496](https://github.com/xataio/client-ts/pull/496) [`e923d11`](https://github.com/xataio/client-ts/commit/e923d11fe357519dc4ca3ae722670e6e70ccd1c6) Thanks [@gimenete](https://github.com/gimenete)! - Ignore git output in Xata client
+
+* [#481](https://github.com/xataio/client-ts/pull/481) [`599b52c`](https://github.com/xataio/client-ts/commit/599b52c3090222eedef85d1ad1e907874cd3e801) Thanks [@xata-bot](https://github.com/xata-bot)! - Add updateWorkspaceMemberInvite API method
+
+## 0.14.0
+
+### Minor Changes
+
+- [#409](https://github.com/xataio/client-ts/pull/409) [`8812380`](https://github.com/xataio/client-ts/commit/881238062b5eeac2dc8b9ba156720e0acc22c5c5) Thanks [@SferaDev](https://github.com/SferaDev)! - Infer types from schema in codegen
+
+* [#457](https://github.com/xataio/client-ts/pull/457) [`0584a5b`](https://github.com/xataio/client-ts/commit/0584a5b207a21dbc36ddc1d44b276f1d5bb60dc5) Thanks [@SferaDev](https://github.com/SferaDev)! - Load env variables so that code analysis detects them
+
+- [#469](https://github.com/xataio/client-ts/pull/469) [`8d8a912`](https://github.com/xataio/client-ts/commit/8d8a9129e36452266c4c12fe35b421f66e572498) Thanks [@gimenete](https://github.com/gimenete)! - Treat branch name specified with third party env variables as git branches in the resolution algorithm
+
+### Patch Changes
+
+- [#462](https://github.com/xataio/client-ts/pull/462) [`7547b7e`](https://github.com/xataio/client-ts/commit/7547b7edbc9a95c6620784cc5348316f27502c73) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix bug with RecordArray.map
+
+* [#472](https://github.com/xataio/client-ts/pull/472) [`e99010c`](https://github.com/xataio/client-ts/commit/e99010c9ab9d355abadcfbcf98b5a3fcc80c307a) Thanks [@SferaDev](https://github.com/SferaDev)! - Add id as entity property
+
+- [#443](https://github.com/xataio/client-ts/pull/443) [`c4be404`](https://github.com/xataio/client-ts/commit/c4be404a3ecb34df9b1ef4501c92f5bdc221f19c) Thanks [@SferaDev](https://github.com/SferaDev)! - Improve performance with `create([])` operation
+
 ## 0.13.4
 
 ### Patch Changes

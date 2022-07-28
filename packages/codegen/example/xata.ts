@@ -1,4 +1,4 @@
-import { BaseClientOptions, buildClient, SchemaInference } from '../../client/src';
+import { BaseClientOptions, buildClient, SchemaInference, XataRecord } from '../../client/src';
 
 const tables = [
   {
@@ -35,13 +35,26 @@ const tables = [
 export type SchemaTables = typeof tables;
 export type DatabaseSchema = SchemaInference<SchemaTables>;
 
-export type TeamRecord = DatabaseSchema['teams'];
-export type UserRecord = DatabaseSchema['users'];
+export type Teams = DatabaseSchema['teams'];
+export type TeamsRecord = Teams & XataRecord;
+
+export type Users = DatabaseSchema['users'];
+export type UsersRecord = Users & XataRecord;
 
 const DatabaseClient = buildClient();
 
+const defaultOptions = { databaseURL: 'https://test-r5vcv5.xata.sh/db/test' };
+
 export class XataClient extends DatabaseClient<SchemaTables> {
   constructor(options?: BaseClientOptions) {
-    super({ databaseURL: 'https://test-r5vcv5.xata.sh/db/test', ...options }, tables);
+    super({ ...defaultOptions, ...options }, tables);
   }
 }
+
+let instance: XataClient | undefined = undefined;
+export const getXataClient = () => {
+  if (instance) return instance;
+
+  instance = new XataClient();
+  return instance;
+};

@@ -7,7 +7,7 @@ import { XataClient } from '../../packages/codegen/example/xata';
 import { teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.envrc') });
+dotenv.config({ path: join(process.cwd(), '.env') });
 
 let client: XataClient;
 let databaseName: string;
@@ -149,5 +149,46 @@ describe('record creation', () => {
     expect(teams[1].id).toBeDefined();
     expect(teams[1].name).toBe('Team planes');
     expect(teams[1].read).toBeDefined();
+  });
+
+  test('create multiple with returning columns', async () => {
+    const teams = await client.db.teams.create(
+      [{ name: 'Team cars' }, { name: 'Team planes', labels: ['foo'] }],
+      ['id']
+    );
+
+    expect(teams).toHaveLength(2);
+    expect(teams[0].id).toBeDefined();
+    // @ts-expect-error
+    expect(teams[0].name).toBeUndefined();
+    expect(teams[0].read).toBeDefined();
+    expect(teams[1].id).toBeDefined();
+    // @ts-expect-error
+    expect(teams[1].name).toBeUndefined();
+    expect(teams[1].read).toBeDefined();
+
+    const team1 = await teams[0].read();
+    expect(team1?.id).toBe(teams[0].id);
+    expect(team1?.name).toBe('Team cars');
+
+    const team2 = await teams[1].read(['labels']);
+    expect(team2?.id).toBe(teams[1].id);
+    // @ts-expect-error
+    expect(team2?.name).toBeUndefined();
+    expect(team2?.labels).toEqual(['foo']);
+  });
+
+  test('create single with returning columns', async () => {
+    const team = await client.db.teams.create({ name: 'Team cars' }, ['id']);
+
+    expect(team).toBeDefined();
+    expect(team.id).toBeDefined();
+    // @ts-expect-error
+    expect(team.name).toBeUndefined();
+    expect(team.read).toBeDefined();
+
+    const team1 = await team.read();
+    expect(team1?.id).toBe(team.id);
+    expect(team1?.name).toBe('Team cars');
   });
 });

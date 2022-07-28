@@ -186,6 +186,18 @@ class WorkspaceApi {
     });
   }
 
+  public updateWorkspaceMemberInvite(
+    workspaceId: Schemas.WorkspaceID,
+    inviteId: Schemas.InviteID,
+    role: Schemas.Role
+  ): Promise<Schemas.WorkspaceInvite> {
+    return operationsByTag.workspaces.updateWorkspaceMemberInvite({
+      pathParams: { workspaceId, inviteId },
+      body: { role },
+      ...this.extraProps
+    });
+  }
+
   public cancelWorkspaceMemberInvite(workspaceId: Schemas.WorkspaceID, inviteId: Schemas.InviteID): Promise<void> {
     return operationsByTag.workspaces.cancelWorkspaceMemberInvite({
       pathParams: { workspaceId, inviteId },
@@ -312,7 +324,7 @@ class BranchApi {
     branch: Schemas.BranchName,
     from?: string,
     options: Types.CreateBranchRequestBody = {}
-  ): Promise<void> {
+  ): Promise<Types.CreateBranchResponse> {
     return operationsByTag.branch.createBranch({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       queryParams: isString(from) ? { from } : undefined,
@@ -415,7 +427,7 @@ class TableApi {
     database: Schemas.DBName,
     branch: Schemas.BranchName,
     tableName: Schemas.TableName
-  ): Promise<void> {
+  ): Promise<Types.CreateTableResponse> {
     return operationsByTag.table.createTable({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
       ...this.extraProps
@@ -550,10 +562,12 @@ class RecordsApi {
     database: Schemas.DBName,
     branch: Schemas.BranchName,
     tableName: Schemas.TableName,
-    record: Record<string, any>
-  ): Promise<Types.InsertRecordResponse> {
+    record: Record<string, any>,
+    options: Types.InsertRecordQueryParams = {}
+  ): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.insertRecord({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
+      queryParams: options,
       body: record,
       ...this.extraProps
     });
@@ -615,10 +629,12 @@ class RecordsApi {
     database: Schemas.DBName,
     branch: Schemas.BranchName,
     tableName: Schemas.TableName,
-    recordId: Schemas.RecordID
-  ): Promise<void> {
+    recordId: Schemas.RecordID,
+    options: Types.DeleteRecordQueryParams = {}
+  ): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.deleteRecord({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName, recordId },
+      queryParams: options,
       ...this.extraProps
     });
   }
@@ -629,13 +645,11 @@ class RecordsApi {
     branch: Schemas.BranchName,
     tableName: Schemas.TableName,
     recordId: Schemas.RecordID,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    options: Types.GetRecordRequestBody = {}
+    options: Types.GetRecordQueryParams = {}
   ): Promise<Schemas.XataRecord> {
     return operationsByTag.records.getRecord({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName, recordId },
-      // TODO: FIXME https://github.com/xataio/openapi/issues/139
-      //body: options,
+      queryParams: options,
       ...this.extraProps
     });
   }
@@ -645,10 +659,12 @@ class RecordsApi {
     database: Schemas.DBName,
     branch: Schemas.BranchName,
     tableName: Schemas.TableName,
-    records: Record<string, any>[]
-  ): Promise<Types.BulkInsertTableRecordsResponse> {
+    records: Record<string, any>[],
+    options: Types.BulkInsertTableRecordsQueryParams = {}
+  ): Promise<Responses.BulkInsertResponse> {
     return operationsByTag.records.bulkInsertTableRecords({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
+      queryParams: options,
       body: { records },
       ...this.extraProps
     });

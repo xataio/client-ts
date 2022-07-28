@@ -1,9 +1,10 @@
-import { getBranchDetails, Schemas, searchBranch } from '../api';
+import type { Schemas } from '../api';
+import { getBranchDetails, searchBranch } from '../api';
 import { FuzzinessExpression, HighlightExpression, PrefixExpression } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';
-import { BaseData, XataRecord } from '../schema/record';
+import { BaseData, XataRecord, XataRecordMetadata } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
@@ -124,7 +125,9 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
   }
 }
 
-export type SearchXataRecord<T extends XataRecord> = Omit<T, 'getMetadata'> & XataRecord<SearchExtraProperties>;
+export type SearchXataRecord<Record extends XataRecord> = Omit<Record, 'getMetadata'> & {
+  getMetadata: () => XataRecordMetadata & SearchExtraProperties;
+};
 
 type SearchExtraProperties = {
   /*

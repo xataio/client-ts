@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Flags } from '@oclif/core';
 import { getBranchDetails, Schemas } from '@xata.io/client';
 import chalk from 'chalk';
-import clipboardy from 'clipboardy';
 import enquirer from 'enquirer';
-import { BaseCommand } from '../../base.js';
-import Codegen from '../codegen/index.js';
-import { defaultEditor, getEditor, allEditors } from 'env-editor';
-import { Flags } from '@oclif/core';
-import tmp from 'tmp';
+import { getEditor } from 'env-editor';
 import { readFile, writeFile } from 'fs/promises';
-import { parseSchemaFile } from '../../schema.js';
+import tmp from 'tmp';
 import which from 'which';
+import { BaseCommand } from '../../base.js';
+import { parseSchemaFile } from '../../schema.js';
+import { reportBugURL } from '../../utils.js';
+import Codegen from '../codegen/index.js';
 
 // The enquirer library has type definitions but they are very poor
 const { Select, Snippet, Confirm } = enquirer as any;
@@ -148,9 +148,7 @@ Beware that this can lead to ${chalk.bold(
       this.error(`The editor ${chalk.bold(env)} is a graphical editor that is not supported.`, {
         suggestions: [
           `Set the ${chalk.bold('EDITOR')} or ${chalk.bold('VISUAL')} variables to a different editor`,
-          `Open an issue at https://github.com/xataio/client-ts/issues/new?title=${encodeURIComponent(
-            `Support \`${info.binary}\` for schema editing`
-          )}`
+          `Open an issue at ${reportBugURL(`Support \`${info.binary}\` editor for schema editing`)}`
         ]
       });
     }
@@ -241,37 +239,7 @@ Beware that this can lead to ${chalk.bold(
     select.on('keypress', async (char: string, key: { name: string; action: string }) => {
       const flatChoice = flatChoices[select.state.index];
       try {
-        if (key.action === 'paste') {
-          if (!flatChoice) return;
-
-          if (flatChoice.name.type == 'schema') {
-            try {
-              const data = JSON.parse(clipboardy.readSync());
-              // TODO: validate that it's a table
-              data.added = true;
-              this.tables.push(data);
-              this.selectItem = data;
-            } catch (err) {
-              if (!(err instanceof SyntaxError)) throw err;
-            }
-          } else if (flatChoice.name.type === 'edit-table') {
-            const table = flatChoice.name.table;
-            try {
-              const data = JSON.parse(clipboardy.readSync());
-              // TODO: validate that it's a table
-              data.added = true;
-              table.columns.push(data);
-              this.selectItem = data;
-            } catch (err) {
-              if (!(err instanceof SyntaxError)) throw err;
-            }
-          } else {
-            return;
-          }
-
-          await select.cancel();
-          await this.showSchema();
-        } else if (key.name === 'backspace' || key.name === 'delete') {
+        if (key.name === 'backspace' || key.name === 'delete') {
           if (!flatChoice) return; // add table is not here for example
           const choice = flatChoice.name;
           if (typeof choice !== 'object') return;

@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { getCurrentBranchName, Schemas, XataApiClient, XataApiClientOptions } from '@xata.io/client';
+import { getAPIKey, getCurrentBranchName, Schemas, XataApiClient, XataApiClientOptions } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
@@ -9,12 +9,12 @@ import { readFile, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path from 'path';
 import prompts from 'prompts';
-import slugify from 'slugify';
 import table from 'text-table';
 import which from 'which';
 import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
-import { getProfile } from './credentials.js';
+import { credentialsPath, getProfileName, Profile, readCredentials } from './credentials.js';
+import { reportBugURL, slug } from './utils.js';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -39,6 +39,9 @@ export abstract class BaseCommand extends Command {
 
   projectConfig?: ProjectConfig;
   projectConfigLocation?: string;
+
+  dotenvLocation = '.env';
+  apiKeyLocation?: 'shell' | 'dotenv' | 'profile' | 'new';
 
   #xataClient?: XataApiClient;
 
@@ -96,7 +99,9 @@ export abstract class BaseCommand extends Command {
   }
 
   async init() {
-    dotenv.config();
+    if (process.env.XATA_API_KEY) this.apiKeyLocation = 'shell';
+    const env = dotenv.config({ path: this.dotenvLocation });
+    if (env.parsed?.['XATA_API_KEY']) this.apiKeyLocation = 'dotenv';
 
     const moduleName = 'xata';
     const search = cosmiconfigSync(moduleName, { searchPlaces: this.searchPlaces }).search();
@@ -112,10 +117,56 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  async catch(err: Error & { exitCode?: number | undefined }): Promise<any> {
+    if (err.message.match(/invalid api key/i)) {
+      let message = '';
+      let suggestions: string[] = [];
+      switch (this.apiKeyLocation) {
+        case 'shell':
+          message = 'the API key from the shell environment variable XATA_API_KEY';
+          suggestions = [
+            'Make sure you invoke the CLI with a valid XATA_API_KEY environment variable',
+            'Unset the XATA_API_KEY environment variable before invoking the CLI'
+          ];
+          break;
+        case 'dotenv':
+          message = `the API key from the ${this.dotenvLocation} file`;
+          suggestions = [
+            `Edit the ${this.dotenvLocation} file and set the XATA_API_KEY environment variable correctly`,
+            'You can generate or regenerate API keys at https://app.xata.io/settings'
+          ];
+          break;
+        case 'profile':
+          message = `the API key from the ${getProfileName()} profile at ${credentialsPath}`;
+          suggestions = [`Run ${chalk.bold('xata auth login --force')} to override the existing API key`];
+          break;
+        case 'new':
+          message = 'a newly generated API key';
+          suggestions = [
+            `This is likely a bug in our end. Please report it at ${reportBugURL('Newly created API key is invalid')}`
+          ];
+          break;
+      }
+      this.error(`${err.message}, when using ${message}`, { suggestions });
+    } else {
+      throw err;
+    }
+  }
+
+  async getProfile(ignoreEnv?: boolean): Promise<Profile | undefined> {
+    const apiKey = getAPIKey();
+    if (!ignoreEnv && !process.env.XATA_PROFILE && apiKey) return { apiKey };
+
+    const credentials = await readCredentials();
+    const profile = credentials[getProfileName()];
+    if (profile?.apiKey) this.apiKeyLocation = 'profile';
+    return profile;
+  }
+
   async getXataClient(apiKey?: string | null) {
     if (this.#xataClient) return this.#xataClient;
 
-    const profile = apiKey ? undefined : await getProfile();
+    const profile = apiKey ? undefined : await this.getProfile();
 
     apiKey = apiKey || profile?.apiKey;
     if (!apiKey) {
@@ -190,7 +241,7 @@ export abstract class BaseCommand extends Command {
         message: 'New workspace name'
       });
       if (!name) return this.error('No workspace name provided');
-      const workspace = await xata.workspaces.createWorkspace({ name, slug: slugify(name) });
+      const workspace = await xata.workspaces.createWorkspace({ name, slug: slug(name) });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
@@ -348,7 +399,7 @@ export abstract class BaseCommand extends Command {
 
     const workspace = await this.getWorkspace({ allowCreate });
     const database = await this.getDatabase(workspace, { allowCreate });
-    const profile = await getProfile();
+    const profile = await this.getProfile();
     let host = 'xata.sh';
     // TODO: unify logic somewhere
     if (profile?.api) {
@@ -402,7 +453,7 @@ export abstract class BaseCommand extends Command {
   }
 
   async getCurrentBranchName(databaseURL: string) {
-    const profile = await getProfile();
+    const profile = await this.getProfile();
     return getCurrentBranchName({
       fetchImpl: fetch,
       databaseURL,
