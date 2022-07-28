@@ -68,9 +68,11 @@ describe('record read', () => {
     const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const copies = await client.db.teams.read(teams.map((team) => team.id).concat(['does-not-exist']));
-    expect(copies).toHaveLength(2);
+
+    expect(copies).toHaveLength(3);
     expect(copies[0]?.id).toBe(teams[0].id);
     expect(copies[1]?.id).toBe(teams[1].id);
+    expect(copies[2]).toBeNull();
   });
 
   test('read multiple with empty array', async () => {

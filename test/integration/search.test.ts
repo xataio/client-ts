@@ -71,7 +71,7 @@ afterAll(async () => {
 });
 
 describe('search', () => {
-  test.skip('search in table', async () => {
+  test('search in table', async () => {
     const owners = await client.db.users.search('Owner');
     expect(owners.length).toBeGreaterThan(0);
 
@@ -79,9 +79,10 @@ describe('search', () => {
     expect(owners[0].id).toBeDefined();
     expect(owners[0].full_name?.includes('Owner')).toBeTruthy();
     expect(owners[0].read).toBeDefined();
+    expect(owners[0].getMetadata().table).toBe('users');
   });
 
-  test.skip('search in table with filtering', async () => {
+  test('search in table with filtering', async () => {
     const owners = await client.db.users.search('Owner', {
       filter: { full_name: 'Owner of team animals' }
     });
@@ -92,7 +93,7 @@ describe('search', () => {
     expect(owners[0].read).toBeDefined();
   });
 
-  test.skip('search by tables with multiple tables', async () => {
+  test('search by tables with multiple tables', async () => {
     const { users = [], teams = [] } = await client.search.byTable('fruits', { tables: ['teams', 'users'] });
 
     expect(users.length).toBeGreaterThan(0);
@@ -107,7 +108,7 @@ describe('search', () => {
     expect(teams[0].name?.includes('fruits')).toBeTruthy();
   });
 
-  test.skip('search by table with all tables', async () => {
+  test('search by table with all tables', async () => {
     const { users = [], teams = [] } = await client.search.byTable('fruits');
 
     expect(users.length).toBeGreaterThan(0);
@@ -122,7 +123,7 @@ describe('search', () => {
     expect(teams[0].name?.includes('fruits')).toBeTruthy();
   });
 
-  test.skip('search all with multiple tables', async () => {
+  test('search all with multiple tables', async () => {
     const results = await client.search.all('fruits', { tables: ['teams', 'users'] });
 
     for (const result of results) {
@@ -130,15 +131,17 @@ describe('search', () => {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
         expect(result.record.name?.includes('fruits')).toBeTruthy();
+        expect(result.record.getMetadata().table).toBe('teams');
       } else {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
         expect(result.record.full_name?.includes('fruits')).toBeTruthy();
+        expect(result.record.getMetadata().table).toBe('users');
       }
     }
   });
 
-  test.skip('search all with one table', async () => {
+  test('search all with one table', async () => {
     const results = await client.search.all('fruits', { tables: ['teams'] });
 
     for (const result of results) {
@@ -151,7 +154,7 @@ describe('search', () => {
     }
   });
 
-  test.skip('search all with all tables', async () => {
+  test('search all with all tables', async () => {
     const results = await client.search.all('fruits');
 
     for (const result of results) {
@@ -167,9 +170,9 @@ describe('search', () => {
     }
   });
 
-  test.skip('search all with filters', async () => {
+  test('search all with filters', async () => {
     const results = await client.search.all('fruits', {
-      tables: [{ table: 'teams', filter: { name: 'Team fruits' } }, 'users']
+      tables: [{ table: 'teams', filter: { name: 'Team fruits' } }]
     });
 
     expect(results.length).toBe(1);

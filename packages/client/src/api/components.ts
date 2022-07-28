@@ -509,10 +509,6 @@ export type InviteWorkspaceMemberError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
-  | {
-      status: 409;
-      payload: Responses.SimpleError;
-    }
 >;
 
 export type InviteWorkspaceMemberRequestBody = {
@@ -1994,6 +1990,13 @@ export type InsertRecordPathParams = {
   workspace: string;
 };
 
+export type InsertRecordQueryParams = {
+  /*
+   * Column filters
+   */
+  columns?: Schemas.ColumnsProjection;
+};
+
 export type InsertRecordError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -2009,27 +2012,24 @@ export type InsertRecordError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type InsertRecordResponse = {
-  id: string;
-  xata: {
-    version: number;
-  };
-};
-
 export type InsertRecordVariables = {
   body?: Record<string, any>;
   pathParams: InsertRecordPathParams;
+  queryParams?: InsertRecordQueryParams;
 } & FetcherExtraProps;
 
 /**
  * Insert a new Record into the Table
  */
 export const insertRecord = (variables: InsertRecordVariables) =>
-  fetch<InsertRecordResponse, InsertRecordError, Record<string, any>, {}, {}, InsertRecordPathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/data',
-    method: 'post',
-    ...variables
-  });
+  fetch<
+    Responses.RecordUpdateResponse,
+    InsertRecordError,
+    Record<string, any>,
+    {},
+    InsertRecordQueryParams,
+    InsertRecordPathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/data', method: 'post', ...variables });
 
 export type InsertRecordWithIDPathParams = {
   /*
@@ -2048,6 +2048,10 @@ export type InsertRecordWithIDPathParams = {
 };
 
 export type InsertRecordWithIDQueryParams = {
+  /*
+   * Column filters
+   */
+  columns?: Schemas.ColumnsProjection;
   createOnly?: boolean;
   ifVersion?: number;
 };
@@ -2107,6 +2111,10 @@ export type UpdateRecordWithIDPathParams = {
 };
 
 export type UpdateRecordWithIDQueryParams = {
+  /*
+   * Column filters
+   */
+  columns?: Schemas.ColumnsProjection;
   ifVersion?: number;
 };
 
@@ -2162,6 +2170,10 @@ export type UpsertRecordWithIDPathParams = {
 };
 
 export type UpsertRecordWithIDQueryParams = {
+  /*
+   * Column filters
+   */
+  columns?: Schemas.ColumnsProjection;
   ifVersion?: number;
 };
 
@@ -2216,6 +2228,13 @@ export type DeleteRecordPathParams = {
   workspace: string;
 };
 
+export type DeleteRecordQueryParams = {
+  /*
+   * Column filters
+   */
+  columns?: Schemas.ColumnsProjection;
+};
+
 export type DeleteRecordError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -2233,10 +2252,11 @@ export type DeleteRecordError = Fetcher.ErrorWrapper<
 
 export type DeleteRecordVariables = {
   pathParams: DeleteRecordPathParams;
+  queryParams?: DeleteRecordQueryParams;
 } & FetcherExtraProps;
 
 export const deleteRecord = (variables: DeleteRecordVariables) =>
-  fetch<undefined, DeleteRecordError, undefined, {}, {}, DeleteRecordPathParams>({
+  fetch<Responses.RecordResponse, DeleteRecordError, undefined, {}, DeleteRecordQueryParams, DeleteRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
     method: 'delete',
     ...variables
@@ -2258,6 +2278,13 @@ export type GetRecordPathParams = {
   workspace: string;
 };
 
+export type GetRecordQueryParams = {
+  /*
+   * Column filters
+   */
+  columns?: Schemas.ColumnsProjection;
+};
+
 export type GetRecordError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -2273,20 +2300,16 @@ export type GetRecordError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type GetRecordRequestBody = {
-  columns?: Schemas.ColumnsFilter;
-};
-
 export type GetRecordVariables = {
-  body?: GetRecordRequestBody;
   pathParams: GetRecordPathParams;
+  queryParams?: GetRecordQueryParams;
 } & FetcherExtraProps;
 
 /**
  * Retrieve record by ID
  */
 export const getRecord = (variables: GetRecordVariables) =>
-  fetch<Schemas.XataRecord, GetRecordError, GetRecordRequestBody, {}, {}, GetRecordPathParams>({
+  fetch<Responses.RecordResponse, GetRecordError, undefined, {}, GetRecordQueryParams, GetRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
     method: 'get',
     ...variables
@@ -2304,6 +2327,13 @@ export type BulkInsertTableRecordsPathParams = {
   workspace: string;
 };
 
+export type BulkInsertTableRecordsQueryParams = {
+  /*
+   * Column filters
+   */
+  columns?: Schemas.ColumnsProjection;
+};
+
 export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -2317,15 +2347,7 @@ export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
-  | {
-      status: 422;
-      payload: Responses.SimpleError;
-    }
 >;
-
-export type BulkInsertTableRecordsResponse = {
-  recordIDs: string[];
-};
 
 export type BulkInsertTableRecordsRequestBody = {
   records: Record<string, any>[];
@@ -2334,6 +2356,7 @@ export type BulkInsertTableRecordsRequestBody = {
 export type BulkInsertTableRecordsVariables = {
   body: BulkInsertTableRecordsRequestBody;
   pathParams: BulkInsertTableRecordsPathParams;
+  queryParams?: BulkInsertTableRecordsQueryParams;
 } & FetcherExtraProps;
 
 /**
@@ -2341,11 +2364,11 @@ export type BulkInsertTableRecordsVariables = {
  */
 export const bulkInsertTableRecords = (variables: BulkInsertTableRecordsVariables) =>
   fetch<
-    BulkInsertTableRecordsResponse,
+    Responses.BulkInsertResponse,
     BulkInsertTableRecordsError,
     BulkInsertTableRecordsRequestBody,
     {},
-    {},
+    BulkInsertTableRecordsQueryParams,
     BulkInsertTableRecordsPathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/bulk', method: 'post', ...variables });
 
@@ -2380,7 +2403,7 @@ export type QueryTableRequestBody = {
   filter?: Schemas.FilterExpression;
   sort?: Schemas.SortExpression;
   page?: Schemas.PageConfig;
-  columns?: Schemas.ColumnsFilter;
+  columns?: Schemas.ColumnsProjection;
 };
 
 export type QueryTableVariables = {

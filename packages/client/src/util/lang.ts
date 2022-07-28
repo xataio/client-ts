@@ -24,6 +24,10 @@ export function isString(value: any): value is string {
   return isDefined(value) && typeof value === 'string';
 }
 
+export function isStringArray(value: any): value is string[] {
+  return isDefined(value) && Array.isArray(value) && value.every(isString);
+}
+
 export function toBase64(value: string): string {
   try {
     return btoa(value);
