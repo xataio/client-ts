@@ -1,6 +1,5 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
-import { highlight } from 'cli-highlight';
 import { access, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import which from 'which';
@@ -112,10 +111,10 @@ export default class Init extends BaseCommand {
     this.printCode([
       "import { XataApiClient } from '@xata.io/client';",
       '',
-      '// Initialize the client',
+      chalk.dim('// Initialize the client'),
       'const api = new XataApiClient();',
       '',
-      '// Usage example',
+      chalk.dim('// Usage example'),
       "const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);"
     ]);
 
@@ -140,14 +139,14 @@ export default class Init extends BaseCommand {
       'Do you want to use the code generator? The code generator will allow you to use your database with type safety and autocompletion. Example:'
     );
     this.printCode([
-      '// Import the generated code',
-      "import { XataClient } from './xata';",
+      chalk.dim('// Import the generated code'),
+      `import { XataClient } from './xata';`,
       '',
-      '// Initialize the client',
+      chalk.dim('// Initialize the client'),
       'const xata = new XataClient();',
       '',
-      '// Query a table with a simple filter',
-      'const { records } = await xata.db.tableName.filter("column", value).getPaginated();'
+      chalk.dim('// Query a table with a simple filter'),
+      'const { records } = await xata.db.TableName.filter("column", value).getPaginated();'
     ]);
 
     const { flags } = await this.parse(Init);
@@ -197,10 +196,10 @@ export default class Init extends BaseCommand {
   }
 
   printCode(lines: string[]) {
-    const code = lines.map((line) => `\t${line}`).join('\n');
-    const highlighted = highlight(code, { language: 'typescript' });
     this.log();
-    this.log(highlighted);
+    for (const line of lines) {
+      this.log('\t', line);
+    }
     this.log();
   }
 
