@@ -324,7 +324,7 @@ class BranchApi {
     branch: Schemas.BranchName,
     from?: string,
     options: Types.CreateBranchRequestBody = {}
-  ): Promise<void> {
+  ): Promise<Types.CreateBranchResponse> {
     return operationsByTag.branch.createBranch({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       queryParams: isString(from) ? { from } : undefined,
@@ -427,7 +427,7 @@ class TableApi {
     database: Schemas.DBName,
     branch: Schemas.BranchName,
     tableName: Schemas.TableName
-  ): Promise<void> {
+  ): Promise<Types.CreateTableResponse> {
     return operationsByTag.table.createTable({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
       ...this.extraProps
