@@ -77,7 +77,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Creates multiple records in the table.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
-   * @returns Array of the persisted records.
+   * @returns Array of the persisted records in order.
    */
   abstract create<K extends SelectableColumn<Record>>(
     objects: Array<Omit<EditableData<Data>, 'id'> & Partial<Identifiable>>,
@@ -87,7 +87,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   /**
    * Creates multiple records in the table.
    * @param objects Array of objects with the column names and the values to be stored in the table.
-   * @returns Array of the persisted records.
+   * @returns Array of the persisted records in order.
    */
   abstract create(
     objects: Array<Omit<EditableData<Data>, 'id'> & Partial<Identifiable>>
@@ -115,19 +115,19 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Queries multiple records from the table given their unique id.
    * @param ids The unique ids array.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
-   * @returns The persisted records for the given ids (if a record could not be found it is not returned).
+   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
   abstract read<K extends SelectableColumn<Record>>(
     ids: string[],
     columns: K[]
-  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
 
   /**
    * Queries multiple records from the table given their unique id.
    * @param ids The unique ids array.
-   * @returns The persisted records for the given ids (if a record could not be found it is not returned).
+   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
-  abstract read(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  abstract read(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
 
   /**
    * Queries a single record from the table by the id in the object.
@@ -151,19 +151,19 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Queries multiple records from the table by the ids in the objects.
    * @param objects Array of objects containing the ids of the records.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
-   * @returns The persisted records for the given ids (if a record could not be found it is not returned).
+   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
   abstract read<K extends SelectableColumn<Record>>(
     objects: Identifiable[],
     columns: K[]
-  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
 
   /**
    * Queries multiple records from the table by the ids in the objects.
    * @param objects Array of objects containing the ids of the records.
-   * @returns The persisted records for the given ids (if a record could not be found it is not returned).
+   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
-  abstract read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  abstract read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
 
   /**
    * Partially update a single record.
@@ -208,7 +208,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Partially updates multiple records.
    * @param objects An array of objects with their ids and columns to be updated.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
-   * @returns Array of the persisted records.
+   * @returns Array of the persisted records in order.
    */
   abstract update<K extends SelectableColumn<Record>>(
     objects: Array<Partial<EditableData<Data>> & Identifiable>,
@@ -218,7 +218,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   /**
    * Partially updates multiple records.
    * @param objects An array of objects with their ids and columns to be updated.
-   * @returns Array of the persisted records.
+   * @returns Array of the persisted records in order.
    */
   abstract update(
     objects: Array<Partial<EditableData<Data>> & Identifiable>
