@@ -1186,6 +1186,14 @@ export type CreateBranchError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type CreateBranchResponse = {
+  /*
+   * @minLength 1
+   */
+  databaseName: string;
+  branchName: string;
+};
+
 export type CreateBranchRequestBody = {
   /*
    * Select the branch to fork from. Defaults to 'main'
@@ -1201,11 +1209,14 @@ export type CreateBranchVariables = {
 } & FetcherExtraProps;
 
 export const createBranch = (variables: CreateBranchVariables) =>
-  fetch<undefined, CreateBranchError, CreateBranchRequestBody, {}, CreateBranchQueryParams, CreateBranchPathParams>({
-    url: '/db/{dbBranchName}',
-    method: 'put',
-    ...variables
-  });
+  fetch<
+    CreateBranchResponse,
+    CreateBranchError,
+    CreateBranchRequestBody,
+    {},
+    CreateBranchQueryParams,
+    CreateBranchPathParams
+  >({ url: '/db/{dbBranchName}', method: 'put', ...variables });
 
 export type DeleteBranchPathParams = {
   /*
@@ -1531,6 +1542,14 @@ export type CreateTableError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type CreateTableResponse = {
+  branchName: string;
+  /*
+   * @minLength 1
+   */
+  tableName: string;
+};
+
 export type CreateTableVariables = {
   pathParams: CreateTablePathParams;
 } & FetcherExtraProps;
@@ -1539,7 +1558,7 @@ export type CreateTableVariables = {
  * Creates a new table with the given name. Returns 422 if a table with the same name already exists.
  */
 export const createTable = (variables: CreateTableVariables) =>
-  fetch<undefined, CreateTableError, undefined, {}, {}, CreateTablePathParams>({
+  fetch<CreateTableResponse, CreateTableError, undefined, {}, {}, CreateTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}',
     method: 'put',
     ...variables

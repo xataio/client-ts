@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { join } from 'path';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { SimpleCache, XataApiClient } from '../../packages/client/src';
-import { User, XataClient } from '../../packages/codegen/example/xata';
+import { Users, XataClient } from '../../packages/codegen/example/xata';
 import { teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
@@ -54,17 +54,17 @@ describe('cache', () => {
   test('miss - set, get and remove', async () => {
     const user = await client.db.users.create({ full_name: 'John Doe' });
 
-    const cachedItem = await cache.get<User>(`rec_users:${user.id}`);
+    const cachedItem = await cache.get<Users>(`rec_users:${user.id}`);
     expect(cachedItem?.full_name).toBe('John Doe');
 
     await client.db.users.read(user.id);
 
-    const cachedItem2 = await cache.get<User>(`rec_users:${user.id}`);
+    const cachedItem2 = await cache.get<Users>(`rec_users:${user.id}`);
     expect(cachedItem2?.full_name).toBe('John Doe');
 
     await user.delete();
 
-    const cachedItem3 = await cache.get<User>(`rec_users:${user.id}`);
+    const cachedItem3 = await cache.get<Users>(`rec_users:${user.id}`);
     expect(cachedItem3).toBeNull();
   });
 
@@ -77,7 +77,7 @@ describe('cache', () => {
 
     const update = await client.db.users.createOrUpdate('foo', { full_name: 'John Smith' });
 
-    const cachedItem = await cache.get<User>('rec_users:foo');
+    const cachedItem = await cache.get<Users>('rec_users:foo');
 
     expect(cachedItem?.full_name).toBe('John Smith');
 
