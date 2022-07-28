@@ -79,6 +79,7 @@ describe('search', () => {
     expect(owners[0].id).toBeDefined();
     expect(owners[0].full_name?.includes('Owner')).toBeTruthy();
     expect(owners[0].read).toBeDefined();
+    expect(owners[0].getMetadata().score).toBeDefined();
     expect(owners[0].getMetadata().table).toBe('users');
   });
 
@@ -91,6 +92,7 @@ describe('search', () => {
     expect(owners[0].id).toBeDefined();
     expect(owners[0].full_name?.includes('Owner of team animals')).toBeTruthy();
     expect(owners[0].read).toBeDefined();
+    expect(owners[0].getMetadata().score).toBeDefined();
   });
 
   test('search by tables with multiple tables', async () => {
@@ -102,10 +104,12 @@ describe('search', () => {
     expect(users[0].id).toBeDefined();
     expect(users[0].read).toBeDefined();
     expect(users[0].full_name?.includes('fruits')).toBeTruthy();
+    expect(users[0].getMetadata().score).toBeDefined();
 
     expect(teams[0].id).toBeDefined();
     expect(teams[0].read).toBeDefined();
     expect(teams[0].name?.includes('fruits')).toBeTruthy();
+    expect(users[0].getMetadata().score).toBeDefined();
   });
 
   test('search by table with all tables', async () => {
@@ -117,10 +121,12 @@ describe('search', () => {
     expect(users[0].id).toBeDefined();
     expect(users[0].read).toBeDefined();
     expect(users[0].full_name?.includes('fruits')).toBeTruthy();
+    expect(users[0].getMetadata().score).toBeDefined();
 
     expect(teams[0].id).toBeDefined();
     expect(teams[0].read).toBeDefined();
     expect(teams[0].name?.includes('fruits')).toBeTruthy();
+    expect(teams[0].getMetadata().score).toBeDefined();
   });
 
   test('search all with multiple tables', async () => {
@@ -131,12 +137,14 @@ describe('search', () => {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
         expect(result.record.name?.includes('fruits')).toBeTruthy();
+        expect(result.record.getMetadata().score).toBeDefined();
         expect(result.record.getMetadata().table).toBe('teams');
       } else {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
         expect(result.record.full_name?.includes('fruits')).toBeTruthy();
         expect(result.record.getMetadata().table).toBe('users');
+        expect(result.record.getMetadata().score).toBeDefined();
       }
     }
   });
@@ -148,6 +156,7 @@ describe('search', () => {
       expect(result.record.id).toBeDefined();
       expect(result.record.read).toBeDefined();
       expect(result.record.name?.includes('fruits')).toBeTruthy();
+      expect(result.record.getMetadata().score).toBeDefined();
 
       //@ts-expect-error
       result.table === 'users';
@@ -162,10 +171,12 @@ describe('search', () => {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
         expect(result.record.name?.includes('fruits')).toBeTruthy();
+        expect(result.record.getMetadata().score).toBeDefined();
       } else {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
         expect(result.record.full_name?.includes('fruits')).toBeTruthy();
+        expect(result.record.getMetadata().score).toBeDefined();
       }
     }
   });
@@ -182,6 +193,7 @@ describe('search', () => {
       expect(results[0].record.id).toBeDefined();
       expect(results[0].record.read).toBeDefined();
       expect(results[0].record.name?.includes('fruits')).toBeTruthy();
+      expect(results[0].record.getMetadata().score).toBeDefined();
     }
   });
 });

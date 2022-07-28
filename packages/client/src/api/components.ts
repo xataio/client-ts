@@ -509,6 +509,10 @@ export type InviteWorkspaceMemberError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 409;
+      payload: Responses.SimpleError;
+    }
 >;
 
 export type InviteWorkspaceMemberRequestBody = {
@@ -2347,6 +2351,10 @@ export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
 >;
 
 export type BulkInsertTableRecordsRequestBody = {
@@ -3177,6 +3185,7 @@ export type SearchTableRequestBody = {
   prefix?: Schemas.PrefixExpression;
   filter?: Schemas.FilterExpression;
   highlight?: Schemas.HighlightExpression;
+  boosters?: Schemas.BoosterExpression[];
 };
 
 export type SearchTableVariables = {
@@ -3233,6 +3242,7 @@ export type SearchBranchRequestBody = {
          */
         table: string;
         filter?: Schemas.FilterExpression;
+        boosters?: Schemas.BoosterExpression[];
       }
   )[];
   /*

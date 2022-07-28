@@ -13,9 +13,10 @@ import {
   upsertRecordWithID
 } from '../api';
 import { FetcherExtraProps } from '../api/fetcher';
-import { FuzzinessExpression, HighlightExpression, RecordsMetadata } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, PrefixExpression, RecordsMetadata } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
+import { Boosters } from '../search/boosters';
 import { isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { CacheImpl } from './cache';
@@ -329,7 +330,13 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    */
   abstract search(
     query: string,
-    options?: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> }
+    options?: {
+      fuzziness?: FuzzinessExpression;
+      prefix?: PrefixExpression;
+      highlight?: HighlightExpression;
+      filter?: Filter<Record>;
+      boosters?: Boosters<Record>[];
+    }
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
@@ -737,8 +744,14 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
   async search(
     query: string,
-    options: { fuzziness?: FuzzinessExpression; highlight?: HighlightExpression; filter?: Filter<Record> } = {}
-  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]> {
+    options: {
+      fuzziness?: FuzzinessExpression;
+      prefix?: PrefixExpression;
+      highlight?: HighlightExpression;
+      filter?: Filter<Record>;
+      boosters?: Boosters<Record>[];
+    } = {}
+  ) {
     const fetchProps = await this.#getFetchProps();
 
     const { records } = await searchTable({
@@ -746,14 +759,16 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       body: {
         query,
         fuzziness: options.fuzziness,
+        prefix: options.prefix,
         highlight: options.highlight,
-        filter: options.filter as Schemas.FilterExpression
+        filter: options.filter as Schemas.FilterExpression,
+        boosters: options.boosters as Schemas.BoosterExpression[]
       },
       ...fetchProps
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return records.map((item) => initObject(this.db, schemaTables, this.#table, item));
+    return records.map((item) => initObject(this.db, schemaTables, this.#table, item)) as any;
   }
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
