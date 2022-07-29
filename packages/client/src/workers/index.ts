@@ -1,3 +1,4 @@
+import { deserialize, serialize } from '../serializer';
 import { Request } from '../util/request';
 
 type XataWorkerContext<XataClient> = { xata: XataClient; request: Request; env: Record<string, string | undefined> };
@@ -22,14 +23,13 @@ export function buildWorkerRunner<XataClient>(config: WorkerRunnerConfig) {
       const result = await fetch(`${url}/${config.workspace}/${config.worker}/${name}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // TODO: Add serializer
-        body: JSON.stringify({ args })
+        body: serialize({ args })
       });
 
-      // TODO: Detect if not compiled yet (+ errors)
+      // TODO: Detect if not compiled yet (+ other errors)
 
-      // TODO: Add deserializer
-      return result.json() as any;
+      const text = await result.text();
+      return deserialize<any>(text);
     };
   };
 }

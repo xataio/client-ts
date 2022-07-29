@@ -1,24 +1,23 @@
-// @ts-nocheck FIXME: This file is not yet type-checked.
-
 // These will be used to set special fields to serialized objects.
 // So objects should not use this field names. I think that's fine. Another approach would be to generate two objects:
 // One containing the "data tree" and another containing the a tree with the type information.
 const META = '__';
 const VALUE = '___';
 
+// TODO: Add types for the serializer
 export class Serializer {
-  classes = {};
+  classes: Record<string, any> = {};
 
-  add(clazz) {
+  add(clazz: any) {
     this.classes[clazz.name] = clazz;
   }
 
-  toJSON(data) {
+  toJSON<T>(data: T): string {
     // We are not using JSON.stringify() and the replacer function here, because the replacer receives
     // the result of toJSON() if the object has a toJSON() method. This is a problem for the Date type:
     // we get a string, because Date.toJSON() returns the date formatted into a ISO string alreayd,
     // so it's not possible to guess the type of the original object.
-    function visit(obj) {
+    function visit(obj: any): any {
       if (Array.isArray(obj)) return obj.map(visit);
 
       const type = typeof obj;
@@ -27,7 +26,7 @@ export class Serializer {
       if (obj === null || type !== 'object') return obj;
 
       const constructor = obj.constructor;
-      const o = { [META]: constructor.name };
+      const o: Record<string, any> = { [META]: constructor.name };
       for (const [key, value] of Object.entries(obj)) {
         o[key] = visit(value);
       }
@@ -36,10 +35,11 @@ export class Serializer {
       if (constructor === Set) o[VALUE] = [...obj];
       return o;
     }
+
     return JSON.stringify(visit(data));
   }
 
-  fromJSON(json) {
+  fromJSON<T>(json: string): T {
     return JSON.parse(json, (key, value) => {
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -64,12 +64,12 @@ export class Serializer {
   }
 }
 
-// const serializer = new Serializer();
+const defaultSerializer = new Serializer();
 
-export const serialize = () => {
-  throw new Error('Not implemented');
+export const serialize = <T>(data: T): string => {
+  return defaultSerializer.toJSON<T>(data);
 };
 
-export const deserialize = () => {
-  throw new Error('Not implemented');
+export const deserialize = <T>(json: string): T => {
+  return defaultSerializer.fromJSON<T>(json);
 };

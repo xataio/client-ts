@@ -48,7 +48,7 @@ export async function generate({
   };
 
   const code = `
-    import { BaseClientOptions, buildClient, SchemaInference, XataRecord } from '@xata.io/client';
+    import { BaseClientOptions, buildClient, buildWorkerRunner, SchemaInference, XataRecord } from '@xata.io/client';
 
     ${
       language === 'javascript'
@@ -90,6 +90,11 @@ export async function generate({
       instance = new XataClient();
       return instance;
     };
+
+    export const xataWorker = buildWorkerRunner<XataClient>({
+      workspace: '<your-workspace-slug>',
+      worker: "<your-workspace-id>",
+     });
   `;
 
   const transpiled = transpile(code, language, javascriptTarget);
