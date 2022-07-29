@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.8.1
+
+### Patch Changes
+
+- [#508](https://github.com/xataio/client-ts/pull/508) [`2187276`](https://github.com/xataio/client-ts/commit/2187276b58fe2c0427a4935d0cb760855dfa0e15) Thanks [@gimenete](https://github.com/gimenete)! - Remove code highlighting in xata init
+
+- Updated dependencies [[`6a96ea5`](https://github.com/xataio/client-ts/commit/6a96ea5da4c5b7ca9a99b57ebbce8d6766b5d4d8), [`43f2560`](https://github.com/xataio/client-ts/commit/43f25605ddd0d2fd514a1542a14389d28955c500), [`a9cbb26`](https://github.com/xataio/client-ts/commit/a9cbb263fbca47cb91a827db252d95a5bb4079a6), [`7e04a3d`](https://github.com/xataio/client-ts/commit/7e04a3d1c51958a44f687a0036ead8bb3f5a2dfb)]:
+  - @xata.io/client@0.16.0
+  - @xata.io/importer@0.2.5
+
 ## 0.8.0
 
 ### Minor Changes
