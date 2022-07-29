@@ -154,7 +154,7 @@ function isXataWorker(path: NodePath): path is NodePath<FunctionDeclaration> {
 
 function workerCode(code: string, external: string[]) {
   return `
-import { BaseClient } from "@xata.io/client";
+import { BaseClient, deserialize, serialize } from "@xata.io/client";
 ${external.join('\n')}
 
 const xataWorker = ${code};
@@ -167,7 +167,8 @@ export default {
       ...env
     } = environment;
 
-    const body = await request.json();
+    const text = await request.text();
+    const body = deserialize(text);
     const args = body.args || [];
 
     const xata = new BaseClient({ databaseURL, apiKey });
@@ -175,7 +176,7 @@ export default {
 
     return result instanceof Response
       ? result
-      : new Response(JSON.stringify(result));
+      : new Response(serialize(result));
   },
 };
 `;
