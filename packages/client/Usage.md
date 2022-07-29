@@ -155,6 +155,13 @@ const user = await xata.db.users.read(object1);
 const users = await xata.db.users.read([object1, object2]);
 ```
 
+By default an object with the first level properties is returned. If you want to reduce or expand its columns, you can pass an array of columns to the `read()` method.
+
+```ts
+const user = await xata.db.users.read('rec_1234abcdef', ['fullName', 'team.name']);
+const users = await xata.db.users.read(['rec_1234abcdef', 'rec_5678defgh'], ['fullName', 'team.name']);
+```
+
 ### Creating Records
 
 Both the `create()` and `createOrUpdate()` methods can be used to create a new record.
@@ -202,6 +209,19 @@ const users = await xata.db.users.createOrUpdate([
 ]);
 ```
 
+By default, the `create` and `createOrUpdate` methods will return the created record with the first level properties. If you want to reduce or expand its columns, you can pass an array of columns to the `create` or `createOrUpdate` method.
+
+```ts
+const user = await xata.db.users.create('user_admin', { fullName: 'John Smith' }, ['fullName', 'team.name']);
+const users = await xata.db.users.createOrUpdate(
+  [
+    { id: 'user_admin', fullName: 'John Smith' },
+    { id: 'user_manager', fullName: 'Jane Doe' }
+  ],
+  ['fullName', 'team.name']
+);
+```
+
 ### Updating records
 
 The `update()` method can be used to update an existing record. It will throw an `Error` if the record cannot be found.
@@ -223,6 +243,12 @@ const users = await xata.db.users.update([
   { id: 'rec_1234abcdef', fullName: 'John Smith' },
   { id: 'user_admin', fullName: 'Jane Doe' }
 ]);
+```
+
+By default, the `update` method will return the updated record with the first level properties. If you want to reduce or expand its columns, you can pass an array of columns to the `update` method.
+
+```ts
+const user = await xata.db.users.update('rec_1234abcdef', { fullName: 'John Smith' }, ['fullName', 'team.name']);
 ```
 
 ### Deleting Records
@@ -371,6 +397,13 @@ user?.fullName; // 'John Smith'
 user?.read(); // Reads the record again
 user?.update({ fullName: 'John Doe' }); // Partially updates the record
 user?.delete(); // Deletes the record
+```
+
+The `read` and `update` methods return the updated record with the first level properties. If you want to reduce or expand its columns, you can pass an array of columns to the `read` and `update` methods.
+
+```ts
+const user = await xata.db.users.read('rec_1234abcdef');
+user?.read(['fullName', 'team.name']); // Reads the record again with the `fullName` and `team.name` columns
 ```
 
 If the table contains a link property, it will be represented as a `Link` object containing its `id` property and methods to read again or update the linked record.

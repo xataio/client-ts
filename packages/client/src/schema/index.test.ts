@@ -413,7 +413,30 @@ describe('read', () => {
         {
           "body": undefined,
           "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
+        },
+        {
+          "body": undefined,
+          "method": "GET",
+          "url": "https://mock.xata.sh/db/xata:main",
+        },
+      ]
+    `);
+  });
+
+  test('reads an object by id with multiple columns', async () => {
+    const { fetch, users } = buildClient();
+
+    const id = 'rec_1234';
+    const expected = { method: 'GET', path: `/tables/users/data/${id}`, body: undefined };
+    const result = await expectRequest(fetch, expected, () => users.read(id, ['name', 'age']));
+
+    expect(result).toMatchInlineSnapshot(`
+      [
+        {
+          "body": undefined,
+          "method": "GET",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=name%2Cage",
         },
         {
           "body": undefined,
@@ -449,12 +472,7 @@ describe('Repository.update', () => {
         {
           "body": "{\\"id\\":\\"rec_1234\\",\\"name\\":\\"Ada\\"}",
           "method": "PATCH",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
-        },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
         },
         {
           "body": undefined,
@@ -519,12 +537,7 @@ describe('create', () => {
         {
           "body": "{\\"name\\":\\"Ada\\"}",
           "method": "POST",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data",
-        },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data?columns=*",
         },
         {
           "body": undefined,

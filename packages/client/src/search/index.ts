@@ -1,23 +1,26 @@
 import type { Schemas } from '../api';
 import { getBranchDetails, searchBranch } from '../api';
-import { FuzzinessExpression, HighlightExpression } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, PrefixExpression } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';
-import { BaseData, XataRecord } from '../schema/record';
+import { BaseData, XataRecord, XataRecordMetadata } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
+import { Boosters } from './boosters';
 
 export type SearchOptions<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = {
   fuzziness?: FuzzinessExpression;
+  prefix?: PrefixExpression;
   highlight?: HighlightExpression;
   tables?: Array<
     | Tables
     | Values<{
         [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
           table: Model;
-          filter?: Filter<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
+          filter?: Filter<SelectedPick<Schemas[Model] & XataRecord, ['*']>>;
+          boosters?: Boosters<Schemas[Model] & XataRecord>[];
         };
       }>
   >;
@@ -35,7 +38,7 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
         GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
       >]: {
         table: Model;
-        record: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
+        record: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>>;
       };
     }>[]
   >;
@@ -47,7 +50,7 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
       Schemas,
       Tables,
       GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
-    >]?: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]>;
+    >]?: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>[]>;
   }>;
 };
 
@@ -96,12 +99,12 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
     getFetchProps: XataPluginOptions['getFetchProps']
   ) {
     const fetchProps = await getFetchProps();
-    const { tables, fuzziness, highlight } = options ?? {};
+    const { tables, fuzziness, highlight, prefix } = options ?? {};
 
     const { records } = await searchBranch({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
       // @ts-ignore https://github.com/xataio/client-ts/issues/313
-      body: { tables, query, fuzziness, highlight },
+      body: { tables, query, fuzziness, prefix, highlight },
       ...fetchProps
     });
 
@@ -122,7 +125,9 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
   }
 }
 
-type SearchXataRecord = XataRecord<SearchExtraProperties>;
+export type SearchXataRecord<Record extends XataRecord> = Omit<Record, 'getMetadata'> & {
+  getMetadata: () => XataRecordMetadata & SearchExtraProperties;
+};
 
 type SearchExtraProperties = {
   /*
@@ -139,6 +144,10 @@ type SearchExtraProperties = {
           [key: string]: any;
         };
   };
+  /*
+   * The record's relevancy score. This is returned by the search APIs.
+   */
+  score?: number;
 };
 
 type ReturnTable<Table, Tables> = Table extends Tables ? Table : never;

@@ -1,5 +1,23 @@
 # @xata.io/plugin-client-cache
 
+## 0.1.0
+
+### Minor Changes
+
+- [#485](https://github.com/xataio/client-ts/pull/485) [`7e04a3d`](https://github.com/xataio/client-ts/commit/7e04a3d1c51958a44f687a0036ead8bb3f5a2dfb) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove record cache
+
+### Patch Changes
+
+- Updated dependencies [[`6a96ea5`](https://github.com/xataio/client-ts/commit/6a96ea5da4c5b7ca9a99b57ebbce8d6766b5d4d8), [`43f2560`](https://github.com/xataio/client-ts/commit/43f25605ddd0d2fd514a1542a14389d28955c500), [`a9cbb26`](https://github.com/xataio/client-ts/commit/a9cbb263fbca47cb91a827db252d95a5bb4079a6), [`7e04a3d`](https://github.com/xataio/client-ts/commit/7e04a3d1c51958a44f687a0036ead8bb3f5a2dfb)]:
+  - @xata.io/client@0.16.0
+
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [[`e923d11`](https://github.com/xataio/client-ts/commit/e923d11fe357519dc4ca3ae722670e6e70ccd1c6), [`599b52c`](https://github.com/xataio/client-ts/commit/599b52c3090222eedef85d1ad1e907874cd3e801)]:
+  - @xata.io/client@0.15.0
+
 ## 0.0.7
 
 ### Patch Changes
