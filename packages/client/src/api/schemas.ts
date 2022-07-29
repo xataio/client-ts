@@ -186,11 +186,24 @@ export type Schema = {
   tablesOrder?: string[];
 };
 
+/**
+ * @x-go-type migcmp.SchemaScript
+ */
+export type SchemaEditScript = {
+  tables: TableEdit[];
+};
+
 export type Table = {
   id?: string;
   name: TableName;
   columns: Column[];
   revLinks?: RevLink[];
+};
+
+export type TableEdit = {
+  oldName?: string;
+  newName?: string;
+  columns?: MigrationColumnOp[];
 };
 
 /**
@@ -278,6 +291,73 @@ export type TableMigration = {
 export type ColumnMigration = {
   old: Column;
   ['new']: Column;
+};
+
+export type Commit = {
+  meta?: {
+    title?: string;
+    message?: string;
+    id: string;
+    parentID?: string;
+    mergeParentID?: string;
+    status: string;
+    createdAt: DateTime;
+    modifiedAt?: DateTime;
+  };
+  operations: MigrationOp[];
+};
+
+export type MigrationOp = MigrationTableOp | MigrationColumnOp;
+
+export type MigrationTableOp =
+  | {
+      addTable: TableOpAdd;
+    }
+  | {
+      removeTable: TableOpRemove;
+    }
+  | {
+      renameTable: TableOpRename;
+    };
+
+export type MigrationColumnOp =
+  | {
+      addColumn: ColumnOpAdd;
+    }
+  | {
+      removeColumn: ColumnOpRemove;
+    }
+  | {
+      renameColumn: ColumnOpRename;
+    };
+
+export type TableOpAdd = {
+  table: string;
+};
+
+export type TableOpRemove = {
+  table: string;
+};
+
+export type TableOpRename = {
+  oldName: string;
+  newName: string;
+};
+
+export type ColumnOpAdd = {
+  table?: string;
+  column: Column;
+};
+
+export type ColumnOpRemove = {
+  table?: string;
+  name: string;
+};
+
+export type ColumnOpRename = {
+  table?: string;
+  oldName: string;
+  newName: string;
 };
 
 export type SortExpression =

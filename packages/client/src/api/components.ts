@@ -1122,6 +1122,327 @@ export const resolveBranch = (variables: ResolveBranchVariables) =>
     ...variables
   });
 
+export type ListMigrationRequestsPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type ListMigrationRequestsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type ListMigrationRequestsVariables = {
+  body?: Record<string, any>;
+  pathParams: ListMigrationRequestsPathParams;
+} & FetcherExtraProps;
+
+export const listMigrationRequests = (variables: ListMigrationRequestsVariables) =>
+  fetch<Record<string, any>, ListMigrationRequestsError, Record<string, any>, {}, {}, ListMigrationRequestsPathParams>({
+    url: '/dbs/{dbName}/migrations/list',
+    method: 'post',
+    ...variables
+  });
+
+export type CreateMigrationRequestsPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type CreateMigrationRequestsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CreateMigrationRequestsVariables = {
+  body?: Record<string, any>;
+  pathParams: CreateMigrationRequestsPathParams;
+} & FetcherExtraProps;
+
+export const createMigrationRequests = (variables: CreateMigrationRequestsVariables) =>
+  fetch<
+    Record<string, any>,
+    CreateMigrationRequestsError,
+    Record<string, any>,
+    {},
+    {},
+    CreateMigrationRequestsPathParams
+  >({ url: '/dbs/{dbName}/migrations', method: 'post', ...variables });
+
+export type GetMigrationRequestPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  /*
+   * The migration request number.
+   */
+  mrNumber: number;
+  workspace: string;
+};
+
+export type GetMigrationRequestError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetMigrationRequestVariables = {
+  pathParams: GetMigrationRequestPathParams;
+} & FetcherExtraProps;
+
+export const getMigrationRequest = (variables: GetMigrationRequestVariables) =>
+  fetch<Record<string, any>, GetMigrationRequestError, undefined, {}, {}, GetMigrationRequestPathParams>({
+    url: '/dbs/{dbName}/migrations/{mrNumber}',
+    method: 'get',
+    ...variables
+  });
+
+export type UpdateMigrationRequestPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  /*
+   * The migration request number.
+   */
+  mrNumber: number;
+  workspace: string;
+};
+
+export type UpdateMigrationRequestError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateMigrationRequestVariables = {
+  body?: Record<string, any>;
+  pathParams: UpdateMigrationRequestPathParams;
+} & FetcherExtraProps;
+
+export const updateMigrationRequest = (variables: UpdateMigrationRequestVariables) =>
+  fetch<
+    Record<string, any>,
+    UpdateMigrationRequestError,
+    Record<string, any>,
+    {},
+    {},
+    UpdateMigrationRequestPathParams
+  >({ url: '/dbs/{dbName}/migrations/{mrNumber}', method: 'patch', ...variables });
+
+export type ListMigrationRequestsCommitsPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  /*
+   * The migration request number.
+   */
+  mrNumber: number;
+  workspace: string;
+};
+
+export type ListMigrationRequestsCommitsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type ListMigrationRequestsCommitsResponse = {
+  logs?: Schemas.Commit[];
+};
+
+export type ListMigrationRequestsCommitsVariables = {
+  body?: Record<string, any>;
+  pathParams: ListMigrationRequestsCommitsPathParams;
+} & FetcherExtraProps;
+
+export const listMigrationRequestsCommits = (variables: ListMigrationRequestsCommitsVariables) =>
+  fetch<
+    ListMigrationRequestsCommitsResponse,
+    ListMigrationRequestsCommitsError,
+    Record<string, any>,
+    {},
+    {},
+    ListMigrationRequestsCommitsPathParams
+  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/commits', method: 'post', ...variables });
+
+export type CompareMigrationRequestPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  /*
+   * The migration request number.
+   */
+  mrNumber: number;
+  workspace: string;
+};
+
+export type CompareMigrationRequestError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CompareMigrationRequestVariables = {
+  body?: Record<string, any>;
+  pathParams: CompareMigrationRequestPathParams;
+} & FetcherExtraProps;
+
+export const compareMigrationRequest = (variables: CompareMigrationRequestVariables) =>
+  fetch<
+    Responses.SchemaCompareResponse,
+    CompareMigrationRequestError,
+    Record<string, any>,
+    {},
+    {},
+    CompareMigrationRequestPathParams
+  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/compare', method: 'post', ...variables });
+
+export type GetMigrationRequestMergedPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  /*
+   * The migration request number.
+   */
+  mrNumber: number;
+  workspace: string;
+};
+
+export type GetMigrationRequestMergedError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetMigrationRequestMergedVariables = {
+  pathParams: GetMigrationRequestMergedPathParams;
+} & FetcherExtraProps;
+
+export const getMigrationRequestMerged = (variables: GetMigrationRequestMergedVariables) =>
+  fetch<Record<string, any>, GetMigrationRequestMergedError, undefined, {}, {}, GetMigrationRequestMergedPathParams>({
+    url: '/dbs/{dbName}/migrations/{mrNumber}/merge',
+    method: 'get',
+    ...variables
+  });
+
+export type MergeMigrationRequestPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  /*
+   * The migration request number.
+   */
+  mrNumber: number;
+  workspace: string;
+};
+
+export type MergeMigrationRequestError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type MergeMigrationRequestVariables = {
+  body?: Record<string, any>;
+  pathParams: MergeMigrationRequestPathParams;
+} & FetcherExtraProps;
+
+export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables) =>
+  fetch<
+    Responses.SchemaCompareResponse,
+    MergeMigrationRequestError,
+    Record<string, any>,
+    {},
+    {},
+    MergeMigrationRequestPathParams
+  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/merge', method: 'post', ...variables });
+
 export type GetBranchDetailsPathParams = {
   /*
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -1461,6 +1782,274 @@ export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariable
     {},
     GetBranchMigrationPlanPathParams
   >({ url: '/db/{dbBranchName}/migrations/plan', method: 'post', ...variables });
+
+export type CompareBranchWithUserSchemaPathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type CompareBranchWithUserSchemaError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CompareBranchWithUserSchemaRequestBody = {
+  schema: Schemas.Schema;
+};
+
+export type CompareBranchWithUserSchemaVariables = {
+  body: CompareBranchWithUserSchemaRequestBody;
+  pathParams: CompareBranchWithUserSchemaPathParams;
+} & FetcherExtraProps;
+
+export const compareBranchWithUserSchema = (variables: CompareBranchWithUserSchemaVariables) =>
+  fetch<
+    Responses.SchemaCompareResponse,
+    CompareBranchWithUserSchemaError,
+    CompareBranchWithUserSchemaRequestBody,
+    {},
+    {},
+    CompareBranchWithUserSchemaPathParams
+  >({ url: '/db/{dbBranchName}/schema/compare', method: 'post', ...variables });
+
+export type CompareBranchSchemasPathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /*
+   * The Database Name
+   */
+  branchName: Schemas.BranchName;
+  workspace: string;
+};
+
+export type CompareBranchSchemasError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CompareBranchSchemasVariables = {
+  body?: Record<string, any>;
+  pathParams: CompareBranchSchemasPathParams;
+} & FetcherExtraProps;
+
+export const compareBranchSchemas = (variables: CompareBranchSchemasVariables) =>
+  fetch<
+    Responses.SchemaCompareResponse,
+    CompareBranchSchemasError,
+    Record<string, any>,
+    {},
+    {},
+    CompareBranchSchemasPathParams
+  >({ url: '/db/{dbBranchName}/schema/compare/{branchName}', method: 'post', ...variables });
+
+export type UpdateBranchSchemaPathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type UpdateBranchSchemaError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateBranchSchemaResponse = {
+  id: string;
+  parentID: string;
+};
+
+export type UpdateBranchSchemaRequestBody = {
+  operations?: Schemas.MigrationOp[];
+};
+
+export type UpdateBranchSchemaVariables = {
+  body?: UpdateBranchSchemaRequestBody;
+  pathParams: UpdateBranchSchemaPathParams;
+} & FetcherExtraProps;
+
+export const updateBranchSchema = (variables: UpdateBranchSchemaVariables) =>
+  fetch<
+    UpdateBranchSchemaResponse,
+    UpdateBranchSchemaError,
+    UpdateBranchSchemaRequestBody,
+    {},
+    {},
+    UpdateBranchSchemaPathParams
+  >({ url: '/db/{dbBranchName}/schema/update', method: 'post', ...variables });
+
+export type PreviweBranchSchemdEditPathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type PreviweBranchSchemdEditError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PreviweBranchSchemdEditResponse = {
+  original: Schemas.Schema;
+  updated: Schemas.Schema;
+};
+
+export type PreviweBranchSchemdEditRequestBody = {
+  edits?: Schemas.SchemaEditScript;
+  operations?: Schemas.MigrationOp[];
+};
+
+export type PreviweBranchSchemdEditVariables = {
+  body?: PreviweBranchSchemdEditRequestBody;
+  pathParams: PreviweBranchSchemdEditPathParams;
+} & FetcherExtraProps;
+
+export const previweBranchSchemdEdit = (variables: PreviweBranchSchemdEditVariables) =>
+  fetch<
+    PreviweBranchSchemdEditResponse,
+    PreviweBranchSchemdEditError,
+    PreviweBranchSchemdEditRequestBody,
+    {},
+    {},
+    PreviweBranchSchemdEditPathParams
+  >({ url: '/db/{dbBranchName}/schema/preview', method: 'post', ...variables });
+
+export type ApplyBranchSchemdEditPathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type ApplyBranchSchemdEditError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type ApplyBranchSchemdEditResponse = {
+  id: string;
+  parentID: string;
+};
+
+export type ApplyBranchSchemdEditRequestBody = {
+  edits: Schemas.SchemaEditScript;
+};
+
+export type ApplyBranchSchemdEditVariables = {
+  body: ApplyBranchSchemdEditRequestBody;
+  pathParams: ApplyBranchSchemdEditPathParams;
+} & FetcherExtraProps;
+
+export const applyBranchSchemdEdit = (variables: ApplyBranchSchemdEditVariables) =>
+  fetch<
+    ApplyBranchSchemdEditResponse,
+    ApplyBranchSchemdEditError,
+    ApplyBranchSchemdEditRequestBody,
+    {},
+    {},
+    ApplyBranchSchemdEditPathParams
+  >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables });
+
+export type GetBranchSchemaHistoryPathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type GetBranchSchemaHistoryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetBranchSchemaHistoryResponse = {
+  logs?: Schemas.Commit[];
+};
+
+export type GetBranchSchemaHistoryVariables = {
+  body?: Record<string, any>;
+  pathParams: GetBranchSchemaHistoryPathParams;
+} & FetcherExtraProps;
+
+export const getBranchSchemaHistory = (variables: GetBranchSchemaHistoryVariables) =>
+  fetch<
+    GetBranchSchemaHistoryResponse,
+    GetBranchSchemaHistoryError,
+    Record<string, any>,
+    {},
+    {},
+    GetBranchSchemaHistoryPathParams
+  >({ url: '/db/{dbBranchName}/schema/history', method: 'post', ...variables });
 
 export type GetBranchStatsPathParams = {
   /*
@@ -3306,7 +3895,23 @@ export const operationsByTag = {
     getBranchMigrationHistory,
     executeBranchMigrationPlan,
     getBranchMigrationPlan,
+    compareBranchWithUserSchema,
+    compareBranchSchemas,
+    updateBranchSchema,
+    previweBranchSchemdEdit,
+    applyBranchSchemdEdit,
+    getBranchSchemaHistory,
     getBranchStats
+  },
+  migrationRequests: {
+    listMigrationRequests,
+    createMigrationRequests,
+    getMigrationRequest,
+    updateMigrationRequest,
+    listMigrationRequestsCommits,
+    compareMigrationRequest,
+    getMigrationRequestMerged,
+    mergeMigrationRequest
   },
   table: {
     createTable,
