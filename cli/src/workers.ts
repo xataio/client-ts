@@ -159,8 +159,25 @@ ${external.join('\n')}
 
 const xataWorker = ${code};
 
+const corsHeaders = {
+  // TODO: Allow customizing CORS origin
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST,OPTIONS",
+  "Access-Control-Max-Age": "86400",
+};
+
 export default {
   async fetch(request, environment) {
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        headers: {
+          ...corsHeaders,
+          "Access-Control-Allow-Headers":
+            request.headers.get("Access-Control-Request-Headers") ?? "",
+        },
+      });
+    }
+
     const {
       XATA_API_KEY: apiKey,
       XATA_DATABASE_URL: databaseURL,
@@ -174,9 +191,17 @@ export default {
     const xata = new BaseClient({ databaseURL, apiKey });
     const result = await xataWorker({ xata, env, request }, ...args);
 
-    return result instanceof Response
+    const response = result instanceof Response
       ? result
       : new Response(serialize(result));
+
+    // TODO: Allow customizing CORS origin
+    response.headers.set("Access-Control-Allow-Origin", "*");
+    response.headers.set("Access-Control-Allow-Headers", "*");
+    response.headers.set("Access-Control-Allow-Methods", "POST,OPTIONS");
+    response.headers.set("Access-Control-Max-Age", "86400");
+
+    return response;
   },
 };
 `;
