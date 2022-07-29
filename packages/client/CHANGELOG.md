@@ -1,5 +1,19 @@
 # @xata.io/client
 
+## 0.16.0
+
+### Minor Changes
+
+- [#485](https://github.com/xataio/client-ts/pull/485) [`a9cbb26`](https://github.com/xataio/client-ts/commit/a9cbb263fbca47cb91a827db252d95a5bb4079a6) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow selecting columns with record operations
+
+* [#485](https://github.com/xataio/client-ts/pull/485) [`7e04a3d`](https://github.com/xataio/client-ts/commit/7e04a3d1c51958a44f687a0036ead8bb3f5a2dfb) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove record cache
+
+### Patch Changes
+
+- [#503](https://github.com/xataio/client-ts/pull/503) [`6a96ea5`](https://github.com/xataio/client-ts/commit/6a96ea5da4c5b7ca9a99b57ebbce8d6766b5d4d8) Thanks [@xata-bot](https://github.com/xata-bot)! - Update API response types for create of tables and branches
+
+* [#421](https://github.com/xataio/client-ts/pull/421) [`43f2560`](https://github.com/xataio/client-ts/commit/43f25605ddd0d2fd514a1542a14389d28955c500) Thanks [@SferaDev](https://github.com/SferaDev)! - Add search boosters and allow prefix search
+
 ## 0.15.0
 
 ### Patch Changes
