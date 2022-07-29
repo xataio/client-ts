@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers, WorkerScript, workerScriptSchema } from '../../workers.js';
 
-const UPLOAD_ENDPOINT = 'http://localhost:3000/api/workers';
+const UPLOAD_ENDPOINT = 'https://xata-app-git-workers-xata.vercel.app/api/workers';
 
 export default class Upload extends BaseCommand {
   static description = 'Compile and upload xata workers';
@@ -75,10 +75,10 @@ export default class Upload extends BaseCommand {
     const json = await response.json();
     console.log(json);
 
-    const { id: worker, createdAt: compileTime, publicKey } = responseSchema.parse(json);
+    const { id } = responseSchema.parse(json);
 
     // TODO: Update codegen file and save
-    console.log({ worker, workspace, compileTime, publicKey });
+    console.log(`Worker: ${id}`);
 
     await watcher.close();
   }
@@ -99,8 +99,6 @@ type Body = z.infer<typeof bodySchema>;
 
 const responseSchema = z.object({
   id: z.string(),
-  workspace: z.string(),
   createdBy: z.string(),
-  createdAt: z.string(),
-  publicKey: z.string()
+  createdAt: z.string()
 });

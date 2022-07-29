@@ -167,8 +167,11 @@ export default {
       ...env
     } = environment;
 
+    const body = await request.json();
+    const args = body.args || [];
+
     const xata = new BaseClient({ databaseURL, apiKey });
-    const result = await xataWorker({ xata, env, request });
+    const result = await xataWorker({ xata, env, request }, ...args);
 
     return result instanceof Response
       ? result

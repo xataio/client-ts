@@ -1,4 +1,3 @@
-import { ClientConstructor } from '../client';
 import { Request } from '../util/request';
 
 type XataWorkerContext<XataClient> = { xata: XataClient; request: Request; env: Record<string, string | undefined> };
@@ -6,8 +5,8 @@ type XataWorkerContext<XataClient> = { xata: XataClient; request: Request; env: 
 type RemoveFirst<T> = T extends [any, ...infer U] ? U : never;
 
 type WorkerRunnerConfig = {
+  workspace: string;
   worker: string;
-  publicKey: string;
 };
 
 export function buildWorkerRunner<XataClient>(config: WorkerRunnerConfig) {
@@ -16,20 +15,15 @@ export function buildWorkerRunner<XataClient>(config: WorkerRunnerConfig) {
     _worker: WorkerFunction
   ) {
     return async (...args: RemoveFirst<Parameters<WorkerFunction>>): Promise<Awaited<ReturnType<typeof _worker>>> => {
-      // Get an instance of crypto in browser, no need for cross compat, crypto subtle it is
-
-      // TODO: Call PROD too
+      const url =
+        process.env.NODE_ENV === 'development' ? 'http://localhost:64749' : 'https://dispatcher.xata.workers.dev';
 
       // @ts-ignore - This is a browser only feature - fetch will be defined in the browser
-      const result = await fetch('http://localhost:64749', {
+      const result = await fetch(`${url}/${config.workspace}/${config.worker}/${name}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // TODO: Encrypt this
         // TODO: Add serializer
-        body: JSON.stringify({
-          name,
-          payload: args
-        })
+        body: JSON.stringify({ args })
       });
 
       // TODO: Detect if not compiled yet (+ errors)
