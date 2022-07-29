@@ -1,5 +1,4 @@
 import Case from 'case';
-import pluralize from 'pluralize';
 import prettier, { BuiltInParserName } from 'prettier';
 import * as parserJavascript from 'prettier/parser-babel.js';
 import * as parserTypeScript from 'prettier/parser-typescript.js';
@@ -24,8 +23,7 @@ export type Language = 'typescript' | 'javascript';
 export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
 function getTypeName(tableName: string) {
-  const pascal = Case.pascal(tableName);
-  const name = pluralize.singular(pascal);
+  const name = Case.pascal(tableName);
 
   // If table starts with a number, prepend a $ sign
   if (name.match(/^\d/)) return `$${name}`;
@@ -50,7 +48,7 @@ export async function generate({
   };
 
   const code = `
-    import { BaseClientOptions, buildClient, SchemaInference, XataRecord } from '@xata.io/client';
+    import { BaseClientOptions, buildClient, buildWorkerRunner, SchemaInference, XataRecord } from '@xata.io/client';
 
     ${
       language === 'javascript'
@@ -84,6 +82,19 @@ export async function generate({
         super({ ...defaultOptions, ...options}, tables);
       }
     }
+
+    let instance: XataClient | undefined = undefined;
+    export const getXataClient = () => {
+      if (instance) return instance;
+
+      instance = new XataClient();
+      return instance;
+    };
+
+    export const xataWorker = buildWorkerRunner<XataClient>({
+      workspace: '<your-workspace-slug>',
+      worker: "<your-workspace-id>",
+     });
   `;
 
   const transpiled = transpile(code, language, javascriptTarget);

@@ -88,5 +88,9 @@
     {
       "path": "packages/codegen/dist/index.cjs"
     }
-  ]
+  ],
+  "dependencies": {
+    "@xata.io/client": "^0.13.0",
+    "node-fetch": "^3.2.6"
+  }
 }

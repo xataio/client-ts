@@ -10,3 +10,9 @@ export function slug(name: string) {
   if (str.charAt(0).match(/[a-zA-Z0-9]/)) return str;
   return `a${str}`;
 }
+
+export function reportBugURL(title: string) {
+  return `https://github.com/xataio/client-ts/issues/new?labels=bug&template=bug_report.md&title=${encodeURIComponent(
+    title
+  )}`;
+}

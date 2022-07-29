@@ -29,7 +29,6 @@
   "homepage": "https://github.com/xataio/client-ts/blob/main/codegen/README.md",
   "dependencies": {
     "case": "^1.6.3",
-    "pluralize": "^8.0.0",
     "prettier": "^2.7.1",
     "typescript": "^4.7.4",
     "zod": "^3.17.10"
