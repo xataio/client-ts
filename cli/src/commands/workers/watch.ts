@@ -3,8 +3,6 @@ import { Miniflare } from 'miniflare';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers } from '../../workers.js';
 
-export const WATCH_PORT = 64749;
-
 export default class WorkersCompile extends BaseCommand {
   static description = 'Extract and compile xata workers';
 
@@ -15,11 +13,15 @@ export default class WorkersCompile extends BaseCommand {
     }),
     ignore: Flags.string({
       description: 'Exclude a glob pattern of files to compile'
+    }),
+    port: Flags.integer({
+      description: 'Port to use for the watcher'
     })
   };
 
   async run(): Promise<void> {
     const { flags } = await this.parse(WorkersCompile);
+    const watchPort = flags.port ?? 64749;
 
     const { databaseURL } = await this.getDatabaseURL(flags.db);
     const { apiKey } = (await this.getProfile()) ?? {};
@@ -39,7 +41,7 @@ export default class WorkersCompile extends BaseCommand {
           XATA_API_KEY: apiKey,
           XATA_DATABASE_URL: databaseURL
         },
-        routes: [`http://localhost:${WATCH_PORT}/${name}`]
+        routes: [`http://localhost:${watchPort}/${name}`]
       }
     ]);
 
@@ -49,8 +51,8 @@ export default class WorkersCompile extends BaseCommand {
 
     const server = await miniflare.createServer();
 
-    server.listen(WATCH_PORT, () => {
-      console.log(`Listening on port ${WATCH_PORT}`);
+    server.listen(watchPort, () => {
+      console.log(`Listening on port ${watchPort}`);
     });
   }
 }
