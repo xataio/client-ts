@@ -1,5 +1,6 @@
 import open from 'open';
 import { BaseCommand } from '../../base.js';
+
 export default class Browse extends BaseCommand {
   static description = 'Open the current database in the browser';
 

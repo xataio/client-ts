@@ -27,6 +27,7 @@ export const projectConfigSchema = z.object({
 const partialProjectConfig = projectConfigSchema.deepPartial();
 
 export type ProjectConfig = z.infer<typeof partialProjectConfig>;
+export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
 
 const moduleName = 'xata';
 const commonFlagsHelpGroup = 'Common';
@@ -41,7 +42,7 @@ export abstract class BaseCommand extends Command {
   projectConfigLocation?: string;
 
   dotenvLocation = '.env';
-  apiKeyLocation?: 'shell' | 'dotenv' | 'profile' | 'new';
+  apiKeyLocation?: APIKeyLocation;
 
   #xataClient?: XataApiClient;
 
