@@ -50,6 +50,7 @@
     "lodash.compact": "^3.0.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
+    "miniflare": "^2.6.0",
     "node-fetch": "^3.2.9",
     "open": "^8.4.0",
     "prompts": "^2.4.2",

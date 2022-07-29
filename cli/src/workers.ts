@@ -12,8 +12,8 @@ import { OutputChunk, rollup } from 'rollup';
 import esbuild from 'rollup-plugin-esbuild';
 import { z } from 'zod';
 
-type BuildWatcherOptions = {
-  action: (path: string) => Promise<void>;
+type BuildWatcherOptions<T> = {
+  action: (path: string) => Promise<T>;
   included?: Array<string>;
   ignored?: Array<string | RegExp>;
 };
@@ -30,15 +30,15 @@ const watcherIncludePaths = [
 ];
 const watcherIgnorePaths = [/(^|[/\\])\../, 'dist/*', 'node_modules/*'];
 
-export function buildWatcher({
+export function buildWatcher<T>({
   action,
   included = watcherIncludePaths,
   ignored = watcherIgnorePaths
-}: BuildWatcherOptions): Promise<chokidar.FSWatcher> {
+}: BuildWatcherOptions<T>): Promise<{ watcher: chokidar.FSWatcher; results: T[] }> {
   return new Promise((resolve, reject) => {
     const watcher = chokidar.watch(included, { ignored, cwd: process.cwd() });
 
-    const init: Promise<void>[] = [];
+    const init: Promise<T>[] = [];
 
     watcher
       .on('add', (path) => {
@@ -52,7 +52,7 @@ export function buildWatcher({
       .on('error', () => reject(new Error('Watcher error')))
       .on('ready', async () => {
         console.log('Watcher ready');
-        await Promise.all(init).then(() => resolve(watcher));
+        await Promise.all(init).then((results) => resolve({ watcher, results }));
       });
   });
 }

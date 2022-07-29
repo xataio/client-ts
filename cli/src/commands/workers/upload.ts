@@ -34,7 +34,7 @@ export default class Upload extends BaseCommand {
 
     const workers: Map<string, WorkerScript> = new Map();
 
-    const watcher = await buildWatcher({
+    const { watcher } = await buildWatcher({
       action: async (path) => {
         const compiledWorkers = await compileWorkers(path);
         console.log(`Compiled ${compiledWorkers.length} workers`);

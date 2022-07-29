@@ -17,10 +17,12 @@ export function buildWorkerRunner<XataClient>(config: WorkerRunnerConfig) {
   ) {
     return async (...args: RemoveFirst<Parameters<WorkerFunction>>): Promise<Awaited<ReturnType<typeof _worker>>> => {
       const url =
-        process.env.NODE_ENV === 'development' ? 'http://localhost:64749' : 'https://dispatcher.xata.workers.dev';
+        process.env.NODE_ENV === 'development'
+          ? `http://localhost:64749/${name}`
+          : `https://dispatcher.xata.workers.dev/${config.workspace}/${config.worker}/${name}`;
 
       // @ts-ignore - This is a browser only feature - fetch will be defined in the browser
-      const result = await fetch(`${url}/${config.workspace}/${config.worker}/${name}`, {
+      const result = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: serialize({ args })
