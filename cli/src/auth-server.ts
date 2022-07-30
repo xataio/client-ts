@@ -22,7 +22,7 @@ export function handler(publicKey: string, privateKey: string, passphrase: strin
       if (parsedURL.pathname === '/new') {
         const port = +(parsedURL.port || 80);
         res.writeHead(302, {
-          location: generateURL(port, publicKey, privateKey, passphrase)
+          location: generateURL(port, publicKey)
         });
         res.end();
         return;
@@ -57,14 +57,18 @@ function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse) 
   res.end(readFileSync(path.join(__dirname, 'api-key-success.html'), 'utf-8'));
 }
 
-export function generateURL(port: number, publicKey: string, privateKey: string, passphrase: string) {
+export function generateURL(port: number, publicKey: string) {
   const pub = publicKey
     .replace(/\n/g, '')
     .replace('-----BEGIN PUBLIC KEY-----', '')
     .replace('-----END PUBLIC KEY-----', '');
-  const data = Buffer.from(JSON.stringify({ name: 'Xata CLI', redirect: `http://localhost:${port}` }));
-  const info = crypto.privateEncrypt({ key: privateKey, passphrase }, data).toString('base64');
-  return `https://app.xata.io/new-api-key?pub=${encodeURIComponent(pub)}&info=${encodeURIComponent(info)}`;
+  const name = 'Xata CLI';
+  const redirect = `http://localhost:${port}`;
+  const url = new URL('https://app.xata.io/new-api-key');
+  url.searchParams.append('pub', pub);
+  url.searchParams.append('name', name);
+  url.searchParams.append('redirect', redirect);
+  return url.toString();
 }
 
 export function generateKeys() {
@@ -97,7 +101,7 @@ export async function createAPIKeyThroughWebUI() {
     );
     server.listen(() => {
       const { port } = server.address() as AddressInfo;
-      const openURL = generateURL(port, publicKey, privateKey, passphrase);
+      const openURL = generateURL(port, publicKey);
       console.log(
         `We are opening your default browser. If your browser doesn't open automatically, please copy and paste the following URL into your browser: ${chalk.bold(
           `http://localhost:${port}/new`
