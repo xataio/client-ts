@@ -29,9 +29,21 @@ describe('branches delete', () => {
       databaseURL: 'https://test-1234.xata.sh/db/test'
     };
 
-    promptsMock.mockReturnValue({ confirm: false });
+    promptsMock.mockReturnValue({});
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 1]');
+  });
+
+  test('exists if the user did not enter the branch name correctly', async () => {
+    const config = await Config.load();
+    const command = new BranchesDelete(['featureA'], config as Config);
+    command.projectConfig = {
+      databaseURL: 'https://test-1234.xata.sh/db/test'
+    };
+
+    promptsMock.mockReturnValue({ confirm: 'nope' });
+
+    await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: The branch name did not match]');
   });
 
   test('fails if the HTTP response is not ok', async () => {
@@ -41,7 +53,7 @@ describe('branches delete', () => {
         message: 'Something went wrong'
       })
     });
-    promptsMock.mockReturnValue({ confirm: true });
+    promptsMock.mockReturnValue({ confirm: 'featureA' });
 
     const config = await Config.load();
     const command = new BranchesDelete(['featureA'], config as Config);
@@ -61,7 +73,7 @@ describe('branches delete', () => {
       ok: true,
       json: async () => ({})
     });
-    promptsMock.mockReturnValue({ confirm: true });
+    promptsMock.mockReturnValue({ confirm: 'featureA' });
 
     const config = await Config.load();
     const command = new BranchesDelete(['featureA'], config as Config);

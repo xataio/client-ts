@@ -24,14 +24,15 @@ export default class BranchesDelete extends BaseCommand {
 
     const { confirm } = await this.prompt(
       {
-        type: 'confirm',
+        type: 'text',
         name: 'confirm',
-        message: `Are you sure you want to delete the branch ${database}:${branch} in the ${workspace} workspace?`,
+        message: `Are you sure you want to delete the branch ${database}:${branch} in the ${workspace} workspace? Please type ${branch} to confirm`,
         initial: false
       },
-      flags.force
+      flags.force ? branch : undefined
     );
     if (!confirm) return this.exit(1);
+    if (confirm !== branch) return this.error('The branch name did not match');
 
     await xata.branches.deleteBranch(workspace, database, branch);
 
