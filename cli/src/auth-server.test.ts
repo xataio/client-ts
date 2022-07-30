@@ -9,26 +9,16 @@ const { publicKey, privateKey, passphrase } = generateKeys();
 
 describe('generateURL', () => {
   test('generates a URL', async () => {
-    const uiURL = generateURL(port, publicKey, privateKey, passphrase);
+    const uiURL = generateURL(port, publicKey);
 
     expect(uiURL.startsWith('https://app.xata.io/new-api-key?')).toBe(true);
 
     const parsed = url.parse(uiURL, true);
-    const { pub, info } = parsed.query;
+    const { pub, name, redirect } = parsed.query;
 
-    const pk = crypto.createPublicKey(
-      `-----BEGIN PUBLIC KEY-----\n${String(pub).replace(/ /g, '+')}\n-----END PUBLIC KEY-----`
-    );
-    const appInfo = JSON.parse(
-      crypto.publicDecrypt(pk, Buffer.from(String(info).replace(/ /g, '+'), 'base64')).toString('utf-8')
-    );
-
-    expect(appInfo).toMatchInlineSnapshot(`
-      {
-        "name": "Xata CLI",
-        "redirect": "http://localhost:1234",
-      }
-    `);
+    expect(pub).toBeDefined();
+    expect(name).toEqual('Xata CLI');
+    expect(redirect).toEqual('http://localhost:1234');
   });
 });
 
