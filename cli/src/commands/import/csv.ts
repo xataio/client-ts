@@ -77,7 +77,7 @@ export default class ImportCSV extends BaseCommand {
         return Boolean(await this.shouldContinue(compare, table, create));
       },
       onBatchProcessed: async (rows) => {
-        this.log(`${rows} rows processed`);
+        this.info(`${chalk.bold(rows)} rows processed`);
       }
     });
 
@@ -86,7 +86,7 @@ export default class ImportCSV extends BaseCommand {
     } else {
       await parseCSVFile(file, options);
     }
-    this.log('Finished');
+    this.success('Finished importing data');
   }
 
   async shouldContinue(compare: CompareSchemaResult, table: string, create: boolean): Promise<boolean | void> {

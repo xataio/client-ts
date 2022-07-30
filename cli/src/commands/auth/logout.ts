@@ -31,6 +31,6 @@ export default class Logout extends BaseCommand {
 
     await removeProfile();
 
-    this.log('Logged out correctly');
+    this.success('Logged out correctly');
   }
 }

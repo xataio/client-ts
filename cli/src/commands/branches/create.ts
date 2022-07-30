@@ -73,6 +73,6 @@ export default class BranchesCreate extends BaseCommand {
       message = `${message}. A new git branch with the same name has been created and is your current branch.`;
     }
 
-    this.log(message);
+    this.success(message);
   }
 }

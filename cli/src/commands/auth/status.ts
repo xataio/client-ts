@@ -15,10 +15,10 @@ export default class Status extends BaseCommand {
       return this.log('You are not logged in, run `xata auth login` first');
     }
 
-    this.log('Client is logged in');
+    this.info('Client is logged in');
 
     await this.verifyAPIKey(existingProfile.apiKey);
 
-    this.log('API key is valid');
+    this.success('API key is valid');
   }
 }

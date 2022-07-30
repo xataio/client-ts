@@ -37,6 +37,6 @@ export default class BranchesDelete extends BaseCommand {
 
     if (this.jsonEnabled()) return {};
 
-    this.log(`Branch ${database}:${branch} in the ${workspace} workspace successfully deleted`);
+    this.success(`Branch ${database}:${branch} in the ${workspace} workspace successfully deleted`);
   }
 }
