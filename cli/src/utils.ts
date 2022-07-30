@@ -1,14 +1,12 @@
-import slugify from 'slugify';
-
 export function pluralize(word: string, count: number) {
   return `${word}${count === 1 ? '' : 's'}`;
 }
 
 // Based on `IsValidIdentifier` from xvalidator.go
-export function slug(name: string) {
-  const str = slugify(name, { remove: /[^a-zA-Z0-9-_~\s]/ });
-  if (str.charAt(0).match(/[a-zA-Z0-9]/)) return str;
-  return `a${str}`;
+export function slugify(name: string) {
+  const str = (name.toLowerCase().match(/[a-z0-9-_~]+/g) || []).join('-');
+  if (str.charAt(0).match(/[a-z0-9]/)) return str;
+  return `x${str}`;
 }
 
 export function reportBugURL(title: string) {
