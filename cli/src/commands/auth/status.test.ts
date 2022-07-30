@@ -65,13 +65,13 @@ describe('auth status', () => {
     expect(log.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          "Client is logged in",
+          "i Client is logged in",
         ],
         [
-          "Checking access to the API...",
+          "i Checking access to the API...",
         ],
         [
-          "API key is valid",
+          "✔ API key is valid",
         ],
       ]
     `);
