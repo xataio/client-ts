@@ -83,7 +83,7 @@ describe('databases create', () => {
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(log.mock.calls[0][0]).toEqual('Database hello-world successfully created');
+      expect(log.mock.calls[0][0]).toEqual('✔ Database hello-world successfully created');
     }
   });
 });

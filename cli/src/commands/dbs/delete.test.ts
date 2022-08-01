@@ -26,7 +26,7 @@ describe('databases delete', () => {
     const config = await Config.load();
     const command = new DatabasesDelete(['--workspace', 'test-1234'], config as Config);
 
-    promptsMock.mockReturnValue({ confirm: false });
+    promptsMock.mockReturnValue({ confirm: 'foo' });
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(`
       [Error: Missing 1 required arg:
@@ -39,9 +39,18 @@ describe('databases delete', () => {
     const config = await Config.load();
     const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
 
-    promptsMock.mockReturnValue({ confirm: false });
+    promptsMock.mockReturnValue({});
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 1]');
+  });
+
+  test('exists if the user did not enter the branch name correctly', async () => {
+    const config = await Config.load();
+    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
+
+    promptsMock.mockReturnValue({ confirm: 'nope' });
+
+    await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: The database name did not match]');
   });
 
   test('fails if the HTTP response is not ok', async () => {
@@ -51,7 +60,7 @@ describe('databases delete', () => {
         message: 'Something went wrong'
       })
     });
-    promptsMock.mockReturnValue({ confirm: true });
+    promptsMock.mockReturnValue({ confirm: 'foo' });
 
     const config = await Config.load();
     const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
@@ -68,7 +77,7 @@ describe('databases delete', () => {
       ok: true,
       json: async () => ({})
     });
-    promptsMock.mockReturnValue({ confirm: true });
+    promptsMock.mockReturnValue({ confirm: 'foo' });
 
     const config = await Config.load();
     const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
@@ -93,7 +102,7 @@ describe('databases delete', () => {
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(log.mock.calls[0][0]).toEqual('Database test-1234/foo successfully deleted');
+      expect(log.mock.calls[0][0]).toEqual('✔ Database test-1234/foo successfully deleted');
     }
   });
 });
