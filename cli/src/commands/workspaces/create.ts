@@ -28,6 +28,6 @@ export default class WorkspacesCreate extends BaseCommand {
 
     if (this.jsonEnabled()) return result;
 
-    this.log(`Workspace ${result.id} successfully created`);
+    this.success(`Workspace ${result.id} successfully created`);
   }
 }
