@@ -89,7 +89,7 @@ describe('workspaces delete', () => {
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(log.mock.calls[0][0]).toEqual('Workspace test-1234 successfully deleted');
+      expect(log.mock.calls[0][0]).toEqual('✔ Workspace test-1234 successfully deleted');
     }
   });
 });

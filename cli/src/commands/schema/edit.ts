@@ -578,10 +578,10 @@ Beware that this can lead to ${chalk.bold(
     // Create tables, update tables, delete columns and update columns
     for (const table of this.tables) {
       if (table.added) {
-        this.log(`Creating table ${table.name}`);
+        this.info(`Creating table ${table.name}`);
         await xata.tables.createTable(workspace, database, branch, table.name);
       } else if (table.initialName) {
-        this.log(`Renaming table ${table.initialName} to ${table.name}`);
+        this.info(`Renaming table ${table.initialName} to ${table.name}`);
         await xata.tables.updateTable(workspace, database, branch, table.initialName, {
           name: table.name
         });
@@ -590,10 +590,10 @@ Beware that this can lead to ${chalk.bold(
       for (const column of table.columns) {
         const linkedTable = this.tables.find((t) => (t.initialName || t.name) === column.link?.table);
         if (column.deleted || linkedTable?.deleted) {
-          this.log(`Deleting column ${table.name}.${column.name}`);
+          this.info(`Deleting column ${table.name}.${column.name}`);
           await xata.tables.deleteColumn(workspace, database, branch, table.name, column.name);
         } else if (column.initialName) {
-          this.log(`Renaming column ${table.name}.${column.initialName} to ${table.name}.${column.name}`);
+          this.info(`Renaming column ${table.name}.${column.initialName} to ${table.name}.${column.name}`);
           await xata.tables.updateColumn(workspace, database, branch, table.name, column.initialName, {
             name: column.name
           });
@@ -604,7 +604,7 @@ Beware that this can lead to ${chalk.bold(
     // Delete tables and create columns
     for (const table of this.tables) {
       if (table.deleted) {
-        this.log(`Deleting table ${table.name}`);
+        this.info(`Deleting table ${table.name}`);
         await xata.tables.deleteTable(workspace, database, branch, table.name);
         continue;
       }
@@ -620,6 +620,6 @@ Beware that this can lead to ${chalk.bold(
       }
     }
 
-    this.log('Migration completed!');
+    this.success('Migration completed!');
   }
 }

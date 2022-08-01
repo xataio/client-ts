@@ -41,6 +41,6 @@ export default class DatabasesDelete extends BaseCommand {
 
     if (this.jsonEnabled()) return {};
 
-    this.log(`Database ${workspace}/${database} successfully deleted`);
+    this.success(`Database ${workspace}/${database} successfully deleted`);
   }
 }
