@@ -33,6 +33,6 @@ export default class Login extends BaseCommand {
 
     await setProfile({ apiKey: key });
 
-    this.log('All set! you can now start using xata');
+    this.success('All set! you can now start using xata');
   }
 }

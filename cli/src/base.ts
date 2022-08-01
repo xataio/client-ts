@@ -218,7 +218,7 @@ export abstract class BaseCommand extends Command {
   }
 
   async verifyAPIKey(key: string) {
-    this.log('Checking access to the API...');
+    this.info('Checking access to the API...');
     const xata = await this.getXataClient(key);
     try {
       await xata.workspaces.getWorkspacesList();
