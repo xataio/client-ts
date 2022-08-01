@@ -93,7 +93,7 @@ describe('databases delete', () => {
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(log.mock.calls[0][0]).toEqual('Database test-1234/foo successfully deleted');
+      expect(log.mock.calls[0][0]).toEqual('✔ Database test-1234/foo successfully deleted');
     }
   });
 });

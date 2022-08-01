@@ -39,6 +39,6 @@ export default class WorkspacesDelete extends BaseCommand {
 
     if (this.jsonEnabled()) return {};
 
-    this.log(`Workspace ${workspace} successfully deleted`);
+    this.success(`Workspace ${workspace} successfully deleted`);
   }
 }

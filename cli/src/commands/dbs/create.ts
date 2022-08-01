@@ -33,6 +33,6 @@ export default class DatabasesCreate extends BaseCommand {
 
     if (this.jsonEnabled()) return result;
 
-    this.log(`Database ${result.databaseName} successfully created`);
+    this.success(`Database ${result.databaseName} successfully created`);
   }
 }
