@@ -92,11 +92,11 @@ export type WorkspaceMembers = {
  */
 export type InviteKey = string;
 
-export type ListDatabasesResponse = {
+export type DatabaseMetadata = {
   /*
-   * A list of databases in a Xata workspace
+   * Metadata of databases
    */
-  databases?: {
+  database?: {
     /*
      * The machine-readable name of a database
      */
@@ -122,7 +122,14 @@ export type ListDatabasesResponse = {
        */
       color?: string;
     };
-  }[];
+  };
+};
+
+export type ListDatabasesResponse = {
+  /*
+   * A list of databases in a Xata workspace
+   */
+  databases?: DatabaseMetadata[];
 };
 
 export type ListBranchesResponse = {
