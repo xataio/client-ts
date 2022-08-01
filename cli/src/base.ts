@@ -14,7 +14,7 @@ import which from 'which';
 import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
 import { credentialsPath, getProfileName, Profile, readCredentials } from './credentials.js';
-import { reportBugURL, slug } from './utils.js';
+import { reportBugURL, slugify } from './utils.js';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -242,7 +242,7 @@ export abstract class BaseCommand extends Command {
         message: 'New workspace name'
       });
       if (!name) return this.error('No workspace name provided');
-      const workspace = await xata.workspaces.createWorkspace({ name, slug: slug(name) });
+      const workspace = await xata.workspaces.createWorkspace({ name, slug: slugify(name) });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
