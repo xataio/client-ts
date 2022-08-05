@@ -873,6 +873,43 @@ export const deleteDatabase = (variables: DeleteDatabaseVariables) =>
     ...variables
   });
 
+export type GetDatabaseMetadataPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type GetDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetDatabaseMetadataVariables = {
+  pathParams: GetDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Retrieve metadata of the given database
+ */
+export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables) =>
+  fetch<Schemas.DatabaseMetadata, GetDatabaseMetadataError, undefined, {}, {}, GetDatabaseMetadataPathParams>({
+    url: '/dbs/{dbName}/metadata',
+    method: 'get',
+    ...variables
+  });
+
 export type GetGitBranchesMappingPathParams = {
   /*
    * The Database Name
@@ -1119,6 +1156,138 @@ export const resolveBranch = (variables: ResolveBranchVariables) =>
   fetch<ResolveBranchResponse, ResolveBranchError, undefined, {}, ResolveBranchQueryParams, ResolveBranchPathParams>({
     url: '/dbs/{dbName}/resolveBranch',
     method: 'get',
+    ...variables
+  });
+
+export type GetDatabaseAPIKeysPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type GetDatabaseAPIKeysError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetDatabaseAPIKeysResponse = {
+  keys: {
+    name: string;
+    createdAt: Schemas.DateTime;
+  }[];
+};
+
+export type GetDatabaseAPIKeysVariables = {
+  pathParams: GetDatabaseAPIKeysPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Retrieve a list of existing database API keys
+ */
+export const getDatabaseAPIKeys = (variables: GetDatabaseAPIKeysVariables) =>
+  fetch<GetDatabaseAPIKeysResponse, GetDatabaseAPIKeysError, undefined, {}, {}, GetDatabaseAPIKeysPathParams>({
+    url: '/dbs/{dbName}/keys',
+    method: 'get',
+    ...variables
+  });
+
+export type CreateDatabaseAPIKeyPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  /*
+   * API Key name
+   */
+  keyName: Schemas.APIKeyName;
+  workspace: string;
+};
+
+export type CreateDatabaseAPIKeyError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CreateDatabaseAPIKeyResponse = {
+  name: string;
+  key: string;
+  createdAt: Schemas.DateTime;
+};
+
+export type CreateDatabaseAPIKeyVariables = {
+  pathParams: CreateDatabaseAPIKeyPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Create and return new API key
+ */
+export const createDatabaseAPIKey = (variables: CreateDatabaseAPIKeyVariables) =>
+  fetch<CreateDatabaseAPIKeyResponse, CreateDatabaseAPIKeyError, undefined, {}, {}, CreateDatabaseAPIKeyPathParams>({
+    url: '/dbs/{dbName}/keys/{keyName}',
+    method: 'post',
+    ...variables
+  });
+
+export type DeleteDatabaseAPIKeyPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  /*
+   * API Key name
+   */
+  keyName: Schemas.APIKeyName;
+  workspace: string;
+};
+
+export type DeleteDatabaseAPIKeyError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteDatabaseAPIKeyVariables = {
+  pathParams: DeleteDatabaseAPIKeyPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Delete an existing API key
+ */
+export const deleteDatabaseAPIKey = (variables: DeleteDatabaseAPIKeyVariables) =>
+  fetch<undefined, DeleteDatabaseAPIKeyError, undefined, {}, {}, DeleteDatabaseAPIKeyPathParams>({
+    url: '/dbs/{dbName}/keys/{keyName}',
+    method: 'delete',
     ...variables
   });
 
@@ -3294,10 +3463,14 @@ export const operationsByTag = {
     getGitBranchesMapping,
     addGitBranchesEntry,
     removeGitBranchesEntry,
-    resolveBranch
+    resolveBranch,
+    getDatabaseAPIKeys,
+    createDatabaseAPIKey,
+    deleteDatabaseAPIKey
   },
   branch: {
     getBranchList,
+    getDatabaseMetadata,
     getBranchDetails,
     createBranch,
     deleteBranch,
