@@ -55,6 +55,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       }
     }
 
+    public getBranch() {
+      return this.#branch;
+    }
+
     #parseOptions(options?: BaseClientOptions) {
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
