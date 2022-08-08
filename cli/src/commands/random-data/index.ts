@@ -45,24 +45,26 @@ export default class RandomData extends BaseCommand {
       this.log();
     }
 
+    const { table: tableName, records: totalRecords = 25 } = flags;
+
     for (const table of tables) {
-      if (flags.table && !flags.table.includes(table.name)) continue;
+      if (tableName && !tableName.includes(table.name)) continue;
 
       const records: Record<string, unknown>[] = [];
-      for (let index = 0; index < flags.records; index++) {
+      for (let index = 0; index < totalRecords; index++) {
         records.push(this.randomRecord(table.columns));
       }
       await xata.records.bulkInsertTableRecords(workspace, database, branch, table.name, records);
 
       this.info(
-        `Inserted ${chalk.bold(flags.records)} random ${pluralize('record', flags.records)} in the ${chalk.bold(
+        `Inserted ${chalk.bold(totalRecords)} random ${pluralize('record', totalRecords)} in the ${chalk.bold(
           table.name
         )} table`
       );
     }
 
     this.success(
-      `Inserted ${chalk.bold(tables.length * flags.records)} random records across ${chalk.bold(
+      `Inserted ${chalk.bold(tables.length * totalRecords)} random records across ${chalk.bold(
         tables.length
       )} ${pluralize('table', tables.length)}`
     );
