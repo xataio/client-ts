@@ -873,6 +873,43 @@ export const deleteDatabase = (variables: DeleteDatabaseVariables) =>
     ...variables
   });
 
+export type GetDatabaseMetadataPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type GetDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetDatabaseMetadataVariables = {
+  pathParams: GetDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Retrieve metadata of the given database
+ */
+export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables) =>
+  fetch<Schemas.DatabaseMetadata, GetDatabaseMetadataError, undefined, {}, {}, GetDatabaseMetadataPathParams>({
+    url: '/dbs/{dbName}/metadata',
+    method: 'get',
+    ...variables
+  });
+
 export type GetGitBranchesMappingPathParams = {
   /*
    * The Database Name
@@ -3298,6 +3335,7 @@ export const operationsByTag = {
   },
   branch: {
     getBranchList,
+    getDatabaseMetadata,
     getBranchDetails,
     createBranch,
     deleteBranch,

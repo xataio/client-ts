@@ -83,7 +83,7 @@ describe('workspaces create', () => {
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(log.mock.calls[0][0]).toEqual('Workspace hello-world-1234 successfully created');
+      expect(log.mock.calls[0][0]).toEqual('✔ Workspace hello-world-1234 successfully created');
     }
   });
 });

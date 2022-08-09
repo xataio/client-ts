@@ -1,5 +1,5 @@
 import { BaseCommand } from '../../base.js';
-import { slug } from '../../utils.js';
+import { slugify } from '../../utils.js';
 
 export default class WorkspacesCreate extends BaseCommand {
   static description = 'Create a workspace';
@@ -24,10 +24,10 @@ export default class WorkspacesCreate extends BaseCommand {
 
     const xata = await this.getXataClient();
 
-    const result = await xata.workspaces.createWorkspace({ name: workspace, slug: slug(workspace) });
+    const result = await xata.workspaces.createWorkspace({ name: workspace, slug: slugify(workspace) });
 
     if (this.jsonEnabled()) return result;
 
-    this.log(`Workspace ${result.id} successfully created`);
+    this.success(`Workspace ${result.id} successfully created`);
   }
 }

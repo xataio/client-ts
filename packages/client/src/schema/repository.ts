@@ -348,7 +348,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 {
   #table: string;
   #getFetchProps: () => Promise<FetcherExtraProps>;
-  db: SchemaPluginResult<any>;
+  #db: SchemaPluginResult<any>;
   #cache: CacheImpl;
   #schemaTables?: Schemas.Table[];
 
@@ -362,7 +362,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     this.#table = options.table;
     this.#getFetchProps = options.pluginOptions.getFetchProps;
-    this.db = options.db;
+    this.#db = options.db;
     this.#cache = options.pluginOptions.cache;
     this.#schemaTables = options.schemaTables;
   }
@@ -443,7 +443,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.db, schemaTables, this.#table, response) as any;
+    return initObject(this.#db, schemaTables, this.#table, response) as any;
   }
 
   async #insertRecordWithId(recordId: string, object: EditableData<Data>, columns: SelectableColumn<Record>[] = ['*']) {
@@ -464,7 +464,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.db, schemaTables, this.#table, response) as any;
+    return initObject(this.#db, schemaTables, this.#table, response) as any;
   }
 
   async #bulkInsertTableRecords(objects: EditableData<Data>[], columns: SelectableColumn<Record>[] = ['*']) {
@@ -484,7 +484,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     }
 
     const schemaTables = await this.#getSchemaTables();
-    return response.records?.map((item) => initObject(this.db, schemaTables, this.#table, item)) as any;
+    return response.records?.map((item) => initObject(this.#db, schemaTables, this.#table, item)) as any;
   }
 
   async read(recordId: string): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
@@ -549,7 +549,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
         });
 
         const schemaTables = await this.#getSchemaTables();
-        return initObject(this.db, schemaTables, this.#table, response);
+        return initObject(this.#db, schemaTables, this.#table, response);
       } catch (e) {
         if (isObject(e) && e.status === 404) {
           return null;
@@ -633,7 +633,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.db, schemaTables, this.#table, response) as any;
+    return initObject(this.#db, schemaTables, this.#table, response) as any;
   }
 
   async createOrUpdate(object: EditableData<Data>): Promise<SelectedPick<Record, ['*']>>;
@@ -701,7 +701,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.db, schemaTables, this.#table, response) as any;
+    return initObject(this.#db, schemaTables, this.#table, response) as any;
   }
 
   async delete(a: string | Identifiable | Array<string | Identifiable>): Promise<void> {
@@ -768,7 +768,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return records.map((item) => initObject(this.db, schemaTables, this.#table, item)) as any;
+    return records.map((item) => initObject(this.#db, schemaTables, this.#table, item)) as any;
   }
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
@@ -792,7 +792,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     });
 
     const schemaTables = await this.#getSchemaTables();
-    const records = objects.map((record) => initObject<Result>(this.db, schemaTables, this.#table, record));
+    const records = objects.map((record) => initObject<Result>(this.#db, schemaTables, this.#table, record));
     await this.#setCacheQuery(query, meta, records);
 
     return new Page<Record, Result>(query, meta, records);

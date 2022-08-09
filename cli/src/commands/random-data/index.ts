@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Flags } from '@oclif/core';
 import { Column } from '@xata.io/codegen';
+import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
 import { pluralize } from '../../utils.js';
 
@@ -37,27 +38,35 @@ export default class RandomData extends BaseCommand {
     const { tables } = branchDetails.schema;
     if (tables.length === 0) {
       this.warn(
-        'Your database has no tables. To create one, use `xata schema edit`. Once your database has at least one table, running this command again will generate random data for you.\n'
+        `Your database has no tables. To create one, use ${chalk.bold(
+          'xata schema edit'
+        )}. Once your database has at least one table, running this command again will generate random data for you.`
       );
+      this.log();
     }
 
+    const { table: tableName, records: totalRecords = 25 } = flags;
+
     for (const table of tables) {
-      if (flags.table && !flags.table.includes(table.name)) continue;
+      if (tableName && !tableName.includes(table.name)) continue;
 
       const records: Record<string, unknown>[] = [];
-      for (let index = 0; index < flags.records; index++) {
+      for (let index = 0; index < totalRecords; index++) {
         records.push(this.randomRecord(table.columns));
       }
       await xata.records.bulkInsertTableRecords(workspace, database, branch, table.name, records);
 
-      this.log(`Inserted ${flags.records} random ${pluralize('record', flags.records)} in table ${table.name}`);
+      this.info(
+        `Inserted ${chalk.bold(totalRecords)} random ${pluralize('record', totalRecords)} in the ${chalk.bold(
+          table.name
+        )} table`
+      );
     }
 
-    this.log(
-      `Inserted ${tables.length * flags.records} random records across ${tables.length} ${pluralize(
-        'table',
+    this.success(
+      `Inserted ${chalk.bold(tables.length * totalRecords)} random records across ${chalk.bold(
         tables.length
-      )}.`
+      )} ${pluralize('table', tables.length)}`
     );
   }
 

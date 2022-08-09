@@ -26,9 +26,18 @@ describe('workspaces delete', () => {
     const config = await Config.load();
     const list = new WorkspacesDelete(['--workspace', 'test-1234'], config as Config);
 
-    promptsMock.mockReturnValue({ confirm: false });
+    promptsMock.mockReturnValue({});
 
     await expect(list.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 1]');
+  });
+
+  test('exists if the user does not enter the workspace id correctly', async () => {
+    const config = await Config.load();
+    const list = new WorkspacesDelete(['--workspace', 'test-1234'], config as Config);
+
+    promptsMock.mockReturnValue({ confirm: 'nope' });
+
+    await expect(list.run()).rejects.toMatchInlineSnapshot('[Error: The workspace name did not match]');
   });
 
   test('fails if the HTTP response is not ok', async () => {
@@ -38,7 +47,7 @@ describe('workspaces delete', () => {
         message: 'Something went wrong'
       })
     });
-    promptsMock.mockReturnValue({ confirm: true });
+    promptsMock.mockReturnValue({ confirm: 'test-1234' });
 
     const config = await Config.load();
     const list = new WorkspacesDelete(['--workspace', 'test-1234'], config as Config);
@@ -55,7 +64,7 @@ describe('workspaces delete', () => {
       ok: true,
       json: async () => ({})
     });
-    promptsMock.mockReturnValue({ confirm: true });
+    promptsMock.mockReturnValue({ confirm: 'test-1234' });
 
     const config = await Config.load();
     const list = new WorkspacesDelete(['--workspace', 'test-1234'], config as Config);
@@ -80,7 +89,7 @@ describe('workspaces delete', () => {
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(log.mock.calls[0][0]).toEqual('Workspace test-1234 successfully deleted');
+      expect(log.mock.calls[0][0]).toEqual('✔ Workspace test-1234 successfully deleted');
     }
   });
 });

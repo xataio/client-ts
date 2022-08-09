@@ -14,7 +14,7 @@ import which from 'which';
 import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
 import { credentialsPath, getProfileName, Profile, readCredentials } from './credentials.js';
-import { reportBugURL, slug } from './utils.js';
+import { reportBugURL, slugify } from './utils.js';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -27,6 +27,7 @@ export const projectConfigSchema = z.object({
 const partialProjectConfig = projectConfigSchema.deepPartial();
 
 export type ProjectConfig = z.infer<typeof partialProjectConfig>;
+export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
 
 const moduleName = 'xata';
 const commonFlagsHelpGroup = 'Common';
@@ -41,7 +42,7 @@ export abstract class BaseCommand extends Command {
   projectConfigLocation?: string;
 
   dotenvLocation = '.env';
-  apiKeyLocation?: 'shell' | 'dotenv' | 'profile' | 'new';
+  apiKeyLocation?: APIKeyLocation;
 
   #xataClient?: XataApiClient;
 
@@ -217,7 +218,7 @@ export abstract class BaseCommand extends Command {
   }
 
   async verifyAPIKey(key: string) {
-    this.log('Checking access to the API...');
+    this.info('Checking access to the API...');
     const xata = await this.getXataClient(key);
     try {
       await xata.workspaces.getWorkspacesList();
@@ -241,7 +242,7 @@ export abstract class BaseCommand extends Command {
         message: 'New workspace name'
       });
       if (!name) return this.error('No workspace name provided');
-      const workspace = await xata.workspaces.createWorkspace({ name, slug: slug(name) });
+      const workspace = await xata.workspaces.createWorkspace({ name, slug: slugify(name) });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
