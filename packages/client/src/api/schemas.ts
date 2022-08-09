@@ -45,7 +45,7 @@ export type Role = 'owner' | 'maintainer';
 
 export type WorkspaceMeta = {
   name: string;
-  slug: string;
+  slug?: string;
 };
 
 export type Workspace = WorkspaceMeta & {
