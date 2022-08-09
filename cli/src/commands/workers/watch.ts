@@ -5,6 +5,7 @@ import { buildWatcher, compileWorkers } from '../../workers.js';
 
 export default class WorkersCompile extends BaseCommand {
   static description = 'Extract and compile xata workers';
+  static hidden = true;
 
   static flags = {
     ...this.databaseURLFlag,
@@ -13,7 +14,7 @@ export default class WorkersCompile extends BaseCommand {
     }),
     ignore: Flags.string({
       description: 'Exclude a glob pattern of files to compile'
-    }),
+    })
   };
 
   async run(): Promise<void> {
