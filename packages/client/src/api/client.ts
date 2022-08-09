@@ -307,6 +307,16 @@ class BranchApi {
     });
   }
 
+  public getDatabaseMetadata(
+    workspace: Schemas.WorkspaceID,
+    dbName: Schemas.DBName
+  ): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.branch.getDatabaseMetadata({
+      pathParams: { workspace, dbName },
+      ...this.extraProps
+    });
+  }
+
   public getBranchDetails(
     workspace: Schemas.WorkspaceID,
     database: Schemas.DBName,

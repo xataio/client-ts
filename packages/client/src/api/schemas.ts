@@ -92,37 +92,42 @@ export type WorkspaceMembers = {
  */
 export type InviteKey = string;
 
+/**
+ * Metadata of databases
+ */
+export type DatabaseMetadata = {
+  /*
+   * The machine-readable name of a database
+   */
+  name: string;
+  /*
+   * The human-readable name of a database
+   */
+  displayName: string;
+  /*
+   * The time this database was created
+   */
+  createdAt: DateTime;
+  /*
+   * The number of branches the database has
+   */
+  numberOfBranches: number;
+  /*
+   * Metadata about the database for display in Xata user interfaces
+   */
+  ui?: {
+    /*
+     * The user-selected color for this database across interfaces
+     */
+    color?: string;
+  };
+};
+
 export type ListDatabasesResponse = {
   /*
    * A list of databases in a Xata workspace
    */
-  databases?: {
-    /*
-     * The machine-readable name of a database
-     */
-    name: string;
-    /*
-     * The human-readable name of a database
-     */
-    displayName: string;
-    /*
-     * The time this database was created
-     */
-    createdAt: DateTime;
-    /*
-     * The number of branches the database has
-     */
-    numberOfBranches: number;
-    /*
-     * Metadata about the database for display in Xata user interfaces
-     */
-    ui?: {
-      /*
-       * The user-selected color for this database across interfaces
-       */
-      color?: string;
-    };
-  }[];
+  databases?: DatabaseMetadata[];
 };
 
 export type ListBranchesResponse = {

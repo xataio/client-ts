@@ -3,7 +3,7 @@ import { LoaderFunction } from '@remix-run/cloudflare';
 // @ts-ignore
 import { XataApiClient, BaseClient } from '@xata.io/client';
 
-export const loader: LoaderFunction = async ({ context }: { context: Record<string, unknown> }) => {
+export const loader: LoaderFunction = async ({ context }: { context: Record<string, any> }) => {
   const { XATA_WORKSPACE: workspace, XATA_API_KEY: apiKey } = context;
   if (!workspace || !apiKey) {
     throw new Error('XATA_WORKSPACE and XATA_API_KEY are required');
