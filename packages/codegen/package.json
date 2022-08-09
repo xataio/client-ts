@@ -13,6 +13,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepack": "npm run build",
+    "prebuild": "node ../../scripts/add-version-file.mjs",
     "build": "rimraf dist && rollup -c",
     "build-example": "npm run build && node example/build-example.mjs"
   },
