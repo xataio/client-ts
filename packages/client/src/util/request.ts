@@ -1,3 +1,5 @@
+// Type definitions from libdom: https://github.com/microsoft/TypeScript/blob/main/lib/lib.dom.d.ts
+
 interface Body {
   arrayBuffer(): Promise<ArrayBuffer>;
   blob(): Promise<Blob>;
