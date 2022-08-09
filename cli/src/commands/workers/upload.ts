@@ -44,7 +44,7 @@ export default class Upload extends BaseCommand {
             this.error(`Worker ${worker.name} already exists. Worker names must be unique.`);
           }
 
-          this.info('Saving worker', worker.name);
+          this.info(`Saving worker ${worker.name}`);
           workers.set(worker.name, worker);
         }
       },
