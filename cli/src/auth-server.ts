@@ -55,7 +55,7 @@ function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse, 
     'Content-Type': 'text/html'
   });
   const html = readFileSync(path.join(__dirname, 'api-key-success.html'), 'utf-8');
-  res.end(html.replace('data-color-mode=""', colorMode));
+  res.end(html.replace('data-color-mode=""', `data-color-mode="${colorMode}"`));
 }
 
 export function generateURL(port: number, publicKey: string) {
