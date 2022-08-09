@@ -31,6 +31,10 @@ export default class Codegen extends BaseCommand {
     'inject-branch': Flags.boolean({
       description:
         'Inject the branch name into the generated code. Useful if you have a build step and the branch name is not available at runtime'
+    }),
+    'experimental-workers': Flags.boolean({
+      description: 'Add xata workers to the generated code',
+      hidden: true
     })
   };
 
@@ -73,7 +77,8 @@ export default class Codegen extends BaseCommand {
       schema: { formatVersion: '1.0', ...schema },
       databaseURL,
       language,
-      branch: codegenBranch
+      branch: codegenBranch,
+      includeWorkers: flags['experimental-workers'] ?? false
     });
     const code = result.transpiled;
     const declarations = result.declarations;
