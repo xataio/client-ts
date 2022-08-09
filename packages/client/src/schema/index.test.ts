@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vite
 import { BaseClient, BaseClientOptions } from '..';
 import { server } from '../../../../test/mock_server';
 import realFetch from 'cross-fetch';
+
 interface User {
   id: string;
   name: string;

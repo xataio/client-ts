@@ -46,6 +46,7 @@
     "lerna": "^5.4.0",
     "lint-staged": "^13.0.3",
     "msw": "^0.44.2",
+    "node-fetch": "=2.6.7",
     "prettier": "^2.7.1",
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-dts": "^4.2.2",
@@ -88,9 +89,5 @@
     {
       "path": "packages/codegen/dist/index.cjs"
     }
-  ],
-  "dependencies": {
-    "@xata.io/client": "^0.13.0",
-    "node-fetch": "^3.2.6"
-  }
+  ]
 }
