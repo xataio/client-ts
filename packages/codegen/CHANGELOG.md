@@ -1,5 +1,11 @@
 # @xata.io/codegen
 
+## 0.16.1
+
+### Patch Changes
+
+- [#530](https://github.com/xataio/client-ts/pull/530) [`370a2e0`](https://github.com/xataio/client-ts/commit/370a2e0ae94f2ad714ad5bdefb3e0fb4d99f88c5) Thanks [@gimenete](https://github.com/gimenete)! - Codegen from now on will add a comment with the version of the codegen used
+
 ## 0.15.0
 
 ### Minor Changes

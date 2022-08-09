@@ -1,5 +1,21 @@
 # @xata.io/cli
 
+## 0.9.0
+
+### Minor Changes
+
+- [#514](https://github.com/xataio/client-ts/pull/514) [`2b3aee5`](https://github.com/xataio/client-ts/commit/2b3aee5e83223401936457374e10e11f339e2a36) Thanks [@gimenete](https://github.com/gimenete)! - Ask to introduce workspace/db/branch name to confirm deletions
+
+* [#511](https://github.com/xataio/client-ts/pull/511) [`0fdfec7`](https://github.com/xataio/client-ts/commit/0fdfec7a463948054a51026f728e0fa4a5112d98) Thanks [@gimenete](https://github.com/gimenete)! - Add xata status command
+
+### Patch Changes
+
+- [#525](https://github.com/xataio/client-ts/pull/525) [`5f0f2c2`](https://github.com/xataio/client-ts/commit/5f0f2c2bb42da360e810f0a61ce360f8f8b07a04) Thanks [@xata-bot](https://github.com/xata-bot)! - Update dependencies
+
+- Updated dependencies [[`e33d8fb`](https://github.com/xataio/client-ts/commit/e33d8fbca264d3ab1597ed698d5e79484dcba8a3), [`a3b1044`](https://github.com/xataio/client-ts/commit/a3b1044038c4ae73b4aacaa112818e69b7d380e1), [`5f0f2c2`](https://github.com/xataio/client-ts/commit/5f0f2c2bb42da360e810f0a61ce360f8f8b07a04), [`370a2e0`](https://github.com/xataio/client-ts/commit/370a2e0ae94f2ad714ad5bdefb3e0fb4d99f88c5)]:
+  - @xata.io/client@0.16.1
+  - @xata.io/codegen@0.16.1
+
 ## 0.8.1
 
 ### Patch Changes

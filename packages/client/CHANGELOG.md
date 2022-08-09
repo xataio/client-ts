@@ -1,5 +1,15 @@
 # @xata.io/client
 
+## 0.16.1
+
+### Patch Changes
+
+- [#531](https://github.com/xataio/client-ts/pull/531) [`e33d8fb`](https://github.com/xataio/client-ts/commit/e33d8fbca264d3ab1597ed698d5e79484dcba8a3) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new method to list database metadata in the API client
+
+* [#524](https://github.com/xataio/client-ts/pull/524) [`a3b1044`](https://github.com/xataio/client-ts/commit/a3b1044038c4ae73b4aacaa112818e69b7d380e1) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose internal config information
+
+- [#525](https://github.com/xataio/client-ts/pull/525) [`5f0f2c2`](https://github.com/xataio/client-ts/commit/5f0f2c2bb42da360e810f0a61ce360f8f8b07a04) Thanks [@xata-bot](https://github.com/xata-bot)! - Update dependencies
+
 ## 0.16.0
 
 ### Minor Changes
