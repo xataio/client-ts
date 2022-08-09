@@ -3328,6 +3328,7 @@ export const operationsByTag = {
     getDatabaseList,
     createDatabase,
     deleteDatabase,
+    getDatabaseMetadata,
     getGitBranchesMapping,
     addGitBranchesEntry,
     removeGitBranchesEntry,
@@ -3335,7 +3336,6 @@ export const operationsByTag = {
   },
   branch: {
     getBranchList,
-    getDatabaseMetadata,
     getBranchDetails,
     createBranch,
     deleteBranch,

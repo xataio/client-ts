@@ -249,6 +249,16 @@ class DatabaseApi {
     });
   }
 
+  public getDatabaseMetadata(
+    workspace: Schemas.WorkspaceID,
+    dbName: Schemas.DBName
+  ): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.database.getDatabaseMetadata({
+      pathParams: { workspace, dbName },
+      ...this.extraProps
+    });
+  }
+
   public getGitBranchesMapping(
     workspace: Schemas.WorkspaceID,
     dbName: Schemas.DBName
@@ -302,16 +312,6 @@ class BranchApi {
 
   public getBranchList(workspace: Schemas.WorkspaceID, dbName: Schemas.DBName): Promise<Schemas.ListBranchesResponse> {
     return operationsByTag.branch.getBranchList({
-      pathParams: { workspace, dbName },
-      ...this.extraProps
-    });
-  }
-
-  public getDatabaseMetadata(
-    workspace: Schemas.WorkspaceID,
-    dbName: Schemas.DBName
-  ): Promise<Schemas.DatabaseMetadata> {
-    return operationsByTag.branch.getDatabaseMetadata({
       pathParams: { workspace, dbName },
       ...this.extraProps
     });
