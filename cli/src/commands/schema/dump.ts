@@ -11,7 +11,7 @@ export default class SchemaDump extends BaseCommand {
   static flags = {
     ...this.databaseURLFlag,
     branch: this.branchFlag,
-    file: Flags.string({ char: 'f', description: 'File to write the schma to' })
+    file: Flags.string({ char: 'f', description: 'File to write the schema to' })
   };
 
   static args = [];

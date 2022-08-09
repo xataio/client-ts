@@ -5,6 +5,7 @@ import { join } from 'path';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { XataApiClient } from '../../packages/client/src';
 import { getCurrentBranchName } from '../../packages/client/src/util/config';
+import { XataClient } from '../../packages/codegen/example/xata';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -111,5 +112,19 @@ describe('getBranch', () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0][0].toString().endsWith('/resolveBranch')).toBeTruthy();
+  });
+
+  test('getBranch method retruns runtime branch', async () => {
+    const client = new XataClient({
+      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
+      branch: 'foo',
+      apiKey,
+      fetch
+    });
+
+    const { databaseURL, branch } = await client.getConfig();
+
+    expect(branch).toEqual('foo');
+    expect(databaseURL).toEqual(`https://${workspace}.xata.sh/db/${databaseName}`);
   });
 });
