@@ -40,7 +40,7 @@ export function handler(publicKey: string, privateKey: string, passphrase: strin
       const apiKey = crypto
         .privateDecrypt(privKey, Buffer.from(String(parsedURL.query.key).replace(/ /g, '+'), 'base64'))
         .toString('utf8');
-      renderSuccessPage(req, res);
+      renderSuccessPage(req, res, String(parsedURL.query['color-mode']));
       req.destroy();
       callback(apiKey);
     } catch (err) {
@@ -50,11 +50,12 @@ export function handler(publicKey: string, privateKey: string, passphrase: strin
   };
 }
 
-function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse) {
+function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse, colorMode: string) {
   res.writeHead(200, {
     'Content-Type': 'text/html'
   });
-  res.end(readFileSync(path.join(__dirname, 'api-key-success.html'), 'utf-8'));
+  const html = readFileSync(path.join(__dirname, 'api-key-success.html'), 'utf-8');
+  res.end(html.replace('data-color-mode=""', colorMode));
 }
 
 export function generateURL(port: number, publicKey: string) {
