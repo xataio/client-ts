@@ -14,14 +14,12 @@ export default class WorkersCompile extends BaseCommand {
     ignore: Flags.string({
       description: 'Exclude a glob pattern of files to compile'
     }),
-    port: Flags.integer({
-      description: 'Port to use for the watcher'
-    })
   };
 
   async run(): Promise<void> {
     const { flags } = await this.parse(WorkersCompile);
-    const watchPort = flags.port ?? 64749;
+    // TODO: Allow customising port
+    const watchPort = 64749;
 
     const { databaseURL } = await this.getDatabaseURL(flags.db);
     const { apiKey } = (await this.getProfile()) ?? {};
