@@ -52,7 +52,7 @@ export default class WorkersCompile extends BaseCommand {
     const server = await miniflare.createServer();
 
     server.listen(watchPort, () => {
-      console.log(`Listening on port ${watchPort}`);
+      this.info(`Listening on port ${watchPort}`);
     });
   }
 }

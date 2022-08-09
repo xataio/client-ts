@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers, WorkerScript, workerScriptSchema } from '../../workers.js';
 
-const UPLOAD_ENDPOINT = 'https://xata-app-git-workers-xata.vercel.app/api/workers';
+const UPLOAD_ENDPOINT = 'https://app.xata.io/api/workers';
 
 export default class Upload extends BaseCommand {
   static description = 'Compile and upload xata workers';
@@ -44,7 +44,7 @@ export default class Upload extends BaseCommand {
             this.error(`Worker ${worker.name} already exists. Worker names must be unique.`);
           }
 
-          console.log('Saving worker', worker.name);
+          this.info('Saving worker', worker.name);
           workers.set(worker.name, worker);
         }
       },
@@ -73,12 +73,11 @@ export default class Upload extends BaseCommand {
     });
 
     const json = await response.json();
-    console.log(json);
 
     const { id } = responseSchema.parse(json);
 
     // TODO: Update codegen file and save
-    console.log(`Worker: ${id}`);
+    this.info(`Worker: ${id}`);
 
     await watcher.close();
   }
