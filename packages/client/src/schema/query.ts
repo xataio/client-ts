@@ -187,7 +187,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param direction The direction. Either ascending or descending.
    * @returns A new Query object.
    */
-  sort<F extends SelectableColumn<Record>>(column: F, direction: SortDirection): Query<Record, Result> {
+  sort<F extends SelectableColumn<Record>>(column: F, direction: SortDirection = 'asc'): Query<Record, Result> {
     const originalSort = [this.#data.sort ?? []].flat() as SortFilter<Record>[];
     const sort = [...originalSort, { column, direction }];
     return new Query<Record, Result>(this.#repository, this.#table, { sort }, this.#data);
