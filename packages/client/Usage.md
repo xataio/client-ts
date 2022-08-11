@@ -38,7 +38,7 @@ To get a collection of records, you can use the `Query` object. It provides the 
 
 - `getFirst()`: returns the first record in the query results.
 - `getPaginated()`: returns a page of records in the query results.
-- `getAll()`: returns all the records in the query results. **We recommend avoiding this method and using `getMany` or `getPaginated` instead, as large datasets can cause performance problems in your applications.**
+- `getAll()`: returns all the records in the query results by paginating all the query results. If the query is not filtered and the table is a large dataset, this operation can affect the performance.
 - `getMany()`: returns 20 results by default (for more defaults, see [helper variables](#helper-variables)), but is customizable via [pagination](#page).
 
 Since the [`Repository`](#repository) class implements the `Query` interface, you can use it to query and paginate the records in the table too.
