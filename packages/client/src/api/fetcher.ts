@@ -1,4 +1,4 @@
-import { trace, TraceAttributes } from '../schema/tracing';
+import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
@@ -35,6 +35,7 @@ export type FetcherExtraProps = {
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   fetchImpl: FetchImpl;
   apiKey: string;
+  trace: TraceFunction;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
@@ -91,7 +92,8 @@ export async function fetch<
   fetchImpl,
   apiKey,
   apiUrl,
-  workspacesApiUrl
+  workspacesApiUrl,
+  trace
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   return trace(
     `${method.toUpperCase()} ${path}`,

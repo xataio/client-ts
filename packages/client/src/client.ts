@@ -3,6 +3,7 @@ import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaInference, SchemaPlugin, SchemaPluginResult } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
+import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
@@ -16,6 +17,7 @@ export type BaseClientOptions = {
   databaseURL?: string;
   branch?: BranchStrategyOption;
   cache?: CacheImpl;
+  trace?: TraceFunction;
 };
 
 type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch'>> & {
@@ -37,7 +39,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const pluginOptions: XataPluginOptions = {
         getFetchProps: () => this.#getFetchProps(safeOptions),
-        cache: safeOptions.cache
+        cache: safeOptions.cache,
+        trace: safeOptions.trace
       };
 
       const db = new SchemaPlugin(schemaTables).build(pluginOptions);
@@ -75,6 +78,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const databaseURL = options?.databaseURL || getDatabaseURL();
       const apiKey = options?.apiKey || getAPIKey();
       const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
+      const trace = options?.trace ?? defaultTrace;
       const branch = async () =>
         options?.branch !== undefined
           ? await this.#evaluateBranch(options.branch)
@@ -84,10 +88,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         throw new Error('Options databaseURL and apiKey are required');
       }
 
-      return { fetch, databaseURL, apiKey, branch, cache };
+      return { fetch, databaseURL, apiKey, branch, cache, trace };
     }
 
-    async #getFetchProps({ fetch, apiKey, databaseURL, branch }: SafeOptions): Promise<FetcherExtraProps> {
+    async #getFetchProps({ fetch, apiKey, databaseURL, branch, trace }: SafeOptions): Promise<FetcherExtraProps> {
       const branchValue = await this.#evaluateBranch(branch);
       if (!branchValue) throw new Error('Unable to resolve branch value');
 
@@ -100,7 +104,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
           const hasBranch = params.dbBranchName ?? params.branch;
           const newPath = path.replace(/^\/db\/[^/]+/, hasBranch ? `:${branchValue}` : '');
           return databaseURL + newPath;
-        }
+        },
+        trace
       };
     }
 
