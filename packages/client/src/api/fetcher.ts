@@ -126,13 +126,13 @@ export async function fetch<
         return {} as unknown as TData;
       }
 
-      const { host, protocol } = new URL(response.url);
+      const { host, protocol } = parseUrl(response.url);
       const requestId = response.headers?.get('x-request-id') ?? undefined;
       setAttributes({
         [TraceAttributes.HTTP_REQUEST_ID]: requestId,
         [TraceAttributes.HTTP_STATUS_CODE]: response.status,
         [TraceAttributes.HTTP_HOST]: host,
-        [TraceAttributes.HTTP_SCHEME]: protocol.replace(':', '')
+        [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', '')
       });
 
       try {
@@ -152,4 +152,14 @@ export async function fetch<
     },
     { [TraceAttributes.HTTP_METHOD]: method.toUpperCase(), [TraceAttributes.HTTP_ROUTE]: path }
   );
+}
+
+function parseUrl(url: string): { host?: string; protocol?: string } {
+  try {
+    const { host, protocol } = new URL(url);
+
+    return { host, protocol };
+  } catch (error) {
+    return {};
+  }
 }
