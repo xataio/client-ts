@@ -41,6 +41,20 @@ To get a collection of records, you can use the `Query` object. It provides the 
 - `getAll()`: returns all the records in the query results by paginating all the query results. If the query is not filtered and the table is a large dataset, this operation can affect the performance.
 - `getMany()`: returns an array with a subset of the first results in the query. The default [pagination](#page) size (20) is used and can be customised by passing a different `{ pagination: { size: number } }` in its options. To learn more about default values, see [helper variables](#helper-variables).
 
+All these methods allow customising its filters, column selection, column ordering, pagination and even cache TTL. For example:
+
+```ts
+// First item sorting by name
+const user = await xata.db.users.getFirst({ sort: "name" });
+
+// Get first 50 items but ignore the first one
+const users = await xata.db.users.getMany({ pagination: { pageSize: 50, offset: 1 } });
+
+// Get page of 100 items where name contains "foo"
+const page = await xata.db.users.getPaginated({ filter: { name: { $contains: "foo" } }, pagination: { pageSize: 100 } });
+
+// Get all admin users and cache the result for 5 minutes
+const user = await xata.db.users.filter("role", "admin").getAll({ cache: 5 * 60 * 1000 }); 
 Since the [`Repository`](#repository) class implements the `Query` interface, you can use it to query and paginate the records in the table too.
 
 ```ts
