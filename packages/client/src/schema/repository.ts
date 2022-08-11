@@ -19,6 +19,7 @@ import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
 import { isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
+import { VERSION } from '../version';
 import { CacheImpl } from './cache';
 import { Filter } from './filters';
 import { Page } from './pagination';
@@ -26,6 +27,7 @@ import { Query } from './query';
 import { BaseData, EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
+import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
 
 /**
  * Common interface for performing operations on a table.
@@ -351,6 +353,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   #db: SchemaPluginResult<any>;
   #cache: CacheImpl;
   #schemaTables?: Schemas.Table[];
+  #trace: TraceFunction;
 
   constructor(options: {
     table: string;
@@ -365,6 +368,19 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     this.#db = options.db;
     this.#cache = options.pluginOptions.cache;
     this.#schemaTables = options.schemaTables;
+
+    const trace = options.pluginOptions.trace ?? defaultTrace;
+    this.#trace = async <T>(
+      name: string,
+      fn: (options: { setAttributes: (attrs: AttributeDictionary) => void; onError: (message: string) => void }) => T,
+      options: AttributeDictionary = {}
+    ) => {
+      return trace<T>(name, fn, {
+        ...options,
+        [TraceAttributes.TABLE]: this.#table,
+        [TraceAttributes.VERSION]: VERSION
+      });
+    };
   }
 
   async create(object: EditableData<Data>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
@@ -393,37 +409,39 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     | Readonly<SelectedPick<Record, ['*']>>
     | Readonly<SelectedPick<Record, ['*']>>[]
   > {
-    // Create many records
-    if (Array.isArray(a)) {
-      if (a.length === 0) return [];
+    return this.#trace('create', async () => {
+      // Create many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
 
-      const columns = isStringArray(b) ? b : undefined;
-      return this.#bulkInsertTableRecords(a, columns);
-    }
+        const columns = isStringArray(b) ? b : undefined;
+        return this.#bulkInsertTableRecords(a, columns);
+      }
 
-    // Create one record with id as param
-    if (isString(a) && isObject(b)) {
-      if (a === '') throw new Error("The id can't be empty");
+      // Create one record with id as param
+      if (isString(a) && isObject(b)) {
+        if (a === '') throw new Error("The id can't be empty");
 
-      const columns = isStringArray(c) ? c : undefined;
-      return this.#insertRecordWithId(a, b, columns);
-    }
+        const columns = isStringArray(c) ? c : undefined;
+        return this.#insertRecordWithId(a, b, columns);
+      }
 
-    // Create one record with id as property
-    if (isObject(a) && isString(a.id)) {
-      if (a.id === '') throw new Error("The id can't be empty");
+      // Create one record with id as property
+      if (isObject(a) && isString(a.id)) {
+        if (a.id === '') throw new Error("The id can't be empty");
 
-      const columns = isStringArray(b) ? b : undefined;
-      return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns);
-    }
+        const columns = isStringArray(b) ? b : undefined;
+        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns);
+      }
 
-    // Create one record without id
-    if (isObject(a)) {
-      const columns = isStringArray(b) ? b : undefined;
-      return this.#insertRecordWithoutId(a, columns);
-    }
+      // Create one record without id
+      if (isObject(a)) {
+        const columns = isStringArray(b) ? b : undefined;
+        return this.#insertRecordWithoutId(a, columns);
+      }
 
-    throw new Error('Invalid arguments for create method');
+      throw new Error('Invalid arguments for create method');
+    });
   }
 
   async #insertRecordWithoutId(object: EditableData<Data>, columns: SelectableColumn<Record>[] = ['*']) {
@@ -517,49 +535,56 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     | Readonly<SelectedPick<Record, K[]>>[]
     | null
   > {
-    const columns = isStringArray(b) ? b : ['*' as const];
+    return this.#trace('read', async () => {
+      const columns = isStringArray(b) ? b : ['*' as const];
 
-    // Read many records
-    if (Array.isArray(a)) {
-      if (a.length === 0) return [];
+      // Read many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
 
-      const ids = a.map((item) => (isString(item) ? item : item.id)).filter((id) => isString(id));
+        const ids = a.map((item) => (isString(item) ? item : item.id)).filter((id) => isString(id));
 
-      const finalObjects = await this.getAll({ filter: { id: { $any: ids } }, columns });
+        const finalObjects = await this.getAll({ filter: { id: { $any: ids } }, columns });
 
-      // Maintain order of objects
-      const dictionary = finalObjects.reduce((acc, object) => {
-        acc[object.id] = object;
-        return acc;
-      }, {} as Dictionary<any>);
+        // Maintain order of objects
+        const dictionary = finalObjects.reduce((acc, object) => {
+          acc[object.id] = object;
+          return acc;
+        }, {} as Dictionary<any>);
 
-      return ids.map((id) => dictionary[id] ?? null);
-    }
-
-    // Read one record
-    const id = isString(a) ? a : a.id;
-    if (isString(id)) {
-      const fetchProps = await this.#getFetchProps();
-
-      try {
-        const response = await getRecord({
-          pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId: id },
-          queryParams: { columns },
-          ...fetchProps
-        });
-
-        const schemaTables = await this.#getSchemaTables();
-        return initObject(this.#db, schemaTables, this.#table, response);
-      } catch (e) {
-        if (isObject(e) && e.status === 404) {
-          return null;
-        }
-
-        throw e;
+        return ids.map((id) => dictionary[id] ?? null);
       }
-    }
 
-    return null;
+      // Read one record
+      const id = isString(a) ? a : a.id;
+      if (isString(id)) {
+        const fetchProps = await this.#getFetchProps();
+
+        try {
+          const response = await getRecord({
+            pathParams: {
+              workspace: '{workspaceId}',
+              dbBranchName: '{dbBranch}',
+              tableName: this.#table,
+              recordId: id
+            },
+            queryParams: { columns },
+            ...fetchProps
+          });
+
+          const schemaTables = await this.#getSchemaTables();
+          return initObject(this.#db, schemaTables, this.#table, response);
+        } catch (e) {
+          if (isObject(e) && e.status === 404) {
+            return null;
+          }
+
+          throw e;
+        }
+      }
+
+      return null;
+    });
   }
 
   async update(object: Partial<EditableData<Data>> & Identifiable): Promise<SelectedPick<Record, ['*']>>;
@@ -588,32 +613,34 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     | SelectedPick<Record, K[]>
     | SelectedPick<Record, K[]>[]
   > {
-    // Update many records
-    if (Array.isArray(a)) {
-      if (a.length === 0) return [];
+    return this.#trace('update', async () => {
+      // Update many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
 
-      if (a.length > 100) {
-        // TODO: Implement bulk update when API has support for it
-        console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
+        if (a.length > 100) {
+          // TODO: Implement bulk update when API has support for it
+          console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
+        }
+
+        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        return Promise.all(a.map((object) => this.update(object, columns)));
       }
 
-      const columns = isStringArray(b) ? b : (['*'] as K[]);
-      return Promise.all(a.map((object) => this.update(object, columns)));
-    }
+      // Update one record with id as param
+      if (isString(a) && isObject(b)) {
+        const columns = isStringArray(c) ? c : undefined;
+        return this.#updateRecordWithID(a, b, columns);
+      }
 
-    // Update one record with id as param
-    if (isString(a) && isObject(b)) {
-      const columns = isStringArray(c) ? c : undefined;
-      return this.#updateRecordWithID(a, b, columns);
-    }
+      // Update one record with id as property
+      if (isObject(a) && isString(a.id)) {
+        const columns = isStringArray(b) ? b : undefined;
+        return this.#updateRecordWithID(a.id, { ...a, id: undefined }, columns);
+      }
 
-    // Update one record with id as property
-    if (isObject(a) && isString(a.id)) {
-      const columns = isStringArray(b) ? b : undefined;
-      return this.#updateRecordWithID(a.id, { ...a, id: undefined }, columns);
-    }
-
-    throw new Error('Invalid arguments for update method');
+      throw new Error('Invalid arguments for update method');
+    });
   }
 
   async #updateRecordWithID(
@@ -662,32 +689,34 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
     | SelectedPick<Record, K[]>
     | SelectedPick<Record, K[]>[]
   > {
-    // Create or update many records
-    if (Array.isArray(a)) {
-      if (a.length === 0) return [];
+    return this.#trace('createOrUpdate', async () => {
+      // Create or update many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
 
-      if (a.length > 100) {
-        // TODO: Implement bulk update when API has support for it
-        console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
+        if (a.length > 100) {
+          // TODO: Implement bulk update when API has support for it
+          console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
+        }
+
+        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        return Promise.all(a.map((object) => this.createOrUpdate(object, columns)));
       }
 
-      const columns = isStringArray(b) ? b : (['*'] as K[]);
-      return Promise.all(a.map((object) => this.createOrUpdate(object, columns)));
-    }
+      // Create or update one record with id as param
+      if (isString(a) && isObject(b)) {
+        const columns = isStringArray(c) ? c : undefined;
+        return this.#upsertRecordWithID(a, b, columns);
+      }
 
-    // Create or update one record with id as param
-    if (isString(a) && isObject(b)) {
-      const columns = isStringArray(c) ? c : undefined;
-      return this.#upsertRecordWithID(a, b, columns);
-    }
+      // Create or update one record with id as property
+      if (isObject(a) && isString(a.id)) {
+        const columns = isStringArray(c) ? c : undefined;
+        return this.#upsertRecordWithID(a.id, { ...a, id: undefined }, columns);
+      }
 
-    // Create or update one record with id as property
-    if (isObject(a) && isString(a.id)) {
-      const columns = isStringArray(c) ? c : undefined;
-      return this.#upsertRecordWithID(a.id, { ...a, id: undefined }, columns);
-    }
-
-    throw new Error('Invalid arguments for createOrUpdate method');
+      throw new Error('Invalid arguments for createOrUpdate method');
+    });
   }
 
   async #upsertRecordWithID(recordId: string, object: EditableData<Data>, columns: SelectableColumn<Record>[] = ['*']) {
@@ -705,32 +734,34 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   async delete(a: string | Identifiable | Array<string | Identifiable>): Promise<void> {
-    // Delete many records
-    if (Array.isArray(a)) {
-      if (a.length === 0) return;
+    return this.#trace('delete', async () => {
+      // Delete many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return;
 
-      if (a.length > 100) {
-        // TODO: Implement bulk delete when API has support for it
-        console.warn('Bulk delete operation is not optimized in the Xata API yet, this request might be slow');
+        if (a.length > 100) {
+          // TODO: Implement bulk delete when API has support for it
+          console.warn('Bulk delete operation is not optimized in the Xata API yet, this request might be slow');
+        }
+
+        await Promise.all(a.map((id) => this.delete(id)));
+        return;
       }
 
-      await Promise.all(a.map((id) => this.delete(id)));
-      return;
-    }
+      // Delete one record with id as param
+      if (isString(a)) {
+        await this.#deleteRecord(a);
+        return;
+      }
 
-    // Delete one record with id as param
-    if (isString(a)) {
-      await this.#deleteRecord(a);
-      return;
-    }
+      // Delete one record with id as property
+      if (isObject(a) && isString(a.id)) {
+        await this.#deleteRecord(a.id);
+        return;
+      }
 
-    // Delete one record with id as property
-    if (isObject(a) && isString(a.id)) {
-      await this.#deleteRecord(a.id);
-      return;
-    }
-
-    throw new Error('Invalid arguments for delete method');
+      throw new Error('Invalid arguments for delete method');
+    });
   }
 
   async #deleteRecord(recordId: string): Promise<void> {
@@ -752,50 +783,54 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       boosters?: Boosters<Record>[];
     } = {}
   ) {
-    const fetchProps = await this.#getFetchProps();
+    return this.#trace('search', async () => {
+      const fetchProps = await this.#getFetchProps();
 
-    const { records } = await searchTable({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
-      body: {
-        query,
-        fuzziness: options.fuzziness,
-        prefix: options.prefix,
-        highlight: options.highlight,
-        filter: options.filter as Schemas.FilterExpression,
-        boosters: options.boosters as Schemas.BoosterExpression[]
-      },
-      ...fetchProps
+      const { records } = await searchTable({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        body: {
+          query,
+          fuzziness: options.fuzziness,
+          prefix: options.prefix,
+          highlight: options.highlight,
+          filter: options.filter as Schemas.FilterExpression,
+          boosters: options.boosters as Schemas.BoosterExpression[]
+        },
+        ...fetchProps
+      });
+
+      const schemaTables = await this.#getSchemaTables();
+      return records.map((item) => initObject(this.#db, schemaTables, this.#table, item)) as any;
     });
-
-    const schemaTables = await this.#getSchemaTables();
-    return records.map((item) => initObject(this.#db, schemaTables, this.#table, item)) as any;
   }
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
-    const cacheQuery = await this.#getCacheQuery<Result>(query);
-    if (cacheQuery) return new Page<Record, Result>(query, cacheQuery.meta, cacheQuery.records);
+    return this.#trace('query', async () => {
+      const cacheQuery = await this.#getCacheQuery<Result>(query);
+      if (cacheQuery) return new Page<Record, Result>(query, cacheQuery.meta, cacheQuery.records);
 
-    const data = query.getQueryOptions();
+      const data = query.getQueryOptions();
 
-    const body = {
-      filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
-      sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
-      page: data.pagination,
-      columns: data.columns
-    };
+      const body = {
+        filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
+        sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
+        page: data.pagination,
+        columns: data.columns
+      };
 
-    const fetchProps = await this.#getFetchProps();
-    const { meta, records: objects } = await queryTable({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
-      body,
-      ...fetchProps
+      const fetchProps = await this.#getFetchProps();
+      const { meta, records: objects } = await queryTable({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        body,
+        ...fetchProps
+      });
+
+      const schemaTables = await this.#getSchemaTables();
+      const records = objects.map((record) => initObject<Result>(this.#db, schemaTables, this.#table, record));
+      await this.#setCacheQuery(query, meta, records);
+
+      return new Page<Record, Result>(query, meta, records);
     });
-
-    const schemaTables = await this.#getSchemaTables();
-    const records = objects.map((record) => initObject<Result>(this.#db, schemaTables, this.#table, record));
-    await this.#setCacheQuery(query, meta, records);
-
-    return new Page<Record, Result>(query, meta, records);
   }
 
   async #setCacheQuery(query: Query<Record, XataRecord>, meta: RecordsMetadata, records: XataRecord[]): Promise<void> {

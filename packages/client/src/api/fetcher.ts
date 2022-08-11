@@ -1,3 +1,4 @@
+import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
@@ -20,6 +21,7 @@ export type FetchImpl = (
 ) => Promise<{
   ok: boolean;
   status: number;
+  url: string;
   json(): Promise<any>;
   headers?: {
     get(name: string): string | null;
@@ -33,6 +35,7 @@ export type FetcherExtraProps = {
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   fetchImpl: FetchImpl;
   apiKey: string;
+  trace: TraceFunction;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
@@ -89,43 +92,74 @@ export async function fetch<
   fetchImpl,
   apiKey,
   apiUrl,
-  workspacesApiUrl
+  workspacesApiUrl,
+  trace
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
-  const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
-  const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
+  return trace(
+    `${method.toUpperCase()} ${path}`,
+    async ({ setAttributes, onError }) => {
+      const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
+      const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
-  // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
-  // So, instead, we use localhost without subdomains, but will add a Host header
-  const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\./, 'http://') : fullUrl;
+      // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
+      // So, instead, we use localhost without subdomains, but will add a Host header
+      const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\./, 'http://') : fullUrl;
+      setAttributes({
+        [TraceAttributes.HTTP_URL]: url,
+        [TraceAttributes.HTTP_TARGET]: resolveUrl(path, queryParams, pathParams)
+      });
 
-  const response = await fetchImpl(url, {
-    method: method.toUpperCase(),
-    body: body ? JSON.stringify(body) : undefined,
-    headers: {
-      'Content-Type': 'application/json',
-      'User-Agent': `Xata client-ts/${VERSION}`,
-      ...headers,
-      ...hostHeader(fullUrl),
-      Authorization: `Bearer ${apiKey}`
-    }
-  });
+      const response = await fetchImpl(url, {
+        method: method.toUpperCase(),
+        body: body ? JSON.stringify(body) : undefined,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': `Xata client-ts/${VERSION}`,
+          ...headers,
+          ...hostHeader(fullUrl),
+          Authorization: `Bearer ${apiKey}`
+        }
+      });
 
-  // No content
-  if (response.status === 204) {
-    return {} as unknown as TData;
-  }
+      // No content
+      if (response.status === 204) {
+        return {} as unknown as TData;
+      }
 
-  const requestId = response.headers?.get('x-request-id') ?? undefined;
+      const { host, protocol } = parseUrl(response.url);
+      const requestId = response.headers?.get('x-request-id') ?? undefined;
+      setAttributes({
+        [TraceAttributes.HTTP_REQUEST_ID]: requestId,
+        [TraceAttributes.HTTP_STATUS_CODE]: response.status,
+        [TraceAttributes.HTTP_HOST]: host,
+        [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', '')
+      });
 
+      try {
+        const jsonResponse = await response.json();
+
+        if (response.ok) {
+          return jsonResponse;
+        }
+
+        throw new FetcherError(response.status, jsonResponse as TError['payload'], requestId);
+      } catch (error) {
+        const fetcherError = new FetcherError(response.status, error, requestId);
+        onError(fetcherError.message);
+
+        throw fetcherError;
+      }
+    },
+    { [TraceAttributes.HTTP_METHOD]: method.toUpperCase(), [TraceAttributes.HTTP_ROUTE]: path }
+  );
+}
+
+function parseUrl(url: string): { host?: string; protocol?: string } {
   try {
-    const jsonResponse = await response.json();
+    const { host, protocol } = new URL(url);
 
-    if (response.ok) {
-      return jsonResponse;
-    }
-
-    throw new FetcherError(response.status, jsonResponse as TError['payload'], requestId);
+    return { host, protocol };
   } catch (error) {
-    throw new FetcherError(response.status, error, requestId);
+    return {};
   }
 }
