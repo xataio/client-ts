@@ -41,7 +41,7 @@ To get a collection of records, you can use the `Query` object. It provides the 
 - `getAll()`: returns all the records in the query results by making multiple requests to iterate over all the pages which exist. If the query is not filtered and the table is a large dataset, this operation can affect the performance.
 - `getMany()`: returns an array with a subset of the first results in the query. The default [pagination](#page) size (20) is used and can be customised by passing a different `{ pagination: { size: number } }` in its options. To learn more about default values, see [helper variables](#helper-variables).
 
-All these methods allow customising its filters, column selection, column ordering, pagination and even cache TTL. For example:
+All these methods allow customising its filters, column selection, column ordering, pagination or cache TTL. For example:
 
 ```ts
 // First item sorting by name
