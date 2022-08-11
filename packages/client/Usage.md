@@ -325,7 +325,7 @@ It contains:
 - `meta`: Information about the current page and its cursor.
 
 ```ts
-const page = await xata.db.users.getPaginated({ pagination: { size: 25, offset: 3 } });
+const page = await xata.db.users.getPaginated();
 page.records; // Array of `XataRecord` objects.
 page.hasNextPage();
 
