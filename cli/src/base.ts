@@ -20,6 +20,7 @@ export const projectConfigSchema = z.object({
   databaseURL: z.string(),
   codegen: z.object({
     output: z.string(),
+    moduleType: z.enum(['cjs', 'esm']),
     declarations: z.boolean()
   })
 });
