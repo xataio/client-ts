@@ -60,6 +60,8 @@ const user = await xata.db.users.filter("role", "admin").getAll({ cache: 5 * 60 
 const query = xata.db.users.filter("role", "admin").select(["name"]);
 const adminUsers = await query.getAll();
 const firstAdminUserWithEmail = await query.getFirst({ columns: ["name", "email"] });
+```
+
 Since the [`Repository`](#repository) class implements the `Query` interface, you can use it to query and paginate the records in the table too.
 
 ```ts
