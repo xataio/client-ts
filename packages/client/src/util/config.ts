@@ -1,5 +1,6 @@
 import { getBranchDetails, resolveBranch } from '../api';
 import { FetchImpl } from '../api/fetcher';
+import { defaultTrace } from '../schema/tracing';
 import { getAPIKey } from './apiKey';
 import { getEnvironment, getGitBranch } from './environment';
 import { getFetchImplementation } from './fetch';
@@ -53,7 +54,8 @@ async function resolveXataBranch(gitBranch: string | undefined, options?: Branch
     fetchImpl: getFetchImplementation(options?.fetchImpl),
     workspacesApiUrl: `${protocol}//${host}`,
     pathParams: { dbName, workspace },
-    queryParams: { gitBranch, fallbackBranch }
+    queryParams: { gitBranch, fallbackBranch },
+    trace: defaultTrace
   });
 
   return branch;
@@ -81,7 +83,8 @@ async function getDatabaseBranch(branch: string, options?: BranchResolutionOptio
       apiUrl: databaseURL,
       fetchImpl: getFetchImplementation(options?.fetchImpl),
       workspacesApiUrl: `${protocol}//${host}`,
-      pathParams: { dbBranchName, workspace }
+      pathParams: { dbBranchName, workspace },
+      trace: defaultTrace
     });
   } catch (err) {
     if (isObject(err) && err.status === 404) return null;
