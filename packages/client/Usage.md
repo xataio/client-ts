@@ -39,7 +39,7 @@ To get a collection of records, you can use the `Query` object. It provides the 
 - `getFirst()`: returns the first record in the query results.
 - `getPaginated()`: returns a page of records in the query results.
 - `getAll()`: returns all the records in the query results.
-- `getMany()`: returns an array of some records in the query results.
+- `getMany()`: returns 20 results by default (for more defaults, see [helper variables](#helper-variables)), but is customizable via [pagination](#page).
 
 Since the [`Repository`](#repository) class implements the `Query` interface, you can use it to query and paginate the records in the table too.
 
@@ -311,7 +311,7 @@ It contains:
 - `meta`: Information about the current page and its cursor.
 
 ```ts
-const page = await xata.db.users.getPaginated();
+const page = await xata.db.users.getPaginated({ pagination: { size: 25, offset: 3 } });
 page.records; // Array of `XataRecord` objects.
 page.hasNextPage();
 
@@ -375,10 +375,10 @@ for await (const users of xata.db.users.getIterator({ batchSize: 50 })) {
 
 We expose some helper variables of the API limits when paginating:
 
-- `PAGINATION_MAX_SIZE`: Maximum page size.
-- `PAGINATION_DEFAULT_SIZE`: Default page size.
-- `PAGINATION_MAX_OFFSET`: Maximum offset.
-- `PAGINATION_DEFAULT_OFFSET`: Default offset.
+- `PAGINATION_MAX_SIZE`: Maximum page size (200).
+- `PAGINATION_DEFAULT_SIZE`: Default page size (20).
+- `PAGINATION_MAX_OFFSET`: Maximum offset (800).
+- `PAGINATION_DEFAULT_OFFSET`: Default offset (0).
 
 You can use these variables if you implement your own pagination mechanism, as they will be updated when our API limits are updated.
 
