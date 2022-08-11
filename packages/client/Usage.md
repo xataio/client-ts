@@ -38,8 +38,29 @@ To get a collection of records, you can use the `Query` object. It provides the 
 
 - `getFirst()`: returns the first record in the query results.
 - `getPaginated()`: returns a page of records in the query results.
-- `getAll()`: returns all the records in the query results.
-- `getMany()`: returns an array of some records in the query results.
+- `getAll()`: returns all the records in the query results by making multiple requests to iterate over all the pages which exist. If the query is not filtered and the table is a large dataset, this operation can affect the performance.
+- `getMany()`: returns an array with a subset of the first results in the query. The default [pagination](#page) size (20) is used and can be customised by passing a different `{ pagination: { size: number } }` in its options. To learn more about default values, see [helper variables](#helper-variables).
+
+All these methods allow customising its filters, column selection, column ordering, pagination or cache TTL. For example:
+
+```ts
+// First item sorting by name
+const user = await xata.db.users.getFirst({ sort: "name" });
+
+// Get first 50 items but ignore the first one
+const users = await xata.db.users.getMany({ pagination: { pageSize: 50, offset: 1 } });
+
+// Get page of 100 items where name contains "foo"
+const page = await xata.db.users.getPaginated({ filter: { name: { $contains: "foo" } }, pagination: { pageSize: 100 } });
+
+// Get all admin users and cache the result for 5 minutes
+const user = await xata.db.users.filter("role", "admin").getAll({ cache: 5 * 60 * 1000 }); 
+
+// Overwrite values set in a query
+const query = xata.db.users.filter("role", "admin").select(["name"]);
+const adminUsers = await query.getAll();
+const firstAdminUserWithEmail = await query.getFirst({ columns: ["name", "email"] });
+```
 
 Since the [`Repository`](#repository) class implements the `Query` interface, you can use it to query and paginate the records in the table too.
 
@@ -375,10 +396,10 @@ for await (const users of xata.db.users.getIterator({ batchSize: 50 })) {
 
 We expose some helper variables of the API limits when paginating:
 
-- `PAGINATION_MAX_SIZE`: Maximum page size.
-- `PAGINATION_DEFAULT_SIZE`: Default page size.
-- `PAGINATION_MAX_OFFSET`: Maximum offset.
-- `PAGINATION_DEFAULT_OFFSET`: Default offset.
+- `PAGINATION_MAX_SIZE`: Maximum page size (200).
+- `PAGINATION_DEFAULT_SIZE`: Default page size (20).
+- `PAGINATION_MAX_OFFSET`: Maximum offset (800).
+- `PAGINATION_DEFAULT_OFFSET`: Default offset (0).
 
 You can use these variables if you implement your own pagination mechanism, as they will be updated when our API limits are updated.
 

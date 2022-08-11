@@ -158,6 +158,8 @@ const page = await xata.db.users.sort('full_name', 'asc').getPaginated();
 
 Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, `sort`, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getPaginated()`, `getMany()`, `getAll()`, or `getFirst()`.
 
+To learn the differences between these methods, see the [reference](https://docs.xata.io/sdk/reference#query).
+
 ```ts
 // Operators that combine multiple conditions can be deconstructed
 const { filter, any, all, not, sort } = xata.db.users;
