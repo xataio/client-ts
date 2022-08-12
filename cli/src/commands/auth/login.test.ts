@@ -70,11 +70,11 @@ describe('auth login', () => {
         {
           "choices": [
             {
-              "title": "Create a new API key opening a browser",
+              "title": "Create a new API key in browser",
               "value": "create",
             },
             {
-              "title": "Existing API key",
+              "title": "Use an existing API key",
               "value": "existing",
             },
           ],
@@ -112,11 +112,11 @@ describe('auth login', () => {
         {
           "choices": [
             {
-              "title": "Create a new API key opening a browser",
+              "title": "Create a new API key in browser",
               "value": "create",
             },
             {
-              "title": "Existing API key",
+              "title": "Use an existing API key",
               "value": "existing",
             },
           ],
@@ -129,7 +129,7 @@ describe('auth login', () => {
     expect(promptsMock.mock.calls[1]).toMatchInlineSnapshot(`
       [
         {
-          "message": "Introduce your API key:",
+          "message": "Existing API key:",
           "name": "key",
           "type": "password",
         },
