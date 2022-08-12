@@ -90,16 +90,18 @@ export default class Init extends BaseCommand {
     this.success('Project configured successfully.');
     this.info(`Next steps? Here's a list of useful commands below. Use ${chalk.bold('xata --help')} to list them all.`);
     const bullet = chalk.magenta('»');
-    this.printTable(
-      [],
-      [
-        [bullet + ' xata shell', chalk.dim(Shell.description)],
-        [bullet + ' xata browse', chalk.dim(Browse.description)],
-        [bullet + ' xata schema edit', chalk.dim(EditSchema.description)],
-        [bullet + ' xata codegen', chalk.dim(Codegen.description)],
-        [bullet + ' xata random-data', chalk.dim(RandomData.description)]
-      ]
-    );
+    const suggestions = [
+      [bullet + ' xata shell', chalk.dim(Shell.description)],
+      [bullet + ' xata browse', chalk.dim(Browse.description)],
+      [bullet + ' xata schema edit', chalk.dim(EditSchema.description)],
+      [bullet + ' xata random-data', chalk.dim(RandomData.description)]
+    ];
+
+    if (this.projectConfig.codegen) {
+      suggestions.push([bullet + ' xata codegen', chalk.dim(Codegen.description)]);
+    }
+
+    this.printTable([], suggestions);
 
     this.log();
     this.success('You are all set!');
