@@ -1,0 +1,26 @@
+{
+  "name": "@xata.io/plugin-client-cloudflare",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.cjs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rimraf dist && rollup -c",
+    "prepack": "npm run build"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/xataio/client-ts/issues"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^3.14.1",
+    "@xata.io/client": "^0.16.0"
+  }
+}
