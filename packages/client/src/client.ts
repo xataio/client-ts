@@ -84,8 +84,12 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
           ? await this.#evaluateBranch(options.branch)
           : await getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch });
 
-      if (!databaseURL || !apiKey) {
-        throw new Error('Options databaseURL and apiKey are required');
+      if (!apiKey) {
+        throw new Error('Option apiKey is required');
+      }
+
+      if (!databaseURL) {
+        throw new Error('Option databaseURL is required');
       }
 
       return { fetch, databaseURL, apiKey, branch, cache, trace };
