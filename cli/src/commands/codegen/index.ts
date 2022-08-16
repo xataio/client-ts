@@ -50,6 +50,7 @@ export default class Codegen extends BaseCommand {
   async run(): Promise<void> {
     const { flags } = await this.parse(Codegen);
     const output = flags.output || this.projectConfig?.codegen?.output;
+    const moduleType = this.projectConfig?.codegen?.moduleType;
 
     if (!output) {
       return this.error(
@@ -80,6 +81,7 @@ export default class Codegen extends BaseCommand {
       schema: { formatVersion: '1.0', ...schema },
       databaseURL,
       language,
+      moduleType,
       branch: codegenBranch,
       includeWorkers: flags['experimental-workers'] ?? false
     });
