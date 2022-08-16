@@ -16,9 +16,6 @@ export interface XataApiClientOptions {
   trace?: TraceFunction;
 }
 
-/**
- * @deprecated Use XataApiPlugin instead
- */
 export class XataApiClient {
   #extraProps: FetcherExtraProps;
   #namespaces: Partial<{

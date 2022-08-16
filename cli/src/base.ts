@@ -20,6 +20,7 @@ export const projectConfigSchema = z.object({
   databaseURL: z.string(),
   codegen: z.object({
     output: z.string(),
+    moduleType: z.enum(['cjs', 'esm']),
     declarations: z.boolean()
   })
 });
@@ -482,8 +483,8 @@ export abstract class BaseCommand extends Command {
       name: 'decision',
       message: 'Do you want to use an existing API key or create a new API key?',
       choices: [
-        { title: 'Create a new API key opening a browser', value: 'create' },
-        { title: 'Existing API key', value: 'existing' }
+        { title: 'Create a new API key in browser', value: 'create' },
+        { title: 'Use an existing API key', value: 'existing' }
       ]
     });
     if (!decision) this.exit(2);
@@ -494,7 +495,7 @@ export abstract class BaseCommand extends Command {
       const { key } = await this.prompt({
         type: 'password',
         name: 'key',
-        message: 'Introduce your API key:'
+        message: 'Existing API key:'
       });
       if (!key) this.exit(2);
       return key;

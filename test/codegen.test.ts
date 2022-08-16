@@ -76,6 +76,46 @@ describe('generate', () => {
 
     expect(stableVersion(output.transpiled)).toMatchSnapshot();
   });
+
+  it('should generate CJS code', async () => {
+    const output = await generate({
+      schema: {
+        formatVersion: '1.0',
+        tables: [
+          {
+            name: 'users',
+            columns: [{ name: 'name', type: 'string' }]
+          }
+        ]
+      },
+      language: 'javascript',
+      moduleType: 'cjs',
+      databaseURL: 'https://workspace-1234.xata.sh/db/dbname',
+      branch: 'feature-branch'
+    });
+
+    expect(stableVersion(output.transpiled)).toMatchSnapshot();
+  });
+
+  it('should ignore moduleType for TS code', async () => {
+    const output = await generate({
+      schema: {
+        formatVersion: '1.0',
+        tables: [
+          {
+            name: 'users',
+            columns: [{ name: 'name', type: 'string' }]
+          }
+        ]
+      },
+      language: 'typescript',
+      moduleType: 'cjs',
+      databaseURL: 'https://workspace-1234.xata.sh/db/dbname',
+      branch: 'feature-branch'
+    });
+
+    expect(stableVersion(output.transpiled)).toMatchSnapshot();
+  });
 });
 
 // This method will replace the current version of the codegen with a placeholder so snapshots don't change
