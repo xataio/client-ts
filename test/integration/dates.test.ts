@@ -2,7 +2,7 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { BaseClientOptions, buildClient, SchemaInference, XataApiClient } from '../../packages/client/src';
+import { BaseClientOptions, buildClient, gte, is, lt, SchemaInference, XataApiClient } from '../../packages/client/src';
 import { Column } from '../../packages/client/src/api/schemas';
 
 // Get environment variables before reading them
@@ -85,5 +85,18 @@ describe('dates', () => {
     const record = await xata.db.datetime.create({});
 
     expect(record.date).toBeUndefined();
+  });
+
+  test('filter date with operators', async () => {
+    const date = new Date();
+    await xata.db.datetime.create({ date });
+
+    const exact = await xata.db.datetime.filter('date', is(date)).getFirst();
+    const notFound = await xata.db.datetime.filter('date', gte(new Date())).getFirst();
+    const found = await xata.db.datetime.filter('date', lt(new Date())).filter('date', gte(date)).getFirst();
+
+    expect(exact?.date?.toISOString()).toEqual(date.toISOString());
+    expect(notFound).toBeNull();
+    expect(found?.date?.toISOString()).toEqual(date.toISOString());
   });
 });

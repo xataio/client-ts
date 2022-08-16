@@ -45,21 +45,21 @@ All these methods allow customising its filters, column selection, column orderi
 
 ```ts
 // First item sorting by name
-const user = await xata.db.users.getFirst({ sort: "name" });
+const user = await xata.db.users.getFirst({ sort: 'name' });
 
 // Get first 50 items but ignore the first one
-const users = await xata.db.users.getMany({ pagination: { pageSize: 50, offset: 1 } });
+const users = await xata.db.users.getMany({ pagination: { size: 50, offset: 1 } });
 
 // Get page of 100 items where name contains "foo"
-const page = await xata.db.users.getPaginated({ filter: { name: { $contains: "foo" } }, pagination: { pageSize: 100 } });
+const page = await xata.db.users.getPaginated({ filter: { name: { $contains: 'foo' } }, pagination: { size: 100 } });
 
 // Get all admin users and cache the result for 5 minutes
-const user = await xata.db.users.filter("role", "admin").getAll({ cache: 5 * 60 * 1000 }); 
+const user = await xata.db.users.filter('role', 'admin').getAll({ cache: 5 * 60 * 1000 });
 
 // Overwrite values set in a query
-const query = xata.db.users.filter("role", "admin").select(["name"]);
+const query = xata.db.users.filter('role', 'admin').select(['name']);
 const adminUsers = await query.getAll();
-const firstAdminUserWithEmail = await query.getFirst({ columns: ["name", "email"] });
+const firstAdminUserWithEmail = await query.getFirst({ columns: ['name', 'email'] });
 ```
 
 Since the [`Repository`](#repository) class implements the `Query` interface, you can use it to query and paginate the records in the table too.

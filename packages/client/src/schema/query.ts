@@ -151,7 +151,10 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param value The value to filter.
    * @returns A new Query object.
    */
-  filter<F extends SelectableColumn<Record>>(column: F, value: Filter<ValueAtColumn<Record, F>>): Query<Record, Result>;
+  filter<F extends SelectableColumn<Record>>(
+    column: F,
+    value: Filter<NonNullable<ValueAtColumn<Record, F>>>
+  ): Query<Record, Result>;
 
   /**
    * Builds a new query object adding one or more constraints. Examples:

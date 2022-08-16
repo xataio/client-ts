@@ -248,7 +248,7 @@ export default class Init extends BaseCommand {
     }
     if (content) content += '\n\n';
     content += '# API key used by the CLI and the SDK\n';
-    content += '# Make sure your framework/tooling load this file on startup to have it available for the SDK\n';
+    content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
     content += `XATA_API_KEY=${apiKey}\n`;
     if (fallbackBranch) {
       content += "# Xata branch that will be used if there's not a xata branch with the same name as your git branch\n";
