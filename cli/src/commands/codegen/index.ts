@@ -5,10 +5,17 @@ import { mkdir, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
 import { BaseCommand, ProjectConfig } from '../../base.js';
 
-const languages: Record<string, 'javascript' | 'typescript'> = {
+export const languages: Record<string, 'javascript' | 'typescript'> = {
   '.js': 'javascript',
   '.mjs': 'javascript',
+  '.cjs': 'javascript',
   '.ts': 'typescript'
+};
+
+export const unsupportedExtensionError = (ext: string) => {
+  return `Cannot generate code for a file with extension ${ext}. Please use one of the following extensions: ${Object.keys(
+    languages
+  ).join(', ')}`;
 };
 
 export default class Codegen extends BaseCommand {
@@ -43,6 +50,7 @@ export default class Codegen extends BaseCommand {
   async run(): Promise<void> {
     const { flags } = await this.parse(Codegen);
     const output = flags.output || this.projectConfig?.codegen?.output;
+    const moduleType = this.projectConfig?.codegen?.moduleType;
 
     if (!output) {
       return this.error(
@@ -56,11 +64,7 @@ export default class Codegen extends BaseCommand {
     const dir = dirname(output);
     const language = languages[ext];
     if (!language) {
-      return this.error(
-        `Cannot generate code for a file with extension ${ext}. Please use one of the following extensions: ${Object.keys(
-          languages
-        ).join(', ')}`
-      );
+      return this.error(unsupportedExtensionError(ext));
     }
 
     const xata = await this.getXataClient();
@@ -77,6 +81,7 @@ export default class Codegen extends BaseCommand {
       schema: { formatVersion: '1.0', ...schema },
       databaseURL,
       language,
+      moduleType,
       branch: codegenBranch,
       includeWorkers: flags['experimental-workers'] ?? false
     });

@@ -1,18 +1,20 @@
 import { Flags } from '@oclif/core';
+import { ModuleType } from '@xata.io/codegen';
 import chalk from 'chalk';
 import { access, readFile, writeFile } from 'fs/promises';
-import path from 'path';
+import path, { extname } from 'path';
 import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
 import { isIgnored } from '../../git.js';
 import { xataDatabaseSchema } from '../../schema.js';
 import Browse from '../browse/index.js';
-import Codegen from '../codegen/index.js';
+import Codegen, { languages, unsupportedExtensionError } from '../codegen/index.js';
 import RandomData from '../random-data/index.js';
 import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
 
+const moduleTypeOptions = ['cjs', 'esm'];
 export default class Init extends BaseCommand {
   static description = 'Configure your working directory to work with a Xata database';
 
@@ -34,6 +36,10 @@ export default class Init extends BaseCommand {
     }),
     codegen: Flags.string({
       description: 'Output file to generate a TypeScript/JavaScript client with types for your database schema'
+    }),
+    module: Flags.enum({
+      description: 'When generating JavaScript code, what kind of module to generate',
+      options: moduleTypeOptions
     }),
     declarations: Flags.boolean({
       description: 'Whether or not to generate type declarations for JavaScript code geneartion'
@@ -69,8 +75,6 @@ export default class Init extends BaseCommand {
 
     await this.configureCodegen();
 
-    await this.installSDK();
-
     await this.writeConfig();
 
     await this.writeEnvFile(workspace, database);
@@ -86,121 +90,96 @@ export default class Init extends BaseCommand {
     this.success('Project configured successfully.');
     this.info(`Next steps? Here's a list of useful commands below. Use ${chalk.bold('xata --help')} to list them all.`);
     const bullet = chalk.magenta('»');
-    this.printTable(
-      [],
-      [
-        [bullet + ' xata shell', chalk.dim(Shell.description)],
-        [bullet + ' xata browse', chalk.dim(Browse.description)],
-        [bullet + ' xata schema edit', chalk.dim(EditSchema.description)],
-        [bullet + ' xata codegen', chalk.dim(Codegen.description)],
-        [bullet + ' xata random-data', chalk.dim(RandomData.description)]
-      ]
-    );
+    const suggestions = [
+      [bullet + ' xata shell', chalk.dim(Shell.description)],
+      [bullet + ' xata browse', chalk.dim(Browse.description)],
+      [bullet + ' xata schema edit', chalk.dim(EditSchema.description)],
+      [bullet + ' xata random-data', chalk.dim(RandomData.description)]
+    ];
+
+    if (this.projectConfig.codegen) {
+      suggestions.push([bullet + ' xata codegen', chalk.dim(Codegen.description)]);
+    }
+
+    this.printTable([], suggestions);
 
     this.log();
     this.success('You are all set!');
   }
 
-  async installSDK() {
-    // If codegen is configured, the SDK is already installed
-    if (this.projectConfig?.codegen) return;
-
-    this.info(
-      'We recommend generating a Xata client to help you use your database predictably and safely with autocompletion. Like this:'
-    );
-    this.printCode([
-      "import { XataApiClient } from '@xata.io/client';",
-      '',
-      chalk.dim('// Initialize the client'),
-      'const api = new XataApiClient();',
-      '',
-      chalk.dim('// Usage example'),
-      "const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);"
-    ]);
-
-    const { flags } = await this.parse(Init);
-    const { confirm } = await this.prompt(
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: 'Do you want to install the TypeScript/JavaScript SDK?',
-        initial: true
-      },
-      flags.sdk
-    );
-    if (confirm === undefined) return this.exit(1);
-    if (!confirm) return;
-
-    await this.installPackage('@xata.io/client');
-  }
-
   async configureCodegen() {
-    this.info(
-      'Do you want to use the code generator? The code generator will allow you to use your database with type safety and autocompletion. Example:'
-    );
-    this.printCode([
-      chalk.dim('// Import the generated code'),
-      `import { XataClient } from './xata';`,
-      '',
-      chalk.dim('// Initialize the client'),
-      'const xata = new XataClient();',
-      '',
-      chalk.dim('// Query a table with a simple filter'),
-      'const { records } = await xata.db.TableName.filter("column", value).getPaginated();'
-    ]);
+    this.projectConfig = this.projectConfig || {};
 
     const { flags } = await this.parse(Init);
-    if (!flags.codegen) {
-      const { confirm } = await this.prompt({
-        type: 'confirm',
-        name: 'confirm',
-        message: 'Do you want to use the TypeScript/JavaScript code generator?',
-        initial: true
-      });
-      if (confirm === undefined) return this.exit(1);
-      if (!confirm) return;
-    }
 
-    this.projectConfig = this.projectConfig || {};
-    this.projectConfig.codegen = {};
+    let output = flags.codegen;
+    let sdk = flags.sdk;
+    let moduleType: ModuleType | undefined = flags.module as ModuleType;
 
-    const { output } = await this.prompt(
-      {
-        type: 'text',
-        name: 'output',
-        message: 'Choose the output file for the code generator',
-        initial: 'src/xata.ts'
-      },
-      flags.codegen
-    );
-    if (!output) return this.error('You must provide an output file');
-
-    this.projectConfig.codegen.output = output;
-
-    if (!output.endsWith('.ts')) {
-      const { declarations } = await this.prompt(
+    if (!output && !sdk) {
+      const { codegen } = await this.prompt(
         {
-          type: 'confirm',
-          name: 'declarations',
-          message: 'Do you want to generate the TypeScript declarations?'
+          type: 'select',
+          name: 'codegen',
+          message: 'Do you want to use code generation in your project?',
+          choices: [
+            { title: 'Do not use code generation', value: 'no' },
+            { title: 'Generate TypeScript code', value: 'ts' },
+            { title: 'Generate JavaScript code with ES modules', value: 'esm' },
+            {
+              title: 'Generate JavaScript code with CJS (require)',
+              value: 'cjs'
+            },
+            { title: 'Install the JavaScript SDK only, with no code generation', value: 'js' }
+          ]
         },
-        flags.declarations
+        flags.module
       );
 
-      if (declarations) {
-        this.projectConfig.codegen.declarations = true;
+      if (['ts', 'esm', 'cjs'].includes(codegen)) {
+        const { file } = await this.prompt({
+          type: 'text',
+          name: 'file',
+          message: 'Choose the output file for the code generator',
+          initial: `src/xata.${codegen === 'ts' ? 'ts' : 'js'}`
+        });
+        if (!file) return this.error('You must provide an output file');
+
+        const ext = extname(file);
+        if (!Object.keys(languages).includes(ext)) {
+          this.error(unsupportedExtensionError(ext));
+        }
+        if (codegen !== 'ts') {
+          moduleType = codegen;
+        }
+        output = file;
+      } else if (codegen === 'js') {
+        sdk = true;
       }
     }
 
-    await this.installPackage('@xata.io/client');
-  }
+    if (output) {
+      this.projectConfig.codegen = { output, moduleType };
 
-  printCode(lines: string[]) {
-    this.log();
-    for (const line of lines) {
-      this.log('\t', line);
+      if (['.js', '.mjs', '.cjs'].includes(extname(output))) {
+        const { declarations } = await this.prompt(
+          {
+            type: 'confirm',
+            name: 'declarations',
+            message: 'Do you want to generate the TypeScript declarations?'
+          },
+          flags.declarations
+        );
+
+        if (declarations) {
+          this.projectConfig.codegen.declarations = true;
+        }
+      }
     }
-    this.log();
+
+    if (output || sdk) {
+      await this.installPackage('@xata.io/client');
+    }
   }
 
   async getPackageManager() {
