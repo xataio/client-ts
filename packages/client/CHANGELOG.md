@@ -1,5 +1,19 @@
 # @xata.io/client
 
+## 0.16.2
+
+### Patch Changes
+
+- [#541](https://github.com/xataio/client-ts/pull/541) [`c74467c`](https://github.com/xataio/client-ts/commit/c74467caeff4e3d60d0981a173b462e970c6c1fc) Thanks [@SferaDev](https://github.com/SferaDev)! - Add tracing with open telemetry
+
+* [#551](https://github.com/xataio/client-ts/pull/551) [`ee72bfe`](https://github.com/xataio/client-ts/commit/ee72bfef34765374ec66c7edaa6b5508c3f8e8dc) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix filter operators and dates
+
+- [#552](https://github.com/xataio/client-ts/pull/552) [`e88effa`](https://github.com/xataio/client-ts/commit/e88effa00f8c2c0e24ec8cd60fb21859ac236191) Thanks [@SferaDev](https://github.com/SferaDev)! - Update error message for required settings
+
+* [#551](https://github.com/xataio/client-ts/pull/551) [`33293b3`](https://github.com/xataio/client-ts/commit/33293b3509d984bb9b1af457c96260d43f398efe) Thanks [@SferaDev](https://github.com/SferaDev)! - Add aliases for some operators
+
+- [#534](https://github.com/xataio/client-ts/pull/534) [`efc09b4`](https://github.com/xataio/client-ts/commit/efc09b420a25253b428662c2eec40ff3bc36ce79) Thanks [@SferaDev](https://github.com/SferaDev)! - Make sort direction optional
+
 ## 0.16.1
 
 ### Patch Changes
