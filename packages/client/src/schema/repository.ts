@@ -17,7 +17,7 @@ import { FuzzinessExpression, HighlightExpression, PrefixExpression, RecordsMeta
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
-import { isObject, isString, isStringArray } from '../util/lang';
+import { compact, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { VERSION } from '../version';
 import { CacheImpl } from './cache';
@@ -168,6 +168,85 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
   abstract read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+
+  /**
+   * Queries a single record from the table given its unique id.
+   * @param id The unique id.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The persisted record for the given id or null if the record could not be found.
+   * @throws {@link Error} If the record could not be found.
+   */
+  abstract readOrThrow<K extends SelectableColumn<Record>>(
+    id: string,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+
+  /**
+   * Queries a single record from the table given its unique id.
+   * @param id The unique id.
+   * @returns The persisted record for the given id or null if the record could not be found.
+   */
+  abstract readOrThrow(id: string): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+
+  /**
+   * Queries multiple records from the table given their unique id.
+   * @param ids The unique ids array.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
+   * @throws {@link Error} If the record could not be found.
+   */
+  abstract readOrThrow<K extends SelectableColumn<Record>>(
+    ids: string[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+
+  /**
+   * Queries multiple records from the table given their unique id.
+   * @param ids The unique ids array.
+   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
+   * @throws {@link Error} If the record could not be found.
+   */
+  abstract readOrThrow(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+
+  /**
+   * Queries a single record from the table by the id in the object.
+   * @param object Object containing the id of the record.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The persisted record for the given id or null if the record could not be found.
+   * @throws {@link Error} If the record could not be found.
+   */
+  abstract readOrThrow<K extends SelectableColumn<Record>>(
+    object: Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+
+  /**
+   * Queries a single record from the table by the id in the object.
+   * @param object Object containing the id of the record.
+   * @returns The persisted record for the given id or null if the record could not be found.
+   * @throws {@link Error} If the record could not be found.
+   */
+  abstract readOrThrow(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+
+  /**
+   * Queries multiple records from the table by the ids in the objects.
+   * @param objects Array of objects containing the ids of the records.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
+   * @throws {@link Error} If the record could not be found.
+   */
+  abstract readOrThrow<K extends SelectableColumn<Record>>(
+    objects: Identifiable[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+
+  /**
+   * Queries multiple records from the table by the ids in the objects.
+   * @param objects Array of objects containing the ids of the records.
+   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
+   * @throws {@link Error} If the record could not be found.
+   */
+  abstract readOrThrow(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 
   /**
    * Partially update a single record.
@@ -506,9 +585,9 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   }
 
   async read(recordId: string): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
-  async read(recordIds: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async read(recordIds: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async read(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
-  async read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async read<K extends SelectableColumn<Record>>(
     recordId: string,
     columns: K[]
@@ -516,7 +595,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async read<K extends SelectableColumn<Record>>(
     recordIds: string[],
     columns: K[]
-  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
   async read<K extends SelectableColumn<Record>>(
     object: Identifiable,
     columns: K[]
@@ -524,15 +603,15 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async read<K extends SelectableColumn<Record>>(
     objects: Identifiable[],
     columns: K[]
-  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
   async read<K extends SelectableColumn<Record>>(
     a: string | string[] | Identifiable | Identifiable[],
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
-    | Readonly<SelectedPick<Record, ['*']>>[]
+    | Array<Readonly<SelectedPick<Record, ['*']>> | null>
     | Readonly<SelectedPick<Record, K[]>>
-    | Readonly<SelectedPick<Record, K[]>>[]
+    | Array<Readonly<SelectedPick<Record, K[]>> | null>
     | null
   > {
     return this.#trace('read', async () => {
@@ -542,22 +621,22 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        const ids = a.map((item) => (isString(item) ? item : item.id)).filter((id) => isString(id));
+        const ids = a.map((item) => extractId(item));
 
-        const finalObjects = await this.getAll({ filter: { id: { $any: ids } }, columns });
+        const finalObjects = await this.getAll({ filter: { id: { $any: compact(ids) } }, columns });
 
-        // Maintain order of objects
+        // Maintain order of object<s
         const dictionary = finalObjects.reduce((acc, object) => {
           acc[object.id] = object;
           return acc;
         }, {} as Dictionary<any>);
 
-        return ids.map((id) => dictionary[id] ?? null);
+        return ids.map((id) => dictionary[id ?? ''] ?? null);
       }
 
       // Read one record
-      const id = isString(a) ? a : a.id;
-      if (isString(id)) {
+      const id = extractId(a);
+      if (id) {
         const fetchProps = await this.#getFetchProps();
 
         try {
@@ -584,6 +663,61 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
       }
 
       return null;
+    });
+  }
+
+  async readOrThrow(recordId: string): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async readOrThrow(recordIds: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async readOrThrow(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async readOrThrow(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    recordId: string,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    recordIds: string[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    object: Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    objects: Identifiable[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    a: string | string[] | Identifiable | Identifiable[],
+    b?: K[]
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Readonly<SelectedPick<Record, ['*']>>[]
+    | Readonly<SelectedPick<Record, K[]>>
+    | Readonly<SelectedPick<Record, K[]>>[]
+  > {
+    return this.#trace('readOrThrow', async () => {
+      const result = await this.read(a as Parameters<typeof this.read>[0], b as Parameters<typeof this.read>[1]);
+
+      if (Array.isArray(result)) {
+        const missingIds = compact(
+          (a as Array<string | Identifiable>)
+            .filter((_item, index) => result[index] === null)
+            .map((item) => extractId(item))
+        );
+
+        if (missingIds.length > 0) {
+          throw new Error(`Could not find records with ids: ${missingIds.join(', ')}`);
+        }
+
+        return result as any;
+      }
+
+      if (result === null) {
+        const id = extractId(a) ?? 'unknown';
+        throw new Error(`Record with id ${id} not found`);
+      }
+
+      return result;
     });
   }
 
@@ -959,4 +1093,10 @@ function getIds(value: any): string[] {
 
 function isResponseWithRecords(value: any): value is { records: Schemas.XataRecord[] } {
   return isObject(value) && Array.isArray(value.records);
+}
+
+function extractId(value: any): string | undefined {
+  if (isString(value)) return value;
+  if (isObject(value) && isString(value.id)) return value.id;
+  return undefined;
 }

@@ -393,8 +393,42 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
   async getFirst<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
     const records = await this.getMany({ ...options, pagination: { size: 1 } });
+
     // Method overloading does not provide type inference for the return type.
     return (records[0] as unknown as Result) ?? null;
+  }
+
+  /**
+   * Performs the query in the database and returns the first result.
+   * @returns The first record that matches the query, or null if no record matched the query.
+   * @throws {@link Error} if there are no results.
+   */
+  getFirstOrThrow(): Promise<Result>;
+
+  /**
+   * Performs the query in the database and returns the first result.
+   * @param options Additional options to be used when performing the query.
+   * @returns The first record that matches the query, or null if no record matched the query.
+   * @throws {@link Error} if there are no results.
+   */
+  getFirstOrThrow<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'>>(
+    options: Options
+  ): Promise<SelectedPick<Record, typeof options['columns']>>;
+
+  /**
+   * Performs the query in the database and returns the first result.
+   * @param options Additional options to be used when performing the query.
+   * @returns The first record that matches the query, or null if no record matched the query.
+   * @throws {@link Error} if there are no results.
+   */
+  getFirstOrThrow(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'>): Promise<Result>;
+
+  async getFirstOrThrow<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result> {
+    const records = await this.getMany({ ...options, pagination: { size: 1 } });
+    if (records[0] === undefined) throw new Error('No results found.');
+
+    // Method overloading does not provide type inference for the return type.
+    return records[0] as unknown as Result;
   }
 
   /**

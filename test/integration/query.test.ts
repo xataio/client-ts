@@ -10,6 +10,7 @@ import {
   PAGINATION_MAX_SIZE
 } from '../../packages/client/src/schema/pagination';
 import { UsersRecord, XataClient } from '../../packages/codegen/example/xata';
+import { XataRecord } from '../e2e/dist/packages/client/src';
 import { animalUsers, fruitUsers, mockUsers, ownerAnimals, ownerFruits, teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
@@ -335,7 +336,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements paginable', async () => {
-    async function foo(page: Paginable<UsersRecord>): Promise<UsersRecord[]> {
+    async function foo<T extends XataRecord>(page: Paginable<T>): Promise<T[]> {
       const nextPage = page.hasNextPage() ? await foo(await page.nextPage()) : [];
       return [...page.records, ...nextPage];
     }
@@ -348,6 +349,25 @@ describe('integration tests', () => {
     const users = await client.db.users.getAll();
     expect(users).toHaveLength(mockUsers.length);
     expect(users[0].id).toBeDefined();
+  });
+
+  test('get first', async () => {
+    const user = await client.db.users.getFirst();
+    const definedUser = await client.db.users.getFirstOrThrow();
+
+    expect(user).toBeDefined();
+    expect(definedUser).toBeDefined();
+    expect(user?.id).toBe(definedUser.id);
+  });
+
+  test('get first not found', async () => {
+    const query = client.db.users.filter('id', 'not-found');
+
+    const user = await query.getFirst();
+
+    expect(user).toBeNull();
+
+    expect(query.getFirstOrThrow()).rejects.toThrow();
   });
 
   test('query implements iterator', async () => {
