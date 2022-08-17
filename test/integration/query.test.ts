@@ -466,9 +466,9 @@ describe('integration tests', () => {
 
     expect(user.address?.street).not.toBe('New street 2');
 
-    expect(updatedUserResponse.address?.street).toBe('New street 2');
-    expect(updatedUserResponse.address?.zipcode).toBe(22);
-    expect(updatedUserResponse.full_name).toBe(user.full_name);
+    expect(updatedUserResponse?.address?.street).toBe('New street 2');
+    expect(updatedUserResponse?.address?.zipcode).toBe(22);
+    expect(updatedUserResponse?.full_name).toBe(user.full_name);
 
     expect(updatedUser.address?.street).toBe('New street 2');
     expect(updatedUser.address?.zipcode).toBe(22);
@@ -585,7 +585,7 @@ describe('integration tests', () => {
     const updated = await team.update({ owner: owner2 });
 
     expect(team.owner?.id).toEqual(owner.id);
-    expect(updated.owner?.id).toEqual(owner2.id);
+    expect(updated?.owner?.id).toEqual(owner2.id);
   });
 
   test('Update link with linked object (string)', async () => {
@@ -596,6 +596,6 @@ describe('integration tests', () => {
     const updated = await team.update({ owner: owner2.id });
 
     expect(team.owner?.id).toEqual(owner.id);
-    expect(updated.owner?.id).toEqual(owner2.id);
+    expect(updated?.owner?.id).toEqual(owner2.id);
   });
 });
