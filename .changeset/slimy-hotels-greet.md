@@ -2,4 +2,4 @@
 '@xata.io/client': patch
 ---
 
-Add `readOrThrow` and `getFirstOrThrow` methods
+Add `orThrows` methods that instead of returning null, throw an exception.
