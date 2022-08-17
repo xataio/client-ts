@@ -253,9 +253,74 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Partially update a single record.
    * @param object An object with its id and the columns to be updated.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
-   * @returns The full persisted record.
+   * @returns The full persisted record, null if the record could not be found.
    */
   abstract update<K extends SelectableColumn<Record>>(
+    object: Partial<EditableData<Data>> & Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
+
+  /**
+   * Partially update a single record.
+   * @param object An object with its id and the columns to be updated.
+   * @returns The full persisted record, null if the record could not be found.
+   */
+  abstract update(
+    object: Partial<EditableData<Data>> & Identifiable
+  ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+
+  /**
+   * Partially update a single record given its unique id.
+   * @param id The unique id.
+   * @param object The column names and their values that have to be updated.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The full persisted record, null if the record could not be found.
+   */
+  abstract update<K extends SelectableColumn<Record>>(
+    id: string,
+    object: Partial<EditableData<Data>>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
+
+  /**
+   * Partially update a single record given its unique id.
+   * @param id The unique id.
+   * @param object The column names and their values that have to be updated.
+   * @returns The full persisted record, null if the record could not be found.
+   */
+  abstract update(
+    id: string,
+    object: Partial<EditableData<Data>>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+
+  /**
+   * Partially updates multiple records.
+   * @param objects An array of objects with their ids and columns to be updated.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns Array of the persisted records in order (if a record could not be found null is returned).
+   */
+  abstract update<K extends SelectableColumn<Record>>(
+    objects: Array<Partial<EditableData<Data>> & Identifiable>,
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
+
+  /**
+   * Partially updates multiple records.
+   * @param objects An array of objects with their ids and columns to be updated.
+   * @returns Array of the persisted records in order (if a record could not be found null is returned).
+   */
+  abstract update(
+    objects: Array<Partial<EditableData<Data>> & Identifiable>
+  ): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+
+  /**
+   * Partially update a single record.
+   * @param object An object with its id and the columns to be updated.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The full persisted record.
+   * @throws If the record could not be found.
+   */
+  abstract updateOrThrow<K extends SelectableColumn<Record>>(
     object: Partial<EditableData<Data>> & Identifiable,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
@@ -264,8 +329,11 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Partially update a single record.
    * @param object An object with its id and the columns to be updated.
    * @returns The full persisted record.
+   * @throws If the record could not be found.
    */
-  abstract update(object: Partial<EditableData<Data>> & Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  abstract updateOrThrow(
+    object: Partial<EditableData<Data>> & Identifiable
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Partially update a single record given its unique id.
@@ -273,8 +341,9 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object The column names and their values that have to be updated.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
    * @returns The full persisted record.
+   * @throws If the record could not be found.
    */
-  abstract update<K extends SelectableColumn<Record>>(
+  abstract updateOrThrow<K extends SelectableColumn<Record>>(
     id: string,
     object: Partial<EditableData<Data>>,
     columns: K[]
@@ -285,16 +354,21 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param id The unique id.
    * @param object The column names and their values that have to be updated.
    * @returns The full persisted record.
+   * @throws If the record could not be found.
    */
-  abstract update(id: string, object: Partial<EditableData<Data>>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  abstract updateOrThrow(
+    id: string,
+    object: Partial<EditableData<Data>>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Partially updates multiple records.
    * @param objects An array of objects with their ids and columns to be updated.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
    * @returns Array of the persisted records in order.
+   * @throws If one or more records could not be found.
    */
-  abstract update<K extends SelectableColumn<Record>>(
+  abstract updateOrThrow<K extends SelectableColumn<Record>>(
     objects: Array<Partial<EditableData<Data>> & Identifiable>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
@@ -303,8 +377,9 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Partially updates multiple records.
    * @param objects An array of objects with their ids and columns to be updated.
    * @returns Array of the persisted records in order.
+   * @throws If one or more records could not be found.
    */
-  abstract update(
+  abstract updateOrThrow(
     objects: Array<Partial<EditableData<Data>> & Identifiable>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
@@ -378,31 +453,159 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
 
   /**
    * Deletes a record given its unique id.
-   * @param id The unique id.
-   * @throws If the record could not be found or there was an error while performing the deletion.
+   * @param object An object with a unique id.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The deleted record, null if the record could not be found.
    */
-  abstract delete(id: string): Promise<void>;
+  abstract delete<K extends SelectableColumn<Record>>(
+    object: Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
 
   /**
    * Deletes a record given its unique id.
-   * @param id An object with a unique id.
-   * @throws If the record could not be found or there was an error while performing the deletion.
+   * @param object An object with a unique id.
+   * @returns The deleted record, null if the record could not be found.
    */
-  abstract delete(id: Identifiable): Promise<void>;
+  abstract delete(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
 
   /**
-   * Deletes a record given a list of unique ids.
-   * @param ids The array of unique ids.
-   * @throws If the record could not be found or there was an error while performing the deletion.
+   * Deletes a record given a unique id.
+   * @param id The unique id.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The deleted record, null if the record could not be found.
    */
-  abstract delete(ids: string[]): Promise<void>;
+  abstract delete<K extends SelectableColumn<Record>>(
+    id: string,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
 
   /**
-   * Deletes a record given a list of unique ids.
-   * @param ids An array of objects with unique ids.
-   * @throws If the record could not be found or there was an error while performing the deletion.
+   * Deletes a record given a unique id.
+   * @param id The unique id.
+   * @returns The deleted record, null if the record could not be found.
    */
-  abstract delete(ids: Identifiable[]): Promise<void>;
+  abstract delete(id: string): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+
+  /**
+   * Deletes multiple records given an array of objects with ids.
+   * @param objects An array of objects with unique ids.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns Array of the deleted records in order (if a record could not be found null is returned).
+   */
+  abstract delete<K extends SelectableColumn<Record>>(
+    objects: Array<Partial<EditableData<Data>> & Identifiable>,
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
+
+  /**
+   * Deletes multiple records given an array of objects with ids.
+   * @param objects An array of objects with unique ids.
+   * @returns Array of the deleted records in order (if a record could not be found null is returned).
+   */
+  abstract delete(
+    objects: Array<Partial<EditableData<Data>> & Identifiable>
+  ): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+
+  /**
+   * Deletes multiple records given an array of unique ids.
+   * @param objects An array of ids.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns Array of the deleted records in order (if a record could not be found null is returned).
+   */
+  abstract delete<K extends SelectableColumn<Record>>(
+    objects: string[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
+
+  /**
+   * Deletes multiple records given an array of unique ids.
+   * @param objects An array of ids.
+   * @returns Array of the deleted records in order (if a record could not be found null is returned).
+   */
+  abstract delete(objects: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+
+  /**
+   * Deletes a record given its unique id.
+   * @param object An object with a unique id.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The deleted record, null if the record could not be found.
+   * @throws If the record could not be found.
+   */
+  abstract deleteOrThrow<K extends SelectableColumn<Record>>(
+    object: Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+
+  /**
+   * Deletes a record given its unique id.
+   * @param object An object with a unique id.
+   * @returns The deleted record, null if the record could not be found.
+   * @throws If the record could not be found.
+   */
+  abstract deleteOrThrow(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+
+  /**
+   * Deletes a record given a unique id.
+   * @param id The unique id.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The deleted record, null if the record could not be found.
+   * @throws If the record could not be found.
+   */
+  abstract deleteOrThrow<K extends SelectableColumn<Record>>(
+    id: string,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+
+  /**
+   * Deletes a record given a unique id.
+   * @param id The unique id.
+   * @returns The deleted record, null if the record could not be found.
+   * @throws If the record could not be found.
+   */
+  abstract deleteOrThrow(id: string): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+
+  /**
+   * Deletes multiple records given an array of objects with ids.
+   * @param objects An array of objects with unique ids.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns Array of the deleted records in order (if a record could not be found null is returned).
+   * @throws If one or more records could not be found.
+   */
+  abstract deleteOrThrow<K extends SelectableColumn<Record>>(
+    objects: Array<Partial<EditableData<Data>> & Identifiable>,
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+
+  /**
+   * Deletes multiple records given an array of objects with ids.
+   * @param objects An array of objects with unique ids.
+   * @returns Array of the deleted records in order (if a record could not be found null is returned).
+   * @throws If one or more records could not be found.
+   */
+  abstract deleteOrThrow(
+    objects: Array<Partial<EditableData<Data>> & Identifiable>
+  ): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+
+  /**
+   * Deletes multiple records given an array of unique ids.
+   * @param objects An array of ids.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns Array of the deleted records in order (if a record could not be found null is returned).
+   * @throws If one or more records could not be found.
+   */
+  abstract deleteOrThrow<K extends SelectableColumn<Record>>(
+    objects: string[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+
+  /**
+   * Deletes multiple records given an array of unique ids.
+   * @param objects An array of ids.
+   * @returns Array of the deleted records in order.
+   * @throws If one or more records could not be found.
+   */
+  abstract deleteOrThrow(objects: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 
   /**
    * Search for records in the table.
