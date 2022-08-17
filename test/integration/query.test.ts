@@ -336,7 +336,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements paginable', async () => {
-    async function foo<T extends XataRecord>(page: Paginable<T>): Promise<T[]> {
+    async function foo<T extends XataRecord>(page: Paginable<any>): Promise<T[]> {
       const nextPage = page.hasNextPage() ? await foo(await page.nextPage()) : [];
       return [...page.records, ...nextPage];
     }
@@ -437,9 +437,9 @@ describe('integration tests', () => {
     expect(user.address?.street).toBe('123 Main St');
     expect(user.address?.zipcode).toBeUndefined();
 
-    expect(updatedUserResponse.address?.street).toBe('New street');
-    expect(updatedUserResponse.address?.zipcode).toBe(11);
-    expect(updatedUserResponse.full_name).toBe(user.full_name);
+    expect(updatedUserResponse?.address?.street).toBe('New street');
+    expect(updatedUserResponse?.address?.zipcode).toBe(11);
+    expect(updatedUserResponse?.full_name).toBe(user.full_name);
 
     expect(updatedUser.address?.street).toBe('New street');
     expect(updatedUser.address?.zipcode).toBe(11);

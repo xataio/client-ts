@@ -47,12 +47,12 @@ describe('record update', () => {
 
     const updatedTeam = await client.db.teams.update(team.id, { name: 'Team boats' });
 
-    expect(updatedTeam.id).toBe(team.id);
+    expect(updatedTeam?.id).toBe(team.id);
 
     const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
     if (!apiTeam) throw new Error('No team found');
 
-    expect(updatedTeam.name).toBe('Team boats');
+    expect(updatedTeam?.name).toBe('Team boats');
     expect(apiTeam.name).toBe('Team boats');
   });
 
@@ -75,11 +75,11 @@ describe('record update', () => {
 
     const updatedTeam = await client.db.teams.update({ id: team.id, name: 'Team boats' });
 
-    expect(updatedTeam.id).toBe(team.id);
+    expect(updatedTeam?.id).toBe(team.id);
 
     const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
 
-    expect(updatedTeam.name).toBe('Team boats');
+    expect(updatedTeam?.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
   });
 
