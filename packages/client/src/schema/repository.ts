@@ -173,8 +173,8 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Queries a single record from the table given its unique id.
    * @param id The unique id.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
-   * @returns The persisted record for the given id or null if the record could not be found.
-   * @throws {@link Error} If the record could not be found.
+   * @returns The persisted record for the given id.
+   * @throws If the record could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<Record>>(
     id: string,
@@ -184,7 +184,8 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   /**
    * Queries a single record from the table given its unique id.
    * @param id The unique id.
-   * @returns The persisted record for the given id or null if the record could not be found.
+   * @returns The persisted record for the given id.
+   * @throws If the record could not be found.
    */
   abstract readOrThrow(id: string): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
@@ -192,8 +193,8 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Queries multiple records from the table given their unique id.
    * @param ids The unique ids array.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
-   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
-   * @throws {@link Error} If the record could not be found.
+   * @returns The persisted records for the given ids in order.
+   * @throws If one or more records could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<Record>>(
     ids: string[],
@@ -203,8 +204,8 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   /**
    * Queries multiple records from the table given their unique id.
    * @param ids The unique ids array.
-   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
-   * @throws {@link Error} If the record could not be found.
+   * @returns The persisted records for the given ids in order.
+   * @throws If one or more records could not be found.
    */
   abstract readOrThrow(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 
@@ -212,8 +213,8 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Queries a single record from the table by the id in the object.
    * @param object Object containing the id of the record.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
-   * @returns The persisted record for the given id or null if the record could not be found.
-   * @throws {@link Error} If the record could not be found.
+   * @returns The persisted record for the given id.
+   * @throws If the record could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<Record>>(
     object: Identifiable,
@@ -223,8 +224,8 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   /**
    * Queries a single record from the table by the id in the object.
    * @param object Object containing the id of the record.
-   * @returns The persisted record for the given id or null if the record could not be found.
-   * @throws {@link Error} If the record could not be found.
+   * @returns The persisted record for the given id.
+   * @throws If the record could not be found.
    */
   abstract readOrThrow(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
@@ -232,8 +233,8 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * Queries multiple records from the table by the ids in the objects.
    * @param objects Array of objects containing the ids of the records.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
-   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
-   * @throws {@link Error} If the record could not be found.
+   * @returns The persisted records for the given ids in order.
+   * @throws If one or more records could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<Record>>(
     objects: Identifiable[],
@@ -243,8 +244,8 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
   /**
    * Queries multiple records from the table by the ids in the objects.
    * @param objects Array of objects containing the ids of the records.
-   * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
-   * @throws {@link Error} If the record could not be found.
+   * @returns The persisted records for the given ids in order.
+   * @throws If one or more records could not be found.
    */
   abstract readOrThrow(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 

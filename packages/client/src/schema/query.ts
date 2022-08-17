@@ -401,7 +401,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   /**
    * Performs the query in the database and returns the first result.
    * @returns The first record that matches the query, or null if no record matched the query.
-   * @throws {@link Error} if there are no results.
+   * @throws if there are no results.
    */
   getFirstOrThrow(): Promise<Result>;
 
@@ -409,7 +409,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * Performs the query in the database and returns the first result.
    * @param options Additional options to be used when performing the query.
    * @returns The first record that matches the query, or null if no record matched the query.
-   * @throws {@link Error} if there are no results.
+   * @throws if there are no results.
    */
   getFirstOrThrow<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'>>(
     options: Options
@@ -419,7 +419,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * Performs the query in the database and returns the first result.
    * @param options Additional options to be used when performing the query.
    * @returns The first record that matches the query, or null if no record matched the query.
-   * @throws {@link Error} if there are no results.
+   * @throws if there are no results.
    */
   getFirstOrThrow(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'>): Promise<Result>;
 
