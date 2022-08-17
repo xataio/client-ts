@@ -129,6 +129,6 @@ describe('record read', () => {
     const items = [null, undefined, false, 0, ''];
 
     // @ts-ignore
-    await expect(client.db.teams.readOrThrow(items)).rejects.toThrow();
+   expect(client.db.teams.readOrThrow(items)).rejects.toThrow();
   });
 });
