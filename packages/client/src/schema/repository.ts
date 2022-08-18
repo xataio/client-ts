@@ -308,7 +308,7 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @returns The deleted record, null if the record could not be found.
    */
   abstract delete<K extends SelectableColumn<Record>>(
-    object: Identifiable,
+    object: Identifiable & Partial<EditableData<Data>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
 
@@ -317,7 +317,9 @@ export abstract class Repository<Data extends BaseData, Record extends XataRecor
    * @param object An object with a unique id.
    * @returns The deleted record, null if the record could not be found.
    */
-  abstract delete(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+  abstract delete(
+    object: Identifiable & Partial<EditableData<Data>>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
 
   /**
    * Deletes a record given a unique id.
@@ -710,15 +712,23 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
     const record = transformObjectLinks(object);
 
-    const response = await updateRecordWithID({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-      queryParams: { columns },
-      body: record,
-      ...fetchProps
-    });
+    try {
+      const response = await updateRecordWithID({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+        queryParams: { columns },
+        body: record,
+        ...fetchProps
+      });
 
-    const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response) as any;
+      const schemaTables = await this.#getSchemaTables();
+      return initObject(this.#db, schemaTables, this.#table, response) as any;
+    } catch (e) {
+      if (isObject(e) && e.status === 404) {
+        return null;
+      }
+
+      throw e;
+    }
   }
 
   async createOrUpdate<K extends SelectableColumn<Record>>(
@@ -862,14 +872,22 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
   async #deleteRecord(recordId: string, columns: SelectableColumn<Record>[] = ['*']) {
     const fetchProps = await this.#getFetchProps();
 
-    const response = await deleteRecord({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-      queryParams: { columns },
-      ...fetchProps
-    });
+    try {
+      const response = await deleteRecord({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+        queryParams: { columns },
+        ...fetchProps
+      });
 
-    const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response) as any;
+      const schemaTables = await this.#getSchemaTables();
+      return initObject(this.#db, schemaTables, this.#table, response) as any;
+    } catch (e) {
+      if (isObject(e) && e.status === 404) {
+        return null;
+      }
+
+      throw e;
+    }
   }
 
   async search(
