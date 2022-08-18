@@ -353,8 +353,11 @@ describe('integration tests', () => {
 
   test('get first', async () => {
     const user = await client.db.users.getFirst();
+    const definedUser = await client.db.users.getFirstOrThrow();
 
     expect(user).toBeDefined();
+    expect(definedUser).toBeDefined();
+    expect(user?.id).toBe(definedUser.id);
   });
 
   test('get first not found', async () => {
@@ -363,6 +366,8 @@ describe('integration tests', () => {
     const user = await query.getFirst();
 
     expect(user).toBeNull();
+
+    expect(query.getFirstOrThrow()).rejects.toThrow();
   });
 
   test('query implements iterator', async () => {
