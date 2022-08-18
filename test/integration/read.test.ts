@@ -46,52 +46,34 @@ describe('record read', () => {
     const team = await client.db.teams.create({ name: 'Team ships' });
 
     const copy = await client.db.teams.read(team.id);
-    const definedCopy = await client.db.teams.readOrThrow(team.id);
 
     expect(copy).toBeDefined();
     expect(copy?.id).toBe(team.id);
-
-    expect(definedCopy).toBeDefined();
-    expect(definedCopy.id).toBe(team.id);
   });
 
   test('read multiple teams ', async () => {
     const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const copies = await client.db.teams.read(teams);
-    const definedCopies = await client.db.teams.readOrThrow(teams);
 
     expect(copies).toHaveLength(2);
     expect(copies[0]?.id).toBe(teams[0].id);
     expect(copies[1]?.id).toBe(teams[1].id);
-
-    expect(definedCopies).toHaveLength(2);
-    expect(definedCopies[0].id).toBe(teams[0].id);
-    expect(definedCopies[1].id).toBe(teams[1].id);
   });
 
   test('read multiple teams with id list', async () => {
     const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const copies = await client.db.teams.read(teams.map((team) => team.id));
-    const definedCopies = await client.db.teams.readOrThrow(teams.map((team) => team.id));
 
     expect(copies).toHaveLength(2);
     expect(copies[0]?.id).toBe(teams[0].id);
     expect(copies[1]?.id).toBe(teams[1].id);
-
-    expect(definedCopies).toHaveLength(2);
-    expect(definedCopies[0].id).toBe(teams[0].id);
-    expect(definedCopies[1].id).toBe(teams[1].id);
   });
 
   test("read single and return null if team doesn't exist", async () => {
     const copy = await client.db.teams.read('does-not-exist');
     expect(copy).toBeNull();
-  });
-
-  test("read single and throws if team doesn't exist", async () => {
-    expect(client.db.teams.readOrThrow('does-not-exist')).rejects.toThrow();
   });
 
   test("read multiple teams with id list and ignores a team if doesn't exist", async () => {
@@ -103,11 +85,6 @@ describe('record read', () => {
     expect(copies[0]?.id).toBe(teams[0].id);
     expect(copies[1]?.id).toBe(teams[1].id);
     expect(copies[2]).toBeNull();
-  });
-
-  test("read multiple teams with id list and throws if a team doesn't exist", async () => {
-    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
-    expect(client.db.teams.readOrThrow(teams.map((team) => team.id).concat(['does-not-exist']))).rejects.toThrow();
   });
 
   test('read multiple with empty array', async () => {
@@ -123,12 +100,5 @@ describe('record read', () => {
 
     expect(result).toHaveLength(items.length);
     expect(result).toEqual(items.map(() => null));
-  });
-
-  test('read multiple with falsy values, throws', async () => {
-    const items = [null, undefined, false, 0, ''];
-
-    // @ts-ignore
-    expect(client.db.teams.readOrThrow(items)).rejects.toThrow();
   });
 });
