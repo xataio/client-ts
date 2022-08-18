@@ -599,7 +599,7 @@ export class RestRepository<Data extends BaseData, Record extends XataRecord = D
 
         const finalObjects = await this.getAll({ filter: { id: { $any: compact(ids) } }, columns });
 
-        // Maintain order of object<s
+        // Maintain order of objects
         const dictionary = finalObjects.reduce((acc, object) => {
           acc[object.id] = object;
           return acc;
