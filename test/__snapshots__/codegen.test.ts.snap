@@ -17,13 +17,15 @@ const defaultOptions = {
   databaseURL: \\"https://workspace-1234.xata.sh/db/dbname\\",
   branch: \\"feature-branch\\",
 };
-/** @extends DatabaseClient<SchemaTables> */
+/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
+/** @extends DatabaseClient<DatabaseSchema> */
 export class XataClient extends DatabaseClient {
   constructor(options) {
     super({ ...defaultOptions, ...options }, tables);
   }
 }
 let instance = undefined;
+/** @type { () => XataClient } */
 export const getXataClient = () => {
   if (instance) return instance;
   instance = new XataClient();
@@ -46,10 +48,14 @@ const tables = [
 ] as const;
 
 export type SchemaTables = typeof tables;
-export type DatabaseSchema = SchemaInference<SchemaTables>;
+export type InferredTypes = SchemaInference<SchemaTables>;
 
-export type Users = DatabaseSchema[\\"users\\"];
+export type Users = InferredTypes[\\"users\\"];
 export type UsersRecord = Users & XataRecord;
+
+export type DatabaseSchema = {
+  users: UsersRecord;
+};
 
 const DatabaseClient = buildClient();
 
@@ -58,13 +64,15 @@ const defaultOptions = {
   branch: \\"feature-branch\\",
 };
 
-export class XataClient extends DatabaseClient<SchemaTables> {
+export class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
     super({ ...defaultOptions, ...options }, tables);
   }
 }
 
 let instance: XataClient | undefined = undefined;
+
+/** @type { () => XataClient } */
 export const getXataClient = () => {
   if (instance) return instance;
 
@@ -88,10 +96,14 @@ const tables = [
 ] as const;
 
 export type SchemaTables = typeof tables;
-export type DatabaseSchema = SchemaInference<SchemaTables>;
+export type InferredTypes = SchemaInference<SchemaTables>;
 
-export type Users = DatabaseSchema[\\"users\\"];
+export type Users = InferredTypes[\\"users\\"];
 export type UsersRecord = Users & XataRecord;
+
+export type DatabaseSchema = {
+  users: UsersRecord;
+};
 
 const DatabaseClient = buildClient();
 
@@ -100,13 +112,15 @@ const defaultOptions = {
   branch: \\"feature-branch\\",
 };
 
-export class XataClient extends DatabaseClient<SchemaTables> {
+export class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
     super({ ...defaultOptions, ...options }, tables);
   }
 }
 
 let instance: XataClient | undefined = undefined;
+
+/** @type { () => XataClient } */
 export const getXataClient = () => {
   if (instance) return instance;
 
@@ -145,13 +159,18 @@ const tables = [
 ] as const;
 
 export type SchemaTables = typeof tables;
-export type DatabaseSchema = SchemaInference<SchemaTables>;
+export type InferredTypes = SchemaInference<SchemaTables>;
 
-export type TeamsLike = DatabaseSchema[\\"teams_Like\\"];
+export type TeamsLike = InferredTypes[\\"teams_Like\\"];
 export type TeamsLikeRecord = TeamsLike & XataRecord;
 
-export type UsersFoo = DatabaseSchema[\\"users-foo\\"];
+export type UsersFoo = InferredTypes[\\"users-foo\\"];
 export type UsersFooRecord = UsersFoo & XataRecord;
+
+export type DatabaseSchema = {
+  teams_Like: TeamsLikeRecord;
+  \\"users-foo\\": UsersFooRecord;
+};
 
 const DatabaseClient = buildClient();
 
@@ -159,13 +178,15 @@ const defaultOptions = {
   databaseURL: \\"https://workspace-1234.xata.sh/db/dbname\\",
 };
 
-export class XataClient extends DatabaseClient<SchemaTables> {
+export class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
     super({ ...defaultOptions, ...options }, tables);
   }
 }
 
 let instance: XataClient | undefined = undefined;
+
+/** @type { () => XataClient } */
 export const getXataClient = () => {
   if (instance) return instance;
 
@@ -195,10 +216,14 @@ const tables = [
 ] as const;
 
 export type SchemaTables = typeof tables;
-export type DatabaseSchema = SchemaInference<SchemaTables>;
+export type InferredTypes = SchemaInference<SchemaTables>;
 
-export type $1teamsCase = DatabaseSchema[\\"1teams-case\\"];
+export type $1teamsCase = InferredTypes[\\"1teams-case\\"];
 export type $1teamsCaseRecord = $1teamsCase & XataRecord;
+
+export type DatabaseSchema = {
+  \\"1teams-case\\": $1teamsCaseRecord;
+};
 
 const DatabaseClient = buildClient();
 
@@ -206,13 +231,15 @@ const defaultOptions = {
   databaseURL: \\"https://workspace-1234.xata.sh/db/dbname\\",
 };
 
-export class XataClient extends DatabaseClient<SchemaTables> {
+export class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
     super({ ...defaultOptions, ...options }, tables);
   }
 }
 
 let instance: XataClient | undefined = undefined;
+
+/** @type { () => XataClient } */
 export const getXataClient = () => {
   if (instance) return instance;
 
