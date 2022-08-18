@@ -110,7 +110,7 @@ export async function generate({
 
     let instance: XataClient | undefined = undefined;
 
-    /** @type { () => XataClient } */
+    ${language === 'javascript' ? `/** @type { () => XataClient } */` : ''}
     export const getXataClient = () => {
       if (instance) return instance;
 
