@@ -54,9 +54,9 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
     if (first) {
       first = false;
 
-      const columnTypes = types || guessTypes(lines, columnNames);
+      const columnTypes = types || guessTypes(lines, columnNames, options.nullValue);
       const table = await findTable(xata, tableInfo);
-      const compare = compareSquema(columnNames, columnTypes, table);
+      const compare = compareSchema(columnNames, columnTypes, table);
       const cont = await options.shouldContinue(compare);
 
       if (cont === false) return true; // Stops the parsing
@@ -67,7 +67,7 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
     }
 
     // TODO: values that do not match the type are transformed to null values. We should allow users to have control on that
-    const parsed = lines.map((row) => parseRow(row, types || []));
+    const parsed = lines.map((row) => parseRow(row, types || [], options.nullValue));
 
     await batchUpsert(xata, tableInfo, columnNames, parsed);
 
@@ -85,7 +85,7 @@ export async function findTable(xata: XataApiClient, tableInfo: TableInfo): Prom
   return tables.find((t) => t.name === name);
 }
 
-export function compareSquema(
+export function compareSchema(
   columns: string[],
   types: string[],
   table: Schemas.Table | undefined

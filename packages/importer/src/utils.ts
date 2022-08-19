@@ -6,7 +6,7 @@ export function normalizeColumnName(value: string) {
   return parts.map((s) => camelcase(transliterate(s)).replace(/\W/g, '')).join('.');
 }
 
-export function parseArray(value: string) {
+function parseJSONArray(value: string) {
   try {
     const val = JSON.parse(value);
     if (!Array.isArray(val)) return null;
@@ -16,7 +16,18 @@ export function parseArray(value: string) {
   }
 }
 
-export function guessTypes(lines: string[][], columns: string[]): string[] {
+function parseStringArray(value: string) {
+  return value
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+export function parseArray(value: string): string[] | null {
+  return parseJSONArray(value) ?? parseStringArray(value);
+}
+
+export function guessTypes(lines: string[][], columns: string[], nullValues: string[] = []): string[] {
   const types: string[] = new Array(columns.length).fill(undefined);
   for (const line of lines) {
     for (let index = 0; index < columns.length; index++) {
@@ -27,6 +38,9 @@ export function guessTypes(lines: string[][], columns: string[]): string[] {
 
       const type = types[index];
       const value = line[index];
+
+      // Ignore null values
+      if (nullValues.includes(value)) continue;
 
       // In the future this can be used to specify if the column is nullable or not
       if (!value) continue;
@@ -45,6 +59,7 @@ export function guessTypes(lines: string[][], columns: string[]): string[] {
 
 export function guessType(value: string) {
   const num = +value;
+
   if (Number.isSafeInteger(num)) {
     return 'int';
   } else if (Number.isFinite(num)) {
@@ -57,38 +72,54 @@ export function guessType(value: string) {
     return 'multiple';
   } else if (value.indexOf('\n') >= 0) {
     return 'text';
-  } else if (!isNaN(new Date(value).getTime())) {
-    return 'datetime';
   }
+
   return 'string';
 }
 
-export function castType(a: string, b: string) {
-  if (a === b) {
-    return a;
-  } else if ((a === 'float' && b === 'int') || (a === 'int' && b === 'float')) {
+export function castType(schemaType: string, valueType: string) {
+  if (schemaType === valueType) {
+    return schemaType;
+  } else if ((schemaType === 'float' && valueType === 'int') || (schemaType === 'int' && valueType === 'float')) {
     return 'float';
-  } else if (a === 'text' || b === 'text') {
+  } else if (schemaType === 'text' || valueType === 'text') {
     return 'text';
-  } else if (a === 'link' || b === 'link') {
+  } else if (schemaType === 'link') {
     return 'link';
-  } else if (a === 'datetime' || b === 'datetime') {
+  } else if (schemaType === 'datetime') {
     return 'datetime';
+  } else if (schemaType === 'bool' && valueType === 'int') {
+    return 'bool';
+  } else if (schemaType === 'multiple' && valueType === 'string') {
+    return 'multiple';
+  } else if (schemaType === 'int' && valueType === 'string') {
+    return 'int';
+  } else if (schemaType === 'float' && valueType === 'string') {
+    return 'float';
   }
+
   return 'string';
 }
 
-export function parseRow(values: string[], types: string[]) {
+export function parseRow(values: string[], types: string[], nullValues: string[] = []) {
   return values.map((val, i) => {
     const type = types[i];
-    if (type === 'int') {
-      const num = +val;
+    const num = +val;
+
+    if (nullValues.includes(val)) {
+      return null;
+    } else if (type === 'int') {
       return Number.isSafeInteger(num) && val !== '' ? num : null;
     } else if (type === 'float') {
-      const num = +val;
       return Number.isFinite(num) && val !== '' ? num : null;
     } else if (type === 'bool') {
-      return ['true', 'false'].includes(val) ? val === 'true' : null;
+      if (val === 'true' || num === 1) {
+        return true;
+      } else if (val === 'false' || num === 0) {
+        return false;
+      } else {
+        return null;
+      }
     } else if (type === 'multiple') {
       return parseArray(val);
     } else if (type === 'email') {
@@ -99,6 +130,7 @@ export function parseRow(values: string[], types: string[]) {
       const date = new Date(val);
       return !isNaN(date.getTime()) ? date : null;
     }
+
     return val;
   });
 }
