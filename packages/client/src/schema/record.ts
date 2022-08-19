@@ -47,7 +47,7 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
    * @returns The persisted record with the selected columns, null if not found.
    */
   update<K extends SelectableColumn<OriginalRecord>>(
-    partialUpdate: Partial<EditableData<Omit<OriginalRecord, keyof XataRecord>>>,
+    partialUpdate: Partial<EditableData<OriginalRecord>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>> | null>;
 
@@ -58,7 +58,7 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
    * @returns The persisted record with all first level properties, null if not found.
    */
   update(
-    partialUpdate: Partial<EditableData<Omit<OriginalRecord, keyof XataRecord>>>
+    partialUpdate: Partial<EditableData<OriginalRecord>>
   ): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 
   /**
@@ -95,7 +95,7 @@ export type Link<Record extends XataRecord> = Omit<XataRecord, 'read' | 'update'
    * @returns A new record containing the latest values for all the columns of the current record.
    */
   update<K extends SelectableColumn<Record>>(
-    partialUpdate: Partial<EditableData<Omit<Record, keyof XataRecord>>>,
+    partialUpdate: Partial<EditableData<Record>>,
     columns?: K[]
   ): Promise<
     Readonly<SelectedPick<Record, typeof columns extends SelectableColumn<Record>[] ? typeof columns : ['*']>>
@@ -131,10 +131,14 @@ export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> 
   return isIdentifiable(x) && isObject(metadata) && typeof metadata.version === 'number';
 }
 
-export type EditableData<O extends BaseData> = {
-  [K in keyof O]: O[K] extends XataRecord
-    ? { id: string } | string
-    : NonNullable<O[K]> extends XataRecord
-    ? { id: string } | string | null | undefined
-    : O[K];
-};
+export type EditableData<O extends XataRecord> = Identifiable &
+  Omit<
+    {
+      [K in keyof O]: O[K] extends XataRecord
+        ? { id: string } | string
+        : NonNullable<O[K]> extends XataRecord
+        ? { id: string } | string | null | undefined
+        : O[K];
+    },
+    keyof XataRecord
+  >;

@@ -1,8 +1,7 @@
 import type { Schemas } from '../api';
-import { XataRecord } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isString } from '../util/lang';
-import { BaseData } from './record';
+import { XataRecord } from './record';
 import { Repository, RestRepository } from './repository';
 
 export * from './cache';
@@ -19,11 +18,11 @@ export type SchemaDefinition = {
   table: string;
 };
 
-export type SchemaPluginResult<Schemas extends Record<string, BaseData>> = {
+export type SchemaPluginResult<Schemas extends Record<string, XataRecord>> = {
   [Key in keyof Schemas]: Repository<Schemas[Key]>;
 } & { [key: string]: Repository<XataRecord> };
 
-export class SchemaPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
+export class SchemaPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   #tables: Record<string, Repository<any>> = {};
   #schemaTables?: Schemas.Table[];
 

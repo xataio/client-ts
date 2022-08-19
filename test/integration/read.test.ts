@@ -101,4 +101,19 @@ describe('record read', () => {
     expect(result).toHaveLength(items.length);
     expect(result).toEqual(items.map(() => null));
   });
+
+  test('records are readonly', async () => {
+    const team = await client.db.teams.create({ name: 'Team ships' });
+
+    expect(Object.getOwnPropertyDescriptor(team, 'name')?.writable).toBe(false);
+
+    try {
+      // @ts-ignore
+      team.name = 'New name';
+
+      throw new Error('Unknown error');
+    } catch (error) {
+      expect(error).toBeInstanceOf(TypeError);
+    }
+  });
 });

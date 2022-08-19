@@ -2,7 +2,16 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { BaseClientOptions, buildClient, gte, is, lt, SchemaInference, XataApiClient } from '../../packages/client/src';
+import {
+  BaseClientOptions,
+  buildClient,
+  gte,
+  is,
+  lt,
+  SchemaInference,
+  XataApiClient,
+  XataRecord
+} from '../../packages/client/src';
 import { Column } from '../../packages/client/src/api/schemas';
 
 // Get environment variables before reading them
@@ -20,10 +29,11 @@ const tables = [
   }
 ] as const;
 
-export type SchemaTables = typeof tables;
-export type DatabaseSchema = SchemaInference<SchemaTables>;
+export type DatabaseSchema = {
+  datetime: SchemaInference<typeof tables>['datetime'] & XataRecord;
+};
 
-class XataClient extends DatabaseClient<SchemaTables> {
+class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
     super(options, tables);
   }
