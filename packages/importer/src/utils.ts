@@ -57,6 +57,8 @@ export function guessType(value: string) {
     return 'multiple';
   } else if (value.indexOf('\n') >= 0) {
     return 'text';
+  } else if (!isNaN(new Date(value).getTime())) {
+    return 'datetime';
   }
   return 'string';
 }
@@ -68,6 +70,10 @@ export function castType(a: string, b: string) {
     return 'float';
   } else if (a === 'text' || b === 'text') {
     return 'text';
+  } else if (a === 'link' || b === 'link') {
+    return 'link';
+  } else if (a === 'datetime' || b === 'datetime') {
+    return 'datetime';
   }
   return 'string';
 }
@@ -87,6 +93,11 @@ export function parseRow(values: string[], types: string[]) {
       return parseArray(val);
     } else if (type === 'email') {
       return val || null;
+    } else if (type === 'link') {
+      return val ? String(val) : null;
+    } else if (type === 'datetime') {
+      const date = new Date(val);
+      return !isNaN(date.getTime()) ? date : null;
     }
     return val;
   });
