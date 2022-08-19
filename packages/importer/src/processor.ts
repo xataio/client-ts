@@ -104,12 +104,14 @@ export function compareSquema(
     columnTypes: []
   };
 
+  const schemaColumns = [{ name: 'id', type: 'string' }, ...table.columns];
+
   columns.forEach((column, i) => {
-    const existing = table.columns.find((col) => col.name === column);
+    const existing = schemaColumns.find((col) => col.name === column);
     if (existing) {
       const type = castType(existing.type, types[i]);
       result.columnTypes.push({
-        columnName: columns[i],
+        columnName: column,
         schemaType: existing.type,
         guessedType: types[i],
         castedType: type,
@@ -119,7 +121,7 @@ export function compareSquema(
       const type = types[i];
       result.missingColumns.push({ column, type });
       result.columnTypes.push({
-        columnName: columns[i],
+        columnName: column,
         schemaType: type,
         guessedType: types[i],
         castedType: type,
@@ -127,6 +129,7 @@ export function compareSquema(
       });
     }
   });
+
   return result;
 }
 
@@ -161,5 +164,9 @@ export async function batchUpsert(
     return record;
   });
 
-  await xata.records.bulkInsertTableRecords(workspaceID, database, branch, tableName, records);
+  try {
+    await xata.records.bulkInsertTableRecords(workspaceID, database, branch, tableName, records);
+  } catch (e) {
+    console.error(e);
+  }
 }
