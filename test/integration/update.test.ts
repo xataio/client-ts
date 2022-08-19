@@ -47,12 +47,12 @@ describe('record update', () => {
 
     const updatedTeam = await client.db.teams.update(team.id, { name: 'Team boats' });
 
-    expect(updatedTeam.id).toBe(team.id);
+    expect(updatedTeam?.id).toBe(team.id);
 
     const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
     if (!apiTeam) throw new Error('No team found');
 
-    expect(updatedTeam.name).toBe('Team boats');
+    expect(updatedTeam?.name).toBe('Team boats');
     expect(apiTeam.name).toBe('Team boats');
   });
 
@@ -75,16 +75,34 @@ describe('record update', () => {
 
     const updatedTeam = await client.db.teams.update({ id: team.id, name: 'Team boats' });
 
-    expect(updatedTeam.id).toBe(team.id);
+    expect(updatedTeam?.id).toBe(team.id);
 
     const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
 
-    expect(updatedTeam.name).toBe('Team boats');
+    expect(updatedTeam?.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
   });
 
   test("update many with empty array doesn't update anything", async () => {
     const updatedTeams = await client.db.teams.update([]);
     expect(updatedTeams).toHaveLength(0);
+  });
+
+  test('update invalid items returns null', async () => {
+    const valid = await client.db.teams.create({ name: 'Team ships' });
+
+    const team1 = await client.db.teams.update('invalid', { name: 'Team boats' });
+    const team2 = await client.db.teams.update({ id: 'invalid', name: 'Team boats' });
+    const team3 = await client.db.teams.update([
+      { id: 'invalid', name: 'Team boats' },
+      { id: valid.id, name: 'Team boats' }
+    ]);
+
+    expect(team1).toBeNull();
+    expect(team2).toBeNull();
+    expect(team3[0]).toBeNull();
+    expect(team3[1]).toBeDefined();
+    expect(team3[1]?.id).toBe(valid.id);
+    expect(team3[1]?.name).toBe('Team boats');
   });
 });

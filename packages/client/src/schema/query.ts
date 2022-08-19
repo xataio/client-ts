@@ -393,6 +393,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
   async getFirst<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result | null> {
     const records = await this.getMany({ ...options, pagination: { size: 1 } });
+
     // Method overloading does not provide type inference for the return type.
     return (records[0] as unknown as Result) ?? null;
   }

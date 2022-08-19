@@ -46,14 +46,26 @@ describe('record read', () => {
     const team = await client.db.teams.create({ name: 'Team ships' });
 
     const copy = await client.db.teams.read(team.id);
+
     expect(copy).toBeDefined();
     expect(copy?.id).toBe(team.id);
+  });
+
+  test('read multiple teams ', async () => {
+    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    const copies = await client.db.teams.read(teams);
+
+    expect(copies).toHaveLength(2);
+    expect(copies[0]?.id).toBe(teams[0].id);
+    expect(copies[1]?.id).toBe(teams[1].id);
   });
 
   test('read multiple teams with id list', async () => {
     const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const copies = await client.db.teams.read(teams.map((team) => team.id));
+
     expect(copies).toHaveLength(2);
     expect(copies[0]?.id).toBe(teams[0].id);
     expect(copies[1]?.id).toBe(teams[1].id);
@@ -80,8 +92,13 @@ describe('record read', () => {
     expect(copies).toHaveLength(0);
   });
 
-  test('read multiple with falsy values, throws', async () => {
+  test('read multiple with falsy values', async () => {
+    const items = [null, undefined, false, 0, ''];
+
     // @ts-ignore
-    expect(client.db.teams.read([null, undefined, false, 0, ''])).rejects.toThrow();
+    const result = await client.db.teams.read(items);
+
+    expect(result).toHaveLength(items.length);
+    expect(result).toEqual(items.map(() => null));
   });
 });

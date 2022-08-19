@@ -11,6 +11,9 @@ const handlers = [
   }),
   rest.get('https://mock.xata.sh/db/xata:branch/tables/users/data/rec_1234', (_req, res, ctx) => {
     return res(ctx.json({ id: 'rec_1234', xata: { version: 1 } }));
+  }),
+  rest.delete('https://mock.xata.sh/db/xata:branch/tables/users/data/rec_1234', (_req, res, ctx) => {
+    return res(ctx.json({ id: 'rec_1234', xata: { version: 1 } }));
   })
 ];
 

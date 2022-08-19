@@ -103,4 +103,19 @@ describe('record deletion', () => {
 
     expect(apiTeam).toBeNull();
   });
+
+  test('delete invalid items returns null', async () => {
+    const valid = await client.db.teams.create({ name: 'Team ships' });
+
+    const team1 = await client.db.teams.delete('invalid');
+    const team2 = await client.db.teams.delete({ id: 'invalid', name: 'Team boats' });
+    const team3 = await client.db.teams.delete([{ id: 'invalid', name: 'Team boats' }, valid]);
+
+    expect(team1).toBeNull();
+    expect(team2).toBeNull();
+    expect(team3[0]).toBeNull();
+    expect(team3[1]).toBeDefined();
+    expect(team3[1]?.id).toBe(valid.id);
+    expect(team3[1]?.name).toBe('Team ships');
+  });
 });

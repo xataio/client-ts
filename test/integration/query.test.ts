@@ -10,6 +10,7 @@ import {
   PAGINATION_MAX_SIZE
 } from '../../packages/client/src/schema/pagination';
 import { UsersRecord, XataClient } from '../../packages/codegen/example/xata';
+import { XataRecord } from '../e2e/dist/packages/client/src';
 import { animalUsers, fruitUsers, mockUsers, ownerAnimals, ownerFruits, teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
@@ -335,7 +336,7 @@ describe('integration tests', () => {
   });
 
   test('repository implements paginable', async () => {
-    async function foo(page: Paginable<UsersRecord>): Promise<UsersRecord[]> {
+    async function foo<T extends XataRecord>(page: Paginable<any>): Promise<T[]> {
       const nextPage = page.hasNextPage() ? await foo(await page.nextPage()) : [];
       return [...page.records, ...nextPage];
     }
@@ -348,6 +349,20 @@ describe('integration tests', () => {
     const users = await client.db.users.getAll();
     expect(users).toHaveLength(mockUsers.length);
     expect(users[0].id).toBeDefined();
+  });
+
+  test('get first', async () => {
+    const user = await client.db.users.getFirst();
+
+    expect(user).toBeDefined();
+  });
+
+  test('get first not found', async () => {
+    const query = client.db.users.filter('id', 'not-found');
+
+    const user = await query.getFirst();
+
+    expect(user).toBeNull();
   });
 
   test('query implements iterator', async () => {
@@ -417,9 +432,9 @@ describe('integration tests', () => {
     expect(user.address?.street).toBe('123 Main St');
     expect(user.address?.zipcode).toBeUndefined();
 
-    expect(updatedUserResponse.address?.street).toBe('New street');
-    expect(updatedUserResponse.address?.zipcode).toBe(11);
-    expect(updatedUserResponse.full_name).toBe(user.full_name);
+    expect(updatedUserResponse?.address?.street).toBe('New street');
+    expect(updatedUserResponse?.address?.zipcode).toBe(11);
+    expect(updatedUserResponse?.full_name).toBe(user.full_name);
 
     expect(updatedUser.address?.street).toBe('New street');
     expect(updatedUser.address?.zipcode).toBe(11);
@@ -446,9 +461,9 @@ describe('integration tests', () => {
 
     expect(user.address?.street).not.toBe('New street 2');
 
-    expect(updatedUserResponse.address?.street).toBe('New street 2');
-    expect(updatedUserResponse.address?.zipcode).toBe(22);
-    expect(updatedUserResponse.full_name).toBe(user.full_name);
+    expect(updatedUserResponse?.address?.street).toBe('New street 2');
+    expect(updatedUserResponse?.address?.zipcode).toBe(22);
+    expect(updatedUserResponse?.full_name).toBe(user.full_name);
 
     expect(updatedUser.address?.street).toBe('New street 2');
     expect(updatedUser.address?.zipcode).toBe(22);
@@ -565,7 +580,7 @@ describe('integration tests', () => {
     const updated = await team.update({ owner: owner2 });
 
     expect(team.owner?.id).toEqual(owner.id);
-    expect(updated.owner?.id).toEqual(owner2.id);
+    expect(updated?.owner?.id).toEqual(owner2.id);
   });
 
   test('Update link with linked object (string)', async () => {
@@ -576,6 +591,6 @@ describe('integration tests', () => {
     const updated = await team.update({ owner: owner2.id });
 
     expect(team.owner?.id).toEqual(owner.id);
-    expect(updated.owner?.id).toEqual(owner2.id);
+    expect(updated?.owner?.id).toEqual(owner2.id);
   });
 });
