@@ -40,6 +40,9 @@ export default class ImportCSV extends BaseCommand {
     }),
     'no-column-name-normalization': Flags.boolean({
       description: 'Avoid changing column names in a normalized way'
+    }),
+    'batch-size': Flags.integer({
+      description: 'Batch size to process and upload records'
     })
   };
 
@@ -54,7 +57,8 @@ export default class ImportCSV extends BaseCommand {
       columns,
       'no-header': noHeader,
       create,
-      'no-column-name-normalization': ignoreColumnNormalization
+      'no-column-name-normalization': ignoreColumnNormalization,
+      'batch-size': batchSize
     } = flags;
 
     const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
@@ -72,6 +76,7 @@ export default class ImportCSV extends BaseCommand {
       types: splitCommas(types),
       columns: splitCommas(columns),
       noheader: Boolean(noHeader),
+      batchSize,
       ignoreColumnNormalization,
       shouldContinue: async (compare) => {
         return Boolean(await this.shouldContinue(compare, table, create));
