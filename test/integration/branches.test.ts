@@ -77,21 +77,22 @@ describe('getBranch', () => {
 
   test('uses the git branch name if branch exists', async () => {
     process.env = { NODE_ENV: 'development' };
+    if (gitBranch) {
+      await api.branches.createBranch(workspace, databaseName, gitBranch);
 
-    await api.branches.createBranch(workspace, databaseName, gitBranch);
+      fetch.mockClear();
 
-    fetch.mockClear();
+      const branch = await getCurrentBranchName({
+        apiKey,
+        databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
+        fetchImpl: fetch
+      });
 
-    const branch = await getCurrentBranchName({
-      apiKey,
-      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
-      fetchImpl: fetch
-    });
+      expect(branch).toEqual(gitBranch);
 
-    expect(branch).toEqual(gitBranch);
-
-    expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch.mock.calls[0][0].toString().endsWith(`/resolveBranch?gitBranch=${gitBranch}`)).toBeTruthy();
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch.mock.calls[0][0].toString().endsWith(`/resolveBranch?gitBranch=${gitBranch}`)).toBeTruthy();
+    }
   });
 
   test('Strips null and undefined values from qs', async () => {
