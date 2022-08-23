@@ -12,19 +12,19 @@ beforeAll(async (ctx) => {
   xata = result.client;
   hooks = result.hooks;
 
-  return hooks.beforeAll(ctx);
+  await hooks.beforeAll(ctx);
 });
 
-afterAll((ctx) => {
-  return hooks.afterAll(ctx);
+afterAll(async (ctx) => {
+  await hooks.afterAll(ctx);
 });
 
-beforeEach((ctx) => {
-  return hooks.beforeEach(ctx);
+beforeEach(async (ctx) => {
+  await hooks.beforeEach(ctx);
 });
 
-afterEach((ctx) => {
-  return hooks.afterEach(ctx);
+afterEach(async (ctx) => {
+  await hooks.afterEach(ctx);
 });
 
 describe('dates', () => {
