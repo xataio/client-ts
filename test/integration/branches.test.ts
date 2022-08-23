@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { BaseClientOptions, FetchImpl, XataApiClient } from '../../packages/client/src';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import { XataApiClient } from '../../packages/client/src';
 import { getCurrentBranchName } from '../../packages/client/src/util/config';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
@@ -8,7 +8,7 @@ import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 let api: XataApiClient;
 let workspace: string;
 let database: string;
-let cleanup: () => Promise<void>;
+let hooks: TestEnvironmentResult['hooks'];
 let fetch: TestEnvironmentResult['clientOptions']['fetch'];
 
 let getBranchOptions: {
@@ -17,11 +17,11 @@ let getBranchOptions: {
   fetchImpl: TestEnvironmentResult['clientOptions']['fetch'];
 };
 
-beforeAll(async () => {
+beforeAll(async (ctx) => {
   const result = await setUpTestEnvironment('branches');
 
   api = result.api;
-  cleanup = result.cleanup;
+  hooks = result.hooks;
   workspace = result.workspace;
   database = result.database;
   fetch = result.clientOptions.fetch;
@@ -31,10 +31,20 @@ beforeAll(async () => {
     databaseURL: result.clientOptions.databaseURL,
     fetchImpl: result.clientOptions.fetch
   };
+
+  await hooks.beforeAll(ctx);
 });
 
-afterAll(async () => {
-  await cleanup();
+afterAll(async (ctx) => {
+  await hooks.afterAll(ctx);
+});
+
+beforeEach(async (ctx) => {
+  await hooks.beforeEach(ctx);
+});
+
+afterEach(async (ctx) => {
+  await hooks.afterEach(ctx);
 });
 
 describe('getBranch', () => {

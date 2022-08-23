@@ -1,20 +1,30 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { gte, is, lt } from '../../packages/client/src';
 import { XataClient } from '../../packages/codegen/example/xata';
-import { setUpTestEnvironment } from '../utils/setup';
+import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
 let xata: XataClient;
-let cleanup: () => Promise<void>;
+let hooks: TestEnvironmentResult['hooks'];
 
-beforeAll(async () => {
+beforeAll(async (ctx) => {
   const result = await setUpTestEnvironment('dates');
 
   xata = result.client;
-  cleanup = result.cleanup;
+  hooks = result.hooks;
+
+  return hooks.beforeAll(ctx);
 });
 
-afterAll(async () => {
-  await cleanup();
+afterAll((ctx) => {
+  return hooks.afterAll(ctx);
+});
+
+beforeEach((ctx) => {
+  return hooks.beforeEach(ctx);
+});
+
+afterEach((ctx) => {
+  return hooks.afterEach(ctx);
 });
 
 describe('dates', () => {

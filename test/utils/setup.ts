@@ -1,10 +1,14 @@
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { BasicTracerProvider, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import realFetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { vi } from 'vitest';
+import { File, Suite, TestContext, vi } from 'vitest';
 import { BaseClient, CacheImpl, XataApiClient } from '../../packages/client/src';
 import { getHostUrl, HostProvider, isHostProviderAlias } from '../../packages/client/src/api/providers';
 import { XataClient } from '../../packages/codegen/example/xata';
+import { trace, tracer } from '../../packages/plugin-client-opentelemetry';
 import { teamColumns, userColumns } from '../mock_data';
 
 // Get environment variables before reading them
@@ -26,7 +30,9 @@ export type EnvironmentOptions = {
 export type TestEnvironmentResult = {
   api: XataApiClient;
   client: XataClient;
-  cleanup: () => Promise<void>;
+  baseClient: BaseClient;
+  database: string;
+  workspace: string;
   clientOptions: {
     databaseURL: string;
     fetch: typeof fetch;
@@ -34,9 +40,20 @@ export type TestEnvironmentResult = {
     branch: string;
     cache?: CacheImpl;
   };
+  hooks: {
+    beforeAll: (ctx: Suite | File) => Promise<void>;
+    afterAll: (ctx: Suite | File) => Promise<void>;
+    beforeEach: (ctx: TestContext) => Promise<void>;
+    afterEach: (ctx: TestContext) => Promise<void>;
+  };
 };
 
-export async function setUpTestEnvironment(prefix: string, { cache }: EnvironmentOptions = {}) {
+export async function setUpTestEnvironment(
+  prefix: string,
+  { cache }: EnvironmentOptions = {}
+): Promise<TestEnvironmentResult> {
+  setupTracing();
+
   const id = Math.round(Math.random() * 100000);
 
   const api = new XataApiClient({ apiKey, fetch, host });
@@ -52,7 +69,8 @@ export async function setUpTestEnvironment(prefix: string, { cache }: Environmen
     branch: 'main',
     apiKey,
     fetch,
-    cache
+    cache,
+    trace
   };
 
   await api.tables.createTable(workspace, database, 'main', 'teams');
@@ -60,14 +78,42 @@ export async function setUpTestEnvironment(prefix: string, { cache }: Environmen
   await api.tables.setTableSchema(workspace, database, 'main', 'teams', { columns: teamColumns });
   await api.tables.setTableSchema(workspace, database, 'main', 'users', { columns: userColumns });
 
-  const cleanup = async () => {
-    await api.databases.deleteDatabase(workspace, database);
+  let span = tracer.startSpan(`test ${prefix}`);
+
+  const hooks = {
+    beforeAll: async (ctx: Suite | File) => {
+      span = tracer.startSpan(ctx.name);
+    },
+    afterAll: async (ctx: Suite | File) => {
+      await api.databases.deleteDatabase(workspace, database);
+      span.end();
+    },
+    beforeEach: async (ctx: TestContext) => {
+      ctx.span = tracer.startSpan(ctx.meta.name);
+    },
+    afterEach: async (ctx: TestContext) => {
+      ctx.span.end();
+    }
   };
 
   const client = new XataClient(clientOptions);
   const baseClient = new BaseClient(clientOptions);
 
-  return { api, client, baseClient, clientOptions, database, workspace, cleanup };
+  return { api, client, baseClient, clientOptions, database, workspace, hooks };
+}
+
+function setupTracing() {
+  const url = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+  if (!url) return;
+
+  const tracerProvider = new BasicTracerProvider();
+
+  registerInstrumentations({ tracerProvider });
+
+  const exporter = new OTLPTraceExporter({ url });
+  tracerProvider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+
+  tracerProvider.register();
 }
 
 function getProvider(provider = 'production'): HostProvider {
@@ -82,4 +128,10 @@ function getProvider(provider = 'production'): HostProvider {
     );
   }
   return { main, workspaces };
+}
+
+declare module 'vitest' {
+  export interface TestContext {
+    span: { end: () => void };
+  }
 }

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import {
   BaseClient,
   contains,
@@ -16,16 +16,16 @@ import {
 } from '../../packages/client/src/schema/pagination';
 import { UsersRecord, XataClient } from '../../packages/codegen/example/xata';
 import { animalUsers, fruitUsers, mockUsers, ownerAnimals, ownerFruits } from '../mock_data';
-import { setUpTestEnvironment } from '../utils/setup';
+import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
 let xata: XataClient;
 let api: XataApiClient;
 let baseClient: BaseClient;
 let workspace: string;
 let database: string;
-let cleanup: () => Promise<void>;
+let hooks: TestEnvironmentResult['hooks'];
 
-beforeAll(async () => {
+beforeAll(async (ctx) => {
   const result = await setUpTestEnvironment('query');
 
   xata = result.client;
@@ -33,7 +33,9 @@ beforeAll(async () => {
   baseClient = result.baseClient;
   workspace = result.workspace;
   database = result.database;
-  cleanup = result.cleanup;
+  hooks = result.hooks;
+
+  await hooks.beforeAll(ctx);
 
   const { id: ownerAnimalsId } = await xata.db.users.create(ownerAnimals);
   const { id: ownerFruitsId } = await xata.db.users.create(ownerFruits);
@@ -61,8 +63,16 @@ beforeAll(async () => {
   ]);
 });
 
-afterAll(async () => {
-  await cleanup();
+afterAll(async (ctx) => {
+  await hooks.afterAll(ctx);
+});
+
+beforeEach(async (ctx) => {
+  await hooks.beforeEach(ctx);
+});
+
+afterEach(async (ctx) => {
+  await hooks.afterEach(ctx);
 });
 
 describe('integration tests', () => {

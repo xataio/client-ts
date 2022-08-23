@@ -1,19 +1,29 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { XataClient } from '../../packages/codegen/example/xata';
-import { setUpTestEnvironment } from '../utils/setup';
+import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
 let xata: XataClient;
-let cleanup: () => Promise<void>;
+let hooks: TestEnvironmentResult['hooks'];
 
-beforeAll(async () => {
+beforeAll(async (ctx) => {
   const result = await setUpTestEnvironment('delete');
 
   xata = result.client;
-  cleanup = result.cleanup;
+  hooks = result.hooks;
+
+  await hooks.beforeAll(ctx);
 });
 
-afterAll(async () => {
-  await cleanup();
+afterAll(async (ctx) => {
+  await hooks.afterAll(ctx);
+});
+
+beforeEach(async (ctx) => {
+  await hooks.beforeEach(ctx);
+});
+
+afterEach(async (ctx) => {
+  await hooks.afterEach(ctx);
 });
 
 describe('record deletion', () => {

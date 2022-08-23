@@ -1,28 +1,35 @@
-import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { BaseClientOptions, SimpleCache } from '../../packages/client/src';
 import { XataClient } from '../../packages/codegen/example/xata';
-import { setUpTestEnvironment } from '../utils/setup';
+import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
 const cache = new SimpleCache();
 
 let xata: XataClient;
 let clientOptions: BaseClientOptions;
-let cleanup: () => Promise<void>;
+let hooks: TestEnvironmentResult['hooks'];
 
-beforeAll(async () => {
+beforeAll(async (ctx) => {
   const result = await setUpTestEnvironment('cache', { cache });
 
   xata = result.client;
   clientOptions = result.clientOptions;
-  cleanup = result.cleanup;
+  hooks = result.hooks;
+
+  await hooks.beforeAll(ctx);
 });
 
-afterAll(async () => {
-  await cleanup();
+afterAll(async (ctx) => {
+  await hooks.afterAll(ctx);
 });
 
-afterEach(async () => {
+beforeEach(async (ctx) => {
+  await hooks.beforeEach(ctx);
+});
+
+afterEach(async (ctx) => {
   await cache.clear();
+  await hooks.afterEach(ctx);
 });
 
 describe('cache', () => {

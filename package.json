@@ -89,5 +89,10 @@
     {
       "path": "packages/codegen/dist/index.cjs"
     }
-  ]
+  ],
+  "dependencies": {
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.31.0",
+    "@opentelemetry/instrumentation": "^0.31.0",
+    "@opentelemetry/sdk-trace-base": "^1.5.0"
+  }
 }
