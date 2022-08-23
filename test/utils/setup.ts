@@ -75,5 +75,11 @@ function getProvider(provider = 'production'): HostProvider {
     return provider;
   }
 
-  return { main: provider, workspaces: provider };
+  const [main, workspaces] = provider.split(',');
+  if (!main || !workspaces) {
+    throw new Error(
+      `Invalid XATA_API_PROVIDER environment variable, expected either "production", "staging" or "apiUrl,workspacesUrl"`
+    );
+  }
+  return { main, workspaces };
 }
