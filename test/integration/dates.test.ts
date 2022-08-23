@@ -1,112 +1,50 @@
-import fetch from 'cross-fetch';
-import dotenv from 'dotenv';
-import { join } from 'path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import {
-  BaseClientOptions,
-  buildClient,
-  gte,
-  is,
-  lt,
-  SchemaInference,
-  XataApiClient,
-  XataRecord
-} from '../../packages/client/src';
-import { Column } from '../../packages/client/src/api/schemas';
-
-// Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.env') });
-
-const DatabaseClient = buildClient();
-
-const tables = [
-  {
-    name: 'datetime',
-    columns: [
-      { name: 'text', type: 'string' },
-      { name: 'date', type: 'datetime' }
-    ]
-  }
-] as const;
-
-export type DatabaseSchema = {
-  datetime: SchemaInference<typeof tables>['datetime'] & XataRecord;
-};
-
-class XataClient extends DatabaseClient<DatabaseSchema> {
-  constructor(options?: BaseClientOptions) {
-    super(options, tables);
-  }
-}
+import { gte, is, lt } from '../../packages/client/src';
+import { XataClient } from '../../packages/codegen/example/xata';
+import { setUpTestEnvironment } from '../utils/setup';
 
 let xata: XataClient;
-let databaseName: string;
-
-const workspace = process.env.XATA_WORKSPACE ?? '';
-if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
-
-const api = new XataApiClient({
-  apiKey: process.env.XATA_API_KEY || '',
-  fetch
-});
-
-const columns: Column[] = [
-  {
-    name: 'text',
-    type: 'string'
-  },
-  {
-    name: 'date',
-    type: 'datetime'
-  }
-];
+let cleanup: () => Promise<void>;
 
 beforeAll(async () => {
-  const id = Math.round(Math.random() * 100000);
+  const result = await setUpTestEnvironment('dates');
 
-  const database = await api.databases.createDatabase(workspace, `sdk-integration-test-dates-${id}`);
-  databaseName = database.databaseName;
-
-  xata = new XataClient({
-    databaseURL: `https://${workspace}.xata.sh/db/${database.databaseName}`,
-    branch: 'main',
-    apiKey: process.env.XATA_API_KEY || '',
-    fetch
-  });
-
-  await api.tables.createTable(workspace, databaseName, 'main', 'datetime');
-  await api.tables.setTableSchema(workspace, databaseName, 'main', 'datetime', { columns });
+  xata = result.client;
+  cleanup = result.cleanup;
 });
 
 afterAll(async () => {
-  await api.databases.deleteDatabase(workspace, databaseName);
+  await cleanup();
 });
 
 describe('dates', () => {
   test('add a record with a date', async () => {
-    const date = new Date();
-    const record = await xata.db.datetime.create({ date });
+    const birthDate = new Date();
+    const record = await xata.db.users.create({ birthDate });
 
-    expect(record.date instanceof Date).toEqual(true);
-    expect(record.date?.toISOString()).toEqual(date.toISOString());
+    expect(record.birthDate instanceof Date).toEqual(true);
+    expect(record.birthDate?.toISOString()).toEqual(birthDate.toISOString());
   });
 
   test('add a record without a date (optional)', async () => {
-    const record = await xata.db.datetime.create({});
+    const record = await xata.db.users.create({});
 
-    expect(record.date).toBeUndefined();
+    expect(record.birthDate).toBeUndefined();
   });
 
   test('filter date with operators', async () => {
-    const date = new Date();
-    await xata.db.datetime.create({ date });
+    const birthDate = new Date();
+    await xata.db.users.create({ birthDate });
 
-    const exact = await xata.db.datetime.filter('date', is(date)).getFirst();
-    const notFound = await xata.db.datetime.filter('date', gte(new Date())).getFirst();
-    const found = await xata.db.datetime.filter('date', lt(new Date())).filter('date', gte(date)).getFirst();
+    const exact = await xata.db.users.filter('birthDate', is(birthDate)).getFirst();
+    const notFound = await xata.db.users.filter('birthDate', gte(new Date())).getFirst();
+    const found = await xata.db.users
+      .filter('birthDate', lt(new Date()))
+      .filter('birthDate', gte(birthDate))
+      .getFirst();
 
-    expect(exact?.date?.toISOString()).toEqual(date.toISOString());
+    expect(exact?.birthDate?.toISOString()).toEqual(birthDate.toISOString());
     expect(notFound).toBeNull();
-    expect(found?.date?.toISOString()).toEqual(date.toISOString());
+    expect(found?.birthDate?.toISOString()).toEqual(birthDate.toISOString());
   });
 });

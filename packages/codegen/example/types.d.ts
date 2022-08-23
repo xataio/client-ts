@@ -34,6 +34,10 @@ declare const tables: readonly [
         readonly type: 'string';
       },
       {
+        readonly name: 'birthDate';
+        readonly type: 'datetime';
+      },
+      {
         readonly name: 'address';
         readonly type: 'object';
         readonly columns: readonly [

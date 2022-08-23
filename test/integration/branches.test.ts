@@ -1,34 +1,40 @@
 import { execSync } from 'child_process';
-import realFetch from 'cross-fetch';
-import dotenv from 'dotenv';
-import { join } from 'path';
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
-import { XataApiClient } from '../../packages/client/src';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { BaseClientOptions, FetchImpl, XataApiClient } from '../../packages/client/src';
 import { getCurrentBranchName } from '../../packages/client/src/util/config';
 import { XataClient } from '../../packages/codegen/example/xata';
+import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
-// Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.env') });
+let api: XataApiClient;
+let workspace: string;
+let database: string;
+let cleanup: () => Promise<void>;
+let fetch: TestEnvironmentResult['clientOptions']['fetch'];
 
-const fetch = vi.fn(realFetch);
-
-let databaseName: string;
-
-const apiKey = process.env.XATA_API_KEY ?? '';
-const workspace = process.env.XATA_WORKSPACE ?? '';
-if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
-
-const api = new XataApiClient({ apiKey, fetch });
+let getBranchOptions: {
+  apiKey: string;
+  databaseURL: string;
+  fetchImpl: TestEnvironmentResult['clientOptions']['fetch'];
+};
 
 beforeAll(async () => {
-  const id = Math.round(Math.random() * 100000);
+  const result = await setUpTestEnvironment('branches');
 
-  const database = await api.databases.createDatabase(workspace, `sdk-integration-test-branches-${id}`);
-  databaseName = database.databaseName;
+  api = result.api;
+  cleanup = result.cleanup;
+  workspace = result.workspace;
+  database = result.database;
+  fetch = result.clientOptions.fetch;
+
+  getBranchOptions = {
+    apiKey: result.clientOptions.apiKey,
+    databaseURL: result.clientOptions.databaseURL,
+    fetchImpl: result.clientOptions.fetch
+  };
 });
 
 afterAll(async () => {
-  await api.databases.deleteDatabase(workspace, databaseName);
+  await cleanup();
 });
 
 describe('getBranch', () => {
@@ -43,13 +49,7 @@ describe('getBranch', () => {
   test('uses an env variable if it is set', async () => {
     const branchName = 'using-env-variable';
 
-    await api.branches.createBranch(workspace, databaseName, branchName);
-
-    const getBranchOptions = {
-      apiKey,
-      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
-      fetchImpl: fetch
-    };
+    await api.branches.createBranch(workspace, database, branchName);
 
     process.env = { NODE_ENV: 'development', XATA_BRANCH: branchName };
     expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
@@ -66,11 +66,7 @@ describe('getBranch', () => {
 
   test('uses `main` if no env variable is set is not set and there is not associated git branch', async () => {
     process.env = { NODE_ENV: 'development' };
-    const branch = await getCurrentBranchName({
-      apiKey,
-      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
-      fetchImpl: fetch
-    });
+    const branch = await getCurrentBranchName(getBranchOptions);
 
     expect(branch).toEqual('main');
   });
@@ -78,15 +74,11 @@ describe('getBranch', () => {
   test('uses the git branch name if branch exists', async () => {
     process.env = { NODE_ENV: 'development' };
     if (gitBranch) {
-      await api.branches.createBranch(workspace, databaseName, gitBranch);
+      await api.branches.createBranch(workspace, database, gitBranch);
 
       fetch.mockClear();
 
-      const branch = await getCurrentBranchName({
-        apiKey,
-        databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
-        fetchImpl: fetch
-      });
+      const branch = await getCurrentBranchName(getBranchOptions);
 
       expect(branch).toEqual(gitBranch);
 
@@ -99,7 +91,7 @@ describe('getBranch', () => {
     fetch.mockClear();
 
     // @ts-expect-error
-    const resolveBranch = await api.databases.resolveBranch(workspace, databaseName, undefined, null);
+    const resolveBranch = await api.databases.resolveBranch(workspace, database, undefined, null);
 
     expect(resolveBranch).toMatchInlineSnapshot(`
       {
@@ -117,15 +109,15 @@ describe('getBranch', () => {
 
   test('getBranch method retruns runtime branch', async () => {
     const client = new XataClient({
-      databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
+      databaseURL: getBranchOptions.databaseURL,
       branch: 'foo',
-      apiKey,
-      fetch
+      apiKey: getBranchOptions.apiKey,
+      fetch: getBranchOptions.fetchImpl
     });
 
     const { databaseURL, branch } = await client.getConfig();
 
     expect(branch).toEqual('foo');
-    expect(databaseURL).toEqual(`https://${workspace}.xata.sh/db/${databaseName}`);
+    expect(databaseURL).toEqual(getBranchOptions.databaseURL);
   });
 });

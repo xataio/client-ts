@@ -1,56 +1,31 @@
-import fetch from 'cross-fetch';
-import dotenv from 'dotenv';
-import { join } from 'path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { XataApiClient } from '../../packages/client/src';
 import { XataClient } from '../../packages/codegen/example/xata';
-import { teamColumns, userColumns } from '../mock_data';
+import { setUpTestEnvironment } from '../utils/setup';
 
-// Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.env') });
-
-let client: XataClient;
-let databaseName: string;
-
-const apiKey = process.env.XATA_API_KEY ?? '';
-const workspace = process.env.XATA_WORKSPACE ?? '';
-if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
-
-const api = new XataApiClient({ apiKey, fetch });
+let xata: XataClient;
+let cleanup: () => Promise<void>;
 
 beforeAll(async () => {
-  const id = Math.round(Math.random() * 100000);
+  const result = await setUpTestEnvironment('create');
 
-  const database = await api.databases.createDatabase(workspace, `sdk-integration-test-create-${id}`);
-  databaseName = database.databaseName;
-
-  client = new XataClient({
-    databaseURL: `https://${workspace}.xata.sh/db/${database.databaseName}`,
-    branch: 'main',
-    apiKey: process.env.XATA_API_KEY || '',
-    fetch
-  });
-
-  await api.tables.createTable(workspace, databaseName, 'main', 'teams');
-  await api.tables.createTable(workspace, databaseName, 'main', 'users');
-  await api.tables.setTableSchema(workspace, databaseName, 'main', 'teams', { columns: teamColumns });
-  await api.tables.setTableSchema(workspace, databaseName, 'main', 'users', { columns: userColumns });
+  xata = result.client;
+  cleanup = result.cleanup;
 });
 
 afterAll(async () => {
-  await api.databases.deleteDatabase(workspace, databaseName);
+  await cleanup();
 });
 
 describe('record creation', () => {
   test('create single team without id', async () => {
-    const team = await client.db.teams.create({ name: 'Team ships' });
+    const team = await xata.db.teams.create({ name: 'Team ships' });
 
     expect(team.id).toBeDefined();
     expect(team.name).toBe('Team ships');
   });
 
   test('create multiple teams without ids', async () => {
-    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     expect(teams).toHaveLength(2);
     expect(teams[0].id).toBeDefined();
@@ -62,12 +37,12 @@ describe('record creation', () => {
   });
 
   test('create user with id', async () => {
-    const user = await client.db.users.create('a-unique-record-john-4', {
+    const user = await xata.db.users.create('a-unique-record-john-4', {
       full_name: 'John Doe 4',
       email: 'john4@doe.com'
     });
 
-    const apiUser = await client.db.users.filter({ id: user.id }).getFirst();
+    const apiUser = await xata.db.users.filter({ id: user.id }).getFirst();
     if (!apiUser) throw new Error('No user found');
 
     expect(user.id).toBe('a-unique-record-john-4');
@@ -79,7 +54,7 @@ describe('record creation', () => {
     expect(user.email).toBe(apiUser.email);
 
     expect(
-      client.db.users.create('a-unique-record-john-4', {
+      xata.db.users.create('a-unique-record-john-4', {
         full_name: 'John Doe 5',
         email: 'john5@doe.com'
       })
@@ -87,13 +62,13 @@ describe('record creation', () => {
   });
 
   test('create user with inlined id', async () => {
-    const user = await client.db.users.create({
+    const user = await xata.db.users.create({
       id: 'a-unique-record-john-5',
       full_name: 'John Doe 5',
       email: 'john5@doe.com'
     });
 
-    const apiUser = await client.db.users.filter({ id: user.id }).getFirst();
+    const apiUser = await xata.db.users.filter({ id: user.id }).getFirst();
     if (!apiUser) throw new Error('No user found');
 
     expect(user.id).toBe('a-unique-record-john-5');
@@ -107,7 +82,7 @@ describe('record creation', () => {
 
   test('create user with empty id is not allowed', async () => {
     expect(
-      client.db.users.create('', {
+      xata.db.users.create('', {
         full_name: 'John Doe 3',
         email: 'john3@doe.com'
       })
@@ -116,7 +91,7 @@ describe('record creation', () => {
 
   test('create user with empty inline id is not allowed', async () => {
     expect(
-      client.db.users.create({
+      xata.db.users.create({
         id: '',
         full_name: 'John Doe 3',
         email: 'john3@doe.com'
@@ -127,7 +102,7 @@ describe('record creation', () => {
   test('create user with falsy id is not allowed', async () => {
     expect(
       //@ts-expect-error
-      client.db.users.create(null, {
+      xata.db.users.create(null, {
         full_name: 'John Doe 3',
         email: 'john3@doe.com'
       })
@@ -135,12 +110,12 @@ describe('record creation', () => {
   });
 
   test("create multiple with empty array doesn't create anything", async () => {
-    const teams = await client.db.teams.create([]);
+    const teams = await xata.db.teams.create([]);
     expect(teams).toHaveLength(0);
   });
 
   test('create multiple some with id and others without id', async () => {
-    const teams = await client.db.teams.create([{ id: 'team_cars', name: 'Team cars' }, { name: 'Team planes' }]);
+    const teams = await xata.db.teams.create([{ id: 'team_cars', name: 'Team cars' }, { name: 'Team planes' }]);
 
     expect(teams).toHaveLength(2);
     expect(teams[0].id).toBe('team_cars');
@@ -152,10 +127,7 @@ describe('record creation', () => {
   });
 
   test('create multiple with returning columns', async () => {
-    const teams = await client.db.teams.create(
-      [{ name: 'Team cars' }, { name: 'Team planes', labels: ['foo'] }],
-      ['id']
-    );
+    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes', labels: ['foo'] }], ['id']);
 
     expect(teams).toHaveLength(2);
     expect(teams[0].id).toBeDefined();
@@ -179,7 +151,7 @@ describe('record creation', () => {
   });
 
   test('create single with returning columns', async () => {
-    const team = await client.db.teams.create({ name: 'Team cars' }, ['id']);
+    const team = await xata.db.teams.create({ name: 'Team cars' }, ['id']);
 
     expect(team).toBeDefined();
     expect(team.id).toBeDefined();
