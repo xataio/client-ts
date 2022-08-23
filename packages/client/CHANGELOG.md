@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.17.0
+
+### Minor Changes
+
+- [#563](https://github.com/xataio/client-ts/pull/563) [`26e91d1`](https://github.com/xataio/client-ts/commit/26e91d1d84df082dedd7159271fc7c27ec87fefe) Thanks [@SferaDev](https://github.com/SferaDev)! - Return nulls on operations that can fail
+
+* [#563](https://github.com/xataio/client-ts/pull/563) [`3332d43`](https://github.com/xataio/client-ts/commit/3332d43121367f61c8d87dfb7da2af65bd1c278f) Thanks [@SferaDev](https://github.com/SferaDev)! - Return object on delete operation
+
 ## 0.16.2
 
 ### Patch Changes
