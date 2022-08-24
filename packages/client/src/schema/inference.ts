@@ -1,4 +1,5 @@
 import { Schemas } from '../api';
+import { Values } from '../util/types';
 import { Identifiable, XataRecord } from './record';
 
 export type BaseSchema = {
@@ -27,15 +28,8 @@ export type SchemaInference<T extends readonly BaseSchema[]> = T extends never[]
 type TableType<Tables, TableName> = Tables & { name: TableName } extends infer Table
   ? Table extends { name: string; columns: infer Columns }
     ? Columns extends readonly unknown[]
-      ? Columns[number] extends { name: string; type: string; notNull?: infer NotNull }
-        ? Identifiable &
-            (NotNull extends true
-              ? {
-                  [K in Columns[number]['name']]: PropertyType<Tables, Columns[number], K>;
-                }
-              : {
-                  [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> | null;
-                })
+      ? Columns[number] extends { name: string; type: string }
+        ? Identifiable & { [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> }
         : never
       : never
     : never
@@ -47,25 +41,32 @@ type PropertyType<Tables, Properties, PropertyName> = Properties & { name: Prope
       type: infer Type;
       link?: { table: infer LinkedTable };
       columns?: infer ObjectColumns;
+      notNull?: infer NotNull;
     }
-    ? Type extends 'string' | 'text' | 'email'
-      ? string
-      : Type extends 'int' | 'float'
-      ? number
-      : Type extends 'bool'
-      ? boolean
-      : Type extends 'datetime'
-      ? Date
-      : Type extends 'multiple'
-      ? string[]
-      : Type extends 'object'
-      ? ObjectColumns extends readonly unknown[]
-        ? ObjectColumns[number] extends { name: string; type: string }
-          ? { [K in ObjectColumns[number]['name']]?: PropertyType<Tables, ObjectColumns[number], K> }
-          : never
-        : never
-      : Type extends 'link'
-      ? TableType<Tables, LinkedTable> & XataRecord
-      : never
+    ? ApplyNullable<
+        Type extends 'string' | 'text' | 'email'
+          ? string
+          : Type extends 'int' | 'float'
+          ? number
+          : Type extends 'bool'
+          ? boolean
+          : Type extends 'datetime'
+          ? Date
+          : Type extends 'multiple'
+          ? string[]
+          : Type extends 'object'
+          ? ObjectColumns extends readonly unknown[]
+            ? ObjectColumns[number] extends { name: string; type: string }
+              ? { [K in ObjectColumns[number]['name']]?: PropertyType<Tables, ObjectColumns[number], K> }
+              : never
+            : never
+          : Type extends 'link'
+          ? TableType<Tables, LinkedTable> & XataRecord
+          : never,
+        NotNull
+      >
     : never
   : never;
+
+// To forward the null/undefined/missing type information, we need to use a mapped type
+type ApplyNullable<Property, NotNull> = Values<NotNull extends true ? { prop: Property } : { prop?: Property | null }>;
