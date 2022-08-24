@@ -84,7 +84,11 @@ describe('getBranch', () => {
   test('uses the git branch name if branch exists', async () => {
     process.env = { NODE_ENV: 'development' };
     if (gitBranch) {
-      await api.branches.createBranch(workspace, database, gitBranch);
+      try {
+        await api.branches.createBranch(workspace, database, gitBranch);
+      } catch (e) {
+        // If the branch already exists, ignore the error
+      }
 
       fetch.mockClear();
 
