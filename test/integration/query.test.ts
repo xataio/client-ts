@@ -210,6 +210,16 @@ describe('integration tests', () => {
     expect(teams).toHaveLength(0);
   });
 
+  test('filter is empty', async () => {
+    const teams = await client.db.teams.filter().getFirst();
+    const teams2 = await client.db.teams.filter(undefined).getFirst();
+    const teams3 = await client.db.teams.filter({}).getFirst();
+
+    expect(teams).toBeDefined();
+    expect(teams2).toBeDefined();
+    expect(teams3).toBeDefined();
+  });
+
   test('returns single record', async () => {
     const user = await client.db.users.getFirst();
     expect(user).toBeDefined();
