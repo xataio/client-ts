@@ -204,6 +204,16 @@ describe('integration tests', () => {
     expect(teams).toHaveLength(0);
   });
 
+  test('filter is empty', async () => {
+    const teams = await xata.db.teams.filter().getFirst();
+    const teams2 = await xata.db.teams.filter(undefined).getFirst();
+    const teams3 = await xata.db.teams.filter({}).getFirst();
+
+    expect(teams).toBeDefined();
+    expect(teams2).toBeDefined();
+    expect(teams3).toBeDefined();
+  });
+
   test('returns single record', async () => {
     const user = await xata.db.users.getFirst();
     expect(user).toBeDefined();

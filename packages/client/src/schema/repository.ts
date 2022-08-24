@@ -936,7 +936,7 @@ export class RestRepository<Record extends XataRecord>
       const data = query.getQueryOptions();
 
       const body = {
-        filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
+        filter: cleanFilter(data.filter),
         sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
         page: data.pagination,
         columns: data.columns
@@ -1075,4 +1075,14 @@ function extractId(value: any): string | undefined {
   if (isString(value)) return value;
   if (isObject(value) && isString(value.id)) return value.id;
   return undefined;
+}
+
+function cleanFilter(filter?: Schemas.FilterExpression) {
+  if (!filter) return undefined;
+
+  const values = Object.values(filter)
+    .filter(Boolean)
+    .filter((value) => (Array.isArray(value) ? value.length > 0 : true));
+
+  return values.length > 0 ? filter : undefined;
 }

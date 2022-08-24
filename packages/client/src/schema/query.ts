@@ -1,5 +1,5 @@
 import { FilterExpression } from '../api/schemas';
-import { compact, toBase64 } from '../util/lang';
+import { compact, isDefined, toBase64 } from '../util/lang';
 import { OmitBy, RequiredBy } from '../util/types';
 import { Filter } from './filters';
 import {
@@ -169,16 +169,17 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param filters A filter object
    * @returns A new Query object.
    */
-  filter(filters: Filter<Record>): Query<Record, Result>;
+  filter(filters?: Filter<Record>): Query<Record, Result>;
 
   filter(a: any, b?: any): Query<Record, Result> {
     if (arguments.length === 1) {
-      const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));
+      const constraints = Object.entries(a ?? {}).map(([column, constraint]) => ({ [column]: constraint as any }));
       const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
       return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     } else {
-      const $all = compact([this.#data.filter?.$all].flat().concat([{ [a]: b }]));
+      const constraints = isDefined(a) && isDefined(b) ? [{ [a]: b }] : undefined;
+      const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
       return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     }
