@@ -205,9 +205,9 @@ describe('integration tests', () => {
   });
 
   test('filter is empty', async () => {
-    const teams = await client.db.teams.filter().getFirst();
-    const teams2 = await client.db.teams.filter(undefined).getFirst();
-    const teams3 = await client.db.teams.filter({}).getFirst();
+    const teams = await xata.db.teams.filter().getFirst();
+    const teams2 = await xata.db.teams.filter(undefined).getFirst();
+    const teams3 = await xata.db.teams.filter({}).getFirst();
 
     expect(teams).toBeDefined();
     expect(teams2).toBeDefined();
