@@ -11,7 +11,7 @@ let database: string;
 let hooks: TestEnvironmentResult['hooks'];
 let fetch: TestEnvironmentResult['clientOptions']['fetch'];
 
-let getBranchOptions: {
+let branchOptions: {
   apiKey: string;
   databaseURL: string;
   fetchImpl: TestEnvironmentResult['clientOptions']['fetch'];
@@ -26,7 +26,7 @@ beforeAll(async (ctx) => {
   database = result.database;
   fetch = result.clientOptions.fetch;
 
-  getBranchOptions = {
+  branchOptions = {
     apiKey: result.clientOptions.apiKey,
     databaseURL: result.clientOptions.databaseURL,
     fetchImpl: result.clientOptions.fetch
@@ -62,21 +62,21 @@ describe('getBranch', () => {
     await api.branches.createBranch(workspace, database, branchName);
 
     process.env = { NODE_ENV: 'development', XATA_BRANCH: branchName };
-    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(branchOptions)).toEqual(branchName);
 
     process.env = { NODE_ENV: 'development', VERCEL_GIT_COMMIT_REF: branchName };
-    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(branchOptions)).toEqual(branchName);
 
     process.env = { NODE_ENV: 'development', CF_PAGES_BRANCH: branchName };
-    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(branchOptions)).toEqual(branchName);
 
     process.env = { NODE_ENV: 'development', BRANCH: branchName };
-    expect(await getCurrentBranchName(getBranchOptions)).toEqual(branchName);
+    expect(await getCurrentBranchName(branchOptions)).toEqual(branchName);
   });
 
   test('uses `main` if no env variable is set is not set and there is not associated git branch', async () => {
     process.env = { NODE_ENV: 'development' };
-    const branch = await getCurrentBranchName(getBranchOptions);
+    const branch = await getCurrentBranchName(branchOptions);
 
     expect(branch).toEqual('main');
   });
@@ -88,7 +88,7 @@ describe('getBranch', () => {
 
       fetch.mockClear();
 
-      const branch = await getCurrentBranchName(getBranchOptions);
+      const branch = await getCurrentBranchName(branchOptions);
 
       expect(branch).toEqual(gitBranch);
 
@@ -119,15 +119,15 @@ describe('getBranch', () => {
 
   test('getBranch method retruns runtime branch', async () => {
     const client = new XataClient({
-      databaseURL: getBranchOptions.databaseURL,
+      databaseURL: branchOptions.databaseURL,
       branch: 'foo',
-      apiKey: getBranchOptions.apiKey,
-      fetch: getBranchOptions.fetchImpl
+      apiKey: branchOptions.apiKey,
+      fetch: branchOptions.fetchImpl
     });
 
     const { databaseURL, branch } = await client.getConfig();
 
     expect(branch).toEqual('foo');
-    expect(databaseURL).toEqual(getBranchOptions.databaseURL);
+    expect(databaseURL).toEqual(branchOptions.databaseURL);
   });
 });

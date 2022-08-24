@@ -58,7 +58,8 @@ export async function setUpTestEnvironment(
 ): Promise<TestEnvironmentResult> {
   const { trace, tracer } = await setupTracing();
 
-  const id = Math.round(Math.random() * 100000);
+  // Timestamp to avoid collisions
+  const id = Date.now().toString(36);
 
   const api = new XataApiClient({ apiKey, fetch, host });
   const { databaseName: database } = await api.databases.createDatabase(
