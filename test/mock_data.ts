@@ -102,6 +102,10 @@ export const userColumns: Column[] = [
     link: {
       table: 'teams'
     }
+  },
+  {
+    name: 'birthDate',
+    type: 'datetime'
   }
 ];
 
