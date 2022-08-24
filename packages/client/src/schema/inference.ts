@@ -7,6 +7,7 @@ export type BaseSchema = {
     | {
         name: string;
         type: Schemas.Column['type'];
+        notNull?: boolean;
       }
     | { name: string; type: 'link'; link: { table: string } }
     | { name: string; type: 'object'; columns: { name: string; type: string }[] }
@@ -26,8 +27,15 @@ export type SchemaInference<T extends readonly BaseSchema[]> = T extends never[]
 type TableType<Tables, TableName> = Tables & { name: TableName } extends infer Table
   ? Table extends { name: string; columns: infer Columns }
     ? Columns extends readonly unknown[]
-      ? Columns[number] extends { name: string; type: string }
-        ? Identifiable & { [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> }
+      ? Columns[number] extends { name: string; type: string; notNull?: infer NotNull }
+        ? Identifiable &
+            (NotNull extends true
+              ? {
+                  [K in Columns[number]['name']]: PropertyType<Tables, Columns[number], K>;
+                }
+              : {
+                  [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> | null;
+                })
         : never
       : never
     : never
@@ -40,26 +48,24 @@ type PropertyType<Tables, Properties, PropertyName> = Properties & { name: Prope
       link?: { table: infer LinkedTable };
       columns?: infer ObjectColumns;
     }
-    ?
-        | (Type extends 'string' | 'text' | 'email'
-            ? string
-            : Type extends 'int' | 'float'
-            ? number
-            : Type extends 'bool'
-            ? boolean
-            : Type extends 'datetime'
-            ? Date
-            : Type extends 'multiple'
-            ? string[]
-            : Type extends 'object'
-            ? ObjectColumns extends readonly unknown[]
-              ? ObjectColumns[number] extends { name: string; type: string }
-                ? { [K in ObjectColumns[number]['name']]?: PropertyType<Tables, ObjectColumns[number], K> }
-                : never
-              : never
-            : Type extends 'link'
-            ? TableType<Tables, LinkedTable> & XataRecord
-            : never)
-        | null // TODO: Types shouldn't be always nullable
+    ? Type extends 'string' | 'text' | 'email'
+      ? string
+      : Type extends 'int' | 'float'
+      ? number
+      : Type extends 'bool'
+      ? boolean
+      : Type extends 'datetime'
+      ? Date
+      : Type extends 'multiple'
+      ? string[]
+      : Type extends 'object'
+      ? ObjectColumns extends readonly unknown[]
+        ? ObjectColumns[number] extends { name: string; type: string }
+          ? { [K in ObjectColumns[number]['name']]?: PropertyType<Tables, ObjectColumns[number], K> }
+          : never
+        : never
+      : Type extends 'link'
+      ? TableType<Tables, LinkedTable> & XataRecord
+      : never
     : never
   : never;
