@@ -58,6 +58,7 @@ describe('record creation', () => {
     expect(user.id).toBe('a-unique-record-john-4');
     expect(user.read).toBeDefined();
     expect(user.full_name).toBe('John Doe 4');
+    expect(user.full_name.startsWith('John')).toBe(true);
 
     expect(user.id).toBe(apiUser.id);
     expect(user.full_name).toBe(apiUser.full_name);
