@@ -2,7 +2,10 @@ export type AttributeDictionary = Record<string, string | number | boolean | und
 
 export type TraceFunction = <T>(
   name: string,
-  fn: (options: { setAttributes: (attrs: AttributeDictionary) => void; onError: (message: string) => void }) => T,
+  fn: (options: {
+    setAttributes: (attrs: AttributeDictionary) => void;
+    onError: (message: string, options?: { ignoreErrorKind?: boolean }) => void;
+  }) => T,
   options?: AttributeDictionary
 ) => Promise<T>;
 
@@ -25,6 +28,8 @@ export const defaultTrace: TraceFunction = async <T>(
 };
 
 export const TraceAttributes = {
+  KIND: 'xata.trace.kind',
+
   VERSION: 'xata.sdk.version',
 
   TABLE: 'xata.table',

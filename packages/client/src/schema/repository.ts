@@ -431,6 +431,7 @@ export class RestRepository<Record extends XataRecord>
       return trace<T>(name, fn, {
         ...options,
         [TraceAttributes.TABLE]: this.#table,
+        [TraceAttributes.KIND]: 'sdk-operation',
         [TraceAttributes.VERSION]: VERSION
       });
     };

@@ -129,6 +129,7 @@ export async function fetch<
       const { host, protocol } = parseUrl(response.url);
       const requestId = response.headers?.get('x-request-id') ?? undefined;
       setAttributes({
+        [TraceAttributes.KIND]: 'http',
         [TraceAttributes.HTTP_REQUEST_ID]: requestId,
         [TraceAttributes.HTTP_STATUS_CODE]: response.status,
         [TraceAttributes.HTTP_HOST]: host,
@@ -145,7 +146,7 @@ export async function fetch<
         throw new FetcherError(response.status, jsonResponse as TError['payload'], requestId);
       } catch (error) {
         const fetcherError = new FetcherError(response.status, error, requestId);
-        onError(fetcherError.message);
+        onError(fetcherError.message, { ignoreErrorKind: !String(response.status).startsWith('5') });
 
         throw fetcherError;
       }

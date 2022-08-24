@@ -4,7 +4,10 @@ export const buildTraceFunction =
   (tracer: Tracer) =>
   async <T>(
     name: string,
-    fn: (options: { setAttributes: (attrs: Record<string, any>) => void; onError: (message: string) => void }) => T,
+    fn: (options: {
+      setAttributes: (attrs: Record<string, any>) => void;
+      onError: (message: string, options: { ignoreErrorKind?: boolean }) => void;
+    }) => T,
     attributes: Record<string, string | number | boolean | undefined> = {}
   ): Promise<T> => {
     return await tracer.startActiveSpan(name, { attributes }, async (span) => {
@@ -15,8 +18,8 @@ export const buildTraceFunction =
           }
         };
 
-        const onError = (message: string) => {
-          span.setStatus({ code: SpanStatusCode.ERROR, message });
+        const onError = (message: string, { ignoreErrorKind = false }: { ignoreErrorKind?: boolean } = {}) => {
+          span.setStatus({ code: ignoreErrorKind ? SpanStatusCode.UNSET : SpanStatusCode.ERROR, message });
         };
 
         return await fn({ setAttributes, onError });
