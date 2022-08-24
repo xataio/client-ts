@@ -20,7 +20,7 @@ export type SchemaDefinition = {
 
 export type SchemaPluginResult<Schemas extends Record<string, XataRecord>> = {
   [Key in keyof Schemas]: Repository<Schemas[Key]>;
-} & { [key: string]: Repository<XataRecord> };
+};
 
 export class SchemaPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   #tables: Record<string, Repository<any>> = {};
