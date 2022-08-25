@@ -11,7 +11,14 @@ const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathPara
 
   const query = new URLSearchParams(cleanQueryParams).toString();
   const queryString = query.length > 0 ? `?${query}` : '';
-  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
+
+  // We need to encode the path params because they can contain special characters
+  // Special case, `:` does not need to be encoded as we use it as a separator
+  const cleanPathParams = Object.entries(pathParams).reduce((acc, [key, value]) => {
+    return { ...acc, [key]: encodeURIComponent(value).replace('%3A', ':') };
+  }, {} as Record<string, string>);
+
+  return url.replace(/\{\w*\}/g, (key) => cleanPathParams[key.slice(1, -1)]) + queryString;
 };
 
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
