@@ -2,6 +2,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } fr
 import {
   BaseClient,
   contains,
+  includesAll,
+  includesNone,
   isXataRecord,
   lt,
   Repository,
@@ -91,12 +93,60 @@ describe('integration tests', () => {
     expect(teams[1].name).toBe('Team fruits');
   });
 
-  test.skip('operator filter on multiple column', async () => {
-    const teams = await xata.db.teams.filter('labels', ['banana']).getAll();
+  test('operator filter on multiple column', async () => {
+    const teams = await xata.db.teams.create([
+      { name: 'Team with banana', labels: ['banana'] },
+      { name: 'Team with monkey', labels: ['monkey'] },
+      { name: 'Team with other', labels: ['other'] },
+      { name: 'Team with banana and monkey', labels: ['banana', 'monkey'] },
+      { name: 'Team with banana, monkey and other', labels: ['banana', 'monkey', 'other'] }
+    ]);
 
-    expect(teams).toHaveLength(2);
-    expect(teams[0].name).toBe('Mixed team fruits & animals');
-    expect(teams[1].name).toBe('Team fruits');
+    const teamsWithBanana = await xata.db.teams.filter('labels', 'banana').getMany();
+    const teamsWithBananaOrMonkey = await xata.db.teams.filter('labels', ['banana', 'monkey']).getMany();
+    const teamsWithoutBanana = await xata.db.teams.filter('labels', includesNone('banana')).getMany();
+    const teamsWithoutBananaNorMonkey = await xata.db.teams
+      .filter('labels', includesNone(['banana', 'monkey']))
+      .getMany();
+    const teamsWithBananaAndMonkey = await xata.db.teams
+      .filter('labels', 'banana')
+      .filter('labels', 'monkey')
+      .getMany();
+    const teamsWithOnlyBananaAndMonkey = await xata.db.teams
+      .filter('labels', includesAll(['banana', 'monkey']))
+      .getMany();
+
+    expect(teamsWithBanana.length).toBeGreaterThan(0);
+    expect(teamsWithBanana.every((team) => team.labels?.includes('banana'))).toBe(true);
+
+    expect(teamsWithBananaOrMonkey.length).toBeGreaterThan(0);
+    expect(
+      teamsWithBananaOrMonkey.every((team) => team.labels?.includes('banana') || team.labels?.includes('monkey'))
+    ).toBe(true);
+
+    expect(teamsWithoutBanana.length).toBeGreaterThan(0);
+    expect(teamsWithoutBanana.every((team) => !team.labels?.includes('banana'))).toBe(true);
+
+    expect(teamsWithoutBananaNorMonkey.length).toBeGreaterThan(0);
+    expect(
+      teamsWithoutBananaNorMonkey.every((team) => !team.labels?.includes('banana') && !team.labels?.includes('monkey'))
+    ).toBe(true);
+
+    expect(teamsWithBananaAndMonkey.length).toBeGreaterThan(0);
+    expect(
+      teamsWithBananaAndMonkey.every((team) => team.labels?.includes('banana') && team.labels?.includes('monkey'))
+    ).toBe(true);
+
+    expect(teamsWithOnlyBananaAndMonkey.length).toBeGreaterThan(0);
+    /** https://github.com/xataio/xata/issues/1073
+    expect(
+      teamsWithOnlyBananaAndMonkey.every(
+        (team) => team.labels?.includes('banana') && team.labels?.includes('monkey') && team.labels?.length === 2
+      )
+    ).toBe(true);
+    **/
+
+    await xata.db.teams.delete(teams);
   });
 
   test('multiple filter', async () => {

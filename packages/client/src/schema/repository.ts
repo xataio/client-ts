@@ -414,7 +414,11 @@ export class RestRepository<Record extends XataRecord>
     pluginOptions: XataPluginOptions;
     schemaTables?: Schemas.Table[];
   }) {
-    super(null, options.table, {});
+    super(
+      null,
+      { name: options.table, schema: options.schemaTables?.find((table) => table.name === options.table) },
+      {}
+    );
 
     this.#table = options.table;
     this.#getFetchProps = options.pluginOptions.getFetchProps;
