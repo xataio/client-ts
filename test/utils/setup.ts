@@ -11,6 +11,7 @@ import { join } from 'path';
 import { File, Suite, TestContext, vi } from 'vitest';
 import { BaseClient, CacheImpl, XataApiClient } from '../../packages/client/src';
 import { getHostUrl, HostProvider, isHostProviderAlias } from '../../packages/client/src/api/providers';
+import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
 import { teamColumns, userColumns } from '../mock_data';
@@ -87,14 +88,14 @@ export async function setUpTestEnvironment(
 
   const hooks = {
     beforeAll: async () => {
-      span = tracer?.startSpan(`test suite: ${prefix}`);
+      span = tracer?.startSpan(prefix, { attributes: { [TraceAttributes.KIND]: 'test-suite' } });
     },
     afterAll: async () => {
       await api.databases.deleteDatabase(workspace, database);
       span?.end();
     },
     beforeEach: async (ctx: TestContext) => {
-      ctx.span = tracer?.startSpan(`test case: ${ctx.meta.name}`);
+      ctx.span = tracer?.startSpan(ctx.meta.name, { attributes: { [TraceAttributes.KIND]: 'test-case' } });
     },
     afterEach: async (ctx: TestContext) => {
       ctx.span?.end();
