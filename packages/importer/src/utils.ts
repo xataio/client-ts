@@ -128,7 +128,7 @@ export function parseRow(values: string[], types: string[], nullValues: string[]
       return val ? String(val) : null;
     } else if (type === 'datetime') {
       const date = new Date(val);
-      return !isNaN(date.getTime()) ? date : null;
+      return isNaN(date.getTime()) ? null : date;
     }
 
     return val;
