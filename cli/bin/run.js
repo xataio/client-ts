@@ -7,8 +7,11 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-fork(join(__dirname, 'run-oclif.js'), {
+const args = process.argv.slice(2);
+
+fork(join(__dirname, 'run-oclif.js'), args, {
   env: {
+    ...process.env,
     NODE_OPTIONS: '--experimental-vm-modules'
   }
 });
