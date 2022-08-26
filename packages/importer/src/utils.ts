@@ -86,7 +86,7 @@ export function castType(schemaType: string, valueType: string) {
     return 'text';
   } else if (schemaType === 'link' && valueType === 'string') {
     return 'link';
-  } else if (schemaType === 'datetime') {
+  } else if (schemaType === 'datetime' && valueType === 'string') {
     return 'datetime';
   } else if (schemaType === 'bool' && valueType === 'int') {
     return 'bool';
