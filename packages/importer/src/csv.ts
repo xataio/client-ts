@@ -15,11 +15,11 @@ export async function parseStream(stream: internal.Readable, options: ParseOptio
   return process(initConverter(options).fromStream(stream), options);
 }
 
-function initConverter({ noheader }: ParseOptions) {
-  return csv({ output: 'csv', noheader });
+function initConverter({ noheader, delimiter }: ParseOptions) {
+  return csv({ output: 'csv', noheader, delimiter });
 }
 
-function process(converter: Converter, { callback, batchSize = 100, columns, maxRows }: ParseOptions) {
+function process(converter: Converter, { callback, batchSize = 1000, columns, maxRows }: ParseOptions) {
   let rows = 0;
   // Even after calling converter.end() it seems that csvtojson reads one or two lines more.
   // We want to avoid that.
