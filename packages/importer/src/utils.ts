@@ -68,7 +68,7 @@ export function guessType(value: string) {
     return 'bool';
   } else if (value.match(/^\S+@\S+\.\S+$/)) {
     return 'email';
-  } else if (parseArray(value)) {
+  } else if (parseJSONArray(value)) {
     return 'multiple';
   } else if (value.indexOf('\n') >= 0) {
     return 'text';
@@ -104,7 +104,7 @@ export function castType(schemaType: string, valueType: string) {
 export function parseRow(values: string[], types: string[], nullValues: string[] = []) {
   return values.map((val, i) => {
     const type = types[i];
-    const num = +val;
+    const num = val.length > 0 ? +val : null;
 
     if (nullValues.includes(val)) {
       return null;

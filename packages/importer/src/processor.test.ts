@@ -91,7 +91,7 @@ describe('compareSquema', () => {
     `);
   });
 
-  test('returns incompatible types', () => {
+  test('casts string as float and tries to parse it', () => {
     const table: Schemas.Table = {
       name: 'foo',
       columns: [
@@ -120,9 +120,9 @@ describe('compareSquema', () => {
             "schemaType": "int",
           },
           {
-            "castedType": "string",
+            "castedType": "float",
             "columnName": "c",
-            "error": true,
+            "error": false,
             "guessedType": "string",
             "schemaType": "float",
           },
