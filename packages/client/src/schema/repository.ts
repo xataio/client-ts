@@ -414,7 +414,11 @@ export class RestRepository<Record extends XataRecord>
     pluginOptions: XataPluginOptions;
     schemaTables?: Schemas.Table[];
   }) {
-    super(null, options.table, {});
+    super(
+      null,
+      { name: options.table, schema: options.schemaTables?.find((table) => table.name === options.table) },
+      {}
+    );
 
     this.#table = options.table;
     this.#getFetchProps = options.pluginOptions.getFetchProps;
@@ -425,12 +429,13 @@ export class RestRepository<Record extends XataRecord>
     const trace = options.pluginOptions.trace ?? defaultTrace;
     this.#trace = async <T>(
       name: string,
-      fn: (options: { setAttributes: (attrs: AttributeDictionary) => void; onError: (message: string) => void }) => T,
+      fn: (options: { setAttributes: (attrs: AttributeDictionary) => void }) => T,
       options: AttributeDictionary = {}
     ) => {
       return trace<T>(name, fn, {
         ...options,
         [TraceAttributes.TABLE]: this.#table,
+        [TraceAttributes.KIND]: 'sdk-operation',
         [TraceAttributes.VERSION]: VERSION
       });
     };
@@ -936,7 +941,7 @@ export class RestRepository<Record extends XataRecord>
       const data = query.getQueryOptions();
 
       const body = {
-        filter: Object.values(data.filter ?? {}).some(Boolean) ? data.filter : undefined,
+        filter: cleanFilter(data.filter),
         sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
         page: data.pagination,
         columns: data.columns
@@ -1075,4 +1080,14 @@ function extractId(value: any): string | undefined {
   if (isString(value)) return value;
   if (isObject(value) && isString(value.id)) return value.id;
   return undefined;
+}
+
+function cleanFilter(filter?: Schemas.FilterExpression) {
+  if (!filter) return undefined;
+
+  const values = Object.values(filter)
+    .filter(Boolean)
+    .filter((value) => (Array.isArray(value) ? value.length > 0 : true));
+
+  return values.length > 0 ? filter : undefined;
 }

@@ -11,7 +11,14 @@ const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathPara
 
   const query = new URLSearchParams(cleanQueryParams).toString();
   const queryString = query.length > 0 ? `?${query}` : '';
-  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
+
+  // We need to encode the path params because they can contain special characters
+  // Special case, `:` does not need to be encoded as we use it as a separator
+  const cleanPathParams = Object.entries(pathParams).reduce((acc, [key, value]) => {
+    return { ...acc, [key]: encodeURIComponent(value).replace('%3A', ':') };
+  }, {} as Record<string, string>);
+
+  return url.replace(/\{\w*\}/g, (key) => cleanPathParams[key.slice(1, -1)]) + queryString;
 };
 
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
@@ -97,7 +104,7 @@ export async function fetch<
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   return trace(
     `${method.toUpperCase()} ${path}`,
-    async ({ setAttributes, onError }) => {
+    async ({ setAttributes }) => {
       const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
       const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
@@ -129,6 +136,7 @@ export async function fetch<
       const { host, protocol } = parseUrl(response.url);
       const requestId = response.headers?.get('x-request-id') ?? undefined;
       setAttributes({
+        [TraceAttributes.KIND]: 'http',
         [TraceAttributes.HTTP_REQUEST_ID]: requestId,
         [TraceAttributes.HTTP_STATUS_CODE]: response.status,
         [TraceAttributes.HTTP_HOST]: host,
@@ -144,10 +152,7 @@ export async function fetch<
 
         throw new FetcherError(response.status, jsonResponse as TError['payload'], requestId);
       } catch (error) {
-        const fetcherError = new FetcherError(response.status, error, requestId);
-        onError(fetcherError.message);
-
-        throw fetcherError;
+        throw new FetcherError(response.status, error, requestId);
       }
     },
     { [TraceAttributes.HTTP_METHOD]: method.toUpperCase(), [TraceAttributes.HTTP_ROUTE]: path }

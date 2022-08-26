@@ -103,7 +103,9 @@ type NestedApiFilter<T> = {
 };
 
 export type Filter<T> = T extends Record<string, any>
-  ? T extends Date // Date is a special case because extends object but we treat it as a primitive
+  ? T extends (infer ArrayType)[] // Arrays have a special filter
+    ? ArrayType | ArrayType[] | ArrayFilter<ArrayType> | ArrayFilter<ArrayType[]>
+    : T extends Date // Date extends object but we treat it as a primitive
     ? PropertyFilter<T>
     : BaseApiFilter<T> | NestedApiFilter<T>
   : PropertyFilter<T>;

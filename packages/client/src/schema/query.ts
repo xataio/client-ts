@@ -1,5 +1,6 @@
+import { Schemas } from '../api';
 import { FilterExpression } from '../api/schemas';
-import { compact, toBase64 } from '../util/lang';
+import { compact, isDefined, isString, isStringArray, toBase64 } from '../util/lang';
 import { OmitBy, RequiredBy } from '../util/types';
 import { Filter } from './filters';
 import {
@@ -43,7 +44,7 @@ export type QueryOptions<T extends XataRecord> = BaseOptions<T> & (CursorQueryOp
  * a new Query object containing the both the previous and the new constraints and options.
  */
 export class Query<Record extends XataRecord, Result extends XataRecord = Record> implements Paginable<Record, Result> {
-  #table: string;
+  #table: { name: string; schema?: Schemas.Table };
   #repository: Repository<Record>;
   #data: QueryOptions<Record> = { filter: {} };
 
@@ -53,7 +54,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
   constructor(
     repository: Repository<Record> | null,
-    table: string,
+    table: { name: string; schema?: Schemas.Table },
     data: Partial<QueryOptions<Record>>,
     rawParent?: Partial<QueryOptions<Record>>
   ) {
@@ -169,19 +170,30 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param filters A filter object
    * @returns A new Query object.
    */
-  filter(filters: Filter<Record>): Query<Record, Result>;
+  filter(filters?: Filter<Record>): Query<Record, Result>;
 
   filter(a: any, b?: any): Query<Record, Result> {
     if (arguments.length === 1) {
-      const constraints = Object.entries(a).map(([column, constraint]) => ({ [column]: constraint as any }));
+      const constraints = Object.entries(a ?? {}).map(([column, constraint]) => ({ [column]: constraint as any }));
       const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
       return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     } else {
-      const $all = compact([this.#data.filter?.$all].flat().concat([{ [a]: b }]));
+      const constraints = isDefined(a) && isDefined(b) ? [{ [a]: this.defaultFilter(a, b) }] : undefined;
+      const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
       return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     }
+  }
+
+  defaultFilter<T>(column: string, value: T) {
+    const columnType = this.#table.schema?.columns.find(({ name }) => name === column)?.type;
+    // TODO: Fix when we support more array types than string
+    if (columnType === 'multiple' && (isString(value) || isStringArray(value))) {
+      return { $includes: value };
+    }
+
+    return value;
   }
 
   /**
