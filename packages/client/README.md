@@ -123,7 +123,7 @@ const user = await xata.db.users.insert('user_admin', {
 And if you want to create or insert a record with a specific ID, you can invoke `updateOrInsert()`.
 
 ```ts
-const user = await client.db.users.updateOrInsert('user_admin', {
+const user = await xata.db.users.updateOrInsert('user_admin', {
   fullName: 'John Smith'
 });
 ```
@@ -246,22 +246,22 @@ const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY });
 Once you have initialized the API client, the operations are organized following the same hiearchy as in the [official documentation](https://docs.xata.io). You have different namespaces for each entity (ie. `workspaces`, `databases`, `tables`, `branches`, `users`, `records`...).
 
 ```ts
-const { id: workspace } = await client.workspaces.createWorkspace({ name: 'example', slug: 'example' });
-const { databaseName } = await client.databases.createDatabase(workspace, 'database');
+const { id: workspace } = await api.workspaces.createWorkspace({ name: 'example', slug: 'example' });
+const { databaseName } = await api.databases.createDatabase(workspace, 'database');
 
-await client.branches.createBranch(workspace, databaseName, 'branch');
-await client.tables.createTable(workspace, databaseName, 'branch', 'table');
-await client.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
+await api.branches.createBranch(workspace, databaseName, 'branch');
+await api.tables.createTable(workspace, databaseName, 'branch', 'table');
+await api.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
   columns: [{ name: 'email', type: 'string' }]
 });
 
-const { id: recordId } = await client.records.insertRecord(workspace, databaseName, 'branch', 'table', {
+const { id: recordId } = await api.records.insertRecord(workspace, databaseName, 'branch', 'table', {
   email: 'example@foo.bar'
 });
 
-const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
+const record = await api.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
 
-await client.workspaces.deleteWorkspace(workspace);
+await api.workspaces.deleteWorkspace(workspace);
 ```
 
 ## Deno support
