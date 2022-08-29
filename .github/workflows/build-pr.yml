@@ -69,7 +69,7 @@ jobs:
         run: npm run build
 
       - name: Configure npm registry token
-        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
+        if: ${{ secrets.NPM_TOKEN != null && github.event_name == 'pull_request' }}
         run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -111,40 +111,11 @@ jobs:
             npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 
-  test:
-    runs-on: ubuntu-latest
-    if: github.repository == 'xataio/client-ts'
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Create git branch
-        run: |
-          # Create a git branch from the detached HEAD.
-          # We need this for some integration tests.
-          # This branch is not pushed, it's just local to the workflow environment.
-          git checkout -b test-branch-${{ github.sha }}
-
-      - name: Read .nvmrc
-        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
-        id: nvm
-
-      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Compile
-        run: npm run build
-
       - name: Lint
         run: npm run lint
 
       - name: Test
+        if: ${{ secrets.INTEGRATION_TEST_API_KEY != null && github.event_name == 'pull_request' }}
         run: |
           npm test
         env:
