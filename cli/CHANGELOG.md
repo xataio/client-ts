@@ -1,5 +1,21 @@
 # @xata.io/cli
 
+## 0.9.2
+
+### Patch Changes
+
+- [#588](https://github.com/xataio/client-ts/pull/588) [`26d9c1d`](https://github.com/xataio/client-ts/commit/26d9c1dd2c78c99febc6f3f0e4db5690f36311c6) Thanks [@gimenete](https://github.com/gimenete)! - Fixed CLI on Windows
+
+* [#569](https://github.com/xataio/client-ts/pull/569) [`87bf2c0`](https://github.com/xataio/client-ts/commit/87bf2c0e605fd05f12c2f70abaa8bded08aecd0e) Thanks [@SferaDev](https://github.com/SferaDev)! - Importer: Add max rows, delimiter and null value options
+
+- [#569](https://github.com/xataio/client-ts/pull/569) [`b14f85f`](https://github.com/xataio/client-ts/commit/b14f85f507730819e23d52792cb0ed072a1d2a3c) Thanks [@SferaDev](https://github.com/SferaDev)! - Importer: Allow passing custom batch size and increase default to 1000
+
+* [#569](https://github.com/xataio/client-ts/pull/569) [`b14f85f`](https://github.com/xataio/client-ts/commit/b14f85f507730819e23d52792cb0ed072a1d2a3c) Thanks [@SferaDev](https://github.com/SferaDev)! - Importer: Add support for id, link and datetime columns
+
+* Updated dependencies [[`a305072`](https://github.com/xataio/client-ts/commit/a3050726517632b4975f2a2ed5f771dd247e51d5), [`30e9271`](https://github.com/xataio/client-ts/commit/30e92716b676a2901a4a63d2fd07d047879e3e23), [`7812a41`](https://github.com/xataio/client-ts/commit/7812a414b7d99e9515c0ce48a61ad7a8b84d65d0), [`d4a8ced`](https://github.com/xataio/client-ts/commit/d4a8ced9c257058ed7f660e01ee5fd1da154c391), [`cf85b13`](https://github.com/xataio/client-ts/commit/cf85b13e1ca69e79100fd02f58d79d556012395d), [`2350739`](https://github.com/xataio/client-ts/commit/2350739d3f0a176b0f1fc77b0f4f597321349726), [`a336e61`](https://github.com/xataio/client-ts/commit/a336e6161be04a652e6f0f0a4c2edac10d50c99e), [`b14f85f`](https://github.com/xataio/client-ts/commit/b14f85f507730819e23d52792cb0ed072a1d2a3c), [`b14f85f`](https://github.com/xataio/client-ts/commit/b14f85f507730819e23d52792cb0ed072a1d2a3c)]:
+  - @xata.io/client@0.17.1
+  - @xata.io/importer@0.2.7
+
 ## 0.9.1
 
 ### Patch Changes
