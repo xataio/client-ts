@@ -504,7 +504,7 @@ export abstract class BaseCommand extends Command {
 
   async deploySchema(workspace: string, database: string, branch: string, schema: Schemas.Schema) {
     const xata = await this.getXataClient();
-    const plan = await xata.branches.getBranchMigrationPlan(workspace, database, branch, schema);
+    const plan = await xata.branchSchema.getBranchMigrationPlan(workspace, database, branch, schema);
 
     const { newTables, removedTables, renamedTables, tableMigrations } = plan.migration;
 
@@ -528,7 +528,7 @@ export abstract class BaseCommand extends Command {
       });
       if (!confirm) return this.exit(1);
 
-      await xata.branches.executeBranchMigrationPlan(workspace, database, branch, plan);
+      await xata.branchSchema.executeBranchMigrationPlan(workspace, database, branch, plan);
     }
   }
 

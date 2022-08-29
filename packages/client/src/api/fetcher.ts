@@ -2,7 +2,11 @@ import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
-const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
+const resolveUrl = (
+  url: string,
+  queryParams: Record<string, any> = {},
+  pathParams: Partial<Record<string, string | number>> = {}
+) => {
   // Remove nulls and undefineds from query params
   const cleanQueryParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
     if (value === undefined || value === null) return acc;
@@ -15,7 +19,7 @@ const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathPara
   // We need to encode the path params because they can contain special characters
   // Special case, `:` does not need to be encoded as we use it as a separator
   const cleanPathParams = Object.entries(pathParams).reduce((acc, [key, value]) => {
-    return { ...acc, [key]: encodeURIComponent(value).replace('%3A', ':') };
+    return { ...acc, [key]: encodeURIComponent(String(value ?? '')).replace('%3A', ':') };
   }, {} as Record<string, string>);
 
   return url.replace(/\{\w*\}/g, (key) => cleanPathParams[key.slice(1, -1)]) + queryString;
@@ -35,7 +39,7 @@ export type FetchImpl = (
   };
 }>;
 
-export type WorkspaceApiUrlBuilder = (path: string, pathParams: Record<string, string>) => string;
+export type WorkspaceApiUrlBuilder = (path: string, pathParams: Partial<Record<string, string | number>>) => string;
 
 export type FetcherExtraProps = {
   apiUrl: string;
@@ -65,12 +69,12 @@ function buildBaseUrl({
   path: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   apiUrl: string;
-  pathParams?: Record<string, string>;
+  pathParams?: Partial<Record<string, string | number>>;
 }): string {
-  if (!pathParams?.workspace) return `${apiUrl}${path}`;
+  if (pathParams?.workspace === undefined) return `${apiUrl}${path}`;
 
   const url = typeof workspacesApiUrl === 'string' ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
-  return url.replace('{workspaceId}', pathParams.workspace);
+  return url.replace('{workspaceId}', String(pathParams.workspace));
 }
 
 // The host header is needed by Node.js on localhost.
@@ -88,7 +92,7 @@ export async function fetch<
   TBody extends Record<string, unknown> | undefined | null,
   THeaders extends Record<string, unknown>,
   TQueryParams extends Record<string, unknown>,
-  TPathParams extends Record<string, string>
+  TPathParams extends Partial<Record<string, string | number>>
 >({
   url: path,
   method,
