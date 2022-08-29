@@ -69,18 +69,18 @@ jobs:
         run: npm run build
 
       - name: Configure npm registry token
-        if: ${{ secrets.NPM_TOKEN != null && github.event_name == 'pull_request' }}
+        if: ${{ secrets.NPM_TOKEN != null }}
         run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish build
-        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
+        if: ${{ secrets.NPM_TOKEN != null && github.event_name == 'pull_request' }}
         run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --exact --no-verify-access --yes
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
-        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
+        if: ${{ secrets.NPM_TOKEN != null && github.event_name == 'pull_request' }}
         id: find-comment-2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +90,7 @@ jobs:
 
       - name: Create or update comment of npm release
         uses: peter-evans/create-or-update-comment@v1
-        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
+        if: ${{ secrets.NPM_TOKEN != null && github.event_name == 'pull_request' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.find-comment-2.outputs.comment-id }}
@@ -123,6 +123,7 @@ jobs:
           # We need this for some integration tests.
           # This branch is not pushed, it's just local to the workflow environment.
           git checkout -b test-branch-${{ github.sha }}
+
       - name: Read .nvmrc
         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
         id: nvm
@@ -143,7 +144,7 @@ jobs:
         run: npm run lint
 
       - name: Test
-        if: ${{ secrets.INTEGRATION_TEST_API_KEY != null && github.event_name == 'pull_request' }}
+        if: ${{ secrets.INTEGRATION_TEST_API_KEY != null }}
         run: |
           npm test
         env:
