@@ -111,6 +111,34 @@ jobs:
             npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create git branch
+        run: |
+          # Create a git branch from the detached HEAD.
+          # We need this for some integration tests.
+          # This branch is not pushed, it's just local to the workflow environment.
+          git checkout -b test-branch-${{ github.sha }}
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+
+      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile
+        run: npm run build
+
       - name: Lint
         run: npm run lint
 
