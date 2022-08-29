@@ -1,5 +1,11 @@
 # @xata.io/codegen
 
+## 0.17.0
+
+### Minor Changes
+
+- [#570](https://github.com/xataio/client-ts/pull/570) [`e4af349`](https://github.com/xataio/client-ts/commit/e4af349e197a432ae9425aeda7aa5db5faaa8082) Thanks [@SferaDev](https://github.com/SferaDev)! - Update internal types
+
 ## 0.16.1
 
 ### Patch Changes

@@ -27,7 +27,7 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
   /**
    * Retrieves a refreshed copy of the current record from the database.
    * @param columns The columns to retrieve. If not specified, all first level properties are retrieved.
-   * @returns The persisted record with the selected columns.
+   * @returns The persisted record with the selected columns, null if not found.
    */
   read<K extends SelectableColumn<OriginalRecord>>(
     columns: K[]
@@ -35,7 +35,7 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
 
   /**
    * Retrieves a refreshed copy of the current record from the database.
-   * @returns The persisted record with all first level properties.
+   * @returns The persisted record with all first level properties, null if not found.
    */
   read(): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 
@@ -44,29 +44,38 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
    * returned and the current object is not mutated.
    * @param partialUpdate The columns and their values that have to be updated.
    * @param columns The columns to retrieve. If not specified, all first level properties are retrieved.
-   * @returns The persisted record with the selected columns.
+   * @returns The persisted record with the selected columns, null if not found.
    */
   update<K extends SelectableColumn<OriginalRecord>>(
-    partialUpdate: Partial<EditableData<Omit<OriginalRecord, keyof XataRecord>>>,
+    partialUpdate: Partial<EditableData<OriginalRecord>>,
     columns: K[]
-  ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>>>;
+  ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>> | null>;
 
   /**
    * Performs a partial update of the current record. On success a new object is
    * returned and the current object is not mutated.
    * @param partialUpdate The columns and their values that have to be updated.
-   * @returns The persisted record with all first level properties.
+   * @returns The persisted record with all first level properties, null if not found.
    */
   update(
-    partialUpdate: Partial<EditableData<Omit<OriginalRecord, keyof XataRecord>>>
-  ): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>>>;
+    partialUpdate: Partial<EditableData<OriginalRecord>>
+  ): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 
   /**
    * Performs a deletion of the current record in the database.
-   *
-   * @throws If the record was already deleted or if an error happened while performing the deletion.
+   * @param columns The columns to retrieve. If not specified, all first level properties are retrieved.
+   * @returns The deleted record, null if not found.
    */
-  delete(): Promise<void>;
+  delete<K extends SelectableColumn<OriginalRecord>>(
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>> | null>;
+
+  /**
+   * Performs a deletion of the current record in the database.
+   * @returns The deleted record, null if not found.
+
+   */
+  delete(): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 }
 
 export type Link<Record extends XataRecord> = Omit<XataRecord, 'read' | 'update'> & {
@@ -86,7 +95,7 @@ export type Link<Record extends XataRecord> = Omit<XataRecord, 'read' | 'update'
    * @returns A new record containing the latest values for all the columns of the current record.
    */
   update<K extends SelectableColumn<Record>>(
-    partialUpdate: Partial<EditableData<Omit<Record, keyof XataRecord>>>,
+    partialUpdate: Partial<EditableData<Record>>,
     columns?: K[]
   ): Promise<
     Readonly<SelectedPick<Record, typeof columns extends SelectableColumn<Record>[] ? typeof columns : ['*']>>
@@ -122,10 +131,14 @@ export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> 
   return isIdentifiable(x) && isObject(metadata) && typeof metadata.version === 'number';
 }
 
-export type EditableData<O extends BaseData> = {
-  [K in keyof O]: O[K] extends XataRecord
-    ? { id: string } | string
-    : NonNullable<O[K]> extends XataRecord
-    ? { id: string } | string | null | undefined
-    : O[K];
-};
+export type EditableData<O extends XataRecord> = Identifiable &
+  Omit<
+    {
+      [K in keyof O]: O[K] extends XataRecord
+        ? { id: string } | string
+        : NonNullable<O[K]> extends XataRecord
+        ? { id: string } | string | null | undefined
+        : O[K];
+    },
+    keyof XataRecord
+  >;

@@ -12,11 +12,11 @@ This SDK has zero dependencies, so it can be used in many JavaScript runtimes in
   - [Schema-generated Client](#schema-generated-client)
   - [Schema-less Client](#schema-less-client)
   - [API Design](#api-design)
-    - [Creating Objects](#creating-objects)
-    - [Query a Single Object by its ID](#query-a-single-object-by-its-id)
-    - [Querying Multiple Objects](#querying-multiple-objects)
-    - [Updating Objects](#updating-objects)
-    - [Deleting Objects](#deleting-objects)
+    - [Creating Records](#creating-records)
+    - [Query a Single Record by its ID](#query-a-single-record-by-its-id)
+    - [Querying Multiple Records](#querying-multiple-records)
+    - [Updating Records](#updating-records)
+    - [Deleting Records](#deleting-records)
   - [API Client](#api-client)
 - [Deno support](#deno-support)
 
@@ -102,7 +102,7 @@ The Xata SDK to create/read/update/delete records follows the [repository patter
 
 For example if you have a `users` table, there'll be a repository at `xata.db.users`. If you're using the schema-less client, you can also use the `xata.db.[table-name]` syntax to access the repository but without TypeScript auto-completion.
 
-#### Creating Objects
+#### Creating Records
 
 Invoke the `create()` method in the repository. Example:
 
@@ -123,22 +123,22 @@ const user = await xata.db.users.insert('user_admin', {
 And if you want to create or insert a record with a specific ID, you can invoke `updateOrInsert()`.
 
 ```ts
-const user = await client.db.users.updateOrInsert('user_admin', {
+const user = await xata.db.users.updateOrInsert('user_admin', {
   fullName: 'John Smith'
 });
 ```
 
-#### Query a Single Object by its ID
+#### Query a Single Record by its ID
 
 ```ts
-// `user` will be null if the object cannot be found
+// `user` will be null if the record cannot be found
 const user = await xata.db.users.read('rec_1234abcdef');
 ```
 
-#### Querying Multiple Objects
+#### Querying Multiple Records
 
 ```ts
-// Query objects selecting all fields.
+// Query records selecting all fields.
 const page = await xata.db.users.select().getPaginated();
 const user = await xata.db.users.select().getFirst();
 
@@ -146,7 +146,7 @@ const user = await xata.db.users.select().getFirst();
 const page = await xata.db.users.getPaginated();
 const user = await xata.db.users.getFirst();
 
-// Query objects selecting just one or more fields
+// Query records selecting just one or more fields
 const page = await xata.db.users.select('email', 'profile').getPaginated();
 
 // Apply constraints
@@ -207,9 +207,9 @@ for await (const records of xata.db.users.getIterator({ batchSize: 100 })) {
 }
 ```
 
-#### Updating Objects
+#### Updating Records
 
-Updating an object leaves the existing instance unchanged, but returns a new object with the updated values.
+Updating a record leaves the existing object unchanged, but returns a new object with the updated values.
 
 ```ts
 // Using an existing object
@@ -217,19 +217,19 @@ const updatedUser = await user.update({
   fullName: 'John Smith Jr.'
 });
 
-// Using an object's id
+// Using a record id
 const updatedUser = await xata.db.users.update('rec_1234abcdef', {
   fullName: 'John Smith Jr.'
 });
 ```
 
-#### Deleting Objects
+#### Deleting Records
 
 ```ts
 // Using an existing object
 await user.delete();
 
-// Using an object's id
+// Using a record id
 await xata.db.users.delete('rec_1234abcdef');
 ```
 
@@ -246,22 +246,22 @@ const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY });
 Once you have initialized the API client, the operations are organized following the same hiearchy as in the [official documentation](https://docs.xata.io). You have different namespaces for each entity (ie. `workspaces`, `databases`, `tables`, `branches`, `users`, `records`...).
 
 ```ts
-const { id: workspace } = await client.workspaces.createWorkspace({ name: 'example', slug: 'example' });
-const { databaseName } = await client.databases.createDatabase(workspace, 'database');
+const { id: workspace } = await api.workspaces.createWorkspace({ name: 'example', slug: 'example' });
+const { databaseName } = await api.databases.createDatabase(workspace, 'database');
 
-await client.branches.createBranch(workspace, databaseName, 'branch');
-await client.tables.createTable(workspace, databaseName, 'branch', 'table');
-await client.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
+await api.branches.createBranch(workspace, databaseName, 'branch');
+await api.tables.createTable(workspace, databaseName, 'branch', 'table');
+await api.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
   columns: [{ name: 'email', type: 'string' }]
 });
 
-const { id: recordId } = await client.records.insertRecord(workspace, databaseName, 'branch', 'table', {
+const { id: recordId } = await api.records.insertRecord(workspace, databaseName, 'branch', 'table', {
   email: 'example@foo.bar'
 });
 
-const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
+const record = await api.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
 
-await client.workspaces.deleteWorkspace(workspace);
+await api.workspaces.deleteWorkspace(workspace);
 ```
 
 ## Deno support

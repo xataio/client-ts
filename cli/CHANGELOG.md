@@ -1,5 +1,16 @@
 # @xata.io/cli
 
+## 0.9.1
+
+### Patch Changes
+
+- [#570](https://github.com/xataio/client-ts/pull/570) [`e4af349`](https://github.com/xataio/client-ts/commit/e4af349e197a432ae9425aeda7aa5db5faaa8082) Thanks [@SferaDev](https://github.com/SferaDev)! - Update internal types
+
+- Updated dependencies [[`e4af349`](https://github.com/xataio/client-ts/commit/e4af349e197a432ae9425aeda7aa5db5faaa8082), [`26e91d1`](https://github.com/xataio/client-ts/commit/26e91d1d84df082dedd7159271fc7c27ec87fefe), [`3332d43`](https://github.com/xataio/client-ts/commit/3332d43121367f61c8d87dfb7da2af65bd1c278f)]:
+  - @xata.io/codegen@0.17.0
+  - @xata.io/client@0.17.0
+  - @xata.io/importer@0.2.6
+
 ## 0.9.0
 
 ### Minor Changes

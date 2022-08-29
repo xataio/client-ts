@@ -34,6 +34,10 @@ declare const tables: readonly [
         readonly type: 'string';
       },
       {
+        readonly name: 'birthDate';
+        readonly type: 'datetime';
+      },
+      {
         readonly name: 'address';
         readonly type: 'object';
         readonly columns: readonly [
@@ -58,13 +62,17 @@ declare const tables: readonly [
   }
 ];
 export declare type SchemaTables = typeof tables;
-export declare type DatabaseSchema = SchemaInference<SchemaTables>;
-export declare type Teams = DatabaseSchema['teams'];
+export declare type InferredTypes = SchemaInference<SchemaTables>;
+export declare type Teams = InferredTypes['teams'];
 export declare type TeamsRecord = Teams & XataRecord;
-export declare type Users = DatabaseSchema['users'];
+export declare type Users = InferredTypes['users'];
 export declare type UsersRecord = Users & XataRecord;
+export declare type DatabaseSchema = {
+  teams: TeamsRecord;
+  users: UsersRecord;
+};
 declare const DatabaseClient: any;
-export declare class XataClient extends DatabaseClient<SchemaTables> {
+export declare class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions);
 }
 export declare const getXataClient: () => XataClient;

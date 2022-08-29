@@ -35,6 +35,10 @@
           "type": "string"
         },
         {
+          "name": "birthDate",
+          "type": "datetime"
+        },
+        {
           "name": "address",
           "type": "object",
           "columns": [
