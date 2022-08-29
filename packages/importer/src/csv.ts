@@ -15,7 +15,7 @@ export async function parseStream(stream: internal.Readable, options: ParseOptio
   return process(initConverter(options).fromStream(stream), options);
 }
 
-function initConverter({ noheader, delimiter }: ParseOptions) {
+function initConverter({ noheader = false, delimiter = [','] }: ParseOptions) {
   return csv({ output: 'csv', noheader, delimiter });
 }
 
@@ -49,7 +49,10 @@ function process(converter: Converter, { callback, batchSize = 1000, columns, ma
           converter.end();
         }
       },
-      reject,
+      (error) => {
+        console.error(error);
+        reject(error);
+      },
       () => {
         if (stopped) return;
         const p = lines.length > 0 ? callback(lines, columns, rows) : Promise.resolve();
