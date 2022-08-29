@@ -141,6 +141,7 @@ export async function updateSchema(xata: XataApiClient, tableInfo: TableInfo, ch
   }
 
   for (const column of changes.missingColumns) {
+    if (column.column === 'id') continue;
     await xata.tables.addTableColumn(workspaceID, database, branch, tableName, {
       name: column.column,
       type: column.type as Schemas.Column['type']
