@@ -2076,7 +2076,7 @@ export const previewBranchSchemaEdit = (variables: PreviewBranchSchemaEditVariab
     PreviewBranchSchemaEditPathParams
   >({ url: '/db/{dbBranchName}/schema/preview', method: 'post', ...variables });
 
-export type ApplyBranchSchemdEditPathParams = {
+export type ApplyBranchSchemaEditPathParams = {
   /*
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
@@ -2084,7 +2084,7 @@ export type ApplyBranchSchemdEditPathParams = {
   workspace: string;
 };
 
-export type ApplyBranchSchemdEditError = Fetcher.ErrorWrapper<
+export type ApplyBranchSchemaEditError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -2099,28 +2099,28 @@ export type ApplyBranchSchemdEditError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type ApplyBranchSchemdEditResponse = {
+export type ApplyBranchSchemaEditResponse = {
   id: string;
   parentID: string;
 };
 
-export type ApplyBranchSchemdEditRequestBody = {
+export type ApplyBranchSchemaEditRequestBody = {
   edits: Schemas.SchemaEditScript;
 };
 
-export type ApplyBranchSchemdEditVariables = {
-  body: ApplyBranchSchemdEditRequestBody;
-  pathParams: ApplyBranchSchemdEditPathParams;
+export type ApplyBranchSchemaEditVariables = {
+  body: ApplyBranchSchemaEditRequestBody;
+  pathParams: ApplyBranchSchemaEditPathParams;
 } & FetcherExtraProps;
 
-export const applyBranchSchemdEdit = (variables: ApplyBranchSchemdEditVariables) =>
+export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables) =>
   fetch<
-    ApplyBranchSchemdEditResponse,
-    ApplyBranchSchemdEditError,
-    ApplyBranchSchemdEditRequestBody,
+    ApplyBranchSchemaEditResponse,
+    ApplyBranchSchemaEditError,
+    ApplyBranchSchemaEditRequestBody,
     {},
     {},
-    ApplyBranchSchemdEditPathParams
+    ApplyBranchSchemaEditPathParams
   >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables });
 
 export type GetBranchSchemaHistoryPathParams = {
@@ -4056,7 +4056,7 @@ export const operationsByTag = {
     compareBranchSchemas,
     updateBranchSchema,
     previewBranchSchemaEdit,
-    applyBranchSchemdEdit,
+    applyBranchSchemaEdit,
     getBranchSchemaHistory
   },
   table: {
