@@ -274,6 +274,18 @@ class DatabaseApi {
     });
   }
 
+  public patchDatabaseMetadata(
+    workspace: Schemas.WorkspaceID,
+    dbName: Schemas.DBName,
+    options: Types.PatchDatabaseMetadataRequestBody = {}
+  ): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.database.patchDatabaseMetadata({
+      pathParams: { workspace, dbName },
+      body: options,
+      ...this.extraProps
+    });
+  }
+
   public getGitBranchesMapping(
     workspace: Schemas.WorkspaceID,
     dbName: Schemas.DBName
