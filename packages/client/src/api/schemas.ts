@@ -191,29 +191,11 @@ export type Schema = {
   tablesOrder?: string[];
 };
 
-/**
- * @x-internal true
- */
-export type SchemaEditScript = {
-  sourceMigrationID?: string;
-  targetMigrationID?: string;
-  tables: TableEdit[];
-};
-
 export type Table = {
   id?: string;
   name: TableName;
   columns: Column[];
   revLinks?: RevLink[];
-};
-
-/**
- * @x-internal true
- */
-export type TableEdit = {
-  oldName?: string;
-  newName?: string;
-  columns?: MigrationColumnOp[];
 };
 
 /**
@@ -301,155 +283,6 @@ export type TableMigration = {
 export type ColumnMigration = {
   old: Column;
   ['new']: Column;
-};
-
-/**
- * @x-internal true
- */
-export type Commit = {
-  meta?: {
-    title?: string;
-    message?: string;
-    id: string;
-    parentID?: string;
-    mergeParentID?: string;
-    status: string;
-    createdAt: DateTime;
-    modifiedAt?: DateTime;
-  };
-  operations: MigrationOp[];
-};
-
-/**
- * Branch schema migration.
- *
- * @x-internal true
- */
-export type Migration = {
-  parentID?: string;
-  operations: MigrationOp[];
-};
-
-/**
- * Branch schema migration operations.
- *
- * @x-internal true
- */
-export type MigrationOp = MigrationTableOp | MigrationColumnOp;
-
-/**
- * @x-internal true
- */
-export type MigrationTableOp =
-  | {
-      addTable: TableOpAdd;
-    }
-  | {
-      removeTable: TableOpRemove;
-    }
-  | {
-      renameTable: TableOpRename;
-    };
-
-/**
- * @x-internal true
- */
-export type MigrationColumnOp =
-  | {
-      addColumn: ColumnOpAdd;
-    }
-  | {
-      removeColumn: ColumnOpRemove;
-    }
-  | {
-      renameColumn: ColumnOpRename;
-    };
-
-/**
- * @x-internal true
- */
-export type TableOpAdd = {
-  table: string;
-};
-
-/**
- * @x-internal true
- */
-export type TableOpRemove = {
-  table: string;
-};
-
-/**
- * @x-internal true
- */
-export type TableOpRename = {
-  oldName: string;
-  newName: string;
-};
-
-/**
- * @x-internal true
- */
-export type ColumnOpAdd = {
-  table?: string;
-  column: Column;
-};
-
-/**
- * @x-internal true
- */
-export type ColumnOpRemove = {
-  table?: string;
-  column: string;
-};
-
-/**
- * @x-internal true
- */
-export type ColumnOpRename = {
-  table?: string;
-  oldName: string;
-  newName: string;
-};
-
-export type MigrationRequest = {
-  /*
-   * The migration request number.
-   */
-  number: number;
-  /*
-   * Migration request creation timestamp.
-   */
-  createdAt: DateTime;
-  /*
-   * Last modified timestamp.
-   */
-  modifiedAt?: DateTime;
-  /*
-   * Timestamp when the migration request was closed.
-   */
-  closedAt?: DateTime;
-  /*
-   * Timestamp when the migration request was merged.
-   */
-  mergedAt?: DateTime;
-  status: 'open' | 'closed' | 'merging' | 'merged';
-  /*
-   * The migration request title.
-   */
-  title: string;
-  /*
-   * The migration request body with detailed description.
-   */
-  body: string;
-  /*
-   * Name of the source branch.
-   */
-  source: string;
-  /*
-   * Name of the target branch.
-   */
-  target: string;
 };
 
 export type SortExpression =

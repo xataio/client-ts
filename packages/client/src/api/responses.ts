@@ -45,12 +45,6 @@ export type BranchMigrationPlan = {
 
 export type RecordResponse = Schemas.XataRecord;
 
-export type SchemaCompareResponse = {
-  source: Schemas.Schema;
-  target: Schemas.Schema;
-  edits: Schemas.SchemaEditScript;
-};
-
 export type RecordUpdateResponse =
   | Schemas.XataRecord
   | {

@@ -910,6 +910,56 @@ export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables) =>
     ...variables
   });
 
+export type PatchDatabaseMetadataPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type PatchDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PatchDatabaseMetadataRequestBody = {
+  ui?: {
+    /*
+     * @minLength 1
+     */
+    color?: string;
+  };
+};
+
+export type PatchDatabaseMetadataVariables = {
+  body?: PatchDatabaseMetadataRequestBody;
+  pathParams: PatchDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Update the color of the selected database
+ */
+export const patchDatabaseMetadata = (variables: PatchDatabaseMetadataVariables) =>
+  fetch<
+    Schemas.DatabaseMetadata,
+    PatchDatabaseMetadataError,
+    PatchDatabaseMetadataRequestBody,
+    {},
+    {},
+    PatchDatabaseMetadataPathParams
+  >({ url: '/dbs/{dbName}/metadata', method: 'patch', ...variables });
+
 export type GetGitBranchesMappingPathParams = {
   /*
    * The Database Name
@@ -1156,411 +1206,6 @@ export const resolveBranch = (variables: ResolveBranchVariables) =>
   fetch<ResolveBranchResponse, ResolveBranchError, undefined, {}, ResolveBranchQueryParams, ResolveBranchPathParams>({
     url: '/dbs/{dbName}/resolveBranch',
     method: 'get',
-    ...variables
-  });
-
-export type ListMigrationRequestsPathParams = {
-  /*
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  workspace: string;
-};
-
-export type ListMigrationRequestsError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type ListMigrationRequestsResponse = {
-  migrationRequests: Schemas.MigrationRequest[];
-  meta: Schemas.RecordsMetadata;
-};
-
-export type ListMigrationRequestsRequestBody = {
-  filter?: Schemas.FilterExpression;
-  sort?: Schemas.SortExpression;
-  page?: Schemas.PageConfig;
-  columns?: Schemas.ColumnsProjection;
-};
-
-export type ListMigrationRequestsVariables = {
-  body?: ListMigrationRequestsRequestBody;
-  pathParams: ListMigrationRequestsPathParams;
-} & FetcherExtraProps;
-
-export const listMigrationRequests = (variables: ListMigrationRequestsVariables) =>
-  fetch<
-    ListMigrationRequestsResponse,
-    ListMigrationRequestsError,
-    ListMigrationRequestsRequestBody,
-    {},
-    {},
-    ListMigrationRequestsPathParams
-  >({ url: '/dbs/{dbName}/migrations/list', method: 'post', ...variables });
-
-export type CreateMigrationRequestPathParams = {
-  /*
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  workspace: string;
-};
-
-export type CreateMigrationRequestError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type CreateMigrationRequestResponse = {
-  number: number;
-};
-
-export type CreateMigrationRequestRequestBody = {
-  /*
-   * The source branch.
-   */
-  source: string;
-  /*
-   * The target branch.
-   */
-  target: string;
-  /*
-   * The title.
-   */
-  title: string;
-  /*
-   * Optional migration request description.
-   */
-  body?: string;
-};
-
-export type CreateMigrationRequestVariables = {
-  body: CreateMigrationRequestRequestBody;
-  pathParams: CreateMigrationRequestPathParams;
-} & FetcherExtraProps;
-
-export const createMigrationRequest = (variables: CreateMigrationRequestVariables) =>
-  fetch<
-    CreateMigrationRequestResponse,
-    CreateMigrationRequestError,
-    CreateMigrationRequestRequestBody,
-    {},
-    {},
-    CreateMigrationRequestPathParams
-  >({ url: '/dbs/{dbName}/migrations', method: 'post', ...variables });
-
-export type GetMigrationRequestPathParams = {
-  /*
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  /*
-   * The migration request number.
-   */
-  mrNumber: number;
-  workspace: string;
-};
-
-export type GetMigrationRequestError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GetMigrationRequestVariables = {
-  pathParams: GetMigrationRequestPathParams;
-} & FetcherExtraProps;
-
-export const getMigrationRequest = (variables: GetMigrationRequestVariables) =>
-  fetch<Schemas.MigrationRequest, GetMigrationRequestError, undefined, {}, {}, GetMigrationRequestPathParams>({
-    url: '/dbs/{dbName}/migrations/{mrNumber}',
-    method: 'get',
-    ...variables
-  });
-
-export type UpdateMigrationRequestPathParams = {
-  /*
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  /*
-   * The migration request number.
-   */
-  mrNumber: number;
-  workspace: string;
-};
-
-export type UpdateMigrationRequestError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type UpdateMigrationRequestRequestBody = {
-  /*
-   * New migration request title.
-   */
-  title?: string;
-  /*
-   * New migration request description.
-   */
-  body?: string;
-  /*
-   * Change the migration request status.
-   */
-  status?: 'open' | 'closed';
-};
-
-export type UpdateMigrationRequestVariables = {
-  body?: UpdateMigrationRequestRequestBody;
-  pathParams: UpdateMigrationRequestPathParams;
-} & FetcherExtraProps;
-
-export const updateMigrationRequest = (variables: UpdateMigrationRequestVariables) =>
-  fetch<
-    undefined,
-    UpdateMigrationRequestError,
-    UpdateMigrationRequestRequestBody,
-    {},
-    {},
-    UpdateMigrationRequestPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}', method: 'patch', ...variables });
-
-export type ListMigrationRequestsCommitsPathParams = {
-  /*
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  /*
-   * The migration request number.
-   */
-  mrNumber: number;
-  workspace: string;
-};
-
-export type ListMigrationRequestsCommitsError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type ListMigrationRequestsCommitsResponse = {
-  meta: {
-    /*
-     * last record id
-     */
-    cursor: string;
-    /*
-     * true if more records can be fetch
-     */
-    more: boolean;
-  };
-  logs: Schemas.Commit[];
-};
-
-export type ListMigrationRequestsCommitsRequestBody = {
-  page?: {
-    /*
-     * Query the next page that follow the cursor.
-     */
-    after?: string;
-    /*
-     * Query the previous page before the cursor.
-     */
-    before?: string;
-    /*
-     * Set page size. If the size is missing it is read from the cursor. If no cursor is given xata will choose the default page size.
-     *
-     * @default 20
-     */
-    size?: number;
-  };
-};
-
-export type ListMigrationRequestsCommitsVariables = {
-  body?: ListMigrationRequestsCommitsRequestBody;
-  pathParams: ListMigrationRequestsCommitsPathParams;
-} & FetcherExtraProps;
-
-export const listMigrationRequestsCommits = (variables: ListMigrationRequestsCommitsVariables) =>
-  fetch<
-    ListMigrationRequestsCommitsResponse,
-    ListMigrationRequestsCommitsError,
-    ListMigrationRequestsCommitsRequestBody,
-    {},
-    {},
-    ListMigrationRequestsCommitsPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/commits', method: 'post', ...variables });
-
-export type CompareMigrationRequestPathParams = {
-  /*
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  /*
-   * The migration request number.
-   */
-  mrNumber: number;
-  workspace: string;
-};
-
-export type CompareMigrationRequestError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type CompareMigrationRequestVariables = {
-  pathParams: CompareMigrationRequestPathParams;
-} & FetcherExtraProps;
-
-export const compareMigrationRequest = (variables: CompareMigrationRequestVariables) =>
-  fetch<
-    Responses.SchemaCompareResponse,
-    CompareMigrationRequestError,
-    undefined,
-    {},
-    {},
-    CompareMigrationRequestPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/compare', method: 'post', ...variables });
-
-export type GetMigrationRequestIsMergedPathParams = {
-  /*
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  /*
-   * The migration request number.
-   */
-  mrNumber: number;
-  workspace: string;
-};
-
-export type GetMigrationRequestIsMergedError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GetMigrationRequestIsMergedResponse = {
-  merged?: boolean;
-};
-
-export type GetMigrationRequestIsMergedVariables = {
-  pathParams: GetMigrationRequestIsMergedPathParams;
-} & FetcherExtraProps;
-
-export const getMigrationRequestIsMerged = (variables: GetMigrationRequestIsMergedVariables) =>
-  fetch<
-    GetMigrationRequestIsMergedResponse,
-    GetMigrationRequestIsMergedError,
-    undefined,
-    {},
-    {},
-    GetMigrationRequestIsMergedPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/merge', method: 'get', ...variables });
-
-export type MergeMigrationRequestPathParams = {
-  /*
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  /*
-   * The migration request number.
-   */
-  mrNumber: number;
-  workspace: string;
-};
-
-export type MergeMigrationRequestError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type MergeMigrationRequestVariables = {
-  pathParams: MergeMigrationRequestPathParams;
-} & FetcherExtraProps;
-
-export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables) =>
-  fetch<Schemas.Commit, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
-    url: '/dbs/{dbName}/migrations/{mrNumber}/merge',
-    method: 'post',
     ...variables
   });
 
@@ -1903,296 +1548,6 @@ export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariable
     {},
     GetBranchMigrationPlanPathParams
   >({ url: '/db/{dbBranchName}/migrations/plan', method: 'post', ...variables });
-
-export type CompareBranchWithUserSchemaPathParams = {
-  /*
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type CompareBranchWithUserSchemaError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type CompareBranchWithUserSchemaRequestBody = {
-  schema: Schemas.Schema;
-};
-
-export type CompareBranchWithUserSchemaVariables = {
-  body: CompareBranchWithUserSchemaRequestBody;
-  pathParams: CompareBranchWithUserSchemaPathParams;
-} & FetcherExtraProps;
-
-export const compareBranchWithUserSchema = (variables: CompareBranchWithUserSchemaVariables) =>
-  fetch<
-    Responses.SchemaCompareResponse,
-    CompareBranchWithUserSchemaError,
-    CompareBranchWithUserSchemaRequestBody,
-    {},
-    {},
-    CompareBranchWithUserSchemaPathParams
-  >({ url: '/db/{dbBranchName}/schema/compare', method: 'post', ...variables });
-
-export type CompareBranchSchemasPathParams = {
-  /*
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  /*
-   * The Database Name
-   */
-  branchName: Schemas.BranchName;
-  workspace: string;
-};
-
-export type CompareBranchSchemasError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type CompareBranchSchemasVariables = {
-  body?: Record<string, any>;
-  pathParams: CompareBranchSchemasPathParams;
-} & FetcherExtraProps;
-
-export const compareBranchSchemas = (variables: CompareBranchSchemasVariables) =>
-  fetch<
-    Responses.SchemaCompareResponse,
-    CompareBranchSchemasError,
-    Record<string, any>,
-    {},
-    {},
-    CompareBranchSchemasPathParams
-  >({ url: '/db/{dbBranchName}/schema/compare/{branchName}', method: 'post', ...variables });
-
-export type UpdateBranchSchemaPathParams = {
-  /*
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type UpdateBranchSchemaError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type UpdateBranchSchemaResponse = {
-  id: string;
-  parentID: string;
-};
-
-export type UpdateBranchSchemaVariables = {
-  body: Schemas.Migration;
-  pathParams: UpdateBranchSchemaPathParams;
-} & FetcherExtraProps;
-
-export const updateBranchSchema = (variables: UpdateBranchSchemaVariables) =>
-  fetch<UpdateBranchSchemaResponse, UpdateBranchSchemaError, Schemas.Migration, {}, {}, UpdateBranchSchemaPathParams>({
-    url: '/db/{dbBranchName}/schema/update',
-    method: 'post',
-    ...variables
-  });
-
-export type PreviewBranchSchemaEditPathParams = {
-  /*
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type PreviewBranchSchemaEditError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type PreviewBranchSchemaEditResponse = {
-  original: Schemas.Schema;
-  updated: Schemas.Schema;
-};
-
-export type PreviewBranchSchemaEditRequestBody = {
-  edits?: Schemas.SchemaEditScript;
-  operations?: Schemas.MigrationOp[];
-};
-
-export type PreviewBranchSchemaEditVariables = {
-  body?: PreviewBranchSchemaEditRequestBody;
-  pathParams: PreviewBranchSchemaEditPathParams;
-} & FetcherExtraProps;
-
-export const previewBranchSchemaEdit = (variables: PreviewBranchSchemaEditVariables) =>
-  fetch<
-    PreviewBranchSchemaEditResponse,
-    PreviewBranchSchemaEditError,
-    PreviewBranchSchemaEditRequestBody,
-    {},
-    {},
-    PreviewBranchSchemaEditPathParams
-  >({ url: '/db/{dbBranchName}/schema/preview', method: 'post', ...variables });
-
-export type ApplyBranchSchemaEditPathParams = {
-  /*
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type ApplyBranchSchemaEditError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type ApplyBranchSchemaEditResponse = {
-  id: string;
-  parentID: string;
-};
-
-export type ApplyBranchSchemaEditRequestBody = {
-  edits: Schemas.SchemaEditScript;
-};
-
-export type ApplyBranchSchemaEditVariables = {
-  body: ApplyBranchSchemaEditRequestBody;
-  pathParams: ApplyBranchSchemaEditPathParams;
-} & FetcherExtraProps;
-
-export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables) =>
-  fetch<
-    ApplyBranchSchemaEditResponse,
-    ApplyBranchSchemaEditError,
-    ApplyBranchSchemaEditRequestBody,
-    {},
-    {},
-    ApplyBranchSchemaEditPathParams
-  >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables });
-
-export type GetBranchSchemaHistoryPathParams = {
-  /*
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type GetBranchSchemaHistoryError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GetBranchSchemaHistoryResponse = {
-  meta: {
-    /*
-     * last record id
-     */
-    cursor: string;
-    /*
-     * true if more records can be fetch
-     */
-    more: boolean;
-  };
-  logs: Schemas.Commit[];
-};
-
-export type GetBranchSchemaHistoryRequestBody = {
-  page?: {
-    /*
-     * Query the next page that follow the cursor.
-     */
-    after?: string;
-    /*
-     * Query the previous page before the cursor.
-     */
-    before?: string;
-    /*
-     * Set page size. If the size is missing it is read from the cursor. If no cursor is given xata will choose the default page size.
-     *
-     * @default 20
-     */
-    size?: number;
-  };
-};
-
-export type GetBranchSchemaHistoryVariables = {
-  body?: GetBranchSchemaHistoryRequestBody;
-  pathParams: GetBranchSchemaHistoryPathParams;
-} & FetcherExtraProps;
-
-export const getBranchSchemaHistory = (variables: GetBranchSchemaHistoryVariables) =>
-  fetch<
-    GetBranchSchemaHistoryResponse,
-    GetBranchSchemaHistoryError,
-    GetBranchSchemaHistoryRequestBody,
-    {},
-    {},
-    GetBranchSchemaHistoryPathParams
-  >({ url: '/db/{dbBranchName}/schema/history', method: 'post', ...variables });
 
 export type GetBranchStatsPathParams = {
   /*
@@ -4024,6 +3379,7 @@ export const operationsByTag = {
     createDatabase,
     deleteDatabase,
     getDatabaseMetadata,
+    patchDatabaseMetadata,
     getGitBranchesMapping,
     addGitBranchesEntry,
     removeGitBranchesEntry,
@@ -4036,28 +3392,10 @@ export const operationsByTag = {
     deleteBranch,
     updateBranchMetadata,
     getBranchMetadata,
-    getBranchStats
-  },
-  migrationRequests: {
-    listMigrationRequests,
-    createMigrationRequest,
-    getMigrationRequest,
-    updateMigrationRequest,
-    listMigrationRequestsCommits,
-    compareMigrationRequest,
-    getMigrationRequestIsMerged,
-    mergeMigrationRequest
-  },
-  branchSchema: {
     getBranchMigrationHistory,
     executeBranchMigrationPlan,
     getBranchMigrationPlan,
-    compareBranchWithUserSchema,
-    compareBranchSchemas,
-    updateBranchSchema,
-    previewBranchSchemaEdit,
-    applyBranchSchemaEdit,
-    getBranchSchemaHistory
+    getBranchStats
   },
   table: {
     createTable,
