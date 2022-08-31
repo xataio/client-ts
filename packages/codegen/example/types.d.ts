@@ -28,6 +28,8 @@ declare const tables: readonly [
       {
         readonly name: 'email';
         readonly type: 'email';
+        readonly unique: true;
+        readonly notNull: true;
       },
       {
         readonly name: 'full_name';

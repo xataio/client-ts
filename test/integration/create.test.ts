@@ -174,4 +174,21 @@ describe('record creation', () => {
     expect(team1?.id).toBe(team.id);
     expect(team1?.name).toBe('Team cars');
   });
+
+  test('create single with unique email', async () => {
+    const data = { full_name: 'John Doe 3', email: 'unique@example.com' };
+    const user = await xata.db.users.create(data);
+
+    expect(user.id).toBeDefined();
+    expect(user.read).toBeDefined();
+    expect(user.full_name).toBe(data.full_name);
+    expect(user.email).toBe(data.email);
+
+    await expect(xata.db.users.create(data)).rejects.toThrowError();
+  });
+
+  test('create single with notNull column', async () => {
+    // @ts-expect-error
+    await expect(xata.db.users.create({ full_name: 'John Doe 3' })).rejects.toThrowError();
+  });
 });

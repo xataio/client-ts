@@ -222,7 +222,6 @@ export type TableEdit = {
 export type Column = {
   name: string;
   type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
-  notNull?: boolean;
   link?: {
     table: string;
   };
