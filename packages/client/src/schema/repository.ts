@@ -414,7 +414,11 @@ export class RestRepository<Record extends XataRecord>
     pluginOptions: XataPluginOptions;
     schemaTables?: Schemas.Table[];
   }) {
-    super(null, options.table, {});
+    super(
+      null,
+      { name: options.table, schema: options.schemaTables?.find((table) => table.name === options.table) },
+      {}
+    );
 
     this.#table = options.table;
     this.#getFetchProps = options.pluginOptions.getFetchProps;
@@ -425,12 +429,13 @@ export class RestRepository<Record extends XataRecord>
     const trace = options.pluginOptions.trace ?? defaultTrace;
     this.#trace = async <T>(
       name: string,
-      fn: (options: { setAttributes: (attrs: AttributeDictionary) => void; onError: (message: string) => void }) => T,
+      fn: (options: { setAttributes: (attrs: AttributeDictionary) => void }) => T,
       options: AttributeDictionary = {}
     ) => {
       return trace<T>(name, fn, {
         ...options,
         [TraceAttributes.TABLE]: this.#table,
+        [TraceAttributes.KIND]: 'sdk-operation',
         [TraceAttributes.VERSION]: VERSION
       });
     };

@@ -2,10 +2,11 @@ import { defaultTrace, TraceFunction } from '../schema/tracing';
 import { getAPIKey } from '../util/apiKey';
 import { getFetchImplementation } from '../util/fetch';
 import { isString } from '../util/lang';
+import type * as Components from './components';
 import type * as Types from './components';
 import { operationsByTag } from './components';
 import type { FetcherExtraProps, FetchImpl } from './fetcher';
-import { HostProvider, getHostUrl } from './providers';
+import { getHostUrl, HostProvider } from './providers';
 import type * as Responses from './responses';
 import type * as Schemas from './schemas';
 
@@ -25,6 +26,8 @@ export class XataApiClient {
     branches: BranchApi;
     tables: TableApi;
     records: RecordsApi;
+    migrationRequests: MigrationRequestsApi;
+    branchSchema: BranchSchemaApi;
   }> = {};
 
   constructor(options: XataApiClientOptions = {}) {
@@ -73,6 +76,17 @@ export class XataApiClient {
   public get records() {
     if (!this.#namespaces.records) this.#namespaces.records = new RecordsApi(this.#extraProps);
     return this.#namespaces.records;
+  }
+
+  public get migrationRequests() {
+    if (!this.#namespaces.migrationRequests)
+      this.#namespaces.migrationRequests = new MigrationRequestsApi(this.#extraProps);
+    return this.#namespaces.migrationRequests;
+  }
+
+  public get branchSchema() {
+    if (!this.#namespaces.branchSchema) this.#namespaces.branchSchema = new BranchSchemaApi(this.#extraProps);
+    return this.#namespaces.branchSchema;
   }
 }
 
@@ -260,6 +274,18 @@ class DatabaseApi {
     });
   }
 
+  public patchDatabaseMetadata(
+    workspace: Schemas.WorkspaceID,
+    dbName: Schemas.DBName,
+    options: Types.PatchDatabaseMetadataRequestBody = {}
+  ): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.database.patchDatabaseMetadata({
+      pathParams: { workspace, dbName },
+      body: options,
+      ...this.extraProps
+    });
+  }
+
   public getGitBranchesMapping(
     workspace: Schemas.WorkspaceID,
     dbName: Schemas.DBName
@@ -375,45 +401,6 @@ class BranchApi {
   ): Promise<Schemas.BranchMetadata> {
     return operationsByTag.branch.getBranchMetadata({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
-      ...this.extraProps
-    });
-  }
-
-  public getBranchMigrationHistory(
-    workspace: Schemas.WorkspaceID,
-    database: Schemas.DBName,
-    branch: Schemas.BranchName,
-    options: Types.GetBranchMigrationHistoryRequestBody = {}
-  ): Promise<Types.GetBranchMigrationHistoryResponse> {
-    return operationsByTag.branch.getBranchMigrationHistory({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
-      body: options,
-      ...this.extraProps
-    });
-  }
-
-  public executeBranchMigrationPlan(
-    workspace: Schemas.WorkspaceID,
-    database: Schemas.DBName,
-    branch: Schemas.BranchName,
-    migrationPlan: Types.ExecuteBranchMigrationPlanRequestBody
-  ): Promise<void> {
-    return operationsByTag.branch.executeBranchMigrationPlan({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
-      body: migrationPlan,
-      ...this.extraProps
-    });
-  }
-
-  public getBranchMigrationPlan(
-    workspace: Schemas.WorkspaceID,
-    database: Schemas.DBName,
-    branch: Schemas.BranchName,
-    schema: Schemas.Schema
-  ): Promise<Responses.BranchMigrationPlan> {
-    return operationsByTag.branch.getBranchMigrationPlan({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
-      body: schema,
       ...this.extraProps
     });
   }
@@ -718,6 +705,226 @@ class RecordsApi {
     return operationsByTag.records.searchBranch({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       body: query,
+      ...this.extraProps
+    });
+  }
+}
+
+class MigrationRequestsApi {
+  constructor(private extraProps: FetcherExtraProps) {}
+
+  public listMigrationRequests(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    options: Types.ListMigrationRequestsRequestBody = {}
+  ): Promise<Components.ListMigrationRequestsResponse> {
+    return operationsByTag.migrationRequests.listMigrationRequests({
+      pathParams: { workspace, dbName: database },
+      body: options,
+      ...this.extraProps
+    });
+  }
+
+  public createMigrationRequest(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    options: Components.CreateMigrationRequestRequestBody
+  ): Promise<Components.CreateMigrationRequestResponse> {
+    return operationsByTag.migrationRequests.createMigrationRequest({
+      pathParams: { workspace, dbName: database },
+      body: options,
+      ...this.extraProps
+    });
+  }
+
+  public getMigrationRequest(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    migrationRequest: number
+  ): Promise<Schemas.MigrationRequest> {
+    return operationsByTag.migrationRequests.getMigrationRequest({
+      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      ...this.extraProps
+    });
+  }
+
+  public updateMigrationRequest(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    migrationRequest: number,
+    options: Components.UpdateMigrationRequestRequestBody
+  ): Promise<void> {
+    return operationsByTag.migrationRequests.updateMigrationRequest({
+      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      body: options,
+      ...this.extraProps
+    });
+  }
+
+  public listMigrationRequestsCommits(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    migrationRequest: number,
+    options: Types.ListMigrationRequestsCommitsRequestBody = {}
+  ): Promise<Components.ListMigrationRequestsCommitsResponse> {
+    return operationsByTag.migrationRequests.listMigrationRequestsCommits({
+      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      body: options,
+      ...this.extraProps
+    });
+  }
+
+  public compareMigrationRequest(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    migrationRequest: number
+  ): Promise<Responses.SchemaCompareResponse> {
+    return operationsByTag.migrationRequests.compareMigrationRequest({
+      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      ...this.extraProps
+    });
+  }
+
+  public getMigrationRequestIsMerged(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    migrationRequest: number
+  ): Promise<Components.GetMigrationRequestIsMergedResponse> {
+    return operationsByTag.migrationRequests.getMigrationRequestIsMerged({
+      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      ...this.extraProps
+    });
+  }
+
+  public mergeMigrationRequest(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    migrationRequest: number
+  ): Promise<Schemas.Commit> {
+    return operationsByTag.migrationRequests.mergeMigrationRequest({
+      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      ...this.extraProps
+    });
+  }
+}
+
+class BranchSchemaApi {
+  constructor(private extraProps: FetcherExtraProps) {}
+
+  public getBranchMigrationHistory(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    options: Types.GetBranchMigrationHistoryRequestBody = {}
+  ): Promise<Types.GetBranchMigrationHistoryResponse> {
+    return operationsByTag.branchSchema.getBranchMigrationHistory({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      body: options,
+      ...this.extraProps
+    });
+  }
+
+  public executeBranchMigrationPlan(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    migrationPlan: Types.ExecuteBranchMigrationPlanRequestBody
+  ): Promise<void> {
+    return operationsByTag.branchSchema.executeBranchMigrationPlan({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      body: migrationPlan,
+      ...this.extraProps
+    });
+  }
+
+  public getBranchMigrationPlan(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    schema: Schemas.Schema
+  ): Promise<Responses.BranchMigrationPlan> {
+    return operationsByTag.branchSchema.getBranchMigrationPlan({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      body: schema,
+      ...this.extraProps
+    });
+  }
+
+  public compareBranchWithUserSchema(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    schema: Schemas.Schema
+  ): Promise<Responses.SchemaCompareResponse> {
+    return operationsByTag.branchSchema.compareBranchWithUserSchema({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      body: { schema },
+      ...this.extraProps
+    });
+  }
+
+  public compareBranchSchemas(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    branchName: Schemas.BranchName,
+    schema: Schemas.Schema
+  ): Promise<Responses.SchemaCompareResponse> {
+    return operationsByTag.branchSchema.compareBranchSchemas({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}`, branchName },
+      body: { schema },
+      ...this.extraProps
+    });
+  }
+
+  public updateBranchSchema(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    migration: Schemas.Migration
+  ): Promise<Components.UpdateBranchSchemaResponse> {
+    return operationsByTag.branchSchema.updateBranchSchema({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      body: migration,
+      ...this.extraProps
+    });
+  }
+
+  public previewBranchSchemaEdit(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    migration: Schemas.Migration
+  ): Promise<Components.PreviewBranchSchemaEditResponse> {
+    return operationsByTag.branchSchema.previewBranchSchemaEdit({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      body: migration,
+      ...this.extraProps
+    });
+  }
+
+  public applyBranchSchemaEdit(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    edits: Schemas.SchemaEditScript
+  ): Promise<Components.ApplyBranchSchemaEditResponse> {
+    return operationsByTag.branchSchema.applyBranchSchemaEdit({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      body: { edits },
+      ...this.extraProps
+    });
+  }
+
+  public getBranchSchemaHistory(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    options: Types.GetBranchSchemaHistoryRequestBody = {}
+  ): Promise<Types.GetBranchSchemaHistoryResponse> {
+    return operationsByTag.branchSchema.getBranchSchemaHistory({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      body: options,
       ...this.extraProps
     });
   }

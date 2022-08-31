@@ -8,8 +8,8 @@ export default defineConfig({
       source: 'github',
       owner: 'xataio',
       ref: 'main',
-      repository: 'openapi',
-      specPath: 'bundled/openapi.yaml'
+      repository: 'xata',
+      specPath: 'openapi/bundled/openapi.yaml'
     },
     outputDir: 'packages/client/src/api',
     to: async (context) => {

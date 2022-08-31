@@ -1,6 +1,17 @@
-#!/usr/bin/env -S NODE_OPTIONS=--experimental-vm-modules node
-import { Errors, run } from '@oclif/core';
+#!/usr/bin/env node
 
-run(void 0, import.meta.url)
-  // .then(flush) // Prevent timeout in xata shell
-  .catch(Errors.handle);
+import { fork } from 'child_process';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const args = process.argv.slice(2);
+
+fork(join(__dirname, 'run-oclif.js'), args, {
+  env: {
+    ...process.env,
+    NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --experimental-vm-modules`
+  }
+});
