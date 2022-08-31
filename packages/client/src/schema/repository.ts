@@ -429,10 +429,13 @@ export class RestRepository<Record extends XataRecord>
     const trace = options.pluginOptions.trace ?? defaultTrace;
     this.#trace = async <T>(
       name: string,
-      fn: (options: { setAttributes: (attrs: AttributeDictionary) => void }) => T,
+      fn: (options: {
+        setAttributes: (attrs: AttributeDictionary) => void;
+        propagateTrace: (headers: AttributeDictionary) => void;
+      }) => T,
       options: AttributeDictionary = {}
     ) => {
-      return trace<T>(name, fn, {
+      return trace<T>('sdk op: ' + name, fn, {
         ...options,
         [TraceAttributes.TABLE]: this.#table,
         [TraceAttributes.KIND]: 'sdk-operation',

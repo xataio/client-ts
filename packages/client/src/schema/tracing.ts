@@ -2,17 +2,26 @@ export type AttributeDictionary = Record<string, string | number | boolean | und
 
 export type TraceFunction = <T>(
   name: string,
-  fn: (options: { setAttributes: (attrs: AttributeDictionary) => void }) => T,
+  fn: (options: {
+    setAttributes: (attrs: AttributeDictionary) => void;
+    propagateTrace: (headers: Record<string, any>) => void;
+  }) => T,
   options?: AttributeDictionary
 ) => Promise<T>;
 
 export const defaultTrace: TraceFunction = async <T>(
   _name: string,
-  fn: (options: { setAttributes: (attrs: Record<string, string | number | boolean | undefined>) => void }) => T,
+  fn: (options: {
+    setAttributes: (attrs: AttributeDictionary) => void;
+    propagateTrace: (headers: Record<string, any>) => void;
+  }) => T,
   _options?: Record<string, any>
 ): Promise<T> => {
   return await fn({
     setAttributes: () => {
+      return;
+    },
+    propagateTrace: () => {
       return;
     }
   });

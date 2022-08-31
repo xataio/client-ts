@@ -1,13 +1,16 @@
-import { SpanStatusCode, Tracer } from '@opentelemetry/api';
+import { SpanStatusCode, propagation, Tracer, context as contextAPI } from '@opentelemetry/api';
 
 export const buildTraceFunction =
   (tracer: Tracer) =>
   async <T>(
     name: string,
-    fn: (options: { setAttributes: (attrs: Record<string, any>) => void }) => T,
+    fn: (options: {
+      setAttributes: (attrs: Record<string, any>) => void;
+      propagateTrace: (headers: Record<string, any>) => void;
+    }) => T,
     attributes: Record<string, string | number | boolean | undefined> = {}
   ): Promise<T> => {
-    return await tracer.startActiveSpan(name, { attributes }, async (span) => {
+    return await tracer.startActiveSpan(name, { attributes }, contextAPI.active(), async (span) => {
       try {
         const setAttributes = (attrs: Record<string, any>) => {
           for (const [key, value] of Object.entries(attrs)) {
@@ -15,7 +18,11 @@ export const buildTraceFunction =
           }
         };
 
-        return await fn({ setAttributes });
+        const propagateTrace = (headers: Record<string, string>) => {
+          propagation.inject(contextAPI.active(), headers);
+        };
+
+        return await fn({ setAttributes, propagateTrace });
       } catch (error: any) {
         const message = error.message ?? error.toString();
 

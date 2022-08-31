@@ -108,7 +108,7 @@ export async function fetch<
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   return trace(
     `${method.toUpperCase()} ${path}`,
-    async ({ setAttributes }) => {
+    async ({ setAttributes, propagateTrace }) => {
       const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
       const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
@@ -120,16 +120,19 @@ export async function fetch<
         [TraceAttributes.HTTP_TARGET]: resolveUrl(path, queryParams, pathParams)
       });
 
+      const reqHeaders = {
+        'Content-Type': 'application/json',
+        'User-Agent': `Xata client-ts/${VERSION}`,
+        ...headers,
+        ...hostHeader(fullUrl),
+        Authorization: `Bearer ${apiKey}`
+      };
+
+      propagateTrace(reqHeaders);
       const response = await fetchImpl(url, {
         method: method.toUpperCase(),
         body: body ? JSON.stringify(body) : undefined,
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': `Xata client-ts/${VERSION}`,
-          ...headers,
-          ...hostHeader(fullUrl),
-          Authorization: `Bearer ${apiKey}`
-        }
+        headers: reqHeaders
       });
 
       // No content
