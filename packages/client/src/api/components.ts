@@ -4034,6 +4034,7 @@ export type SearchBranchRequestBody = {
    */
   query: string;
   fuzziness?: Schemas.FuzzinessExpression;
+  prefix?: Schemas.PrefixExpression;
   highlight?: Schemas.HighlightExpression;
 };
 
