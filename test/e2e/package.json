@@ -12,7 +12,7 @@
     "netlify-cli": "^11.5.1",
     "next": "latest",
     "remix": "latest",
-    "rollup": "^2.78.1",
+    "rollup": "^2.79.0",
     "rollup-plugin-esbuild": "^4.10.1",
     "ts-node": "^10.9.1",
     "tslib": "^2.4.0",
