@@ -1,9 +1,10 @@
 import { execSync } from 'child_process';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
 import { XataApiClient } from '../../packages/client/src';
 import { getCurrentBranchName } from '../../packages/client/src/util/config';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
+import { describe, test } from '../utils/tracing';
 
 let api: XataApiClient;
 let workspace: string;
