@@ -910,6 +910,56 @@ export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables) =>
     ...variables
   });
 
+export type PatchDatabaseMetadataPathParams = {
+  /*
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+};
+
+export type PatchDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PatchDatabaseMetadataRequestBody = {
+  ui?: {
+    /*
+     * @minLength 1
+     */
+    color?: string;
+  };
+};
+
+export type PatchDatabaseMetadataVariables = {
+  body?: PatchDatabaseMetadataRequestBody;
+  pathParams: PatchDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Update the color of the selected database
+ */
+export const patchDatabaseMetadata = (variables: PatchDatabaseMetadataVariables) =>
+  fetch<
+    Schemas.DatabaseMetadata,
+    PatchDatabaseMetadataError,
+    PatchDatabaseMetadataRequestBody,
+    {},
+    {},
+    PatchDatabaseMetadataPathParams
+  >({ url: '/dbs/{dbName}/metadata', method: 'patch', ...variables });
+
 export type GetGitBranchesMappingPathParams = {
   /*
    * The Database Name
@@ -3984,6 +4034,7 @@ export type SearchBranchRequestBody = {
    */
   query: string;
   fuzziness?: Schemas.FuzzinessExpression;
+  prefix?: Schemas.PrefixExpression;
   highlight?: Schemas.HighlightExpression;
 };
 
@@ -4024,6 +4075,7 @@ export const operationsByTag = {
     createDatabase,
     deleteDatabase,
     getDatabaseMetadata,
+    patchDatabaseMetadata,
     getGitBranchesMapping,
     addGitBranchesEntry,
     removeGitBranchesEntry,
