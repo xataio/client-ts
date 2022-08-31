@@ -910,7 +910,7 @@ export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables) =>
     ...variables
   });
 
-export type PatchDatabaseMetadataPathParams = {
+export type UpdateDatabaseMetadataPathParams = {
   /*
    * The Database Name
    */
@@ -918,7 +918,7 @@ export type PatchDatabaseMetadataPathParams = {
   workspace: string;
 };
 
-export type PatchDatabaseMetadataError = Fetcher.ErrorWrapper<
+export type UpdateDatabaseMetadataError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -933,7 +933,7 @@ export type PatchDatabaseMetadataError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type PatchDatabaseMetadataRequestBody = {
+export type UpdateDatabaseMetadataRequestBody = {
   ui?: {
     /*
      * @minLength 1
@@ -942,22 +942,22 @@ export type PatchDatabaseMetadataRequestBody = {
   };
 };
 
-export type PatchDatabaseMetadataVariables = {
-  body?: PatchDatabaseMetadataRequestBody;
-  pathParams: PatchDatabaseMetadataPathParams;
+export type UpdateDatabaseMetadataVariables = {
+  body?: UpdateDatabaseMetadataRequestBody;
+  pathParams: UpdateDatabaseMetadataPathParams;
 } & FetcherExtraProps;
 
 /**
  * Update the color of the selected database
  */
-export const patchDatabaseMetadata = (variables: PatchDatabaseMetadataVariables) =>
+export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariables) =>
   fetch<
     Schemas.DatabaseMetadata,
-    PatchDatabaseMetadataError,
-    PatchDatabaseMetadataRequestBody,
+    UpdateDatabaseMetadataError,
+    UpdateDatabaseMetadataRequestBody,
     {},
     {},
-    PatchDatabaseMetadataPathParams
+    UpdateDatabaseMetadataPathParams
   >({ url: '/dbs/{dbName}/metadata', method: 'patch', ...variables });
 
 export type GetGitBranchesMappingPathParams = {
@@ -4075,7 +4075,7 @@ export const operationsByTag = {
     createDatabase,
     deleteDatabase,
     getDatabaseMetadata,
-    patchDatabaseMetadata,
+    updateDatabaseMetadata,
     getGitBranchesMapping,
     addGitBranchesEntry,
     removeGitBranchesEntry,
