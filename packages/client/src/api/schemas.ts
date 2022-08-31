@@ -226,6 +226,7 @@ export type Column = {
     table: string;
   };
   notNull?: boolean;
+  unique?: boolean;
   columns?: Column[];
 };
 
