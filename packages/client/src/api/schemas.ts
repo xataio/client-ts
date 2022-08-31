@@ -225,6 +225,7 @@ export type Column = {
   link?: {
     table: string;
   };
+  notNull?: boolean;
   columns?: Column[];
 };
 
