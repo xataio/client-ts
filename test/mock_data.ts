@@ -1,4 +1,5 @@
-import { Column, Schema } from '../packages/client/src/api/schemas';
+import { Schema } from '../packages/client/src/api/schemas';
+import schemaJson from '../packages/codegen/example/schema.json';
 
 const animals = [
   'Ape',
@@ -73,63 +74,4 @@ export const fruitUsers = fruits.map((fruit) => ({
 
 export const mockUsers = [ownerFruits, ownerAnimals, ...animalUsers, ...fruitUsers];
 
-export const userColumns: Column[] = [
-  {
-    name: 'email',
-    type: 'email'
-  },
-  {
-    name: 'full_name',
-    type: 'string'
-  },
-  {
-    name: 'address',
-    type: 'object',
-    columns: [
-      {
-        name: 'street',
-        type: 'string'
-      },
-      {
-        name: 'zipcode',
-        type: 'int'
-      }
-    ]
-  },
-  {
-    name: 'team',
-    type: 'link',
-    link: {
-      table: 'teams'
-    }
-  },
-  {
-    name: 'birthDate',
-    type: 'datetime'
-  }
-];
-
-export const teamColumns: Column[] = [
-  {
-    name: 'name',
-    type: 'string'
-  },
-  {
-    name: 'labels',
-    type: 'multiple'
-  },
-  {
-    name: 'owner',
-    type: 'link',
-    link: {
-      table: 'users'
-    }
-  }
-];
-
-export const schema: Schema = {
-  tables: [
-    { name: 'users', columns: userColumns },
-    { name: 'teams', columns: teamColumns }
-  ]
-};
+export const schema = schemaJson as Schema;

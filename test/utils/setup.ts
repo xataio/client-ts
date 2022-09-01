@@ -14,7 +14,7 @@ import { getHostUrl, HostProvider, isHostProviderAlias } from '../../packages/cl
 import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
-import { teamColumns, userColumns } from '../mock_data';
+import { schema } from '../mock_data';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -81,6 +81,11 @@ export async function setUpTestEnvironment(
 
   await api.tables.createTable(workspace, database, 'main', 'teams');
   await api.tables.createTable(workspace, database, 'main', 'users');
+
+  const teamColumns = schema.tables.find(({ name }) => name === 'teams')?.columns;
+  const userColumns = schema.tables.find(({ name }) => name === 'users')?.columns;
+  if (!teamColumns || !userColumns) throw new Error('Unable to find tables');
+
   await api.tables.setTableSchema(workspace, database, 'main', 'teams', { columns: teamColumns });
   await api.tables.setTableSchema(workspace, database, 'main', 'users', { columns: userColumns });
 

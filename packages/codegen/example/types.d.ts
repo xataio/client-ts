@@ -6,7 +6,6 @@ declare const tables: readonly [
       {
         readonly name: 'name';
         readonly type: 'string';
-        readonly unique: true;
         readonly description: 'Name of the team';
       },
       {
@@ -28,10 +27,12 @@ declare const tables: readonly [
       {
         readonly name: 'email';
         readonly type: 'email';
+        readonly unique: true;
       },
       {
         readonly name: 'full_name';
         readonly type: 'string';
+        readonly notNull: true;
       },
       {
         readonly name: 'birthDate';

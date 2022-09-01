@@ -7,7 +7,6 @@
         {
           "name": "name",
           "type": "string",
-          "unique": true,
           "description": "Name of the team"
         },
         {
@@ -28,11 +27,13 @@
       "columns": [
         {
           "name": "email",
-          "type": "email"
+          "type": "email",
+          "unique": true
         },
         {
           "name": "full_name",
-          "type": "string"
+          "type": "string",
+          "notNull": true
         },
         {
           "name": "birthDate",
