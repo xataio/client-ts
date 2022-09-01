@@ -107,7 +107,7 @@ export async function fetch<
   trace
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   return trace(
-    `${method.toUpperCase()} ${path}`,
+    `[HTTP] ${method.toUpperCase()} ${path}`,
     async ({ setAttributes, setHeaders }) => {
       const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
       const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);

@@ -70,7 +70,7 @@ export async function setUpTestEnvironment(
   if (tracer && suiteSpan) {
     const suiteSpanCtx = traceAPI.setSpan(context.active(), suiteSpan);
     setupSpan = tracer.startSpan(
-      `[Test Setup] ${prefix}`,
+      `[Test setup] ${prefix}`,
       { attributes: { [TraceAttributes.KIND]: 'test-suite-setup' } },
       suiteSpanCtx
     );
@@ -103,6 +103,7 @@ export async function setUpTestEnvironment(
     beforeEach: async (ctx: TestContext) => {
       if (tracer && suiteSpan) {
         const suiteSpanCtx = traceAPI.setSpan(context.active(), suiteSpan);
+
         ctx.span = tracer.startSpan(
           `[Test case] ${ctx.meta.name}`,
           { attributes: { [TraceAttributes.KIND]: 'test-case' } },
