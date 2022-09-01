@@ -12,19 +12,21 @@ const TRACER_NAME = 'Xata SDK';
 let tracingConfigured = false;
 let globalTracer: Tracer | undefined;
 
-export async function describe(name: string, factory?: SuiteFactory<{ foo: 1 }>) {
+export async function describe(name: string, factory?: SuiteFactory) {
   await setupTracing();
 
   return baseDescribe(name, factory);
 }
 
 export async function test(title: string, fn?: TestFunction, timeout?: number) {
-  if (!tracingConfigured) return baseTest(title, fn, timeout);
-
   return baseTest(
     title,
     async (ctx) => {
-      if (fn) return await contextAPI.bind(traceAPI.setSpan(ctx.suiteSpanCtx!, ctx.span!), fn)(ctx);
+      if (!fn) return;
+      if (ctx.suiteSpanCtx && ctx.span) {
+        return await contextAPI.bind(traceAPI.setSpan(ctx.suiteSpanCtx, ctx.span), fn)(ctx);
+      }
+      return await fn(ctx);
     },
     timeout
   );

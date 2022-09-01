@@ -78,7 +78,7 @@ export async function setUpTestEnvironment(
   }
 
   // Setup the environment
-  let database: string | undefined;
+  let database = '';
   try {
     if (!setupSpanCtx) {
       database = await setupXata(prefix, trace);
@@ -90,13 +90,14 @@ export async function setUpTestEnvironment(
   } finally {
     setupSpan?.end();
   }
+  if (!database) throw new Error('Database not created');
 
   const hooks = {
     beforeAll: async () => {
       return;
     },
     afterAll: async () => {
-      await api.databases.deleteDatabase(workspace, database!);
+      await api.databases.deleteDatabase(workspace, database);
       suiteSpan?.end();
     },
     beforeEach: async (ctx: TestContext) => {
@@ -116,7 +117,7 @@ export async function setUpTestEnvironment(
   };
 
   const clientOptions = {
-    databaseURL: `${workspaceUrl}/db/${database!}`,
+    databaseURL: `${workspaceUrl}/db/${database}`,
     branch: 'main',
     apiKey,
     fetch,
@@ -128,7 +129,7 @@ export async function setUpTestEnvironment(
   const client = new XataClient(clientOptions);
   const baseClient = new BaseClient(clientOptions);
 
-  return { api, client, baseClient, clientOptions, database: database!, workspace, hooks };
+  return { api, client, baseClient, clientOptions, database: database, workspace, hooks };
 }
 
 async function setupXata(prefix: string, trace: TraceFunction) {
@@ -163,6 +164,9 @@ function getProvider(provider = 'production'): HostProvider {
 }
 
 declare module 'vitest' {
+  export interface Suite {
+    suiteSpanCtx?: Context;
+  }
   export interface TestContext {
     span?: Span;
     suiteSpanCtx?: Context;

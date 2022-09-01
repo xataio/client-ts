@@ -1,4 +1,4 @@
-import { SpanStatusCode, propagation, Tracer, trace as traceAPI, context as contextAPI } from '@opentelemetry/api';
+import { SpanStatusCode, propagation, Tracer, context as contextAPI } from '@opentelemetry/api';
 
 export const buildTraceFunction =
   (tracer: Tracer) =>
