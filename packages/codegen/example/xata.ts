@@ -5,12 +5,7 @@ const tables = [
   {
     name: 'teams',
     columns: [
-      {
-        name: 'name',
-        type: 'string',
-        unique: true,
-        description: 'Name of the team'
-      },
+      { name: 'name', type: 'string', description: 'Name of the team' },
       { name: 'labels', type: 'multiple' },
       { name: 'owner', type: 'link', link: { table: 'users' } }
     ]
@@ -18,8 +13,8 @@ const tables = [
   {
     name: 'users',
     columns: [
-      { name: 'email', type: 'email' },
-      { name: 'full_name', type: 'string' },
+      { name: 'email', type: 'email', unique: true },
+      { name: 'full_name', type: 'string', notNull: true },
       { name: 'birthDate', type: 'datetime' },
       {
         name: 'address',

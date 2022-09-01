@@ -58,6 +58,7 @@ describe('record creation', () => {
     expect(user.id).toBe('a-unique-record-john-4');
     expect(user.read).toBeDefined();
     expect(user.full_name).toBe('John Doe 4');
+    expect(user.full_name.startsWith('John')).toBe(true);
 
     expect(user.id).toBe(apiUser.id);
     expect(user.full_name).toBe(apiUser.full_name);
@@ -172,5 +173,22 @@ describe('record creation', () => {
     const team1 = await team.read();
     expect(team1?.id).toBe(team.id);
     expect(team1?.name).toBe('Team cars');
+  });
+
+  test('create single with unique email', async () => {
+    const data = { full_name: 'John Doe 3', email: 'unique@example.com' };
+    const user = await xata.db.users.create(data);
+
+    expect(user.id).toBeDefined();
+    expect(user.read).toBeDefined();
+    expect(user.full_name).toBe(data.full_name);
+    expect(user.email).toBe(data.email);
+
+    await expect(xata.db.users.create(data)).rejects.toThrowError();
+  });
+
+  test('create single with notNull column', async () => {
+    // @ts-expect-error
+    await expect(xata.db.users.create({})).rejects.toThrowError();
   });
 });

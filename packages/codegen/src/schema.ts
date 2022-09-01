@@ -17,6 +17,7 @@ export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
     name: z.string(),
     type: z.enum(['bool', 'int', 'float', 'string', 'text', 'email', 'multiple', 'link', 'object', 'datetime']),
     unique: z.boolean().optional(),
+    notNull: z.boolean().optional(),
     description: z.string().optional(),
     link: z
       .object({
