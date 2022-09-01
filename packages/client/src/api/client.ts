@@ -274,12 +274,12 @@ class DatabaseApi {
     });
   }
 
-  public patchDatabaseMetadata(
+  public updateDatabaseMetadata(
     workspace: Schemas.WorkspaceID,
     dbName: Schemas.DBName,
-    options: Types.PatchDatabaseMetadataRequestBody = {}
+    options: Types.UpdateDatabaseMetadataRequestBody = {}
   ): Promise<Schemas.DatabaseMetadata> {
-    return operationsByTag.database.patchDatabaseMetadata({
+    return operationsByTag.database.updateDatabaseMetadata({
       pathParams: { workspace, dbName },
       body: options,
       ...this.extraProps

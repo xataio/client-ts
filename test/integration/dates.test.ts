@@ -31,21 +31,21 @@ afterEach(async (ctx) => {
 describe('dates', () => {
   test('add a record with a date', async () => {
     const birthDate = new Date();
-    const record = await xata.db.users.create({ birthDate });
+    const record = await xata.db.users.create({ full_name: 'foo', birthDate });
 
     expect(record.birthDate instanceof Date).toEqual(true);
     expect(record.birthDate?.toISOString()).toEqual(birthDate.toISOString());
   });
 
   test('add a record without a date (optional)', async () => {
-    const record = await xata.db.users.create({});
+    const record = await xata.db.users.create({ full_name: 'optional' });
 
     expect(record.birthDate).toBeUndefined();
   });
 
   test('filter date with operators', async () => {
     const birthDate = new Date();
-    await xata.db.users.create({ birthDate });
+    await xata.db.users.create({ full_name: 'bar', birthDate });
 
     const exact = await xata.db.users.filter('birthDate', is(birthDate)).getFirst();
     const notFound = await xata.db.users.filter('birthDate', gte(new Date())).getFirst();

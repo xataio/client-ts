@@ -7,8 +7,8 @@ import { BaseClient, CacheImpl, XataApiClient } from '../../packages/client/src'
 import { getHostUrl, HostProvider, isHostProviderAlias } from '../../packages/client/src/api/providers';
 import { TraceAttributes, TraceFunction } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
-import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry/dist';
-import { teamColumns, userColumns } from '../mock_data';
+import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
+import { schema } from '../mock_data';
 import { getTracer, setupTracing } from './tracing';
 
 // Get environment variables before reading them
@@ -122,7 +122,7 @@ export async function setUpTestEnvironment(
     apiKey,
     fetch,
     cache,
-    trace: trace
+    trace,
   };
 
   const api = new XataApiClient({ apiKey, fetch, host, trace: trace });
@@ -143,6 +143,11 @@ async function setupXata(prefix: string, trace: TraceFunction) {
 
   await api.tables.createTable(workspace, database, 'main', 'teams');
   await api.tables.createTable(workspace, database, 'main', 'users');
+
+  const teamColumns = schema.tables.find(({ name }) => name === 'teams')?.columns;
+  const userColumns = schema.tables.find(({ name }) => name === 'users')?.columns;
+  if (!teamColumns || !userColumns) throw new Error('Unable to find tables');
+
   await api.tables.setTableSchema(workspace, database, 'main', 'teams', { columns: teamColumns });
   await api.tables.setTableSchema(workspace, database, 'main', 'users', { columns: userColumns });
 
