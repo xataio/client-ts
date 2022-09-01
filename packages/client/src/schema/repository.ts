@@ -27,7 +27,7 @@ import { Query } from './query';
 import { EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
-import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
+import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction, TraceFunctionCallback } from './tracing';
 
 /**
  * Common interface for performing operations on a table.
@@ -427,14 +427,7 @@ export class RestRepository<Record extends XataRecord>
     this.#schemaTables = options.schemaTables;
 
     const trace = options.pluginOptions.trace ?? defaultTrace;
-    this.#trace = async <T>(
-      name: string,
-      fn: (options: {
-        setAttributes: (attrs: AttributeDictionary) => void;
-        propagateTrace: (headers: AttributeDictionary) => void;
-      }) => T,
-      options: AttributeDictionary = {}
-    ) => {
+    this.#trace = async <T>(name: string, fn: TraceFunctionCallback<T>, options: AttributeDictionary = {}) => {
       return trace<T>('sdk op: ' + name, fn, {
         ...options,
         [TraceAttributes.TABLE]: this.#table,

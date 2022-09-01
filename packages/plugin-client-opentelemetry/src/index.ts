@@ -1,28 +1,22 @@
 import { SpanStatusCode, propagation, Tracer, context as contextAPI } from '@opentelemetry/api';
+import { TraceFunctionCallback, AttributeDictionary } from '@xata.io/client';
 
 export const buildTraceFunction =
   (tracer: Tracer) =>
-  async <T>(
-    name: string,
-    fn: (options: {
-      setAttributes: (attrs: Record<string, any>) => void;
-      propagateTrace: (headers: Record<string, any>) => void;
-    }) => T,
-    attributes: Record<string, string | number | boolean | undefined> = {}
-  ): Promise<T> => {
+  async <T>(name: string, fn: TraceFunctionCallback<T>, attributes: AttributeDictionary = {}): Promise<T> => {
     return await tracer.startActiveSpan(name, { attributes }, contextAPI.active(), async (span) => {
       try {
-        const setAttributes = (attrs: Record<string, any>) => {
+        const setAttributes = (attrs: AttributeDictionary) => {
           for (const [key, value] of Object.entries(attrs)) {
-            span.setAttribute(key, value);
+            if (value) span.setAttribute(key, value);
           }
         };
 
-        const propagateTrace = (headers: Record<string, string>) => {
+        const setHeaders = (headers: AttributeDictionary) => {
           propagation.inject(contextAPI.active(), headers);
         };
 
-        return await fn({ setAttributes, propagateTrace });
+        return await fn({ setAttributes, setHeaders });
       } catch (error: any) {
         const message = error.message ?? error.toString();
 
