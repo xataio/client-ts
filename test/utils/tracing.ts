@@ -1,4 +1,4 @@
-import { trace as traceAPI, context as contextAPI, propagation, Tracer } from '@opentelemetry/api';
+import { trace, context, propagation, Tracer } from '@opentelemetry/api';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { detectResources, envDetector } from '@opentelemetry/resources';
@@ -24,7 +24,7 @@ export async function test(title: string, fn?: TestFunction, timeout?: number) {
     async (ctx) => {
       if (!fn) return;
       if (ctx.suiteSpanCtx && ctx.span) {
-        return await contextAPI.bind(traceAPI.setSpan(ctx.suiteSpanCtx, ctx.span), fn)(ctx);
+        return await context.bind(trace.setSpan(ctx.suiteSpanCtx, ctx.span), fn)(ctx);
       }
       return await fn(ctx);
     },

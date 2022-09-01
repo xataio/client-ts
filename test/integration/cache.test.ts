@@ -1,5 +1,3 @@
-import { trace as traceAPI, context as contextAPI, propagation, Tracer } from '@opentelemetry/api';
-
 import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
 import { BaseClientOptions, SimpleCache } from '../../packages/client/src';
 import { XataClient } from '../../packages/codegen/example/xata';
