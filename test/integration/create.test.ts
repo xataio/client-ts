@@ -189,6 +189,6 @@ describe('record creation', () => {
 
   test('create single with notNull column', async () => {
     // @ts-expect-error
-    await expect(xata.db.users.create({ full_name: 'John Doe 3' })).rejects.toThrowError();
+    await expect(xata.db.users.create({})).rejects.toThrowError();
   });
 });

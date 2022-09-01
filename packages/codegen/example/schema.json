@@ -29,8 +29,7 @@
         {
           "name": "email",
           "type": "email",
-          "unique": true,
-          "notNull": true
+          "unique": true
         },
         {
           "name": "full_name",

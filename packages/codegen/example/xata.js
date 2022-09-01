@@ -19,7 +19,7 @@ const tables = [
   {
     name: 'users',
     columns: [
-      { name: 'email', type: 'email', unique: true, notNull: true },
+      { name: 'email', type: 'email', unique: true },
       { name: 'full_name', type: 'string', notNull: true },
       { name: 'birthDate', type: 'datetime' },
       {
