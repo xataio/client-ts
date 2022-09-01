@@ -6,7 +6,6 @@ declare const tables: readonly [
       {
         readonly name: 'name';
         readonly type: 'string';
-        readonly unique: true;
         readonly description: 'Name of the team';
       },
       {
