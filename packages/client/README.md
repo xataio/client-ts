@@ -246,7 +246,7 @@ const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY });
 Once you have initialized the API client, the operations are organized following the same hiearchy as in the [official documentation](https://docs.xata.io). You have different namespaces for each entity (ie. `workspaces`, `databases`, `tables`, `branches`, `users`, `records`...).
 
 ```ts
-const { id: workspace } = await api.workspaces.createWorkspace({ name: 'example', slug: 'example' });
+const { id: workspace } = await api.workspaces.createWorkspace({ name: 'example' });
 const { databaseName } = await api.databases.createDatabase(workspace, 'database');
 
 await api.branches.createBranch(workspace, databaseName, 'branch');
