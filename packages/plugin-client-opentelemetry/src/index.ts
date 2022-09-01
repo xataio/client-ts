@@ -1,10 +1,10 @@
-import { SpanStatusCode, propagation, Tracer, context as contextAPI } from '@opentelemetry/api';
+import { SpanStatusCode, propagation, Tracer, context } from '@opentelemetry/api';
 import { TraceFunctionCallback, AttributeDictionary } from '@xata.io/client';
 
 export const buildTraceFunction =
   (tracer: Tracer) =>
   async <T>(name: string, fn: TraceFunctionCallback<T>, attributes: AttributeDictionary = {}): Promise<T> => {
-    return await tracer.startActiveSpan(name, { attributes }, contextAPI.active(), async (span) => {
+    return await tracer.startActiveSpan(name, { attributes }, context.active(), async (span) => {
       try {
         const setAttributes = (attrs: AttributeDictionary) => {
           for (const [key, value] of Object.entries(attrs)) {
@@ -13,7 +13,7 @@ export const buildTraceFunction =
         };
 
         const setHeaders = (headers: AttributeDictionary) => {
-          propagation.inject(contextAPI.active(), headers);
+          propagation.inject(context.active(), headers);
         };
 
         return await fn({ setAttributes, setHeaders });
