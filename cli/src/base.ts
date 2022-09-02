@@ -14,7 +14,7 @@ import which from 'which';
 import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
 import { credentialsPath, getProfileName, Profile, readCredentials } from './credentials.js';
-import { reportBugURL, slugify } from './utils.js';
+import { reportBugURL } from './utils.js';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -243,7 +243,7 @@ export abstract class BaseCommand extends Command {
         message: 'New workspace name'
       });
       if (!name) return this.error('No workspace name provided');
-      const workspace = await xata.workspaces.createWorkspace({ name, slug: slugify(name) });
+      const workspace = await xata.workspaces.createWorkspace({ name });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
@@ -504,7 +504,7 @@ export abstract class BaseCommand extends Command {
 
   async deploySchema(workspace: string, database: string, branch: string, schema: Schemas.Schema) {
     const xata = await this.getXataClient();
-    const plan = await xata.branches.getBranchMigrationPlan(workspace, database, branch, schema);
+    const plan = await xata.branchSchema.getBranchMigrationPlan(workspace, database, branch, schema);
 
     const { newTables, removedTables, renamedTables, tableMigrations } = plan.migration;
 
@@ -528,7 +528,7 @@ export abstract class BaseCommand extends Command {
       });
       if (!confirm) return this.exit(1);
 
-      await xata.branches.executeBranchMigrationPlan(workspace, database, branch, plan);
+      await xata.branchSchema.executeBranchMigrationPlan(workspace, database, branch, plan);
     }
   }
 

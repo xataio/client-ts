@@ -17,7 +17,7 @@ const tables = [
     name: 'users',
     columns: [
       { name: 'email', type: 'email' },
-      { name: 'full_name', type: 'string' },
+      { name: 'full_name', type: 'string', notNull: true },
       {
         name: 'address',
         type: 'object',
@@ -40,6 +40,8 @@ function simpleTeam(team: SchemaInference<typeof tables>['teams'] & XataRecord) 
 }
 
 function simpleUser(user: SchemaInference<typeof tables>['users'] & XataRecord) {
+  user.full_name.startsWith('a');
+
   user.address?.zipcode;
   user.address?.zipcode?.toString();
 

@@ -1,5 +1,29 @@
 # @xata.io/client
 
+## 0.17.1
+
+### Patch Changes
+
+- [#584](https://github.com/xataio/client-ts/pull/584) [`a305072`](https://github.com/xataio/client-ts/commit/a3050726517632b4975f2a2ed5f771dd247e51d5) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix issues with multiple filters
+
+* [#249](https://github.com/xataio/client-ts/pull/249) [`7812a41`](https://github.com/xataio/client-ts/commit/7812a414b7d99e9515c0ce48a61ad7a8b84d65d0) Thanks [@xata-bot](https://github.com/xata-bot)! - API: Add first endpoints for migration requests and schema compare
+
+- [#585](https://github.com/xataio/client-ts/pull/585) [`d4a8ced`](https://github.com/xataio/client-ts/commit/d4a8ced9c257058ed7f660e01ee5fd1da154c391) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix problem with some special characters not being URI encoded
+
+* [#574](https://github.com/xataio/client-ts/pull/574) [`cf85b13`](https://github.com/xataio/client-ts/commit/cf85b13e1ca69e79100fd02f58d79d556012395d) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not allow unknown tables on codegen output
+
+- [#576](https://github.com/xataio/client-ts/pull/576) [`2350739`](https://github.com/xataio/client-ts/commit/2350739d3f0a176b0f1fc77b0f4f597321349726) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow sending empty, undefined or conditional filters
+
+* [#581](https://github.com/xataio/client-ts/pull/581) [`a336e61`](https://github.com/xataio/client-ts/commit/a336e6161be04a652e6f0f0a4c2edac10d50c99e) Thanks [@SferaDev](https://github.com/SferaDev)! - Update error codes in tracing
+
+## 0.17.0
+
+### Minor Changes
+
+- [#563](https://github.com/xataio/client-ts/pull/563) [`26e91d1`](https://github.com/xataio/client-ts/commit/26e91d1d84df082dedd7159271fc7c27ec87fefe) Thanks [@SferaDev](https://github.com/SferaDev)! - Return nulls on operations that can fail
+
+* [#563](https://github.com/xataio/client-ts/pull/563) [`3332d43`](https://github.com/xataio/client-ts/commit/3332d43121367f61c8d87dfb7da2af65bd1c278f) Thanks [@SferaDev](https://github.com/SferaDev)! - Return object on delete operation
+
 ## 0.16.2
 
 ### Patch Changes

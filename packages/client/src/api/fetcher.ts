@@ -2,7 +2,11 @@ import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
-const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
+const resolveUrl = (
+  url: string,
+  queryParams: Record<string, any> = {},
+  pathParams: Partial<Record<string, string | number>> = {}
+) => {
   // Remove nulls and undefineds from query params
   const cleanQueryParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
     if (value === undefined || value === null) return acc;
@@ -11,7 +15,14 @@ const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathPara
 
   const query = new URLSearchParams(cleanQueryParams).toString();
   const queryString = query.length > 0 ? `?${query}` : '';
-  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
+
+  // We need to encode the path params because they can contain special characters
+  // Special case, `:` does not need to be encoded as we use it as a separator
+  const cleanPathParams = Object.entries(pathParams).reduce((acc, [key, value]) => {
+    return { ...acc, [key]: encodeURIComponent(String(value ?? '')).replace('%3A', ':') };
+  }, {} as Record<string, string>);
+
+  return url.replace(/\{\w*\}/g, (key) => cleanPathParams[key.slice(1, -1)]) + queryString;
 };
 
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
@@ -28,7 +39,7 @@ export type FetchImpl = (
   };
 }>;
 
-export type WorkspaceApiUrlBuilder = (path: string, pathParams: Record<string, string>) => string;
+export type WorkspaceApiUrlBuilder = (path: string, pathParams: Partial<Record<string, string | number>>) => string;
 
 export type FetcherExtraProps = {
   apiUrl: string;
@@ -58,12 +69,12 @@ function buildBaseUrl({
   path: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   apiUrl: string;
-  pathParams?: Record<string, string>;
+  pathParams?: Partial<Record<string, string | number>>;
 }): string {
-  if (!pathParams?.workspace) return `${apiUrl}${path}`;
+  if (pathParams?.workspace === undefined) return `${apiUrl}${path}`;
 
   const url = typeof workspacesApiUrl === 'string' ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
-  return url.replace('{workspaceId}', pathParams.workspace);
+  return url.replace('{workspaceId}', String(pathParams.workspace));
 }
 
 // The host header is needed by Node.js on localhost.
@@ -81,7 +92,7 @@ export async function fetch<
   TBody extends Record<string, unknown> | undefined | null,
   THeaders extends Record<string, unknown>,
   TQueryParams extends Record<string, unknown>,
-  TPathParams extends Record<string, string>
+  TPathParams extends Partial<Record<string, string | number>>
 >({
   url: path,
   method,
@@ -97,7 +108,7 @@ export async function fetch<
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   return trace(
     `${method.toUpperCase()} ${path}`,
-    async ({ setAttributes, onError }) => {
+    async ({ setAttributes }) => {
       const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
       const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
@@ -129,6 +140,7 @@ export async function fetch<
       const { host, protocol } = parseUrl(response.url);
       const requestId = response.headers?.get('x-request-id') ?? undefined;
       setAttributes({
+        [TraceAttributes.KIND]: 'http',
         [TraceAttributes.HTTP_REQUEST_ID]: requestId,
         [TraceAttributes.HTTP_STATUS_CODE]: response.status,
         [TraceAttributes.HTTP_HOST]: host,
@@ -144,10 +156,7 @@ export async function fetch<
 
         throw new FetcherError(response.status, jsonResponse as TError['payload'], requestId);
       } catch (error) {
-        const fetcherError = new FetcherError(response.status, error, requestId);
-        onError(fetcherError.message);
-
-        throw fetcherError;
+        throw new FetcherError(response.status, error, requestId);
       }
     },
     { [TraceAttributes.HTTP_METHOD]: method.toUpperCase(), [TraceAttributes.HTTP_ROUTE]: path }

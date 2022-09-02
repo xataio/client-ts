@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/codegen",
-  "version": "0.16.1",
+  "version": "0.17.0",
   "description": "Generates types based on a Xata.io database schema. Meant to be used with @xata.io/client",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -31,7 +31,7 @@
   "dependencies": {
     "case": "^1.6.3",
     "prettier": "^2.7.1",
-    "typescript": "^4.7.4",
+    "typescript": "^4.8.2",
     "zod": "^3.18.0"
   },
   "devDependencies": {
