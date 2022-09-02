@@ -78,36 +78,7 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
   delete(): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 }
 
-export type Link<Record extends XataRecord> = Omit<XataRecord, 'read' | 'update'> & {
-  /**
-   * Retrieves a refreshed copy of the current record from the database.
-   */
-  read<K extends SelectableColumn<Record>>(
-    columns?: K[]
-  ): Promise<Readonly<
-    SelectedPick<Record, typeof columns extends SelectableColumn<Record>[] ? typeof columns : ['*']>
-  > | null>;
-
-  /**
-   * Performs a partial update of the current record. On success a new object is
-   * returned and the current object is not mutated.
-   * @param partialUpdate The columns and their values that have to be updated.
-   * @returns A new record containing the latest values for all the columns of the current record.
-   */
-  update<K extends SelectableColumn<Record>>(
-    partialUpdate: Partial<EditableData<Record>>,
-    columns?: K[]
-  ): Promise<
-    Readonly<SelectedPick<Record, typeof columns extends SelectableColumn<Record>[] ? typeof columns : ['*']>>
-  >;
-
-  /**
-   * Performs a deletion of the current record in the database.
-   *
-   * @throws If the record was already deleted or if an error happened while performing the deletion.
-   */
-  delete(): Promise<void>;
-};
+export type Link<Record extends XataRecord> = XataRecord<Record>;
 
 export type XataRecordMetadata = {
   /**

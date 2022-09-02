@@ -321,7 +321,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If the record could not be found.
    */
   abstract updateOrThrow<K extends SelectableColumn<Record>>(
-    object: Partial<EditableData<Data>> & Identifiable,
+    object: Partial<EditableData<Record>> & Identifiable,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
@@ -332,7 +332,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If the record could not be found.
    */
   abstract updateOrThrow(
-    object: Partial<EditableData<Data>> & Identifiable
+    object: Partial<EditableData<Record>> & Identifiable
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
@@ -345,7 +345,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    */
   abstract updateOrThrow<K extends SelectableColumn<Record>>(
     id: string,
-    object: Partial<EditableData<Data>>,
+    object: Partial<EditableData<Record>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
@@ -358,7 +358,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    */
   abstract updateOrThrow(
     id: string,
-    object: Partial<EditableData<Data>>
+    object: Partial<EditableData<Record>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
@@ -369,7 +369,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If one or more records could not be found.
    */
   abstract updateOrThrow<K extends SelectableColumn<Record>>(
-    objects: Array<Partial<EditableData<Data>> & Identifiable>,
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
 
@@ -380,7 +380,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If one or more records could not be found.
    */
   abstract updateOrThrow(
-    objects: Array<Partial<EditableData<Data>> & Identifiable>
+    objects: Array<Partial<EditableData<Record>> & Identifiable>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
   /**
@@ -575,7 +575,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If one or more records could not be found.
    */
   abstract deleteOrThrow<K extends SelectableColumn<Record>>(
-    objects: Array<Partial<EditableData<Data>> & Identifiable>,
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
 
@@ -586,7 +586,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If one or more records could not be found.
    */
   abstract deleteOrThrow(
-    objects: Array<Partial<EditableData<Data>> & Identifiable>
+    objects: Array<Partial<EditableData<Record>> & Identifiable>
   ): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 
   /**
@@ -1003,28 +1003,31 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async updateOrThrow<K extends SelectableColumn<Record>>(
-    object: Partial<EditableData<Data>> & Identifiable,
+    object: Partial<EditableData<Record>> & Identifiable,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async updateOrThrow(
-    object: Partial<EditableData<Data>> & Identifiable
+    object: Partial<EditableData<Record>> & Identifiable
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
     id: string,
-    object: Partial<EditableData<Data>>,
+    object: Partial<EditableData<Record>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
-  async updateOrThrow(id: string, object: Partial<EditableData<Data>>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async updateOrThrow(
+    id: string,
+    object: Partial<EditableData<Record>>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
-    objects: Array<Partial<EditableData<Data>> & Identifiable>,
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
   async updateOrThrow(
-    objects: Array<Partial<EditableData<Data>> & Identifiable>
+    objects: Array<Partial<EditableData<Record>> & Identifiable>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
-    a: string | (Partial<EditableData<Data>> & Identifiable) | Array<Partial<EditableData<Data>> & Identifiable>,
-    b?: Partial<EditableData<Data>> | K[],
+    a: string | (Partial<EditableData<Record>> & Identifiable) | Array<Partial<EditableData<Record>> & Identifiable>,
+    b?: Partial<EditableData<Record>> | K[],
     c?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
@@ -1235,11 +1238,11 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async deleteOrThrow(id: string): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async deleteOrThrow<K extends SelectableColumn<Record>>(
-    objects: Array<Partial<EditableData<Data>> & Identifiable>,
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
   async deleteOrThrow(
-    objects: Array<Partial<EditableData<Data>> & Identifiable>
+    objects: Array<Partial<EditableData<Record>> & Identifiable>
   ): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
   async deleteOrThrow<K extends SelectableColumn<Record>>(
     objects: string[],
