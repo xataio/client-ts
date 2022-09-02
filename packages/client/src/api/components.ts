@@ -4053,6 +4053,53 @@ export const searchBranch = (variables: SearchBranchVariables) =>
     ...variables
   });
 
+export type SummarizeTablePathParams = {
+  /*
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /*
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+};
+
+export type SummarizeTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type SummarizeTableRequestBody = {
+  summaries?: Schemas.SummaryExpression;
+  columns?: Schemas.ColumnsProjection;
+};
+
+export type SummarizeTableVariables = {
+  body?: SummarizeTableRequestBody;
+  pathParams: SummarizeTablePathParams;
+} & FetcherExtraProps;
+
+/**
+ * Summarize table
+ */
+export const summarizeTable = (variables: SummarizeTableVariables) =>
+  fetch<Responses.SummarizeResponse, SummarizeTableError, SummarizeTableRequestBody, {}, {}, SummarizeTablePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/summarize',
+    method: 'post',
+    ...variables
+  });
+
 export const operationsByTag = {
   users: { getUser, updateUser, deleteUser, getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
   workspaces: {
@@ -4133,6 +4180,7 @@ export const operationsByTag = {
     bulkInsertTableRecords,
     queryTable,
     searchTable,
-    searchBranch
+    searchBranch,
+    summarizeTable
   }
 };

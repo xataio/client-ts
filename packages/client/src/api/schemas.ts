@@ -496,6 +496,12 @@ export type FilterExpression = {
   [key: string]: FilterColumn;
 };
 
+export type SummaryExpression = {
+  [key: string]: {
+    [key: string]: string;
+  };
+};
+
 export type HighlightExpression = {
   /*
    * Set to `false` to disable highlighting. By default it is `true`.
