@@ -35,7 +35,7 @@ describe('record creation', () => {
   });
 
   test('create multiple teams without ids', async () => {
-    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }], ['*', 'owner.*']);
 
     expect(teams).toHaveLength(2);
     expect(teams[0].id).toBeDefined();
@@ -44,6 +44,14 @@ describe('record creation', () => {
     expect(teams[1].id).toBeDefined();
     expect(teams[1].name).toBe('Team planes');
     expect(teams[1].read).toBeDefined();
+    expect(teams[0].id).not.toBe(teams[1].id);
+
+    expect(teams[0].labels).toBeNull();
+    expect(teams[1].labels).toBeNull();
+
+    expect(teams[0].owner).toBeNull();
+    expect(teams[0].owner?.full_name).toBeUndefined();
+    expect(teams[1].owner?.full_name).toBeUndefined();
   });
 
   test('create user with id', async () => {
@@ -143,11 +151,11 @@ describe('record creation', () => {
     expect(teams).toHaveLength(2);
     expect(teams[0].id).toBeDefined();
     // @ts-expect-error
-    expect(teams[0].name).toBeUndefined();
+    expect(teams[0].name).toBeNull();
     expect(teams[0].read).toBeDefined();
     expect(teams[1].id).toBeDefined();
     // @ts-expect-error
-    expect(teams[1].name).toBeUndefined();
+    expect(teams[1].name).toBeNull();
     expect(teams[1].read).toBeDefined();
 
     const team1 = await teams[0].read();
@@ -157,7 +165,7 @@ describe('record creation', () => {
     const team2 = await teams[1].read(['labels']);
     expect(team2?.id).toBe(teams[1].id);
     // @ts-expect-error
-    expect(team2?.name).toBeUndefined();
+    expect(team2?.name).toBeNull();
     expect(team2?.labels).toEqual(['foo']);
   });
 
@@ -167,7 +175,7 @@ describe('record creation', () => {
     expect(team).toBeDefined();
     expect(team.id).toBeDefined();
     // @ts-expect-error
-    expect(team.name).toBeUndefined();
+    expect(team.name).toBeNull();
     expect(team.read).toBeDefined();
 
     const team1 = await team.read();

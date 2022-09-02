@@ -76,7 +76,7 @@ describe('record read', () => {
   });
 
   test("read single and throws if team doesn't exist", async () => {
-    expect(client.db.teams.readOrThrow('does-not-exist')).rejects.toThrow();
+    expect(xata.db.teams.readOrThrow('does-not-exist')).rejects.toThrow();
   });
 
   test("read multiple teams with id list and ignores a team if doesn't exist", async () => {
@@ -91,8 +91,8 @@ describe('record read', () => {
   });
 
   test("read multiple teams with id list and throws if a team doesn't exist", async () => {
-    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
-    expect(client.db.teams.readOrThrow(teams.map((team) => team.id).concat(['does-not-exist']))).rejects.toThrow();
+    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+    expect(xata.db.teams.readOrThrow(teams.map((team) => team.id).concat(['does-not-exist']))).rejects.toThrow();
   });
 
   test('read multiple with empty array', async () => {
@@ -129,6 +129,6 @@ describe('record read', () => {
     const items = [null, undefined, false, 0, ''];
 
     // @ts-ignore
-    expect(client.db.teams.readOrThrow(items)).rejects.toThrow();
+    expect(xata.db.teams.readOrThrow(items)).rejects.toThrow();
   });
 });

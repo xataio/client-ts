@@ -103,4 +103,19 @@ describe('record deletion', () => {
     expect(team3[1]?.id).toBe(valid.id);
     expect(team3[1]?.name).toBe('Team ships');
   });
+
+  test('delete twice and throws', async () => {
+    const team = await xata.db.teams.create({ name: 'Team ships' });
+
+    const result = await xata.db.teams.delete(team);
+    expect(result?.id).toBe(team.id);
+
+    const result2 = await xata.db.teams.delete(team);
+    expect(result2).toBeNull();
+
+    const result3 = await result?.delete();
+    expect(result3).toBeNull();
+
+    await expect(xata.db.teams.deleteOrThrow(team)).rejects.toThrow();
+  });
 });

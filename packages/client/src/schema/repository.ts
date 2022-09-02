@@ -1258,8 +1258,27 @@ export class RestRepository<Record extends XataRecord>
     | Readonly<SelectedPick<Record, K[]>>
     | Array<Readonly<SelectedPick<Record, K[]>>>
   > {
-    return this.#trace('delete', async () => {
-      throw new Error('Not implemented');
+    return this.#trace('deleteOrThrow', async () => {
+      const result = await this.delete(a as any, b as any);
+
+      if (Array.isArray(result)) {
+        const missingIds = compact(
+          (a as Array<string | Identifiable>)
+            .filter((_item, index) => result[index] === null)
+            .map((item) => extractId(item))
+        );
+
+        if (missingIds.length > 0) {
+          throw new Error(`Could not find records with ids: ${missingIds.join(', ')}`);
+        }
+
+        return result as any;
+      } else if (result === null) {
+        const id = extractId(a) ?? 'unknown';
+        throw new Error(`Record with id ${id} not found`);
+      }
+
+      return result;
     });
   }
 
@@ -1421,11 +1440,17 @@ export const initObject = <T>(
           console.error(`Failed to parse link for field ${column.name}`);
         } else if (isObject(value)) {
           result[column.name] = initObject(db, schemaTables, linkTable, value);
+        } else {
+          result[column.name] = null;
         }
 
         break;
       }
       default:
+        result[column.name] = value ?? null;
+        if (column.notNull === true && value === null) {
+          console.error(`Parse error, column ${column.name} is non nullable and value resolves null`);
+        }
         break;
     }
   }
