@@ -13,6 +13,7 @@ import Codegen, { languages, unsupportedExtensionError } from '../codegen/index.
 import RandomData from '../random-data/index.js';
 import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
+import dotenv from 'dotenv';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 export default class Init extends BaseCommand {
@@ -216,10 +217,16 @@ export default class Init extends BaseCommand {
   }
 
   async writeEnvFile(workspace: string, database: string) {
-    const envExists = await this.access('.env');
-    const message = envExists ? 'update your .env file' : 'create an .env file in your project';
+    let envFile = '.env';
+    for (const file of ['.env.local', '.env']) {
+      if (await this.access(file)) {
+        envFile = file;
+        break;
+      }
+    }
+    const message = envFile ? `update your ${envFile} file` : 'create an .env file in your project';
 
-    this.info(`We are going to ${message}. This file will contain an API key and optionally your fallback branch.`);
+    this.info(`We are going to ${message} to store an API key and optionally your fallback branch.`);
 
     // TODO: generate a database-scoped API key
     let apiKey = (await this.getProfile())?.apiKey;
@@ -241,8 +248,13 @@ export default class Init extends BaseCommand {
 
     let content = '';
     try {
-      // TODO: check if the file already contains the key and warn if it does
-      content = await readFile('.env', 'utf-8');
+      content = await readFile(envFile, 'utf-8');
+      const env = dotenv.parse(content);
+      if (env.XATA_API_KEY) {
+        this.warn(
+          `Your ${envFile} file already contains an API key. The old API key will be ignored after updating the file.`
+        );
+      }
     } catch (err) {
       // ignore
     }
@@ -254,13 +266,13 @@ export default class Init extends BaseCommand {
       content += "# Xata branch that will be used if there's not a xata branch with the same name as your git branch\n";
       content += `XATA_FALLBACK_BRANCH=${fallbackBranch}\n`;
     }
-    await writeFile('.env', content);
+    await writeFile(envFile, content);
 
-    await this.ignoreEnvFile();
+    await this.ignoreEnvFile(envFile);
   }
 
-  async ignoreEnvFile() {
-    const ignored = await isIgnored('.env');
+  async ignoreEnvFile(envFile: string) {
+    const ignored = await isIgnored(envFile);
     if (ignored) return;
 
     const exists = await this.access('.gitignore');
@@ -269,13 +281,13 @@ export default class Init extends BaseCommand {
       type: 'confirm',
       name: 'confirm',
       message: exists
-        ? 'Do you want to add .env to your .gitignore?'
-        : 'Do you want to create a .gitignore file and ignore the .env file?',
+        ? `Do you want to add ${envFile} to your .gitignore?`
+        : `Do you want to create a .gitignore file and ignore the ${envFile} file?`,
       initial: true
     });
     if (confirm === undefined) return this.exit(1);
     if (!confirm) {
-      this.warn('You can add .env to your .gitignore later');
+      this.warn(`You can add ${envFile} to your .gitignore later`);
       return;
     }
 
@@ -286,10 +298,10 @@ export default class Init extends BaseCommand {
       // Ignore
     }
     if (content) content += '\n\n';
-    content += '.env\n';
+    content += `${envFile}\n`;
     await writeFile('.gitignore', content);
 
-    this.info(`Added .env to .gitignore`);
+    this.info(`Added ${envFile} to .gitignore`);
   }
 
   async readAndDeploySchema(workspace: string, database: string, branch: string, file: string) {
