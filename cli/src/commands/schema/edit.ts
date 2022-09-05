@@ -356,6 +356,9 @@ Beware that this can lead to ${chalk.bold(
         name?: string;
         type?: string;
         link?: string;
+        notNull?: string;
+        default?: string;
+        unique?: string;
         description?: string;
       };
     };
@@ -366,6 +369,9 @@ Beware that this can lead to ${chalk.bold(
         name: column?.name || '',
         type: column?.type || '',
         link: column?.link?.table || '',
+        notNull: column?.notNull ?? '',
+        default: '', // TODO
+        unique: column?.unique ?? '',
         description: column?.description || ''
       },
       fields: [
@@ -384,7 +390,7 @@ Beware that this can lead to ${chalk.bold(
           message: `The column type (${typesList})`,
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
             if (!types.includes(value)) {
-              return snippet.styles.danger(`Type needs to be one of ${typesList}`);
+              return `Type needs to be one of ${typesList}`;
             }
             return true;
           }
@@ -395,17 +401,39 @@ Beware that this can lead to ${chalk.bold(
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
             if (state.values.type === 'link') {
               if (!value) {
-                return snippet.styles.danger('The link field must be filled the columns of type `link`');
+                return 'The link field must be filled the columns of type `link`';
               }
             } else if (value) {
-              return snippet.styles.danger('The link field must not be filled unless the type of the column is `link`');
+              return 'The link field must not be filled unless the type of the column is `link`';
             }
             return true;
           }
         },
         {
+          name: 'unique',
+          message: 'Whether the column is unique',
+          validate: validateOptionalBoolean
+        },
+        {
+          name: 'notNull',
+          message: 'Whether the column is not nullable',
+          validate: validateOptionalBoolean
+        },
+        {
           name: 'description',
           message: 'An optional column description'
+        },
+        {
+          name: 'default',
+          message: 'Default value for not nullable columns',
+          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+            if (parseBoolean(state.values.notNull) === true && state.values.type) {
+              if (parseDefaultValue(state.values.type, value) == null) {
+                return `Invalid default value for column type ${state.values.type}`;
+              }
+            }
+            return true;
+          }
         }
       ],
       footer() {
@@ -415,7 +443,10 @@ Beware that this can lead to ${chalk.bold(
          Name: \${name}
          Type: \${type}
          Link: \${link}
-  Description: \${description}`
+  Description: \${description}
+       Unique: \${unique}
+     Not null: \${notNull}
+      Default: \${default}`
     });
 
     try {
@@ -423,7 +454,11 @@ Beware that this can lead to ${chalk.bold(
       const col: Column = {
         name: values.name,
         type: values.type,
-        link: values.link && values.type === 'link' ? { table: values.link } : undefined
+        link: values.link && values.type === 'link' ? { table: values.link } : undefined,
+        unique: values.unique !== '' ? values.unique : undefined,
+        notNull: values.notNull !== '' ? values.notNull : undefined
+        // TODO: add default once the backend supports it
+        // default: values.default !== '' ? parseDefaultValue(values.type, values.default) : undefined,
         // TODO: add description once the backend supports it
         // description: values.description
       };
@@ -622,4 +657,45 @@ Beware that this can lead to ${chalk.bold(
 
     this.success('Migration completed!');
   }
+}
+
+function parseBoolean(value?: string) {
+  if (!value) return undefined;
+  const val = value.toLowerCase();
+  if (['true', 't', '1', 'y', 'yes'].includes(val)) return true;
+  if (['false', 'f', '0', 'n', 'no'].includes(val)) return false;
+  return undefined;
+}
+
+function validateOptionalBoolean(value?: string) {
+  const bool = parseBoolean(value);
+  if (bool === undefined) {
+    return 'Please enter a boolean value (e.g. yes, no, true, false) or leave it empty';
+  }
+  return true;
+}
+
+function parseDefaultValue(type: string, val: string) {
+  const num = val.length > 0 ? +val : null;
+
+  if (type === 'int') {
+    return Number.isSafeInteger(num) && val !== '' ? num : null;
+  } else if (type === 'float') {
+    return Number.isFinite(num) && val !== '' ? num : null;
+  } else if (type === 'bool') {
+    return parseBoolean(val);
+  } else if (type === 'multiple') {
+    return val
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  } else if (type === 'email') {
+    return val || null;
+  } else if (type === 'link') {
+    return val ? String(val) : null;
+  } else if (type === 'datetime') {
+    const date = new Date(val);
+    return isNaN(date.getTime()) ? null : date;
+  }
+  return null;
 }
