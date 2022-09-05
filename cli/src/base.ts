@@ -42,8 +42,8 @@ export abstract class BaseCommand extends Command {
   projectConfig?: ProjectConfig;
   projectConfigLocation?: string;
 
-  dotenvLocation = '.env';
   apiKeyLocation?: APIKeyLocation;
+  apiKeyDotenvLocation = '';
 
   #xataClient?: XataApiClient;
 
@@ -100,10 +100,18 @@ export abstract class BaseCommand extends Command {
     };
   }
 
+  loadEnvFile(path: string) {
+    const env = dotenv.config({ path });
+    if (env.parsed?.['XATA_API_KEY']) {
+      this.apiKeyLocation = 'dotenv';
+      this.apiKeyDotenvLocation = path;
+    }
+  }
+
   async init() {
     if (process.env.XATA_API_KEY) this.apiKeyLocation = 'shell';
-    const env = dotenv.config({ path: this.dotenvLocation });
-    if (env.parsed?.['XATA_API_KEY']) this.apiKeyLocation = 'dotenv';
+    this.loadEnvFile('.env.local');
+    this.loadEnvFile('.env');
 
     const moduleName = 'xata';
     const search = cosmiconfigSync(moduleName, { searchPlaces: this.searchPlaces }).search();
@@ -132,9 +140,9 @@ export abstract class BaseCommand extends Command {
           ];
           break;
         case 'dotenv':
-          message = `the API key from the ${this.dotenvLocation} file`;
+          message = `the API key from the ${this.apiKeyDotenvLocation} file`;
           suggestions = [
-            `Edit the ${this.dotenvLocation} file and set the XATA_API_KEY environment variable correctly`,
+            `Edit the ${this.apiKeyDotenvLocation} file and set the XATA_API_KEY environment variable correctly`,
             'You can generate or regenerate API keys at https://app.xata.io/settings'
           ];
           break;
