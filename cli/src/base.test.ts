@@ -31,6 +31,8 @@ describe('init', () => {
 
     expect(command.apiKeyLocation).toBeUndefined();
     expect(command.apiKeyDotenvLocation).toEqual('');
+
+    expect(process.env.XATA_API_KEY).toBeUndefined();
   });
   test('works if the files do not exist', async () => {
     const config = await Config.load();
@@ -46,6 +48,8 @@ describe('init', () => {
 
     expect(command.apiKeyLocation).toBeUndefined();
     expect(command.apiKeyDotenvLocation).toEqual('');
+
+    expect(process.env.XATA_API_KEY).toBeUndefined();
   });
 
   test('loads env variables from process.env if available', async () => {
@@ -65,6 +69,8 @@ describe('init', () => {
 
     expect(command.apiKeyLocation).toEqual('shell');
     expect(command.apiKeyDotenvLocation).toEqual('');
+
+    expect(process.env.XATA_API_KEY).toEqual('key');
   });
 
   test('loads env variables from env files', async () => {
@@ -83,6 +89,8 @@ describe('init', () => {
 
     expect(command.apiKeyLocation).toEqual('dotenv');
     expect(command.apiKeyDotenvLocation).toEqual('.env.local');
+
+    expect(process.env.XATA_API_KEY).toEqual('key');
   });
 
   test('does not override env variables from previous env files', async () => {
@@ -103,6 +111,8 @@ describe('init', () => {
 
     expect(command.apiKeyLocation).toEqual('dotenv');
     expect(command.apiKeyDotenvLocation).toEqual('.env.local');
+
+    expect(process.env.XATA_API_KEY).toEqual('key');
   });
 
   test('sets env variables if previous env files did not contain them', async () => {
@@ -125,5 +135,7 @@ describe('init', () => {
 
     expect(command.apiKeyLocation).toEqual('dotenv');
     expect(command.apiKeyDotenvLocation).toEqual('.env');
+
+    expect(process.env.XATA_API_KEY).toEqual('key');
   });
 });
