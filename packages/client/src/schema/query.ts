@@ -345,7 +345,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
       results.push(...page.records);
     }
 
-    if (page.hasNextPage()) {
+    if (page.hasNextPage() && options.pagination?.size === undefined) {
       console.trace('Calling getMany does not return all results. Paginate to get all results or call getAll.');
     }
 
