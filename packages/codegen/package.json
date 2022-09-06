@@ -32,7 +32,7 @@
     "case": "^1.6.3",
     "prettier": "^2.7.1",
     "typescript": "^4.8.2",
-    "zod": "^3.18.0"
+    "zod": "^3.19.0"
   },
   "devDependencies": {
     "@types/pluralize": "^0.0.29",
