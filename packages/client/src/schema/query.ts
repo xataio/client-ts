@@ -338,12 +338,10 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     const batchSize = size <= PAGINATION_MAX_SIZE ? size : PAGINATION_MAX_SIZE;
 
     let page = await this.getPaginated({ ...rest, pagination: { size: batchSize, offset } });
-    let more = page.hasNextPage();
     const results = [...page.records];
 
-    while (more && results.length < size) {
+    while (page.hasNextPage() && results.length < size) {
       page = await page.nextPage();
-      more = page.hasNextPage();
       results.push(...page.records);
     }
 
