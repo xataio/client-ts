@@ -1,18 +1,31 @@
 export type AttributeDictionary = Record<string, string | number | boolean | undefined>;
 
+export type SetAttributesFn = (
+  attrs: AttributeDictionary,
+  extra: { headers: Record<string, string | undefined> }
+) => void;
+
+export type TraceFunctionCallback<T> = (options: {
+  setAttributes: (attrs: AttributeDictionary) => void;
+  setHeaders: (headers: AttributeDictionary) => void;
+}) => T;
+
 export type TraceFunction = <T>(
   name: string,
-  fn: (options: { setAttributes: (attrs: AttributeDictionary) => void }) => T,
-  options?: AttributeDictionary
+  fn: TraceFunctionCallback<T>,
+  attributes?: AttributeDictionary
 ) => Promise<T>;
 
 export const defaultTrace: TraceFunction = async <T>(
   _name: string,
-  fn: (options: { setAttributes: (attrs: Record<string, string | number | boolean | undefined>) => void }) => T,
-  _options?: Record<string, any>
+  fn: TraceFunctionCallback<T>,
+  _attributes?: Record<string, any>
 ): Promise<T> => {
   return await fn({
     setAttributes: () => {
+      return;
+    },
+    setHeaders: () => {
       return;
     }
   });

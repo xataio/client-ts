@@ -1,20 +1,14 @@
-import { Span } from '@opentelemetry/api';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
-import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import { detectResources, envDetector } from '@opentelemetry/resources';
-import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import { Context, context, Span, trace as traceAPI } from '@opentelemetry/api';
 import realFetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { File, Suite, TestContext, vi } from 'vitest';
 import { BaseClient, CacheImpl, XataApiClient } from '../../packages/client/src';
 import { getHostUrl, HostProvider, isHostProviderAlias } from '../../packages/client/src/api/providers';
-import { TraceAttributes } from '../../packages/client/src/schema/tracing';
+import { TraceAttributes, TraceFunction } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
-import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
 import { schema } from '../mock_data';
+import { setupTracing } from './tracing';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -57,18 +51,63 @@ export async function setUpTestEnvironment(
   prefix: string,
   { cache }: EnvironmentOptions = {}
 ): Promise<TestEnvironmentResult> {
-  const { trace, tracer } = await setupTracing();
-
-  // Timestamp to avoid collisions
-  const id = Date.now().toString(36);
-
-  const api = new XataApiClient({ apiKey, fetch, host });
-  const { databaseName: database } = await api.databases.createDatabase(
-    workspace,
-    `sdk-integration-test-${prefix}-${id}`
-  );
+  const { traceFn, tracer } = await setupTracing();
 
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace);
+
+  // All setup actions belong to the setup span
+  const suiteSpan = tracer.startSpan(
+    `[Test Suite] ${prefix}`,
+    { attributes: { [TraceAttributes.KIND]: 'test-suite' } },
+    context.active()
+  );
+
+  const suiteSpanCtx = traceAPI.setSpan(context.active(), suiteSpan);
+
+  const database = await tracer.startActiveSpan(
+    `[Test setup] ${prefix}`,
+    { attributes: { [TraceAttributes.KIND]: 'test-suite-setup' } },
+    suiteSpanCtx,
+    async (span) => {
+      const result = await buildDatabase(prefix, traceFn);
+      span.end();
+
+      return result;
+    }
+  );
+
+  if (database === '') throw new Error('Database not created');
+
+  const hooks = {
+    beforeAll: async () => {
+      return;
+    },
+    afterAll: async () => {
+      await tracer.startActiveSpan(
+        `[Test teardown] ${prefix}`,
+        { attributes: { [TraceAttributes.KIND]: 'test-suite-teardown' } },
+        suiteSpanCtx,
+        async (span) => {
+          await api.databases.deleteDatabase(workspace, database);
+          span.end();
+        }
+      );
+
+      suiteSpan.end();
+    },
+    beforeEach: async (ctx: TestContext) => {
+      const suiteSpanCtx = traceAPI.setSpan(context.active(), suiteSpan);
+      ctx.span = tracer.startSpan(
+        `[Test case] ${ctx.meta.name}`,
+        { attributes: { [TraceAttributes.KIND]: 'test-case' } },
+        suiteSpanCtx
+      );
+      ctx.suiteSpanCtx = suiteSpanCtx;
+    },
+    afterEach: async (ctx: TestContext) => {
+      ctx.span?.end();
+    }
+  };
 
   const clientOptions = {
     databaseURL: `${workspaceUrl}/db/${database}`,
@@ -76,8 +115,24 @@ export async function setUpTestEnvironment(
     apiKey,
     fetch,
     cache,
-    trace
+    trace: traceFn
   };
+
+  const api = new XataApiClient({ apiKey, fetch, host, trace: traceFn });
+  const client = new XataClient(clientOptions);
+  const baseClient = new BaseClient(clientOptions);
+
+  return { api, client, baseClient, clientOptions, database: database, workspace, hooks };
+}
+
+async function buildDatabase(prefix: string, trace: TraceFunction) {
+  const api = new XataApiClient({ apiKey, fetch, host, trace });
+  // Timestamp to avoid collisions
+  const id = Date.now().toString(36);
+  const { databaseName: database } = await api.databases.createDatabase(
+    workspace,
+    `sdk-integration-test-${prefix}-${id}`
+  );
 
   await api.tables.createTable(workspace, database, 'main', 'teams');
   await api.tables.createTable(workspace, database, 'main', 'users');
@@ -89,51 +144,7 @@ export async function setUpTestEnvironment(
   await api.tables.setTableSchema(workspace, database, 'main', 'teams', { columns: teamColumns });
   await api.tables.setTableSchema(workspace, database, 'main', 'users', { columns: userColumns });
 
-  let span: Span | undefined;
-
-  const hooks = {
-    beforeAll: async () => {
-      span = tracer?.startSpan(prefix, { attributes: { [TraceAttributes.KIND]: 'test-suite' } });
-    },
-    afterAll: async () => {
-      await api.databases.deleteDatabase(workspace, database);
-      span?.end();
-    },
-    beforeEach: async (ctx: TestContext) => {
-      ctx.span = tracer?.startSpan(ctx.meta.name, { attributes: { [TraceAttributes.KIND]: 'test-case' } });
-    },
-    afterEach: async (ctx: TestContext) => {
-      ctx.span?.end();
-    }
-  };
-
-  const client = new XataClient(clientOptions);
-  const baseClient = new BaseClient(clientOptions);
-
-  return { api, client, baseClient, clientOptions, database, workspace, hooks };
-}
-
-async function setupTracing() {
-  const url = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
-  if (!url) return {};
-
-  const resource = await detectResources({ detectors: [envDetector] });
-  resource.attributes[SemanticResourceAttributes.SERVICE_NAME] = 'sdk_tests';
-
-  const tracerProvider = new NodeTracerProvider({ resource });
-  registerInstrumentations({ tracerProvider });
-
-  const exporter = new OTLPTraceExporter({ url });
-  tracerProvider.addSpanProcessor(new SimpleSpanProcessor(exporter));
-
-  tracerProvider.register();
-
-  const tracer = tracerProvider?.getTracer('Xata SDK');
-  if (!tracer) throw new Error('Unable to build tracer');
-
-  const trace = buildTraceFunction(tracer);
-
-  return { trace, tracer };
+  return database;
 }
 
 function getProvider(provider = 'production'): HostProvider {
@@ -153,5 +164,6 @@ function getProvider(provider = 'production'): HostProvider {
 declare module 'vitest' {
   export interface TestContext {
     span?: Span;
+    suiteSpanCtx?: Context;
   }
 }
