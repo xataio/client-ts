@@ -10,6 +10,7 @@ import {
   Page,
   Paginable,
   PaginationQueryMeta,
+  PAGINATION_DEFAULT_SIZE,
   PAGINATION_MAX_SIZE,
   RecordArray
 } from './pagination';
@@ -332,14 +333,28 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<RecordArray<Result>>;
 
   async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<RecordArray<Result>> {
-    const page = await this.getPaginated(options);
+    const { pagination = {}, ...rest } = options;
+    const { size = PAGINATION_DEFAULT_SIZE, offset } = pagination;
+    const batchSize = size <= PAGINATION_MAX_SIZE ? size : PAGINATION_MAX_SIZE;
 
-    if (page.hasNextPage() && options.pagination?.size === undefined) {
+    let page = await this.getPaginated({ ...rest, pagination: { size: batchSize, offset } });
+    let more = page.hasNextPage();
+    const results = [...page.records];
+
+    while (more && results.length < size) {
+      page = await page.nextPage();
+      more = page.hasNextPage();
+      results.push(...page.records);
+    }
+
+    if (page.hasNextPage()) {
       console.trace('Calling getMany does not return all results. Paginate to get all results or call getAll.');
     }
 
+    const array = new RecordArray(page, results.slice(0, size));
+
     // Method overloading does not provide type inference for the return type.
-    return page.records as unknown as RecordArray<Result>;
+    return array as unknown as RecordArray<Result>;
   }
 
   /**

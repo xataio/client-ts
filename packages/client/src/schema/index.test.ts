@@ -298,7 +298,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"columns\\":[\\"*\\"]}",
+            "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
@@ -323,7 +323,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
+            "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
