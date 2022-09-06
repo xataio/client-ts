@@ -1,22 +1,16 @@
-import { trace, context, propagation, Tracer } from '@opentelemetry/api';
+import { context, propagation, trace, Tracer } from '@opentelemetry/api';
+import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { detectResources, envDetector } from '@opentelemetry/resources';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import { test as baseTest, describe as baseDescribe, TestFunction, SuiteFactory } from 'vitest';
-import { W3CTraceContextPropagator } from '@opentelemetry/core';
+import { test as baseTest, TestFunction } from 'vitest';
+import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
 
 const TRACER_NAME = 'Xata SDK';
-let tracingConfigured = false;
 let globalTracer: Tracer | undefined;
-
-export async function describe(name: string, factory?: SuiteFactory) {
-  await setupTracing();
-
-  return baseDescribe(name, factory);
-}
 
 export async function test(title: string, fn?: TestFunction, timeout?: number) {
   return baseTest(
@@ -33,14 +27,15 @@ export async function test(title: string, fn?: TestFunction, timeout?: number) {
 }
 
 export async function setupTracing() {
-  if (tracingConfigured) {
-    return;
+  if (globalTracer !== undefined) {
+    return {
+      tracer: globalTracer,
+      traceFn: buildTraceFunction(globalTracer)
+    };
   }
 
   const url = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
-  if (!url) return {};
 
-  /* Set Global Propagator */
   propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
   const resource = await detectResources({ detectors: [envDetector] });
@@ -49,17 +44,15 @@ export async function setupTracing() {
   const tracerProvider = new NodeTracerProvider({ resource });
   registerInstrumentations({ tracerProvider });
 
-  const exporter = new OTLPTraceExporter({ url });
-  tracerProvider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+  if (url !== undefined) {
+    const exporter = new OTLPTraceExporter({ url });
+    tracerProvider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+  }
 
   tracerProvider.register();
 
-  globalTracer = tracerProvider?.getTracer(TRACER_NAME);
+  globalTracer = tracerProvider.getTracer(TRACER_NAME);
   if (!globalTracer) throw new Error('Unable to build tracer');
 
-  tracingConfigured = true;
-}
-
-export function getTracer(): Tracer | undefined {
-  return globalTracer;
+  return { tracer: globalTracer, traceFn: buildTraceFunction(globalTracer) };
 }

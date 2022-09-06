@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, expect, describe } from 'vitest';
 import {
   BaseClient,
   contains,
@@ -19,7 +19,7 @@ import {
 import { UsersRecord, XataClient } from '../../packages/codegen/example/xata';
 import { animalUsers, fruitUsers, mockUsers, ownerAnimals, ownerFruits } from '../mock_data';
 import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
-import { describe, test } from '../utils/tracing';
+import { test } from '../utils/tracing';
 
 let xata: XataClient;
 let api: XataApiClient;

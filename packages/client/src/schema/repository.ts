@@ -427,7 +427,7 @@ export class RestRepository<Record extends XataRecord>
     this.#schemaTables = options.schemaTables;
 
     const trace = options.pluginOptions.trace ?? defaultTrace;
-    this.#trace = async <T>(name: string, fn: TraceFunctionCallback<T>, options: AttributeDictionary = {}) => {
+    this.#trace = <T>(name: string, fn: TraceFunctionCallback<T>, options: AttributeDictionary = {}) => {
       return trace<T>(`[SDK] ${name}`, fn, {
         ...options,
         [TraceAttributes.TABLE]: this.#table,

@@ -1,8 +1,8 @@
-import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, expect, describe } from 'vitest';
 import { BaseClientOptions, SimpleCache } from '../../packages/client/src';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
-import { describe, test } from '../utils/tracing';
+import { test } from '../utils/tracing';
 
 const cache = new SimpleCache();
 
