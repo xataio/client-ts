@@ -104,9 +104,10 @@ export abstract class BaseCommand extends Command {
   }
 
   loadEnvFile(path: string) {
+    const apiKey = process.env.XATA_API_KEY;
     let env = dotenv.config({ path });
     env = dotenvExpand.expand(env);
-    if (!this.apiKeyDotenvLocation && env.parsed?.['XATA_API_KEY']) {
+    if (!apiKey && env.parsed?.['XATA_API_KEY']) {
       this.apiKeyLocation = 'dotenv';
       this.apiKeyDotenvLocation = path;
     }
