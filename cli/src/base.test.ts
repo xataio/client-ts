@@ -138,4 +138,25 @@ describe('init', () => {
 
     expect(process.env.XATA_API_KEY).toEqual('key');
   });
+
+  test('performs variable expansions', async () => {
+    const config = await Config.load();
+    const command = new FakeCommand([], config as Config);
+    const dotenvConfig = vi.spyOn(dotenv, 'config').mockImplementation(() => ({
+      parsed: {
+        FOO: 'key',
+        XATA_API_KEY: '${FOO}'
+      }
+    }));
+
+    await command.init();
+
+    expect(dotenvConfig).toHaveBeenNthCalledWith(1, { path: '.env.local' });
+    expect(dotenvConfig).toHaveBeenNthCalledWith(2, { path: '.env' });
+
+    expect(command.apiKeyLocation).toEqual('dotenv');
+    expect(command.apiKeyDotenvLocation).toEqual('.env.local');
+
+    expect(process.env.XATA_API_KEY).toEqual('key');
+  });
 });
