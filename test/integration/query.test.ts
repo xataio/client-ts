@@ -411,6 +411,12 @@ describe('integration tests', () => {
     expect(users[0].id).toBeDefined();
   });
 
+  test('get all users with limit 5 in batches of 4', async () => {
+    const users = await xata.db.users.getAll({ limit: 5, batchSize: 4 });
+    expect(users).toHaveLength(5);
+    expect(users[0].id).toBeDefined();
+  });
+
   test('get first', async () => {
     const user = await xata.db.users.getFirst();
 
