@@ -810,10 +810,6 @@ export type CreateDatabaseRequestBody = {
   /*
    * @minLength 1
    */
-  displayName?: string;
-  /*
-   * @minLength 1
-   */
   branchName?: string;
   ui?: {
     color?: string;
