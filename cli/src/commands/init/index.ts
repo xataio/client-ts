@@ -5,7 +5,7 @@ import { access, readFile, writeFile } from 'fs/promises';
 import path, { extname } from 'path';
 import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
-import { BaseCommand } from '../../base.js';
+import { BaseCommand, ENV_FILES } from '../../base.js';
 import { isIgnored } from '../../git.js';
 import { xataDatabaseSchema } from '../../schema.js';
 import Browse from '../browse/index.js';
@@ -217,8 +217,8 @@ export default class Init extends BaseCommand {
   }
 
   async writeEnvFile(workspace: string, database: string) {
-    let envFile = '.env';
-    for (const file of ['.env.local', '.env']) {
+    let envFile = ENV_FILES[ENV_FILES.length - 1];
+    for (const file of ENV_FILES) {
       if (await this.access(file)) {
         envFile = file;
         break;

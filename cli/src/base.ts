@@ -33,6 +33,8 @@ export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
 const moduleName = 'xata';
 const commonFlagsHelpGroup = 'Common';
 
+export const ENV_FILES = ['.env.local', '.env'];
+
 export abstract class BaseCommand extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
   // By default this will use the system locale and timezone.
@@ -110,8 +112,9 @@ export abstract class BaseCommand extends Command {
 
   async init() {
     if (process.env.XATA_API_KEY) this.apiKeyLocation = 'shell';
-    this.loadEnvFile('.env.local');
-    this.loadEnvFile('.env');
+    for (const envFile of ENV_FILES) {
+      this.loadEnvFile(envFile);
+    }
 
     const moduleName = 'xata';
     const search = cosmiconfigSync(moduleName, { searchPlaces: this.searchPlaces }).search();
