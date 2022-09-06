@@ -15,6 +15,7 @@ import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
 import { credentialsPath, getProfileName, Profile, readCredentials } from './credentials.js';
 import { reportBugURL } from './utils.js';
+import dotenvExpand from 'dotenv-expand';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -103,8 +104,9 @@ export abstract class BaseCommand extends Command {
   }
 
   loadEnvFile(path: string) {
-    const env = dotenv.config({ path });
-    if (env.parsed?.['XATA_API_KEY']) {
+    let env = dotenv.config({ path });
+    env = dotenvExpand.expand(env);
+    if (!this.apiKeyDotenvLocation && env.parsed?.['XATA_API_KEY']) {
       this.apiKeyLocation = 'dotenv';
       this.apiKeyDotenvLocation = path;
     }
