@@ -355,9 +355,12 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getAll<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'> & { batchSize?: number }>(
-    options: Options
-  ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
+  getAll<
+    Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'> & {
+      batchSize?: number;
+      limit?: number;
+    }
+  >(options: Options): Promise<SelectedPick<Record, typeof options['columns']>[]>;
 
   /**
    * Performs the query in the database and returns all the results.
@@ -365,16 +368,29 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getAll(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'> & { batchSize?: number }): Promise<Result[]>;
+  getAll(
+    options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'> & {
+      batchSize?: number;
+      limit?: number;
+    }
+  ): Promise<Result[]>;
 
   async getAll<Result extends XataRecord>(
-    options: QueryOptions<Record> & { batchSize?: number } = {}
+    options: QueryOptions<Record> & { batchSize?: number; limit?: number } = {}
   ): Promise<Result[]> {
-    const { batchSize = PAGINATION_MAX_SIZE, ...rest } = options;
+    const { batchSize = PAGINATION_MAX_SIZE, limit, ...rest } = options;
     const results = [];
 
     for await (const page of this.getIterator({ ...rest, batchSize })) {
       results.push(...page);
+
+      if (limit !== undefined && results.length >= limit) {
+        break;
+      }
+    }
+
+    if (limit !== undefined) {
+      return results.slice(0, limit) as unknown as Result[];
     }
 
     // Method overloading does not provide type inference for the return type.
