@@ -31,34 +31,52 @@ describe('record read', () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
     const copy = await xata.db.teams.read(team.id);
+    const definedCopy = await xata.db.teams.readOrThrow(team.id);
 
     expect(copy).toBeDefined();
     expect(copy?.id).toBe(team.id);
+
+    expect(definedCopy).toBeDefined();
+    expect(definedCopy.id).toBe(team.id);
   });
 
   test('read multiple teams ', async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const copies = await xata.db.teams.read(teams);
+    const definedCopies = await xata.db.teams.readOrThrow(teams);
 
     expect(copies).toHaveLength(2);
     expect(copies[0]?.id).toBe(teams[0].id);
     expect(copies[1]?.id).toBe(teams[1].id);
+
+    expect(definedCopies).toHaveLength(2);
+    expect(definedCopies[0].id).toBe(teams[0].id);
+    expect(definedCopies[1].id).toBe(teams[1].id);
   });
 
   test('read multiple teams with id list', async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const copies = await xata.db.teams.read(teams.map((team) => team.id));
+    const definedCopies = await xata.db.teams.readOrThrow(teams.map((team) => team.id));
 
     expect(copies).toHaveLength(2);
     expect(copies[0]?.id).toBe(teams[0].id);
     expect(copies[1]?.id).toBe(teams[1].id);
+
+    expect(definedCopies).toHaveLength(2);
+    expect(definedCopies[0].id).toBe(teams[0].id);
+    expect(definedCopies[1].id).toBe(teams[1].id);
   });
 
   test("read single and return null if team doesn't exist", async () => {
     const copy = await xata.db.teams.read('does-not-exist');
     expect(copy).toBeNull();
+  });
+
+  test("read single and throws if team doesn't exist", async () => {
+    expect(xata.db.teams.readOrThrow('does-not-exist')).rejects.toThrow();
   });
 
   test("read multiple teams with id list and ignores a team if doesn't exist", async () => {
@@ -70,6 +88,11 @@ describe('record read', () => {
     expect(copies[0]?.id).toBe(teams[0].id);
     expect(copies[1]?.id).toBe(teams[1].id);
     expect(copies[2]).toBeNull();
+  });
+
+  test("read multiple teams with id list and throws if a team doesn't exist", async () => {
+    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+    expect(xata.db.teams.readOrThrow(teams.map((team) => team.id).concat(['does-not-exist']))).rejects.toThrow();
   });
 
   test('read multiple with empty array', async () => {
@@ -100,5 +123,12 @@ describe('record read', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(TypeError);
     }
+  });
+
+  test('read multiple with falsy values, throws', async () => {
+    const items = [null, undefined, false, 0, ''];
+
+    // @ts-ignore
+    expect(xata.db.teams.readOrThrow(items)).rejects.toThrow();
   });
 });

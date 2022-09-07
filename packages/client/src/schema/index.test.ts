@@ -250,8 +250,10 @@ describe('request', () => {
       } as Response;
     });
 
-    const result = await users.getFirst();
-    expect(result).toEqual(json);
+    const result: any = await users.getFirst();
+    expect(result?.a).toEqual(json.a);
+    expect(result?.email).toBeNull();
+    expect(result?.read).toBeDefined();
   });
 });
 
