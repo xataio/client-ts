@@ -101,10 +101,6 @@ export type DatabaseMetadata = {
    */
   name: string;
   /*
-   * The human-readable name of a database
-   */
-  displayName: string;
-  /*
    * The time this database was created
    */
   createdAt: DateTime;
@@ -132,7 +128,6 @@ export type ListDatabasesResponse = {
 
 export type ListBranchesResponse = {
   databaseName: string;
-  displayName: string;
   branches: Branch[];
 };
 
