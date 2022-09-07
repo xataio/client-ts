@@ -43,6 +43,7 @@
     "cosmiconfig": "^7.0.1",
     "deepmerge": "^4.2.2",
     "dotenv": "^16.0.2",
+    "dotenv-expand": "^9.0.0",
     "edge-runtime": "^1.1.0-beta.31",
     "enquirer": "^2.3.6",
     "env-editor": "^1.1.0",
