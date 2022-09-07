@@ -548,6 +548,16 @@ describe('integration tests', () => {
     expect(user.email).toBe(apiUser.email);
   });
 
+  test('returns many records with multiple requests', async () => {
+    const newUsers = Array.from({ length: PAGINATION_MAX_SIZE + 1 }).map((_, i) => ({ full_name: `user-${i}` }));
+    await xata.db.users.create(newUsers);
+
+    const records = await xata.db.users.getMany({ pagination: { size: PAGINATION_MAX_SIZE + 1 } });
+
+    expect(records).toHaveLength(PAGINATION_MAX_SIZE + 1);
+    expect(records.hasNextPage).toBeDefined();
+  });
+
   test('Pagination size limit', async () => {
     expect(xata.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
       'message',
