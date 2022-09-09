@@ -708,6 +708,20 @@ class RecordsApi {
       ...this.extraProps
     });
   }
+
+  public summarizeTable(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    tableName: Schemas.TableName,
+    query: Types.SummarizeTableRequestBody
+  ): Promise<Responses.SummarizeResponse> {
+    return operationsByTag.records.summarizeTable({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
+      body: query,
+      ...this.extraProps
+    });
+  }
 }
 
 class MigrationRequestsApi {
