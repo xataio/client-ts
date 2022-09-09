@@ -1823,6 +1823,17 @@ export type GetBranchMigrationHistoryPathParams = {
   workspace: string;
 };
 
+export type GetBranchMigrationHistoryQueryParams = {
+  /*
+   * Limit the number of migrations returned
+   */
+  limit?: number;
+  /*
+   * Start from a specific migration
+   */
+  startFrom?: string;
+};
+
 export type GetBranchMigrationHistoryError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -1843,23 +1854,18 @@ export type GetBranchMigrationHistoryResponse = {
   migrations?: Schemas.BranchMigration[];
 };
 
-export type GetBranchMigrationHistoryRequestBody = {
-  limit?: number;
-  startFrom?: string;
-};
-
 export type GetBranchMigrationHistoryVariables = {
-  body?: GetBranchMigrationHistoryRequestBody;
   pathParams: GetBranchMigrationHistoryPathParams;
+  queryParams?: GetBranchMigrationHistoryQueryParams;
 } & FetcherExtraProps;
 
 export const getBranchMigrationHistory = (variables: GetBranchMigrationHistoryVariables) =>
   fetch<
     GetBranchMigrationHistoryResponse,
     GetBranchMigrationHistoryError,
-    GetBranchMigrationHistoryRequestBody,
+    undefined,
     {},
-    {},
+    GetBranchMigrationHistoryQueryParams,
     GetBranchMigrationHistoryPathParams
   >({ url: '/db/{dbBranchName}/migrations', method: 'get', ...variables });
 
