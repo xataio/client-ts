@@ -65,6 +65,10 @@ export type QueryResponse = {
   meta: Schemas.RecordsMetadata;
 };
 
+export type SummarizeResponse = {
+  summary: Record<string, any>[];
+};
+
 export type SearchResponse = {
   records: Schemas.XataRecord[];
 };

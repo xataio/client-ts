@@ -491,6 +491,24 @@ export type FilterExpression = {
   [key: string]: FilterColumn;
 };
 
+/**
+ * The full summary expression; the entire expression is a map of names to requests.
+ *
+ * @x-go-type xbquery.SummaryList
+ */
+export type SummaryExpressionList = {
+  [key: string]: SummaryExpression;
+};
+
+/**
+ * A single summary expression. The key represents an aggregation function; the value a column to aggregate.
+ *
+ * You may only call one aggregation per key.
+ *
+ * @x-go-type xbquery.Summary
+ */
+export type SummaryExpression = Record<string, any>;
+
 export type HighlightExpression = {
   /*
    * Set to `false` to disable highlighting. By default it is `true`.
