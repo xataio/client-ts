@@ -1,5 +1,27 @@
 # @xata.io/client
 
+## 0.18.0
+
+### Minor Changes
+
+- [#562](https://github.com/xataio/client-ts/pull/562) [`699beb4`](https://github.com/xataio/client-ts/commit/699beb4bbf21cffa001d3f88a03246980e30250b) Thanks [@SferaDev](https://github.com/SferaDev)! - Return null on nullable columns
+
+### Patch Changes
+
+- [#583](https://github.com/xataio/client-ts/pull/583) [`330b076`](https://github.com/xataio/client-ts/commit/330b076a0781e3576c82afab76e3fb2a64f2e041) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for unique columns
+
+- [#598](https://github.com/xataio/client-ts/pull/598) [`c3dfb4b`](https://github.com/xataio/client-ts/commit/c3dfb4babc990634b9e9747616ed93223178a2e7) Thanks [@SferaDev](https://github.com/SferaDev)! - API: Add patch database metadata endpoint
+
+- [#602](https://github.com/xataio/client-ts/pull/602) [`74b17aa`](https://github.com/xataio/client-ts/commit/74b17aaedc0dbdd79bfdcb182b2e70b61f98f5a5) Thanks [@gimenete](https://github.com/gimenete)! - API: Make workspace slug optional on create
+
+- [#615](https://github.com/xataio/client-ts/pull/615) [`83f20cd`](https://github.com/xataio/client-ts/commit/83f20cdbe53706c16016c4db3f318e679b24ec86) Thanks [@SferaDev](https://github.com/SferaDev)! - Make `getMany` return more items than max pagination size
+
+- [#562](https://github.com/xataio/client-ts/pull/562) [`addfcc6`](https://github.com/xataio/client-ts/commit/addfcc67fca663defdd340111ea09c9188bad3ab) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `orThrows` methods that instead of returning null, throw an exception.
+
+- [#583](https://github.com/xataio/client-ts/pull/583) [`eb7ba59`](https://github.com/xataio/client-ts/commit/eb7ba594be2a1f0ab90956836bbeb912e188a46d) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for non nullable columns
+
+- [#612](https://github.com/xataio/client-ts/pull/612) [`f1a0742`](https://github.com/xataio/client-ts/commit/f1a0742a04e1aefab14f46371a04a41069faec01) Thanks [@xata-bot](https://github.com/xata-bot)! - API: Add summarize table endpoint
+
 ## 0.17.1
 
 ### Patch Changes
