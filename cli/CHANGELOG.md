@@ -1,5 +1,20 @@
 # @xata.io/cli
 
+## 0.9.3
+
+### Patch Changes
+
+- [#602](https://github.com/xataio/client-ts/pull/602) [`74b17aa`](https://github.com/xataio/client-ts/commit/74b17aaedc0dbdd79bfdcb182b2e70b61f98f5a5) Thanks [@gimenete](https://github.com/gimenete)! - API: Make workspace slug optional on create
+
+- [#583](https://github.com/xataio/client-ts/pull/583) [`eb7ba59`](https://github.com/xataio/client-ts/commit/eb7ba594be2a1f0ab90956836bbeb912e188a46d) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for non nullable columns
+
+- [#611](https://github.com/xataio/client-ts/pull/611) [`349bfa5`](https://github.com/xataio/client-ts/commit/349bfa503776021a0634c5d11567281a3728df0d) Thanks [@gimenete](https://github.com/gimenete)! - Use .env.local if it exists for storing env vars during xata init. Load .env.local and .env always in the CLI.
+
+- Updated dependencies [[`330b076`](https://github.com/xataio/client-ts/commit/330b076a0781e3576c82afab76e3fb2a64f2e041), [`c3dfb4b`](https://github.com/xataio/client-ts/commit/c3dfb4babc990634b9e9747616ed93223178a2e7), [`699beb4`](https://github.com/xataio/client-ts/commit/699beb4bbf21cffa001d3f88a03246980e30250b), [`74b17aa`](https://github.com/xataio/client-ts/commit/74b17aaedc0dbdd79bfdcb182b2e70b61f98f5a5), [`83f20cd`](https://github.com/xataio/client-ts/commit/83f20cdbe53706c16016c4db3f318e679b24ec86), [`addfcc6`](https://github.com/xataio/client-ts/commit/addfcc67fca663defdd340111ea09c9188bad3ab), [`eb7ba59`](https://github.com/xataio/client-ts/commit/eb7ba594be2a1f0ab90956836bbeb912e188a46d), [`f1a0742`](https://github.com/xataio/client-ts/commit/f1a0742a04e1aefab14f46371a04a41069faec01)]:
+  - @xata.io/client@0.18.0
+  - @xata.io/codegen@0.18.0
+  - @xata.io/importer@0.2.8
+
 ## 0.9.2
 
 ### Patch Changes
