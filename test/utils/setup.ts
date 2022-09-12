@@ -96,7 +96,12 @@ export async function setUpTestEnvironment(
       span = tracer?.startSpan(prefix, { attributes: { [TraceAttributes.KIND]: 'test-suite' } });
     },
     afterAll: async () => {
-      await api.databases.deleteDatabase(workspace, database);
+      try {
+        await api.databases.deleteDatabase(workspace, database);
+      } catch (e) {
+        // Ignore error, delete database during ES snapshot fails
+        console.error('Delete database failed', e);
+      }
       span?.end();
     },
     beforeEach: async (ctx: TestContext) => {
