@@ -77,7 +77,7 @@ export type SearchResponse = {
  * @example {"migrationID":"mig_c7m19ilcefoebpqj12p0"}
  */
 export type MigrationIdResponse = {
-  /*
+  /**
    * @minLength 1
    */
   migrationID: string;

@@ -114,7 +114,7 @@ export const getUserAPIKeys = (variables: GetUserAPIKeysVariables) =>
   });
 
 export type CreateUserAPIKeyPathParams = {
-  /*
+  /**
    * API Key name
    */
   keyName: Schemas.APIKeyName;
@@ -156,7 +156,7 @@ export const createUserAPIKey = (variables: CreateUserAPIKeyVariables) =>
   });
 
 export type DeleteUserAPIKeyPathParams = {
-  /*
+  /**
    * API Key name
    */
   keyName: Schemas.APIKeyName;
@@ -257,7 +257,7 @@ export const getWorkspacesList = (variables: GetWorkspacesListVariables) =>
   });
 
 export type GetWorkspacePathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
@@ -293,7 +293,7 @@ export const getWorkspace = (variables: GetWorkspaceVariables) =>
   });
 
 export type UpdateWorkspacePathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
@@ -330,7 +330,7 @@ export const updateWorkspace = (variables: UpdateWorkspaceVariables) =>
   });
 
 export type DeleteWorkspacePathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
@@ -366,7 +366,7 @@ export const deleteWorkspace = (variables: DeleteWorkspaceVariables) =>
   });
 
 export type GetWorkspaceMembersListPathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
@@ -402,11 +402,11 @@ export const getWorkspaceMembersList = (variables: GetWorkspaceMembersListVariab
   });
 
 export type UpdateWorkspaceMemberRolePathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
-  /*
+  /**
    * UserID
    */
   userId: Schemas.UserID;
@@ -450,11 +450,11 @@ export const updateWorkspaceMemberRole = (variables: UpdateWorkspaceMemberRoleVa
   >({ url: '/workspaces/{workspaceId}/members/{userId}', method: 'put', ...variables });
 
 export type RemoveWorkspaceMemberPathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
-  /*
+  /**
    * UserID
    */
   userId: Schemas.UserID;
@@ -490,7 +490,7 @@ export const removeWorkspaceMember = (variables: RemoveWorkspaceMemberVariables)
   });
 
 export type InviteWorkspaceMemberPathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
@@ -516,7 +516,7 @@ export type InviteWorkspaceMemberError = Fetcher.ErrorWrapper<
 >;
 
 export type InviteWorkspaceMemberRequestBody = {
-  /*
+  /**
    * @format email
    */
   email: string;
@@ -542,11 +542,11 @@ export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables)
   >({ url: '/workspaces/{workspaceId}/invites', method: 'post', ...variables });
 
 export type UpdateWorkspaceMemberInvitePathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
-  /*
+  /**
    * Invite identifier
    */
   inviteId: Schemas.InviteID;
@@ -594,11 +594,11 @@ export const updateWorkspaceMemberInvite = (variables: UpdateWorkspaceMemberInvi
   >({ url: '/workspaces/{workspaceId}/invites/{inviteId}', method: 'patch', ...variables });
 
 export type CancelWorkspaceMemberInvitePathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
-  /*
+  /**
    * Invite identifier
    */
   inviteId: Schemas.InviteID;
@@ -634,11 +634,11 @@ export const cancelWorkspaceMemberInvite = (variables: CancelWorkspaceMemberInvi
   });
 
 export type ResendWorkspaceMemberInvitePathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
-  /*
+  /**
    * Invite identifier
    */
   inviteId: Schemas.InviteID;
@@ -674,11 +674,11 @@ export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInvi
   });
 
 export type AcceptWorkspaceMemberInvitePathParams = {
-  /*
+  /**
    * Workspace name
    */
   workspaceId: Schemas.WorkspaceID;
-  /*
+  /**
    * Invite Key (secret) for the invited user
    */
   inviteKey: Schemas.InviteKey;
@@ -743,7 +743,7 @@ export const getDatabaseList = (variables: GetDatabaseListVariables) =>
   });
 
 export type GetBranchListPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -780,7 +780,7 @@ export const getBranchList = (variables: GetBranchListVariables) =>
   });
 
 export type CreateDatabasePathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -799,7 +799,7 @@ export type CreateDatabaseError = Fetcher.ErrorWrapper<
 >;
 
 export type CreateDatabaseResponse = {
-  /*
+  /**
    * @minLength 1
    */
   databaseName: string;
@@ -807,7 +807,7 @@ export type CreateDatabaseResponse = {
 };
 
 export type CreateDatabaseRequestBody = {
-  /*
+  /**
    * @minLength 1
    */
   branchName?: string;
@@ -833,7 +833,7 @@ export const createDatabase = (variables: CreateDatabaseVariables) =>
   });
 
 export type DeleteDatabasePathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -870,7 +870,7 @@ export const deleteDatabase = (variables: DeleteDatabaseVariables) =>
   });
 
 export type GetDatabaseMetadataPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -907,7 +907,7 @@ export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables) =>
   });
 
 export type UpdateDatabaseMetadataPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -931,7 +931,7 @@ export type UpdateDatabaseMetadataError = Fetcher.ErrorWrapper<
 
 export type UpdateDatabaseMetadataRequestBody = {
   ui?: {
-    /*
+    /**
      * @minLength 1
      */
     color?: string;
@@ -957,7 +957,7 @@ export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariable
   >({ url: '/dbs/{dbName}/metadata', method: 'patch', ...variables });
 
 export type GetGitBranchesMappingPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -1014,7 +1014,7 @@ export const getGitBranchesMapping = (variables: GetGitBranchesMappingVariables)
   >({ url: '/dbs/{dbName}/gitBranches', method: 'get', ...variables });
 
 export type AddGitBranchesEntryPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -1033,18 +1033,18 @@ export type AddGitBranchesEntryError = Fetcher.ErrorWrapper<
 >;
 
 export type AddGitBranchesEntryResponse = {
-  /*
+  /**
    * Warning message
    */
   warning?: string;
 };
 
 export type AddGitBranchesEntryRequestBody = {
-  /*
+  /**
    * The name of the Git branch.
    */
   gitBranch: string;
-  /*
+  /**
    * The name of the Xata branch.
    */
   xataBranch: Schemas.BranchName;
@@ -1081,7 +1081,7 @@ export const addGitBranchesEntry = (variables: AddGitBranchesEntryVariables) =>
   >({ url: '/dbs/{dbName}/gitBranches', method: 'post', ...variables });
 
 export type RemoveGitBranchesEntryPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -1089,7 +1089,7 @@ export type RemoveGitBranchesEntryPathParams = {
 };
 
 export type RemoveGitBranchesEntryQueryParams = {
-  /*
+  /**
    * The Git Branch to remove from the mapping
    */
   gitBranch: string;
@@ -1131,7 +1131,7 @@ export const removeGitBranchesEntry = (variables: RemoveGitBranchesEntryVariable
   >({ url: '/dbs/{dbName}/gitBranches', method: 'delete', ...variables });
 
 export type ResolveBranchPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -1139,11 +1139,11 @@ export type ResolveBranchPathParams = {
 };
 
 export type ResolveBranchQueryParams = {
-  /*
+  /**
    * The Git Branch
    */
   gitBranch?: string;
-  /*
+  /**
    * Default branch to fallback to
    */
   fallbackBranch?: string;
@@ -1206,7 +1206,7 @@ export const resolveBranch = (variables: ResolveBranchVariables) =>
   });
 
 export type ListMigrationRequestsPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -1256,7 +1256,7 @@ export const listMigrationRequests = (variables: ListMigrationRequestsVariables)
   >({ url: '/dbs/{dbName}/migrations/list', method: 'post', ...variables });
 
 export type CreateMigrationRequestPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
@@ -1283,19 +1283,19 @@ export type CreateMigrationRequestResponse = {
 };
 
 export type CreateMigrationRequestRequestBody = {
-  /*
+  /**
    * The source branch.
    */
   source: string;
-  /*
+  /**
    * The target branch.
    */
   target: string;
-  /*
+  /**
    * The title.
    */
   title: string;
-  /*
+  /**
    * Optional migration request description.
    */
   body?: string;
@@ -1317,11 +1317,11 @@ export const createMigrationRequest = (variables: CreateMigrationRequestVariable
   >({ url: '/dbs/{dbName}/migrations', method: 'post', ...variables });
 
 export type GetMigrationRequestPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
-  /*
+  /**
    * The migration request number.
    */
   mrNumber: number;
@@ -1355,11 +1355,11 @@ export const getMigrationRequest = (variables: GetMigrationRequestVariables) =>
   });
 
 export type UpdateMigrationRequestPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
-  /*
+  /**
    * The migration request number.
    */
   mrNumber: number;
@@ -1382,15 +1382,15 @@ export type UpdateMigrationRequestError = Fetcher.ErrorWrapper<
 >;
 
 export type UpdateMigrationRequestRequestBody = {
-  /*
+  /**
    * New migration request title.
    */
   title?: string;
-  /*
+  /**
    * New migration request description.
    */
   body?: string;
-  /*
+  /**
    * Change the migration request status.
    */
   status?: 'open' | 'closed';
@@ -1412,11 +1412,11 @@ export const updateMigrationRequest = (variables: UpdateMigrationRequestVariable
   >({ url: '/dbs/{dbName}/migrations/{mrNumber}', method: 'patch', ...variables });
 
 export type ListMigrationRequestsCommitsPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
-  /*
+  /**
    * The migration request number.
    */
   mrNumber: number;
@@ -1440,11 +1440,11 @@ export type ListMigrationRequestsCommitsError = Fetcher.ErrorWrapper<
 
 export type ListMigrationRequestsCommitsResponse = {
   meta: {
-    /*
+    /**
      * last record id
      */
     cursor: string;
-    /*
+    /**
      * true if more records can be fetch
      */
     more: boolean;
@@ -1454,15 +1454,15 @@ export type ListMigrationRequestsCommitsResponse = {
 
 export type ListMigrationRequestsCommitsRequestBody = {
   page?: {
-    /*
+    /**
      * Query the next page that follow the cursor.
      */
     after?: string;
-    /*
+    /**
      * Query the previous page before the cursor.
      */
     before?: string;
-    /*
+    /**
      * Set page size. If the size is missing it is read from the cursor. If no cursor is given xata will choose the default page size.
      *
      * @default 20
@@ -1487,11 +1487,11 @@ export const listMigrationRequestsCommits = (variables: ListMigrationRequestsCom
   >({ url: '/dbs/{dbName}/migrations/{mrNumber}/commits', method: 'post', ...variables });
 
 export type CompareMigrationRequestPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
-  /*
+  /**
    * The migration request number.
    */
   mrNumber: number;
@@ -1528,11 +1528,11 @@ export const compareMigrationRequest = (variables: CompareMigrationRequestVariab
   >({ url: '/dbs/{dbName}/migrations/{mrNumber}/compare', method: 'post', ...variables });
 
 export type GetMigrationRequestIsMergedPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
-  /*
+  /**
    * The migration request number.
    */
   mrNumber: number;
@@ -1573,11 +1573,11 @@ export const getMigrationRequestIsMerged = (variables: GetMigrationRequestIsMerg
   >({ url: '/dbs/{dbName}/migrations/{mrNumber}/merge', method: 'get', ...variables });
 
 export type MergeMigrationRequestPathParams = {
-  /*
+  /**
    * The Database Name
    */
   dbName: Schemas.DBName;
-  /*
+  /**
    * The migration request number.
    */
   mrNumber: number;
@@ -1611,7 +1611,7 @@ export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables)
   });
 
 export type GetBranchDetailsPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -1645,7 +1645,7 @@ export const getBranchDetails = (variables: GetBranchDetailsVariables) =>
   });
 
 export type CreateBranchPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -1653,7 +1653,7 @@ export type CreateBranchPathParams = {
 };
 
 export type CreateBranchQueryParams = {
-  /*
+  /**
    * Name of source branch to branch the new schema from
    */
   from?: string;
@@ -1675,7 +1675,7 @@ export type CreateBranchError = Fetcher.ErrorWrapper<
 >;
 
 export type CreateBranchResponse = {
-  /*
+  /**
    * @minLength 1
    */
   databaseName: string;
@@ -1683,7 +1683,7 @@ export type CreateBranchResponse = {
 };
 
 export type CreateBranchRequestBody = {
-  /*
+  /**
    * Select the branch to fork from. Defaults to 'main'
    */
   from?: string;
@@ -1707,7 +1707,7 @@ export const createBranch = (variables: CreateBranchVariables) =>
   >({ url: '/db/{dbBranchName}', method: 'put', ...variables });
 
 export type DeleteBranchPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -1744,7 +1744,7 @@ export const deleteBranch = (variables: DeleteBranchVariables) =>
   });
 
 export type UpdateBranchMetadataPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -1782,7 +1782,7 @@ export const updateBranchMetadata = (variables: UpdateBranchMetadataVariables) =
   });
 
 export type GetBranchMetadataPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -1816,7 +1816,7 @@ export const getBranchMetadata = (variables: GetBranchMetadataVariables) =>
   });
 
 export type GetBranchMigrationHistoryPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -1864,7 +1864,7 @@ export const getBranchMigrationHistory = (variables: GetBranchMigrationHistoryVa
   >({ url: '/db/{dbBranchName}/migrations', method: 'get', ...variables });
 
 export type ExecuteBranchMigrationPlanPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -1910,7 +1910,7 @@ export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlan
   >({ url: '/db/{dbBranchName}/migrations/execute', method: 'post', ...variables });
 
 export type GetBranchMigrationPlanPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -1951,7 +1951,7 @@ export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariable
   >({ url: '/db/{dbBranchName}/migrations/plan', method: 'post', ...variables });
 
 export type CompareBranchWithUserSchemaPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -1993,11 +1993,11 @@ export const compareBranchWithUserSchema = (variables: CompareBranchWithUserSche
   >({ url: '/db/{dbBranchName}/schema/compare', method: 'post', ...variables });
 
 export type CompareBranchSchemasPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Database Name
    */
   branchName: Schemas.BranchName;
@@ -2035,7 +2035,7 @@ export const compareBranchSchemas = (variables: CompareBranchSchemasVariables) =
   >({ url: '/db/{dbBranchName}/schema/compare/{branchName}', method: 'post', ...variables });
 
 export type UpdateBranchSchemaPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -2075,7 +2075,7 @@ export const updateBranchSchema = (variables: UpdateBranchSchemaVariables) =>
   });
 
 export type PreviewBranchSchemaEditPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -2123,7 +2123,7 @@ export const previewBranchSchemaEdit = (variables: PreviewBranchSchemaEditVariab
   >({ url: '/db/{dbBranchName}/schema/preview', method: 'post', ...variables });
 
 export type ApplyBranchSchemaEditPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -2170,7 +2170,7 @@ export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables)
   >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables });
 
 export type GetBranchSchemaHistoryPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -2194,11 +2194,11 @@ export type GetBranchSchemaHistoryError = Fetcher.ErrorWrapper<
 
 export type GetBranchSchemaHistoryResponse = {
   meta: {
-    /*
+    /**
      * last record id
      */
     cursor: string;
-    /*
+    /**
      * true if more records can be fetch
      */
     more: boolean;
@@ -2208,15 +2208,15 @@ export type GetBranchSchemaHistoryResponse = {
 
 export type GetBranchSchemaHistoryRequestBody = {
   page?: {
-    /*
+    /**
      * Query the next page that follow the cursor.
      */
     after?: string;
-    /*
+    /**
      * Query the previous page before the cursor.
      */
     before?: string;
-    /*
+    /**
      * Set page size. If the size is missing it is read from the cursor. If no cursor is given xata will choose the default page size.
      *
      * @default 20
@@ -2241,7 +2241,7 @@ export const getBranchSchemaHistory = (variables: GetBranchSchemaHistoryVariable
   >({ url: '/db/{dbBranchName}/schema/history', method: 'post', ...variables });
 
 export type GetBranchStatsPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -2290,11 +2290,11 @@ export const getBranchStats = (variables: GetBranchStatsVariables) =>
   });
 
 export type CreateTablePathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -2322,7 +2322,7 @@ export type CreateTableError = Fetcher.ErrorWrapper<
 
 export type CreateTableResponse = {
   branchName: string;
-  /*
+  /**
    * @minLength 1
    */
   tableName: string;
@@ -2343,11 +2343,11 @@ export const createTable = (variables: CreateTableVariables) =>
   });
 
 export type DeleteTablePathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -2380,11 +2380,11 @@ export const deleteTable = (variables: DeleteTableVariables) =>
   });
 
 export type UpdateTablePathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -2407,7 +2407,7 @@ export type UpdateTableError = Fetcher.ErrorWrapper<
 >;
 
 export type UpdateTableRequestBody = {
-  /*
+  /**
    * @minLength 1
    */
   name: string;
@@ -2439,11 +2439,11 @@ export const updateTable = (variables: UpdateTableVariables) =>
   });
 
 export type GetTableSchemaPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -2481,11 +2481,11 @@ export const getTableSchema = (variables: GetTableSchemaVariables) =>
   });
 
 export type SetTableSchemaPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -2528,11 +2528,11 @@ export const setTableSchema = (variables: SetTableSchemaVariables) =>
   });
 
 export type GetTableColumnsPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -2574,11 +2574,11 @@ export const getTableColumns = (variables: GetTableColumnsVariables) =>
   });
 
 export type AddTableColumnPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -2618,15 +2618,15 @@ export const addTableColumn = (variables: AddTableColumnVariables) =>
   });
 
 export type GetColumnPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
-  /*
+  /**
    * The Column name
    */
   columnName: Schemas.ColumnName;
@@ -2663,15 +2663,15 @@ export const getColumn = (variables: GetColumnVariables) =>
   });
 
 export type DeleteColumnPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
-  /*
+  /**
    * The Column name
    */
   columnName: Schemas.ColumnName;
@@ -2708,15 +2708,15 @@ export const deleteColumn = (variables: DeleteColumnVariables) =>
   });
 
 export type UpdateColumnPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
-  /*
+  /**
    * The Column name
    */
   columnName: Schemas.ColumnName;
@@ -2739,7 +2739,7 @@ export type UpdateColumnError = Fetcher.ErrorWrapper<
 >;
 
 export type UpdateColumnRequestBody = {
-  /*
+  /**
    * @minLength 1
    */
   name: string;
@@ -2761,11 +2761,11 @@ export const updateColumn = (variables: UpdateColumnVariables) =>
   });
 
 export type InsertRecordPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -2773,7 +2773,7 @@ export type InsertRecordPathParams = {
 };
 
 export type InsertRecordQueryParams = {
-  /*
+  /**
    * Column filters
    */
   columns?: Schemas.ColumnsProjection;
@@ -2814,15 +2814,15 @@ export const insertRecord = (variables: InsertRecordVariables) =>
   >({ url: '/db/{dbBranchName}/tables/{tableName}/data', method: 'post', ...variables });
 
 export type InsertRecordWithIDPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
-  /*
+  /**
    * The Record name
    */
   recordId: Schemas.RecordID;
@@ -2830,7 +2830,7 @@ export type InsertRecordWithIDPathParams = {
 };
 
 export type InsertRecordWithIDQueryParams = {
-  /*
+  /**
    * Column filters
    */
   columns?: Schemas.ColumnsProjection;
@@ -2877,15 +2877,15 @@ export const insertRecordWithID = (variables: InsertRecordWithIDVariables) =>
   >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'put', ...variables });
 
 export type UpdateRecordWithIDPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
-  /*
+  /**
    * The Record name
    */
   recordId: Schemas.RecordID;
@@ -2893,7 +2893,7 @@ export type UpdateRecordWithIDPathParams = {
 };
 
 export type UpdateRecordWithIDQueryParams = {
-  /*
+  /**
    * Column filters
    */
   columns?: Schemas.ColumnsProjection;
@@ -2936,15 +2936,15 @@ export const updateRecordWithID = (variables: UpdateRecordWithIDVariables) =>
   >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'patch', ...variables });
 
 export type UpsertRecordWithIDPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
-  /*
+  /**
    * The Record name
    */
   recordId: Schemas.RecordID;
@@ -2952,7 +2952,7 @@ export type UpsertRecordWithIDPathParams = {
 };
 
 export type UpsertRecordWithIDQueryParams = {
-  /*
+  /**
    * Column filters
    */
   columns?: Schemas.ColumnsProjection;
@@ -2995,15 +2995,15 @@ export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables) =>
   >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'post', ...variables });
 
 export type DeleteRecordPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
-  /*
+  /**
    * The Record name
    */
   recordId: Schemas.RecordID;
@@ -3011,7 +3011,7 @@ export type DeleteRecordPathParams = {
 };
 
 export type DeleteRecordQueryParams = {
-  /*
+  /**
    * Column filters
    */
   columns?: Schemas.ColumnsProjection;
@@ -3045,15 +3045,15 @@ export const deleteRecord = (variables: DeleteRecordVariables) =>
   });
 
 export type GetRecordPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
-  /*
+  /**
    * The Record name
    */
   recordId: Schemas.RecordID;
@@ -3061,7 +3061,7 @@ export type GetRecordPathParams = {
 };
 
 export type GetRecordQueryParams = {
-  /*
+  /**
    * Column filters
    */
   columns?: Schemas.ColumnsProjection;
@@ -3098,11 +3098,11 @@ export const getRecord = (variables: GetRecordVariables) =>
   });
 
 export type BulkInsertTableRecordsPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -3110,7 +3110,7 @@ export type BulkInsertTableRecordsPathParams = {
 };
 
 export type BulkInsertTableRecordsQueryParams = {
-  /*
+  /**
    * Column filters
    */
   columns?: Schemas.ColumnsProjection;
@@ -3159,11 +3159,11 @@ export const bulkInsertTableRecords = (variables: BulkInsertTableRecordsVariable
   >({ url: '/db/{dbBranchName}/tables/{tableName}/bulk', method: 'post', ...variables });
 
 export type QueryTablePathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -3926,11 +3926,11 @@ export const queryTable = (variables: QueryTableVariables) =>
   });
 
 export type SearchTablePathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -3953,7 +3953,7 @@ export type SearchTableError = Fetcher.ErrorWrapper<
 >;
 
 export type SearchTableRequestBody = {
-  /*
+  /**
    * The query string.
    *
    * @minLength 1
@@ -3986,7 +3986,7 @@ export const searchTable = (variables: SearchTableVariables) =>
   });
 
 export type SearchBranchPathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
@@ -4009,13 +4009,13 @@ export type SearchBranchError = Fetcher.ErrorWrapper<
 >;
 
 export type SearchBranchRequestBody = {
-  /*
+  /**
    * An array with the tables in which to search. By default, all tables are included. Optionally, filters can be included that apply to each table.
    */
   tables?: (
     | string
     | {
-        /*
+        /**
          * The name of the table.
          */
         table: string;
@@ -4023,7 +4023,7 @@ export type SearchBranchRequestBody = {
         boosters?: Schemas.BoosterExpression[];
       }
   )[];
-  /*
+  /**
    * The query string.
    *
    * @minLength 1
@@ -4050,11 +4050,11 @@ export const searchBranch = (variables: SearchBranchVariables) =>
   });
 
 export type SummarizeTablePathParams = {
-  /*
+  /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
   dbBranchName: Schemas.DBBranchName;
-  /*
+  /**
    * The Table name
    */
   tableName: Schemas.TableName;
@@ -4077,8 +4077,9 @@ export type SummarizeTableError = Fetcher.ErrorWrapper<
 >;
 
 export type SummarizeTableRequestBody = {
-  summaries?: Schemas.SummaryExpressionList;
   columns?: Schemas.ColumnsProjection;
+  summaries?: Schemas.SummaryExpressionList;
+  sort?: Schemas.SortExpression;
 };
 
 export type SummarizeTableVariables = {
@@ -4087,7 +4088,44 @@ export type SummarizeTableVariables = {
 } & FetcherExtraProps;
 
 /**
- * Summarize table
+ * This endpoint allows you to (optionally) define groups, and then to run
+ * calculations on the values in each group. This is most helpful when you'd
+ * like to understand the data you have in your database.
+ *
+ * A group is a combination of unique values. If you create a group for `sold_by`,
+ * `product_name`, we will return one row for every combination of `sold_by` and
+ * `product_name` you have in your database. When you want to calculate statistics,
+ * you define these groups and ask Xata to calculate data on each group.
+ *
+ * **Some questions you can ask of your data:**
+ *
+ * How many records do I have in this table?
+ * - Set `columns: []` as we we want data from the entire table, so we ask for no groups.
+ * - Set `summaries: {"total": {"count": "*"}}` in order to see the count of all records.
+ * We use `count: *` here we'd like to know the total amount of rows; ignoring whether
+ * they are `null` or not.
+ *
+ * What are the top total sales for each product?
+ * - Set `columns: [product_name]` as we'd like to run calculations on each unique product
+ * name in our table. Setting `columns` like this will produce one row per unique product
+ * name.
+ * - Set `summaries: {"total_sales": {"count": "product_name"}}` as we'd like to create a
+ * field called "total_sales" for each group. This field will count all rows in each group
+ * with non-null product names.
+ * - Set `sort: [{"total_sales": "desc"}]` in order to bring the rows with the highest
+ * total_sales field to the top.
+ *
+ * `columns`: tells Xata how to create each group. If you add `product_id` we will create
+ * a new group for every unique `product_id`.
+ *
+ * `summaries`: tells Xata which calculations to run on each group.
+ *
+ * `sort`: tells Xata in which order you'd like to see results. You may sort by fields
+ * specified in `columns` as well as the summary names defined in `summaries`.
+ *
+ * note: Sorting on summarized values can be slower on very large tables; this will impact
+ * your rate limit significantly more than other queries. Try use `filter` [coming soon] to
+ * reduce the amount of data being processed in order to reduce impact on your limits.
  */
 export const summarizeTable = (variables: SummarizeTableVariables) =>
   fetch<Responses.SummarizeResponse, SummarizeTableError, SummarizeTableRequestBody, {}, {}, SummarizeTablePathParams>({

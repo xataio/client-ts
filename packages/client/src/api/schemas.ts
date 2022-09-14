@@ -4,7 +4,7 @@
  * @version 1.0
  */
 export type User = {
-  /*
+  /**
    * @format email
    */
   email: string;
@@ -57,7 +57,7 @@ export type Workspace = WorkspaceMeta & {
 export type WorkspaceMember = {
   userId: UserID;
   fullname: string;
-  /*
+  /**
    * @format email
    */
   email: string;
@@ -71,11 +71,11 @@ export type InviteID = string;
 
 export type WorkspaceInvite = {
   inviteId: InviteID;
-  /*
+  /**
    * @format email
    */
   email: string;
-  /*
+  /**
    * @format date-time
    */
   expires: string;
@@ -96,23 +96,23 @@ export type InviteKey = string;
  * Metadata of databases
  */
 export type DatabaseMetadata = {
-  /*
+  /**
    * The machine-readable name of a database
    */
   name: string;
-  /*
+  /**
    * The time this database was created
    */
   createdAt: DateTime;
-  /*
+  /**
    * The number of branches the database has
    */
   numberOfBranches: number;
-  /*
+  /**
    * Metadata about the database for display in Xata user interfaces
    */
   ui?: {
-    /*
+    /**
      * The user-selected color for this database across interfaces
      */
     color?: string;
@@ -120,7 +120,7 @@ export type DatabaseMetadata = {
 };
 
 export type ListDatabasesResponse = {
-  /*
+  /**
    * A list of databases in a Xata workspace
    */
   databases?: DatabaseMetadata[];
@@ -148,12 +148,12 @@ export type Branch = {
  * @x-go-type xata.BranchMetadata
  */
 export type BranchMetadata = {
-  /*
+  /**
    * @minLength 1
    */
   repository?: string;
   branch?: BranchName;
-  /*
+  /**
    * @minLength 1
    */
   stage?: string;
@@ -410,40 +410,40 @@ export type ColumnOpRename = {
 };
 
 export type MigrationRequest = {
-  /*
+  /**
    * The migration request number.
    */
   number: number;
-  /*
+  /**
    * Migration request creation timestamp.
    */
   createdAt: DateTime;
-  /*
+  /**
    * Last modified timestamp.
    */
   modifiedAt?: DateTime;
-  /*
+  /**
    * Timestamp when the migration request was closed.
    */
   closedAt?: DateTime;
-  /*
+  /**
    * Timestamp when the migration request was merged.
    */
   mergedAt?: DateTime;
   status: 'open' | 'closed' | 'merging' | 'merged';
-  /*
+  /**
    * The migration request title.
    */
   title: string;
-  /*
+  /**
    * The migration request body with detailed description.
    */
   body: string;
-  /*
+  /**
    * Name of the source branch.
    */
   source: string;
-  /*
+  /**
    * Name of the target branch.
    */
   target: string;
@@ -492,8 +492,20 @@ export type FilterExpression = {
 };
 
 /**
- * The full summary expression; the entire expression is a map of names to requests.
+ * The description of the summaries you wish to receive. Set each key to be the field name
+ * you'd like for the summary. These names must not collide with other columns you've
+ * requested from `columns`; including implicit requests like `settings.*`.
  *
+ * The value for each key needs to be an object. This object should contain one key and one
+ * value only. In this object, the key should be set to the summary function you wish to use
+ * and the value set to the column name to be summarized.
+ *
+ * The column being summarized cannot be an internal column (id, xata.*), nor the base of
+ * an object, i.e. if `settings` is an object with `dark_mode` as a field, you may summarize
+ * `settings.dark_mode` but not `settings` nor `settings.*`.
+ *
+ * @example {"all_users":{"count":"*"}}
+ * @example {"total_created":{"count":"created_at"}}
  * @x-go-type xbquery.SummaryList
  */
 export type SummaryExpressionList = {
@@ -501,20 +513,30 @@ export type SummaryExpressionList = {
 };
 
 /**
- * A single summary expression. The key represents an aggregation function; the value a column to aggregate.
+ * A summary expression is the description of a single summary operation. It consists of a single
+ * key representing the operation, and a value representing the column to be operated on.
  *
- * You may only call one aggregation per key.
+ * The column being summarized cannot be an internal column (id, xata.*), nor the base of
+ * an object, i.e. if `settings` is an object with `dark_mode` as a field, you may summarize
+ * `settings.dark_mode` but not `settings` nor `settings.*`.
  *
+ * We currently support the `count` operation. When using `count`, one can set a column name
+ * as the value. Xata will return the total number times this column is non-null in each group.
+ *
+ * Alternately, if you'd like to count the total rows in each group - irregardless of null/not null
+ * status - you can set `count` to `*` to count everything.
+ *
+ * @example {"count":"deleted_at"}
  * @x-go-type xbquery.Summary
  */
 export type SummaryExpression = Record<string, any>;
 
 export type HighlightExpression = {
-  /*
+  /**
    * Set to `false` to disable highlighting. By default it is `true`.
    */
   enabled?: boolean;
-  /*
+  /**
    * Set to `false` to disable HTML encoding in highlight snippets. By default it is `true`.
    */
   encodeHTML?: boolean;
@@ -540,15 +562,15 @@ export type BoosterExpression =
  * Boost records with a particular value for a column.
  */
 export type ValueBooster = {
-  /*
+  /**
    * The column in which to look for the value.
    */
   column: string;
-  /*
+  /**
    * The exact value to boost.
    */
   value: string | number | boolean;
-  /*
+  /**
    * The factor with which to multiply the score of the record.
    */
   factor: number;
@@ -558,11 +580,11 @@ export type ValueBooster = {
  * Boost records based on the value of a numeric column.
  */
 export type NumericBooster = {
-  /*
+  /**
    * The column in which to look for the value.
    */
   column: string;
-  /*
+  /**
    * The factor with which to multiply the value of the column before adding it to the item score.
    */
   factor: number;
@@ -574,22 +596,22 @@ export type NumericBooster = {
  * should be interpreted as: a record with a date 10 days before/after origin will score 2 times less than a record with the date at origin.
  */
 export type DateBooster = {
-  /*
+  /**
    * The column in which to look for the value.
    */
   column: string;
-  /*
+  /**
    * The datetime (formatted as RFC3339) from where to apply the score decay function. The maximum boost will be applied for records with values at this time.
    * If it is not specified, the current date and time is used.
    */
   origin?: string;
-  /*
+  /**
    * The duration at which distance from origin the score is decayed with factor, using an exponential function. It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
    *
    * @pattern ^(\d+)(d|h|m|s|ms)$
    */
   scale: string;
-  /*
+  /**
    * The decay factor to expect at "scale" distance from the "origin".
    */
   decay: number;
@@ -652,29 +674,29 @@ export type FilterValue = number | string | boolean;
  * Pagination settings.
  */
 export type PageConfig = {
-  /*
+  /**
    * Query the next page that follow the cursor.
    */
   after?: string;
-  /*
+  /**
    * Query the previous page before the cursor.
    */
   before?: string;
-  /*
+  /**
    * Query the first page from the cursor.
    */
   first?: string;
-  /*
+  /**
    * Query the last page from the cursor.
    */
   last?: string;
-  /*
+  /**
    * Set page size. If the size is missing it is read from the cursor. If no cursor is given xata will choose the default page size.
    *
    * @default 20
    */
   size?: number;
-  /*
+  /**
    * Use offset to skip entries. To skip pages set offset to a multiple of size.
    *
    * @default 0
@@ -682,6 +704,11 @@ export type PageConfig = {
   offset?: number;
 };
 
+/**
+ * @example name
+ * @example email
+ * @example created_at
+ */
 export type ColumnsProjection = string[];
 
 /**
@@ -690,15 +717,15 @@ export type ColumnsProjection = string[];
 export type RecordMeta = {
   id: RecordID;
   xata: {
-    /*
+    /**
      * The record's version. Can be used for optimistic concurrency control.
      */
     version: number;
-    /*
+    /**
      * The record's table name. APIs that return records from multiple tables will set this field accordingly.
      */
     table?: string;
-    /*
+    /**
      * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
      */
     highlight?: {
@@ -708,11 +735,11 @@ export type RecordMeta = {
             [key: string]: any;
           };
     };
-    /*
+    /**
      * The record's relevancy score. This is returned by the search APIs.
      */
     score?: number;
-    /*
+    /**
      * Encoding/Decoding errors
      */
     warnings?: string[];
@@ -728,11 +755,11 @@ export type RecordID = string;
  * @example {"newName":"newName","oldName":"oldName"}
  */
 export type TableRename = {
-  /*
+  /**
    * @minLength 1
    */
   newName: string;
-  /*
+  /**
    * @minLength 1
    */
   oldName: string;
@@ -743,11 +770,11 @@ export type TableRename = {
  */
 export type RecordsMetadata = {
   page: {
-    /*
+    /**
      * last record id
      */
     cursor: string;
-    /*
+    /**
      * true if more records can be fetch
      */
     more: boolean;
