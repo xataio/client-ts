@@ -3227,8 +3227,9 @@ export type QueryTableVariables = {
  * If the `columns` array is not specified, all columns are included. For link
  * fields, only the ID column of the linked records is included in the response.
  *
- * If the `columns` array is specified, only the selected columns are included.
- * The `*` wildcard can be used to select all columns of the given array
+ * If the `columns` array is specified, only the selected and internal
+ * columns `id` and `xata` are included. The `*` wildcard can be used to
+ * select all columns.
  *
  * For objects and link fields, if the column name of the object is specified, we
  * include all of its sub-keys. If only some sub-keys are specified (via dotted
@@ -3344,6 +3345,10 @@ export type QueryTableVariables = {
  *
  * ```json
  * {
+ *   "id": "id1"
+ *   "xata": {
+ *     "version": 0
+ *   }
  *   "name": "Kilian",
  *   "address": {
  *     "street": "New street"
@@ -3363,6 +3368,10 @@ export type QueryTableVariables = {
  *
  * ```json
  * {
+ *   "id": "id1"
+ *   "xata": {
+ *     "version": 0
+ *   }
  *   "name": "Kilian",
  *   "email": "kilian@gmail.com",
  *   "address": {
@@ -3392,6 +3401,10 @@ export type QueryTableVariables = {
  *
  * ```json
  * {
+ *   "id": "id1"
+ *   "xata": {
+ *     "version": 0
+ *   }
  *   "name": "Kilian",
  *   "email": "kilian@gmail.com",
  *   "address": {
