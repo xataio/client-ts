@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.18.1
+
+### Patch Changes
+
+- [#627](https://github.com/xataio/client-ts/pull/627) [`ad0a5b4`](https://github.com/xataio/client-ts/commit/ad0a5b4bc87b82fdc10008a8ea324a8ca783e678) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix some cases where filters on link and multiple column types are not working
+
 ## 0.18.0
 
 ### Minor Changes
