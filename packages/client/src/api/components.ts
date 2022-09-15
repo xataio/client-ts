@@ -3973,6 +3973,7 @@ export type SearchTableRequestBody = {
    */
   query: string;
   fuzziness?: Schemas.FuzzinessExpression;
+  target?: Schemas.TargetExpression;
   prefix?: Schemas.PrefixExpression;
   filter?: Schemas.FilterExpression;
   highlight?: Schemas.HighlightExpression;
@@ -4033,6 +4034,7 @@ export type SearchBranchRequestBody = {
          */
         table: string;
         filter?: Schemas.FilterExpression;
+        target?: Schemas.TargetExpression;
         boosters?: Schemas.BoosterExpression[];
       }
   )[];
