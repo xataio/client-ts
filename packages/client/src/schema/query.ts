@@ -176,20 +176,20 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   filter(a: any, b?: any): Query<Record, Result> {
     if (arguments.length === 1) {
       const constraints = Object.entries(a ?? {}).map(([column, constraint]) => ({
-        [column]: this.cleanFilterConstraint(column, constraint) as any
+        [column]: this.#cleanFilterConstraint(column, constraint) as any
       }));
       const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
       return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     } else {
-      const constraints = isDefined(a) && isDefined(b) ? [{ [a]: this.cleanFilterConstraint(a, b) }] : undefined;
+      const constraints = isDefined(a) && isDefined(b) ? [{ [a]: this.#cleanFilterConstraint(a, b) }] : undefined;
       const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
       return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     }
   }
 
-  cleanFilterConstraint<T>(column: string, value: T) {
+  #cleanFilterConstraint<T>(column: string, value: T) {
     const columnType = this.#table.schema?.columns.find(({ name }) => name === column)?.type;
 
     // TODO: Fix when we support more array types than string
