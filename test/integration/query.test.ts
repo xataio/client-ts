@@ -662,4 +662,22 @@ describe('integration tests', () => {
     expect(team.owner?.id).toEqual(owner.id);
     expect(updated?.owner?.id).toEqual(owner2.id);
   });
+
+  test('Filter with null value', async () => {
+    const newOwner = await xata.db.users.create({ full_name: 'Example User' });
+    const newTeam = await xata.db.teams.create({ name: 'Example Team', owner: newOwner });
+
+    const owner = await xata.db.users.filter({ id: newOwner.id }).getFirst();
+    if (!owner) throw new Error('No user found');
+
+    const team = await xata.db.teams.filter({ owner }).getFirst();
+    expect(team?.id).toEqual(newTeam.id);
+  });
+
+  test('Filter with multiple column', async () => {
+    const newTeam = await xata.db.teams.create({ name: 'Example Team', labels: ['a', 'b'] });
+
+    const team = await xata.db.teams.filter({ labels: newTeam.labels }).getFirst();
+    expect(team?.id).toEqual(newTeam.id);
+  });
 });
