@@ -478,6 +478,27 @@ export type FuzzinessExpression = number;
 export type PrefixExpression = 'phrase' | 'disabled';
 
 /**
+ * The target expression is used to filter the search results by the target columns.
+ */
+export type TargetExpression = (
+  | string
+  | {
+      /**
+       * The name of the column.
+       */
+      column: string;
+      /**
+       * The weight of the column.
+       *
+       * @default 1
+       * @maximum 10
+       * @minimum 1
+       */
+      weight?: number;
+    }
+)[];
+
+/**
  * @minProperties 1
  */
 export type FilterExpression = {
