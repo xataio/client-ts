@@ -3831,8 +3831,8 @@ export type QueryTableVariables = {
  *
  * ### Pagination
  *
- * We offer cursor pagination and offset pagination. The offset pagination is limited
- * in the amount of data it can retrieve, so we recommend the cursor pagination if you have more than 1000 records.
+ * We offer cursor pagination and offset pagination. For queries that are expected to return more than 1000 records,
+ * cursor pagination is needed in order to retrieve all of their results. The offset pagination method is limited to 1000 records.
  *
  * Example of size + offset pagination:
  *
