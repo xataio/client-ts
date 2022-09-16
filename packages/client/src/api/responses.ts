@@ -71,6 +71,7 @@ export type SummarizeResponse = {
 
 export type SearchResponse = {
   records: Schemas.XataRecord[];
+  warning?: string;
 };
 
 /**
