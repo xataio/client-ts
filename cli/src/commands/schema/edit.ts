@@ -8,6 +8,7 @@ import { readFile, writeFile } from 'fs/promises';
 import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
+import { features } from '../../feature-flags.js';
 import { parseSchemaFile } from '../../schema.js';
 import { reportBugURL } from '../../utils.js';
 import Codegen from '../codegen/index.js';
@@ -351,6 +352,18 @@ Beware that this can lead to ${chalk.bold(
   async showColumnEdit(column: EditableColumn | null, table: EditableTable) {
     this.clear();
 
+    let template = `
+           Name: \${name}
+           Type: \${type}
+           Link: \${link}
+    Description: \${description}
+         Unique: \${unique}`;
+
+    if (features.notNull) {
+      template += `      Not null: \${notNull}
+        Default: \${default}`;
+    }
+
     type ColumnEditState = {
       values: {
         name?: string;
@@ -417,7 +430,10 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'notNull',
           message: 'Whether the column is not nullable',
-          validate: validateOptionalBoolean
+          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+            if (!features.notNull) return true;
+            return validateOptionalBoolean(value);
+          }
         },
         {
           name: 'description',
@@ -427,6 +443,7 @@ Beware that this can lead to ${chalk.bold(
           name: 'default',
           message: 'Default value for not nullable columns',
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+            if (!features.notNull) return true;
             if (parseBoolean(state.values.notNull) === true && state.values.type) {
               if (parseDefaultValue(state.values.type, value) == null) {
                 return `Invalid default value for column type ${state.values.type}`;
