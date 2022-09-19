@@ -9,6 +9,7 @@ import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 import { Boosters } from './boosters';
+import { TargetColumn } from './target';
 
 export type SearchOptions<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = {
   fuzziness?: FuzzinessExpression;
@@ -19,6 +20,7 @@ export type SearchOptions<Schemas extends Record<string, BaseData>, Tables exten
     | Values<{
         [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
           table: Model;
+          target?: TargetColumn<Schemas[Model] & XataRecord>[];
           filter?: Filter<SelectedPick<Schemas[Model] & XataRecord, ['*']>>;
           boosters?: Boosters<Schemas[Model] & XataRecord>[];
         };
