@@ -66,7 +66,7 @@ export type QueryResponse = {
 };
 
 export type SummarizeResponse = {
-  summary: Record<string, any>[];
+  summaries: Record<string, any>[];
 };
 
 export type SearchResponse = {
