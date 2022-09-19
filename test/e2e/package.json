@@ -5,11 +5,11 @@
   "scripts": {},
   "dependencies": {
     "@remix-run/dev": "latest",
-    "@types/node": "^18.7.16",
+    "@types/node": "^18.7.18",
     "create-next-app": "latest",
     "cross-fetch": "^3.1.5",
     "edge-runtime": "latest",
-    "netlify-cli": "^11.7.1",
+    "netlify-cli": "^11.8.0",
     "next": "latest",
     "remix": "latest",
     "rollup": "^2.79.0",
