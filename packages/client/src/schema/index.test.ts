@@ -250,8 +250,10 @@ describe('request', () => {
       } as Response;
     });
 
-    const result = await users.getFirst();
-    expect(result).toEqual(json);
+    const result: any = await users.getFirst();
+    expect(result?.a).toEqual(json.a);
+    expect(result?.email).toBeNull();
+    expect(result?.read).toBeDefined();
   });
 });
 
@@ -298,7 +300,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"columns\\":[\\"*\\"]}",
+            "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
@@ -323,7 +325,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
+            "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },

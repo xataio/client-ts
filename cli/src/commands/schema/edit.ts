@@ -299,16 +299,22 @@ Beware that this can lead to ${chalk.bold(
   getMessageForColumn(table: EditableTable, column: EditableColumn) {
     const linkedTable = this.tables.find((t) => (t.initialName || t.name) === column.link?.table);
     function getType() {
-      if (!linkedTable) return `(${chalk.gray.italic(column.type)})`;
-      return `(${chalk.gray.italic(column.type)} → ${chalk.gray.italic(linkedTable.name)})`;
+      if (!linkedTable) return chalk.gray.italic(column.type);
+      return `${chalk.gray.italic(column.type)} → ${chalk.gray.italic(linkedTable.name)}`;
     }
-    const type = getType();
+    const metadata = [
+      getType(),
+      column.unique ? chalk.gray.italic('unique') : '',
+      column.notNull ? chalk.gray.italic('not null') : ''
+    ]
+      .filter(Boolean)
+      .join(' ');
     if (table.deleted || column.deleted || linkedTable?.deleted)
-      return `- ${chalk.red.strikethrough(column.name)} ${type}`;
-    if (table.added || column.added) return `- ${chalk.green(column.name)} ${type}`;
+      return `- ${chalk.red.strikethrough(column.name)} (${metadata})`;
+    if (table.added || column.added) return `- ${chalk.green(column.name)} (${metadata})`;
     if (column.initialName)
-      return `- ${chalk.cyan(column.name)} ${chalk.yellow.strikethrough(column.initialName)} ${type}`;
-    return `- ${chalk.cyan(column.name)} ${type}`;
+      return `- ${chalk.cyan(column.name)} ${chalk.yellow.strikethrough(column.initialName)} (${metadata})`;
+    return `- ${chalk.cyan(column.name)} (${metadata})`;
   }
 
   getOverview() {
@@ -360,7 +366,8 @@ Beware that this can lead to ${chalk.bold(
          Unique: \${unique}`;
 
     if (features.notNull) {
-      template += `      Not null: \${notNull}
+      template += `
+       Not null: \${notNull}
         Default: \${default}`;
     }
 
@@ -382,9 +389,9 @@ Beware that this can lead to ${chalk.bold(
         name: column?.name || '',
         type: column?.type || '',
         link: column?.link?.table || '',
-        notNull: column?.notNull ?? '',
+        notNull: column?.notNull ? 'true' : '',
         default: '', // TODO
-        unique: column?.unique ?? '',
+        unique: column?.unique ? 'true' : '',
         description: column?.description || ''
       },
       fields: [
@@ -424,12 +431,12 @@ Beware that this can lead to ${chalk.bold(
         },
         {
           name: 'unique',
-          message: 'Whether the column is unique',
+          message: 'Whether the column is unique (true/false)',
           validate: validateOptionalBoolean
         },
         {
           name: 'notNull',
-          message: 'Whether the column is not nullable',
+          message: 'Whether the column is not nullable (true/false)',
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
             if (!features.notNull) return true;
             return validateOptionalBoolean(value);
@@ -441,7 +448,7 @@ Beware that this can lead to ${chalk.bold(
         },
         {
           name: 'default',
-          message: 'Default value for not nullable columns',
+          message: 'Default value for if not nullable',
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
             if (!features.notNull) return true;
             if (parseBoolean(state.values.notNull) === true && state.values.type) {
@@ -456,24 +463,19 @@ Beware that this can lead to ${chalk.bold(
       footer() {
         return '\nUse the ↑ ↓ arrows to move across fields, enter to submit and escape to cancel.';
       },
-      template: `
-         Name: \${name}
-         Type: \${type}
-         Link: \${link}
-  Description: \${description}
-       Unique: \${unique}
-     Not null: \${notNull}
-      Default: \${default}`
+      template
     });
 
     try {
       const { values } = await snippet.run();
+      const unique = parseBoolean(values.unique);
+      const notNull = parseBoolean(values.notNull);
       const col: Column = {
         name: values.name,
         type: values.type,
         link: values.link && values.type === 'link' ? { table: values.link } : undefined,
-        unique: values.unique !== '' ? values.unique : undefined,
-        notNull: values.notNull !== '' ? values.notNull : undefined
+        unique: unique || undefined,
+        notNull: notNull || undefined
         // TODO: add default once the backend supports it
         // default: values.default !== '' ? parseDefaultValue(values.type, values.default) : undefined,
         // TODO: add description once the backend supports it
@@ -663,6 +665,7 @@ Beware that this can lead to ${chalk.bold(
 
       for (const column of table.columns) {
         if (table.added || column.added) {
+          this.info(`Adding column ${table.name}.${column.name}`);
           await xata.tables.addTableColumn(workspace, database, branch, table.name, {
             name: column.name,
             type: column.type,
@@ -681,12 +684,12 @@ function parseBoolean(value?: string) {
   const val = value.toLowerCase();
   if (['true', 't', '1', 'y', 'yes'].includes(val)) return true;
   if (['false', 'f', '0', 'n', 'no'].includes(val)) return false;
-  return undefined;
+  return null;
 }
 
 function validateOptionalBoolean(value?: string) {
   const bool = parseBoolean(value);
-  if (bool === undefined) {
+  if (bool === null) {
     return 'Please enter a boolean value (e.g. yes, no, true, false) or leave it empty';
   }
   return true;

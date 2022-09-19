@@ -15,6 +15,7 @@ import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
 import { credentialsPath, getProfileName, Profile, readCredentials } from './credentials.js';
 import { reportBugURL } from './utils.js';
+import dotenvExpand from 'dotenv-expand';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -33,6 +34,8 @@ export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
 const moduleName = 'xata';
 const commonFlagsHelpGroup = 'Common';
 
+export const ENV_FILES = ['.env.local', '.env'];
+
 export abstract class BaseCommand extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
   // By default this will use the system locale and timezone.
@@ -42,8 +45,8 @@ export abstract class BaseCommand extends Command {
   projectConfig?: ProjectConfig;
   projectConfigLocation?: string;
 
-  dotenvLocation = '.env';
   apiKeyLocation?: APIKeyLocation;
+  apiKeyDotenvLocation = '';
 
   #xataClient?: XataApiClient;
 
@@ -100,10 +103,21 @@ export abstract class BaseCommand extends Command {
     };
   }
 
+  loadEnvFile(path: string) {
+    const apiKey = process.env.XATA_API_KEY;
+    let env = dotenv.config({ path });
+    env = dotenvExpand.expand(env);
+    if (!apiKey && env.parsed?.['XATA_API_KEY']) {
+      this.apiKeyLocation = 'dotenv';
+      this.apiKeyDotenvLocation = path;
+    }
+  }
+
   async init() {
     if (process.env.XATA_API_KEY) this.apiKeyLocation = 'shell';
-    const env = dotenv.config({ path: this.dotenvLocation });
-    if (env.parsed?.['XATA_API_KEY']) this.apiKeyLocation = 'dotenv';
+    for (const envFile of ENV_FILES) {
+      this.loadEnvFile(envFile);
+    }
 
     const moduleName = 'xata';
     const search = cosmiconfigSync(moduleName, { searchPlaces: this.searchPlaces }).search();
@@ -132,9 +146,9 @@ export abstract class BaseCommand extends Command {
           ];
           break;
         case 'dotenv':
-          message = `the API key from the ${this.dotenvLocation} file`;
+          message = `the API key from the ${this.apiKeyDotenvLocation} file`;
           suggestions = [
-            `Edit the ${this.dotenvLocation} file and set the XATA_API_KEY environment variable correctly`,
+            `Edit the ${this.apiKeyDotenvLocation} file and set the XATA_API_KEY environment variable correctly`,
             'You can generate or regenerate API keys at https://app.xata.io/settings'
           ];
           break;

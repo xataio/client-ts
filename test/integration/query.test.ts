@@ -407,8 +407,11 @@ describe('integration tests', () => {
 
   test('get first', async () => {
     const user = await xata.db.users.getFirst();
+    const definedUser = await xata.db.users.getFirstOrThrow();
 
     expect(user).toBeDefined();
+    expect(definedUser).toBeDefined();
+    expect(user?.id).toBe(definedUser.id);
   });
 
   test('get first not found', async () => {
@@ -417,6 +420,8 @@ describe('integration tests', () => {
     const user = await query.getFirst();
 
     expect(user).toBeNull();
+
+    expect(query.getFirstOrThrow()).rejects.toThrow();
   });
 
   test('query implements iterator', async () => {
@@ -448,7 +453,7 @@ describe('integration tests', () => {
     expect(user?.id).toBeDefined();
     expect(user?.full_name).toBeDefined();
     //@ts-expect-error
-    expect(user?.email).toBeUndefined();
+    expect(user?.email).toBeNull();
   });
 
   test('includes selected columns in getFirst', async () => {
@@ -461,7 +466,7 @@ describe('integration tests', () => {
     expect(user?.full_name).toBeDefined();
     expect(user?.email).toBeDefined();
     //@ts-expect-error
-    expect(user?.address).toBeUndefined();
+    expect(user?.address).toBeNull();
   });
 
   test('Partial update of a user', async () => {
@@ -543,6 +548,16 @@ describe('integration tests', () => {
     expect(user.email).toBe(apiUser.email);
   });
 
+  test('returns many records with multiple requests', async () => {
+    const newUsers = Array.from({ length: PAGINATION_MAX_SIZE + 1 }).map((_, i) => ({ full_name: `user-${i}` }));
+    await xata.db.users.create(newUsers);
+
+    const records = await xata.db.users.getMany({ pagination: { size: PAGINATION_MAX_SIZE + 1 } });
+
+    expect(records).toHaveLength(PAGINATION_MAX_SIZE + 1);
+    expect(records.hasNextPage).toBeDefined();
+  });
+
   test('Pagination size limit', async () => {
     expect(xata.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
       'message',
@@ -618,7 +633,7 @@ describe('integration tests', () => {
     expect(isXataRecord(nestedProperty)).toBe(true);
     expect(nestedProperty?.name).toEqual(team.name);
     // @ts-expect-error
-    expect(nestedProperty?.owner?.full_name).toBeUndefined();
+    expect(nestedProperty?.owner?.full_name).toBeNull();
 
     const nestedRead = await nestedProperty?.owner?.read();
 
@@ -646,5 +661,23 @@ describe('integration tests', () => {
 
     expect(team.owner?.id).toEqual(owner.id);
     expect(updated?.owner?.id).toEqual(owner2.id);
+  });
+
+  test('Filter with null value', async () => {
+    const newOwner = await xata.db.users.create({ full_name: 'Example User' });
+    const newTeam = await xata.db.teams.create({ name: 'Example Team', owner: newOwner });
+
+    const owner = await xata.db.users.filter({ id: newOwner.id }).getFirst();
+    if (!owner) throw new Error('No user found');
+
+    const team = await xata.db.teams.filter({ owner }).getFirst();
+    expect(team?.id).toEqual(newTeam.id);
+  });
+
+  test('Filter with multiple column', async () => {
+    const newTeam = await xata.db.teams.create({ name: 'Example Team', labels: ['a', 'b'] });
+
+    const team = await xata.db.teams.filter({ labels: newTeam.labels }).getFirst();
+    expect(team?.id).toEqual(newTeam.id);
   });
 });

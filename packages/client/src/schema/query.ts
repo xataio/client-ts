@@ -1,6 +1,6 @@
 import { Schemas } from '../api';
 import { FilterExpression } from '../api/schemas';
-import { compact, isDefined, isString, isStringArray, toBase64 } from '../util/lang';
+import { compact, isDefined, isObject, isString, isStringArray, toBase64 } from '../util/lang';
 import { OmitBy, RequiredBy } from '../util/types';
 import { Filter } from './filters';
 import {
@@ -10,6 +10,7 @@ import {
   Page,
   Paginable,
   PaginationQueryMeta,
+  PAGINATION_DEFAULT_SIZE,
   PAGINATION_MAX_SIZE,
   RecordArray
 } from './pagination';
@@ -174,23 +175,30 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
   filter(a: any, b?: any): Query<Record, Result> {
     if (arguments.length === 1) {
-      const constraints = Object.entries(a ?? {}).map(([column, constraint]) => ({ [column]: constraint as any }));
+      const constraints = Object.entries(a ?? {}).map(([column, constraint]) => ({
+        [column]: this.#cleanFilterConstraint(column, constraint) as any
+      }));
       const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
       return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     } else {
-      const constraints = isDefined(a) && isDefined(b) ? [{ [a]: this.defaultFilter(a, b) }] : undefined;
+      const constraints = isDefined(a) && isDefined(b) ? [{ [a]: this.#cleanFilterConstraint(a, b) }] : undefined;
       const $all = compact([this.#data.filter?.$all].flat().concat(constraints));
 
       return new Query<Record, Result>(this.#repository, this.#table, { filter: { $all } }, this.#data);
     }
   }
 
-  defaultFilter<T>(column: string, value: T) {
+  #cleanFilterConstraint<T>(column: string, value: T) {
     const columnType = this.#table.schema?.columns.find(({ name }) => name === column)?.type;
+
     // TODO: Fix when we support more array types than string
     if (columnType === 'multiple' && (isString(value) || isStringArray(value))) {
       return { $includes: value };
+    }
+
+    if (columnType === 'link' && isObject(value) && isString(value.id)) {
+      return value.id;
     }
 
     return value;
@@ -332,14 +340,26 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<RecordArray<Result>>;
 
   async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<RecordArray<Result>> {
-    const page = await this.getPaginated(options);
+    const { pagination = {}, ...rest } = options;
+    const { size = PAGINATION_DEFAULT_SIZE, offset } = pagination;
+    const batchSize = size <= PAGINATION_MAX_SIZE ? size : PAGINATION_MAX_SIZE;
+
+    let page = await this.getPaginated({ ...rest, pagination: { size: batchSize, offset } });
+    const results = [...page.records];
+
+    while (page.hasNextPage() && results.length < size) {
+      page = await page.nextPage();
+      results.push(...page.records);
+    }
 
     if (page.hasNextPage() && options.pagination?.size === undefined) {
       console.trace('Calling getMany does not return all results. Paginate to get all results or call getAll.');
     }
 
+    const array = new RecordArray(page, results.slice(0, size));
+
     // Method overloading does not provide type inference for the return type.
-    return page.records as unknown as RecordArray<Result>;
+    return array as unknown as RecordArray<Result>;
   }
 
   /**
@@ -408,6 +428,39 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
     // Method overloading does not provide type inference for the return type.
     return (records[0] as unknown as Result) ?? null;
+  }
+
+  /**
+   * Performs the query in the database and returns the first result.
+   * @returns The first record that matches the query, or null if no record matched the query.
+   * @throws if there are no results.
+   */
+  getFirstOrThrow(): Promise<Result>;
+
+  /**
+   * Performs the query in the database and returns the first result.
+   * @param options Additional options to be used when performing the query.
+   * @returns The first record that matches the query, or null if no record matched the query.
+   * @throws if there are no results.
+   */
+  getFirstOrThrow<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'>>(
+    options: Options
+  ): Promise<SelectedPick<Record, typeof options['columns']>>;
+
+  /**
+   * Performs the query in the database and returns the first result.
+   * @param options Additional options to be used when performing the query.
+   * @returns The first record that matches the query, or null if no record matched the query.
+   * @throws if there are no results.
+   */
+  getFirstOrThrow(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'>): Promise<Result>;
+
+  async getFirstOrThrow<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Result> {
+    const records = await this.getMany({ ...options, pagination: { size: 1 } });
+    if (records[0] === undefined) throw new Error('No results found.');
+
+    // Method overloading does not provide type inference for the return type.
+    return records[0] as unknown as Result;
   }
 
   /**

@@ -49,7 +49,7 @@ export default class Status extends BaseCommand {
       case 'shell':
         return 'XATA_API_KEY environment variable in the current shell';
       case 'dotenv':
-        return `XATA_API_KEY environment variable at ${this.dotenvLocation}`;
+        return `XATA_API_KEY environment variable at ${this.apiKeyDotenvLocation}`;
       case 'profile':
         return `Credentials file at ${credentialsPath} witht the ${getProfileName()} profile`;
       case 'new':

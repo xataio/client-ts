@@ -65,15 +65,20 @@ export type QueryResponse = {
   meta: Schemas.RecordsMetadata;
 };
 
+export type SummarizeResponse = {
+  summary: Record<string, any>[];
+};
+
 export type SearchResponse = {
   records: Schemas.XataRecord[];
+  warning?: string;
 };
 
 /**
  * @example {"migrationID":"mig_c7m19ilcefoebpqj12p0"}
  */
 export type MigrationIdResponse = {
-  /*
+  /**
    * @minLength 1
    */
   migrationID: string;

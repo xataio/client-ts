@@ -12,6 +12,6 @@ const args = process.argv.slice(2);
 fork(join(__dirname, 'run-oclif.js'), args, {
   env: {
     ...process.env,
-    NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --experimental-vm-modules`
+    NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --experimental-vm-modules`
   }
 });
