@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.18.2
+
+### Patch Changes
+
+- [#635](https://github.com/xataio/client-ts/pull/635) [`713f9b2`](https://github.com/xataio/client-ts/commit/713f9b2773be99c17d3fcb663e24fe096fa3da48) Thanks [@SferaDev](https://github.com/SferaDev)! - [Search] Add target columns
+
 ## 0.18.1
 
 ### Patch Changes
