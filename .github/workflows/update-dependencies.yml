@@ -3,7 +3,7 @@ name: Update dependencies
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 15 * * 1' # once every monday
+    - cron: '0 10 * * 1' # once every monday
 
 jobs:
   update-deps:

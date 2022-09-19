@@ -20,7 +20,7 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@xata.io/client": "^0.18.0",
+    "@xata.io/client": "^0.18.2",
     "@opentelemetry/api": "^1.2.0"
   }
 }
