@@ -753,7 +753,7 @@ export class RestRepository<Record extends XataRecord>
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response) as any;
+    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
   async #insertRecordWithId(
@@ -778,7 +778,7 @@ export class RestRepository<Record extends XataRecord>
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response) as any;
+    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
   async #bulkInsertTableRecords(objects: EditableData<Record>[], columns: SelectableColumn<Record>[] = ['*']) {
@@ -798,7 +798,7 @@ export class RestRepository<Record extends XataRecord>
     }
 
     const schemaTables = await this.#getSchemaTables();
-    return response.records?.map((item) => initObject(this.#db, schemaTables, this.#table, item)) as any;
+    return response.records?.map((item) => initObject(this.#db, schemaTables, this.#table, item, columns)) as any;
   }
 
   async read<K extends SelectableColumn<Record>>(
@@ -869,7 +869,7 @@ export class RestRepository<Record extends XataRecord>
           });
 
           const schemaTables = await this.#getSchemaTables();
-          return initObject(this.#db, schemaTables, this.#table, response);
+          return initObject(this.#db, schemaTables, this.#table, response, columns);
         } catch (e) {
           if (isObject(e) && e.status === 404) {
             return null;
@@ -1079,7 +1079,7 @@ export class RestRepository<Record extends XataRecord>
       });
 
       const schemaTables = await this.#getSchemaTables();
-      return initObject(this.#db, schemaTables, this.#table, response) as any;
+      return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1165,7 +1165,7 @@ export class RestRepository<Record extends XataRecord>
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response) as any;
+    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
   async delete<K extends SelectableColumn<Record>>(
@@ -1293,7 +1293,7 @@ export class RestRepository<Record extends XataRecord>
       });
 
       const schemaTables = await this.#getSchemaTables();
-      return initObject(this.#db, schemaTables, this.#table, response) as any;
+      return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1330,7 +1330,9 @@ export class RestRepository<Record extends XataRecord>
       });
 
       const schemaTables = await this.#getSchemaTables();
-      return records.map((item) => initObject(this.#db, schemaTables, this.#table, item)) as any;
+
+      // TODO - Column selection not supported by search endpoint yet
+      return records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any;
     });
   }
 
@@ -1356,7 +1358,9 @@ export class RestRepository<Record extends XataRecord>
       });
 
       const schemaTables = await this.#getSchemaTables();
-      const records = objects.map((record) => initObject<Result>(this.#db, schemaTables, this.#table, record));
+      const records = objects.map((record) =>
+        initObject<Result>(this.#db, schemaTables, this.#table, record, data.columns ?? ['*'])
+      );
       await this.#setCacheQuery(query, meta, records);
 
       return new Page<Record, Result>(query, meta, records);
@@ -1409,7 +1413,8 @@ export const initObject = <T>(
   db: Record<string, Repository<any>>,
   schemaTables: Schemas.Table[],
   table: string,
-  object: Record<string, unknown>
+  object: Record<string, unknown>,
+  selectedColumns: string[]
 ) => {
   const result: Dictionary<unknown> = {};
   const { xata, ...rest } = object ?? {};
@@ -1419,6 +1424,9 @@ export const initObject = <T>(
   if (!columns) console.error(`Table ${table} not found in schema`);
 
   for (const column of columns ?? []) {
+    // Ignore columns not selected
+    if (!isValidColumn(selectedColumns, column)) continue;
+
     const value = result[column.name];
 
     switch (column.type) {
@@ -1439,7 +1447,16 @@ export const initObject = <T>(
         if (!linkTable) {
           console.error(`Failed to parse link for field ${column.name}`);
         } else if (isObject(value)) {
-          result[column.name] = initObject(db, schemaTables, linkTable, value);
+          const selectedLinkColumns = selectedColumns.reduce((acc, item) => {
+            if (item.startsWith(`${column.name}.`)) {
+              const [, ...path] = item.split('.');
+              return [...acc, path.join('.')];
+            }
+
+            return acc;
+          }, [] as string[]);
+
+          result[column.name] = initObject(db, schemaTables, linkTable, value, selectedLinkColumns);
         } else {
           result[column.name] = null;
         }
@@ -1497,4 +1514,19 @@ function cleanFilter(filter?: Schemas.FilterExpression) {
     .filter((value) => (Array.isArray(value) ? value.length > 0 : true));
 
   return values.length > 0 ? filter : undefined;
+}
+
+function isValidColumn(columns: string[], column: Schemas.Column) {
+  // Every column alias
+  if (columns.includes('*')) return true;
+
+  // Link columns
+  if (column.type === 'link') {
+    const linkColumns = columns.filter((item) => item.startsWith(`${column.name}.`));
+
+    return linkColumns.length > 0;
+  }
+
+  // Normal columns
+  return columns.includes(column.name);
 }
