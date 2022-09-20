@@ -151,11 +151,11 @@ describe('record creation', () => {
     expect(teams).toHaveLength(2);
     expect(teams[0].id).toBeDefined();
     // @ts-expect-error
-    expect(teams[0].name).toBeNull();
+    expect(teams[0].name).not.toBeDefined();
     expect(teams[0].read).toBeDefined();
     expect(teams[1].id).toBeDefined();
     // @ts-expect-error
-    expect(teams[1].name).toBeNull();
+    expect(teams[1].name).not.toBeDefined();
     expect(teams[1].read).toBeDefined();
 
     const team1 = await teams[0].read();
@@ -165,17 +165,18 @@ describe('record creation', () => {
     const team2 = await teams[1].read(['labels']);
     expect(team2?.id).toBe(teams[1].id);
     // @ts-expect-error
-    expect(team2?.name).toBeNull();
+    expect(team2?.name).not.toBeDefined();
     expect(team2?.labels).toEqual(['foo']);
   });
 
   test('create single with returning columns', async () => {
-    const team = await xata.db.teams.create({ name: 'Team cars' }, ['id']);
+    const team = await xata.db.teams.create({ name: 'Team cars' }, ['id', 'owner']);
 
     expect(team).toBeDefined();
     expect(team.id).toBeDefined();
     // @ts-expect-error
-    expect(team.name).toBeNull();
+    expect(team.name).not.toBeDefined();
+    expect(team.owner).toBeNull();
     expect(team.read).toBeDefined();
 
     const team1 = await team.read();

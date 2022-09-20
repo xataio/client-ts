@@ -131,4 +131,25 @@ describe('record read', () => {
     // @ts-ignore
     expect(xata.db.teams.readOrThrow(items)).rejects.toThrow();
   });
+
+  test('read with columns', async () => {
+    const owner = await xata.db.users.create({ full_name: 'John', address: { street: 'Newark' } });
+    const team = await xata.db.teams.create({ name: 'Team ships', labels: ['foo', 'bar'], owner });
+
+    const copy = await xata.db.teams.read(team.id, ['id', 'name', 'owner.address.street']);
+
+    expect(copy).toBeDefined();
+    expect(copy?.id).toBe(team.id);
+    expect(copy?.name).toBe(team.name);
+    // @ts-expect-error
+    expect(copy?.labels).not.toBeDefined();
+    expect(copy?.owner).toBeDefined();
+    expect(copy?.owner?.id).toBe(owner.id);
+    expect(copy?.owner?.address).toBeDefined();
+    expect(copy?.owner?.address?.street).toBe(owner.address?.street);
+    // @ts-expect-error
+    expect(copy?.owner?.address?.city).not.toBeDefined();
+    // @ts-expect-error
+    expect(copy?.owner?.full_name).not.toBeDefined();
+  });
 });
