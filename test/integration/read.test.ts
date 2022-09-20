@@ -144,6 +144,7 @@ describe('record read', () => {
     // @ts-expect-error
     expect(copy?.labels).not.toBeDefined();
     expect(copy?.owner).toBeDefined();
+    expect(copy?.owner?.id).toBe(owner.id);
     expect(copy?.owner?.address).toBeDefined();
     expect(copy?.owner?.address?.street).toBe(owner.address?.street);
     // @ts-expect-error
