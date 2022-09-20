@@ -8,9 +8,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky install",
-    "postinstall": "lerna bootstrap",
     "build": "lerna run build",
-    "size": "npm run build && size-limit",
+    "size": "pnpm build && size-limit",
     "openapi-gen": "openapi-codegen xatabase"
   },
   "repository": {
@@ -65,7 +64,7 @@
   },
   "lint-staged": {
     "codegen/src/*.{js,ts,tsx}": [
-      "npm run build-example",
+      "pnpm run build-example",
       "git add codegen/example"
     ],
     "*.{js,ts,tsx}": [

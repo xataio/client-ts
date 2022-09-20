@@ -21,6 +21,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
+          cache: 'pnpm'
 
       - name: Set build version
         run: echo ::set-output name=TAG::0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
@@ -67,10 +68,10 @@ jobs:
             [Pull request has been updated, please wait for latest changes to be pushed to npm...]
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Compile
-        run: npm run build
+        run: pnpm build
 
       - name: Configure npm registry token
         if: ${{ steps.secrets.outputs.exist == 'true' }}
@@ -136,25 +137,25 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Check secrets exist
         run: echo ::set-output name=exist::${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}
         id: secrets
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Compile
-        run: npm run build
+        run: pnpm build
 
       - name: Lint
-        run: npm run lint
+        run: pnpm lint
 
       - name: Test
         if: ${{ steps.secrets.outputs.exist == 'true' }}
         run: |
-          npm test
+          pnpm test
         env:
           XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}

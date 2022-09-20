@@ -13,9 +13,8 @@
     "child_process": false
   },
   "scripts": {
-    "build": "rimraf dist && rollup -c",
-    "prepack": "npm run build",
-    "prebuild": "node ../../scripts/add-version-file.mjs"
+    "build": "rimraf dist && node ../../scripts/add-version-file.mjs && rollup -c",
+    "prepack": "npm run build"
   },
   "peerDependencies": {
     "typescript": ">=4.5"
@@ -30,5 +29,9 @@
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
-  "homepage": "https://xata.io/docs/sdk/getting-started"
+  "homepage": "https://xata.io/docs/sdk/getting-started",
+  "devDependencies": {
+    "rimraf": "^3.0.2",
+    "rollup": "^2.79.0"
+  }
 }
