@@ -1,3 +1,4 @@
 packages:
-  - 'cli/*'
+  - 'cli'
   - 'packages/*'
+  - 'test/e2e'
