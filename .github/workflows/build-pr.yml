@@ -72,7 +72,7 @@ jobs:
             [Pull request has been updated, please wait for latest changes to be pushed to npm...]
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install
 
       - name: Compile
         run: pnpm build
@@ -152,7 +152,7 @@ jobs:
         id: secrets
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install
 
       - name: Compile
         run: pnpm build
