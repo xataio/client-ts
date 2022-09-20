@@ -73,7 +73,8 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
         return records.map((record) => {
           const { table = 'orphan' } = record.xata;
 
-          return { table, record: initObject(this.db, schemaTables, table, record) } as any;
+          // TODO: Search endpoint doesn't support column selection
+          return { table, record: initObject(this.db, schemaTables, table, record, ['*']) } as any;
         });
       },
       byTable: async <Tables extends StringKeys<Schemas>>(
@@ -87,7 +88,8 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
           const { table = 'orphan' } = record.xata;
 
           const items = acc[table] ?? [];
-          const item = initObject(this.db, schemaTables, table, record);
+          // TODO: Search endpoint doesn't support column selection
+          const item = initObject(this.db, schemaTables, table, record, ['*']);
 
           return { ...acc, [table]: [...items, item] };
         }, {} as any);

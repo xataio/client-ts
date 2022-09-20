@@ -453,7 +453,7 @@ describe('integration tests', () => {
     expect(user?.id).toBeDefined();
     expect(user?.full_name).toBeDefined();
     //@ts-expect-error
-    expect(user?.email).toBeNull();
+    expect(user?.email).not.toBeDefined();
   });
 
   test('includes selected columns in getFirst', async () => {
@@ -466,7 +466,7 @@ describe('integration tests', () => {
     expect(user?.full_name).toBeDefined();
     expect(user?.email).toBeDefined();
     //@ts-expect-error
-    expect(user?.address).toBeNull();
+    expect(user?.address).not.toBeDefined();
   });
 
   test('Partial update of a user', async () => {
@@ -633,7 +633,7 @@ describe('integration tests', () => {
     expect(isXataRecord(nestedProperty)).toBe(true);
     expect(nestedProperty?.name).toEqual(team.name);
     // @ts-expect-error
-    expect(nestedProperty?.owner?.full_name).toBeNull();
+    expect(nestedProperty?.owner?.full_name).not.toBeDefined();
 
     const nestedRead = await nestedProperty?.owner?.read();
 

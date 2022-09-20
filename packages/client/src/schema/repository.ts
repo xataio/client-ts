@@ -1448,6 +1448,10 @@ export const initObject = <T>(
           console.error(`Failed to parse link for field ${column.name}`);
         } else if (isObject(value)) {
           const selectedLinkColumns = selectedColumns.reduce((acc, item) => {
+            if (item === column.name) {
+              return [...acc, '*'];
+            }
+
             if (item.startsWith(`${column.name}.`)) {
               const [, ...path] = item.split('.');
               return [...acc, path.join('.')];
@@ -1522,7 +1526,7 @@ function isValidColumn(columns: string[], column: Schemas.Column) {
 
   // Link columns
   if (column.type === 'link') {
-    const linkColumns = columns.filter((item) => item.startsWith(`${column.name}.`));
+    const linkColumns = columns.filter((item) => item.startsWith(column.name));
 
     return linkColumns.length > 0;
   }
