@@ -4092,6 +4092,7 @@ export type SummarizeTableError = Fetcher.ErrorWrapper<
 >;
 
 export type SummarizeTableRequestBody = {
+  filters?: Schemas.FilterExpression;
   columns?: Schemas.ColumnsProjection;
   summaries?: Schemas.SummaryExpressionList;
   sort?: Schemas.SortExpression;
@@ -4120,7 +4121,8 @@ export type SummarizeTableVariables = {
  * We use `count: *` here we'd like to know the total amount of rows; ignoring whether
  * they are `null` or not.
  *
- * What are the top total sales for each product?
+ * What are the top total sales for each product in July 2022?
+ * - Set `filter: {soldAt: {"$ge": "2022-07-01T00:00:00.000Z", "$lt": "2022-08-01T00:00:00.000Z"}}` in order to limit the result set to sales recorded in July 2022.
  * - Set `columns: [product_name]` as we'd like to run calculations on each unique product
  * name in our table. Setting `columns` like this will produce one row per unique product
  * name.
