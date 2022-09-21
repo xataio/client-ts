@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.18.3
+
+### Patch Changes
+
+- [#639](https://github.com/xataio/client-ts/pull/639) [`50fb3c0`](https://github.com/xataio/client-ts/commit/50fb3c0a1cffd03a16cc8b1b21454ea816f2edbb) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not return null for columns not selected
+
 ## 0.18.2
 
 ### Patch Changes
