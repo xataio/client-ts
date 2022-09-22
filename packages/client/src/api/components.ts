@@ -1205,7 +1205,7 @@ export const resolveBranch = (variables: ResolveBranchVariables) =>
     ...variables
   });
 
-export type ListMigrationRequestsPathParams = {
+export type QueryMigrationRequestsPathParams = {
   /**
    * The Database Name
    */
@@ -1213,7 +1213,7 @@ export type ListMigrationRequestsPathParams = {
   workspace: string;
 };
 
-export type ListMigrationRequestsError = Fetcher.ErrorWrapper<
+export type QueryMigrationRequestsError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -1228,32 +1228,32 @@ export type ListMigrationRequestsError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type ListMigrationRequestsResponse = {
+export type QueryMigrationRequestsResponse = {
   migrationRequests: Schemas.MigrationRequest[];
   meta: Schemas.RecordsMetadata;
 };
 
-export type ListMigrationRequestsRequestBody = {
+export type QueryMigrationRequestsRequestBody = {
   filter?: Schemas.FilterExpression;
   sort?: Schemas.SortExpression;
   page?: Schemas.PageConfig;
   columns?: Schemas.ColumnsProjection;
 };
 
-export type ListMigrationRequestsVariables = {
-  body?: ListMigrationRequestsRequestBody;
-  pathParams: ListMigrationRequestsPathParams;
+export type QueryMigrationRequestsVariables = {
+  body?: QueryMigrationRequestsRequestBody;
+  pathParams: QueryMigrationRequestsPathParams;
 } & FetcherExtraProps;
 
-export const listMigrationRequests = (variables: ListMigrationRequestsVariables) =>
+export const queryMigrationRequests = (variables: QueryMigrationRequestsVariables) =>
   fetch<
-    ListMigrationRequestsResponse,
-    ListMigrationRequestsError,
-    ListMigrationRequestsRequestBody,
+    QueryMigrationRequestsResponse,
+    QueryMigrationRequestsError,
+    QueryMigrationRequestsRequestBody,
     {},
     {},
-    ListMigrationRequestsPathParams
-  >({ url: '/dbs/{dbName}/migrations/list', method: 'post', ...variables });
+    QueryMigrationRequestsPathParams
+  >({ url: '/dbs/{dbName}/migrations/query', method: 'post', ...variables });
 
 export type CreateMigrationRequestPathParams = {
   /**
@@ -4189,7 +4189,7 @@ export const operationsByTag = {
     getBranchStats
   },
   migrationRequests: {
-    listMigrationRequests,
+    queryMigrationRequests,
     createMigrationRequest,
     getMigrationRequest,
     updateMigrationRequest,
