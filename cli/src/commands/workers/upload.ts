@@ -2,7 +2,7 @@ import { Flags } from '@oclif/core';
 import fetch from 'node-fetch';
 import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
-import { buildWatcher, compileWorkers, WorkerScript, workerScriptSchema } from '../../workers.js';
+import { buildWatcher, compileWorkers, workerScriptSchema } from '../../workers.js';
 
 const UPLOAD_ENDPOINT = 'https://app.xata.io/api/workers';
 
@@ -33,56 +33,43 @@ export default class Upload extends BaseCommand {
     // TODO: Read and parse local environment variables to include as secrets
     const environment = {};
 
-    const workers: Map<string, WorkerScript> = new Map();
-
     const { watcher } = buildWatcher({
-      compile: async (path) => {
-        const compiledWorkers = await compileWorkers(path);
-        console.log(`Compiled ${compiledWorkers.length} workers`);
+      compile: (path) => compileWorkers(path),
+      run: async (workers) => {
+        this.log(`Uploading ${workers.length} workers`);
 
-        for (const worker of compiledWorkers) {
-          if (workers.has(worker.name)) {
-            this.error(`Worker ${worker.name} already exists. Worker names must be unique.`);
-          }
+        const body: Body = {
+          workspace,
+          database,
+          connection: {
+            databaseUrl: databaseURL,
+            // TODO: Database scoped service API Key (backend generated maybe)
+            apiKey: profile.apiKey
+          },
+          environment,
+          scripts: Array.from(workers.values())
+        };
 
-          this.info(`Saving worker ${worker.name}`);
-          workers.set(worker.name, worker);
-        }
+        const response = await fetch(UPLOAD_ENDPOINT, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${profile.apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
 
-        return compiledWorkers;
+        const json = await response.json();
+
+        const { id } = responseSchema.parse(json);
+
+        // TODO: Update codegen file and save
+        this.info(`Worker: ${id}`);
+
+        await watcher.close();
+
+        return () => Promise.resolve();
       },
       included: flags.include?.split(','),
       ignored: flags.ignore?.split(',')
     });
-
-    this.log(`Uploading ${workers.size} workers`);
-
-    const body: Body = {
-      workspace,
-      database,
-      connection: {
-        databaseUrl: databaseURL,
-        // TODO: Database scoped service API Key (backend generated maybe)
-        apiKey: profile.apiKey
-      },
-      environment,
-      scripts: Array.from(workers.values())
-    };
-
-    const response = await fetch(UPLOAD_ENDPOINT, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${profile.apiKey}` },
-      body: JSON.stringify(body)
-    });
-
-    const json = await response.json();
-
-    const { id } = responseSchema.parse(json);
-
-    // TODO: Update codegen file and save
-    this.info(`Worker: ${id}`);
-
-    await watcher.close();
   }
 }
 
