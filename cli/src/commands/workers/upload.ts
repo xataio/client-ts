@@ -35,8 +35,8 @@ export default class Upload extends BaseCommand {
 
     const workers: Map<string, WorkerScript> = new Map();
 
-    const { watcher } = await buildWatcher({
-      action: async (path) => {
+    const { watcher } = buildWatcher({
+      compile: async (path) => {
         const compiledWorkers = await compileWorkers(path);
         console.log(`Compiled ${compiledWorkers.length} workers`);
 
@@ -48,6 +48,8 @@ export default class Upload extends BaseCommand {
           this.info(`Saving worker ${worker.name}`);
           workers.set(worker.name, worker);
         }
+
+        return compiledWorkers;
       },
       included: flags.include?.split(','),
       ignored: flags.ignore?.split(',')
