@@ -72,54 +72,59 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
   const external: string[] = [];
   const functions: Record<string, string> = {};
 
-  babel.transformFileSync(file, {
-    presets: [presetTypeScript, presetReact],
-    plugins: [
-      (): PluginItem => {
-        return {
-          visitor: {
-            ImportDeclaration: {
-              enter(path) {
-                for (const specifier of path.node.specifiers) {
-                  const binding = path.scope.getBinding(specifier.local.name);
-                  if (!binding) continue;
-                  const refPaths = binding.referencePaths;
-                  for (const refPath of refPaths) {
-                    const usedInWorker = !!refPath.find((path) => {
-                      if (!path.isFunction()) return false;
-                      return isXataWorker(path);
-                    });
+  try {
+    babel.transformFileSync(file, {
+      presets: [presetTypeScript, presetReact],
+      plugins: [
+        (): PluginItem => {
+          return {
+            visitor: {
+              ImportDeclaration: {
+                enter(path) {
+                  for (const specifier of path.node.specifiers) {
+                    const binding = path.scope.getBinding(specifier.local.name);
+                    if (!binding) continue;
+                    const refPaths = binding.referencePaths;
+                    for (const refPath of refPaths) {
+                      const usedInWorker = !!refPath.find((path) => {
+                        if (!path.isFunction()) return false;
+                        return isXataWorker(path);
+                      });
 
-                    if (usedInWorker) {
-                      external.push(path.toString());
+                      if (usedInWorker) {
+                        external.push(path.toString());
+                      }
+                    }
+                  }
+                }
+              },
+              VariableDeclaration: {
+                enter() {
+                  // external.push(path.toString());
+                }
+              },
+              Function: {
+                enter(path) {
+                  if (isXataWorker(path)) {
+                    const args = (path.parent as CallExpression).arguments as any[];
+                    const workerName = args[0]?.value;
+                    if (!workerName || typeof workerName !== 'string') {
+                      console.error(`Found a worker without a name in file ${file}`);
+                    } else {
+                      functions[workerName] = path.toString();
                     }
                   }
                 }
               }
-            },
-            VariableDeclaration: {
-              enter() {
-                // external.push(path.toString());
-              }
-            },
-            Function: {
-              enter(path) {
-                if (isXataWorker(path)) {
-                  const args = (path.parent as CallExpression).arguments as any[];
-                  const workerName = args[0]?.value;
-                  if (!workerName || typeof workerName !== 'string') {
-                    console.error(`Found a worker without a name in file ${file}`);
-                  } else {
-                    functions[workerName] = path.toString();
-                  }
-                }
-              }
             }
-          }
-        };
-      }
-    ]
-  });
+          };
+        }
+      ]
+    });
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
 
   const compiledWorkers: WorkerScript[] = [];
 
