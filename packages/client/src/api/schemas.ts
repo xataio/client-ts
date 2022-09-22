@@ -525,8 +525,7 @@ export type FilterExpression = {
  * an object, i.e. if `settings` is an object with `dark_mode` as a field, you may summarize
  * `settings.dark_mode` but not `settings` nor `settings.*`.
  *
- * @example {"all_users":{"count":"*"}}
- * @example {"total_created":{"count":"created_at"}}
+ * @example {"all_users":{"count":"*"},"total_created":{"count":"created_at"}}
  * @x-go-type xbquery.SummaryList
  */
 export type SummaryExpressionList = {

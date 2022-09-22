@@ -796,6 +796,10 @@ export type CreateDatabaseError = Fetcher.ErrorWrapper<
       status: 401;
       payload: Responses.AuthError;
     }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
 >;
 
 export type CreateDatabaseResponse = {
@@ -1205,7 +1209,7 @@ export const resolveBranch = (variables: ResolveBranchVariables) =>
     ...variables
   });
 
-export type ListMigrationRequestsPathParams = {
+export type QueryMigrationRequestsPathParams = {
   /**
    * The Database Name
    */
@@ -1213,7 +1217,7 @@ export type ListMigrationRequestsPathParams = {
   workspace: string;
 };
 
-export type ListMigrationRequestsError = Fetcher.ErrorWrapper<
+export type QueryMigrationRequestsError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -1228,32 +1232,32 @@ export type ListMigrationRequestsError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type ListMigrationRequestsResponse = {
+export type QueryMigrationRequestsResponse = {
   migrationRequests: Schemas.MigrationRequest[];
   meta: Schemas.RecordsMetadata;
 };
 
-export type ListMigrationRequestsRequestBody = {
+export type QueryMigrationRequestsRequestBody = {
   filter?: Schemas.FilterExpression;
   sort?: Schemas.SortExpression;
   page?: Schemas.PageConfig;
   columns?: Schemas.ColumnsProjection;
 };
 
-export type ListMigrationRequestsVariables = {
-  body?: ListMigrationRequestsRequestBody;
-  pathParams: ListMigrationRequestsPathParams;
+export type QueryMigrationRequestsVariables = {
+  body?: QueryMigrationRequestsRequestBody;
+  pathParams: QueryMigrationRequestsPathParams;
 } & FetcherExtraProps;
 
-export const listMigrationRequests = (variables: ListMigrationRequestsVariables) =>
+export const queryMigrationRequests = (variables: QueryMigrationRequestsVariables) =>
   fetch<
-    ListMigrationRequestsResponse,
-    ListMigrationRequestsError,
-    ListMigrationRequestsRequestBody,
+    QueryMigrationRequestsResponse,
+    QueryMigrationRequestsError,
+    QueryMigrationRequestsRequestBody,
     {},
     {},
-    ListMigrationRequestsPathParams
-  >({ url: '/dbs/{dbName}/migrations/list', method: 'post', ...variables });
+    QueryMigrationRequestsPathParams
+  >({ url: '/dbs/{dbName}/migrations/query', method: 'post', ...variables });
 
 export type CreateMigrationRequestPathParams = {
   /**
@@ -1672,6 +1676,10 @@ export type CreateBranchError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
 >;
 
 export type CreateBranchResponse = {
@@ -1725,6 +1733,10 @@ export type DeleteBranchError = Fetcher.ErrorWrapper<
     }
   | {
       status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
       payload: Responses.SimpleError;
     }
 >;
@@ -2402,6 +2414,10 @@ export type UpdateTableError = Fetcher.ErrorWrapper<
     }
   | {
       status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
       payload: Responses.SimpleError;
     }
 >;
@@ -4189,7 +4205,7 @@ export const operationsByTag = {
     getBranchStats
   },
   migrationRequests: {
-    listMigrationRequests,
+    queryMigrationRequests,
     createMigrationRequest,
     getMigrationRequest,
     updateMigrationRequest,
