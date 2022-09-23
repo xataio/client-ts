@@ -5,6 +5,7 @@ export type ParseOptions = {
   columns?: string[];
   batchSize?: number;
   maxRows?: number;
+  skipRows?: number;
   noheader?: boolean;
   delimiter?: string[];
   nullValue?: string[];
