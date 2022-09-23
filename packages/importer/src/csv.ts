@@ -19,7 +19,7 @@ function initConverter({ noheader = false, delimiter = [','] }: ParseOptions) {
   return csv({ output: 'csv', noheader, delimiter });
 }
 
-function process(converter: Converter, { callback, batchSize = 1000, columns, maxRows }: ParseOptions) {
+function process(converter: Converter, { callback, batchSize = 1000, columns, maxRows, skipRows = 0 }: ParseOptions) {
   let rows = 0;
   // Even after calling converter.end() it seems that csvtojson reads one or two lines more.
   // We want to avoid that.
@@ -30,8 +30,9 @@ function process(converter: Converter, { callback, batchSize = 1000, columns, ma
       if (!columns) columns = header;
     });
     converter.subscribe(
-      async (line) => {
+      async (line, lineNumber) => {
         if (stopped) return;
+        if (lineNumber < skipRows) return;
 
         lines.push(line);
         if (lines.length >= batchSize) {

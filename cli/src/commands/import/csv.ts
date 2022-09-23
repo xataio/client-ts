@@ -47,6 +47,9 @@ export default class ImportCSV extends BaseCommand {
     'max-rows': Flags.integer({
       description: 'Maximum number of rows to process'
     }),
+    'skip-rows': Flags.integer({
+      description: 'Number of rows to skip'
+    }),
     delimiter: Flags.string({
       description: 'Delimiters to use for splitting CSV data',
       multiple: true
@@ -71,6 +74,7 @@ export default class ImportCSV extends BaseCommand {
       'no-column-name-normalization': ignoreColumnNormalization,
       'batch-size': batchSize,
       'max-rows': maxRows,
+      'skip-rows': skipRows,
       delimiter,
       'null-value': nullValue
     } = flags;
@@ -92,6 +96,7 @@ export default class ImportCSV extends BaseCommand {
       noheader: Boolean(noHeader),
       batchSize,
       maxRows,
+      skipRows,
       delimiter,
       nullValue,
       ignoreColumnNormalization,
