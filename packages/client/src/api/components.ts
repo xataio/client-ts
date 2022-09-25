@@ -258,7 +258,7 @@ export const getWorkspacesList = (variables: GetWorkspacesListVariables) =>
 
 export type GetWorkspacePathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
 };
@@ -294,7 +294,7 @@ export const getWorkspace = (variables: GetWorkspaceVariables) =>
 
 export type UpdateWorkspacePathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
 };
@@ -331,7 +331,7 @@ export const updateWorkspace = (variables: UpdateWorkspaceVariables) =>
 
 export type DeleteWorkspacePathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
 };
@@ -367,7 +367,7 @@ export const deleteWorkspace = (variables: DeleteWorkspaceVariables) =>
 
 export type GetWorkspaceMembersListPathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
 };
@@ -403,7 +403,7 @@ export const getWorkspaceMembersList = (variables: GetWorkspaceMembersListVariab
 
 export type UpdateWorkspaceMemberRolePathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
   /**
@@ -451,7 +451,7 @@ export const updateWorkspaceMemberRole = (variables: UpdateWorkspaceMemberRoleVa
 
 export type RemoveWorkspaceMemberPathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
   /**
@@ -491,7 +491,7 @@ export const removeWorkspaceMember = (variables: RemoveWorkspaceMemberVariables)
 
 export type InviteWorkspaceMemberPathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
 };
@@ -543,7 +543,7 @@ export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables)
 
 export type UpdateWorkspaceMemberInvitePathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
   /**
@@ -595,7 +595,7 @@ export const updateWorkspaceMemberInvite = (variables: UpdateWorkspaceMemberInvi
 
 export type CancelWorkspaceMemberInvitePathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
   /**
@@ -635,7 +635,7 @@ export const cancelWorkspaceMemberInvite = (variables: CancelWorkspaceMemberInvi
 
 export type ResendWorkspaceMemberInvitePathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
   /**
@@ -675,7 +675,7 @@ export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInvi
 
 export type AcceptWorkspaceMemberInvitePathParams = {
   /**
-   * Workspace name
+   * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
   /**
