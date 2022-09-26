@@ -1,5 +1,14 @@
 # @xata.io/importer
 
+## 0.2.9
+
+### Patch Changes
+
+- [#653](https://github.com/xataio/client-ts/pull/653) [`7613417`](https://github.com/xataio/client-ts/commit/7613417fba2c09ebdd5e743f778a5ea642baffa2) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing skip rows option to importer
+
+- Updated dependencies [[`b8d441f`](https://github.com/xataio/client-ts/commit/b8d441f80867322f41989d52c94bba230632782b)]:
+  - @xata.io/client@0.18.4
+
 ## 0.2.8
 
 ### Patch Changes

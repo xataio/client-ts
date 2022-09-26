@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.18.4
+
+### Patch Changes
+
+- [#650](https://github.com/xataio/client-ts/pull/650) [`b8d441f`](https://github.com/xataio/client-ts/commit/b8d441f80867322f41989d52c94bba230632782b) Thanks [@xata-bot](https://github.com/xata-bot)! - API: Rename listMigrationRequests to queryMigrationRequests
+
 ## 0.18.3
 
 ### Patch Changes
