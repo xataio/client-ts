@@ -1,5 +1,17 @@
 # @xata.io/cli
 
+## 0.9.4
+
+### Patch Changes
+
+- [#610](https://github.com/xataio/client-ts/pull/610) [`69a05a7`](https://github.com/xataio/client-ts/commit/69a05a7bf2604fd197bc866a5644afa2f6aa4fcc) Thanks [@gimenete](https://github.com/gimenete)! - Add support for not null and unique in interactive schema editor
+
+- [#653](https://github.com/xataio/client-ts/pull/653) [`7613417`](https://github.com/xataio/client-ts/commit/7613417fba2c09ebdd5e743f778a5ea642baffa2) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing skip rows option to importer
+
+- Updated dependencies [[`7613417`](https://github.com/xataio/client-ts/commit/7613417fba2c09ebdd5e743f778a5ea642baffa2), [`b8d441f`](https://github.com/xataio/client-ts/commit/b8d441f80867322f41989d52c94bba230632782b)]:
+  - @xata.io/importer@0.2.9
+  - @xata.io/client@0.18.4
+
 ## 0.9.3
 
 ### Patch Changes
