@@ -28,7 +28,7 @@ const resolveUrl = (
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
 export type FetchImpl = (
   url: string,
-  init?: { body?: string; headers?: Record<string, string>; method?: string }
+  init?: { body?: string; headers?: Record<string, string>; method?: string; signal?: AbortSignal }
 ) => Promise<{
   ok: boolean;
   status: number;
@@ -47,6 +47,7 @@ export type FetcherExtraProps = {
   fetchImpl: FetchImpl;
   apiKey: string;
   trace: TraceFunction;
+  signal?: AbortSignal;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
@@ -104,7 +105,8 @@ export async function fetch<
   apiKey,
   apiUrl,
   workspacesApiUrl,
-  trace
+  trace,
+  signal
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   return trace(
     `${method.toUpperCase()} ${path}`,
@@ -129,7 +131,8 @@ export async function fetch<
           ...headers,
           ...hostHeader(fullUrl),
           Authorization: `Bearer ${apiKey}`
-        }
+        },
+        signal
       });
 
       // No content

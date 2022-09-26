@@ -28,8 +28,8 @@ export type GetUserVariables = FetcherExtraProps;
 /**
  * Return details of the user making the request
  */
-export const getUser = (variables: GetUserVariables) =>
-  fetch<Schemas.UserWithID, GetUserError, undefined, {}, {}, {}>({ url: '/user', method: 'get', ...variables });
+export const getUser = (variables: GetUserVariables, signal?: AbortSignal) =>
+  fetch<Schemas.UserWithID, GetUserError, undefined, {}, {}, {}>({ url: '/user', method: 'get', ...variables, signal });
 
 export type UpdateUserError = Fetcher.ErrorWrapper<
   | {
@@ -53,8 +53,13 @@ export type UpdateUserVariables = {
 /**
  * Update user info
  */
-export const updateUser = (variables: UpdateUserVariables) =>
-  fetch<Schemas.UserWithID, UpdateUserError, Schemas.User, {}, {}, {}>({ url: '/user', method: 'put', ...variables });
+export const updateUser = (variables: UpdateUserVariables, signal?: AbortSignal) =>
+  fetch<Schemas.UserWithID, UpdateUserError, Schemas.User, {}, {}, {}>({
+    url: '/user',
+    method: 'put',
+    ...variables,
+    signal
+  });
 
 export type DeleteUserError = Fetcher.ErrorWrapper<
   | {
@@ -76,8 +81,8 @@ export type DeleteUserVariables = FetcherExtraProps;
 /**
  * Delete the user making the request
  */
-export const deleteUser = (variables: DeleteUserVariables) =>
-  fetch<undefined, DeleteUserError, undefined, {}, {}, {}>({ url: '/user', method: 'delete', ...variables });
+export const deleteUser = (variables: DeleteUserVariables, signal?: AbortSignal) =>
+  fetch<undefined, DeleteUserError, undefined, {}, {}, {}>({ url: '/user', method: 'delete', ...variables, signal });
 
 export type GetUserAPIKeysError = Fetcher.ErrorWrapper<
   | {
@@ -106,11 +111,12 @@ export type GetUserAPIKeysVariables = FetcherExtraProps;
 /**
  * Retrieve a list of existing user API keys
  */
-export const getUserAPIKeys = (variables: GetUserAPIKeysVariables) =>
+export const getUserAPIKeys = (variables: GetUserAPIKeysVariables, signal?: AbortSignal) =>
   fetch<GetUserAPIKeysResponse, GetUserAPIKeysError, undefined, {}, {}, {}>({
     url: '/user/keys',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type CreateUserAPIKeyPathParams = {
@@ -148,11 +154,12 @@ export type CreateUserAPIKeyVariables = {
 /**
  * Create and return new API key
  */
-export const createUserAPIKey = (variables: CreateUserAPIKeyVariables) =>
+export const createUserAPIKey = (variables: CreateUserAPIKeyVariables, signal?: AbortSignal) =>
   fetch<CreateUserAPIKeyResponse, CreateUserAPIKeyError, undefined, {}, {}, CreateUserAPIKeyPathParams>({
     url: '/user/keys/{keyName}',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type DeleteUserAPIKeyPathParams = {
@@ -184,11 +191,12 @@ export type DeleteUserAPIKeyVariables = {
 /**
  * Delete an existing API key
  */
-export const deleteUserAPIKey = (variables: DeleteUserAPIKeyVariables) =>
+export const deleteUserAPIKey = (variables: DeleteUserAPIKeyVariables, signal?: AbortSignal) =>
   fetch<undefined, DeleteUserAPIKeyError, undefined, {}, {}, DeleteUserAPIKeyPathParams>({
     url: '/user/keys/{keyName}',
     method: 'delete',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type CreateWorkspaceError = Fetcher.ErrorWrapper<
@@ -213,11 +221,12 @@ export type CreateWorkspaceVariables = {
 /**
  * Creates a new workspace with the user requesting it as its single owner.
  */
-export const createWorkspace = (variables: CreateWorkspaceVariables) =>
+export const createWorkspace = (variables: CreateWorkspaceVariables, signal?: AbortSignal) =>
   fetch<Schemas.Workspace, CreateWorkspaceError, Schemas.WorkspaceMeta, {}, {}, {}>({
     url: '/workspaces',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetWorkspacesListError = Fetcher.ErrorWrapper<
@@ -249,11 +258,12 @@ export type GetWorkspacesListVariables = FetcherExtraProps;
 /**
  * Retrieve the list of workspaces the user belongs to
  */
-export const getWorkspacesList = (variables: GetWorkspacesListVariables) =>
+export const getWorkspacesList = (variables: GetWorkspacesListVariables, signal?: AbortSignal) =>
   fetch<GetWorkspacesListResponse, GetWorkspacesListError, undefined, {}, {}, {}>({
     url: '/workspaces',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetWorkspacePathParams = {
@@ -285,11 +295,12 @@ export type GetWorkspaceVariables = {
 /**
  * Retrieve workspace info from a workspace ID
  */
-export const getWorkspace = (variables: GetWorkspaceVariables) =>
+export const getWorkspace = (variables: GetWorkspaceVariables, signal?: AbortSignal) =>
   fetch<Schemas.Workspace, GetWorkspaceError, undefined, {}, {}, GetWorkspacePathParams>({
     url: '/workspaces/{workspaceId}',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type UpdateWorkspacePathParams = {
@@ -322,11 +333,12 @@ export type UpdateWorkspaceVariables = {
 /**
  * Update workspace info
  */
-export const updateWorkspace = (variables: UpdateWorkspaceVariables) =>
+export const updateWorkspace = (variables: UpdateWorkspaceVariables, signal?: AbortSignal) =>
   fetch<Schemas.Workspace, UpdateWorkspaceError, Schemas.WorkspaceMeta, {}, {}, UpdateWorkspacePathParams>({
     url: '/workspaces/{workspaceId}',
     method: 'put',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type DeleteWorkspacePathParams = {
@@ -358,11 +370,12 @@ export type DeleteWorkspaceVariables = {
 /**
  * Delete the workspace with the provided ID
  */
-export const deleteWorkspace = (variables: DeleteWorkspaceVariables) =>
+export const deleteWorkspace = (variables: DeleteWorkspaceVariables, signal?: AbortSignal) =>
   fetch<undefined, DeleteWorkspaceError, undefined, {}, {}, DeleteWorkspacePathParams>({
     url: '/workspaces/{workspaceId}',
     method: 'delete',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetWorkspaceMembersListPathParams = {
@@ -394,11 +407,12 @@ export type GetWorkspaceMembersListVariables = {
 /**
  * Retrieve the list of members of the given workspace
  */
-export const getWorkspaceMembersList = (variables: GetWorkspaceMembersListVariables) =>
+export const getWorkspaceMembersList = (variables: GetWorkspaceMembersListVariables, signal?: AbortSignal) =>
   fetch<Schemas.WorkspaceMembers, GetWorkspaceMembersListError, undefined, {}, {}, GetWorkspaceMembersListPathParams>({
     url: '/workspaces/{workspaceId}/members',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type UpdateWorkspaceMemberRolePathParams = {
@@ -439,7 +453,7 @@ export type UpdateWorkspaceMemberRoleVariables = {
 /**
  * Update a workspace member role. Workspaces must always have at least one owner, so this operation will fail if trying to remove owner role from the last owner in the workspace.
  */
-export const updateWorkspaceMemberRole = (variables: UpdateWorkspaceMemberRoleVariables) =>
+export const updateWorkspaceMemberRole = (variables: UpdateWorkspaceMemberRoleVariables, signal?: AbortSignal) =>
   fetch<
     undefined,
     UpdateWorkspaceMemberRoleError,
@@ -447,7 +461,7 @@ export const updateWorkspaceMemberRole = (variables: UpdateWorkspaceMemberRoleVa
     {},
     {},
     UpdateWorkspaceMemberRolePathParams
-  >({ url: '/workspaces/{workspaceId}/members/{userId}', method: 'put', ...variables });
+  >({ url: '/workspaces/{workspaceId}/members/{userId}', method: 'put', ...variables, signal });
 
 export type RemoveWorkspaceMemberPathParams = {
   /**
@@ -482,11 +496,12 @@ export type RemoveWorkspaceMemberVariables = {
 /**
  * Remove the member from the workspace
  */
-export const removeWorkspaceMember = (variables: RemoveWorkspaceMemberVariables) =>
+export const removeWorkspaceMember = (variables: RemoveWorkspaceMemberVariables, signal?: AbortSignal) =>
   fetch<undefined, RemoveWorkspaceMemberError, undefined, {}, {}, RemoveWorkspaceMemberPathParams>({
     url: '/workspaces/{workspaceId}/members/{userId}',
     method: 'delete',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type InviteWorkspaceMemberPathParams = {
@@ -531,7 +546,7 @@ export type InviteWorkspaceMemberVariables = {
 /**
  * Invite some user to join the workspace with the given role
  */
-export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables) =>
+export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables, signal?: AbortSignal) =>
   fetch<
     Schemas.WorkspaceInvite,
     InviteWorkspaceMemberError,
@@ -539,7 +554,7 @@ export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables)
     {},
     {},
     InviteWorkspaceMemberPathParams
-  >({ url: '/workspaces/{workspaceId}/invites', method: 'post', ...variables });
+  >({ url: '/workspaces/{workspaceId}/invites', method: 'post', ...variables, signal });
 
 export type UpdateWorkspaceMemberInvitePathParams = {
   /**
@@ -583,7 +598,7 @@ export type UpdateWorkspaceMemberInviteVariables = {
 /**
  * This operation provides a way to update an existing invite. Updates are performed in-place; they do not change the invite link, the expiry time, nor do they re-notify the recipient of the invite.
  */
-export const updateWorkspaceMemberInvite = (variables: UpdateWorkspaceMemberInviteVariables) =>
+export const updateWorkspaceMemberInvite = (variables: UpdateWorkspaceMemberInviteVariables, signal?: AbortSignal) =>
   fetch<
     Schemas.WorkspaceInvite,
     UpdateWorkspaceMemberInviteError,
@@ -591,7 +606,7 @@ export const updateWorkspaceMemberInvite = (variables: UpdateWorkspaceMemberInvi
     {},
     {},
     UpdateWorkspaceMemberInvitePathParams
-  >({ url: '/workspaces/{workspaceId}/invites/{inviteId}', method: 'patch', ...variables });
+  >({ url: '/workspaces/{workspaceId}/invites/{inviteId}', method: 'patch', ...variables, signal });
 
 export type CancelWorkspaceMemberInvitePathParams = {
   /**
@@ -626,11 +641,12 @@ export type CancelWorkspaceMemberInviteVariables = {
 /**
  * This operation provides a way to cancel invites by deleting them. Already accepted invites cannot be deleted.
  */
-export const cancelWorkspaceMemberInvite = (variables: CancelWorkspaceMemberInviteVariables) =>
+export const cancelWorkspaceMemberInvite = (variables: CancelWorkspaceMemberInviteVariables, signal?: AbortSignal) =>
   fetch<undefined, CancelWorkspaceMemberInviteError, undefined, {}, {}, CancelWorkspaceMemberInvitePathParams>({
     url: '/workspaces/{workspaceId}/invites/{inviteId}',
     method: 'delete',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type ResendWorkspaceMemberInvitePathParams = {
@@ -666,11 +682,12 @@ export type ResendWorkspaceMemberInviteVariables = {
 /**
  * This operation provides a way to resend an Invite notification. Invite notifications can only be sent for Invites not yet accepted.
  */
-export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInviteVariables) =>
+export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInviteVariables, signal?: AbortSignal) =>
   fetch<undefined, ResendWorkspaceMemberInviteError, undefined, {}, {}, ResendWorkspaceMemberInvitePathParams>({
     url: '/workspaces/{workspaceId}/invites/{inviteId}/resend',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type AcceptWorkspaceMemberInvitePathParams = {
@@ -706,11 +723,12 @@ export type AcceptWorkspaceMemberInviteVariables = {
 /**
  * Accept the invitation to join a workspace. If the operation succeeds the user will be a member of the workspace
  */
-export const acceptWorkspaceMemberInvite = (variables: AcceptWorkspaceMemberInviteVariables) =>
+export const acceptWorkspaceMemberInvite = (variables: AcceptWorkspaceMemberInviteVariables, signal?: AbortSignal) =>
   fetch<undefined, AcceptWorkspaceMemberInviteError, undefined, {}, {}, AcceptWorkspaceMemberInvitePathParams>({
     url: '/workspaces/{workspaceId}/invites/{inviteKey}/accept',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetDatabaseListPathParams = {
@@ -735,11 +753,12 @@ export type GetDatabaseListVariables = {
 /**
  * List all databases available in your Workspace.
  */
-export const getDatabaseList = (variables: GetDatabaseListVariables) =>
+export const getDatabaseList = (variables: GetDatabaseListVariables, signal?: AbortSignal) =>
   fetch<Schemas.ListDatabasesResponse, GetDatabaseListError, undefined, {}, {}, GetDatabaseListPathParams>({
     url: '/dbs',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetBranchListPathParams = {
@@ -772,11 +791,12 @@ export type GetBranchListVariables = {
 /**
  * List all available Branches
  */
-export const getBranchList = (variables: GetBranchListVariables) =>
+export const getBranchList = (variables: GetBranchListVariables, signal?: AbortSignal) =>
   fetch<Schemas.ListBranchesResponse, GetBranchListError, undefined, {}, {}, GetBranchListPathParams>({
     url: '/dbs/{dbName}',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type CreateDatabasePathParams = {
@@ -825,11 +845,12 @@ export type CreateDatabaseVariables = {
 /**
  * Create Database with identifier name
  */
-export const createDatabase = (variables: CreateDatabaseVariables) =>
+export const createDatabase = (variables: CreateDatabaseVariables, signal?: AbortSignal) =>
   fetch<CreateDatabaseResponse, CreateDatabaseError, CreateDatabaseRequestBody, {}, {}, CreateDatabasePathParams>({
     url: '/dbs/{dbName}',
     method: 'put',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type DeleteDatabasePathParams = {
@@ -862,11 +883,12 @@ export type DeleteDatabaseVariables = {
 /**
  * Delete a database and all of its branches and tables permanently.
  */
-export const deleteDatabase = (variables: DeleteDatabaseVariables) =>
+export const deleteDatabase = (variables: DeleteDatabaseVariables, signal?: AbortSignal) =>
   fetch<undefined, DeleteDatabaseError, undefined, {}, {}, DeleteDatabasePathParams>({
     url: '/dbs/{dbName}',
     method: 'delete',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetDatabaseMetadataPathParams = {
@@ -899,11 +921,12 @@ export type GetDatabaseMetadataVariables = {
 /**
  * Retrieve metadata of the given database
  */
-export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables) =>
+export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables, signal?: AbortSignal) =>
   fetch<Schemas.DatabaseMetadata, GetDatabaseMetadataError, undefined, {}, {}, GetDatabaseMetadataPathParams>({
     url: '/dbs/{dbName}/metadata',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type UpdateDatabaseMetadataPathParams = {
@@ -946,7 +969,7 @@ export type UpdateDatabaseMetadataVariables = {
 /**
  * Update the color of the selected database
  */
-export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariables) =>
+export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariables, signal?: AbortSignal) =>
   fetch<
     Schemas.DatabaseMetadata,
     UpdateDatabaseMetadataError,
@@ -954,7 +977,7 @@ export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariable
     {},
     {},
     UpdateDatabaseMetadataPathParams
-  >({ url: '/dbs/{dbName}/metadata', method: 'patch', ...variables });
+  >({ url: '/dbs/{dbName}/metadata', method: 'patch', ...variables, signal });
 
 export type GetGitBranchesMappingPathParams = {
   /**
@@ -1003,7 +1026,7 @@ export type GetGitBranchesMappingVariables = {
  * }
  * ```
  */
-export const getGitBranchesMapping = (variables: GetGitBranchesMappingVariables) =>
+export const getGitBranchesMapping = (variables: GetGitBranchesMappingVariables, signal?: AbortSignal) =>
   fetch<
     Schemas.ListGitBranchesResponse,
     GetGitBranchesMappingError,
@@ -1011,7 +1034,7 @@ export const getGitBranchesMapping = (variables: GetGitBranchesMappingVariables)
     {},
     {},
     GetGitBranchesMappingPathParams
-  >({ url: '/dbs/{dbName}/gitBranches', method: 'get', ...variables });
+  >({ url: '/dbs/{dbName}/gitBranches', method: 'get', ...variables, signal });
 
 export type AddGitBranchesEntryPathParams = {
   /**
@@ -1070,7 +1093,7 @@ export type AddGitBranchesEntryVariables = {
  * }
  * ```
  */
-export const addGitBranchesEntry = (variables: AddGitBranchesEntryVariables) =>
+export const addGitBranchesEntry = (variables: AddGitBranchesEntryVariables, signal?: AbortSignal) =>
   fetch<
     AddGitBranchesEntryResponse,
     AddGitBranchesEntryError,
@@ -1078,7 +1101,7 @@ export const addGitBranchesEntry = (variables: AddGitBranchesEntryVariables) =>
     {},
     {},
     AddGitBranchesEntryPathParams
-  >({ url: '/dbs/{dbName}/gitBranches', method: 'post', ...variables });
+  >({ url: '/dbs/{dbName}/gitBranches', method: 'post', ...variables, signal });
 
 export type RemoveGitBranchesEntryPathParams = {
   /**
@@ -1120,7 +1143,7 @@ export type RemoveGitBranchesEntryVariables = {
  * // DELETE https://tutorial-ng7s8c.xata.sh/dbs/demo/gitBranches?gitBranch=fix%2Fbug123
  * ```
  */
-export const removeGitBranchesEntry = (variables: RemoveGitBranchesEntryVariables) =>
+export const removeGitBranchesEntry = (variables: RemoveGitBranchesEntryVariables, signal?: AbortSignal) =>
   fetch<
     undefined,
     RemoveGitBranchesEntryError,
@@ -1128,7 +1151,7 @@ export const removeGitBranchesEntry = (variables: RemoveGitBranchesEntryVariable
     {},
     RemoveGitBranchesEntryQueryParams,
     RemoveGitBranchesEntryPathParams
-  >({ url: '/dbs/{dbName}/gitBranches', method: 'delete', ...variables });
+  >({ url: '/dbs/{dbName}/gitBranches', method: 'delete', ...variables, signal });
 
 export type ResolveBranchPathParams = {
   /**
@@ -1198,11 +1221,12 @@ export type ResolveBranchVariables = {
  * }
  * ```
  */
-export const resolveBranch = (variables: ResolveBranchVariables) =>
+export const resolveBranch = (variables: ResolveBranchVariables, signal?: AbortSignal) =>
   fetch<ResolveBranchResponse, ResolveBranchError, undefined, {}, ResolveBranchQueryParams, ResolveBranchPathParams>({
     url: '/dbs/{dbName}/resolveBranch',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type QueryMigrationRequestsPathParams = {
@@ -1245,7 +1269,7 @@ export type QueryMigrationRequestsVariables = {
   pathParams: QueryMigrationRequestsPathParams;
 } & FetcherExtraProps;
 
-export const queryMigrationRequests = (variables: QueryMigrationRequestsVariables) =>
+export const queryMigrationRequests = (variables: QueryMigrationRequestsVariables, signal?: AbortSignal) =>
   fetch<
     QueryMigrationRequestsResponse,
     QueryMigrationRequestsError,
@@ -1253,7 +1277,7 @@ export const queryMigrationRequests = (variables: QueryMigrationRequestsVariable
     {},
     {},
     QueryMigrationRequestsPathParams
-  >({ url: '/dbs/{dbName}/migrations/query', method: 'post', ...variables });
+  >({ url: '/dbs/{dbName}/migrations/query', method: 'post', ...variables, signal });
 
 export type CreateMigrationRequestPathParams = {
   /**
@@ -1306,7 +1330,7 @@ export type CreateMigrationRequestVariables = {
   pathParams: CreateMigrationRequestPathParams;
 } & FetcherExtraProps;
 
-export const createMigrationRequest = (variables: CreateMigrationRequestVariables) =>
+export const createMigrationRequest = (variables: CreateMigrationRequestVariables, signal?: AbortSignal) =>
   fetch<
     CreateMigrationRequestResponse,
     CreateMigrationRequestError,
@@ -1314,7 +1338,7 @@ export const createMigrationRequest = (variables: CreateMigrationRequestVariable
     {},
     {},
     CreateMigrationRequestPathParams
-  >({ url: '/dbs/{dbName}/migrations', method: 'post', ...variables });
+  >({ url: '/dbs/{dbName}/migrations', method: 'post', ...variables, signal });
 
 export type GetMigrationRequestPathParams = {
   /**
@@ -1347,11 +1371,12 @@ export type GetMigrationRequestVariables = {
   pathParams: GetMigrationRequestPathParams;
 } & FetcherExtraProps;
 
-export const getMigrationRequest = (variables: GetMigrationRequestVariables) =>
+export const getMigrationRequest = (variables: GetMigrationRequestVariables, signal?: AbortSignal) =>
   fetch<Schemas.MigrationRequest, GetMigrationRequestError, undefined, {}, {}, GetMigrationRequestPathParams>({
     url: '/dbs/{dbName}/migrations/{mrNumber}',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type UpdateMigrationRequestPathParams = {
@@ -1401,7 +1426,7 @@ export type UpdateMigrationRequestVariables = {
   pathParams: UpdateMigrationRequestPathParams;
 } & FetcherExtraProps;
 
-export const updateMigrationRequest = (variables: UpdateMigrationRequestVariables) =>
+export const updateMigrationRequest = (variables: UpdateMigrationRequestVariables, signal?: AbortSignal) =>
   fetch<
     undefined,
     UpdateMigrationRequestError,
@@ -1409,7 +1434,7 @@ export const updateMigrationRequest = (variables: UpdateMigrationRequestVariable
     {},
     {},
     UpdateMigrationRequestPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}', method: 'patch', ...variables });
+  >({ url: '/dbs/{dbName}/migrations/{mrNumber}', method: 'patch', ...variables, signal });
 
 export type ListMigrationRequestsCommitsPathParams = {
   /**
@@ -1476,7 +1501,7 @@ export type ListMigrationRequestsCommitsVariables = {
   pathParams: ListMigrationRequestsCommitsPathParams;
 } & FetcherExtraProps;
 
-export const listMigrationRequestsCommits = (variables: ListMigrationRequestsCommitsVariables) =>
+export const listMigrationRequestsCommits = (variables: ListMigrationRequestsCommitsVariables, signal?: AbortSignal) =>
   fetch<
     ListMigrationRequestsCommitsResponse,
     ListMigrationRequestsCommitsError,
@@ -1484,7 +1509,7 @@ export const listMigrationRequestsCommits = (variables: ListMigrationRequestsCom
     {},
     {},
     ListMigrationRequestsCommitsPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/commits', method: 'post', ...variables });
+  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/commits', method: 'post', ...variables, signal });
 
 export type CompareMigrationRequestPathParams = {
   /**
@@ -1517,7 +1542,7 @@ export type CompareMigrationRequestVariables = {
   pathParams: CompareMigrationRequestPathParams;
 } & FetcherExtraProps;
 
-export const compareMigrationRequest = (variables: CompareMigrationRequestVariables) =>
+export const compareMigrationRequest = (variables: CompareMigrationRequestVariables, signal?: AbortSignal) =>
   fetch<
     Responses.SchemaCompareResponse,
     CompareMigrationRequestError,
@@ -1525,7 +1550,7 @@ export const compareMigrationRequest = (variables: CompareMigrationRequestVariab
     {},
     {},
     CompareMigrationRequestPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/compare', method: 'post', ...variables });
+  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/compare', method: 'post', ...variables, signal });
 
 export type GetMigrationRequestIsMergedPathParams = {
   /**
@@ -1562,7 +1587,7 @@ export type GetMigrationRequestIsMergedVariables = {
   pathParams: GetMigrationRequestIsMergedPathParams;
 } & FetcherExtraProps;
 
-export const getMigrationRequestIsMerged = (variables: GetMigrationRequestIsMergedVariables) =>
+export const getMigrationRequestIsMerged = (variables: GetMigrationRequestIsMergedVariables, signal?: AbortSignal) =>
   fetch<
     GetMigrationRequestIsMergedResponse,
     GetMigrationRequestIsMergedError,
@@ -1570,7 +1595,7 @@ export const getMigrationRequestIsMerged = (variables: GetMigrationRequestIsMerg
     {},
     {},
     GetMigrationRequestIsMergedPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/merge', method: 'get', ...variables });
+  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/merge', method: 'get', ...variables, signal });
 
 export type MergeMigrationRequestPathParams = {
   /**
@@ -1603,11 +1628,12 @@ export type MergeMigrationRequestVariables = {
   pathParams: MergeMigrationRequestPathParams;
 } & FetcherExtraProps;
 
-export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables) =>
+export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables, signal?: AbortSignal) =>
   fetch<Schemas.Commit, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
     url: '/dbs/{dbName}/migrations/{mrNumber}/merge',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetBranchDetailsPathParams = {
@@ -1637,11 +1663,12 @@ export type GetBranchDetailsVariables = {
   pathParams: GetBranchDetailsPathParams;
 } & FetcherExtraProps;
 
-export const getBranchDetails = (variables: GetBranchDetailsVariables) =>
+export const getBranchDetails = (variables: GetBranchDetailsVariables, signal?: AbortSignal) =>
   fetch<Schemas.DBBranch, GetBranchDetailsError, undefined, {}, {}, GetBranchDetailsPathParams>({
     url: '/db/{dbBranchName}',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type CreateBranchPathParams = {
@@ -1696,7 +1723,7 @@ export type CreateBranchVariables = {
   queryParams?: CreateBranchQueryParams;
 } & FetcherExtraProps;
 
-export const createBranch = (variables: CreateBranchVariables) =>
+export const createBranch = (variables: CreateBranchVariables, signal?: AbortSignal) =>
   fetch<
     CreateBranchResponse,
     CreateBranchError,
@@ -1704,7 +1731,7 @@ export const createBranch = (variables: CreateBranchVariables) =>
     {},
     CreateBranchQueryParams,
     CreateBranchPathParams
-  >({ url: '/db/{dbBranchName}', method: 'put', ...variables });
+  >({ url: '/db/{dbBranchName}', method: 'put', ...variables, signal });
 
 export type DeleteBranchPathParams = {
   /**
@@ -1736,11 +1763,12 @@ export type DeleteBranchVariables = {
 /**
  * Delete the branch in the database and all its resources
  */
-export const deleteBranch = (variables: DeleteBranchVariables) =>
+export const deleteBranch = (variables: DeleteBranchVariables, signal?: AbortSignal) =>
   fetch<undefined, DeleteBranchError, undefined, {}, {}, DeleteBranchPathParams>({
     url: '/db/{dbBranchName}',
     method: 'delete',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type UpdateBranchMetadataPathParams = {
@@ -1774,11 +1802,12 @@ export type UpdateBranchMetadataVariables = {
 /**
  * Update the branch metadata
  */
-export const updateBranchMetadata = (variables: UpdateBranchMetadataVariables) =>
+export const updateBranchMetadata = (variables: UpdateBranchMetadataVariables, signal?: AbortSignal) =>
   fetch<undefined, UpdateBranchMetadataError, Schemas.BranchMetadata, {}, {}, UpdateBranchMetadataPathParams>({
     url: '/db/{dbBranchName}/metadata',
     method: 'put',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetBranchMetadataPathParams = {
@@ -1808,11 +1837,12 @@ export type GetBranchMetadataVariables = {
   pathParams: GetBranchMetadataPathParams;
 } & FetcherExtraProps;
 
-export const getBranchMetadata = (variables: GetBranchMetadataVariables) =>
+export const getBranchMetadata = (variables: GetBranchMetadataVariables, signal?: AbortSignal) =>
   fetch<Schemas.BranchMetadata, GetBranchMetadataError, undefined, {}, {}, GetBranchMetadataPathParams>({
     url: '/db/{dbBranchName}/metadata',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetBranchMigrationHistoryPathParams = {
@@ -1853,7 +1883,7 @@ export type GetBranchMigrationHistoryVariables = {
   pathParams: GetBranchMigrationHistoryPathParams;
 } & FetcherExtraProps;
 
-export const getBranchMigrationHistory = (variables: GetBranchMigrationHistoryVariables) =>
+export const getBranchMigrationHistory = (variables: GetBranchMigrationHistoryVariables, signal?: AbortSignal) =>
   fetch<
     GetBranchMigrationHistoryResponse,
     GetBranchMigrationHistoryError,
@@ -1861,7 +1891,7 @@ export const getBranchMigrationHistory = (variables: GetBranchMigrationHistoryVa
     {},
     {},
     GetBranchMigrationHistoryPathParams
-  >({ url: '/db/{dbBranchName}/migrations', method: 'get', ...variables });
+  >({ url: '/db/{dbBranchName}/migrations', method: 'get', ...variables, signal });
 
 export type ExecuteBranchMigrationPlanPathParams = {
   /**
@@ -1899,7 +1929,7 @@ export type ExecuteBranchMigrationPlanVariables = {
 /**
  * Apply a migration plan to the branch
  */
-export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlanVariables) =>
+export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlanVariables, signal?: AbortSignal) =>
   fetch<
     undefined,
     ExecuteBranchMigrationPlanError,
@@ -1907,7 +1937,7 @@ export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlan
     {},
     {},
     ExecuteBranchMigrationPlanPathParams
-  >({ url: '/db/{dbBranchName}/migrations/execute', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/migrations/execute', method: 'post', ...variables, signal });
 
 export type GetBranchMigrationPlanPathParams = {
   /**
@@ -1940,7 +1970,7 @@ export type GetBranchMigrationPlanVariables = {
 /**
  * Compute a migration plan from a target schema the branch should be migrated too.
  */
-export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariables) =>
+export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariables, signal?: AbortSignal) =>
   fetch<
     Responses.BranchMigrationPlan,
     GetBranchMigrationPlanError,
@@ -1948,7 +1978,7 @@ export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariable
     {},
     {},
     GetBranchMigrationPlanPathParams
-  >({ url: '/db/{dbBranchName}/migrations/plan', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/migrations/plan', method: 'post', ...variables, signal });
 
 export type CompareBranchWithUserSchemaPathParams = {
   /**
@@ -1982,7 +2012,7 @@ export type CompareBranchWithUserSchemaVariables = {
   pathParams: CompareBranchWithUserSchemaPathParams;
 } & FetcherExtraProps;
 
-export const compareBranchWithUserSchema = (variables: CompareBranchWithUserSchemaVariables) =>
+export const compareBranchWithUserSchema = (variables: CompareBranchWithUserSchemaVariables, signal?: AbortSignal) =>
   fetch<
     Responses.SchemaCompareResponse,
     CompareBranchWithUserSchemaError,
@@ -1990,7 +2020,7 @@ export const compareBranchWithUserSchema = (variables: CompareBranchWithUserSche
     {},
     {},
     CompareBranchWithUserSchemaPathParams
-  >({ url: '/db/{dbBranchName}/schema/compare', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/schema/compare', method: 'post', ...variables, signal });
 
 export type CompareBranchSchemasPathParams = {
   /**
@@ -2024,7 +2054,7 @@ export type CompareBranchSchemasVariables = {
   pathParams: CompareBranchSchemasPathParams;
 } & FetcherExtraProps;
 
-export const compareBranchSchemas = (variables: CompareBranchSchemasVariables) =>
+export const compareBranchSchemas = (variables: CompareBranchSchemasVariables, signal?: AbortSignal) =>
   fetch<
     Responses.SchemaCompareResponse,
     CompareBranchSchemasError,
@@ -2032,7 +2062,7 @@ export const compareBranchSchemas = (variables: CompareBranchSchemasVariables) =
     {},
     {},
     CompareBranchSchemasPathParams
-  >({ url: '/db/{dbBranchName}/schema/compare/{branchName}', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/schema/compare/{branchName}', method: 'post', ...variables, signal });
 
 export type UpdateBranchSchemaPathParams = {
   /**
@@ -2067,11 +2097,12 @@ export type UpdateBranchSchemaVariables = {
   pathParams: UpdateBranchSchemaPathParams;
 } & FetcherExtraProps;
 
-export const updateBranchSchema = (variables: UpdateBranchSchemaVariables) =>
+export const updateBranchSchema = (variables: UpdateBranchSchemaVariables, signal?: AbortSignal) =>
   fetch<UpdateBranchSchemaResponse, UpdateBranchSchemaError, Schemas.Migration, {}, {}, UpdateBranchSchemaPathParams>({
     url: '/db/{dbBranchName}/schema/update',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type PreviewBranchSchemaEditPathParams = {
@@ -2112,7 +2143,7 @@ export type PreviewBranchSchemaEditVariables = {
   pathParams: PreviewBranchSchemaEditPathParams;
 } & FetcherExtraProps;
 
-export const previewBranchSchemaEdit = (variables: PreviewBranchSchemaEditVariables) =>
+export const previewBranchSchemaEdit = (variables: PreviewBranchSchemaEditVariables, signal?: AbortSignal) =>
   fetch<
     PreviewBranchSchemaEditResponse,
     PreviewBranchSchemaEditError,
@@ -2120,7 +2151,7 @@ export const previewBranchSchemaEdit = (variables: PreviewBranchSchemaEditVariab
     {},
     {},
     PreviewBranchSchemaEditPathParams
-  >({ url: '/db/{dbBranchName}/schema/preview', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/schema/preview', method: 'post', ...variables, signal });
 
 export type ApplyBranchSchemaEditPathParams = {
   /**
@@ -2159,7 +2190,7 @@ export type ApplyBranchSchemaEditVariables = {
   pathParams: ApplyBranchSchemaEditPathParams;
 } & FetcherExtraProps;
 
-export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables) =>
+export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables, signal?: AbortSignal) =>
   fetch<
     ApplyBranchSchemaEditResponse,
     ApplyBranchSchemaEditError,
@@ -2167,7 +2198,7 @@ export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables)
     {},
     {},
     ApplyBranchSchemaEditPathParams
-  >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables, signal });
 
 export type GetBranchSchemaHistoryPathParams = {
   /**
@@ -2230,7 +2261,7 @@ export type GetBranchSchemaHistoryVariables = {
   pathParams: GetBranchSchemaHistoryPathParams;
 } & FetcherExtraProps;
 
-export const getBranchSchemaHistory = (variables: GetBranchSchemaHistoryVariables) =>
+export const getBranchSchemaHistory = (variables: GetBranchSchemaHistoryVariables, signal?: AbortSignal) =>
   fetch<
     GetBranchSchemaHistoryResponse,
     GetBranchSchemaHistoryError,
@@ -2238,7 +2269,7 @@ export const getBranchSchemaHistory = (variables: GetBranchSchemaHistoryVariable
     {},
     {},
     GetBranchSchemaHistoryPathParams
-  >({ url: '/db/{dbBranchName}/schema/history', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/schema/history', method: 'post', ...variables, signal });
 
 export type GetBranchStatsPathParams = {
   /**
@@ -2282,11 +2313,12 @@ export type GetBranchStatsVariables = {
 /**
  * Get branch usage metrics.
  */
-export const getBranchStats = (variables: GetBranchStatsVariables) =>
+export const getBranchStats = (variables: GetBranchStatsVariables, signal?: AbortSignal) =>
   fetch<GetBranchStatsResponse, GetBranchStatsError, undefined, {}, {}, GetBranchStatsPathParams>({
     url: '/db/{dbBranchName}/stats',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type CreateTablePathParams = {
@@ -2335,11 +2367,12 @@ export type CreateTableVariables = {
 /**
  * Creates a new table with the given name. Returns 422 if a table with the same name already exists.
  */
-export const createTable = (variables: CreateTableVariables) =>
+export const createTable = (variables: CreateTableVariables, signal?: AbortSignal) =>
   fetch<CreateTableResponse, CreateTableError, undefined, {}, {}, CreateTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}',
     method: 'put',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type DeleteTablePathParams = {
@@ -2372,11 +2405,12 @@ export type DeleteTableVariables = {
 /**
  * Deletes the table with the given name.
  */
-export const deleteTable = (variables: DeleteTableVariables) =>
+export const deleteTable = (variables: DeleteTableVariables, signal?: AbortSignal) =>
   fetch<undefined, DeleteTableError, undefined, {}, {}, DeleteTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}',
     method: 'delete',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type UpdateTablePathParams = {
@@ -2431,11 +2465,12 @@ export type UpdateTableVariables = {
  * }
  * ```
  */
-export const updateTable = (variables: UpdateTableVariables) =>
+export const updateTable = (variables: UpdateTableVariables, signal?: AbortSignal) =>
   fetch<undefined, UpdateTableError, UpdateTableRequestBody, {}, {}, UpdateTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}',
     method: 'patch',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetTableSchemaPathParams = {
@@ -2473,11 +2508,12 @@ export type GetTableSchemaVariables = {
   pathParams: GetTableSchemaPathParams;
 } & FetcherExtraProps;
 
-export const getTableSchema = (variables: GetTableSchemaVariables) =>
+export const getTableSchema = (variables: GetTableSchemaVariables, signal?: AbortSignal) =>
   fetch<GetTableSchemaResponse, GetTableSchemaError, undefined, {}, {}, GetTableSchemaPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/schema',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type SetTableSchemaPathParams = {
@@ -2520,11 +2556,12 @@ export type SetTableSchemaVariables = {
   pathParams: SetTableSchemaPathParams;
 } & FetcherExtraProps;
 
-export const setTableSchema = (variables: SetTableSchemaVariables) =>
+export const setTableSchema = (variables: SetTableSchemaVariables, signal?: AbortSignal) =>
   fetch<undefined, SetTableSchemaError, SetTableSchemaRequestBody, {}, {}, SetTableSchemaPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/schema',
     method: 'put',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetTableColumnsPathParams = {
@@ -2566,11 +2603,12 @@ export type GetTableColumnsVariables = {
  * Retrieves the list of table columns and their definition. This endpoint returns the column list with object columns being reported with their
  * full dot-separated path (flattened).
  */
-export const getTableColumns = (variables: GetTableColumnsVariables) =>
+export const getTableColumns = (variables: GetTableColumnsVariables, signal?: AbortSignal) =>
   fetch<GetTableColumnsResponse, GetTableColumnsError, undefined, {}, {}, GetTableColumnsPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type AddTableColumnPathParams = {
@@ -2610,11 +2648,12 @@ export type AddTableColumnVariables = {
  * contain the full path separated by dots. If the parent objects do not exists, they will be automatically created. For example,
  * passing `"name": "address.city"` will auto-create the `address` object if it doesn't exist.
  */
-export const addTableColumn = (variables: AddTableColumnVariables) =>
+export const addTableColumn = (variables: AddTableColumnVariables, signal?: AbortSignal) =>
   fetch<Responses.MigrationIdResponse, AddTableColumnError, Schemas.Column, {}, {}, AddTableColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetColumnPathParams = {
@@ -2655,11 +2694,12 @@ export type GetColumnVariables = {
 /**
  * Get the definition of a single column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
  */
-export const getColumn = (variables: GetColumnVariables) =>
+export const getColumn = (variables: GetColumnVariables, signal?: AbortSignal) =>
   fetch<Schemas.Column, GetColumnError, undefined, {}, {}, GetColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type DeleteColumnPathParams = {
@@ -2700,11 +2740,12 @@ export type DeleteColumnVariables = {
 /**
  * Deletes the specified column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
  */
-export const deleteColumn = (variables: DeleteColumnVariables) =>
+export const deleteColumn = (variables: DeleteColumnVariables, signal?: AbortSignal) =>
   fetch<Responses.MigrationIdResponse, DeleteColumnError, undefined, {}, {}, DeleteColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
     method: 'delete',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type UpdateColumnPathParams = {
@@ -2753,11 +2794,12 @@ export type UpdateColumnVariables = {
 /**
  * Update column with partial data. Can be used for renaming the column by providing a new "name" field. To refer to sub-objects, the column name can contain dots. For example `address.country`.
  */
-export const updateColumn = (variables: UpdateColumnVariables) =>
+export const updateColumn = (variables: UpdateColumnVariables, signal?: AbortSignal) =>
   fetch<Responses.MigrationIdResponse, UpdateColumnError, UpdateColumnRequestBody, {}, {}, UpdateColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
     method: 'patch',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type InsertRecordPathParams = {
@@ -2803,7 +2845,7 @@ export type InsertRecordVariables = {
 /**
  * Insert a new Record into the Table
  */
-export const insertRecord = (variables: InsertRecordVariables) =>
+export const insertRecord = (variables: InsertRecordVariables, signal?: AbortSignal) =>
   fetch<
     Responses.RecordUpdateResponse,
     InsertRecordError,
@@ -2811,7 +2853,7 @@ export const insertRecord = (variables: InsertRecordVariables) =>
     {},
     InsertRecordQueryParams,
     InsertRecordPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/data', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/data', method: 'post', ...variables, signal });
 
 export type InsertRecordWithIDPathParams = {
   /**
@@ -2866,7 +2908,7 @@ export type InsertRecordWithIDVariables = {
 /**
  * By default, IDs are auto-generated when data is insterted into Xata. Sending a request to this endpoint allows us to insert a record with a pre-existing ID, bypassing the default automatic ID generation.
  */
-export const insertRecordWithID = (variables: InsertRecordWithIDVariables) =>
+export const insertRecordWithID = (variables: InsertRecordWithIDVariables, signal?: AbortSignal) =>
   fetch<
     Responses.RecordUpdateResponse,
     InsertRecordWithIDError,
@@ -2874,7 +2916,7 @@ export const insertRecordWithID = (variables: InsertRecordWithIDVariables) =>
     {},
     InsertRecordWithIDQueryParams,
     InsertRecordWithIDPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'put', ...variables });
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'put', ...variables, signal });
 
 export type UpdateRecordWithIDPathParams = {
   /**
@@ -2925,7 +2967,7 @@ export type UpdateRecordWithIDVariables = {
   queryParams?: UpdateRecordWithIDQueryParams;
 } & FetcherExtraProps;
 
-export const updateRecordWithID = (variables: UpdateRecordWithIDVariables) =>
+export const updateRecordWithID = (variables: UpdateRecordWithIDVariables, signal?: AbortSignal) =>
   fetch<
     Responses.RecordUpdateResponse,
     UpdateRecordWithIDError,
@@ -2933,7 +2975,7 @@ export const updateRecordWithID = (variables: UpdateRecordWithIDVariables) =>
     {},
     UpdateRecordWithIDQueryParams,
     UpdateRecordWithIDPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'patch', ...variables });
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'patch', ...variables, signal });
 
 export type UpsertRecordWithIDPathParams = {
   /**
@@ -2984,7 +3026,7 @@ export type UpsertRecordWithIDVariables = {
   queryParams?: UpsertRecordWithIDQueryParams;
 } & FetcherExtraProps;
 
-export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables) =>
+export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables, signal?: AbortSignal) =>
   fetch<
     Responses.RecordUpdateResponse,
     UpsertRecordWithIDError,
@@ -2992,7 +3034,7 @@ export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables) =>
     {},
     UpsertRecordWithIDQueryParams,
     UpsertRecordWithIDPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'post', ...variables, signal });
 
 export type DeleteRecordPathParams = {
   /**
@@ -3037,11 +3079,12 @@ export type DeleteRecordVariables = {
   queryParams?: DeleteRecordQueryParams;
 } & FetcherExtraProps;
 
-export const deleteRecord = (variables: DeleteRecordVariables) =>
+export const deleteRecord = (variables: DeleteRecordVariables, signal?: AbortSignal) =>
   fetch<Responses.RecordResponse, DeleteRecordError, undefined, {}, DeleteRecordQueryParams, DeleteRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
     method: 'delete',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type GetRecordPathParams = {
@@ -3090,11 +3133,12 @@ export type GetRecordVariables = {
 /**
  * Retrieve record by ID
  */
-export const getRecord = (variables: GetRecordVariables) =>
+export const getRecord = (variables: GetRecordVariables, signal?: AbortSignal) =>
   fetch<Responses.RecordResponse, GetRecordError, undefined, {}, GetRecordQueryParams, GetRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
     method: 'get',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type BulkInsertTableRecordsPathParams = {
@@ -3148,7 +3192,7 @@ export type BulkInsertTableRecordsVariables = {
 /**
  * Bulk insert records
  */
-export const bulkInsertTableRecords = (variables: BulkInsertTableRecordsVariables) =>
+export const bulkInsertTableRecords = (variables: BulkInsertTableRecordsVariables, signal?: AbortSignal) =>
   fetch<
     Responses.BulkInsertResponse,
     BulkInsertTableRecordsError,
@@ -3156,7 +3200,7 @@ export const bulkInsertTableRecords = (variables: BulkInsertTableRecordsVariable
     {},
     BulkInsertTableRecordsQueryParams,
     BulkInsertTableRecordsPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/bulk', method: 'post', ...variables });
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/bulk', method: 'post', ...variables, signal });
 
 export type QueryTablePathParams = {
   /**
@@ -3931,11 +3975,12 @@ export type QueryTableVariables = {
  * }
  * ```
  */
-export const queryTable = (variables: QueryTableVariables) =>
+export const queryTable = (variables: QueryTableVariables, signal?: AbortSignal) =>
   fetch<Responses.QueryResponse, QueryTableError, QueryTableRequestBody, {}, {}, QueryTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/query',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type SearchTablePathParams = {
@@ -3992,11 +4037,12 @@ export type SearchTableVariables = {
  * * filters `$contains`, `$startsWith`, `$endsWith` don't work on columns of type `text`
  * * filtering on columns of type `multiple` is currently unsupported
  */
-export const searchTable = (variables: SearchTableVariables) =>
+export const searchTable = (variables: SearchTableVariables, signal?: AbortSignal) =>
   fetch<Responses.SearchResponse, SearchTableError, SearchTableRequestBody, {}, {}, SearchTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/search',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type SearchBranchPathParams = {
@@ -4057,11 +4103,12 @@ export type SearchBranchVariables = {
 /**
  * Run a free text search operation across the database branch.
  */
-export const searchBranch = (variables: SearchBranchVariables) =>
+export const searchBranch = (variables: SearchBranchVariables, signal?: AbortSignal) =>
   fetch<Responses.SearchResponse, SearchBranchError, SearchBranchRequestBody, {}, {}, SearchBranchPathParams>({
     url: '/db/{dbBranchName}/search',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export type SummarizeTablePathParams = {
@@ -4144,11 +4191,12 @@ export type SummarizeTableVariables = {
  * your rate limit significantly more than other queries. Try use `filter` [coming soon] to
  * reduce the amount of data being processed in order to reduce impact on your limits.
  */
-export const summarizeTable = (variables: SummarizeTableVariables) =>
+export const summarizeTable = (variables: SummarizeTableVariables, signal?: AbortSignal) =>
   fetch<Responses.SummarizeResponse, SummarizeTableError, SummarizeTableRequestBody, {}, {}, SummarizeTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/summarize',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export const operationsByTag = {
