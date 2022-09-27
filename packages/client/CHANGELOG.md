@@ -1,5 +1,95 @@
 # @xata.io/client
 
+## 0.18.5
+
+### Patch Changes
+
+- [#656](https://github.com/xataio/client-ts/pull/656) [`2dc2f5a`](https://github.com/xataio/client-ts/commit/2dc2f5a45529b2ace9127d963fb30214298da2e0) Thanks [@SferaDev](https://github.com/SferaDev)! - Broaden type for AbortSignal
+
+## 0.18.4
+
+### Patch Changes
+
+- [#650](https://github.com/xataio/client-ts/pull/650) [`b8d441f`](https://github.com/xataio/client-ts/commit/b8d441f80867322f41989d52c94bba230632782b) Thanks [@xata-bot](https://github.com/xata-bot)! - API: Rename listMigrationRequests to queryMigrationRequests
+
+## 0.18.3
+
+### Patch Changes
+
+- [#639](https://github.com/xataio/client-ts/pull/639) [`50fb3c0`](https://github.com/xataio/client-ts/commit/50fb3c0a1cffd03a16cc8b1b21454ea816f2edbb) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not return null for columns not selected
+
+## 0.18.2
+
+### Patch Changes
+
+- [#635](https://github.com/xataio/client-ts/pull/635) [`713f9b2`](https://github.com/xataio/client-ts/commit/713f9b2773be99c17d3fcb663e24fe096fa3da48) Thanks [@SferaDev](https://github.com/SferaDev)! - [Search] Add target columns
+
+## 0.18.1
+
+### Patch Changes
+
+- [#627](https://github.com/xataio/client-ts/pull/627) [`ad0a5b4`](https://github.com/xataio/client-ts/commit/ad0a5b4bc87b82fdc10008a8ea324a8ca783e678) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix some cases where filters on link and multiple column types are not working
+
+## 0.18.0
+
+### Minor Changes
+
+- [#562](https://github.com/xataio/client-ts/pull/562) [`699beb4`](https://github.com/xataio/client-ts/commit/699beb4bbf21cffa001d3f88a03246980e30250b) Thanks [@SferaDev](https://github.com/SferaDev)! - Return null on nullable columns
+
+### Patch Changes
+
+- [#583](https://github.com/xataio/client-ts/pull/583) [`330b076`](https://github.com/xataio/client-ts/commit/330b076a0781e3576c82afab76e3fb2a64f2e041) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for unique columns
+
+- [#598](https://github.com/xataio/client-ts/pull/598) [`c3dfb4b`](https://github.com/xataio/client-ts/commit/c3dfb4babc990634b9e9747616ed93223178a2e7) Thanks [@SferaDev](https://github.com/SferaDev)! - API: Add patch database metadata endpoint
+
+- [#602](https://github.com/xataio/client-ts/pull/602) [`74b17aa`](https://github.com/xataio/client-ts/commit/74b17aaedc0dbdd79bfdcb182b2e70b61f98f5a5) Thanks [@gimenete](https://github.com/gimenete)! - API: Make workspace slug optional on create
+
+- [#615](https://github.com/xataio/client-ts/pull/615) [`83f20cd`](https://github.com/xataio/client-ts/commit/83f20cdbe53706c16016c4db3f318e679b24ec86) Thanks [@SferaDev](https://github.com/SferaDev)! - Make `getMany` return more items than max pagination size
+
+- [#562](https://github.com/xataio/client-ts/pull/562) [`addfcc6`](https://github.com/xataio/client-ts/commit/addfcc67fca663defdd340111ea09c9188bad3ab) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `orThrows` methods that instead of returning null, throw an exception.
+
+- [#583](https://github.com/xataio/client-ts/pull/583) [`eb7ba59`](https://github.com/xataio/client-ts/commit/eb7ba594be2a1f0ab90956836bbeb912e188a46d) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for non nullable columns
+
+- [#612](https://github.com/xataio/client-ts/pull/612) [`f1a0742`](https://github.com/xataio/client-ts/commit/f1a0742a04e1aefab14f46371a04a41069faec01) Thanks [@xata-bot](https://github.com/xata-bot)! - API: Add summarize table endpoint
+
+## 0.17.1
+
+### Patch Changes
+
+- [#584](https://github.com/xataio/client-ts/pull/584) [`a305072`](https://github.com/xataio/client-ts/commit/a3050726517632b4975f2a2ed5f771dd247e51d5) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix issues with multiple filters
+
+* [#249](https://github.com/xataio/client-ts/pull/249) [`7812a41`](https://github.com/xataio/client-ts/commit/7812a414b7d99e9515c0ce48a61ad7a8b84d65d0) Thanks [@xata-bot](https://github.com/xata-bot)! - API: Add first endpoints for migration requests and schema compare
+
+- [#585](https://github.com/xataio/client-ts/pull/585) [`d4a8ced`](https://github.com/xataio/client-ts/commit/d4a8ced9c257058ed7f660e01ee5fd1da154c391) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix problem with some special characters not being URI encoded
+
+* [#574](https://github.com/xataio/client-ts/pull/574) [`cf85b13`](https://github.com/xataio/client-ts/commit/cf85b13e1ca69e79100fd02f58d79d556012395d) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not allow unknown tables on codegen output
+
+- [#576](https://github.com/xataio/client-ts/pull/576) [`2350739`](https://github.com/xataio/client-ts/commit/2350739d3f0a176b0f1fc77b0f4f597321349726) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow sending empty, undefined or conditional filters
+
+* [#581](https://github.com/xataio/client-ts/pull/581) [`a336e61`](https://github.com/xataio/client-ts/commit/a336e6161be04a652e6f0f0a4c2edac10d50c99e) Thanks [@SferaDev](https://github.com/SferaDev)! - Update error codes in tracing
+
+## 0.17.0
+
+### Minor Changes
+
+- [#563](https://github.com/xataio/client-ts/pull/563) [`26e91d1`](https://github.com/xataio/client-ts/commit/26e91d1d84df082dedd7159271fc7c27ec87fefe) Thanks [@SferaDev](https://github.com/SferaDev)! - Return nulls on operations that can fail
+
+* [#563](https://github.com/xataio/client-ts/pull/563) [`3332d43`](https://github.com/xataio/client-ts/commit/3332d43121367f61c8d87dfb7da2af65bd1c278f) Thanks [@SferaDev](https://github.com/SferaDev)! - Return object on delete operation
+
+## 0.16.2
+
+### Patch Changes
+
+- [#541](https://github.com/xataio/client-ts/pull/541) [`c74467c`](https://github.com/xataio/client-ts/commit/c74467caeff4e3d60d0981a173b462e970c6c1fc) Thanks [@SferaDev](https://github.com/SferaDev)! - Add tracing with open telemetry
+
+* [#551](https://github.com/xataio/client-ts/pull/551) [`ee72bfe`](https://github.com/xataio/client-ts/commit/ee72bfef34765374ec66c7edaa6b5508c3f8e8dc) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix filter operators and dates
+
+- [#552](https://github.com/xataio/client-ts/pull/552) [`e88effa`](https://github.com/xataio/client-ts/commit/e88effa00f8c2c0e24ec8cd60fb21859ac236191) Thanks [@SferaDev](https://github.com/SferaDev)! - Update error message for required settings
+
+* [#551](https://github.com/xataio/client-ts/pull/551) [`33293b3`](https://github.com/xataio/client-ts/commit/33293b3509d984bb9b1af457c96260d43f398efe) Thanks [@SferaDev](https://github.com/SferaDev)! - Add aliases for some operators
+
+- [#534](https://github.com/xataio/client-ts/pull/534) [`efc09b4`](https://github.com/xataio/client-ts/commit/efc09b420a25253b428662c2eec40ff3bc36ce79) Thanks [@SferaDev](https://github.com/SferaDev)! - Make sort direction optional
+
 ## 0.16.1
 
 ### Patch Changes

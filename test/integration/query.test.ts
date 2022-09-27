@@ -1,8 +1,15 @@
-import fetch from 'cross-fetch';
-import dotenv from 'dotenv';
-import { join } from 'path';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { BaseClient, contains, isXataRecord, lt, Repository, XataApiClient } from '../../packages/client/src';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import {
+  BaseClient,
+  contains,
+  includesAll,
+  includesNone,
+  isXataRecord,
+  lt,
+  Repository,
+  XataApiClient,
+  XataRecord
+} from '../../packages/client/src';
 import {
   Paginable,
   PAGINATION_DEFAULT_SIZE,
@@ -10,109 +17,147 @@ import {
   PAGINATION_MAX_SIZE
 } from '../../packages/client/src/schema/pagination';
 import { UsersRecord, XataClient } from '../../packages/codegen/example/xata';
-import { animalUsers, fruitUsers, mockUsers, ownerAnimals, ownerFruits, teamColumns, userColumns } from '../mock_data';
+import { animalUsers, fruitUsers, mockUsers, ownerAnimals, ownerFruits } from '../mock_data';
+import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
-// Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.env') });
+let xata: XataClient;
+let api: XataApiClient;
+let baseClient: BaseClient;
+let workspace: string;
+let database: string;
+let hooks: TestEnvironmentResult['hooks'];
 
-let client: XataClient;
-let schemaLessclient: BaseClient;
-let databaseName: string;
+beforeAll(async (ctx) => {
+  const result = await setUpTestEnvironment('query');
 
-const apiKey = process.env.XATA_API_KEY ?? '';
-const workspace = process.env.XATA_WORKSPACE ?? '';
-if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
+  xata = result.client;
+  api = result.api;
+  baseClient = result.baseClient;
+  workspace = result.workspace;
+  database = result.database;
+  hooks = result.hooks;
 
-const api = new XataApiClient({ apiKey, fetch });
+  await hooks.beforeAll(ctx);
 
-beforeAll(async () => {
-  const id = Math.round(Math.random() * 100000);
+  const { id: ownerAnimalsId } = await xata.db.users.create(ownerAnimals);
+  const { id: ownerFruitsId } = await xata.db.users.create(ownerFruits);
 
-  const database = await api.databases.createDatabase(workspace, `sdk-integration-test-query-${id}`);
-  databaseName = database.databaseName;
-
-  client = new XataClient({
-    databaseURL: `https://${workspace}.xata.sh/db/${database.databaseName}`,
-    branch: 'main',
-    apiKey: process.env.XATA_API_KEY || '',
-    fetch
-  });
-
-  schemaLessclient = new BaseClient({
-    databaseURL: `https://${workspace}.xata.sh/db/${database.databaseName}`,
-    branch: 'main',
-    apiKey: process.env.XATA_API_KEY || '',
-    fetch
-  });
-
-  await api.tables.createTable(workspace, databaseName, 'main', 'teams');
-  await api.tables.createTable(workspace, databaseName, 'main', 'users');
-  await api.tables.setTableSchema(workspace, databaseName, 'main', 'teams', { columns: teamColumns });
-  await api.tables.setTableSchema(workspace, databaseName, 'main', 'users', { columns: userColumns });
-
-  const { id: ownerAnimalsId } = await client.db.users.create(ownerAnimals);
-  const { id: ownerFruitsId } = await client.db.users.create(ownerFruits);
-
-  const fruitsTeam = await client.db.teams.create({
+  const fruitsTeam = await xata.db.teams.create({
     name: 'Team fruits',
     labels: ['apple', 'banana', 'orange'],
     owner: ownerFruitsId
   });
 
-  const animalsTeam = await client.db.teams.create({
+  const animalsTeam = await xata.db.teams.create({
     name: 'Team animals',
     labels: ['monkey', 'lion', 'eagle', 'dolphin'],
     owner: ownerAnimalsId
   });
 
-  await client.db.teams.create({
+  await xata.db.teams.create({
     name: 'Mixed team fruits & animals',
     labels: ['monkey', 'banana', 'apple', 'dolphin']
   });
 
-  await client.db.users.create([
+  await xata.db.users.create([
     ...animalUsers.map((item) => ({ ...item, team: animalsTeam })),
     ...fruitUsers.map((item) => ({ ...item, team: fruitsTeam }))
   ]);
 });
 
-afterAll(async () => {
-  await api.databases.deleteDatabase(workspace, databaseName);
+afterAll(async (ctx) => {
+  await hooks.afterAll(ctx);
+});
+
+beforeEach(async (ctx) => {
+  await hooks.beforeEach(ctx);
+});
+
+afterEach(async (ctx) => {
+  await hooks.afterEach(ctx);
 });
 
 describe('integration tests', () => {
   test('equal filter', async () => {
-    const teams = await client.db.teams.filter('name', 'Team fruits').getAll();
+    const teams = await xata.db.teams.filter('name', 'Team fruits').getAll();
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Team fruits');
   });
 
   test('operator filter', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).getAll({ sort: ['name'] });
+    const teams = await xata.db.teams.filter('name', contains('fruits')).getAll({ sort: ['name'] });
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
     expect(teams[1].name).toBe('Team fruits');
   });
 
-  test.skip('operator filter on multiple column', async () => {
-    const teams = await client.db.teams.filter('labels', ['banana']).getAll();
+  test('operator filter on multiple column', async () => {
+    const teams = await xata.db.teams.create([
+      { name: 'Team with banana', labels: ['banana'] },
+      { name: 'Team with monkey', labels: ['monkey'] },
+      { name: 'Team with other', labels: ['other'] },
+      { name: 'Team with banana and monkey', labels: ['banana', 'monkey'] },
+      { name: 'Team with banana, monkey and other', labels: ['banana', 'monkey', 'other'] }
+    ]);
 
-    expect(teams).toHaveLength(2);
-    expect(teams[0].name).toBe('Mixed team fruits & animals');
-    expect(teams[1].name).toBe('Team fruits');
+    const teamsWithBanana = await xata.db.teams.filter('labels', 'banana').getMany();
+    const teamsWithBananaOrMonkey = await xata.db.teams.filter('labels', ['banana', 'monkey']).getMany();
+    const teamsWithoutBanana = await xata.db.teams.filter('labels', includesNone('banana')).getMany();
+    const teamsWithoutBananaNorMonkey = await xata.db.teams
+      .filter('labels', includesNone(['banana', 'monkey']))
+      .getMany();
+    const teamsWithBananaAndMonkey = await xata.db.teams
+      .filter('labels', 'banana')
+      .filter('labels', 'monkey')
+      .getMany();
+    const teamsWithOnlyBananaAndMonkey = await xata.db.teams
+      .filter('labels', includesAll(['banana', 'monkey']))
+      .getMany();
+
+    expect(teamsWithBanana.length).toBeGreaterThan(0);
+    expect(teamsWithBanana.every((team) => team.labels?.includes('banana'))).toBe(true);
+
+    expect(teamsWithBananaOrMonkey.length).toBeGreaterThan(0);
+    expect(
+      teamsWithBananaOrMonkey.every((team) => team.labels?.includes('banana') || team.labels?.includes('monkey'))
+    ).toBe(true);
+
+    expect(teamsWithoutBanana.length).toBeGreaterThan(0);
+    expect(teamsWithoutBanana.every((team) => !team.labels?.includes('banana'))).toBe(true);
+
+    expect(teamsWithoutBananaNorMonkey.length).toBeGreaterThan(0);
+    expect(
+      teamsWithoutBananaNorMonkey.every((team) => !team.labels?.includes('banana') && !team.labels?.includes('monkey'))
+    ).toBe(true);
+
+    expect(teamsWithBananaAndMonkey.length).toBeGreaterThan(0);
+    expect(
+      teamsWithBananaAndMonkey.every((team) => team.labels?.includes('banana') && team.labels?.includes('monkey'))
+    ).toBe(true);
+
+    expect(teamsWithOnlyBananaAndMonkey.length).toBeGreaterThan(0);
+    /** https://github.com/xataio/xata/issues/1073
+    expect(
+      teamsWithOnlyBananaAndMonkey.every(
+        (team) => team.labels?.includes('banana') && team.labels?.includes('monkey') && team.labels?.length === 2
+      )
+    ).toBe(true);
+    **/
+
+    await xata.db.teams.delete(teams);
   });
 
   test('multiple filter', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).filter('name', contains('Mixed')).getAll();
+    const teams = await xata.db.teams.filter('name', contains('fruits')).filter('name', contains('Mixed')).getAll();
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
   });
 
   test('sort ascending', async () => {
-    const teams = await client.db.teams.sort('name', 'asc').getAll();
+    const teams = await xata.db.teams.sort('name', 'asc').getAll();
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -121,7 +166,7 @@ describe('integration tests', () => {
   });
 
   test('sort descending', async () => {
-    const teams = await client.db.teams.sort('name', 'desc').getAll();
+    const teams = await xata.db.teams.sort('name', 'desc').getAll();
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Team fruits');
@@ -130,7 +175,7 @@ describe('integration tests', () => {
   });
 
   test('single filter and sort ascending', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'asc').getAll();
+    const teams = await xata.db.teams.filter('name', contains('fruits')).sort('name', 'asc').getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -138,7 +183,7 @@ describe('integration tests', () => {
   });
 
   test('single filter and sort descending', async () => {
-    const teams = await client.db.teams.filter('name', contains('fruits')).sort('name', 'desc').getAll();
+    const teams = await xata.db.teams.filter('name', contains('fruits')).sort('name', 'desc').getAll();
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Team fruits');
@@ -146,7 +191,7 @@ describe('integration tests', () => {
   });
 
   test('sort ascending in getAll', async () => {
-    const teams = await client.db.teams.getAll({ sort: 'name' });
+    const teams = await xata.db.teams.getAll({ sort: 'name' });
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
@@ -155,7 +200,7 @@ describe('integration tests', () => {
   });
 
   test('sort descending in getAll', async () => {
-    const teams = await client.db.teams.getAll({ sort: { column: 'name', direction: 'desc' } });
+    const teams = await xata.db.teams.getAll({ sort: { column: 'name', direction: 'desc' } });
 
     expect(teams).toHaveLength(3);
     expect(teams[0].name).toBe('Team fruits');
@@ -164,7 +209,7 @@ describe('integration tests', () => {
   });
 
   test('negative filter', async () => {
-    const repository = client.db.teams;
+    const repository = xata.db.teams;
     const teams = await repository.not(repository.filter('name', 'Team fruits')).sort('name', 'asc').getAll();
 
     expect(teams).toHaveLength(2);
@@ -173,50 +218,60 @@ describe('integration tests', () => {
   });
 
   test('filter on nullable property', async () => {
-    const ownerAnimals = await client.db.users.filter('full_name', 'Owner of team animals').getFirst();
+    const ownerAnimals = await xata.db.users.filter('full_name', 'Owner of team animals').getFirst();
     if (!ownerAnimals) throw new Error('Could not find owner of team animals');
 
     // Regression test on filtering on nullable property
-    const team = await client.db.teams.filter('owner.id', ownerAnimals.id).getFirst();
+    const team = await xata.db.teams.filter('owner.id', ownerAnimals.id).getFirst();
 
     expect(team?.owner?.id).toEqual(ownerAnimals.id);
   });
 
   test('filter on object', async () => {
-    const users = await client.db.users.filter({ address: { zipcode: 100 } }).getAll();
+    const users = await xata.db.users.filter({ address: { zipcode: 100 } }).getAll();
 
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
   });
 
   test('filter on object with operator', async () => {
-    const users = await client.db.users.filter({ address: { zipcode: lt(150) } }).getAll();
+    const users = await xata.db.users.filter({ address: { zipcode: lt(150) } }).getAll();
 
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
   });
 
   test('filter on link', async () => {
-    const teams = await client.db.teams.filter({ owner: { full_name: 'Owner of team fruits' } }).getAll();
+    const teams = await xata.db.teams.filter({ owner: { full_name: 'Owner of team fruits' } }).getAll();
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Team fruits');
   });
 
   test('filter returns nothing', async () => {
-    const teams = await client.db.teams.filter('name', 'Not even possible').getAll();
+    const teams = await xata.db.teams.filter('name', 'Not even possible').getAll();
 
     expect(teams).toHaveLength(0);
   });
 
+  test('filter is empty', async () => {
+    const teams = await xata.db.teams.filter().getFirst();
+    const teams2 = await xata.db.teams.filter(undefined).getFirst();
+    const teams3 = await xata.db.teams.filter({}).getFirst();
+
+    expect(teams).toBeDefined();
+    expect(teams2).toBeDefined();
+    expect(teams3).toBeDefined();
+  });
+
   test('returns single record', async () => {
-    const user = await client.db.users.getFirst();
+    const user = await xata.db.users.getFirst();
     expect(user).toBeDefined();
   });
 
   test('returns many records with offset/size', async () => {
-    const records1 = await client.db.users.getMany({ pagination: { size: 10 } });
-    const records2 = await client.db.users.getMany({ pagination: { size: 10, offset: 10 } });
+    const records1 = await xata.db.users.getMany({ pagination: { size: 10 } });
+    const records2 = await xata.db.users.getMany({ pagination: { size: 10, offset: 10 } });
 
     expect(records1).not.toEqual(records2);
     expect(records1).toHaveLength(10);
@@ -224,7 +279,7 @@ describe('integration tests', () => {
   });
 
   test('returns many records and implements extended array object', async () => {
-    const records1 = await client.db.users.getMany({ pagination: { size: 10 } });
+    const records1 = await xata.db.users.getMany({ pagination: { size: 10 } });
     const hasPage2 = records1.hasNextPage();
     const records2 = await records1.nextPage();
 
@@ -235,7 +290,7 @@ describe('integration tests', () => {
   });
 
   test('returns many records extended array map converts to a normal array', async () => {
-    const records1 = await client.db.users.filter('team.name', 'Team fruits').getMany();
+    const records1 = await xata.db.users.filter('team.name', 'Team fruits').getMany();
     const records2 = records1.map((item) => ({ ...item }));
 
     expect(records1.length).toBeGreaterThan(0);
@@ -254,7 +309,7 @@ describe('integration tests', () => {
     const size = Math.floor(mockUsers.length / 1.5);
     const lastPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
 
-    const page1 = await client.db.users.getPaginated({ pagination: { size } });
+    const page1 = await xata.db.users.getPaginated({ pagination: { size } });
     const page2 = await page1.nextPage();
     const page3 = await page2.nextPage();
     const firstPage = await page3.firstPage();
@@ -275,7 +330,7 @@ describe('integration tests', () => {
   });
 
   test('returns many records with cursor passing a offset/size', async () => {
-    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
+    const page1 = await xata.db.users.getPaginated({ pagination: { size: 5 } });
     const page2 = await page1.nextPage(10);
     const page3 = await page2.nextPage(10);
     const page2And3 = await page1.nextPage(20);
@@ -289,7 +344,7 @@ describe('integration tests', () => {
   });
 
   test('fails if sending cursor with sorting', async () => {
-    const page1 = await client.db.users.getPaginated({ pagination: { size: 5 } });
+    const page1 = await xata.db.users.getPaginated({ pagination: { size: 5 } });
     const { records: records1, meta } = page1;
     const page2 = await page1.nextPage();
 
@@ -297,7 +352,7 @@ describe('integration tests', () => {
     expect(meta.page.cursor).toBeDefined();
     expect(records1).toHaveLength(5);
 
-    const { records: records2, meta: meta2 } = await client.db.users.getPaginated({
+    const { records: records2, meta: meta2 } = await xata.db.users.getPaginated({
       pagination: { after: meta.page.cursor }
     });
 
@@ -306,7 +361,7 @@ describe('integration tests', () => {
     expect(records2).toHaveLength(5);
     expect(records2).toEqual(page2.records);
 
-    const { records: records3, meta: meta3 } = await client.db.users.getPaginated({
+    const { records: records3, meta: meta3 } = await xata.db.users.getPaginated({
       pagination: { after: meta.page.cursor },
       columns: ['full_name']
     });
@@ -317,7 +372,7 @@ describe('integration tests', () => {
     expect(records3).not.toEqual(page2.records);
 
     expect(
-      client.db.users.getPaginated({
+      xata.db.users.getPaginated({
         // @ts-expect-error
         pagination: { after: meta.page.cursor },
         sort: { column: 'full_name', direction: 'asc' }
@@ -330,30 +385,49 @@ describe('integration tests', () => {
       return repository.getPaginated({ pagination: { size: 10 } });
     };
 
-    const users = await loadUsers(client.db.users);
+    const users = await loadUsers(xata.db.users);
     expect(users.records).toHaveLength(10);
   });
 
   test('repository implements paginable', async () => {
-    async function foo(page: Paginable<UsersRecord>): Promise<UsersRecord[]> {
+    async function foo<T extends XataRecord>(page: Paginable<any>): Promise<T[]> {
       const nextPage = page.hasNextPage() ? await foo(await page.nextPage()) : [];
       return [...page.records, ...nextPage];
     }
 
-    const users = await foo(client.db.users);
+    const users = await foo(xata.db.users);
     expect(users).toHaveLength(mockUsers.length);
   });
 
   test('get all users', async () => {
-    const users = await client.db.users.getAll();
+    const users = await xata.db.users.getAll();
     expect(users).toHaveLength(mockUsers.length);
     expect(users[0].id).toBeDefined();
+  });
+
+  test('get first', async () => {
+    const user = await xata.db.users.getFirst();
+    const definedUser = await xata.db.users.getFirstOrThrow();
+
+    expect(user).toBeDefined();
+    expect(definedUser).toBeDefined();
+    expect(user?.id).toBe(definedUser.id);
+  });
+
+  test('get first not found', async () => {
+    const query = xata.db.users.filter('id', 'not-found');
+
+    const user = await query.getFirst();
+
+    expect(user).toBeNull();
+
+    expect(query.getFirstOrThrow()).rejects.toThrow();
   });
 
   test('query implements iterator', async () => {
     const owners = [];
 
-    for await (const user of client.db.users.filter('full_name', contains('Owner'))) {
+    for await (const user of xata.db.users.filter('full_name', contains('Owner'))) {
       owners.push(user);
     }
 
@@ -364,7 +438,7 @@ describe('integration tests', () => {
   test('query implements iterator with chunks', async () => {
     const owners = [];
 
-    for await (const chunk of client.db.users.filter('full_name', contains('Owner')).getIterator({ batchSize: 10 })) {
+    for await (const chunk of xata.db.users.filter('full_name', contains('Owner')).getIterator({ batchSize: 10 })) {
       owners.push(...chunk);
     }
 
@@ -373,17 +447,17 @@ describe('integration tests', () => {
   });
 
   test('includes selected columns in query', async () => {
-    const user = await client.db.users.select(['full_name']).getFirst();
+    const user = await xata.db.users.select(['full_name']).getFirst();
 
     expect(user).toBeDefined();
     expect(user?.id).toBeDefined();
     expect(user?.full_name).toBeDefined();
     //@ts-expect-error
-    expect(user?.email).toBeUndefined();
+    expect(user?.email).not.toBeDefined();
   });
 
   test('includes selected columns in getFirst', async () => {
-    const user = await client.db.users.getFirst({
+    const user = await xata.db.users.getFirst({
       columns: ['full_name', 'email']
     });
 
@@ -392,11 +466,11 @@ describe('integration tests', () => {
     expect(user?.full_name).toBeDefined();
     expect(user?.email).toBeDefined();
     //@ts-expect-error
-    expect(user?.address).toBeUndefined();
+    expect(user?.address).not.toBeDefined();
   });
 
   test('Partial update of a user', async () => {
-    const user = await client.db.users.create({
+    const user = await xata.db.users.create({
       full_name: 'John Doe',
       email: 'john@doe.com',
       address: {
@@ -404,11 +478,11 @@ describe('integration tests', () => {
       }
     });
 
-    const updatedUserResponse = await client.db.users.update(user.id, {
+    const updatedUserResponse = await xata.db.users.update(user.id, {
       address: { street: 'New street', zipcode: 11 }
     });
 
-    const updatedUser = await client.db.users.filter({ id: user.id }).getFirst();
+    const updatedUser = await xata.db.users.filter({ id: user.id }).getFirst();
     if (!updatedUser) throw new Error('No user found');
 
     await user.delete();
@@ -417,9 +491,9 @@ describe('integration tests', () => {
     expect(user.address?.street).toBe('123 Main St');
     expect(user.address?.zipcode).toBeUndefined();
 
-    expect(updatedUserResponse.address?.street).toBe('New street');
-    expect(updatedUserResponse.address?.zipcode).toBe(11);
-    expect(updatedUserResponse.full_name).toBe(user.full_name);
+    expect(updatedUserResponse?.address?.street).toBe('New street');
+    expect(updatedUserResponse?.address?.zipcode).toBe(11);
+    expect(updatedUserResponse?.full_name).toBe(user.full_name);
 
     expect(updatedUser.address?.street).toBe('New street');
     expect(updatedUser.address?.zipcode).toBe(11);
@@ -427,7 +501,7 @@ describe('integration tests', () => {
   });
 
   test('Partial update from itself', async () => {
-    const user = await client.db.users.create({
+    const user = await xata.db.users.create({
       full_name: 'John Doe 2',
       email: 'john2@doe.com',
       address: {
@@ -439,16 +513,16 @@ describe('integration tests', () => {
       address: { street: 'New street 2', zipcode: 22 }
     });
 
-    const updatedUser = await client.db.users.filter({ id: user.id }).getFirst();
+    const updatedUser = await xata.db.users.filter({ id: user.id }).getFirst();
     if (!updatedUser) throw new Error('No user found');
 
     await user.delete();
 
     expect(user.address?.street).not.toBe('New street 2');
 
-    expect(updatedUserResponse.address?.street).toBe('New street 2');
-    expect(updatedUserResponse.address?.zipcode).toBe(22);
-    expect(updatedUserResponse.full_name).toBe(user.full_name);
+    expect(updatedUserResponse?.address?.street).toBe('New street 2');
+    expect(updatedUserResponse?.address?.zipcode).toBe(22);
+    expect(updatedUserResponse?.full_name).toBe(user.full_name);
 
     expect(updatedUser.address?.street).toBe('New street 2');
     expect(updatedUser.address?.zipcode).toBe(22);
@@ -456,12 +530,12 @@ describe('integration tests', () => {
   });
 
   test('Upsert of a user', async () => {
-    const user = await client.db.users.createOrUpdate('my-good-old-john-6', {
+    const user = await xata.db.users.createOrUpdate('my-good-old-john-6', {
       full_name: 'John Doe 6',
       email: 'john6@doe.com'
     });
 
-    const apiUser = await client.db.users.filter({ id: user.id }).getFirst();
+    const apiUser = await xata.db.users.filter({ id: user.id }).getFirst();
     if (!apiUser) throw new Error('No user found');
 
     await user.delete();
@@ -474,30 +548,40 @@ describe('integration tests', () => {
     expect(user.email).toBe(apiUser.email);
   });
 
+  test('returns many records with multiple requests', async () => {
+    const newUsers = Array.from({ length: PAGINATION_MAX_SIZE + 1 }).map((_, i) => ({ full_name: `user-${i}` }));
+    await xata.db.users.create(newUsers);
+
+    const records = await xata.db.users.getMany({ pagination: { size: PAGINATION_MAX_SIZE + 1 } });
+
+    expect(records).toHaveLength(PAGINATION_MAX_SIZE + 1);
+    expect(records.hasNextPage).toBeDefined();
+  });
+
   test('Pagination size limit', async () => {
-    expect(client.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
+    expect(xata.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
       'message',
       'page size exceeds max limit of 200'
     );
   });
 
   test('Pagination offset limit', async () => {
-    expect(client.db.users.getPaginated({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
+    expect(xata.db.users.getPaginated({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
       'message',
       'page offset must not exceed 800'
     );
   });
 
   test('Pagination default value', async () => {
-    await api.tables.createTable(workspace, databaseName, 'main', 'planes');
-    await api.tables.setTableSchema(workspace, databaseName, 'main', 'planes', {
+    await api.tables.createTable(workspace, database, 'main', 'planes');
+    await api.tables.setTableSchema(workspace, database, 'main', 'planes', {
       columns: [{ name: 'name', type: 'string' }]
     });
 
     const planes = Array.from({ length: PAGINATION_DEFAULT_SIZE + 50 }, (_, index) => ({ name: `Plane ${index}` }));
 
-    const createdPlanes = await schemaLessclient.db.planes.create(planes);
-    const queriedPlanes = await schemaLessclient.db.planes.getPaginated();
+    const createdPlanes = await baseClient.db.planes.create(planes);
+    const queriedPlanes = await baseClient.db.planes.getPaginated();
 
     expect(createdPlanes).toHaveLength(PAGINATION_DEFAULT_SIZE + 50);
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
@@ -506,15 +590,15 @@ describe('integration tests', () => {
   test('multiple errors in one response', async () => {
     const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as UsersRecord[];
 
-    expect(client.db.users.create(invalidUsers)).rejects.toHaveProperty('status', 400);
+    expect(xata.db.users.create(invalidUsers)).rejects.toHaveProperty('status', 400);
   });
 
   test('Link is a record object', async () => {
-    const user = await client.db.users.create({
+    const user = await xata.db.users.create({
       full_name: 'Base User'
     });
 
-    const team = await client.db.teams.create({
+    const team = await xata.db.teams.create({
       name: 'Base team',
       owner: user
     });
@@ -524,7 +608,7 @@ describe('integration tests', () => {
     const updatedUser = await user.read();
     expect(updatedUser?.team?.id).toEqual(team.id);
 
-    const response = await client.db.teams.getFirst({ filter: { id: team.id }, columns: ['*', 'owner.*'] });
+    const response = await xata.db.teams.getFirst({ filter: { id: team.id }, columns: ['*', 'owner.*'] });
     const owner = await response?.owner?.read();
 
     expect(response?.owner?.id).toBeDefined();
@@ -536,7 +620,7 @@ describe('integration tests', () => {
     expect(response?.owner?.id).toBe(owner?.id);
     expect(response?.owner?.full_name).toBe(owner?.full_name);
 
-    const nestedObject = await client.db.teams.getFirst({
+    const nestedObject = await xata.db.teams.getFirst({
       filter: { id: team.id },
       columns: ['owner.team.owner.team.owner.team', 'owner.team.owner.team.owner.full_name']
     });
@@ -549,7 +633,7 @@ describe('integration tests', () => {
     expect(isXataRecord(nestedProperty)).toBe(true);
     expect(nestedProperty?.name).toEqual(team.name);
     // @ts-expect-error
-    expect(nestedProperty?.owner?.full_name).toBeUndefined();
+    expect(nestedProperty?.owner?.full_name).not.toBeDefined();
 
     const nestedRead = await nestedProperty?.owner?.read();
 
@@ -558,24 +642,42 @@ describe('integration tests', () => {
   });
 
   test('Update link with linked object', async () => {
-    const owner = await client.db.users.create({ full_name: 'Example User' });
-    const owner2 = await client.db.users.create({ full_name: 'Example User 2' });
+    const owner = await xata.db.users.create({ full_name: 'Example User' });
+    const owner2 = await xata.db.users.create({ full_name: 'Example User 2' });
 
-    const team = await client.db.teams.create({ name: 'Example Team', owner });
+    const team = await xata.db.teams.create({ name: 'Example Team', owner });
     const updated = await team.update({ owner: owner2 });
 
     expect(team.owner?.id).toEqual(owner.id);
-    expect(updated.owner?.id).toEqual(owner2.id);
+    expect(updated?.owner?.id).toEqual(owner2.id);
   });
 
   test('Update link with linked object (string)', async () => {
-    const owner = await client.db.users.create({ full_name: 'Example User' });
-    const owner2 = await client.db.users.create({ full_name: 'Example User 2' });
+    const owner = await xata.db.users.create({ full_name: 'Example User' });
+    const owner2 = await xata.db.users.create({ full_name: 'Example User 2' });
 
-    const team = await client.db.teams.create({ name: 'Example Team', owner: owner.id });
+    const team = await xata.db.teams.create({ name: 'Example Team', owner: owner.id });
     const updated = await team.update({ owner: owner2.id });
 
     expect(team.owner?.id).toEqual(owner.id);
-    expect(updated.owner?.id).toEqual(owner2.id);
+    expect(updated?.owner?.id).toEqual(owner2.id);
+  });
+
+  test('Filter with null value', async () => {
+    const newOwner = await xata.db.users.create({ full_name: 'Example User' });
+    const newTeam = await xata.db.teams.create({ name: 'Example Team', owner: newOwner });
+
+    const owner = await xata.db.users.filter({ id: newOwner.id }).getFirst();
+    if (!owner) throw new Error('No user found');
+
+    const team = await xata.db.teams.filter({ owner }).getFirst();
+    expect(team?.id).toEqual(newTeam.id);
+  });
+
+  test('Filter with multiple column', async () => {
+    const newTeam = await xata.db.teams.create({ name: 'Example Team', labels: ['a', 'b'] });
+
+    const team = await xata.db.teams.filter({ labels: newTeam.labels }).getFirst();
+    expect(team?.id).toEqual(newTeam.id);
   });
 });

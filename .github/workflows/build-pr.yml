@@ -26,6 +26,10 @@ jobs:
         run: echo ::set-output name=TAG::0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
         id: version
 
+      - name: Check secrets exist
+        run: echo ::set-output name=exist::${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}
+        id: secrets
+
       - name: Find Comment
         uses: peter-evans/find-comment@v1
         if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
@@ -69,18 +73,18 @@ jobs:
         run: npm run build
 
       - name: Configure npm registry token
-        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
+        if: ${{ steps.secrets.outputs.exist == 'true' }}
         run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish build
-        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
+        if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --exact --no-verify-access --yes
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
-        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
+        if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         id: find-comment-2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +94,7 @@ jobs:
 
       - name: Create or update comment of npm release
         uses: peter-evans/create-or-update-comment@v1
-        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
+        if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.find-comment-2.outputs.comment-id }}
@@ -113,7 +117,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    if: github.repository == 'xataio/client-ts'
 
     steps:
       - uses: actions/checkout@v3
@@ -135,6 +138,10 @@ jobs:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
           cache: 'npm'
 
+      - name: Check secrets exist
+        run: echo ::set-output name=exist::${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}
+        id: secrets
+
       - name: Install dependencies
         run: npm install
 
@@ -145,6 +152,7 @@ jobs:
         run: npm run lint
 
       - name: Test
+        if: ${{ steps.secrets.outputs.exist == 'true' }}
         run: |
           npm test
         env:

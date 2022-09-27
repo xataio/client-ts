@@ -9,6 +9,7 @@ import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 import { Boosters } from './boosters';
+import { TargetColumn } from './target';
 
 export type SearchOptions<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = {
   fuzziness?: FuzzinessExpression;
@@ -19,6 +20,7 @@ export type SearchOptions<Schemas extends Record<string, BaseData>, Tables exten
     | Values<{
         [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
           table: Model;
+          target?: TargetColumn<Schemas[Model] & XataRecord>[];
           filter?: Filter<SelectedPick<Schemas[Model] & XataRecord, ['*']>>;
           boosters?: Boosters<Schemas[Model] & XataRecord>[];
         };
@@ -54,7 +56,7 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
   }>;
 };
 
-export class SearchPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
+export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   #schemaTables?: Schemas.Table[];
 
   constructor(private db: SchemaPluginResult<Schemas>, schemaTables?: Schemas.Table[]) {
@@ -71,7 +73,8 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
         return records.map((record) => {
           const { table = 'orphan' } = record.xata;
 
-          return { table, record: initObject(this.db, schemaTables, table, record) } as any;
+          // TODO: Search endpoint doesn't support column selection
+          return { table, record: initObject(this.db, schemaTables, table, record, ['*']) } as any;
         });
       },
       byTable: async <Tables extends StringKeys<Schemas>>(
@@ -85,7 +88,8 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
           const { table = 'orphan' } = record.xata;
 
           const items = acc[table] ?? [];
-          const item = initObject(this.db, schemaTables, table, record);
+          // TODO: Search endpoint doesn't support column selection
+          const item = initObject(this.db, schemaTables, table, record, ['*']);
 
           return { ...acc, [table]: [...items, item] };
         }, {} as any);

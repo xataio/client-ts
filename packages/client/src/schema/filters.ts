@@ -102,4 +102,10 @@ type NestedApiFilter<T> = {
   [key in keyof T]?: T[key] extends Record<string, any> ? SingleOrArray<Filter<T[key]>> : PropertyFilter<T[key]>;
 };
 
-export type Filter<T> = T extends Record<string, any> ? BaseApiFilter<T> | NestedApiFilter<T> : PropertyFilter<T>;
+export type Filter<T> = T extends Record<string, any>
+  ? T extends (infer ArrayType)[] // Arrays have a special filter
+    ? ArrayType | ArrayType[] | ArrayFilter<ArrayType> | ArrayFilter<ArrayType[]>
+    : T extends Date // Date extends object but we treat it as a primitive
+    ? PropertyFilter<T>
+    : BaseApiFilter<T> | NestedApiFilter<T>
+  : PropertyFilter<T>;

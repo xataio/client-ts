@@ -1,10 +1,10 @@
 import { Schemas, XataApiClient } from '@xata.io/client';
 import { describe, expect, test, vi } from 'vitest';
-import { compareSquema, createProcessor, TableInfo } from './processor';
+import { compareSchema, createProcessor, TableInfo } from './processor';
 
 describe('compareSquema', () => {
   test('returns a missing table', () => {
-    const diff = compareSquema(['a', 'b', 'c'], ['string', 'int', 'float'], undefined);
+    const diff = compareSchema(['a', 'b', 'c'], ['string', 'int', 'float'], undefined);
     expect(diff).toMatchInlineSnapshot(`
       {
         "columnTypes": [
@@ -50,7 +50,7 @@ describe('compareSquema', () => {
         }
       ]
     };
-    const diff = compareSquema(['a', 'b', 'c'], ['string', 'int', 'float'], table);
+    const diff = compareSchema(['a', 'b', 'c'], ['string', 'int', 'float'], table);
     expect(diff).toMatchInlineSnapshot(`
       {
         "columnTypes": [
@@ -91,7 +91,7 @@ describe('compareSquema', () => {
     `);
   });
 
-  test('returns incompatible types', () => {
+  test('casts string as float and tries to parse it', () => {
     const table: Schemas.Table = {
       name: 'foo',
       columns: [
@@ -101,7 +101,7 @@ describe('compareSquema', () => {
         }
       ]
     };
-    const diff = compareSquema(['a', 'b', 'c'], ['string', 'int', 'string'], table);
+    const diff = compareSchema(['a', 'b', 'c'], ['string', 'int', 'string'], table);
     expect(diff).toMatchInlineSnapshot(`
       {
         "columnTypes": [
@@ -120,9 +120,9 @@ describe('compareSquema', () => {
             "schemaType": "int",
           },
           {
-            "castedType": "string",
+            "castedType": "float",
             "columnName": "c",
-            "error": true,
+            "error": false,
             "guessedType": "string",
             "schemaType": "float",
           },

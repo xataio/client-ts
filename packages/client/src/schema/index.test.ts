@@ -250,8 +250,10 @@ describe('request', () => {
       } as Response;
     });
 
-    const result = await users.getFirst();
-    expect(result).toEqual(json);
+    const result: any = await users.getFirst();
+    expect(result?.a).toEqual(json.a);
+    expect(result?.email).toBeNull();
+    expect(result?.read).toBeDefined();
   });
 });
 
@@ -298,7 +300,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"columns\\":[\\"*\\"]}",
+            "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
@@ -323,7 +325,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"columns\\":[\\"*\\"]}",
+            "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
@@ -463,7 +465,7 @@ describe('Repository.update', () => {
       expected,
       async () => {
         const result = await users.update(object.id, object);
-        expect(result.id).toBe(object.id);
+        expect(result?.id).toBe(object.id);
       },
       { id: object.id }
     );
@@ -492,8 +494,7 @@ describe('Repository.delete', () => {
     const id = 'rec_1234';
     const expected = { method: 'DELETE', path: `/tables/users/data/${id}`, body: undefined };
     const result = await expectRequest(fetch, expected, async () => {
-      const result = await users.delete(id);
-      expect(result).toBe(undefined);
+      await users.delete(id);
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -501,7 +502,12 @@ describe('Repository.delete', () => {
         {
           "body": undefined,
           "method": "DELETE",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234",
+          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
+        },
+        {
+          "body": undefined,
+          "method": "GET",
+          "url": "https://mock.xata.sh/db/xata:main",
         },
       ]
     `);

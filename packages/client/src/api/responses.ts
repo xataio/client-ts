@@ -45,6 +45,12 @@ export type BranchMigrationPlan = {
 
 export type RecordResponse = Schemas.XataRecord;
 
+export type SchemaCompareResponse = {
+  source: Schemas.Schema;
+  target: Schemas.Schema;
+  edits: Schemas.SchemaEditScript;
+};
+
 export type RecordUpdateResponse =
   | Schemas.XataRecord
   | {
@@ -59,15 +65,20 @@ export type QueryResponse = {
   meta: Schemas.RecordsMetadata;
 };
 
+export type SummarizeResponse = {
+  summaries: Record<string, any>[];
+};
+
 export type SearchResponse = {
   records: Schemas.XataRecord[];
+  warning?: string;
 };
 
 /**
  * @example {"migrationID":"mig_c7m19ilcefoebpqj12p0"}
  */
 export type MigrationIdResponse = {
-  /*
+  /**
    * @minLength 1
    */
   migrationID: string;

@@ -1,97 +1,82 @@
-import fetch from 'cross-fetch';
-import dotenv from 'dotenv';
-import { join } from 'path';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { XataApiClient } from '../../packages/client/src';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { XataClient } from '../../packages/codegen/example/xata';
-import { teamColumns, userColumns } from '../mock_data';
+import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
-// Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.env') });
+let xata: XataClient;
+let hooks: TestEnvironmentResult['hooks'];
 
-let client: XataClient;
-let databaseName: string;
+beforeAll(async (ctx) => {
+  const result = await setUpTestEnvironment('delete');
 
-const apiKey = process.env.XATA_API_KEY ?? '';
-const workspace = process.env.XATA_WORKSPACE ?? '';
-if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
+  xata = result.client;
+  hooks = result.hooks;
 
-const api = new XataApiClient({ apiKey, fetch });
-
-beforeAll(async () => {
-  const id = Math.round(Math.random() * 100000);
-
-  const database = await api.databases.createDatabase(workspace, `sdk-integration-test-delete-${id}`);
-  databaseName = database.databaseName;
-
-  client = new XataClient({
-    databaseURL: `https://${workspace}.xata.sh/db/${database.databaseName}`,
-    branch: 'main',
-    apiKey: process.env.XATA_API_KEY || '',
-    fetch
-  });
-
-  await api.tables.createTable(workspace, databaseName, 'main', 'teams');
-  await api.tables.createTable(workspace, databaseName, 'main', 'users');
-  await api.tables.setTableSchema(workspace, databaseName, 'main', 'teams', { columns: teamColumns });
-  await api.tables.setTableSchema(workspace, databaseName, 'main', 'users', { columns: userColumns });
+  await hooks.beforeAll(ctx);
 });
 
-afterAll(async () => {
-  await api.databases.deleteDatabase(workspace, databaseName);
+afterAll(async (ctx) => {
+  await hooks.afterAll(ctx);
+});
+
+beforeEach(async (ctx) => {
+  await hooks.beforeEach(ctx);
+});
+
+afterEach(async (ctx) => {
+  await hooks.afterEach(ctx);
 });
 
 describe('record deletion', () => {
   test('delete single team with id', async () => {
-    const team = await client.db.teams.create({ name: 'Team ships' });
+    const team = await xata.db.teams.create({ name: 'Team ships' });
 
-    await client.db.teams.delete(team.id);
+    await xata.db.teams.delete(team.id);
 
     const copy = await team.read();
 
     expect(copy).toBeNull();
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
+    const apiTeam = await xata.db.teams.filter({ id: team.id }).getFirst();
 
     expect(apiTeam).toBeNull();
   });
 
   test('delete multiple teams with id list', async () => {
-    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
-    await client.db.teams.delete(teams.map((team) => team.id));
+    await xata.db.teams.delete(teams.map((team) => team.id));
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
+    const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(0);
   });
 
   test('delete single team with id in object', async () => {
-    const team = await client.db.teams.create({ name: 'Team ships' });
+    const team = await xata.db.teams.create({ name: 'Team ships' });
 
-    await client.db.teams.delete(team);
+    await xata.db.teams.delete(team);
 
     const copy = await team.read();
 
     expect(copy).toBeNull();
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
+    const apiTeam = await xata.db.teams.filter({ id: team.id }).getFirst();
 
     expect(apiTeam).toBeNull();
   });
 
   test('delete multiple teams with id in object', async () => {
-    const teams = await client.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
-    await client.db.teams.delete(teams);
+    await xata.db.teams.delete(teams);
 
-    const apiTeams = await client.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
+    const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
     expect(apiTeams).toHaveLength(0);
   });
 
   test('delete team with own operation', async () => {
-    const team = await client.db.teams.create({ name: 'Team ships' });
+    const team = await xata.db.teams.create({ name: 'Team ships' });
 
     await team.delete();
 
@@ -99,8 +84,38 @@ describe('record deletion', () => {
 
     expect(copy).toBeNull();
 
-    const apiTeam = await client.db.teams.filter({ id: team.id }).getFirst();
+    const apiTeam = await xata.db.teams.filter({ id: team.id }).getFirst();
 
     expect(apiTeam).toBeNull();
+  });
+
+  test('delete invalid items returns null', async () => {
+    const valid = await xata.db.teams.create({ name: 'Team ships' });
+
+    const team1 = await xata.db.teams.delete('invalid');
+    const team2 = await xata.db.teams.delete({ id: 'invalid', name: 'Team boats' });
+    const team3 = await xata.db.teams.delete([{ id: 'invalid', name: 'Team boats' }, valid]);
+
+    expect(team1).toBeNull();
+    expect(team2).toBeNull();
+    expect(team3[0]).toBeNull();
+    expect(team3[1]).toBeDefined();
+    expect(team3[1]?.id).toBe(valid.id);
+    expect(team3[1]?.name).toBe('Team ships');
+  });
+
+  test('delete twice and throws', async () => {
+    const team = await xata.db.teams.create({ name: 'Team ships' });
+
+    const result = await xata.db.teams.delete(team);
+    expect(result?.id).toBe(team.id);
+
+    const result2 = await xata.db.teams.delete(team);
+    expect(result2).toBeNull();
+
+    const result3 = await result?.delete();
+    expect(result3).toBeNull();
+
+    await expect(xata.db.teams.deleteOrThrow(team)).rejects.toThrow();
   });
 });

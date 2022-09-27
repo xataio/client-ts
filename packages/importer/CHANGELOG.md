@@ -1,5 +1,41 @@
 # @xata.io/importer
 
+## 0.2.9
+
+### Patch Changes
+
+- [#653](https://github.com/xataio/client-ts/pull/653) [`7613417`](https://github.com/xataio/client-ts/commit/7613417fba2c09ebdd5e743f778a5ea642baffa2) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing skip rows option to importer
+
+- Updated dependencies [[`b8d441f`](https://github.com/xataio/client-ts/commit/b8d441f80867322f41989d52c94bba230632782b)]:
+  - @xata.io/client@0.18.4
+
+## 0.2.8
+
+### Patch Changes
+
+- Updated dependencies [[`330b076`](https://github.com/xataio/client-ts/commit/330b076a0781e3576c82afab76e3fb2a64f2e041), [`c3dfb4b`](https://github.com/xataio/client-ts/commit/c3dfb4babc990634b9e9747616ed93223178a2e7), [`699beb4`](https://github.com/xataio/client-ts/commit/699beb4bbf21cffa001d3f88a03246980e30250b), [`74b17aa`](https://github.com/xataio/client-ts/commit/74b17aaedc0dbdd79bfdcb182b2e70b61f98f5a5), [`83f20cd`](https://github.com/xataio/client-ts/commit/83f20cdbe53706c16016c4db3f318e679b24ec86), [`addfcc6`](https://github.com/xataio/client-ts/commit/addfcc67fca663defdd340111ea09c9188bad3ab), [`eb7ba59`](https://github.com/xataio/client-ts/commit/eb7ba594be2a1f0ab90956836bbeb912e188a46d), [`f1a0742`](https://github.com/xataio/client-ts/commit/f1a0742a04e1aefab14f46371a04a41069faec01)]:
+  - @xata.io/client@0.18.0
+
+## 0.2.7
+
+### Patch Changes
+
+- [#591](https://github.com/xataio/client-ts/pull/591) [`30e9271`](https://github.com/xataio/client-ts/commit/30e92716b676a2901a4a63d2fd07d047879e3e23) Thanks [@SferaDev](https://github.com/SferaDev)! - Importer: Export parseCSVString
+
+* [#569](https://github.com/xataio/client-ts/pull/569) [`b14f85f`](https://github.com/xataio/client-ts/commit/b14f85f507730819e23d52792cb0ed072a1d2a3c) Thanks [@SferaDev](https://github.com/SferaDev)! - Importer: Allow passing custom batch size and increase default to 1000
+
+- [#569](https://github.com/xataio/client-ts/pull/569) [`b14f85f`](https://github.com/xataio/client-ts/commit/b14f85f507730819e23d52792cb0ed072a1d2a3c) Thanks [@SferaDev](https://github.com/SferaDev)! - Importer: Add support for id, link and datetime columns
+
+- Updated dependencies [[`a305072`](https://github.com/xataio/client-ts/commit/a3050726517632b4975f2a2ed5f771dd247e51d5), [`7812a41`](https://github.com/xataio/client-ts/commit/7812a414b7d99e9515c0ce48a61ad7a8b84d65d0), [`d4a8ced`](https://github.com/xataio/client-ts/commit/d4a8ced9c257058ed7f660e01ee5fd1da154c391), [`cf85b13`](https://github.com/xataio/client-ts/commit/cf85b13e1ca69e79100fd02f58d79d556012395d), [`2350739`](https://github.com/xataio/client-ts/commit/2350739d3f0a176b0f1fc77b0f4f597321349726), [`a336e61`](https://github.com/xataio/client-ts/commit/a336e6161be04a652e6f0f0a4c2edac10d50c99e)]:
+  - @xata.io/client@0.17.1
+
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [[`26e91d1`](https://github.com/xataio/client-ts/commit/26e91d1d84df082dedd7159271fc7c27ec87fefe), [`3332d43`](https://github.com/xataio/client-ts/commit/3332d43121367f61c8d87dfb7da2af65bd1c278f)]:
+  - @xata.io/client@0.17.0
+
 ## 0.2.5
 
 ### Patch Changes

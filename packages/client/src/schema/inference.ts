@@ -1,4 +1,5 @@
 import { Schemas } from '../api';
+import { UnionToIntersection, Values } from '../util/types';
 import { Identifiable, XataRecord } from './record';
 
 export type BaseSchema = {
@@ -7,6 +8,7 @@ export type BaseSchema = {
     | {
         name: string;
         type: Schemas.Column['type'];
+        notNull?: boolean;
       }
     | { name: string; type: 'link'; link: { table: string } }
     | { name: string; type: 'object'; columns: { name: string; type: string }[] }
@@ -27,39 +29,51 @@ type TableType<Tables, TableName> = Tables & { name: TableName } extends infer T
   ? Table extends { name: string; columns: infer Columns }
     ? Columns extends readonly unknown[]
       ? Columns[number] extends { name: string; type: string }
-        ? Identifiable & { [K in Columns[number]['name']]?: PropertyType<Tables, Columns[number], K> }
+        ? Identifiable &
+            UnionToIntersection<Values<{ [K in Columns[number]['name']]: PropertyType<Tables, Columns[number], K> }>>
         : never
       : never
     : never
   : never;
 
-type PropertyType<Tables, Properties, PropertyName> = Properties & { name: PropertyName } extends infer Property
+type PropertyType<Tables, Properties, PropertyName extends PropertyKey> = Properties & {
+  name: PropertyName;
+} extends infer Property
   ? Property extends {
       name: string;
       type: infer Type;
       link?: { table: infer LinkedTable };
       columns?: infer ObjectColumns;
+      notNull?: infer NotNull;
     }
-    ?
-        | (Type extends 'string' | 'text' | 'email'
-            ? string
-            : Type extends 'int' | 'float'
-            ? number
-            : Type extends 'bool'
-            ? boolean
-            : Type extends 'datetime'
-            ? Date
-            : Type extends 'multiple'
-            ? string[]
-            : Type extends 'object'
-            ? ObjectColumns extends readonly unknown[]
-              ? ObjectColumns[number] extends { name: string; type: string }
-                ? { [K in ObjectColumns[number]['name']]?: PropertyType<Tables, ObjectColumns[number], K> }
-                : never
-              : never
-            : Type extends 'link'
-            ? TableType<Tables, LinkedTable> & XataRecord
-            : never)
-        | null // TODO: Types shouldn't be always nullable
+    ? NotNull extends true
+      ? {
+          [K in PropertyName]: InnerType<Type, ObjectColumns, Tables, LinkedTable>;
+        }
+      : {
+          [K in PropertyName]?: InnerType<Type, ObjectColumns, Tables, LinkedTable> | null;
+        }
     : never
+  : never;
+
+type InnerType<Type, ObjectColumns, Tables, LinkedTable> = Type extends 'string' | 'text' | 'email'
+  ? string
+  : Type extends 'int' | 'float'
+  ? number
+  : Type extends 'bool'
+  ? boolean
+  : Type extends 'datetime'
+  ? Date
+  : Type extends 'multiple'
+  ? string[]
+  : Type extends 'object'
+  ? ObjectColumns extends readonly unknown[]
+    ? ObjectColumns[number] extends { name: string; type: string }
+      ? UnionToIntersection<
+          Values<{ [K in ObjectColumns[number]['name']]: PropertyType<Tables, ObjectColumns[number], K> }>
+        >
+      : never
+    : never
+  : Type extends 'link'
+  ? TableType<Tables, LinkedTable> & XataRecord
   : never;

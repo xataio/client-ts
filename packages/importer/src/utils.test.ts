@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { castType, guessType, guessTypes, normalizeColumnName, parseArray, parseRow, splitCommas } from './utils';
+import { castType, guessType, guessTypes, normalizeColumnName, parseArray, parseRow } from './utils';
 
 describe('normalizeColumnName', () => {
   test('transliterates, removes whitespaces and camel cases and keeps dots', () => {
@@ -8,8 +8,9 @@ describe('normalizeColumnName', () => {
 });
 
 describe('parseArray', () => {
-  test('returns null if it is not an array', () => {
-    expect(parseArray('foo')).toBeNull();
+  test('build array if its valid', () => {
+    const result = parseArray('foo');
+    expect(result).toEqual(['foo']);
   });
 
   test('returns an array of strings when it can be parsed as an array', () => {
