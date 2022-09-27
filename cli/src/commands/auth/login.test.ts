@@ -42,7 +42,7 @@ describe('auth login', () => {
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
         {
-          "message": "Authentication is already configured for default profile, do you want to overwrite it?",
+          "message": "Authentication is already configured for the default profile, do you want to overwrite it?",
           "name": "overwrite",
           "type": "confirm",
         },
