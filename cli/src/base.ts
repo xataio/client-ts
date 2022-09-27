@@ -74,6 +74,14 @@ export abstract class BaseCommand extends Command {
     })
   };
 
+  static profileFlag = {
+    profile: Flags.string({
+      helpGroup: commonFlagsHelpGroup,
+      helpValue: '<profile-name>',
+      description: 'Profile name to use'
+    })
+  };
+
   static yesFlag = {
     yes: Flags.boolean({
       char: 'y',
@@ -91,7 +99,8 @@ export abstract class BaseCommand extends Command {
 
   static commonFlags = {
     ...this.jsonFlag,
-    ...this.noInputFlag
+    ...this.noInputFlag,
+    ...this.profileFlag
   };
 
   static forceFlag(description?: string) {
@@ -170,11 +179,14 @@ export abstract class BaseCommand extends Command {
   }
 
   async getProfile(ignoreEnv?: boolean): Promise<Profile | undefined> {
+    const { flags } = await this.parse({ strict: false, flags: { ...BaseCommand.profileFlag } }, this.argv);
+    const profileName = flags.profile || getProfileName();
+
     const apiKey = getAPIKey();
     if (!ignoreEnv && !process.env.XATA_PROFILE && apiKey) return { apiKey };
 
     const credentials = await readCredentials();
-    const profile = credentials[getProfileName()];
+    const profile = credentials[profileName];
     if (profile?.apiKey) this.apiKeyLocation = 'profile';
     return profile;
   }
