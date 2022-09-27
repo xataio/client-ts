@@ -37,7 +37,7 @@ export default class Login extends BaseCommand {
 
     const host = parseProviderString(flags.host);
     if (!host) {
-      this.error('Invalid host provider, expected either "production", "staging" or "apiUrl,workspacesUrl"');
+      this.error('Invalid host provider, expected either "production", "staging" or "{apiUrl},{workspacesUrl}"');
     }
 
     const key = await this.obtainKey();
