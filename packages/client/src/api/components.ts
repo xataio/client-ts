@@ -4186,7 +4186,7 @@ export type SummarizeTableVariables = {
  * will count all rows in each group with non-null product names.
  * - Set `sort: [{"total_sales": "desc"}]` in order to bring the rows with
  * the highest total_sales field to the top.
- * - Set `having: {"total_sales": {"$ge": 10}}` to only send back data
+ * - Set `summariesFilters: {"total_sales": {"$ge": 10}}` to only send back data
  * with greater than or equal to 10 units.
  *
  * `columns`: tells Xata how to create each group. If you add `product_id`
