@@ -61,7 +61,7 @@ export async function hasProfile(profile: string): Promise<boolean> {
   return !!credentials[profile];
 }
 
-export async function writeCredentials(credentials: CredentialsDictionary) {
+async function writeCredentials(credentials: CredentialsDictionary) {
   const dir = dirname(credentialsFilePath);
   await mkdir(dir, { recursive: true });
   await writeFile(credentialsFilePath, ini.stringify(credentials), { mode: 0o600 });
@@ -69,7 +69,10 @@ export async function writeCredentials(credentials: CredentialsDictionary) {
 
 export async function setProfile(name: string, profile: Credential) {
   const credentials = await readCredentialsDictionary();
-  credentials[name] = profile;
+  credentials[name] = {
+    apiKey: profile.apiKey,
+    ...Object.fromEntries(Object.entries(profile).filter(([, value]) => value))
+  };
   await writeCredentials(credentials);
 }
 

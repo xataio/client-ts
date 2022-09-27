@@ -200,13 +200,11 @@ export abstract class BaseCommand extends Command {
     return buildProfile({ ...credential, name: profileName });
   }
 
-  async getXataClient(apiKey?: string | null) {
+  async getXataClient(overrideProfile?: Profile) {
     if (this.#xataClient) return this.#xataClient;
 
-    const profile = apiKey ? undefined : await this.getProfile();
-    const host = profile?.host ?? 'production';
+    const { apiKey, host } = overrideProfile ?? (await this.getProfile());
 
-    apiKey = apiKey || profile?.apiKey;
     if (!apiKey) {
       this.error('Could not instantiate Xata client. No API key found.', {
         suggestions: [
@@ -243,9 +241,9 @@ export abstract class BaseCommand extends Command {
     this.log(`${chalk.greenBright('✔')} ${message}`);
   }
 
-  async verifyAPIKey(key: string) {
+  async verifyAPIKey(profile: Profile) {
     this.info('Checking access to the API...');
-    const xata = await this.getXataClient(key);
+    const xata = await this.getXataClient(profile);
     try {
       await xata.workspaces.getWorkspacesList();
     } catch (err) {

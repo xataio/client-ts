@@ -19,7 +19,7 @@ export default class Status extends BaseCommand {
 
     this.info('Client is logged in');
 
-    await this.verifyAPIKey(profile.apiKey);
+    await this.verifyAPIKey(profile);
 
     this.success('API key is valid');
   }
