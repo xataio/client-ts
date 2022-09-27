@@ -1,10 +1,11 @@
 import { Command, Flags } from '@oclif/core';
-import { getAPIKey, getCurrentBranchName, Schemas, XataApiClient, XataApiClientOptions } from '@xata.io/client';
+import { getAPIKey, getCurrentBranchName, getHostUrl, Schemas, XataApiClient } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { cosmiconfigSync } from 'cosmiconfig';
 import dotenv from 'dotenv';
+import dotenvExpand from 'dotenv-expand';
 import { readFile, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path from 'path';
@@ -13,9 +14,8 @@ import table from 'text-table';
 import which from 'which';
 import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
-import { credentialsPath, getProfileName, Profile, readCredentials } from './credentials.js';
+import { buildProfile, credentialsFilePath, getProfileName, Profile, readCredentials } from './credentials.js';
 import { reportBugURL } from './utils.js';
-import dotenvExpand from 'dotenv-expand';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -162,7 +162,7 @@ export abstract class BaseCommand extends Command {
           ];
           break;
         case 'profile':
-          message = `the API key from the ${getProfileName()} profile at ${credentialsPath}`;
+          message = `the API key from the ${getProfileName()} profile at ${credentialsFilePath}`;
           suggestions = [`Run ${chalk.bold('xata auth login --force')} to override the existing API key`];
           break;
         case 'new':
@@ -178,23 +178,25 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  async getProfile(ignoreEnv?: boolean): Promise<Profile | undefined> {
+  async getProfile(ignoreEnv?: boolean): Promise<Profile> {
     const { flags } = await this.parse({ strict: false, flags: { ...BaseCommand.profileFlag } }, this.argv);
     const profileName = flags.profile || getProfileName();
 
     const apiKey = getAPIKey();
-    if (!ignoreEnv && !process.env.XATA_PROFILE && apiKey) return { apiKey };
+    const useEnv = !process.env.XATA_PROFILE && !flags.profile && !ignoreEnv;
+    if (useEnv && apiKey) return buildProfile({ apiKey });
 
     const credentials = await readCredentials();
-    const profile = credentials[profileName];
-    if (profile?.apiKey) this.apiKeyLocation = 'profile';
-    return profile;
+    const credential = credentials[profileName];
+    if (credential?.apiKey) this.apiKeyLocation = 'profile';
+    return buildProfile(credential);
   }
 
   async getXataClient(apiKey?: string | null) {
     if (this.#xataClient) return this.#xataClient;
 
     const profile = apiKey ? undefined : await this.getProfile();
+    const host = profile?.host ?? 'production';
 
     apiKey = apiKey || profile?.apiKey;
     if (!apiKey) {
@@ -206,17 +208,6 @@ export abstract class BaseCommand extends Command {
       });
     }
 
-    let host: XataApiClientOptions['host'];
-    if (profile?.api) {
-      if (profile.api === 'staging') {
-        host = 'staging';
-      } else {
-        host = {
-          main: profile.api,
-          workspaces: profile.api
-        };
-      }
-    }
     this.#xataClient = new XataApiClient({ apiKey, fetch, host });
     return this.#xataClient;
   }
@@ -428,16 +419,9 @@ export abstract class BaseCommand extends Command {
     const workspace = await this.getWorkspace({ allowCreate });
     const database = await this.getDatabase(workspace, { allowCreate });
     const profile = await this.getProfile();
-    let host = 'xata.sh';
-    // TODO: unify logic somewhere
-    if (profile?.api) {
-      if (profile.api === 'staging') {
-        host = 'staging.xatabase.co';
-      } else {
-        host = profile.api.split('/')[2];
-      }
-    }
-    return { databaseURL: `https://${workspace}.${host}/db/${database}`, source: 'interactive' };
+    const apiURL = getHostUrl(profile.host, 'workspaces').replace('{workspaceId}', workspace);
+
+    return { databaseURL: `${apiURL}/db/${database}`, source: 'interactive' };
   }
 
   async getParsedDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {

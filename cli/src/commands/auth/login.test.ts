@@ -5,7 +5,7 @@ import { clearEnvVariables } from '../utils.test.js';
 import Login from './login.js';
 import prompts from 'prompts';
 import * as fs from 'fs/promises';
-import { credentialsPath } from '../../credentials.js';
+import { credentialsFilePath } from '../../credentials.js';
 import { dirname } from 'path';
 import ini from 'ini';
 
@@ -37,7 +37,7 @@ describe('auth login', () => {
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 2]');
 
-    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsFilePath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -63,7 +63,7 @@ describe('auth login', () => {
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 2]');
 
-    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsFilePath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -105,7 +105,7 @@ describe('auth login', () => {
 
     await command.run();
 
-    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsFilePath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledTimes(2);
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -139,9 +139,13 @@ describe('auth login', () => {
     expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 
-    expect(fs.mkdir).toHaveBeenCalledWith(dirname(credentialsPath), { recursive: true });
-    expect(fs.writeFile).toHaveBeenCalledWith(credentialsPath, ini.stringify({ default: { apiKey: '1234abcdef' } }), {
-      mode: 0o600
-    });
+    expect(fs.mkdir).toHaveBeenCalledWith(dirname(credentialsFilePath), { recursive: true });
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      credentialsFilePath,
+      ini.stringify({ default: { apiKey: '1234abcdef' } }),
+      {
+        mode: 0o600
+      }
+    );
   });
 });

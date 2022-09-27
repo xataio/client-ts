@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { XataApiClient } from '@xata.io/client';
+import { getHostUrl, XataApiClient } from '@xata.io/client';
 import { generate } from '@xata.io/codegen';
 import chalk from 'chalk';
 import EventEmitter from 'events';
@@ -69,7 +69,7 @@ export default class Shell extends BaseCommand {
     );
 
     const fetchApi = async (method: string, path: string, body?: any) => {
-      const mainHost = profile.api === 'staging' ? 'https://staging.xatabase.co' : 'https://api.xata.io';
+      const mainHost = getHostUrl(profile.host, 'main');
       const baseUrl = path.startsWith('/db') ? `${protocol}//${host}` : mainHost;
 
       const parse = () => {
@@ -132,7 +132,7 @@ export default class Shell extends BaseCommand {
     const { XataClient } = await import(tempFile);
     await fs.unlink(tempFile);
 
-    replServer.context.xata = new XataClient({ fetch, apiKey, host: profile.api });
+    replServer.context.xata = new XataClient({ fetch, apiKey, host: profile.host });
     replServer.context.api = new XataApiClient({ fetch, apiKey });
     replServer.context.api.GET = (path: string) => fetchApi('GET', path);
     replServer.context.api.POST = (path: string, body?: any) => fetchApi('POST', path, JSON.stringify(body));

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { APIKeyLocation, BaseCommand } from '../../base.js';
-import { credentialsPath, getProfileName } from '../../credentials.js';
+import { credentialsFilePath, getProfileName } from '../../credentials.js';
 
 export default class Status extends BaseCommand {
   static description = 'Print information about the current project configuration';
@@ -51,7 +51,7 @@ export default class Status extends BaseCommand {
       case 'dotenv':
         return `XATA_API_KEY environment variable at ${this.apiKeyDotenvLocation}`;
       case 'profile':
-        return `Credentials file at ${credentialsPath} witht the ${getProfileName()} profile`;
+        return `Credentials file at ${credentialsFilePath} witht the ${getProfileName()} profile`;
       case 'new':
         return 'Newly created API key';
     }
