@@ -28,7 +28,7 @@ const resolveUrl = (
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
 export type FetchImpl = (
   url: string,
-  init?: { body?: string; headers?: Record<string, string>; method?: string; signal?: AbortSignal }
+  init?: { body?: string; headers?: Record<string, string>; method?: string; signal?: any }
 ) => Promise<{
   ok: boolean;
   status: number;
