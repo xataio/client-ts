@@ -1,5 +1,5 @@
 import { BaseCommand } from '../../base.js';
-import { setProfile } from '../../credentials.js';
+import { hasProfile, setProfile } from '../../credentials.js';
 
 export default class Login extends BaseCommand {
   static description = 'Authenticate with Xata';
@@ -7,20 +7,23 @@ export default class Login extends BaseCommand {
   static examples = [];
 
   static flags = {
-    ...BaseCommand.forceFlag('Overwrite existing credentials if they exist')
+    ...BaseCommand.forceFlag('Overwrite existing credentials if they exist'),
+    ...BaseCommand.profileFlag
   };
 
   static args = [];
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Login);
-    const existingProfile = await this.getProfile(true);
-    if (existingProfile) {
+
+    const profile = await this.getProfile(true);
+    const loggedIn = await hasProfile(profile.name);
+    if (loggedIn) {
       const { overwrite } = await this.prompt(
         {
           type: 'confirm',
           name: 'overwrite',
-          message: 'Authentication is already configured, do you want to overwrite it?'
+          message: `Authentication is already configured for ${profile.name} profile, do you want to overwrite it?`
         },
         flags.force
       );
@@ -31,7 +34,7 @@ export default class Login extends BaseCommand {
 
     await this.verifyAPIKey(key);
 
-    await setProfile({ apiKey: key });
+    await setProfile(profile.name, { apiKey: key });
 
     this.success('All set! you can now start using xata');
   }

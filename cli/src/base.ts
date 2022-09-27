@@ -14,7 +14,13 @@ import table from 'text-table';
 import which from 'which';
 import { z, ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
-import { buildProfile, credentialsFilePath, getProfileName, Profile, readCredentials } from './credentials.js';
+import {
+  buildProfile,
+  credentialsFilePath,
+  getEnvProfileName,
+  Profile,
+  readCredentialsDictionary
+} from './credentials.js';
 import { reportBugURL } from './utils.js';
 
 export const projectConfigSchema = z.object({
@@ -144,6 +150,8 @@ export abstract class BaseCommand extends Command {
 
   async catch(err: Error & { exitCode?: number | undefined }): Promise<any> {
     if (err.message.match(/invalid api key/i)) {
+      const profile = await this.getProfile();
+
       let message = '';
       let suggestions: string[] = [];
       switch (this.apiKeyLocation) {
@@ -162,7 +170,7 @@ export abstract class BaseCommand extends Command {
           ];
           break;
         case 'profile':
-          message = `the API key from the ${getProfileName()} profile at ${credentialsFilePath}`;
+          message = `the API key from the ${profile.name} profile at ${credentialsFilePath}`;
           suggestions = [`Run ${chalk.bold('xata auth login --force')} to override the existing API key`];
           break;
         case 'new':
@@ -180,16 +188,16 @@ export abstract class BaseCommand extends Command {
 
   async getProfile(ignoreEnv?: boolean): Promise<Profile> {
     const { flags } = await this.parse({ strict: false, flags: { ...BaseCommand.profileFlag } }, this.argv);
-    const profileName = flags.profile || getProfileName();
+    const profileName = flags.profile || getEnvProfileName();
 
     const apiKey = getAPIKey();
     const useEnv = !process.env.XATA_PROFILE && !flags.profile && !ignoreEnv;
-    if (useEnv && apiKey) return buildProfile({ apiKey });
+    if (useEnv && apiKey) return buildProfile({ name: 'default', apiKey });
 
-    const credentials = await readCredentials();
+    const credentials = await readCredentialsDictionary();
     const credential = credentials[profileName];
     if (credential?.apiKey) this.apiKeyLocation = 'profile';
-    return buildProfile(credential);
+    return buildProfile({ ...credential, name: profileName });
   }
 
   async getXataClient(apiKey?: string | null) {
