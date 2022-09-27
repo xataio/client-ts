@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { APIKeyLocation, BaseCommand } from '../../base.js';
-import { credentialsPath, getProfileName } from '../../credentials.js';
+import { credentialsFilePath, Profile } from '../../credentials.js';
 
 export default class Status extends BaseCommand {
   static description = 'Print information about the current project configuration';
@@ -19,6 +19,7 @@ export default class Status extends BaseCommand {
     }
 
     const { databaseURL, workspace, database, branch } = await this.getParsedDatabaseURLWithBranch();
+    const profile = await this.getProfile();
 
     if (this.jsonEnabled()) {
       return {
@@ -34,7 +35,7 @@ export default class Status extends BaseCommand {
     this.printValue('Project configuration file', this.projectConfigLocation);
     this.printValue('Database URL', databaseURL);
     this.printValue('Branch', branch);
-    this.printValue('API key location', this.getAPIKeyLocationDescription(this.apiKeyLocation));
+    this.printValue('API key location', this.getAPIKeyLocationDescription(profile, this.apiKeyLocation));
   }
 
   printValue(name: string, value?: string) {
@@ -43,7 +44,7 @@ export default class Status extends BaseCommand {
     this.log();
   }
 
-  getAPIKeyLocationDescription(location?: APIKeyLocation) {
+  getAPIKeyLocationDescription(profile: Profile, location?: APIKeyLocation) {
     if (!location) return '';
     switch (location) {
       case 'shell':
@@ -51,7 +52,7 @@ export default class Status extends BaseCommand {
       case 'dotenv':
         return `XATA_API_KEY environment variable at ${this.apiKeyDotenvLocation}`;
       case 'profile':
-        return `Credentials file at ${credentialsPath} witht the ${getProfileName()} profile`;
+        return `Credentials file at ${credentialsFilePath} with ${profile.name} profile`;
       case 'new':
         return 'Newly created API key';
     }
