@@ -1,18 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { castType, guessType, guessTypes, normalizeColumnName, parseArray, parseRow, splitCommas } from './utils';
-
-describe('splitCommas', () => {
-  test('returns undefined for falsy values', () => {
-    expect(splitCommas(null)).toBeUndefined();
-    expect(splitCommas('')).toBeUndefined();
-    expect(splitCommas(false)).toBeUndefined();
-    expect(splitCommas(undefined)).toBeUndefined();
-  });
-
-  test('returns an array with the comma separated values', () => {
-    expect(splitCommas('a,b,c')).toEqual(['a', 'b', 'c']);
-  });
-});
+import { castType, guessType, guessTypes, normalizeColumnName, parseArray, parseRow } from './utils';
 
 describe('normalizeColumnName', () => {
   test('transliterates, removes whitespaces and camel cases and keeps dots', () => {
@@ -21,8 +8,9 @@ describe('normalizeColumnName', () => {
 });
 
 describe('parseArray', () => {
-  test('returns null if it is not an array', () => {
-    expect(parseArray('foo')).toBeNull();
+  test('build array if its valid', () => {
+    const result = parseArray('foo');
+    expect(result).toEqual(['foo']);
   });
 
   test('returns an array of strings when it can be parsed as an array', () => {
@@ -41,6 +29,7 @@ describe('guessType', () => {
     expect(guessType('foo')).toBe('string');
     expect(guessType('foo\nbar')).toBe('text');
     expect(guessType('foo@example.com')).toBe('email');
+    expect(guessType('not an email, even though it contains foo@bar.com')).toBe('string');
     expect(guessType('[1,2,3]')).toBe('multiple');
     expect(guessType('true')).toBe('bool');
     expect(guessType('false')).toBe('bool');

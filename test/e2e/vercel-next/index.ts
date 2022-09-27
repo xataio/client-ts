@@ -19,16 +19,17 @@ async function main() {
   execSync(`npx create-next-app app --ts --use-npm`, { cwd: __dirname });
 
   // Install npm dependencies
-  execSync(`npm install @xata.io/client@${process.env.VERSION_TAG}`, { cwd: projectDir });
+  try {
+    execSync(`npm install @xata.io/client@${process.env.VERSION_TAG}`, { cwd: projectDir });
+  } catch (e) {
+    execSync(`npm install @xata.io/client@latest`, { cwd: projectDir });
+  }
 
   // Copy route
   execSync('cp ../test.ts pages/api/test.ts', { cwd: projectDir });
 
   // Install npm dependencies
   execSync('npm install', { cwd: projectDir });
-
-  // Build the app
-  execSync('npm run build', { cwd: projectDir });
 
   // Create Vercel project
   const createResponse = await fetch(`https://api.vercel.com/v8/projects?teamId=${teamId}`, {
@@ -104,9 +105,9 @@ async function main() {
       body.users.length > 0 &&
       body.teams.length > 0
     ) {
-      console.log('Successfully fetched data from CF');
+      console.log('Successfully fetched data from Vercel');
     } else {
-      throw new Error('Failed to fetch data from CF');
+      throw new Error('Failed to fetch data from Vercel');
     }
   } catch (e) {
     error = e;

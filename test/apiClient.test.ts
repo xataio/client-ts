@@ -5,16 +5,13 @@ import { describe, expect, test } from 'vitest';
 import { XataApiClient } from '../packages/client/src';
 
 // Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.envrc') });
+dotenv.config({ path: join(process.cwd(), '.env') });
 
-const client = new XataApiClient({
-  fetch,
-  apiKey: process.env.XATA_API_KEY || ''
-});
+const api = new XataApiClient({ fetch, apiKey: process.env.XATA_API_KEY });
 
 describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace', async () => {
-    const workspace = await client.workspaces.createWorkspace({
+    const workspace = await api.workspaces.createWorkspace({
       name: 'foo',
       slug: 'foo'
     });
@@ -22,41 +19,38 @@ describe('API Client Integration Tests', () => {
     expect(workspace.id).toBeDefined();
     expect(workspace.name).toBe('foo');
 
-    const foo = await client.workspaces.getWorkspace(workspace.id);
+    const foo = await api.workspaces.getWorkspace(workspace.id);
     expect(foo.id).toBe(workspace.id);
     expect(foo.slug).toBe('foo');
 
-    await client.workspaces.deleteWorkspace(workspace.id);
+    await api.workspaces.deleteWorkspace(workspace.id);
 
-    await expect(client.workspaces.getWorkspace(workspace.id)).rejects.toHaveProperty(
-      'message',
-      'no access to the workspace'
-    );
+    await expect(api.workspaces.getWorkspace(workspace.id)).rejects.toHaveProperty('message');
   });
 
   test('Create workspace with database, branch, table and records', async () => {
-    const { id: workspace } = await client.workspaces.createWorkspace({
+    const { id: workspace } = await api.workspaces.createWorkspace({
       name: 'sdk-integration-api-client',
       slug: 'sdk-integration-api-client'
     });
 
-    const { databaseName } = await client.databases.createDatabase(workspace, `test-data-${workspace}`);
+    const { databaseName } = await api.databases.createDatabase(workspace, `test-data-${workspace}`);
 
-    await client.branches.createBranch(workspace, databaseName, 'branch');
-    await client.tables.createTable(workspace, databaseName, 'branch', 'table');
-    await client.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
+    await api.branches.createBranch(workspace, databaseName, 'branch');
+    await api.tables.createTable(workspace, databaseName, 'branch', 'table');
+    await api.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
       columns: [{ name: 'email', type: 'string' }]
     });
 
-    const { id: recordId } = await client.records.insertRecord(workspace, databaseName, 'branch', 'table', {
+    const { id: recordId } = await api.records.insertRecord(workspace, databaseName, 'branch', 'table', {
       email: 'example@foo.bar'
     });
 
-    const record = await client.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
+    const record = await api.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
 
     expect(record.id).toBeDefined();
     expect(record.email).toEqual('example@foo.bar');
 
-    await client.workspaces.deleteWorkspace(workspace);
+    await api.workspaces.deleteWorkspace(workspace);
   });
 });

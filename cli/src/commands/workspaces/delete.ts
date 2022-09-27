@@ -1,5 +1,4 @@
 import { Flags } from '@oclif/core';
-import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
 
 export default class WorkspacesDelete extends BaseCommand {
@@ -9,6 +8,7 @@ export default class WorkspacesDelete extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
+    ...BaseCommand.forceFlag(),
     workspace: Flags.string({
       description: 'Workspace id to delete'
     })
@@ -24,18 +24,21 @@ export default class WorkspacesDelete extends BaseCommand {
 
     const xata = await this.getXataClient();
 
-    const { confirm } = await prompts({
-      type: 'confirm',
-      name: 'confirm',
-      message: `Are you sure you want to delete workspace ${workspace}?`,
-      initial: true
-    });
+    const { confirm } = await this.prompt(
+      {
+        type: 'text',
+        name: 'confirm',
+        message: `Are you sure you want to delete the ${workspace} workspace? Please type ${workspace} to confirm`
+      },
+      flags.force ? workspace : undefined
+    );
     if (!confirm) return this.exit(1);
+    if (confirm !== workspace) return this.error('The workspace name did not match');
 
     await xata.workspaces.deleteWorkspace(workspace);
 
     if (this.jsonEnabled()) return {};
 
-    this.log(`Workspace ${workspace} successfully deleted`);
+    this.success(`Workspace ${workspace} successfully deleted`);
   }
 }

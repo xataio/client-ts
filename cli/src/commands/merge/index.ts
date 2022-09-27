@@ -1,7 +1,6 @@
-import { getCurrentBranchDetails, Schemas } from '@xata.io/client';
-import fetch from 'node-fetch';
-import { BaseCommand } from '../../base.js';
+import { Schemas } from '@xata.io/client';
 import deepmerge from 'deepmerge';
+import { BaseCommand } from '../../base.js';
 import Codegen from '../codegen/index.js';
 
 export default class Merge extends BaseCommand {
@@ -31,6 +30,6 @@ export default class Merge extends BaseCommand {
 
     await Codegen.runIfConfigured(this.projectConfig);
 
-    this.log('Done. You are all set!');
+    this.success('Done. You are all set!');
   }
 }

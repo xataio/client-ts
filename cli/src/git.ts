@@ -1,5 +1,15 @@
 import { spawnSync } from 'child_process';
 
+export function isGitRepo() {
+  try {
+    run('git', ['status', '--porcelain=v1']);
+    return true;
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('not a git repository')) return false;
+    throw err;
+  }
+}
+
 export function isWorkingDirClean() {
   const out = run('git', ['status', '--porcelain=v1']);
   return out === '';
@@ -12,6 +22,39 @@ export function listRemotes() {
     const [name, url, method] = item.split(/\s+/);
     return { name, url, method: method.replace('(', '').replace(')', '') };
   });
+}
+
+export function currentGitBranch() {
+  const out = run('git', ['branch', '--show-current']);
+  return out === '' ? null : out;
+}
+
+export function listBranches(): { name: string; local: boolean; remotes: string[] }[] {
+  const out = run('git', ['for-each-ref', '--format', '%(refname)']);
+  const items = out.split('\n').filter(Boolean);
+
+  const branches = items.reduce((acc, item) => {
+    const [_prefix, type, ...rest] = item.split(/\//);
+
+    switch (type) {
+      case 'heads': {
+        const name = rest.join('/');
+        acc[name] = { name, local: true, remotes: acc[name]?.remotes ?? [] };
+        break;
+      }
+      case 'remotes': {
+        const [remote, ...parts] = rest;
+        const name = parts.join('/');
+        const prev = acc[name] ?? { local: false, remotes: [] };
+        acc[name] = { name, local: prev.local, remotes: [...prev.remotes, remote] };
+        break;
+      }
+    }
+
+    return acc;
+  }, {} as Record<string, { name: string; local: boolean; remotes: string[] }>);
+
+  return Object.values(branches);
 }
 
 export function defaultGitBranch(remote?: string) {
@@ -50,6 +93,15 @@ export function isGitInstalled() {
 
 export function createBranch(name: string, base: string) {
   run('git', ['checkout', '-b', name, base]);
+}
+
+export function isIgnored(path: string) {
+  try {
+    run('git', ['check-ignore', path]);
+    return true;
+  } catch (err) {
+    return false;
+  }
 }
 
 function run(command: string, args: string[]) {

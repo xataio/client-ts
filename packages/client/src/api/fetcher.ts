@@ -1,24 +1,53 @@
+import { TraceAttributes, TraceFunction } from '../schema/tracing';
+import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
-const resolveUrl = (url: string, queryParams: Record<string, any> = {}, pathParams: Record<string, string> = {}) => {
-  const query = new URLSearchParams(queryParams).toString();
+const resolveUrl = (
+  url: string,
+  queryParams: Record<string, any> = {},
+  pathParams: Partial<Record<string, string | number>> = {}
+) => {
+  // Remove nulls and undefineds from query params
+  const cleanQueryParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
+    if (value === undefined || value === null) return acc;
+    return { ...acc, [key]: value };
+  }, {} as Record<string, any>);
+
+  const query = new URLSearchParams(cleanQueryParams).toString();
   const queryString = query.length > 0 ? `?${query}` : '';
-  return url.replace(/\{\w*\}/g, (key) => pathParams[key.slice(1, -1)]) + queryString;
+
+  // We need to encode the path params because they can contain special characters
+  // Special case, `:` does not need to be encoded as we use it as a separator
+  const cleanPathParams = Object.entries(pathParams).reduce((acc, [key, value]) => {
+    return { ...acc, [key]: encodeURIComponent(String(value ?? '')).replace('%3A', ':') };
+  }, {} as Record<string, string>);
+
+  return url.replace(/\{\w*\}/g, (key) => cleanPathParams[key.slice(1, -1)]) + queryString;
 };
 
 // Typed only the subset of the spec we actually use (to be able to build a simple mock)
 export type FetchImpl = (
   url: string,
-  init?: { body?: string; headers?: Record<string, string>; method?: string }
-) => Promise<{ ok: boolean; status: number; json(): Promise<any> }>;
+  init?: { body?: string; headers?: Record<string, string>; method?: string; signal?: AbortSignal }
+) => Promise<{
+  ok: boolean;
+  status: number;
+  url: string;
+  json(): Promise<any>;
+  headers?: {
+    get(name: string): string | null;
+  };
+}>;
 
-export type WorkspaceApiUrlBuilder = (path: string, pathParams: Record<string, string>) => string;
+export type WorkspaceApiUrlBuilder = (path: string, pathParams: Partial<Record<string, string | number>>) => string;
 
 export type FetcherExtraProps = {
   apiUrl: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   fetchImpl: FetchImpl;
   apiKey: string;
+  trace: TraceFunction;
+  signal?: AbortSignal;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
@@ -41,12 +70,12 @@ function buildBaseUrl({
   path: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   apiUrl: string;
-  pathParams?: Record<string, string>;
+  pathParams?: Partial<Record<string, string | number>>;
 }): string {
-  if (!pathParams?.workspace) return `${apiUrl}${path}`;
+  if (pathParams?.workspace === undefined) return `${apiUrl}${path}`;
 
   const url = typeof workspacesApiUrl === 'string' ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
-  return url.replace('{workspaceId}', pathParams.workspace);
+  return url.replace('{workspaceId}', String(pathParams.workspace));
 }
 
 // The host header is needed by Node.js on localhost.
@@ -64,7 +93,7 @@ export async function fetch<
   TBody extends Record<string, unknown> | undefined | null,
   THeaders extends Record<string, unknown>,
   TQueryParams extends Record<string, unknown>,
-  TPathParams extends Record<string, string>
+  TPathParams extends Partial<Record<string, string | number>>
 >({
   url: path,
   method,
@@ -75,40 +104,74 @@ export async function fetch<
   fetchImpl,
   apiKey,
   apiUrl,
-  workspacesApiUrl
+  workspacesApiUrl,
+  trace,
+  signal
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
-  const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
-  const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
+  return trace(
+    `${method.toUpperCase()} ${path}`,
+    async ({ setAttributes }) => {
+      const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
+      const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
-  // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
-  // So, instead, we use localhost without subdomains, but will add a Host header
-  const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\./, 'http://') : fullUrl;
+      // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
+      // So, instead, we use localhost without subdomains, but will add a Host header
+      const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\./, 'http://') : fullUrl;
+      setAttributes({
+        [TraceAttributes.HTTP_URL]: url,
+        [TraceAttributes.HTTP_TARGET]: resolveUrl(path, queryParams, pathParams)
+      });
 
-  const response = await fetchImpl(url, {
-    method: method.toUpperCase(),
-    body: body ? JSON.stringify(body) : undefined,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-      ...hostHeader(fullUrl),
-      Authorization: `Bearer ${apiKey}`
-    }
-  });
+      const response = await fetchImpl(url, {
+        method: method.toUpperCase(),
+        body: body ? JSON.stringify(body) : undefined,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': `Xata client-ts/${VERSION}`,
+          ...headers,
+          ...hostHeader(fullUrl),
+          Authorization: `Bearer ${apiKey}`
+        },
+        signal
+      });
 
-  // No content
-  if (response.status === 204) {
-    return {} as unknown as TData;
-  }
+      // No content
+      if (response.status === 204) {
+        return {} as unknown as TData;
+      }
 
+      const { host, protocol } = parseUrl(response.url);
+      const requestId = response.headers?.get('x-request-id') ?? undefined;
+      setAttributes({
+        [TraceAttributes.KIND]: 'http',
+        [TraceAttributes.HTTP_REQUEST_ID]: requestId,
+        [TraceAttributes.HTTP_STATUS_CODE]: response.status,
+        [TraceAttributes.HTTP_HOST]: host,
+        [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', '')
+      });
+
+      try {
+        const jsonResponse = await response.json();
+
+        if (response.ok) {
+          return jsonResponse;
+        }
+
+        throw new FetcherError(response.status, jsonResponse as TError['payload'], requestId);
+      } catch (error) {
+        throw new FetcherError(response.status, error, requestId);
+      }
+    },
+    { [TraceAttributes.HTTP_METHOD]: method.toUpperCase(), [TraceAttributes.HTTP_ROUTE]: path }
+  );
+}
+
+function parseUrl(url: string): { host?: string; protocol?: string } {
   try {
-    const jsonResponse = await response.json();
+    const { host, protocol } = new URL(url);
 
-    if (response.ok) {
-      return jsonResponse;
-    }
-
-    throw new FetcherError(response.status, jsonResponse as TError['payload']);
+    return { host, protocol };
   } catch (error) {
-    throw new FetcherError(response.status, error as Error);
+    return {};
   }
 }

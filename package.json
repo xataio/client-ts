@@ -11,8 +11,7 @@
     "postinstall": "lerna bootstrap",
     "build": "lerna run build",
     "size": "npm run build && size-limit",
-    "openapi-gen": "openapi-codegen xatabase",
-    "build-example": "cd packages/codegen && npm run example-ts && npm run example-js && cd .."
+    "openapi-gen": "openapi-codegen xatabase"
   },
   "repository": {
     "type": "git",
@@ -20,45 +19,49 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "homepage": "https://github.com/xataio/client-ts#readme",
   "devDependencies": {
-    "@babel/core": "^7.18.5",
-    "@babel/preset-env": "^7.18.2",
-    "@babel/preset-typescript": "^7.17.12",
-    "@changesets/changelog-github": "^0.4.5",
-    "@changesets/cli": "^2.23.0",
-    "@openapi-codegen/cli": "^1.5.2",
-    "@openapi-codegen/typescript": "^4.0.1",
-    "@rollup/plugin-node-resolve": "^13.3.0",
-    "@size-limit/preset-small-lib": "^7.0.8",
-    "@types/node": "^17.0.42",
-    "@typescript-eslint/eslint-plugin": "^5.28.0",
-    "@typescript-eslint/parser": "^5.27.1",
+    "@babel/core": "^7.19.1",
+    "@babel/preset-env": "^7.19.1",
+    "@babel/preset-typescript": "^7.18.6",
+    "@changesets/changelog-github": "^0.4.6",
+    "@changesets/cli": "^2.24.4",
+    "@openapi-codegen/cli": "^2.0.0",
+    "@openapi-codegen/typescript": "^6.0.0",
+    "@opentelemetry/exporter-trace-otlp-grpc": "^0.33.0",
+    "@opentelemetry/instrumentation": "^0.33.0",
+    "@opentelemetry/sdk-trace-node": "^1.7.0",
+    "@size-limit/preset-small-lib": "^8.1.0",
+    "@types/node": "^18.7.21",
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "@typescript-eslint/parser": "^5.38.0",
     "cross-fetch": "^3.1.5",
-    "dotenv": "^16.0.1",
-    "eslint": "^8.17.0",
-    "eslint-import-resolver-typescript": "^2.7.1",
+    "doctoc": "^2.2.1",
+    "dotenv": "^16.0.2",
+    "eslint": "^8.24.0",
+    "eslint-import-resolver-typescript": "^3.5.1",
     "eslint-plugin-import": "^2.26.0",
     "husky": "^8.0.1",
-    "lerna": "^5.1.2",
-    "lint-staged": "^13.0.1",
-    "msw": "^0.42.1",
-    "prettier": "^2.6.2",
+    "lerna": "^5.5.2",
+    "lint-staged": "^13.0.3",
+    "msw": "^0.47.3",
+    "node-fetch": "=2.6.7",
+    "prettier": "^2.7.1",
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-dts": "^4.2.2",
-    "rollup-plugin-esbuild": "^4.9.1",
+    "rollup-plugin-esbuild": "^4.10.1",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-preserve-shebang": "^1.0.1",
-    "size-limit": "^7.0.8",
-    "ts-node": "^10.8.1",
-    "typescript": "^4.7.3",
-    "vitest": "^0.14.2",
-    "zod": "^3.17.3"
+    "size-limit": "^8.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.3",
+    "vitest": "^0.23.4",
+    "zod": "^3.19.1"
   },
   "lint-staged": {
     "codegen/src/*.{js,ts,tsx}": [
@@ -71,6 +74,9 @@
     ],
     "*.{css,json,md,yml,yaml}": [
       "prettier --write"
+    ],
+    "client/{README,Usage}.md": [
+      "doctoc --notitle"
     ]
   },
   "size-limit": [

@@ -1,22 +1,27 @@
 import { Command, Flags } from '@oclif/core';
-import { getCurrentBranchName, Schemas, XataApiClient, XataApiClientOptions } from '@xata.io/client';
+import { getAPIKey, getCurrentBranchName, Schemas, XataApiClient, XataApiClientOptions } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
+import { spawn } from 'child_process';
 import { cosmiconfigSync } from 'cosmiconfig';
 import dotenv from 'dotenv';
 import { readFile, writeFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path from 'path';
 import prompts from 'prompts';
-import slugify from 'slugify';
 import table from 'text-table';
+import which from 'which';
 import { z, ZodError } from 'zod';
-import { getProfile } from './credentials.js';
+import { createAPIKeyThroughWebUI } from './auth-server.js';
+import { credentialsPath, getProfileName, Profile, readCredentials } from './credentials.js';
+import { reportBugURL } from './utils.js';
+import dotenvExpand from 'dotenv-expand';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
   codegen: z.object({
     output: z.string(),
+    moduleType: z.enum(['cjs', 'esm']),
     declarations: z.boolean()
   })
 });
@@ -24,8 +29,13 @@ export const projectConfigSchema = z.object({
 const partialProjectConfig = projectConfigSchema.deepPartial();
 
 export type ProjectConfig = z.infer<typeof partialProjectConfig>;
+export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
 
 const moduleName = 'xata';
+const commonFlagsHelpGroup = 'Common';
+
+export const ENV_FILES = ['.env.local', '.env'];
+
 export abstract class BaseCommand extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
   // By default this will use the system locale and timezone.
@@ -35,23 +45,79 @@ export abstract class BaseCommand extends Command {
   projectConfig?: ProjectConfig;
   projectConfigLocation?: string;
 
+  apiKeyLocation?: APIKeyLocation;
+  apiKeyDotenvLocation = '';
+
   #xataClient?: XataApiClient;
 
+  // The first place is the one used by default when running `xata init`
   // In the future we can support YAML
-  searchPlaces = ['package.json', `.${moduleName}rc`, `.${moduleName}rc.json`];
+  searchPlaces = [`.${moduleName}rc`, `.${moduleName}rc.json`, 'package.json'];
 
-  static databaseURLFlag = Flags.string({
-    name: 'databaseurl',
-    description: 'URL of the database in the format https://{workspace}.xata.sh/db/{database}'
-  });
+  static databaseURLFlag = {
+    db: Flags.string({
+      helpValue: 'https://{workspace}.xata.sh/db/{database}',
+      description: 'URL of the database'
+    })
+  };
 
   static branchFlag = Flags.string({
-    name: 'branch',
+    char: 'b',
+    helpValue: '<branch-name>',
     description: 'Branch name to use'
   });
 
+  static noInputFlag = {
+    'no-input': Flags.boolean({
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Will not prompt interactively for missing values'
+    })
+  };
+
+  static yesFlag = {
+    yes: Flags.boolean({
+      char: 'y',
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Will use the default answers for any interactive question'
+    })
+  };
+
+  static jsonFlag = {
+    json: Flags.boolean({
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Print the output in JSON format'
+    })
+  };
+
+  static commonFlags = {
+    ...this.jsonFlag,
+    ...this.noInputFlag
+  };
+
+  static forceFlag(description?: string) {
+    return {
+      force: Flags.boolean({
+        char: 'f',
+        description: description || 'Do not ask for confirmation'
+      })
+    };
+  }
+
+  loadEnvFile(path: string) {
+    const apiKey = process.env.XATA_API_KEY;
+    let env = dotenv.config({ path });
+    env = dotenvExpand.expand(env);
+    if (!apiKey && env.parsed?.['XATA_API_KEY']) {
+      this.apiKeyLocation = 'dotenv';
+      this.apiKeyDotenvLocation = path;
+    }
+  }
+
   async init() {
-    dotenv.config();
+    if (process.env.XATA_API_KEY) this.apiKeyLocation = 'shell';
+    for (const envFile of ENV_FILES) {
+      this.loadEnvFile(envFile);
+    }
 
     const moduleName = 'xata';
     const search = cosmiconfigSync(moduleName, { searchPlaces: this.searchPlaces }).search();
@@ -67,16 +133,66 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  async catch(err: Error & { exitCode?: number | undefined }): Promise<any> {
+    if (err.message.match(/invalid api key/i)) {
+      let message = '';
+      let suggestions: string[] = [];
+      switch (this.apiKeyLocation) {
+        case 'shell':
+          message = 'the API key from the shell environment variable XATA_API_KEY';
+          suggestions = [
+            'Make sure you invoke the CLI with a valid XATA_API_KEY environment variable',
+            'Unset the XATA_API_KEY environment variable before invoking the CLI'
+          ];
+          break;
+        case 'dotenv':
+          message = `the API key from the ${this.apiKeyDotenvLocation} file`;
+          suggestions = [
+            `Edit the ${this.apiKeyDotenvLocation} file and set the XATA_API_KEY environment variable correctly`,
+            'You can generate or regenerate API keys at https://app.xata.io/settings'
+          ];
+          break;
+        case 'profile':
+          message = `the API key from the ${getProfileName()} profile at ${credentialsPath}`;
+          suggestions = [`Run ${chalk.bold('xata auth login --force')} to override the existing API key`];
+          break;
+        case 'new':
+          message = 'a newly generated API key';
+          suggestions = [
+            `This is likely a bug in our end. Please report it at ${reportBugURL('Newly created API key is invalid')}`
+          ];
+          break;
+      }
+      this.error(`${err.message}, when using ${message}`, { suggestions });
+    } else {
+      throw err;
+    }
+  }
+
+  async getProfile(ignoreEnv?: boolean): Promise<Profile | undefined> {
+    const apiKey = getAPIKey();
+    if (!ignoreEnv && !process.env.XATA_PROFILE && apiKey) return { apiKey };
+
+    const credentials = await readCredentials();
+    const profile = credentials[getProfileName()];
+    if (profile?.apiKey) this.apiKeyLocation = 'profile';
+    return profile;
+  }
+
   async getXataClient(apiKey?: string | null) {
     if (this.#xataClient) return this.#xataClient;
 
-    const profile = apiKey ? undefined : await getProfile();
+    const profile = apiKey ? undefined : await this.getProfile();
 
     apiKey = apiKey || profile?.apiKey;
-    if (!apiKey)
-      this.error(
-        'Could not instantiate Xata client. No API key found. Please run `xata auth login` or configure a project with `xata init`.'
-      );
+    if (!apiKey) {
+      this.error('Could not instantiate Xata client. No API key found.', {
+        suggestions: [
+          'Run `xata auth login`',
+          'Configure a project with `xata init --db=https://{workspace}.xata.sh/db/{database}`'
+        ]
+      });
+    }
 
     let host: XataApiClientOptions['host'];
     if (profile?.api) {
@@ -108,8 +224,16 @@ export abstract class BaseCommand extends Command {
     });
   }
 
+  info(message: string) {
+    this.log(`${chalk.blueBright('i')} ${message}`);
+  }
+
+  success(message: string) {
+    this.log(`${chalk.greenBright('✔')} ${message}`);
+  }
+
   async verifyAPIKey(key: string) {
-    this.log('Checking access to the API...');
+    this.info('Checking access to the API...');
     const xata = await this.getXataClient(key);
     try {
       await xata.workspaces.getWorkspacesList();
@@ -127,22 +251,22 @@ export abstract class BaseCommand extends Command {
         return this.error('No workspaces found, please create one first');
       }
 
-      const { name } = await prompts({
+      const { name } = await this.prompt({
         type: 'text',
         name: 'name',
         message: 'New workspace name'
       });
       if (!name) return this.error('No workspace name provided');
-      const workspace = await xata.workspaces.createWorkspace({ name, slug: slugify(name) });
+      const workspace = await xata.workspaces.createWorkspace({ name });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
-      this.log(`You only have a workspace, using it by default: ${workspace}"`);
+      this.log(`You have a single workspace, using it by default: ${workspace}`);
       return workspace;
     }
 
-    const { workspace } = await prompts({
-      type: 'select',
+    const { workspace } = await this.prompt({
+      type: 'autocomplete',
       name: 'workspace',
       message: 'Select a workspace',
       choices: workspaces.workspaces.map((workspace) => ({
@@ -171,8 +295,8 @@ export abstract class BaseCommand extends Command {
         choices.splice(0, 0, { title: '<Create a new database>', value: 'create' });
       }
 
-      const { database } = await prompts({
-        type: 'select',
+      const { database } = await this.prompt({
+        type: 'autocomplete',
         name: 'database',
         message: dbs.length > 0 && options.allowCreate ? 'Select a database or create a new one' : 'Select a database',
         choices
@@ -198,6 +322,9 @@ export abstract class BaseCommand extends Command {
     const xata = await this.getXataClient();
     const { branches = [] } = await xata.branches.getBranchList(workspace, database);
 
+    const EMPTY_CHOICE = '$empty';
+    const CREATE_CHOICE = '$create';
+
     if (branches.length > 0) {
       const choices = branches.map((db) => ({
         title: db.name,
@@ -205,23 +332,29 @@ export abstract class BaseCommand extends Command {
       }));
 
       if (options.allowEmpty) {
-        choices.splice(0, 0, { title: '<None>', value: 'empty' });
+        choices.splice(0, 0, { title: '<None>', value: EMPTY_CHOICE });
       }
 
       if (options.allowCreate) {
-        choices.splice(0, 0, { title: '<Create a new branch>', value: 'create' });
+        choices.splice(0, 0, { title: '<Create a new branch>', value: CREATE_CHOICE });
       }
 
       const {
         title = branches.length > 0 && options.allowCreate ? 'Select a branch or create a new one' : 'Select a branch'
       } = options;
 
-      const { branch } = await prompts({ type: 'select', name: 'branch', message: title, choices });
+      const { branch } = await this.prompt({
+        type: 'autocomplete',
+        name: 'branch',
+        message: title,
+        choices,
+        initial: options.allowEmpty ? EMPTY_CHOICE : undefined
+      });
 
       if (!branch) return this.error('No branch selected');
-      if (branch === 'create') {
+      if (branch === CREATE_CHOICE) {
         return this.createBranch(workspace, database);
-      } else if (branch === 'empty') {
+      } else if (branch === EMPTY_CHOICE) {
         return '';
       } else {
         return branch;
@@ -235,7 +368,7 @@ export abstract class BaseCommand extends Command {
 
   async createDatabase(workspace: string) {
     const xata = await this.getXataClient();
-    const { name } = await prompts({
+    const { name } = await this.prompt({
       type: 'text',
       name: 'name',
       message: 'New database name',
@@ -250,7 +383,7 @@ export abstract class BaseCommand extends Command {
 
   async createBranch(workspace: string, database: string): Promise<string> {
     const xata = await this.getXataClient();
-    const { name } = await prompts({
+    const { name } = await this.prompt({
       type: 'text',
       name: 'name',
       message: 'New branch name'
@@ -277,17 +410,35 @@ export abstract class BaseCommand extends Command {
     allowCreate?: boolean
   ): Promise<{ databaseURL: string; source: 'flag' | 'config' | 'env' | 'interactive' }> {
     if (databaseURLFlag) return { databaseURL: databaseURLFlag, source: 'flag' };
-    if (this.projectConfig?.databaseURL) return { databaseURL: this.projectConfig.databaseURL, source: 'config' };
     if (process.env.XATA_DATABASE_URL) return { databaseURL: process.env.XATA_DATABASE_URL, source: 'env' };
+    if (this.projectConfig?.databaseURL) return { databaseURL: this.projectConfig.databaseURL, source: 'config' };
 
     const workspace = await this.getWorkspace({ allowCreate });
     const database = await this.getDatabase(workspace, { allowCreate });
-    return { databaseURL: `https://${workspace}.xata.sh/db/${database}`, source: 'interactive' };
+    const profile = await this.getProfile();
+    let host = 'xata.sh';
+    // TODO: unify logic somewhere
+    if (profile?.api) {
+      if (profile.api === 'staging') {
+        host = 'staging.xatabase.co';
+      } else {
+        host = profile.api.split('/')[2];
+      }
+    }
+    return { databaseURL: `https://${workspace}.${host}/db/${database}`, source: 'interactive' };
   }
 
   async getParsedDatabaseURL(databaseURLFlag?: string, allowCreate?: boolean) {
     const { databaseURL, source } = await this.getDatabaseURL(databaseURLFlag, allowCreate);
 
+    const info = this.parseDatabaseURL(databaseURL);
+    return {
+      ...info,
+      source
+    };
+  }
+
+  parseDatabaseURL(databaseURL: string) {
     const [protocol, , host, , database] = databaseURL.split('/');
     const [workspace] = (host || '').split('.');
     return {
@@ -295,26 +446,19 @@ export abstract class BaseCommand extends Command {
       protocol,
       host,
       database,
-      workspace,
-      source
+      workspace
     };
   }
 
   async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, branchFlag?: string, allowCreate?: boolean) {
     const info = await this.getParsedDatabaseURL(databaseURLFlag, allowCreate);
-    const profile = await getProfile();
 
     let branch = '';
 
     if (branchFlag) {
       branch = branchFlag;
     } else if (info.source === 'config') {
-      // TODO: pass host information
-      branch = await getCurrentBranchName({
-        fetchImpl: fetch,
-        databaseURL: info.databaseURL,
-        apiKey: profile?.apiKey ?? undefined
-      });
+      branch = await this.getCurrentBranchName(info.databaseURL);
     } else if (process.env.XATA_BRANCH !== undefined) {
       branch = process.env.XATA_BRANCH;
     } else {
@@ -322,6 +466,15 @@ export abstract class BaseCommand extends Command {
     }
 
     return { ...info, branch };
+  }
+
+  async getCurrentBranchName(databaseURL: string) {
+    const profile = await this.getProfile();
+    return getCurrentBranchName({
+      fetchImpl: fetch,
+      databaseURL,
+      apiKey: profile?.apiKey ?? undefined
+    });
   }
 
   async updateConfig() {
@@ -338,9 +491,34 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  async obtainKey() {
+    const { decision } = await this.prompt({
+      type: 'select',
+      name: 'decision',
+      message: 'Do you want to use an existing API key or create a new API key?',
+      choices: [
+        { title: 'Create a new API key in browser', value: 'create' },
+        { title: 'Use an existing API key', value: 'existing' }
+      ]
+    });
+    if (!decision) this.exit(2);
+
+    if (decision === 'create') {
+      return createAPIKeyThroughWebUI();
+    } else if (decision === 'existing') {
+      const { key } = await this.prompt({
+        type: 'password',
+        name: 'key',
+        message: 'Existing API key:'
+      });
+      if (!key) this.exit(2);
+      return key;
+    }
+  }
+
   async deploySchema(workspace: string, database: string, branch: string, schema: Schemas.Schema) {
     const xata = await this.getXataClient();
-    const plan = await xata.branches.getBranchMigrationPlan(workspace, database, branch, schema);
+    const plan = await xata.branchSchema.getBranchMigrationPlan(workspace, database, branch, schema);
 
     const { newTables, removedTables, renamedTables, tableMigrations } = plan.migration;
 
@@ -356,7 +534,7 @@ export abstract class BaseCommand extends Command {
       this.printMigration(plan.migration);
       this.log();
 
-      const { confirm } = await prompts({
+      const { confirm } = await this.prompt({
         type: 'confirm',
         name: 'confirm',
         message: `Do you want to apply the above migration into the ${branch} branch?`,
@@ -364,7 +542,7 @@ export abstract class BaseCommand extends Command {
       });
       if (!confirm) return this.exit(1);
 
-      await xata.branches.executeBranchMigrationPlan(workspace, database, branch, plan);
+      await xata.branchSchema.executeBranchMigrationPlan(workspace, database, branch, plan);
     }
   }
 
@@ -393,14 +571,14 @@ export abstract class BaseCommand extends Command {
     }
 
     if (migration.removedTables) {
-      for (const tableName of Object.keys(migration.removedTables)) {
+      for (const tableName of migration.removedTables) {
         this.log(` ${chalk.bgWhite.red('DELETE table ')} ${tableName}`);
       }
     }
 
     if (migration.renamedTables) {
-      for (const tableName of Object.keys(migration.renamedTables)) {
-        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${tableName}`);
+      for (const renamedTable of migration.renamedTables) {
+        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${renamedTable.oldName} to ${renamedTable.newName}`);
       }
     }
 
@@ -414,12 +592,12 @@ export abstract class BaseCommand extends Command {
           }
         }
         if (tableMigration.removedColumns) {
-          for (const columnName of Object.keys(tableMigration.removedColumns)) {
+          for (const columnName of tableMigration.removedColumns) {
             this.log(` ${chalk.bgWhite.red('DELETE column ')} ${columnName}`);
           }
         }
         if (tableMigration.modifiedColumns) {
-          for (const [, columnMigration] of Object.entries(tableMigration.modifiedColumns)) {
+          for (const columnMigration of tableMigration.modifiedColumns) {
             this.log(` ${chalk.bgWhite.red('MODIFY column ')} ${columnMigration.old.name}`);
           }
         }
@@ -433,12 +611,51 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  static commonFlags = {
-    json: Flags.boolean({
-      description: 'Print the output in JSON format'
-    }),
-    'no-input': Flags.boolean({
-      description: 'Will not prompt interactively for missing values'
-    })
-  };
+  async prompt<name extends string>(
+    options: prompts.PromptObject<name>,
+    flagValue?: boolean | string
+  ): Promise<prompts.Answers<name>> {
+    // If there's a flag, use the value of the flag
+    if (flagValue != null) return { [String(options.name)]: flagValue } as prompts.Answers<name>;
+
+    const { flags } = await this.parse(
+      { strict: false, flags: { ...BaseCommand.noInputFlag, ...BaseCommand.yesFlag } },
+      this.argv
+    );
+    const { 'no-input': noInput, yes } = flags;
+
+    if (yes && options.initial != null && typeof options.initial !== 'function') {
+      return { [String(options.name)]: options.initial } as prompts.Answers<name>;
+    }
+
+    let reason = '';
+
+    if (!process.stdout.isTTY && process.env.NODE_ENV !== 'test') {
+      reason = 'you are not running it in a TTY';
+    } else if (noInput) {
+      reason = 'the --no-input flag is being used';
+    }
+
+    if (reason) {
+      this.error(
+        `The current command required interactivity, but ${reason}. Use --help to check if you can pass arguments instead or --yes to use the default answers for all questions.`
+      );
+    }
+
+    return prompts(options);
+  }
+
+  runCommand(command: string, args: string[]) {
+    this.info(`Running ${command} ${args.join(' ')}`);
+    const fullPath = which.sync(command, { nothrow: true });
+    if (!fullPath) {
+      this.error(`Could not find binary ${command} in your PATH`);
+    }
+    return new Promise((resolve, reject) => {
+      spawn(fullPath, args, { stdio: 'inherit' }).on('exit', (code) => {
+        if (code && code > 0) return reject(new Error('Command failed'));
+        resolve(undefined);
+      });
+    });
+  }
 }

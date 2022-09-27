@@ -16,14 +16,23 @@ export function isObject(value: any): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+export function isDefined<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
+
 export function isString(value: any): value is string {
-  return value !== undefined && value !== null && typeof value === 'string';
+  return isDefined(value) && typeof value === 'string';
+}
+
+export function isStringArray(value: any): value is string[] {
+  return isDefined(value) && Array.isArray(value) && value.every(isString);
 }
 
 export function toBase64(value: string): string {
   try {
     return btoa(value);
   } catch (err) {
-    return Buffer.from(value).toString('base64');
+    const buf = Buffer; // Avoid "A Node.js API is used which is not supported in the Edge Runtime" in Vercel Edge middleware
+    return buf.from(value).toString('base64');
   }
 }

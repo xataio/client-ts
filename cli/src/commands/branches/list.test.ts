@@ -49,7 +49,8 @@ describe('branches list', () => {
             name: 'main',
             createdAt: '2020-01-01T00:00:00.000Z'
           }
-        ]
+        ],
+        mapping: []
       })
     });
 
@@ -69,37 +70,23 @@ describe('branches list', () => {
     const result = await command.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "createdAt": "2020-01-01T00:00:00.000Z",
-            "name": "main",
-          },
-        ]
-      `);
+      expect(result[0].name).toMatchInlineSnapshot('"main"');
     } else {
       expect(result).toBeUndefined();
     }
 
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 
     expect(printTable).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(printTable.mock.calls[0]).toMatchInlineSnapshot(`
+      expect(printTable.mock.calls[0][0]).toMatchInlineSnapshot(`
         [
-          [
-            "Name",
-            "Created at",
-          ],
-          [
-            [
-              "main",
-              "Jan 1, 2020, 12:00 AM",
-            ],
-          ],
+          "Name",
+          "Created at",
+          "Git branch",
         ]
       `);
     }

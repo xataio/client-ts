@@ -1,15 +1,31 @@
+import type { Schemas } from '../api';
 import { getBranchDetails, searchBranch } from '../api';
-import { Schema } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, PrefixExpression } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
-import { BaseData, XataRecord } from '../schema/record';
+import { Filter } from '../schema/filters';
+import { BaseData, XataRecord, XataRecordMetadata } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
+import { Boosters } from './boosters';
+import { TargetColumn } from './target';
 
 export type SearchOptions<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = {
-  fuzziness?: number;
-  tables?: Tables[];
+  fuzziness?: FuzzinessExpression;
+  prefix?: PrefixExpression;
+  highlight?: HighlightExpression;
+  tables?: Array<
+    | Tables
+    | Values<{
+        [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
+          table: Model;
+          target?: TargetColumn<Schemas[Model] & XataRecord>[];
+          filter?: Filter<SelectedPick<Schemas[Model] & XataRecord, ['*']>>;
+          boosters?: Boosters<Schemas[Model] & XataRecord>[];
+        };
+      }>
+  >;
 };
 
 export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
@@ -18,9 +34,13 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
     options?: SearchOptions<Schemas, Tables>
   ) => Promise<
     Values<{
-      [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]: {
+      [Model in ExtractTables<
+        Schemas,
+        Tables,
+        GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
+      >]: {
         table: Model;
-        record: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
+        record: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>>;
       };
     }>[]
   >;
@@ -28,57 +48,48 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
     query: string,
     options?: SearchOptions<Schemas, Tables>
   ) => Promise<{
-    [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]?: Awaited<
-      SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]
-    >;
+    [Model in ExtractTables<
+      Schemas,
+      Tables,
+      GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
+    >]?: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>[]>;
   }>;
 };
 
-export class SearchPlugin<Schemas extends Record<string, BaseData>> extends XataPlugin {
-  #schema?: Schema;
+export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
+  #schemaTables?: Schemas.Table[];
 
-  constructor(private db: SchemaPluginResult<Schemas>) {
+  constructor(private db: SchemaPluginResult<Schemas>, schemaTables?: Schemas.Table[]) {
     super();
+    this.#schemaTables = schemaTables;
   }
 
   build({ getFetchProps }: XataPluginOptions): SearchPluginResult<Schemas> {
     return {
-      all: async <Tables extends StringKeys<Schemas>>(
-        query: string,
-        options: SearchOptions<Schemas, Tables> = {}
-      ): Promise<
-        Values<{
-          [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]: {
-            table: Model;
-            record: Awaited<SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>>;
-          };
-        }>[]
-      > => {
+      all: async <Tables extends StringKeys<Schemas>>(query: string, options: SearchOptions<Schemas, Tables> = {}) => {
         const records = await this.#search(query, options, getFetchProps);
-        const schema = await this.#getSchema(getFetchProps);
+        const schemaTables = await this.#getSchemaTables(getFetchProps);
 
         return records.map((record) => {
           const { table = 'orphan' } = record.xata;
 
-          return { table, record: initObject(this.db, schema, table, record) } as any;
+          // TODO: Search endpoint doesn't support column selection
+          return { table, record: initObject(this.db, schemaTables, table, record, ['*']) } as any;
         });
       },
       byTable: async <Tables extends StringKeys<Schemas>>(
         query: string,
         options: SearchOptions<Schemas, Tables> = {}
-      ): Promise<{
-        [Model in GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>]?: Awaited<
-          SelectedPick<Schemas[Model] & SearchXataRecord, ['*']>[]
-        >;
-      }> => {
+      ) => {
         const records = await this.#search(query, options, getFetchProps);
-        const schema = await this.#getSchema(getFetchProps);
+        const schemaTables = await this.#getSchemaTables(getFetchProps);
 
         return records.reduce((acc, record) => {
           const { table = 'orphan' } = record.xata;
 
           const items = acc[table] ?? [];
-          const item = initObject(this.db, schema, table, record);
+          // TODO: Search endpoint doesn't support column selection
+          const item = initObject(this.db, schemaTables, table, record, ['*']);
 
           return { ...acc, [table]: [...items, item] };
         }, {} as any);
@@ -88,23 +99,24 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
 
   async #search<Tables extends StringKeys<Schemas>>(
     query: string,
-    options: { fuzziness?: number; tables?: Tables[] },
+    options: SearchOptions<Schemas, Tables>,
     getFetchProps: XataPluginOptions['getFetchProps']
   ) {
     const fetchProps = await getFetchProps();
-    const { tables, fuzziness } = options ?? {};
+    const { tables, fuzziness, highlight, prefix } = options ?? {};
 
     const { records } = await searchBranch({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
-      body: { tables, query, fuzziness },
+      // @ts-ignore https://github.com/xataio/client-ts/issues/313
+      body: { tables, query, fuzziness, prefix, highlight },
       ...fetchProps
     });
 
     return records;
   }
 
-  async #getSchema(getFetchProps: XataPluginOptions['getFetchProps']): Promise<Schema> {
-    if (this.#schema) return this.#schema;
+  async #getSchemaTables(getFetchProps: XataPluginOptions['getFetchProps']): Promise<Schemas.Table[]> {
+    if (this.#schemaTables) return this.#schemaTables;
     const fetchProps = await getFetchProps();
 
     const { schema } = await getBranchDetails({
@@ -112,9 +124,44 @@ export class SearchPlugin<Schemas extends Record<string, BaseData>> extends Xata
       ...fetchProps
     });
 
-    this.#schema = schema;
-    return schema;
+    this.#schemaTables = schema.tables;
+    return schema.tables;
   }
 }
 
-type SearchXataRecord = XataRecord & { xata: { table: string } };
+export type SearchXataRecord<Record extends XataRecord> = Omit<Record, 'getMetadata'> & {
+  getMetadata: () => XataRecordMetadata & SearchExtraProperties;
+};
+
+type SearchExtraProperties = {
+  /*
+   * The record's table name. APIs that return records from multiple tables will set this field accordingly.
+   */
+  table: string;
+  /*
+   * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
+   */
+  highlight?: {
+    [key: string]:
+      | string[]
+      | {
+          [key: string]: any;
+        };
+  };
+  /*
+   * The record's relevancy score. This is returned by the search APIs.
+   */
+  score?: number;
+};
+
+type ReturnTable<Table, Tables> = Table extends Tables ? Table : never;
+
+type ExtractTables<
+  Schemas extends Record<string, BaseData>,
+  Tables extends StringKeys<Schemas>,
+  TableOptions extends GetArrayInnerType<NonNullable<NonNullable<SearchOptions<Schemas, Tables>>['tables']>>
+> = TableOptions extends `${infer Table}`
+  ? ReturnTable<Table, Tables>
+  : TableOptions extends { table: infer Table }
+  ? ReturnTable<Table, Tables>
+  : never;

@@ -1,5 +1,70 @@
 # @xata.io/codegen
 
+## 0.18.0
+
+### Patch Changes
+
+- [#583](https://github.com/xataio/client-ts/pull/583) [`eb7ba59`](https://github.com/xataio/client-ts/commit/eb7ba594be2a1f0ab90956836bbeb912e188a46d) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for non nullable columns
+
+## 0.17.0
+
+### Minor Changes
+
+- [#570](https://github.com/xataio/client-ts/pull/570) [`e4af349`](https://github.com/xataio/client-ts/commit/e4af349e197a432ae9425aeda7aa5db5faaa8082) Thanks [@SferaDev](https://github.com/SferaDev)! - Update internal types
+
+## 0.16.1
+
+### Patch Changes
+
+- [#530](https://github.com/xataio/client-ts/pull/530) [`370a2e0`](https://github.com/xataio/client-ts/commit/370a2e0ae94f2ad714ad5bdefb3e0fb4d99f88c5) Thanks [@gimenete](https://github.com/gimenete)! - Codegen from now on will add a comment with the version of the codegen used
+
+## 0.15.0
+
+### Minor Changes
+
+- [#501](https://github.com/xataio/client-ts/pull/501) [`ad9817f`](https://github.com/xataio/client-ts/commit/ad9817fc4191158c7beaeb292bb8cd4f55a5ec6d) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not pluralize table names
+
+### Patch Changes
+
+- [#498](https://github.com/xataio/client-ts/pull/498) [`65abca8`](https://github.com/xataio/client-ts/commit/65abca8be59f00b307e576b945c3cccffc3820af) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose singleton of xata client
+
+## 0.14.0
+
+### Minor Changes
+
+- [#409](https://github.com/xataio/client-ts/pull/409) [`8812380`](https://github.com/xataio/client-ts/commit/881238062b5eeac2dc8b9ba156720e0acc22c5c5) Thanks [@SferaDev](https://github.com/SferaDev)! - Infer types from schema in codegen
+
+* [#475](https://github.com/xataio/client-ts/pull/475) [`b6fa1b1`](https://github.com/xataio/client-ts/commit/b6fa1b11c27163c25bb9973697daae658b1a12e9) Thanks [@gimenete](https://github.com/gimenete)! - Allow injecting the branch name in codegen
+
+### Patch Changes
+
+- [#482](https://github.com/xataio/client-ts/pull/482) [`5f83ad1`](https://github.com/xataio/client-ts/commit/5f83ad176e0833bf43b26fcb085e43de44891dc7) Thanks [@gimenete](https://github.com/gimenete)! - Deleted deprecated binaries
+
+## 0.12.0
+
+### Minor Changes
+
+- [#341](https://github.com/xataio/client-ts/pull/341) [`8bc84f1`](https://github.com/xataio/client-ts/commit/8bc84f17a3ad1cc66aa6c9c9cfe4898e284d37ce) Thanks [@gimenete](https://github.com/gimenete)! - Deprecate codegen CLI
+
+### Patch Changes
+
+- [#367](https://github.com/xataio/client-ts/pull/367) [`d861608`](https://github.com/xataio/client-ts/commit/d86160803f317a9e72e55121afb42573b574c20e) Thanks [@gimenete](https://github.com/gimenete)! - Some fixes, including adding a missing dependency for codegen
+
+## 0.11.0
+
+### Patch Changes
+
+- Updated dependencies [[`505257c`](https://github.com/xataio/client-ts/commit/505257c0c42ca0c8beaf5c0f638037c576dcc43c), [`ff7e5c6`](https://github.com/xataio/client-ts/commit/ff7e5c6f211913196d8c28600d7a7675ed261688), [`bf64cb8`](https://github.com/xataio/client-ts/commit/bf64cb885d55a0271e966314384324f02ded084e), [`ce07601`](https://github.com/xataio/client-ts/commit/ce07601e4ddf9f75e20249d479dc04a63795ca96), [`bc64c28`](https://github.com/xataio/client-ts/commit/bc64c28fbfbb000c7190ac8092e2ef6a261df86f), [`12f1ce3`](https://github.com/xataio/client-ts/commit/12f1ce362f6cda27dfdb3afab0800282bddc8b5e), [`a73a2a2`](https://github.com/xataio/client-ts/commit/a73a2a2014c44cf88eaef42196ba1dba9d516b4a)]:
+  - @xata.io/client@0.11.0
+
+## 0.10.1
+
+### Patch Changes
+
+- [#299](https://github.com/xataio/client-ts/pull/299) [`7a020de`](https://github.com/xataio/client-ts/commit/7a020decd283e07d4cd3ae12cbab98566b9b096a) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix kebab case names
+
+* [#271](https://github.com/xataio/client-ts/pull/271) [`0bb17b8`](https://github.com/xataio/client-ts/commit/0bb17b88d49f1c8be32d2d6b0b3a5918890876cb) Thanks [@SferaDev](https://github.com/SferaDev)! - Link and resolve branches from git
+
 ## 0.10.0
 
 ### Patch Changes

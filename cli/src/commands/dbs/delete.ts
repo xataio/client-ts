@@ -1,5 +1,4 @@
 import { Flags } from '@oclif/core';
-import prompts from 'prompts';
 import { BaseCommand } from '../../base.js';
 
 export default class DatabasesDelete extends BaseCommand {
@@ -9,6 +8,7 @@ export default class DatabasesDelete extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
+    ...BaseCommand.forceFlag(),
     workspace: Flags.string({
       description: 'Workspace id the database to delete belongs to'
     })
@@ -25,18 +25,22 @@ export default class DatabasesDelete extends BaseCommand {
 
     const xata = await this.getXataClient();
 
-    const { confirm } = await prompts({
-      type: 'confirm',
-      name: 'confirm',
-      message: `Are you sure you want to delete database ${workspace}/${database}?`,
-      initial: true
-    });
+    const { confirm } = await this.prompt(
+      {
+        type: 'text',
+        name: 'confirm',
+        message: `Are you sure you want to delete database ${database} in the ${workspace} workspace? Please type ${database} to confirm`,
+        initial: false
+      },
+      flags.force ? database : undefined
+    );
     if (!confirm) return this.exit(1);
+    if (confirm !== database) return this.error('The database name did not match');
 
     await xata.databases.deleteDatabase(workspace, database);
 
     if (this.jsonEnabled()) return {};
 
-    this.log(`Database ${workspace}/${database} successfully deleted`);
+    this.success(`Database ${workspace}/${database} successfully deleted`);
   }
 }

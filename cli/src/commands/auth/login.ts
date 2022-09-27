@@ -1,59 +1,38 @@
-import prompts from 'prompts';
-import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand } from '../../base.js';
-import { getProfile, setProfile } from '../../credentials.js';
+import { setProfile } from '../../credentials.js';
 
 export default class Login extends BaseCommand {
   static description = 'Authenticate with Xata';
 
   static examples = [];
 
-  static flags = {};
+  static flags = {
+    ...BaseCommand.forceFlag('Overwrite existing credentials if they exist')
+  };
 
   static args = [];
 
   async run(): Promise<void> {
-    const existingProfile = await getProfile(true);
+    const { flags } = await this.parse(Login);
+    const existingProfile = await this.getProfile(true);
     if (existingProfile) {
-      const { overwrite } = await prompts({
-        type: 'confirm',
-        name: 'overwrite',
-        message: 'Authentication is already configured, do you want to overwrite it?'
-      });
+      const { overwrite } = await this.prompt(
+        {
+          type: 'confirm',
+          name: 'overwrite',
+          message: 'Authentication is already configured, do you want to overwrite it?'
+        },
+        flags.force
+      );
       if (!overwrite) this.exit(2);
     }
 
-    const { decision } = await prompts({
-      type: 'select',
-      name: 'decision',
-      message: 'Do you want to use an existing API key or create a new API key?',
-      choices: [
-        { title: 'Create a new API key opening a browser', value: 'create' },
-        { title: 'Existing API key', value: 'existing' }
-      ]
-    });
-    if (!decision) this.exit(2);
-
-    const key = await this.obtainKey(decision);
+    const key = await this.obtainKey();
 
     await this.verifyAPIKey(key);
 
     await setProfile({ apiKey: key });
 
-    this.log('All set! you can now start using xata');
-  }
-
-  async obtainKey(decision: 'create' | 'existing') {
-    if (decision === 'create') {
-      return createAPIKeyThroughWebUI();
-    } else if (decision === 'existing') {
-      const { key } = await prompts({
-        type: 'password',
-        name: 'key',
-        message: 'Introduce your API key:'
-      });
-      if (!key) this.exit(2);
-      return key;
-    }
+    this.success('All set! you can now start using xata');
   }
 }

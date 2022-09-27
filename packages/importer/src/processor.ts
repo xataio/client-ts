@@ -43,7 +43,9 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
     columns: string[] | undefined,
     count: number
   ) => {
-    const columnNames = (options.columns || columns || []).map(normalizeColumnName);
+    const columnNames =
+      options.columns || (options.ignoreColumnNormalization ? columns : columns?.map(normalizeColumnName)) || [];
+
     if (columnNames.length === 0) {
       throw new Error(
         'Cannot calculate column names. A file header was not specified and no custom columns were specified either'
@@ -52,9 +54,9 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
     if (first) {
       first = false;
 
-      const columnTypes = types || guessTypes(lines, columnNames);
+      const columnTypes = types || guessTypes(lines, columnNames, options.nullValue);
       const table = await findTable(xata, tableInfo);
-      const compare = compareSquema(columnNames, columnTypes, table);
+      const compare = compareSchema(columnNames, columnTypes, table);
       const cont = await options.shouldContinue(compare);
 
       if (cont === false) return true; // Stops the parsing
@@ -65,7 +67,7 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
     }
 
     // TODO: values that do not match the type are transformed to null values. We should allow users to have control on that
-    const parsed = lines.map((row) => parseRow(row, types || []));
+    const parsed = lines.map((row) => parseRow(row, types || [], options.nullValue));
 
     await batchUpsert(xata, tableInfo, columnNames, parsed);
 
@@ -83,7 +85,7 @@ export async function findTable(xata: XataApiClient, tableInfo: TableInfo): Prom
   return tables.find((t) => t.name === name);
 }
 
-export function compareSquema(
+export function compareSchema(
   columns: string[],
   types: string[],
   table: Schemas.Table | undefined
@@ -102,12 +104,14 @@ export function compareSquema(
     columnTypes: []
   };
 
+  const schemaColumns = [{ name: 'id', type: 'string' }, ...table.columns];
+
   columns.forEach((column, i) => {
-    const existing = table.columns.find((col) => col.name === column);
+    const existing = schemaColumns.find((col) => col.name === column);
     if (existing) {
       const type = castType(existing.type, types[i]);
       result.columnTypes.push({
-        columnName: columns[i],
+        columnName: column,
         schemaType: existing.type,
         guessedType: types[i],
         castedType: type,
@@ -117,7 +121,7 @@ export function compareSquema(
       const type = types[i];
       result.missingColumns.push({ column, type });
       result.columnTypes.push({
-        columnName: columns[i],
+        columnName: column,
         schemaType: type,
         guessedType: types[i],
         castedType: type,
@@ -125,6 +129,7 @@ export function compareSquema(
       });
     }
   });
+
   return result;
 }
 
@@ -136,6 +141,7 @@ export async function updateSchema(xata: XataApiClient, tableInfo: TableInfo, ch
   }
 
   for (const column of changes.missingColumns) {
+    if (column.column === 'id') continue;
     await xata.tables.addTableColumn(workspaceID, database, branch, tableName, {
       name: column.column,
       type: column.type as Schemas.Column['type']
@@ -159,5 +165,9 @@ export async function batchUpsert(
     return record;
   });
 
-  await xata.records.bulkInsertTableRecords(workspaceID, database, branch, tableName, records);
+  try {
+    await xata.records.bulkInsertTableRecords(workspaceID, database, branch, tableName, records);
+  } catch (e) {
+    console.error(e);
+  }
 }

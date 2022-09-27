@@ -1,4 +1,5 @@
-import { Column, Schema } from '../packages/client/src/api/schemas';
+import { Schema } from '../packages/client/src/api/schemas';
+import schemaJson from '../packages/codegen/example/schema.json';
 
 const animals = [
   'Ape',
@@ -35,7 +36,7 @@ const fruits = [
   'Watermelon'
 ];
 
-const ownerFruits = {
+export const ownerFruits = {
   full_name: 'Owner of team fruits',
   email: 'owner.fruits@example.com',
   address: {
@@ -44,7 +45,7 @@ const ownerFruits = {
   }
 };
 
-const ownerAnimals = {
+export const ownerAnimals = {
   full_name: 'Owner of team animals',
   email: 'owner.animals@example.com',
   address: {
@@ -53,7 +54,7 @@ const ownerAnimals = {
   }
 };
 
-const animalUsers = animals.map((animal) => ({
+export const animalUsers = animals.map((animal) => ({
   full_name: animal,
   email: `${animal.toLowerCase().replace(' ', '_')}@zoo.example.com`,
   address: {
@@ -62,7 +63,7 @@ const animalUsers = animals.map((animal) => ({
   }
 }));
 
-const fruitUsers = fruits.map((fruit) => ({
+export const fruitUsers = fruits.map((fruit) => ({
   full_name: fruit,
   email: `${fruit.toLowerCase().replace(' ', '_')}@macedonia.example.com`,
   address: {
@@ -73,59 +74,4 @@ const fruitUsers = fruits.map((fruit) => ({
 
 export const mockUsers = [ownerFruits, ownerAnimals, ...animalUsers, ...fruitUsers];
 
-export const userColumns: Column[] = [
-  {
-    name: 'email',
-    type: 'email'
-  },
-  {
-    name: 'full_name',
-    type: 'string'
-  },
-  {
-    name: 'address',
-    type: 'object',
-    columns: [
-      {
-        name: 'street',
-        type: 'string'
-      },
-      {
-        name: 'zipcode',
-        type: 'int'
-      }
-    ]
-  },
-  {
-    name: 'team',
-    type: 'link',
-    link: {
-      table: 'teams'
-    }
-  }
-];
-
-export const teamColumns: Column[] = [
-  {
-    name: 'name',
-    type: 'string'
-  },
-  {
-    name: 'labels',
-    type: 'multiple'
-  },
-  {
-    name: 'owner',
-    type: 'link',
-    link: {
-      table: 'users'
-    }
-  }
-];
-
-export const schema: Schema = {
-  tables: [
-    { name: 'users', columns: userColumns },
-    { name: 'teams', columns: teamColumns }
-  ]
-};
+export const schema = schemaJson as Schema;

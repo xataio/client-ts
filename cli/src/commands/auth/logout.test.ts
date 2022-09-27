@@ -52,6 +52,7 @@ describe('branches delete', () => {
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
         {
+          "initial": true,
           "message": "Are you sure you want to logout of Xata?",
           "name": "confirm",
           "type": "confirm",
@@ -76,6 +77,7 @@ describe('branches delete', () => {
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
         {
+          "initial": true,
           "message": "Are you sure you want to logout of Xata?",
           "name": "confirm",
           "type": "confirm",

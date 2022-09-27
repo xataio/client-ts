@@ -87,7 +87,7 @@ describe('branches create', () => {
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(log.mock.calls[0][0]).toEqual('Branch featureA successfully created');
+      expect(log.mock.calls[0][0]).toEqual('✔ Branch featureA successfully created');
     }
   });
 
@@ -164,7 +164,7 @@ describe('branches create', () => {
         expect(result).toBeUndefined();
       }
 
-      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(fetchMock).toHaveBeenCalledTimes(1);
       expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
       expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
 
@@ -176,7 +176,7 @@ describe('branches create', () => {
 
       if (!json) {
         expect(log.mock.calls[0][0]).toEqual(
-          'Branch featureA successfully created. A new git branch with the same name has been created and is your current branch.'
+          '✔ Branch featureA successfully created. A new git branch with the same name has been created and is your current branch.'
         );
       }
     }
@@ -189,6 +189,7 @@ describe('branches create', () => {
       vi.spyOn(git, 'isWorkingDirClean').mockReturnValue(true);
       vi.spyOn(git, 'defaultGitBranch').mockReturnValue('def');
       const createBranch = vi.spyOn(git, 'createBranch').mockReturnValue(undefined);
+      fetchMock.mockReturnValue({ ok: true, json: async () => ({ branch: 'base' }) });
 
       const config = await Config.load();
       const command = new BranchesCreate(['featureA', '--from', 'base'], config as Config);
@@ -204,14 +205,20 @@ describe('branches create', () => {
       const result = await command.run();
 
       if (json) {
-        expect(result).toMatchInlineSnapshot('{}');
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "branch": "base",
+          }
+        `);
       } else {
         expect(result).toBeUndefined();
       }
 
-      expect(fetchMock).toHaveBeenCalledOnce();
-      expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA?from=base');
-      expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test/resolveBranch?gitBranch=base');
+      expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
+      expect(fetchMock.mock.calls[1][0]).toEqual('https://test-1234.xata.sh/db/test:featureA?from=base');
+      expect(fetchMock.mock.calls[1][1].method).toEqual('PUT');
 
       expect(createBranch).toHaveBeenCalledOnce();
       expect(createBranch.mock.calls[0][0]).toEqual('featureA');
@@ -221,7 +228,7 @@ describe('branches create', () => {
 
       if (!json) {
         expect(log.mock.calls[0][0]).toEqual(
-          'Branch featureA successfully created. A new git branch with the same name has been created and is your current branch.'
+          '✔ Branch featureA successfully created. A new git branch with the same name has been created and is your current branch.'
         );
       }
     }

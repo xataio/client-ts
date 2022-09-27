@@ -30,32 +30,55 @@ export type BulkError = {
   }[];
 };
 
+export type BulkInsertResponse =
+  | {
+      recordIDs: string[];
+    }
+  | {
+      records: Schemas.XataRecord[];
+    };
+
 export type BranchMigrationPlan = {
   version: number;
   migration: Schemas.BranchMigration;
 };
 
-export type RecordUpdateResponse = {
-  id: string;
-  xata: {
-    version: number;
-  };
+export type RecordResponse = Schemas.XataRecord;
+
+export type SchemaCompareResponse = {
+  source: Schemas.Schema;
+  target: Schemas.Schema;
+  edits: Schemas.SchemaEditScript;
 };
+
+export type RecordUpdateResponse =
+  | Schemas.XataRecord
+  | {
+      id: string;
+      xata: {
+        version: number;
+      };
+    };
 
 export type QueryResponse = {
   records: Schemas.XataRecord[];
   meta: Schemas.RecordsMetadata;
 };
 
+export type SummarizeResponse = {
+  summaries: Record<string, any>[];
+};
+
 export type SearchResponse = {
   records: Schemas.XataRecord[];
+  warning?: string;
 };
 
 /**
  * @example {"migrationID":"mig_c7m19ilcefoebpqj12p0"}
  */
 export type MigrationIdResponse = {
-  /*
+  /**
    * @minLength 1
    */
   migrationID: string;

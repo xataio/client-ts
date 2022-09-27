@@ -1,6 +1,6 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
-import { createBranch, defaultGitBranch, isGitInstalled, isWorkingDirClean } from '../../git.js';
+import { createBranch, currentGitBranch, defaultGitBranch, isGitInstalled, isWorkingDirClean } from '../../git.js';
 export default class BranchesCreate extends BaseCommand {
   static description = 'Create a branch';
 
@@ -8,7 +8,7 @@ export default class BranchesCreate extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     from: Flags.string({
       description: 'Branch name to branch off from'
     }),
@@ -25,11 +25,7 @@ export default class BranchesCreate extends BaseCommand {
     const { args, flags } = await this.parse(BranchesCreate);
     const { branch } = args;
 
-    if (!branch) {
-      return this.error('Please, specify a branch name');
-    }
-
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.databaseURL);
+    const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
 
@@ -48,6 +44,15 @@ export default class BranchesCreate extends BaseCommand {
             'The working directory has uncommited changes. Please commit or stash them before creating a branch. Or use the --no-git flag to disable integrating xata branches with git branches.'
           );
         }
+
+        const currentBranch = currentGitBranch();
+        if (currentBranch !== branch) {
+          const { branch: gitBase } = from
+            ? await xata.databases.resolveBranch(workspace, database, from)
+            : { branch: defaultGitBranch() };
+
+          createBranch(branch, gitBase);
+        }
       } catch (err) {
         if (err instanceof Error && err.message.includes('not a git repository')) {
           this.error(
@@ -57,9 +62,6 @@ export default class BranchesCreate extends BaseCommand {
           throw err;
         }
       }
-      // TODO calculate associated git branch with `from` xata branch
-      const gitBase = from || defaultGitBranch();
-      createBranch(branch, gitBase);
     }
 
     const result = await xata.branches.createBranch(workspace, database, branch, from);
@@ -71,6 +73,6 @@ export default class BranchesCreate extends BaseCommand {
       message = `${message}. A new git branch with the same name has been created and is your current branch.`;
     }
 
-    this.log(message);
+    this.success(message);
   }
 }

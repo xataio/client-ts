@@ -5,6 +5,7 @@ export type Column = {
   name: string;
   type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
   unique?: boolean;
+  notNull?: boolean;
   description?: string;
   link?: {
     table: string;
@@ -17,6 +18,7 @@ export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
     name: z.string(),
     type: z.enum(['bool', 'int', 'float', 'string', 'text', 'email', 'multiple', 'link', 'object', 'datetime']),
     unique: z.boolean().optional(),
+    notNull: z.boolean().optional(),
     description: z.string().optional(),
     link: z
       .object({
@@ -35,12 +37,12 @@ export const tableSchema = z.object({
 export type Table = z.infer<typeof tableSchema>;
 
 export const xataDatabaseSchema = z.object({
-  formatVersion: z.literal('1.0'),
+  formatVersion: z.literal('1.0').or(z.literal('')).optional(),
   tables: z.array(tableSchema)
 });
 
 export type XataDatabaseSchema = z.infer<typeof xataDatabaseSchema>;
 
 export const parseSchemaFile = (input: string) => {
-  return xataDatabaseSchema.parse(JSON.parse(input));
+  return xataDatabaseSchema.safeParse(JSON.parse(input));
 };

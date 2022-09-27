@@ -1,3 +1,4 @@
+import { isDefined, isObject } from '../util/lang';
 import { Query } from './query';
 import { XataRecord } from './record';
 
@@ -5,7 +6,7 @@ export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
 export interface Paginable<Record extends XataRecord, Result extends XataRecord = Record> {
   meta: PaginationQueryMeta;
-  records: Result[];
+  records: RecordArray<Result>;
 
   nextPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
   previousPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
@@ -28,12 +29,12 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
   /**
    * The set of results for this page.
    */
-  readonly records: Result[];
+  readonly records: RecordArray<Result>;
 
   constructor(query: Query<Record, Result>, meta: PaginationQueryMeta, records: Result[] = []) {
     this.#query = query;
     this.meta = meta;
-    this.records = records;
+    this.records = new RecordArray(this, records);
   }
 
   /**
@@ -89,6 +90,98 @@ export type CursorNavigationOptions = { first?: string } | { last?: string } | {
 export type OffsetNavigationOptions = { size?: number; offset?: number };
 
 export const PAGINATION_MAX_SIZE = 200;
-export const PAGINATION_DEFAULT_SIZE = 200;
+export const PAGINATION_DEFAULT_SIZE = 20;
 export const PAGINATION_MAX_OFFSET = 800;
 export const PAGINATION_DEFAULT_OFFSET = 0;
+
+export function isCursorPaginationOptions(
+  options: Record<string, unknown> | undefined | null
+): options is CursorNavigationOptions {
+  return (
+    isDefined(options) &&
+    (isDefined(options.first) || isDefined(options.last) || isDefined(options.after) || isDefined(options.before))
+  );
+}
+
+export class RecordArray<Result extends XataRecord> extends Array<Result> {
+  #page: Paginable<Result, Result>;
+
+  constructor(page: Paginable<any, Result>, overrideRecords?: Result[]);
+  constructor(...args: any[]) {
+    super(...RecordArray.parseConstructorParams(...args));
+
+    // In the case of serialization/deserialization, the page might be lost
+    this.#page = isObject(args[0]?.meta) ? args[0] : { meta: { page: { cursor: '', more: false } }, records: [] };
+  }
+
+  static parseConstructorParams(...args: any[]) {
+    // new <T>(arrayLength: number): T[]
+    if (args.length === 1 && typeof args[0] === 'number') {
+      return new Array(args[0]);
+    }
+
+    // new RecordArray<T>(page: Page, overrideRecords: Array | undefined): T[>]
+    if (args.length <= 2 && isObject(args[0]?.meta) && Array.isArray(args[1] ?? [])) {
+      const result = args[1] ?? args[0].records ?? [];
+      return new Array(...result);
+    }
+
+    // <T>(...items: T[]): T[]
+    return new Array(...args);
+  }
+
+  toArray(): Result[] {
+    return new Array(...this);
+  }
+
+  map<U>(callbackfn: (value: Result, index: number, array: Result[]) => U, thisArg?: any): U[] {
+    return this.toArray().map(callbackfn, thisArg);
+  }
+
+  /**
+   * Retrieve next page of records
+   *
+   * @returns A new array of objects
+   */
+  async nextPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+    const newPage = await this.#page.nextPage(size, offset);
+    return new RecordArray(newPage);
+  }
+
+  /**
+   * Retrieve previous page of records
+   *
+   * @returns A new array of objects
+   */
+  async previousPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+    const newPage = await this.#page.previousPage(size, offset);
+    return new RecordArray(newPage);
+  }
+
+  /**
+   * Retrieve first page of records
+   *
+   * @returns A new array of objects
+   */
+  async firstPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+    const newPage = await this.#page.firstPage(size, offset);
+    return new RecordArray(newPage);
+  }
+
+  /**
+   * Retrieve last page of records
+   *
+   * @returns A new array of objects
+   */
+  async lastPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+    const newPage = await this.#page.lastPage(size, offset);
+    return new RecordArray(newPage);
+  }
+
+  /**
+   * @returns Boolean indicating if there is a next page
+   */
+  hasNextPage(): boolean {
+    return this.#page.meta.page.more;
+  }
+}

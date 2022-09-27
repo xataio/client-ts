@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Flags } from '@oclif/core';
 import { getBranchDetails, Schemas } from '@xata.io/client';
 import chalk from 'chalk';
-import clipboardy from 'clipboardy';
 import enquirer from 'enquirer';
+import { getEditor } from 'env-editor';
+import { readFile, writeFile } from 'fs/promises';
+import tmp from 'tmp';
+import which from 'which';
 import { BaseCommand } from '../../base.js';
+import { features } from '../../feature-flags.js';
+import { parseSchemaFile } from '../../schema.js';
+import { reportBugURL } from '../../utils.js';
 import Codegen from '../codegen/index.js';
 
 // The enquirer library has type definitions but they are very poor
@@ -14,7 +21,7 @@ type Table = Schema['tables'][0];
 type Column = Table['columns'][0];
 
 type EditableColumn = Column & {
-  added?: string;
+  added?: boolean;
   deleted?: boolean;
   initialName?: string;
   description?: string;
@@ -30,6 +37,18 @@ type EditableTable = Table & {
 const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime'];
 const typesList = types.join(', ');
 const identifier = /^[a-zA-Z0-9-_~]+$/;
+
+const waitFlags: Record<string, string> = {
+  code: '-w',
+  'code-insiders': '-w',
+  vscodium: '-w',
+  sublime: '-w',
+  textmate: '-w',
+  atom: '--wait',
+  webstorm: '--wait',
+  intellij: '--wait',
+  xcode: '-w'
+};
 
 type SelectChoice = {
   name:
@@ -58,8 +77,11 @@ export default class EditSchema extends BaseCommand {
   static examples = [];
 
   static flags = {
-    databaseURL: this.databaseURLFlag,
-    branch: this.branchFlag
+    ...this.databaseURLFlag,
+    branch: this.branchFlag,
+    source: Flags.boolean({
+      description: 'Edit the schema as a JSON document in your default editor'
+    })
   };
 
   static args = [];
@@ -68,18 +90,85 @@ export default class EditSchema extends BaseCommand {
   tables: EditableTable[] = [];
   workspace!: string;
   database!: string;
+  branch!: string;
 
   selectItem: EditableColumn | EditableTable | null = null;
 
   async run(): Promise<void> {
     const { flags } = await this.parse(EditSchema);
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
+
+    if (flags.source) {
+      this.warn(
+        `This way of editing the schema doesn't detect renames of tables or columns. They are interpreted as deleting/adding tables and columns.
+Beware that this can lead to ${chalk.bold(
+          'data loss'
+        )}. Other ways of editing the schema that do not have this limitation are:
+* run the command without ${chalk.bold('--source')}
+* edit the schema in the Web UI. Use ${chalk.bold('xata browse')} to open the Web UI in your browser.`
+      );
+      this.log();
+    }
+
+    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     this.workspace = workspace;
     this.database = database;
+    this.branch = branch;
 
     const xata = await this.getXataClient();
-    this.branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
-    if (!this.branchDetails) this.error('Could not get the schema from the current branch');
+    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+    if (!branchDetails) this.error('Could not get the schema from the current branch');
+
+    if (flags.source) {
+      await this.showSourceEditing(branchDetails);
+    } else {
+      await this.showInteractiveEditing(branchDetails);
+    }
+  }
+
+  async showSourceEditing(branchDetails: Schemas.DBBranch) {
+    const env = process.env.EDITOR || process.env.VISUAL;
+    if (!env) {
+      this.error(
+        `Could not find an editor. Please set the environment variable ${chalk.bold('EDITOR')} or ${chalk.bold(
+          'VISUAL'
+        )}`
+      );
+    }
+
+    const info = await getEditor(env);
+    // This honors the env value. For `code-insiders` for example, we don't want `code` to be used instead.
+    const binary = which.sync(env, { nothrow: true }) ? env : info.binary;
+
+    const tmpobj = tmp.fileSync({ prefix: 'schema-', postfix: 'source.json' });
+    // TODO: add a $schema to the document to allow autocomplete in editors such as vscode
+    await writeFile(tmpobj.name, JSON.stringify(branchDetails.schema, null, 2));
+
+    const waitFlag = waitFlags[info.id] || waitFlags[env];
+
+    if (!info.isTerminalEditor && !waitFlag) {
+      this.error(`The editor ${chalk.bold(env)} is a graphical editor that is not supported.`, {
+        suggestions: [
+          `Set the ${chalk.bold('EDITOR')} or ${chalk.bold('VISUAL')} variables to a different editor`,
+          `Open an issue at ${reportBugURL(`Support \`${info.binary}\` editor for schema editing`)}`
+        ]
+      });
+    }
+
+    const args = [waitFlag, tmpobj.name].filter(Boolean);
+    await this.runCommand(binary, args);
+
+    const newSchema = await readFile(tmpobj.name, 'utf8');
+    const result = parseSchemaFile(newSchema);
+    if (!result.success) {
+      this.printZodError(result.error);
+      this.error('The schema is not valid. See the errors above');
+    }
+
+    await this.deploySchema(this.workspace, this.database, this.branch, result.data);
+  }
+
+  async showInteractiveEditing(branchDetails: Schemas.DBBranch) {
+    this.branchDetails = branchDetails;
     this.tables = this.branchDetails.schema.tables;
     await this.showSchema();
   }
@@ -96,6 +185,7 @@ export default class EditSchema extends BaseCommand {
     const schema: SelectChoice = {
       name: { type: 'schema' },
       message: 'Tables',
+      role: 'heading',
       choices: tableChoices
     };
     choices.push(schema);
@@ -150,37 +240,7 @@ export default class EditSchema extends BaseCommand {
     select.on('keypress', async (char: string, key: { name: string; action: string }) => {
       const flatChoice = flatChoices[select.state.index];
       try {
-        if (key.action === 'paste') {
-          if (!flatChoice) return;
-
-          if (flatChoice.name.type == 'schema') {
-            try {
-              const data = JSON.parse(clipboardy.readSync());
-              // TODO: validate that it's a table
-              data.added = true;
-              this.tables.push(data);
-              this.selectItem = data;
-            } catch (err) {
-              if (!(err instanceof SyntaxError)) throw err;
-            }
-          } else if (flatChoice.name.type === 'edit-table') {
-            const table = flatChoice.name.table;
-            try {
-              const data = JSON.parse(clipboardy.readSync());
-              // TODO: validate that it's a table
-              data.added = true;
-              table.columns.push(data);
-              this.selectItem = data;
-            } catch (err) {
-              if (!(err instanceof SyntaxError)) throw err;
-            }
-          } else {
-            return;
-          }
-
-          await select.cancel();
-          await this.showSchema();
-        } else if (key.name === 'backspace' || key.name === 'delete') {
+        if (key.name === 'backspace' || key.name === 'delete') {
           if (!flatChoice) return; // add table is not here for example
           const choice = flatChoice.name;
           if (typeof choice !== 'object') return;
@@ -239,16 +299,22 @@ export default class EditSchema extends BaseCommand {
   getMessageForColumn(table: EditableTable, column: EditableColumn) {
     const linkedTable = this.tables.find((t) => (t.initialName || t.name) === column.link?.table);
     function getType() {
-      if (!linkedTable) return `(${chalk.gray.italic(column.type)})`;
-      return `(${chalk.gray.italic(column.type)} → ${chalk.gray.italic(linkedTable.name)})`;
+      if (!linkedTable) return chalk.gray.italic(column.type);
+      return `${chalk.gray.italic(column.type)} → ${chalk.gray.italic(linkedTable.name)}`;
     }
-    const type = getType();
+    const metadata = [
+      getType(),
+      column.unique ? chalk.gray.italic('unique') : '',
+      column.notNull ? chalk.gray.italic('not null') : ''
+    ]
+      .filter(Boolean)
+      .join(' ');
     if (table.deleted || column.deleted || linkedTable?.deleted)
-      return `- ${chalk.red.strikethrough(column.name)} ${type}`;
-    if (table.added || column.added) return `- ${chalk.green(column.name)} ${type}`;
+      return `- ${chalk.red.strikethrough(column.name)} (${metadata})`;
+    if (table.added || column.added) return `- ${chalk.green(column.name)} (${metadata})`;
     if (column.initialName)
-      return `- ${chalk.cyan(column.name)} ${chalk.yellow.strikethrough(column.initialName)} ${type}`;
-    return `- ${chalk.cyan(column.name)} ${type}`;
+      return `- ${chalk.cyan(column.name)} ${chalk.yellow.strikethrough(column.initialName)} (${metadata})`;
+    return `- ${chalk.cyan(column.name)} (${metadata})`;
   }
 
   getOverview() {
@@ -292,11 +358,27 @@ export default class EditSchema extends BaseCommand {
   async showColumnEdit(column: EditableColumn | null, table: EditableTable) {
     this.clear();
 
+    let template = `
+           Name: \${name}
+           Type: \${type}
+           Link: \${link}
+    Description: \${description}
+         Unique: \${unique}`;
+
+    if (features.notNull) {
+      template += `
+       Not null: \${notNull}
+        Default: \${default}`;
+    }
+
     type ColumnEditState = {
       values: {
         name?: string;
         type?: string;
         link?: string;
+        notNull?: string;
+        default?: string;
+        unique?: string;
         description?: string;
       };
     };
@@ -307,6 +389,9 @@ export default class EditSchema extends BaseCommand {
         name: column?.name || '',
         type: column?.type || '',
         link: column?.link?.table || '',
+        notNull: column?.notNull ? 'true' : '',
+        default: '', // TODO
+        unique: column?.unique ? 'true' : '',
         description: column?.description || ''
       },
       fields: [
@@ -325,7 +410,7 @@ export default class EditSchema extends BaseCommand {
           message: `The column type (${typesList})`,
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
             if (!types.includes(value)) {
-              return snippet.styles.danger(`Type needs to be one of ${typesList}`);
+              return `Type needs to be one of ${typesList}`;
             }
             return true;
           }
@@ -336,42 +421,77 @@ export default class EditSchema extends BaseCommand {
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
             if (state.values.type === 'link') {
               if (!value) {
-                return snippet.styles.danger('The link field must be filled the columns of type `link`');
+                return 'The link field must be filled the columns of type `link`';
               }
             } else if (value) {
-              return snippet.styles.danger('The link field must not be filled unless the type of the column is `link`');
+              return 'The link field must not be filled unless the type of the column is `link`';
             }
             return true;
           }
         },
         {
+          name: 'unique',
+          message: 'Whether the column is unique (true/false)',
+          validate: validateOptionalBoolean
+        },
+        {
+          name: 'notNull',
+          message: 'Whether the column is not nullable (true/false)',
+          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+            if (!features.notNull) return true;
+            return validateOptionalBoolean(value);
+          }
+        },
+        {
           name: 'description',
           message: 'An optional column description'
+        },
+        {
+          name: 'default',
+          message: 'Default value for if not nullable',
+          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+            if (!features.notNull) return true;
+            if (parseBoolean(state.values.notNull) === true && state.values.type) {
+              if (parseDefaultValue(state.values.type, value) == null) {
+                return `Invalid default value for column type ${state.values.type}`;
+              }
+            }
+            return true;
+          }
         }
       ],
       footer() {
         return '\nUse the ↑ ↓ arrows to move across fields, enter to submit and escape to cancel.';
       },
-      template: `
-         Name: \${name}
-         Type: \${type}
-         Link: \${link}
-  Description: \${description}`
+      template
     });
 
     try {
-      const answer = await snippet.run();
+      const { values } = await snippet.run();
+      const unique = parseBoolean(values.unique);
+      const notNull = parseBoolean(values.notNull);
+      const col: Column = {
+        name: values.name,
+        type: values.type,
+        link: values.link && values.type === 'link' ? { table: values.link } : undefined,
+        unique: unique || undefined,
+        notNull: notNull || undefined
+        // TODO: add default once the backend supports it
+        // default: values.default !== '' ? parseDefaultValue(values.type, values.default) : undefined,
+        // TODO: add description once the backend supports it
+        // description: values.description
+      };
       if (column) {
-        if (!column.initialName && !column.added && column.name !== answer.values.name) {
+        if (!column.initialName && !column.added && column.name !== values.name) {
           column.initialName = column.name;
         }
-        Object.assign(column, answer.values);
+        Object.assign(column, col);
         if (column.name === column.initialName) {
           delete column.initialName;
         }
       } else {
         table.columns.push({
-          ...answer.values,
+          ...col,
           added: true
         });
         // Override the variable to use it when redefining this.selectItem below
@@ -512,10 +632,10 @@ export default class EditSchema extends BaseCommand {
     // Create tables, update tables, delete columns and update columns
     for (const table of this.tables) {
       if (table.added) {
-        this.log(`Creating table ${table.name}`);
+        this.info(`Creating table ${table.name}`);
         await xata.tables.createTable(workspace, database, branch, table.name);
       } else if (table.initialName) {
-        this.log(`Renaming table ${table.initialName} to ${table.name}`);
+        this.info(`Renaming table ${table.initialName} to ${table.name}`);
         await xata.tables.updateTable(workspace, database, branch, table.initialName, {
           name: table.name
         });
@@ -524,10 +644,10 @@ export default class EditSchema extends BaseCommand {
       for (const column of table.columns) {
         const linkedTable = this.tables.find((t) => (t.initialName || t.name) === column.link?.table);
         if (column.deleted || linkedTable?.deleted) {
-          this.log(`Deleting column ${table.name}.${column.name}`);
+          this.info(`Deleting column ${table.name}.${column.name}`);
           await xata.tables.deleteColumn(workspace, database, branch, table.name, column.name);
         } else if (column.initialName) {
-          this.log(`Renaming column ${table.name}.${column.initialName} to ${table.name}.${column.name}`);
+          this.info(`Renaming column ${table.name}.${column.initialName} to ${table.name}.${column.name}`);
           await xata.tables.updateColumn(workspace, database, branch, table.name, column.initialName, {
             name: column.name
           });
@@ -538,14 +658,14 @@ export default class EditSchema extends BaseCommand {
     // Delete tables and create columns
     for (const table of this.tables) {
       if (table.deleted) {
-        this.log(`Deleting table ${table.name}`);
+        this.info(`Deleting table ${table.name}`);
         await xata.tables.deleteTable(workspace, database, branch, table.name);
         continue;
       }
 
       for (const column of table.columns) {
         if (table.added || column.added) {
-          this.log(`Creating column ${table.name}.${column.name}`);
+          this.info(`Adding column ${table.name}.${column.name}`);
           await xata.tables.addTableColumn(workspace, database, branch, table.name, {
             name: column.name,
             type: column.type,
@@ -555,6 +675,47 @@ export default class EditSchema extends BaseCommand {
       }
     }
 
-    this.log('Migration completed!');
+    this.success('Migration completed!');
   }
+}
+
+function parseBoolean(value?: string) {
+  if (!value) return undefined;
+  const val = value.toLowerCase();
+  if (['true', 't', '1', 'y', 'yes'].includes(val)) return true;
+  if (['false', 'f', '0', 'n', 'no'].includes(val)) return false;
+  return null;
+}
+
+function validateOptionalBoolean(value?: string) {
+  const bool = parseBoolean(value);
+  if (bool === null) {
+    return 'Please enter a boolean value (e.g. yes, no, true, false) or leave it empty';
+  }
+  return true;
+}
+
+function parseDefaultValue(type: string, val: string) {
+  const num = val.length > 0 ? +val : null;
+
+  if (type === 'int') {
+    return Number.isSafeInteger(num) && val !== '' ? num : null;
+  } else if (type === 'float') {
+    return Number.isFinite(num) && val !== '' ? num : null;
+  } else if (type === 'bool') {
+    return parseBoolean(val);
+  } else if (type === 'multiple') {
+    return val
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  } else if (type === 'email') {
+    return val || null;
+  } else if (type === 'link') {
+    return val ? String(val) : null;
+  } else if (type === 'datetime') {
+    const date = new Date(val);
+    return isNaN(date.getTime()) ? null : date;
+  }
+  return null;
 }

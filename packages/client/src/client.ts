@@ -1,8 +1,9 @@
+import { Schemas } from './api';
 import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { XataPlugin, XataPluginOptions } from './plugins';
-import { SchemaPlugin, SchemaPluginResult } from './schema';
+import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
-import { BaseData } from './schema/record';
+import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
@@ -16,24 +17,34 @@ export type BaseClientOptions = {
   databaseURL?: string;
   branch?: BranchStrategyOption;
   cache?: CacheImpl;
+  trace?: TraceFunction;
+};
+
+type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch'>> & {
+  branch: () => Promise<string | undefined>;
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
   class {
     #branch: BranchStrategyValue;
+    #options: SafeOptions;
+
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
 
-    constructor(options: BaseClientOptions = {}, tables?: string[]) {
+    constructor(options: BaseClientOptions = {}, schemaTables?: Schemas.Table[]) {
       const safeOptions = this.#parseOptions(options);
+      this.#options = safeOptions;
+
       const pluginOptions: XataPluginOptions = {
         getFetchProps: () => this.#getFetchProps(safeOptions),
-        cache: safeOptions.cache
+        cache: safeOptions.cache,
+        trace: safeOptions.trace
       };
 
-      const db = new SchemaPlugin(tables).build(pluginOptions);
-      const search = new SearchPlugin(db).build(pluginOptions);
+      const db = new SchemaPlugin(schemaTables).build(pluginOptions);
+      const search = new SearchPlugin(db, schemaTables).build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
       this.db = db;
@@ -55,29 +66,36 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       }
     }
 
-    #parseOptions(options?: BaseClientOptions) {
+    public async getConfig() {
+      const databaseURL = this.#options.databaseURL;
+      const branch = await this.#options.branch();
+
+      return { databaseURL, branch };
+    }
+
+    #parseOptions(options?: BaseClientOptions): SafeOptions {
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
       const apiKey = options?.apiKey || getAPIKey();
-      const cache = options?.cache ?? new SimpleCache({ cacheRecords: false, defaultQueryTTL: 0 });
+      const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
+      const trace = options?.trace ?? defaultTrace;
       const branch = async () =>
         options?.branch !== undefined
           ? await this.#evaluateBranch(options.branch)
           : await getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch });
 
-      if (!databaseURL || !apiKey) {
-        throw new Error('Options databaseURL and apiKey are required');
+      if (!apiKey) {
+        throw new Error('Option apiKey is required');
       }
 
-      return { fetch, databaseURL, apiKey, branch, cache };
+      if (!databaseURL) {
+        throw new Error('Option databaseURL is required');
+      }
+
+      return { fetch, databaseURL, apiKey, branch, cache, trace };
     }
 
-    async #getFetchProps({
-      fetch,
-      apiKey,
-      databaseURL,
-      branch
-    }: AllRequired<BaseClientOptions>): Promise<FetcherExtraProps> {
+    async #getFetchProps({ fetch, apiKey, databaseURL, branch, trace }: SafeOptions): Promise<FetcherExtraProps> {
       const branchValue = await this.#evaluateBranch(branch);
       if (!branchValue) throw new Error('Unable to resolve branch value');
 
@@ -88,9 +106,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
         workspacesApiUrl: (path, params) => {
           const hasBranch = params.dbBranchName ?? params.branch;
-          const newPath = path.replace(/^\/db\/[^/]+/, hasBranch ? `:${branchValue}` : '');
+          const newPath = path.replace(/^\/db\/[^/]+/, hasBranch !== undefined ? `:${branchValue}` : '');
           return databaseURL + newPath;
-        }
+        },
+        trace
       };
     }
 
@@ -116,7 +135,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
   // eslint-disable-next-line @typescript-eslint/ban-types
-  new <Schemas extends Record<string, BaseData> = {}>(options?: Partial<BaseClientOptions>, tables?: string[]): Omit<
+  new <Schemas extends Record<string, XataRecord> = {}>(
+    options?: Partial<BaseClientOptions>,
+    schemaTables?: readonly BaseSchema[]
+  ): Omit<
     {
       db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
       search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
@@ -124,6 +146,11 @@ export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
     keyof Plugins
   > & {
     [Key in StringKeys<NonNullable<Plugins>>]: Awaited<ReturnType<NonNullable<Plugins>[Key]['build']>>;
+  } & {
+    getConfig(): Promise<{
+      databaseURL: string;
+      branch: string;
+    }>;
   };
 }
 

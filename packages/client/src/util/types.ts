@@ -34,3 +34,6 @@ export type SingleOrArray<T> = T | T[];
 export type Dictionary<T> = Record<string, T>;
 
 export type OmitBy<T, K extends keyof T> = T extends any ? Omit<T, K> : never;
+
+type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
+export type ExclusiveOr<T, U> = T | U extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U;

@@ -1,10 +1,16 @@
+import chalk from 'chalk';
+import crypto from 'crypto';
+import { readFileSync } from 'fs';
 import http from 'http';
 import { AddressInfo } from 'net';
 import open from 'open';
-import url from 'url';
-import crypto from 'crypto';
+import path, { dirname } from 'path';
+import url, { fileURLToPath } from 'url';
 
-export function handler(privateKey: string, passphrase: string, callback: (apiKey: string) => void) {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export function handler(publicKey: string, privateKey: string, passphrase: string, callback: (apiKey: string) => void) {
   return (req: http.IncomingMessage, res: http.ServerResponse) => {
     try {
       if (req.method !== 'GET') {
@@ -13,6 +19,15 @@ export function handler(privateKey: string, passphrase: string, callback: (apiKe
       }
 
       const parsedURL = url.parse(req.url ?? '', true);
+      if (parsedURL.pathname === '/new') {
+        const port = +(parsedURL.port || 80);
+        res.writeHead(302, {
+          location: generateURL(port, publicKey)
+        });
+        res.end();
+        return;
+      }
+
       if (parsedURL.pathname !== '/') {
         res.writeHead(404);
         return res.end();
@@ -25,8 +40,7 @@ export function handler(privateKey: string, passphrase: string, callback: (apiKe
       const apiKey = crypto
         .privateDecrypt(privKey, Buffer.from(String(parsedURL.query.key).replace(/ /g, '+'), 'base64'))
         .toString('utf8');
-      res.writeHead(200);
-      res.end('You are all set! You can close this tab now');
+      renderSuccessPage(req, res, String(parsedURL.query['color-mode']));
       req.destroy();
       callback(apiKey);
     } catch (err) {
@@ -36,14 +50,26 @@ export function handler(privateKey: string, passphrase: string, callback: (apiKe
   };
 }
 
-export function generateURL(port: number, publicKey: string, privateKey: string, passphrase: string) {
+function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse, colorMode: string) {
+  res.writeHead(200, {
+    'Content-Type': 'text/html'
+  });
+  const html = readFileSync(path.join(__dirname, 'api-key-success.html'), 'utf-8');
+  res.end(html.replace('data-color-mode=""', `data-color-mode="${colorMode}"`));
+}
+
+export function generateURL(port: number, publicKey: string) {
   const pub = publicKey
     .replace(/\n/g, '')
     .replace('-----BEGIN PUBLIC KEY-----', '')
     .replace('-----END PUBLIC KEY-----', '');
-  const data = Buffer.from(JSON.stringify({ name: 'Xata CLI', redirect: `http://localhost:${port}` }));
-  const info = crypto.privateEncrypt({ key: privateKey, passphrase }, data).toString('base64');
-  return `https://app.xata.io/new-api-key?pub=${encodeURIComponent(pub)}&info=${encodeURIComponent(info)}`;
+  const name = 'Xata CLI';
+  const redirect = `http://localhost:${port}`;
+  const url = new URL('https://app.xata.io/new-api-key');
+  url.searchParams.append('pub', pub);
+  url.searchParams.append('name', name);
+  url.searchParams.append('redirect', redirect);
+  return url.toString();
 }
 
 export function generateKeys() {
@@ -69,17 +95,20 @@ export async function createAPIKeyThroughWebUI() {
 
   return new Promise<string>((resolve) => {
     const server = http.createServer(
-      handler(privateKey, passphrase, (apiKey) => {
+      handler(publicKey, privateKey, passphrase, (apiKey) => {
         resolve(apiKey);
         server.close();
       })
     );
     server.listen(() => {
       const { port } = server.address() as AddressInfo;
-      const openURL = generateURL(port, publicKey, privateKey, passphrase);
-      open(openURL).catch(() => {
-        console.log(`Please open ${openURL} in your browser`);
-      });
+      const openURL = generateURL(port, publicKey);
+      console.log(
+        `We are opening your default browser. If your browser doesn't open automatically, please copy and paste the following URL into your browser: ${chalk.bold(
+          `http://localhost:${port}/new`
+        )}`
+      );
+      open(openURL).catch(console.error);
     });
   });
 }

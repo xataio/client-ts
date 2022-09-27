@@ -1,6 +1,6 @@
 import { Flags } from '@oclif/core';
 import { XataApiClient } from '@xata.io/client';
-import { generateFromContext } from '@xata.io/codegen';
+import { generate } from '@xata.io/codegen';
 import chalk from 'chalk';
 import EventEmitter from 'events';
 import { createWriteStream } from 'fs';
@@ -11,8 +11,8 @@ import path, { dirname } from 'path';
 import RJSON from 'relaxed-json';
 import repl from 'repl';
 import { fileURLToPath } from 'url';
+import util from 'util';
 import { BaseCommand } from '../../base.js';
-import { getProfile } from '../../credentials.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,26 +22,40 @@ export default class Shell extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    databaseURL: this.databaseURLFlag,
+    ...this.databaseURLFlag,
     branch: this.branchFlag,
     code: Flags.string({
+      char: 'c',
       description: 'Fragment of code to be executed in the shell immediately after starting it'
     })
   };
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Shell);
-    const profile = await getProfile();
+    const profile = await this.getProfile();
     const apiKey = profile?.apiKey;
-    if (!apiKey)
+    if (!apiKey) {
       this.error('No API key found. Either use the XATA_API_KEY environment variable or run `xata auth login`');
-    const { protocol, host, databaseURL } = await this.getParsedDatabaseURLWithBranch(flags.databaseURL, flags.branch);
+    }
+    const { protocol, host, databaseURL, workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(
+      flags.db,
+      flags.branch
+    );
 
     // Generate the file in the same dir than this package's code so it
     // can import @xata.io/client
     const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
     try {
-      const { transpiled } = await generateFromContext('javascript', { apiKey, databaseURL });
+      const xata = await this.getXataClient();
+      const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+      const { schema } = branchDetails;
+
+      // TODO: remove formatVersion
+      const { transpiled } = await generate({
+        language: 'javascript',
+        databaseURL,
+        schema: { formatVersion: '1.0', ...schema }
+      });
       await fs.writeFile(tempFile, transpiled);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -58,6 +72,14 @@ export default class Shell extends BaseCommand {
       const mainHost = profile.api === 'staging' ? 'https://staging.xatabase.co' : 'https://api.xata.io';
       const baseUrl = path.startsWith('/db') ? `${protocol}//${host}` : mainHost;
 
+      const parse = () => {
+        try {
+          return JSON.stringify(RJSON.parse(body));
+        } catch (error) {
+          return undefined;
+        }
+      };
+
       try {
         const response = await fetch(`${baseUrl}${path}`, {
           method,
@@ -65,7 +87,7 @@ export default class Shell extends BaseCommand {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiKey}`
           },
-          body: body ? JSON.stringify(RJSON.parse(body)) : undefined
+          body: parse()
         });
 
         return response.json();
@@ -88,7 +110,7 @@ export default class Shell extends BaseCommand {
           if (['get', 'post', 'patch', 'put', 'delete'].includes(verb.toLowerCase())) {
             const body = rest.join(' ');
             return fetchApi(verb, path, body).then((result) => {
-              return postProcess(result, { table }, callback);
+              return postProcess(result, { table, deep: true }, callback);
             });
           }
 
@@ -112,6 +134,11 @@ export default class Shell extends BaseCommand {
 
     replServer.context.xata = new XataClient({ fetch, apiKey, host: profile.api });
     replServer.context.api = new XataApiClient({ fetch, apiKey });
+    replServer.context.api.GET = (path: string) => fetchApi('GET', path);
+    replServer.context.api.POST = (path: string, body?: any) => fetchApi('POST', path, JSON.stringify(body));
+    replServer.context.api.PATCH = (path: string, body?: any) => fetchApi('PATCH', path, JSON.stringify(body));
+    replServer.context.api.PUT = (path: string, body?: any) => fetchApi('PUT', path, JSON.stringify(body));
+    replServer.context.api.DELETE = (path: string) => fetchApi('DELETE', path);
 
     await setupHistory(replServer);
 
@@ -141,9 +168,20 @@ function getDefaultEval() {
   return defaultEval;
 }
 
-function postProcess(result: any, options: { table: boolean }, callback: (err: Error | null, result: any) => void) {
+function postProcess(
+  result: any,
+  options: { table: boolean; deep?: boolean },
+  callback: (err: Error | null, result: any) => void
+) {
   const { table } = options;
-  return callback(null, table ? console.table(result) : result);
+  return callback(
+    null,
+    table
+      ? console.table(result)
+      : typeof result === 'object' && options.deep
+      ? console.log(util.inspect(result, { showHidden: false, depth: null, colors: true }))
+      : result
+  );
 }
 
 async function setupHistory(replServer: repl.REPLServer) {

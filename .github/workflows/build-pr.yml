@@ -17,23 +17,22 @@ jobs:
           # This branch is not pushed, it's just local to the workflow environment.
           git checkout -b test-branch-${{ github.sha }}
 
-      - name: Read .nvmrc
-        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
-        id: nvm
-
-      - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
-        uses: actions/setup-node@v2
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
-          cache: 'npm'
+          node-version-file: '.nvmrc'
 
       - name: Set build version
         run: echo ::set-output name=TAG::0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
         id: version
 
+      - name: Check secrets exist
+        run: echo ::set-output name=exist::${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}
+        id: secrets
+
       - name: Find Comment
         uses: peter-evans/find-comment@v1
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' }}
         id: find-comment-1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -44,7 +43,7 @@ jobs:
       - name: Update existing comment with stale state of npm release
         uses: peter-evans/create-or-update-comment@v1
         id: update-existing
-        if: ${{ github.event_name == 'pull_request' && steps.find-comment-1.outputs.comment-id != '' }}
+        if: ${{ github.repository == 'xataio/client-ts' && github.event_name == 'pull_request' && steps.find-comment-1.outputs.comment-id != '' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.find-comment-1.outputs.comment-id }}
@@ -57,9 +56,12 @@ jobs:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/codegen@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/importer@${{ steps.version.outputs.TAG }}
-            npm install @xata.io/shell@${{ steps.version.outputs.TAG }}
+            ```
+
+            To test the CLI, run:
+
+            ```
+            npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 
             [Pull request has been updated, please wait for latest changes to be pushed to npm...]
@@ -71,17 +73,18 @@ jobs:
         run: npm run build
 
       - name: Configure npm registry token
+        if: ${{ steps.secrets.outputs.exist == 'true' }}
         run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish build
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --exact --no-verify-access --yes
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         id: find-comment-2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -91,7 +94,7 @@ jobs:
 
       - name: Create or update comment of npm release
         uses: peter-evans/create-or-update-comment@v1
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.find-comment-2.outputs.comment-id }}
@@ -104,6 +107,11 @@ jobs:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
+            ```
+
+            To test the CLI, run:
+
+            ```
             npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 
@@ -130,6 +138,10 @@ jobs:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
           cache: 'npm'
 
+      - name: Check secrets exist
+        run: echo ::set-output name=exist::${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}
+        id: secrets
+
       - name: Install dependencies
         run: npm install
 
@@ -140,54 +152,11 @@ jobs:
         run: npm run lint
 
       - name: Test
+        if: ${{ steps.secrets.outputs.exist == 'true' }}
         run: |
           npm test
         env:
           XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
           XATA_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
-
-  e2e-test:
-    name: E2E Test
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.head_ref == 'changeset-release/main'
-
-    strategy:
-      fail-fast: false
-      matrix:
-        target: ['cf-workers', 'cf-pages', 'edge-runtime', 'vercel-next']
-
-    steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: 📥 Install dependencies
-        uses: bahmutov/npm-install@v1
-        with:
-          working-directory: ./test/e2e
-          useLockFile: false
-
-      - name: 🚀 Deploy to ${{ matrix.target }}
-        run: npx ts-node ${{ matrix.target }}
-        working-directory: ./test/e2e
-        env:
-          VERSION_TAG: 0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
-
-          XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
           XATA_WORKSPACE: ${{ secrets.INTEGRATION_TEST_WORKSPACE }}
-
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.E2E_CF_ACCOUNT_ID }}
-          CLOUDFLARE_ACCOUNT_DOMAIN: ${{ secrets.E2E_CF_ACCOUNT_DOMAIN }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.E2E_CF_API_TOKEN }}
-
-          VERCEL_TEAM_ID: ${{ secrets.E2E_VERCEL_TEAM_ID }}
-          VERCEL_API_TOKEN: ${{ secrets.E2E_VERCEL_API_TOKEN }}

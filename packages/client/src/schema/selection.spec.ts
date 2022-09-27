@@ -17,6 +17,7 @@ interface User {
   full_name: string;
   address?: { street?: string | null; zipcode?: number | null } | null;
   team?: TeamRecord | null;
+  date?: Date | null;
   partner: UserRecord;
   settings?: {
     theme?: 'light' | 'dark';
@@ -52,7 +53,8 @@ const validTeamColumns: SelectableColumn<TeamRecord>[] = [
   'owner.*',
   'owner.address.*',
   'owner.address',
-  'owner.address.street'
+  'owner.address.street',
+  'owner.date'
 ];
 
 // @ts-expect-error
@@ -63,6 +65,8 @@ const invalidPartialTeamColumn: SelectableColumn<Team> = 'owner.address.';
 const invalidDeleteTeamColumn: SelectableColumn<Team> = 'owner.delete';
 // @ts-expect-error
 const invalidReadTeamColumn: SelectableColumn<Team> = 'owner.read.*';
+// @ts-expect-error
+const invalidInternalDateColumns: SelectableColumn<Team> = 'owner.date.getFullYear';
 
 //                              ValueAtColumn<O, P>                            //
 // --------------------------------------------------------------------------- //

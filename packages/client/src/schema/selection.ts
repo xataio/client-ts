@@ -13,11 +13,11 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   | NestedColumns<O, RecursivePath>;
 
 // Public: Utility type to get the XataRecord built from a list of selected columns
-export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]> = XataRecord &
+export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]> = XataRecord<O> &
   // For each column, we get its nested value and join it as an intersection
   UnionToIntersection<
     Values<{
-      [K in Key[number]]: NestedValueAtColumn<O, K> & XataRecord;
+      [K in Key[number]]: NestedValueAtColumn<O, K> & XataRecord<O>;
     }>
   >;
 
@@ -31,7 +31,13 @@ export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
   : P extends `${infer K}.${infer V}`
   ? K extends keyof O
     ? Values<
-        O[K] extends XataRecord ? (V extends SelectableColumn<O[K]> ? { V: ValueAtColumn<O[K], V> } : never) : O[K]
+        NonNullable<O[K]> extends infer Item
+          ? Item extends Record<string, any>
+            ? V extends SelectableColumn<Item>
+              ? { V: ValueAtColumn<Item, V> }
+              : never
+            : O[K]
+          : never
       >
     : never
   : never;
@@ -46,19 +52,25 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
   : If<
       IsObject<O>,
       Values<{
-        [K in DataProps<O>]: If<
-          IsArray<NonNullable<O[K]>>,
-          K, // If the property is an array, we stop recursion. We don't support object arrays yet
-          If<
-            IsObject<NonNullable<O[K]>>,
-            NonNullable<O[K]> extends XataRecord
-              ? SelectableColumn<NonNullable<O[K]>, [...RecursivePath, O[K]]> extends string
-                ? K | `${K}.${SelectableColumn<NonNullable<O[K]>, [...RecursivePath, O[K]]>}`
-                : never
-              : `${K}.${StringKeys<NonNullable<O[K]>> | '*'}`, // This allows usage of objects that are not links
-            K
-          >
-        >;
+        [K in DataProps<O>]: NonNullable<O[K]> extends infer Item
+          ? If<
+              IsArray<Item>,
+              K, // If the property is an array, we stop recursion. We don't support object arrays yet
+              If<
+                IsObject<Item>,
+                Item extends XataRecord
+                  ? SelectableColumn<Item, [...RecursivePath, Item]> extends infer Column
+                    ? Column extends string
+                      ? K | `${K}.${Column}`
+                      : never
+                    : never
+                  : Item extends Date
+                  ? K
+                  : `${K}.${StringKeys<Item> | '*'}`, // This allows usage of objects that are not links
+                K
+              >
+            >
+          : never;
       }>,
       never
     >;

@@ -11,32 +11,62 @@ import { SelectableColumn } from './selection';
 /**
  * Operator to restrict results to only values that are greater than the given value.
  */
-export const gt = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $gt: value });
+export const greaterThan = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $gt: value });
+
+/**
+ * Operator to restrict results to only values that are greater than the given value.
+ */
+export const gt = greaterThan;
 
 /**
  * Operator to restrict results to only values that are greater than or equal to the given value.
  */
-export const ge = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $ge: value });
+export const greaterThanEquals = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $ge: value });
 
 /**
  * Operator to restrict results to only values that are greater than or equal to the given value.
  */
-export const gte = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $ge: value });
+export const greaterEquals = greaterThanEquals;
+
+/**
+ * Operator to restrict results to only values that are greater than or equal to the given value.
+ */
+export const gte = greaterThanEquals;
+
+/**
+ * Operator to restrict results to only values that are greater than or equal to the given value.
+ */
+export const ge = greaterThanEquals;
 
 /**
  * Operator to restrict results to only values that are lower than the given value.
  */
-export const lt = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $lt: value });
+export const lessThan = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $lt: value });
+
+/**
+ * Operator to restrict results to only values that are lower than the given value.
+ */
+export const lt = lessThan;
 
 /**
  * Operator to restrict results to only values that are lower than or equal to the given value.
  */
-export const lte = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $le: value });
+export const lessThanEquals = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $le: value });
 
 /**
  * Operator to restrict results to only values that are lower than or equal to the given value.
  */
-export const le = <T extends ComparableType>(value: T): ComparableTypeFilter<T> => ({ $le: value });
+export const lessEquals = lessThanEquals;
+
+/**
+ * Operator to restrict results to only values that are lower than or equal to the given value.
+ */
+export const lte = lessThanEquals;
+
+/**
+ * Operator to restrict results to only values that are lower than or equal to the given value.
+ */
+export const le = lessThanEquals;
 
 /**
  * Operator to restrict results to only values that are not null.
@@ -67,6 +97,11 @@ export const pattern = (value: string): StringTypeFilter => ({ $pattern: value }
  * Operator to restrict results to only values that are equal to the given value.
  */
 export const is = <T>(value: T): PropertyFilter<T> => ({ $is: value });
+
+/**
+ * Operator to restrict results to only values that are equal to the given value.
+ */
+export const equals = is;
 
 /**
  * Operator to restrict results to only values that are not equal to the given value.
