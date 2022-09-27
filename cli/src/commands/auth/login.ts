@@ -28,7 +28,7 @@ export default class Login extends BaseCommand {
         {
           type: 'confirm',
           name: 'overwrite',
-          message: `Authentication is already configured for ${profile.name} profile, do you want to overwrite it?`
+          message: `Authentication is already configured for the ${profile.name} profile, do you want to overwrite it?`
         },
         flags.force
       );
