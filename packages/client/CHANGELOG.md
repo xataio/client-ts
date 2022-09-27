@@ -1,5 +1,17 @@
 # @xata.io/client
 
+## 0.18.5
+
+### Patch Changes
+
+- [#656](https://github.com/xataio/client-ts/pull/656) [`2dc2f5a`](https://github.com/xataio/client-ts/commit/2dc2f5a45529b2ace9127d963fb30214298da2e0) Thanks [@SferaDev](https://github.com/SferaDev)! - Broaden type for AbortSignal
+
+## 0.18.4
+
+### Patch Changes
+
+- [#650](https://github.com/xataio/client-ts/pull/650) [`b8d441f`](https://github.com/xataio/client-ts/commit/b8d441f80867322f41989d52c94bba230632782b) Thanks [@xata-bot](https://github.com/xata-bot)! - API: Rename listMigrationRequests to queryMigrationRequests
+
 ## 0.18.3
 
 ### Patch Changes

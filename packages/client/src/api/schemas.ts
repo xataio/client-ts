@@ -51,7 +51,7 @@ export type WorkspaceMeta = {
 export type Workspace = WorkspaceMeta & {
   id: WorkspaceID;
   memberCount: number;
-  plan: 'free';
+  plan: 'free' | 'pro';
 };
 
 export type WorkspaceMember = {

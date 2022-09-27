@@ -727,12 +727,12 @@ class RecordsApi {
 class MigrationRequestsApi {
   constructor(private extraProps: FetcherExtraProps) {}
 
-  public listMigrationRequests(
+  public queryMigrationRequests(
     workspace: Schemas.WorkspaceID,
     database: Schemas.DBName,
-    options: Types.ListMigrationRequestsRequestBody = {}
-  ): Promise<Components.ListMigrationRequestsResponse> {
-    return operationsByTag.migrationRequests.listMigrationRequests({
+    options: Types.QueryMigrationRequestsRequestBody = {}
+  ): Promise<Components.QueryMigrationRequestsResponse> {
+    return operationsByTag.migrationRequests.queryMigrationRequests({
       pathParams: { workspace, dbName: database },
       body: options,
       ...this.extraProps
