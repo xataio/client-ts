@@ -10,7 +10,7 @@ import dotenv from 'dotenv';
 import { join } from 'path';
 import { File, Suite, TestContext, vi } from 'vitest';
 import { BaseClient, CacheImpl, XataApiClient } from '../../packages/client/src';
-import { getHostUrl, HostProvider, isHostProviderAlias } from '../../packages/client/src/api/providers';
+import { getHostUrl, parseProviderString } from '../../packages/client/src/api/providers';
 import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
@@ -25,7 +25,7 @@ if (apiKey === '') throw new Error('XATA_API_KEY environment variable is not set
 const workspace = process.env.XATA_WORKSPACE ?? '';
 if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
 
-const host = getProvider(process.env.XATA_API_PROVIDER);
+const host = parseProviderString(process.env.XATA_API_PROVIDER);
 const fetch = vi.fn(realFetch);
 
 export type EnvironmentOptions = {
@@ -57,6 +57,12 @@ export async function setUpTestEnvironment(
   prefix: string,
   { cache }: EnvironmentOptions = {}
 ): Promise<TestEnvironmentResult> {
+  if (host === null) {
+    throw new Error(
+      `Invalid XATA_API_PROVIDER environment variable, expected either "production", "staging" or "apiUrl,workspacesUrl"`
+    );
+  }
+
   const { trace, tracer } = await setupTracing();
 
   // Timestamp to avoid collisions
@@ -139,20 +145,6 @@ async function setupTracing() {
   const trace = buildTraceFunction(tracer);
 
   return { trace, tracer };
-}
-
-function getProvider(provider = 'production'): HostProvider {
-  if (isHostProviderAlias(provider)) {
-    return provider;
-  }
-
-  const [main, workspaces] = provider.split(',');
-  if (!main || !workspaces) {
-    throw new Error(
-      `Invalid XATA_API_PROVIDER environment variable, expected either "production", "staging" or "apiUrl,workspacesUrl"`
-    );
-  }
-  return { main, workspaces };
 }
 
 declare module 'vitest' {

@@ -5,7 +5,7 @@ import { clearEnvVariables } from '../utils.test.js';
 import Status from './status.js';
 import prompts from 'prompts';
 import * as fs from 'fs/promises';
-import { credentialsPath } from '../../credentials.js';
+import { credentialsFilePath } from '../../credentials.js';
 import ini from 'ini';
 
 vi.mock('node-fetch');
@@ -39,7 +39,7 @@ describe('auth status', () => {
 
     await command.run();
 
-    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsFilePath, 'utf-8');
     expect(log).toHaveBeenCalledWith('You are not logged in, run `xata auth login` first');
   });
 
@@ -57,7 +57,7 @@ describe('auth status', () => {
 
     await command.run();
 
-    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsFilePath, 'utf-8');
 
     expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');

@@ -2,7 +2,7 @@ import { Config } from '@oclif/core';
 import * as fs from 'fs/promises';
 import prompts from 'prompts';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { credentialsPath } from '../../credentials.js';
+import { credentialsFilePath } from '../../credentials.js';
 import { clearEnvVariables } from '../utils.test.js';
 import Logout from './logout.js';
 import ini from 'ini';
@@ -34,7 +34,7 @@ describe('branches delete', () => {
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: You are not logged in]');
 
-    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsFilePath, 'utf-8');
   });
 
   test('exists if the user does not confirm', async () => {
@@ -47,7 +47,7 @@ describe('branches delete', () => {
 
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 2]');
 
-    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsFilePath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -72,7 +72,7 @@ describe('branches delete', () => {
 
     await command.run();
 
-    expect(readFile).toHaveBeenCalledWith(credentialsPath, 'utf-8');
+    expect(readFile).toHaveBeenCalledWith(credentialsFilePath, 'utf-8');
     expect(promptsMock).toHaveBeenCalledOnce();
     expect(promptsMock.mock.calls[0]).toMatchInlineSnapshot(`
       [
@@ -84,6 +84,6 @@ describe('branches delete', () => {
         },
       ]
     `);
-    expect(writeFile).toHaveBeenCalledWith(credentialsPath, '', { mode: 0o600 });
+    expect(writeFile).toHaveBeenCalledWith(credentialsFilePath, '', { mode: 0o600 });
   });
 });
