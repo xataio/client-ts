@@ -722,6 +722,20 @@ class RecordsApi {
       ...this.extraProps
     });
   }
+
+  public aggregateTable(
+    workspace: Schemas.WorkspaceID,
+    database: Schemas.DBName,
+    branch: Schemas.BranchName,
+    tableName: Schemas.TableName,
+    query: Types.AggregateTableRequestBody
+  ): Promise<Responses.AggResponse> {
+    return operationsByTag.records.aggregateTable({
+      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName },
+      body: query,
+      ...this.extraProps
+    });
+  }
 }
 
 class MigrationRequestsApi {
