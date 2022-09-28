@@ -1,7 +1,7 @@
 import { Dictionary, ExactlyOne } from '../util/types';
 import { Filter } from './filters';
 import { XataRecord } from './record';
-import { SelectableColumn } from './selection';
+import { ColumnsByValue } from './selection';
 
 /**
  * The description of a single aggregation operation. The key represents the
@@ -54,7 +54,7 @@ export type SumAggregation<O extends XataRecord> = {
   /**
    * The column on which to compute the sum. Must be a numeric type.
    */
-  column: SelectableColumn<O>;
+  column: ColumnsByValue<O, number>;
 };
 
 /**
@@ -64,7 +64,7 @@ export type MaxAggregation<O extends XataRecord> = {
   /**
    * The column on which to compute the max. Must be a numeric type.
    */
-  column: SelectableColumn<O>;
+  column: ColumnsByValue<O, number>;
 };
 
 /**
@@ -74,7 +74,7 @@ export type MinAggregation<O extends XataRecord> = {
   /**
    * The column on which to compute the min. Must be a numeric type.
    */
-  column: SelectableColumn<O>;
+  column: ColumnsByValue<O, number>;
 };
 
 /**
@@ -84,7 +84,7 @@ export type AverageAggregation<O extends XataRecord> = {
   /**
    * The column on which to compute the average. Must be a numeric type.
    */
-  column: SelectableColumn<O>;
+  column: ColumnsByValue<O, number>;
 };
 
 /**
@@ -94,7 +94,7 @@ export type UniqueCountAggregation<O extends XataRecord> = {
   /**
    * The column from where to count the unique values.
    */
-  column: SelectableColumn<O>;
+  column: ColumnsByValue<O, any>;
   /**
    * The threshold under which the unique count is exact. If the number of unique
    * values in the column is higher than this threshold, the results are approximative.
@@ -110,7 +110,7 @@ export type DateHistogramAggregation<O extends XataRecord> = {
   /**
    * The column to use for bucketing. Must be of type datetime.
    */
-  column: SelectableColumn<O>;
+  column: ColumnsByValue<O, Date>;
   /**
    * The fixed interval to use when bucketing.
    * It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
@@ -142,7 +142,7 @@ export type TopValuesAggregation<O extends XataRecord> = {
   /**
    * The column to use for bucketing. Accepted types are `string`, `email`, `int`, `float`, or `bool`.
    */
-  column: SelectableColumn<O>;
+  column: ColumnsByValue<O, string | number | boolean>;
   aggs?: Dictionary<AggregationExpression<O>>;
   /**
    * The maximum number of unique values to return.
@@ -160,7 +160,7 @@ export type NumericHistogramAggregation<O extends XataRecord> = {
   /**
    * The column to use for bucketing. Must be of numeric type.
    */
-  column: SelectableColumn<O>;
+  column: ColumnsByValue<O, number>;
   /**
    * The numeric interval to use for bucketing. The resulting buckets will be ranges
    * with this value as size.
@@ -192,8 +192,29 @@ type AggregationExpressionResultTypes = {
   numericHistogram: NumericHistogramAggregationResult;
 };
 
-type DateHistogramAggregationResult = any;
+// TODO: Improve this type
+type DateHistogramAggregationResult = {
+  values?: {
+    $key?: string | number;
+    $count?: number;
+    [key: string]: any;
+  }[];
+};
 
-type TopValuesAggregationResult = any;
+// TODO: Improve this type
+type TopValuesAggregationResult = {
+  values?: {
+    $key?: string | number;
+    $count?: number;
+    [key: string]: any;
+  }[];
+};
 
-type NumericHistogramAggregationResult = any;
+// TODO: Improve this type
+type NumericHistogramAggregationResult = {
+  values?: {
+    $key?: string | number;
+    $count?: number;
+    [key: string]: any;
+  }[];
+};

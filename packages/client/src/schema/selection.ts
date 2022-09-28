@@ -12,6 +12,22 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   // Nested properties of the lower levels
   | NestedColumns<O, RecursivePath>;
 
+// Private: Returns columns ending with a wildcard
+type WildcardColumns<O> = Values<{
+  [K in SelectableColumn<O>]: K extends `${string}*` ? K : never;
+}>;
+
+// Public: Utility type to get a union with the selectable columns of an object by a given type
+export type ColumnsByValue<O extends XataRecord, Value> = Values<{
+  [K in SelectableColumn<O>]: ValueAtColumn<O, K> extends infer C
+    ? C extends Value
+      ? K extends WildcardColumns<O>
+        ? never
+        : K
+      : never
+    : never;
+}>;
+
 // Public: Utility type to get the XataRecord built from a list of selected columns
 export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]> = XataRecord<O> &
   // For each column, we get its nested value and join it as an intersection
