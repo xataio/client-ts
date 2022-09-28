@@ -86,13 +86,16 @@ export async function setUpTestEnvironment(
   };
 
   await api.tables.createTable(workspace, database, 'main', 'teams');
+  await api.tables.createTable(workspace, database, 'main', 'pets');
   await api.tables.createTable(workspace, database, 'main', 'users');
 
   const teamColumns = schema.tables.find(({ name }) => name === 'teams')?.columns;
+  const petColumns = schema.tables.find(({ name }) => name === 'pets')?.columns;
   const userColumns = schema.tables.find(({ name }) => name === 'users')?.columns;
-  if (!teamColumns || !userColumns) throw new Error('Unable to find tables');
+  if (!teamColumns || !userColumns || !petColumns) throw new Error('Unable to find tables');
 
   await api.tables.setTableSchema(workspace, database, 'main', 'teams', { columns: teamColumns });
+  await api.tables.setTableSchema(workspace, database, 'main', 'pets', { columns: petColumns });
   await api.tables.setTableSchema(workspace, database, 'main', 'users', { columns: userColumns });
 
   let span: Span | undefined;

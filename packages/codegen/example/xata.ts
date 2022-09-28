@@ -7,6 +7,7 @@ const tables = [
     columns: [
       { name: 'name', type: 'string' },
       { name: 'description', type: 'text' },
+      { name: 'labels', type: 'multiple' },
       { name: 'index', type: 'int' },
       { name: 'rating', type: 'float' },
       { name: 'founded_date', type: 'datetime' },
@@ -27,7 +28,7 @@ const tables = [
     name: 'users',
     columns: [
       { name: 'email', type: 'email', unique: true },
-      { name: 'name', type: 'string', notNull: true },
+      { name: 'name', type: 'string' },
       {
         name: 'settings',
         type: 'object',
@@ -38,7 +39,6 @@ const tables = [
         ]
       },
       { name: 'full_name', type: 'string', notNull: true },
-      { name: 'email', type: 'email' },
       { name: 'index', type: 'int' },
       { name: 'rating', type: 'float' },
       { name: 'birthDate', type: 'datetime' },

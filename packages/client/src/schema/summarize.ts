@@ -6,6 +6,7 @@ export type SummarizeExpression<O extends XataRecord> = ExactlyOne<{
   count: ColumnsByValue<O, any>;
 }>;
 
+// TODO: THIS IS NOT CORRECT
 export type SummarizeResult<Record extends XataRecord, Expression extends Dictionary<SummarizeExpression<Record>>> = {
   summaries: {
     [K in keyof Expression]: SummarizeResultItem<Record, Expression[K]>;

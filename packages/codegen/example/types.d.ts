@@ -12,6 +12,10 @@ declare const tables: readonly [
         readonly type: 'text';
       },
       {
+        readonly name: 'labels';
+        readonly type: 'multiple';
+      },
+      {
         readonly name: 'index';
         readonly type: 'int';
       },
@@ -65,7 +69,6 @@ declare const tables: readonly [
       {
         readonly name: 'name';
         readonly type: 'string';
-        readonly notNull: true;
       },
       {
         readonly name: 'settings';
@@ -89,10 +92,6 @@ declare const tables: readonly [
         readonly name: 'full_name';
         readonly type: 'string';
         readonly notNull: true;
-      },
-      {
-        readonly name: 'email';
-        readonly type: 'email';
       },
       {
         readonly name: 'index';

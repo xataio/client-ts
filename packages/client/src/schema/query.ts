@@ -1,8 +1,8 @@
-import { Schemas } from '../api';
+import { Schemas, summarizeTable } from '../api';
 import { FilterExpression } from '../api/schemas';
 import { compact, isDefined, isObject, isString, isStringArray, toBase64 } from '../util/lang';
-import { OmitBy, RequiredBy } from '../util/types';
-import { Filter } from './filters';
+import { Dictionary, OmitBy, RequiredBy } from '../util/types';
+import { cleanFilter, Filter } from './filters';
 import {
   CursorNavigationOptions,
   isCursorPaginationOptions,
@@ -15,9 +15,10 @@ import {
   RecordArray
 } from './pagination';
 import { XataRecord } from './record';
-import { Repository } from './repository';
+import { Repository, RestRepository } from './repository';
 import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
-import { SortDirection, SortFilter } from './sorting';
+import { buildSortFilter, SortDirection, SortFilter } from './sorting';
+import { SummarizeExpression, SummarizeResult } from './summarize';
 
 type BaseOptions<T extends XataRecord> = {
   columns?: SelectableColumn<T>[];
@@ -46,7 +47,7 @@ export type QueryOptions<T extends XataRecord> = BaseOptions<T> & (CursorQueryOp
  */
 export class Query<Record extends XataRecord, Result extends XataRecord = Record> implements Paginable<Record, Result> {
   #table: { name: string; schema?: Schemas.Table };
-  #repository: Repository<Record>;
+  #repository: RestRepository<Record>;
   #data: QueryOptions<Record> = { filter: {} };
 
   // Implements pagination
@@ -54,7 +55,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   readonly records: RecordArray<Result> = new RecordArray<Result>(this, []);
 
   constructor(
-    repository: Repository<Record> | null,
+    repository: RestRepository<Record> | null,
     table: { name: string; schema?: Schemas.Table },
     data: Partial<QueryOptions<Record>>,
     rawParent?: Partial<QueryOptions<Record>>
@@ -463,7 +464,21 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     return records[0] as unknown as Result;
   }
 
-  //async summarize<Expression extends Dictionary<SummarizeExpression<Record>>>(expression: Expression): Promise<any> {}
+  async summarize<Expression extends Dictionary<SummarizeExpression<Record>>>(
+    params: {
+      summaries?: Expression;
+      // TODO: Not sure about this type
+      summariesFilter?: FilterExpression;
+      // TODO: Not sure about this type
+      filter?: FilterExpression;
+      columns?: SelectableColumn<Record>[];
+      sort?: SortFilter<Record> | SortFilter<Record>[];
+    } = {}
+  ): Promise<SummarizeResult<Record, Expression>> {
+    const { summaries, summariesFilter, ...options } = params;
+    const query = new Query<Record, Result>(this.#repository, this.#table, options, this.#data);
+    return this.#repository.summarizeTable(query, summaries, summariesFilter) as any;
+  }
 
   /**
    * Builds a new query object adding a cache TTL in milliseconds.

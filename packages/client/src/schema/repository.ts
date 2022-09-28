@@ -10,6 +10,7 @@ import {
   queryTable,
   Schemas,
   searchTable,
+  summarizeTable,
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
@@ -23,12 +24,13 @@ import { Dictionary } from '../util/types';
 import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
 import { CacheImpl } from './cache';
-import { Filter } from './filters';
+import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
+import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
 
 /**
@@ -1373,17 +1375,15 @@ export class RestRepository<Record extends XataRecord>
 
       const data = query.getQueryOptions();
 
-      const body = {
-        filter: cleanFilter(data.filter),
-        sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
-        page: data.pagination,
-        columns: data.columns
-      };
-
       const fetchProps = await this.#getFetchProps();
       const { meta, records: objects } = await queryTable({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
-        body,
+        body: {
+          filter: cleanFilter(data.filter),
+          sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
+          page: data.pagination,
+          columns: data.columns
+        },
         ...fetchProps
       });
 
@@ -1394,6 +1394,32 @@ export class RestRepository<Record extends XataRecord>
       await this.#setCacheQuery(query, meta, records);
 
       return new Page<Record, Result>(query, meta, records);
+    });
+  }
+
+  async summarizeTable<Result extends XataRecord>(
+    query: Query<Record, Result>,
+    summaries?: Dictionary<SummarizeExpression<Record>>,
+    summariesFilter?: Schemas.FilterExpression
+  ) {
+    return this.#trace('summarize', async () => {
+      const data = query.getQueryOptions();
+
+      const fetchProps = await this.#getFetchProps();
+      const result = await summarizeTable({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        body: {
+          //@ts-ignore TODO FIXME Remove trailing (s)
+          filter: cleanFilter(data.filter),
+          sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
+          columns: data.columns,
+          summaries,
+          summariesFilter
+        },
+        ...fetchProps
+      });
+
+      return result;
     });
   }
 
@@ -1538,16 +1564,6 @@ function extractId(value: any): string | undefined {
   if (isString(value)) return value;
   if (isObject(value) && isString(value.id)) return value.id;
   return undefined;
-}
-
-function cleanFilter(filter?: Schemas.FilterExpression) {
-  if (!filter) return undefined;
-
-  const values = Object.values(filter)
-    .filter(Boolean)
-    .filter((value) => (Array.isArray(value) ? value.length > 0 : true));
-
-  return values.length > 0 ? filter : undefined;
 }
 
 function isValidColumn(columns: string[], column: Schemas.Column) {

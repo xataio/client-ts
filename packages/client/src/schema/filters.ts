@@ -1,3 +1,4 @@
+import { FilterExpression } from '../api/schemas';
 import { SingleOrArray } from '../util/types';
 import { SelectableColumn, ValueAtColumn } from './selection';
 
@@ -109,3 +110,13 @@ export type Filter<T> = T extends Record<string, any>
     ? PropertyFilter<T>
     : BaseApiFilter<T> | NestedApiFilter<T>
   : PropertyFilter<T>;
+
+export function cleanFilter(filter?: FilterExpression) {
+  if (!filter) return undefined;
+
+  const values = Object.values(filter)
+    .filter(Boolean)
+    .filter((value) => (Array.isArray(value) ? value.length > 0 : true));
+
+  return values.length > 0 ? filter : undefined;
+}
