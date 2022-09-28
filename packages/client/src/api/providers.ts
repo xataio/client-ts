@@ -32,3 +32,13 @@ export function isHostProviderAlias(alias: HostProvider | string): alias is Host
 export function isHostProviderBuilder(builder: HostProvider): builder is ProviderBuilder {
   return isObject(builder) && isString(builder.main) && isString(builder.workspaces);
 }
+
+export function parseProviderString(provider = 'production'): HostProvider | null {
+  if (isHostProviderAlias(provider)) {
+    return provider;
+  }
+
+  const [main, workspaces] = provider.split(',');
+  if (!main || !workspaces) return null;
+  return { main, workspaces };
+}

@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { Miniflare } from 'miniflare';
+import { Log, LogLevel, Miniflare } from 'miniflare';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers } from '../../workers.js';
 
@@ -25,33 +25,47 @@ export default class WorkersCompile extends BaseCommand {
     const { databaseURL } = await this.getDatabaseURL(flags.db);
     const { apiKey } = (await this.getProfile()) ?? {};
 
-    const { results } = await buildWatcher({
-      action: (path) => compileWorkers(path),
+    buildWatcher({
+      compile: (path) => compileWorkers(path),
+      run: async (results) => {
+        const mounts = results.flat().map(({ name, modules, main }) => [
+          name,
+          {
+            modules: true,
+            script: modules.find(({ name }) => name === main)?.content ?? modules[0].content,
+            bindings: {
+              XATA_API_KEY: apiKey,
+              XATA_DATABASE_URL: databaseURL
+            },
+            routes: [`http://localhost:${watchPort}/${name}`]
+          }
+        ]);
+
+        const miniflare = new Miniflare({
+          mounts: Object.fromEntries(mounts),
+          scriptRequired: false,
+          liveReload: true,
+          log: new Log(LogLevel.DEBUG)
+        });
+
+        const server = await miniflare.createServer();
+
+        try {
+          server.listen(watchPort, () => {
+            this.info(`Listening on port ${watchPort}`);
+          });
+        } catch (e) {
+          console.error("Couldn't start server", e);
+        }
+
+        return () => {
+          return new Promise((resolve) => {
+            server.close(() => resolve());
+          });
+        };
+      },
       included: flags.include?.split(','),
       ignored: flags.ignore?.split(',')
-    });
-
-    const mounts = results.flat().map(({ name, modules, main }) => [
-      name,
-      {
-        modules: true,
-        script: modules.find(({ name }) => name === main)?.content ?? modules[0].content,
-        bindings: {
-          XATA_API_KEY: apiKey,
-          XATA_DATABASE_URL: databaseURL
-        },
-        routes: [`http://localhost:${watchPort}/${name}`]
-      }
-    ]);
-
-    const miniflare = new Miniflare({
-      mounts: Object.fromEntries(mounts)
-    });
-
-    const server = await miniflare.createServer();
-
-    server.listen(watchPort, () => {
-      this.info(`Listening on port ${watchPort}`);
     });
   }
 }

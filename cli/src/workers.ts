@@ -9,11 +9,12 @@ import resolve from '@rollup/plugin-node-resolve';
 import virtual from '@rollup/plugin-virtual';
 import chokidar from 'chokidar';
 import { OutputChunk, rollup } from 'rollup';
-import esbuild from 'rollup-plugin-esbuild';
+import ts from 'typescript';
 import { z } from 'zod';
 
 type BuildWatcherOptions<T> = {
-  action: (path: string) => Promise<T>;
+  compile: (path: string) => Promise<T[]>;
+  run?: (modules: T[]) => Promise<() => Promise<void>>;
   included?: Array<string>;
   ignored?: Array<string | RegExp>;
 };
@@ -30,103 +31,117 @@ const watcherIncludePaths = [
 ];
 const watcherIgnorePaths = [/(^|[/\\])\../, 'dist/*', 'node_modules/*'];
 
-export function buildWatcher<T>({
-  action,
+export function buildWatcher<T extends WorkerScript>({
+  compile,
+  run,
   included = watcherIncludePaths,
   ignored = watcherIgnorePaths
-}: BuildWatcherOptions<T>): Promise<{ watcher: chokidar.FSWatcher; results: T[] }> {
-  return new Promise((resolve, reject) => {
-    const watcher = chokidar.watch(included, { ignored, cwd: process.cwd() });
+}: BuildWatcherOptions<T>): { watcher: chokidar.FSWatcher } {
+  const watcher = chokidar.watch(included, { ignored, cwd: process.cwd() });
 
-    const init: Promise<T>[] = [];
+  let stopServer: () => Promise<void> | undefined;
+  const modules: Record<string, T[]> = {};
 
-    watcher
-      .on('add', (path) => {
-        console.log(`Added ${path}`);
-        init.push(action(path));
-      })
-      .on('change', async (path) => {
-        console.log(`Changed ${path}`);
-        await action(path);
-      })
-      .on('error', () => reject(new Error('Watcher error')))
-      .on('ready', async () => {
-        console.log('Watcher ready');
-        await Promise.all(init).then((results) => resolve({ watcher, results }));
-      });
-  });
+  const updateModule = async (path: string) => {
+    modules[path] = await compile(path);
+    if (run) {
+      if (stopServer) await stopServer();
+      stopServer = await run(Object.values(modules).flat());
+    }
+  };
+
+  watcher
+    .on('add', async (path) => {
+      modules[path] = await compile(path);
+    })
+    .on('change', updateModule)
+    .on('error', () => {
+      throw new Error('Watcher error');
+    })
+    .on('ready', async () => {
+      console.log('Watcher ready');
+      if (run) {
+        stopServer = await run(Object.values(modules).flat());
+      }
+    });
+
+  return { watcher };
 }
 
-export async function compileWorkers(file: string) {
+export async function compileWorkers(file: string): Promise<WorkerScript[]> {
   const external: string[] = [];
   const functions: Record<string, string> = {};
 
-  babel.transformFileSync(file, {
-    presets: [presetTypeScript, presetReact],
-    plugins: [
-      (): PluginItem => {
-        return {
-          visitor: {
-            ImportDeclaration: {
-              enter(path) {
-                for (const specifier of path.node.specifiers) {
-                  const binding = path.scope.getBinding(specifier.local.name);
-                  if (!binding) continue;
-                  const refPaths = binding.referencePaths;
-                  for (const refPath of refPaths) {
-                    const usedInWorker = !!refPath.find((path) => {
-                      if (!path.isFunction()) return false;
-                      return isXataWorker(path);
-                    });
+  try {
+    babel.transformFileSync(file, {
+      presets: [presetTypeScript, presetReact],
+      plugins: [
+        (): PluginItem => {
+          return {
+            visitor: {
+              ImportDeclaration: {
+                enter(path) {
+                  for (const specifier of path.node.specifiers) {
+                    const binding = path.scope.getBinding(specifier.local.name);
+                    if (!binding) continue;
+                    const refPaths = binding.referencePaths;
+                    for (const refPath of refPaths) {
+                      const usedInWorker = !!refPath.find((path) => {
+                        if (!path.isFunction()) return false;
+                        return isXataWorker(path);
+                      });
 
-                    if (usedInWorker) {
-                      external.push(path.toString());
+                      if (usedInWorker) {
+                        external.push(path.toString());
+                      }
+                    }
+                  }
+                }
+              },
+              VariableDeclaration: {
+                enter() {
+                  // external.push(path.toString());
+                }
+              },
+              Function: {
+                enter(path) {
+                  if (isXataWorker(path)) {
+                    const args = (path.parent as CallExpression).arguments as any[];
+                    const workerName = args[0]?.value;
+                    if (!workerName || typeof workerName !== 'string') {
+                      console.error(`Found a worker without a name in file ${file}`);
+                    } else {
+                      functions[workerName] = path.toString();
                     }
                   }
                 }
               }
-            },
-            VariableDeclaration: {
-              enter() {
-                // external.push(path.toString());
-              }
-            },
-            Function: {
-              enter(path) {
-                if (isXataWorker(path)) {
-                  const args = (path.parent as CallExpression).arguments as any[];
-                  const workerName = args[0]?.value;
-                  if (!workerName || typeof workerName !== 'string') {
-                    console.error(`Found a worker without a name in file ${file}`);
-                  } else {
-                    functions[workerName] = path.toString();
-                  }
-                }
-              }
             }
-          }
-        };
-      }
-    ]
-  });
+          };
+        }
+      ]
+    });
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
 
   const compiledWorkers: WorkerScript[] = [];
 
-  console.log('Compiling workers...', file);
-
   for (const [name, worker] of Object.entries(functions)) {
     try {
+      const code = workerCode(worker, external);
+      const { outputText: entry } = ts.transpileModule(code, {
+        compilerOptions: {
+          module: ts.ModuleKind.ESNext,
+          target: ts.ScriptTarget.ESNext
+        }
+      });
+
       const bundle = await rollup({
         input: 'entry',
         output: { file: `file://bundle.js`, format: 'es' },
-        plugins: [
-          virtual({
-            entry: workerCode(worker, external)
-          }),
-          resolve(),
-          commonjs(),
-          esbuild({ target: 'es2022' })
-        ]
+        plugins: [virtual({ entry }), resolve(), commonjs()]
       });
 
       const { output } = await bundle.generate({});
