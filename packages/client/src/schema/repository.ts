@@ -1,5 +1,6 @@
 import { SchemaPluginResult } from '.';
 import {
+  aggregateTable,
   bulkInsertTableRecords,
   deleteRecord,
   getBranchDetails,
@@ -20,6 +21,7 @@ import { Boosters } from '../search/boosters';
 import { compact, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { VERSION } from '../version';
+import { AggregationExpression, AggregationResult } from './analytics';
 import { CacheImpl } from './cache';
 import { Filter } from './filters';
 import { Page } from './pagination';
@@ -625,6 +627,14 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       boosters?: Boosters<Record>[];
     }
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
+
+  /**
+   * Aggregates records in the table.
+   */
+  abstract aggregate<Expression extends Dictionary<AggregationExpression<Record>>>(
+    aggregationExpression?: Expression,
+    filter?: Filter<Record>
+  ): Promise<AggregationResult<Record, Expression>>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -1333,6 +1343,23 @@ export class RestRepository<Record extends XataRecord>
 
       // TODO - Column selection not supported by search endpoint yet
       return records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any;
+    });
+  }
+
+  async aggregate<Expression extends Dictionary<AggregationExpression<Record>>>(
+    aggs?: Expression,
+    filter?: Filter<Record>
+  ) {
+    return this.#trace('aggregate', async () => {
+      const fetchProps = await this.#getFetchProps();
+
+      const result = await aggregateTable({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        body: { aggs, filter: filter as Schemas.FilterExpression },
+        ...fetchProps
+      });
+
+      return result as any;
     });
   }
 
