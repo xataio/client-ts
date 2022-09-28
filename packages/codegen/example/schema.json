@@ -92,10 +92,6 @@
           "notNull": true
         },
         {
-          "name": "email",
-          "type": "email"
-        },
-        {
           "name": "index",
           "type": "int"
         },
