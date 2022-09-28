@@ -1,13 +1,12 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { XataClient } from '../../packages/codegen/example/xata';
-import { mockUsers } from '../mock_data';
 import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
 let xata: XataClient;
 let hooks: TestEnvironmentResult['hooks'];
 
 beforeAll(async (ctx) => {
-  const result = await setUpTestEnvironment('aggregations');
+  const result = await setUpTestEnvironment('aggregate');
 
   xata = result.client;
   hooks = result.hooks;
@@ -97,7 +96,7 @@ afterEach(async (ctx) => {
   await hooks.afterEach(ctx);
 });
 
-describe('aggregations', () => {
+describe('aggregate', () => {
   test('no body', async () => {
     const result = await xata.db.teams.aggregate();
     expect(result.aggs.count).toBe(5);

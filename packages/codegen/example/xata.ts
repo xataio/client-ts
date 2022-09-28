@@ -27,7 +27,20 @@ const tables = [
     name: 'users',
     columns: [
       { name: 'email', type: 'email', unique: true },
+      { name: 'name', type: 'string', notNull: true },
+      {
+        name: 'settings',
+        type: 'object',
+        columns: [
+          { name: 'plan', type: 'string' },
+          { name: 'dark', type: 'bool' },
+          { name: 'labels', type: 'multiple' }
+        ]
+      },
       { name: 'full_name', type: 'string', notNull: true },
+      { name: 'email', type: 'email' },
+      { name: 'index', type: 'int' },
+      { name: 'rating', type: 'float' },
       { name: 'birthDate', type: 'datetime' },
       {
         name: 'address',
@@ -37,7 +50,16 @@ const tables = [
           { name: 'zipcode', type: 'int' }
         ]
       },
-      { name: 'team', type: 'link', link: { table: 'teams' } }
+      { name: 'team', type: 'link', link: { table: 'teams' } },
+      { name: 'pet', type: 'link', link: { table: 'pets' } }
+    ]
+  },
+  {
+    name: 'pets',
+    columns: [
+      { name: 'name', type: 'string' },
+      { name: 'type', type: 'string' },
+      { name: 'num_legs', type: 'int' }
     ]
   }
 ] as const;
@@ -51,9 +73,13 @@ export type TeamsRecord = Teams & XataRecord;
 export type Users = InferredTypes['users'];
 export type UsersRecord = Users & XataRecord;
 
+export type Pets = InferredTypes['pets'];
+export type PetsRecord = Pets & XataRecord;
+
 export type DatabaseSchema = {
   teams: TeamsRecord;
   users: UsersRecord;
+  pets: PetsRecord;
 };
 
 const DatabaseClient = buildClient();
