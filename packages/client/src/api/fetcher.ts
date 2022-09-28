@@ -48,6 +48,8 @@ export type FetcherExtraProps = {
   apiKey: string;
   trace: TraceFunction;
   signal?: AbortSignal;
+  clientID?: string;
+  sessionID?: string;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
@@ -106,7 +108,9 @@ export async function fetch<
   apiUrl,
   workspacesApiUrl,
   trace,
-  signal
+  signal,
+  clientID,
+  sessionID
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   return trace(
     `${method.toUpperCase()} ${path}`,
@@ -128,6 +132,8 @@ export async function fetch<
         headers: {
           'Content-Type': 'application/json',
           'User-Agent': `Xata client-ts/${VERSION}`,
+          'X-Xata-Client-ID': clientID ?? '',
+          'X-Xata-Session-ID': sessionID ?? '',
           ...headers,
           ...hostHeader(fullUrl),
           Authorization: `Bearer ${apiKey}`

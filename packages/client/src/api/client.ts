@@ -2,6 +2,7 @@ import { defaultTrace, TraceFunction } from '../schema/tracing';
 import { getAPIKey } from '../util/apiKey';
 import { getFetchImplementation } from '../util/fetch';
 import { isString } from '../util/lang';
+import { generateUUID } from '../util/uuid';
 import type * as Components from './components';
 import type * as Types from './components';
 import { operationsByTag } from './components';
@@ -44,7 +45,8 @@ export class XataApiClient {
       workspacesApiUrl: getHostUrl(provider, 'workspaces'),
       fetchImpl: getFetchImplementation(options.fetch),
       apiKey,
-      trace
+      trace,
+      clientID: generateUUID()
     };
   }
 
