@@ -463,6 +463,8 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     return records[0] as unknown as Result;
   }
 
+  //async summarize<Expression extends Dictionary<SummarizeExpression<Record>>>(expression: Expression): Promise<any> {}
+
   /**
    * Builds a new query object adding a cache TTL in milliseconds.
    * @param ttl The cache TTL in milliseconds.

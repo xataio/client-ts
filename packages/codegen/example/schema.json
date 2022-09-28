@@ -6,12 +6,45 @@
       "columns": [
         {
           "name": "name",
-          "type": "string",
-          "description": "Name of the team"
+          "type": "string"
         },
         {
-          "name": "labels",
-          "type": "multiple"
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "index",
+          "type": "int"
+        },
+        {
+          "name": "rating",
+          "type": "float"
+        },
+        {
+          "name": "founded_date",
+          "type": "datetime"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "settings",
+          "type": "object",
+          "columns": [
+            {
+              "name": "plan",
+              "type": "string"
+            },
+            {
+              "name": "dark",
+              "type": "bool"
+            },
+            {
+              "name": "labels",
+              "type": "multiple"
+            }
+          ]
         },
         {
           "name": "owner",

@@ -6,11 +6,44 @@ declare const tables: readonly [
       {
         readonly name: 'name';
         readonly type: 'string';
-        readonly description: 'Name of the team';
       },
       {
-        readonly name: 'labels';
-        readonly type: 'multiple';
+        readonly name: 'description';
+        readonly type: 'text';
+      },
+      {
+        readonly name: 'index';
+        readonly type: 'int';
+      },
+      {
+        readonly name: 'rating';
+        readonly type: 'float';
+      },
+      {
+        readonly name: 'founded_date';
+        readonly type: 'datetime';
+      },
+      {
+        readonly name: 'email';
+        readonly type: 'email';
+      },
+      {
+        readonly name: 'settings';
+        readonly type: 'object';
+        readonly columns: readonly [
+          {
+            readonly name: 'plan';
+            readonly type: 'string';
+          },
+          {
+            readonly name: 'dark';
+            readonly type: 'bool';
+          },
+          {
+            readonly name: 'labels';
+            readonly type: 'multiple';
+          }
+        ];
       },
       {
         readonly name: 'owner';

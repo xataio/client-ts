@@ -21,7 +21,7 @@ import { Boosters } from '../search/boosters';
 import { compact, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { VERSION } from '../version';
-import { AggregationExpression, AggregationResult } from './analytics';
+import { AggregationExpression, AggregationResult } from './aggregate';
 import { CacheImpl } from './cache';
 import { Filter } from './filters';
 import { Page } from './pagination';
@@ -630,9 +630,12 @@ export abstract class Repository<Record extends XataRecord> extends Query<
 
   /**
    * Aggregates records in the table.
+   * @param expression The aggregations to perform.
+   * @param filter The filter to apply to the queried records.
+   * @returns The requested aggregations.
    */
   abstract aggregate<Expression extends Dictionary<AggregationExpression<Record>>>(
-    aggregationExpression?: Expression,
+    expression?: Expression,
     filter?: Filter<Record>
   ): Promise<AggregationResult<Record, Expression>>;
 
