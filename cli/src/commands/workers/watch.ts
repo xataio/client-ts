@@ -60,7 +60,7 @@ export default class WorkersCompile extends BaseCommand {
 
         return () => {
           return new Promise((resolve) => {
-            server.close(resolve);
+            server.close(() => resolve());
           });
         };
       },
