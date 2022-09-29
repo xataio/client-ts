@@ -127,8 +127,8 @@ describe('aggregate', () => {
 
   test('counts with filters', async () => {
     const result = await xata.db.teams.aggregate({
-      freeCount: { count: '*', filter: { 'settings.plan': 'free' } },
-      paidCount: { count: '*', filter: { 'settings.plan': 'paid' } }
+      freeCount: { count: { filter: { 'settings.plan': 'free' } } },
+      paidCount: { count: { filter: { 'settings.plan': 'paid' } } }
     });
 
     expect(result.aggs.freeCount).toBe(3);
@@ -305,8 +305,8 @@ describe('aggregate', () => {
 });
 
 async function waitForSearchIndexing(): Promise<void> {
-  const { users = [], teams = [] } = await xata.search.byTable('fruits');
-  if (users.length === 0 || teams.length === 0) {
+  const { teams = [] } = await xata.search.byTable('longer');
+  if (teams.length === 0) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return waitForSearchIndexing();
   }
