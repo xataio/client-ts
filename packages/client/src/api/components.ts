@@ -4219,6 +4219,234 @@ export const summarizeTable = (variables: SummarizeTableVariables, signal?: Abor
     signal
   });
 
+export type CPGetDatabaseListPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+};
+
+export type CPGetDatabaseListError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type CPGetDatabaseListVariables = {
+  pathParams: CPGetDatabaseListPathParams;
+} & FetcherExtraProps;
+
+/**
+ * List all databases available in your Workspace.
+ */
+export const cPGetDatabaseList = (variables: CPGetDatabaseListVariables, signal?: AbortSignal) =>
+  fetch<Schemas.CPListDatabasesResponse, CPGetDatabaseListError, undefined, {}, {}, CPGetDatabaseListPathParams>({
+    url: '/workspaces/{workspaceId}/dbs',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type CPCreateDatabasePathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPCreateDatabaseError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type CPCreateDatabaseResponse = {
+  /**
+   * @minLength 1
+   */
+  databaseName?: string;
+  branchName?: string;
+};
+
+export type CPCreateDatabaseRequestBody = {
+  /**
+   * @minLength 1
+   */
+  branchName?: string;
+  /**
+   * @minLength 1
+   */
+  region: string;
+  ui?: {
+    color?: string;
+  };
+  metadata?: Schemas.BranchMetadata;
+};
+
+export type CPCreateDatabaseVariables = {
+  body: CPCreateDatabaseRequestBody;
+  pathParams: CPCreateDatabasePathParams;
+} & FetcherExtraProps;
+
+/**
+ * Create Database with identifier name
+ */
+export const cPCreateDatabase = (variables: CPCreateDatabaseVariables, signal?: AbortSignal) =>
+  fetch<
+    CPCreateDatabaseResponse,
+    CPCreateDatabaseError,
+    CPCreateDatabaseRequestBody,
+    {},
+    {},
+    CPCreateDatabasePathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'put', ...variables, signal });
+
+export type CPDeleteDatabasePathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPDeleteDatabaseError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CPDeleteDatabaseVariables = {
+  pathParams: CPDeleteDatabasePathParams;
+} & FetcherExtraProps;
+
+/**
+ * Delete a database and all of its branches and tables permanently.
+ */
+export const cPDeleteDatabase = (variables: CPDeleteDatabaseVariables, signal?: AbortSignal) =>
+  fetch<undefined, CPDeleteDatabaseError, undefined, {}, {}, CPDeleteDatabasePathParams>({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type CPGetCPDatabaseMetadataPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPGetCPDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CPGetCPDatabaseMetadataVariables = {
+  pathParams: CPGetCPDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Retrieve metadata of the given database
+ */
+export const cPGetCPDatabaseMetadata = (variables: CPGetCPDatabaseMetadataVariables, signal?: AbortSignal) =>
+  fetch<Schemas.CPDatabaseMetadata, CPGetCPDatabaseMetadataError, undefined, {}, {}, CPGetCPDatabaseMetadataPathParams>(
+    { url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'get', ...variables, signal }
+  );
+
+export type CPUpdateCPDatabaseMetadataPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPUpdateCPDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CPUpdateCPDatabaseMetadataRequestBody = {
+  ui?: {
+    /**
+     * @minLength 1
+     */
+    color?: string;
+  };
+};
+
+export type CPUpdateCPDatabaseMetadataVariables = {
+  body?: CPUpdateCPDatabaseMetadataRequestBody;
+  pathParams: CPUpdateCPDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Update the color of the selected database
+ */
+export const cPUpdateCPDatabaseMetadata = (variables: CPUpdateCPDatabaseMetadataVariables, signal?: AbortSignal) =>
+  fetch<
+    Schemas.CPDatabaseMetadata,
+    CPUpdateCPDatabaseMetadataError,
+    CPUpdateCPDatabaseMetadataRequestBody,
+    {},
+    {},
+    CPUpdateCPDatabaseMetadataPathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'patch', ...variables, signal });
+
 export const operationsByTag = {
   users: { getUser, updateUser, deleteUser, getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
   workspaces: {
@@ -4301,5 +4529,12 @@ export const operationsByTag = {
     searchTable,
     searchBranch,
     summarizeTable
+  },
+  databases: {
+    cPGetDatabaseList,
+    cPCreateDatabase,
+    cPDeleteDatabase,
+    cPGetCPDatabaseMetadata,
+    cPUpdateCPDatabaseMetadata
   }
 };
