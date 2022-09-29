@@ -10,6 +10,7 @@ import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStra
 import { getCurrentBranchName, getDatabaseURL } from './util/config';
 import { getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
+import { generateUUID } from './util/uuid';
 
 export type BaseClientOptions = {
   fetch?: FetchImpl;
@@ -22,6 +23,7 @@ export type BaseClientOptions = {
 
 type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch'>> & {
   branch: () => Promise<string | undefined>;
+  clientID: string;
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -92,10 +94,17 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         throw new Error('Option databaseURL is required');
       }
 
-      return { fetch, databaseURL, apiKey, branch, cache, trace };
+      return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID() };
     }
 
-    async #getFetchProps({ fetch, apiKey, databaseURL, branch, trace }: SafeOptions): Promise<FetcherExtraProps> {
+    async #getFetchProps({
+      fetch,
+      apiKey,
+      databaseURL,
+      branch,
+      trace,
+      clientID
+    }: SafeOptions): Promise<FetcherExtraProps> {
       const branchValue = await this.#evaluateBranch(branch);
       if (!branchValue) throw new Error('Unable to resolve branch value');
 
@@ -109,7 +118,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
           const newPath = path.replace(/^\/db\/[^/]+/, hasBranch !== undefined ? `:${branchValue}` : '');
           return databaseURL + newPath;
         },
-        trace
+        trace,
+        clientID
       };
     }
 
