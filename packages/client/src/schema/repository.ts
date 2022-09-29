@@ -1409,7 +1409,6 @@ export class RestRepository<Record extends XataRecord>
       const result = await summarizeTable({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
         body: {
-          //@ts-ignore TODO FIXME Remove trailing (s)
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
           columns: data.columns,
