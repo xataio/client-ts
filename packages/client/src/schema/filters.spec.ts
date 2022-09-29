@@ -253,6 +253,14 @@ const filterWithInvalidNestedObjectPropertyType: Filter<Record> = { settings: { 
 // @ts-expect-error
 const filterWithInvalidOperator: Filter<Record> = { name: { $is: 42 } };
 
+// Filter with wildcard is not allowed
+// @ts-expect-error
+const filterWithWildcardIsNotAllowed: Filter<Record> = { '*': { $is: 'foo' } };
+
+// Filter with link wildcard is not allowed
+// @ts-expect-error
+const filterWithLinkWildcardIsNotAllowed: Filter<Record> = { 'settings.*': { $is: 'foo' } };
+
 test('fake test', () => {
   // This is a fake test to make sure that the type definitions in this file are working
 });
