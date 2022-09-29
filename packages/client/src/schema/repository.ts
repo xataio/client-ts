@@ -1382,7 +1382,7 @@ export class RestRepository<Record extends XataRecord>
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
           page: data.pagination,
-          columns: data.columns
+          columns: data.columns ?? ['*']
         },
         ...fetchProps
       });

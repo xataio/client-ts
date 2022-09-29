@@ -187,34 +187,16 @@ type AggregationExpressionResultTypes = {
   min: number;
   average: number;
   uniqueCount: number;
-  dateHistogram: DateHistogramAggregationResult;
-  topValues: TopValuesAggregationResult;
-  numericHistogram: NumericHistogramAggregationResult;
+  dateHistogram: ComplexAggregationResult;
+  topValues: ComplexAggregationResult;
+  numericHistogram: ComplexAggregationResult;
 };
 
-// TODO: Improve this type
-type DateHistogramAggregationResult = {
-  values?: {
-    $key?: string | number;
-    $count?: number;
+type ComplexAggregationResult = {
+  values: Array<{
+    $key: string | number;
+    $count: number;
+    // TODO: Improve this type
     [key: string]: any;
-  }[];
-};
-
-// TODO: Improve this type
-type TopValuesAggregationResult = {
-  values?: {
-    $key?: string | number;
-    $count?: number;
-    [key: string]: any;
-  }[];
-};
-
-// TODO: Improve this type
-type NumericHistogramAggregationResult = {
-  values?: {
-    $key?: string | number;
-    $count?: number;
-    [key: string]: any;
-  }[];
+  }>;
 };
