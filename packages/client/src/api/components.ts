@@ -4143,7 +4143,6 @@ export type SummarizeTableRequestBody = {
   columns?: Schemas.ColumnsProjection;
   summaries?: Schemas.SummaryExpressionList;
   sort?: Schemas.SortExpression;
-  summariesFilter?: Schemas.FilterExpression;
 };
 
 export type SummarizeTableVariables = {
@@ -4153,63 +4152,44 @@ export type SummarizeTableVariables = {
 
 /**
  * This endpoint allows you to (optionally) define groups, and then to run
- * calculations on the values in each group. This is most helpful when
- * you'd like to understand the data you have in your database.
+ * calculations on the values in each group. This is most helpful when you'd
+ * like to understand the data you have in your database.
  *
- * A group is a combination of unique values. If you create a group for
- * `sold_by`, `product_name`, we will return one row for every combination
- * of `sold_by` and `product_name` you have in your database. When you
- * want to calculate statistics, you define these groups and ask Xata to
- * calculate data on each group.
+ * A group is a combination of unique values. If you create a group for `sold_by`,
+ * `product_name`, we will return one row for every combination of `sold_by` and
+ * `product_name` you have in your database. When you want to calculate statistics,
+ * you define these groups and ask Xata to calculate data on each group.
  *
  * **Some questions you can ask of your data:**
  *
  * How many records do I have in this table?
- * - Set `columns: []` as we we want data from the entire table, so we ask
- * for no groups.
- * - Set `summaries: {"total": {"count": "*"}}` in order to see the count
- * of all records. We use `count: *` here we'd like to know the total
- * amount of rows; ignoring whether they are `null` or not.
+ * - Set `columns: []` as we we want data from the entire table, so we ask for no groups.
+ * - Set `summaries: {"total": {"count": "*"}}` in order to see the count of all records.
+ * We use `count: *` here we'd like to know the total amount of rows; ignoring whether
+ * they are `null` or not.
  *
- * What are the top total sales for each product in July 2022 and sold
- * more than 10 units?
- * - Set `filter: {soldAt: {
- *   "$ge": "2022-07-01T00:00:00.000Z",
- *   "$lt": "2022-08-01T00:00:00.000Z"}
- * }`
- * in order to limit the result set to sales recorded in July 2022.
- * - Set `columns: [product_name]` as we'd like to run calculations on
- * each unique product name in our table. Setting `columns` like this will
- * produce one row per unique product name.
- * - Set `summaries: {"total_sales": {"count": "product_name"}}` as we'd
- * like to create a field called "total_sales" for each group. This field
- * will count all rows in each group with non-null product names.
- * - Set `sort: [{"total_sales": "desc"}]` in order to bring the rows with
- * the highest total_sales field to the top.
- * - Set `summariesFilters: {"total_sales": {"$ge": 10}}` to only send back data
- * with greater than or equal to 10 units.
+ * What are the top total sales for each product in July 2022?
+ * - Set `filter: {soldAt: {"$ge": "2022-07-01T00:00:00.000Z", "$lt": "2022-08-01T00:00:00.000Z"}}` in order to limit the result set to sales recorded in July 2022.
+ * - Set `columns: [product_name]` as we'd like to run calculations on each unique product
+ * name in our table. Setting `columns` like this will produce one row per unique product
+ * name.
+ * - Set `summaries: {"total_sales": {"count": "product_name"}}` as we'd like to create a
+ * field called "total_sales" for each group. This field will count all rows in each group
+ * with non-null product names.
+ * - Set `sort: [{"total_sales": "desc"}]` in order to bring the rows with the highest
+ * total_sales field to the top.
  *
- * `columns`: tells Xata how to create each group. If you add `product_id`
- * we will create a new group for every unique `product_id`.
+ * `columns`: tells Xata how to create each group. If you add `product_id` we will create
+ * a new group for every unique `product_id`.
  *
  * `summaries`: tells Xata which calculations to run on each group.
  *
- * `sort`: tells Xata in which order you'd like to see results. You may
- * sort by fields specified in `columns` as well as the summary names
- * defined in `summaries`.
+ * `sort`: tells Xata in which order you'd like to see results. You may sort by fields
+ * specified in `columns` as well as the summary names defined in `summaries`.
  *
- * note: Sorting on summarized values can be slower on very large tables;
- * this will impact your rate limit significantly more than other queries.
- * Try use `filter` [coming soon] to reduce the amount of data being
- * processed in order to reduce impact on your limits.
- *
- * `summariesFilter`: tells Xata how to filter the results of a summary.
- * It has the same syntax as `filter`, however, by using `summariesFilter`
- * you may also filter on the results of a query.
- *
- * note: This is a much slower to use than `filter`. We recommend using
- * `filter` wherever possible and `summariesFilter` when it's not
- * possible to use `filter`.
+ * note: Sorting on summarized values can be slower on very large tables; this will impact
+ * your rate limit significantly more than other queries. Try use `filter` [coming soon] to
+ * reduce the amount of data being processed in order to reduce impact on your limits.
  */
 export const summarizeTable = (variables: SummarizeTableVariables, signal?: AbortSignal) =>
   fetch<Responses.SummarizeResponse, SummarizeTableError, SummarizeTableRequestBody, {}, {}, SummarizeTablePathParams>({
@@ -4218,6 +4198,234 @@ export const summarizeTable = (variables: SummarizeTableVariables, signal?: Abor
     ...variables,
     signal
   });
+
+export type CPGetDatabaseListPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+};
+
+export type CPGetDatabaseListError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type CPGetDatabaseListVariables = {
+  pathParams: CPGetDatabaseListPathParams;
+} & FetcherExtraProps;
+
+/**
+ * List all databases available in your Workspace.
+ */
+export const cPGetDatabaseList = (variables: CPGetDatabaseListVariables, signal?: AbortSignal) =>
+  fetch<Schemas.CPListDatabasesResponse, CPGetDatabaseListError, undefined, {}, {}, CPGetDatabaseListPathParams>({
+    url: '/workspaces/{workspaceId}/dbs',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type CPCreateDatabasePathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPCreateDatabaseError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type CPCreateDatabaseResponse = {
+  /**
+   * @minLength 1
+   */
+  databaseName?: string;
+  branchName?: string;
+};
+
+export type CPCreateDatabaseRequestBody = {
+  /**
+   * @minLength 1
+   */
+  branchName?: string;
+  /**
+   * @minLength 1
+   */
+  region: string;
+  ui?: {
+    color?: string;
+  };
+  metadata?: Schemas.BranchMetadata;
+};
+
+export type CPCreateDatabaseVariables = {
+  body: CPCreateDatabaseRequestBody;
+  pathParams: CPCreateDatabasePathParams;
+} & FetcherExtraProps;
+
+/**
+ * Create Database with identifier name
+ */
+export const cPCreateDatabase = (variables: CPCreateDatabaseVariables, signal?: AbortSignal) =>
+  fetch<
+    CPCreateDatabaseResponse,
+    CPCreateDatabaseError,
+    CPCreateDatabaseRequestBody,
+    {},
+    {},
+    CPCreateDatabasePathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'put', ...variables, signal });
+
+export type CPDeleteDatabasePathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPDeleteDatabaseError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CPDeleteDatabaseVariables = {
+  pathParams: CPDeleteDatabasePathParams;
+} & FetcherExtraProps;
+
+/**
+ * Delete a database and all of its branches and tables permanently.
+ */
+export const cPDeleteDatabase = (variables: CPDeleteDatabaseVariables, signal?: AbortSignal) =>
+  fetch<undefined, CPDeleteDatabaseError, undefined, {}, {}, CPDeleteDatabasePathParams>({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type CPGetCPDatabaseMetadataPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPGetCPDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CPGetCPDatabaseMetadataVariables = {
+  pathParams: CPGetCPDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Retrieve metadata of the given database
+ */
+export const cPGetCPDatabaseMetadata = (variables: CPGetCPDatabaseMetadataVariables, signal?: AbortSignal) =>
+  fetch<Schemas.CPDatabaseMetadata, CPGetCPDatabaseMetadataError, undefined, {}, {}, CPGetCPDatabaseMetadataPathParams>(
+    { url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'get', ...variables, signal }
+  );
+
+export type CPUpdateCPDatabaseMetadataPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPUpdateCPDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CPUpdateCPDatabaseMetadataRequestBody = {
+  ui?: {
+    /**
+     * @minLength 1
+     */
+    color?: string;
+  };
+};
+
+export type CPUpdateCPDatabaseMetadataVariables = {
+  body?: CPUpdateCPDatabaseMetadataRequestBody;
+  pathParams: CPUpdateCPDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Update the color of the selected database
+ */
+export const cPUpdateCPDatabaseMetadata = (variables: CPUpdateCPDatabaseMetadataVariables, signal?: AbortSignal) =>
+  fetch<
+    Schemas.CPDatabaseMetadata,
+    CPUpdateCPDatabaseMetadataError,
+    CPUpdateCPDatabaseMetadataRequestBody,
+    {},
+    {},
+    CPUpdateCPDatabaseMetadataPathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'patch', ...variables, signal });
 
 export const operationsByTag = {
   users: { getUser, updateUser, deleteUser, getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
@@ -4301,5 +4509,12 @@ export const operationsByTag = {
     searchTable,
     searchBranch,
     summarizeTable
+  },
+  databases: {
+    cPGetDatabaseList,
+    cPCreateDatabase,
+    cPDeleteDatabase,
+    cPGetCPDatabaseMetadata,
+    cPUpdateCPDatabaseMetadata
   }
 };
