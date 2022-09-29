@@ -182,10 +182,10 @@ export type NumericHistogramAggregation<O extends XataRecord> = {
 
 type AggregationExpressionResultTypes = {
   count: number;
-  sum: number;
-  max: number;
-  min: number;
-  average: number;
+  sum: number | null;
+  max: number | null;
+  min: number | null;
+  average: number | null;
   uniqueCount: number;
   dateHistogram: ComplexAggregationResult;
   topValues: ComplexAggregationResult;
