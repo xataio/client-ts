@@ -4219,6 +4219,59 @@ export const summarizeTable = (variables: SummarizeTableVariables, signal?: Abor
     signal
   });
 
+export type AggregateTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+};
+
+export type AggregateTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type AggregateTableRequestBody = {
+  filter?: Schemas.FilterExpression;
+  aggs?: Schemas.AggExpressionMap;
+};
+
+export type AggregateTableVariables = {
+  body?: AggregateTableRequestBody;
+  pathParams: AggregateTablePathParams;
+} & FetcherExtraProps;
+
+/**
+ * This endpoint allows you to run aggragations (analytics) on the data from one table.
+ * While the summary endpoint is served from a transactional store and the results are strongly
+ * consistent, the aggregate endpoint is served from our columnar store and the results are
+ * only eventually consistent. On the other hand, the aggregate endpoint uses a
+ * store that is more appropiate for analytics, makes use of approximative algorithms
+ * (e.g for cardinality), and is generally faster and can do more complex aggregations.
+ */
+export const aggregateTable = (variables: AggregateTableVariables, signal?: AbortSignal) =>
+  fetch<Responses.AggResponse, AggregateTableError, AggregateTableRequestBody, {}, {}, AggregateTablePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/aggregate',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type CPGetDatabaseListPathParams = {
   /**
    * Workspace ID
@@ -4528,7 +4581,8 @@ export const operationsByTag = {
     queryTable,
     searchTable,
     searchBranch,
-    summarizeTable
+    summarizeTable,
+    aggregateTable
   },
   databases: {
     cPGetDatabaseList,
