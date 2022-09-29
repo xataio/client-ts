@@ -562,7 +562,9 @@ export type AggExpressionMap = {
 };
 
 /**
- * The description of a single aggregation operation. The key represents the
+ * The description of a single aggregation operation. It is an object with only one key-value pair.
+ * The key represents the aggreagtion type, while the value is an object with the configuration of
+ * the aggreagtion.
  *
  * @x-go-type xata.AggExpression
  */
@@ -990,11 +992,12 @@ export type RecordsMetadata = {
 export type AggResponse =
   | number
   | {
-      values?: {
-        $key?: string | number;
-        $count?: number;
-        additionalProperties?: AggResponse;
-      }[];
+      values: ({
+        $key: string | number;
+        $count: number;
+      } & {
+        [key: string]: AggResponse;
+      })[];
     };
 
 /**

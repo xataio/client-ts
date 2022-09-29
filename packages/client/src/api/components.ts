@@ -4258,17 +4258,18 @@ export type AggregateTableVariables = {
 
 /**
  * This endpoint allows you to run aggragations (analytics) on the data from one table.
- * While the summary endpoint is served from PostgreSQL and the results are strongly
- * consistent, the aggregate endpoint is served from Elasticsearch and the results are
- * only eventaully consistent. On the other hand, the aggregate endpoint uses a columnar
+ * While the summary endpoint is served from a transactional store and the results are strongly
+ * consistent, the aggregate endpoint is served from our columnar store and the results are
+ * only eventually consistent. On the other hand, the aggregate endpoint uses a
  * store that is more appropiate for analytics, makes use of approximative algorithms
  * (e.g for cardinality), and is generally faster and can do more complex aggregations.
  */
-export const aggregateTable = (variables: AggregateTableVariables) =>
+export const aggregateTable = (variables: AggregateTableVariables, signal?: AbortSignal) =>
   fetch<Responses.AggResponse, AggregateTableError, AggregateTableRequestBody, {}, {}, AggregateTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/aggregate',
     method: 'post',
-    ...variables
+    ...variables,
+    signal
   });
 
 export const operationsByTag = {
