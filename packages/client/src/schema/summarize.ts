@@ -1,9 +1,12 @@
-import { Dictionary, ExactlyOne } from '../util/types';
+import { FilterExpression } from '../api/schemas';
+import { Dictionary, ExactlyOne, SingleOrArray, StringKeys } from '../util/types';
 import { XataRecord } from './record';
-import { ColumnsByValue } from './selection';
+import { ColumnsByValue, SelectableColumn } from './selection';
+import { SortFilter } from './sorting';
 
 export type SummarizeExpression<O extends XataRecord> = ExactlyOne<{
-  count: ColumnsByValue<O, any>;
+  // DAN: [question] Do we allow link.* here?
+  count: ColumnsByValue<O, any> | '*';
 }>;
 
 // TODO: THIS IS NOT CORRECT
@@ -26,4 +29,18 @@ type SummarizeResultItem<
 
 type SummarizeExpressionResultTypes = {
   count: number;
+};
+
+type SummarizeColumns<Record extends XataRecord, Expression extends Dictionary<SummarizeExpression<Record>>> =
+  | SelectableColumn<Record>
+  | StringKeys<Expression>;
+
+export type SummarizeParams<Record extends XataRecord, Expression extends Dictionary<SummarizeExpression<Record>>> = {
+  summaries?: Expression;
+  // TODO: Not sure about this type
+  summariesFilter?: FilterExpression;
+  // TODO: Not sure about this type
+  filter?: FilterExpression;
+  columns?: SelectableColumn<Record>[];
+  sort?: SingleOrArray<SortFilter<Record, SummarizeColumns<Record, Expression>>>;
 };

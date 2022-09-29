@@ -156,10 +156,15 @@ describe('search', () => {
         expect(result.record.read).toBeDefined();
         expect(result.record.name?.includes('fruits')).toBeTruthy();
         expect(result.record.getMetadata().score).toBeDefined();
-      } else {
+      } else if (result.table === 'users') {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
         expect(result.record.full_name?.includes('fruits')).toBeTruthy();
+        expect(result.record.getMetadata().score).toBeDefined();
+      } else if (result.table === 'pets') {
+        expect(result.record.id).toBeDefined();
+        expect(result.record.read).toBeDefined();
+        expect(result.record.name?.includes('fruits')).toBeTruthy();
         expect(result.record.getMetadata().score).toBeDefined();
       }
     }
