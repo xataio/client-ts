@@ -70,7 +70,7 @@ export type SummarizeResponse = {
 };
 
 /**
- * @example {"aggs":{"dailyUniqueUsers":{"values":[{"key":"2022-02-22T22:22:22","uniqueUsers":134},{"key":"2022-02-23T22:22:22","uniqueUsers":90}]}}}
+ * @example {"aggs":{"dailyUniqueUsers":{"values":[{"key":"2022-02-22T22:22:22Z","uniqueUsers":134},{"key":"2022-02-23T22:22:22Z","uniqueUsers":90}]}}}
  */
 export type AggResponse = {
   aggs?: {

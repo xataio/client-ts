@@ -990,7 +990,7 @@ export type RecordsMetadata = {
 };
 
 export type AggResponse =
-  | number
+  | (number | null)
   | {
       values: ({
         $key: string | number;
@@ -999,6 +999,40 @@ export type AggResponse =
         [key: string]: AggResponse;
       })[];
     };
+
+/**
+ * Metadata of databases
+ */
+export type CPDatabaseMetadata = {
+  /**
+   * The machine-readable name of a database
+   */
+  name: string;
+  /**
+   * Region where this database is hosted
+   */
+  region: string;
+  /**
+   * The time this database was created
+   */
+  createdAt: DateTime;
+  /**
+   * Metadata about the database for display in Xata user interfaces
+   */
+  ui?: {
+    /**
+     * The user-selected color for this database across interfaces
+     */
+    color?: string;
+  };
+};
+
+export type CPListDatabasesResponse = {
+  /**
+   * A list of databases in a Xata workspace
+   */
+  databases?: CPDatabaseMetadata[];
+};
 
 /**
  * Xata Table Record Metadata
