@@ -18,7 +18,7 @@ type WildcardColumns<O> = Values<{
 }>;
 
 // Public: Utility type to get a union with the selectable columns of an object by a given type
-export type ColumnsByValue<O extends XataRecord, Value> = Values<{
+export type ColumnsByValue<O, Value> = Values<{
   [K in SelectableColumn<O>]: ValueAtColumn<O, K> extends infer C
     ? C extends Value
       ? K extends WildcardColumns<O>

@@ -45,20 +45,53 @@ describe('summarize', () => {
       sort: [{ column: 'index', direction: 'asc' }]
     });
 
-    expect(result.summaries).toEqual([
-      { index: 10, rating: 10.5 },
-      { index: 30, rating: 40.0 }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "index": 10,
+          "rating": 10.5,
+        },
+        {
+          "index": 30,
+          "rating": 40,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].index).toBe(10);
+    expect(result.summaries[0].rating).toBe(10.5);
+    expect(result.summaries[1].index).toBe(30);
+    expect(result.summaries[1].rating).toBe(40.0);
   });
 
   test('group by without any common groups', async () => {
     const result = await xata.db.users.select(['name', 'rating']).sort('name', 'asc').summarize();
 
-    expect(result.summaries).toEqual([
-      { name: 'A', rating: 10.5 },
-      { name: 'B', rating: 10.5 },
-      { name: 'C', rating: 40.0 }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "A",
+          "rating": 10.5,
+        },
+        {
+          "name": "B",
+          "rating": 10.5,
+        },
+        {
+          "name": "C",
+          "rating": 40,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(3);
+    expect(result.summaries[0].name).toBe('A');
+    expect(result.summaries[0].rating).toBe(10.5);
+    expect(result.summaries[1].name).toBe('B');
+    expect(result.summaries[1].rating).toBe(10.5);
+    expect(result.summaries[2].name).toBe('C');
+    expect(result.summaries[2].rating).toBe(40.0);
   });
 
   test('group by with wildcard columns', async () => {
@@ -68,11 +101,39 @@ describe('summarize', () => {
       .sort('settings.dark', 'asc')
       .summarize();
 
-    expect(result.summaries).toEqual([
-      { settings: { plan: 'free', labels: null, dark: null } },
-      { settings: { plan: 'paid', labels: null, dark: true } },
-      { settings: { plan: 'paid', labels: null, dark: null } }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "settings": {
+            "dark": null,
+            "labels": null,
+            "plan": "free",
+          },
+        },
+        {
+          "settings": {
+            "dark": true,
+            "labels": null,
+            "plan": "paid",
+          },
+        },
+        {
+          "settings": {
+            "dark": null,
+            "labels": null,
+            "plan": "paid",
+          },
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(3);
+    expect(result.summaries[0].settings?.plan).toBe('free');
+    expect(result.summaries[0].settings?.dark).toBe(null);
+    expect(result.summaries[1].settings?.plan).toBe('paid');
+    expect(result.summaries[1].settings?.dark).toBe(true);
+    expect(result.summaries[2].settings?.plan).toBe('paid');
+    expect(result.summaries[2].settings?.dark).toBe(null);
   });
 
   test('group by with a link', async () => {
@@ -80,11 +141,54 @@ describe('summarize', () => {
       .select(['name', 'settings.plan', 'pet.type', 'pet.num_legs'])
       .summarize({ sort: [{ column: 'name', direction: 'asc' }] });
 
-    expect(result.summaries).toEqual([
-      { name: 'A', settings: { plan: 'paid' }, pet: { type: 'dog', num_legs: 4 } },
-      { name: 'B', settings: { plan: 'free' }, pet: { type: 'cat', num_legs: 4 } },
-      { name: 'C', settings: { plan: 'paid' }, pet: { type: 'dog', num_legs: 3 } }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "A",
+          "pet": {
+            "num_legs": 4,
+            "type": "dog",
+          },
+          "settings": {
+            "plan": "paid",
+          },
+        },
+        {
+          "name": "B",
+          "pet": {
+            "num_legs": 4,
+            "type": "cat",
+          },
+          "settings": {
+            "plan": "free",
+          },
+        },
+        {
+          "name": "C",
+          "pet": {
+            "num_legs": 3,
+            "type": "dog",
+          },
+          "settings": {
+            "plan": "paid",
+          },
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(3);
+    expect(result.summaries[0].name).toBe('A');
+    expect(result.summaries[0].settings?.plan).toBe('paid');
+    expect(result.summaries[0].pet?.type).toBe('dog');
+    expect(result.summaries[0].pet?.num_legs).toBe(4);
+    expect(result.summaries[1].name).toBe('B');
+    expect(result.summaries[1].settings?.plan).toBe('free');
+    expect(result.summaries[1].pet?.type).toBe('cat');
+    expect(result.summaries[1].pet?.num_legs).toBe(4);
+    expect(result.summaries[2].name).toBe('C');
+    expect(result.summaries[2].settings?.plan).toBe('paid');
+    expect(result.summaries[2].pet?.type).toBe('dog');
+    expect(result.summaries[2].pet?.num_legs).toBe(3);
   });
 
   test('count without groups', async () => {
@@ -97,14 +201,22 @@ describe('summarize', () => {
       }
     });
 
-    expect(result.summaries).toEqual([
-      {
-        all: 3,
-        col: 3,
-        obj_with_null: 1,
-        link: 3
-      }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "all": 3,
+          "col": 3,
+          "link": 3,
+          "obj_with_null": 1,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(1);
+    expect(result.summaries[0].all).toBe(3);
+    expect(result.summaries[0].col).toBe(3);
+    expect(result.summaries[0].obj_with_null).toBe(1);
+    expect(result.summaries[0].link).toBe(3);
   });
 
   test('count with groups', async () => {
@@ -113,10 +225,32 @@ describe('summarize', () => {
       sort: [{ column: 'index', direction: 'asc' }]
     });
 
-    expect(result.summaries).toEqual([
-      { index: 10, pet: { num_legs: 4 }, nl: 2 },
-      { index: 30, pet: { num_legs: 3 }, nl: 1 }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "index": 10,
+          "nl": 2,
+          "pet": {
+            "num_legs": 4,
+          },
+        },
+        {
+          "index": 30,
+          "nl": 1,
+          "pet": {
+            "num_legs": 3,
+          },
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].index).toBe(10);
+    expect(result.summaries[0].pet?.num_legs).toBe(4);
+    expect(result.summaries[0].nl).toBe(2);
+    expect(result.summaries[1].index).toBe(30);
+    expect(result.summaries[1].pet?.num_legs).toBe(3);
+    expect(result.summaries[1].nl).toBe(1);
   });
 
   test('count with sort on group', async () => {
@@ -128,11 +262,42 @@ describe('summarize', () => {
       ]
     });
 
-    expect(result.summaries).toEqual([
-      { index: 10, pet: { type: 'dog' }, nl: 1 },
-      { index: 10, pet: { type: 'cat' }, nl: 1 },
-      { index: 30, pet: { type: 'dog' }, nl: 1 }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "index": 10,
+          "nl": 1,
+          "pet": {
+            "type": "dog",
+          },
+        },
+        {
+          "index": 10,
+          "nl": 1,
+          "pet": {
+            "type": "cat",
+          },
+        },
+        {
+          "index": 30,
+          "nl": 1,
+          "pet": {
+            "type": "dog",
+          },
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(3);
+    expect(result.summaries[0].index).toBe(10);
+    expect(result.summaries[0].pet?.type).toBe('dog');
+    expect(result.summaries[0].nl).toBe(1);
+    expect(result.summaries[1].index).toBe(10);
+    expect(result.summaries[1].pet?.type).toBe('cat');
+    expect(result.summaries[1].nl).toBe(1);
+    expect(result.summaries[2].index).toBe(30);
+    expect(result.summaries[2].pet?.type).toBe('dog');
+    expect(result.summaries[2].nl).toBe(1);
   });
 
   test('count with sort on summary', async () => {
@@ -141,10 +306,24 @@ describe('summarize', () => {
       sort: [{ column: 'total', direction: 'desc' }]
     });
 
-    expect(result.summaries).toEqual([
-      { index: 10, total: 2 },
-      { index: 30, total: 1 }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "index": 10,
+          "total": 2,
+        },
+        {
+          "index": 30,
+          "total": 1,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].index).toBe(10);
+    expect(result.summaries[0].total).toBe(2);
+    expect(result.summaries[1].index).toBe(30);
+    expect(result.summaries[1].total).toBe(1);
   });
 
   test('count with sort on group and count', async () => {
@@ -157,11 +336,36 @@ describe('summarize', () => {
       ]
     });
 
-    expect(result.summaries).toEqual([
-      { pet: { name: 'Otis' }, dark_set: 1 },
-      { pet: { name: 'Lyra' }, dark_set: 0 },
-      { pet: { name: 'Toffee' }, dark_set: 0 }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "dark_set": 1,
+          "pet": {
+            "name": "Otis",
+          },
+        },
+        {
+          "dark_set": 0,
+          "pet": {
+            "name": "Lyra",
+          },
+        },
+        {
+          "dark_set": 0,
+          "pet": {
+            "name": "Toffee",
+          },
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(3);
+    expect(result.summaries[0].pet?.name).toBe('Otis');
+    expect(result.summaries[0].dark_set).toBe(1);
+    expect(result.summaries[1].pet?.name).toBe('Lyra');
+    expect(result.summaries[1].dark_set).toBe(0);
+    expect(result.summaries[2].pet?.name).toBe('Toffee');
+    expect(result.summaries[2].dark_set).toBe(0);
   });
 
   test('summarize with no results', async () => {
@@ -171,7 +375,9 @@ describe('summarize', () => {
       filter: { id: 'nomatches' }
     });
 
-    expect(result.summaries).toEqual([]);
+    expect(result.summaries).toMatchInlineSnapshot('[]');
+
+    expect(result.summaries.length).toBe(0);
   });
 
   test('filter on id', async () => {
@@ -183,7 +389,18 @@ describe('summarize', () => {
       filter: { id: user1?.id ?? '' }
     });
 
-    expect(result.summaries).toEqual([{ name: 'A', total: 1 }]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "A",
+          "total": 1,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(1);
+    expect(result.summaries[0].name).toBe('A');
+    expect(result.summaries[0].total).toBe(1);
   });
 
   test('filter should create joins', async () => {
@@ -194,7 +411,18 @@ describe('summarize', () => {
       filter: { 'pet.name': 'Toffee' }
     });
 
-    expect(result.summaries).toEqual([{ name: 'B', dark_set: 0 }]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "dark_set": 0,
+          "name": "B",
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(1);
+    expect(result.summaries[0].name).toBe('B');
+    expect(result.summaries[0].dark_set).toBe(0);
   });
 
   test('group by, count, sort, filter', async () => {
@@ -205,9 +433,27 @@ describe('summarize', () => {
       filter: { 'pet.type': 'dog' }
     });
 
-    expect(result.summaries).toEqual([
-      { pet: { name: 'Lyra' }, dark_set: 0 },
-      { pet: { name: 'Otis' }, dark_set: 1 }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "dark_set": 0,
+          "pet": {
+            "name": "Lyra",
+          },
+        },
+        {
+          "dark_set": 1,
+          "pet": {
+            "name": "Otis",
+          },
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].pet?.name).toBe('Lyra');
+    expect(result.summaries[0].dark_set).toBe(0);
+    expect(result.summaries[1].pet?.name).toBe('Otis');
+    expect(result.summaries[1].dark_set).toBe(1);
   });
 });

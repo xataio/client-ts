@@ -464,9 +464,10 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     return records[0] as unknown as Result;
   }
 
-  async summarize<Expression extends Dictionary<SummarizeExpression<Record>>>(
-    params: SummarizeParams<Record, Expression> = {}
-  ): Promise<SummarizeResult<Record, Expression>> {
+  async summarize<
+    Expression extends Dictionary<SummarizeExpression<Record>>,
+    Columns extends SelectableColumn<Record>[]
+  >(params: SummarizeParams<Record, Expression, Columns> = {}): Promise<SummarizeResult<Record, Expression, Columns>> {
     const { summaries, summariesFilter, ...options } = params;
     const query = new Query<Record, Result>(
       this.#repository,
@@ -475,7 +476,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
       this.#data
     );
 
-    return this.#repository.summarizeTable(query, summaries, summariesFilter) as any;
+    return this.#repository.summarizeTable(query, summaries, summariesFilter as Schemas.FilterExpression) as any;
   }
 
   /**
