@@ -6,7 +6,6 @@ import { SortFilter } from './sorting';
 
 export type SummarizeExpression<O extends XataRecord> = ExactlyOne<{
   count: ColumnsByValue<O, any> | '*';
-  // TODO: Add for other summarize expressions, PR not merged in the backend yet
   min: ColumnsByValue<O, string | number | Date | any[]>;
   max: ColumnsByValue<O, string | number | Date | any[]>;
   sum: ColumnsByValue<O, number>;
