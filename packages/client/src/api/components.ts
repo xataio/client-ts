@@ -4139,7 +4139,7 @@ export type SummarizeTableError = Fetcher.ErrorWrapper<
 >;
 
 export type SummarizeTableRequestBody = {
-  filters?: Schemas.FilterExpression;
+  filter?: Schemas.FilterExpression;
   columns?: Schemas.ColumnsProjection;
   summaries?: Schemas.SummaryExpressionList;
   sort?: Schemas.SortExpression;
