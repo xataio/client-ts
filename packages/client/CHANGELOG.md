@@ -1,5 +1,17 @@
 # @xata.io/client
 
+## 0.18.6
+
+### Patch Changes
+
+- [#662](https://github.com/xataio/client-ts/pull/662) [`4a41680`](https://github.com/xataio/client-ts/commit/4a416803761a1c944ef9a76b794020ead6c8f477) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove wildcard columns from sorting and filtering
+
+- [#303](https://github.com/xataio/client-ts/pull/303) [`ad0cccb`](https://github.com/xataio/client-ts/commit/ad0cccb11cd4f9bb4bd7e44672d3375821e700fe) Thanks [@gimenete](https://github.com/gimenete)! - Add profiles for host parsing
+
+- [#662](https://github.com/xataio/client-ts/pull/662) [`e1d6add`](https://github.com/xataio/client-ts/commit/e1d6addf84c55648bc0d908887b6bd020b429801) Thanks [@SferaDev](https://github.com/SferaDev)! - Add aggregations support to the SDK
+
+- [#662](https://github.com/xataio/client-ts/pull/662) [`4a41680`](https://github.com/xataio/client-ts/commit/4a416803761a1c944ef9a76b794020ead6c8f477) Thanks [@SferaDev](https://github.com/SferaDev)! - Add summarize endpoints to SDK
+
 ## 0.18.5
 
 ### Patch Changes
