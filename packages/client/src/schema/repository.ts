@@ -1,5 +1,6 @@
 import { SchemaPluginResult } from '.';
 import {
+  aggregateTable,
   bulkInsertTableRecords,
   deleteRecord,
   getBranchDetails,
@@ -9,6 +10,7 @@ import {
   queryTable,
   Schemas,
   searchTable,
+  summarizeTable,
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
@@ -20,13 +22,15 @@ import { Boosters } from '../search/boosters';
 import { compact, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { VERSION } from '../version';
+import { AggregationExpression, AggregationResult } from './aggregate';
 import { CacheImpl } from './cache';
-import { Filter } from './filters';
+import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
 import { SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
+import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
 
 /**
@@ -625,6 +629,17 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       boosters?: Boosters<Record>[];
     }
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
+
+  /**
+   * Aggregates records in the table.
+   * @param expression The aggregations to perform.
+   * @param filter The filter to apply to the queried records.
+   * @returns The requested aggregations.
+   */
+  abstract aggregate<Expression extends Dictionary<AggregationExpression<Record>>>(
+    expression?: Expression,
+    filter?: Filter<Record>
+  ): Promise<AggregationResult<Record, Expression>>;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -1336,6 +1351,23 @@ export class RestRepository<Record extends XataRecord>
     });
   }
 
+  async aggregate<Expression extends Dictionary<AggregationExpression<Record>>>(
+    aggs?: Expression,
+    filter?: Filter<Record>
+  ) {
+    return this.#trace('aggregate', async () => {
+      const fetchProps = await this.#getFetchProps();
+
+      const result = await aggregateTable({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        body: { aggs, filter: filter as Schemas.FilterExpression },
+        ...fetchProps
+      });
+
+      return result as any;
+    });
+  }
+
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
     return this.#trace('query', async () => {
       const cacheQuery = await this.#getCacheQuery<Result>(query);
@@ -1343,17 +1375,15 @@ export class RestRepository<Record extends XataRecord>
 
       const data = query.getQueryOptions();
 
-      const body = {
-        filter: cleanFilter(data.filter),
-        sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
-        page: data.pagination,
-        columns: data.columns
-      };
-
       const fetchProps = await this.#getFetchProps();
       const { meta, records: objects } = await queryTable({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
-        body,
+        body: {
+          filter: cleanFilter(data.filter),
+          sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
+          page: data.pagination,
+          columns: data.columns ?? ['*']
+        },
         ...fetchProps
       });
 
@@ -1364,6 +1394,31 @@ export class RestRepository<Record extends XataRecord>
       await this.#setCacheQuery(query, meta, records);
 
       return new Page<Record, Result>(query, meta, records);
+    });
+  }
+
+  async summarizeTable<Result extends XataRecord>(
+    query: Query<Record, Result>,
+    summaries?: Dictionary<SummarizeExpression<Record>>,
+    summariesFilter?: Schemas.FilterExpression
+  ) {
+    return this.#trace('summarize', async () => {
+      const data = query.getQueryOptions();
+
+      const fetchProps = await this.#getFetchProps();
+      const result = await summarizeTable({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        body: {
+          filter: cleanFilter(data.filter),
+          sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
+          columns: data.columns,
+          summaries,
+          summariesFilter
+        },
+        ...fetchProps
+      });
+
+      return result;
     });
   }
 
@@ -1508,16 +1563,6 @@ function extractId(value: any): string | undefined {
   if (isString(value)) return value;
   if (isObject(value) && isString(value.id)) return value.id;
   return undefined;
-}
-
-function cleanFilter(filter?: Schemas.FilterExpression) {
-  if (!filter) return undefined;
-
-  const values = Object.values(filter)
-    .filter(Boolean)
-    .filter((value) => (Array.isArray(value) ? value.length > 0 : true));
-
-  return values.length > 0 ? filter : undefined;
 }
 
 function isValidColumn(columns: string[], column: Schemas.Column) {

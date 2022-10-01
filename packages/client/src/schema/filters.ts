@@ -1,5 +1,6 @@
+import { FilterExpression } from '../api/schemas';
 import { SingleOrArray } from '../util/types';
-import { SelectableColumn, ValueAtColumn } from './selection';
+import { ColumnsByValue, ValueAtColumn } from './selection';
 
 /**
  * PropertyMatchFilter
@@ -20,7 +21,7 @@ import { SelectableColumn, ValueAtColumn } from './selection';
 }
 */
 type PropertyAccessFilter<Record> = {
-  [key in SelectableColumn<Record>]?:
+  [key in ColumnsByValue<Record, any>]?:
     | NestedApiFilter<ValueAtColumn<Record, key>>
     | PropertyFilter<ValueAtColumn<Record, key>>;
 };
@@ -88,7 +89,7 @@ type AggregatorFilter<T> = {
  * Example: { filter: { $exists: "settings" } }
  */
 export type ExistanceFilter<Record> = {
-  [key in '$exists' | '$notExists']?: SelectableColumn<Record>;
+  [key in '$exists' | '$notExists']?: ColumnsByValue<Record, any>;
 };
 
 type BaseApiFilter<Record> = PropertyAccessFilter<Record> | AggregatorFilter<Record> | ExistanceFilter<Record>;
@@ -109,3 +110,13 @@ export type Filter<T> = T extends Record<string, any>
     ? PropertyFilter<T>
     : BaseApiFilter<T> | NestedApiFilter<T>
   : PropertyFilter<T>;
+
+export function cleanFilter(filter?: FilterExpression) {
+  if (!filter) return undefined;
+
+  const values = Object.values(filter)
+    .filter(Boolean)
+    .filter((value) => (Array.isArray(value) ? value.length > 0 : true));
+
+  return values.length > 0 ? filter : undefined;
+}

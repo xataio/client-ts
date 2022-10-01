@@ -1,7 +1,7 @@
 import { Schemas } from '../api';
 import { FilterExpression } from '../api/schemas';
 import { compact, isDefined, isObject, isString, isStringArray, toBase64 } from '../util/lang';
-import { OmitBy, RequiredBy } from '../util/types';
+import { Dictionary, OmitBy, RequiredBy, SingleOrArray } from '../util/types';
 import { Filter } from './filters';
 import {
   CursorNavigationOptions,
@@ -15,9 +15,10 @@ import {
   RecordArray
 } from './pagination';
 import { XataRecord } from './record';
-import { Repository } from './repository';
-import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
+import { RestRepository } from './repository';
+import { ColumnsByValue, SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
 import { SortDirection, SortFilter } from './sorting';
+import { SummarizeExpression, SummarizeParams, SummarizeResult } from './summarize';
 
 type BaseOptions<T extends XataRecord> = {
   columns?: SelectableColumn<T>[];
@@ -33,7 +34,7 @@ type CursorQueryOptions = {
 type OffsetQueryOptions<T extends XataRecord> = {
   pagination?: OffsetNavigationOptions;
   filter?: FilterExpression;
-  sort?: SortFilter<T> | SortFilter<T>[];
+  sort?: SingleOrArray<SortFilter<T>>;
 };
 
 export type QueryOptions<T extends XataRecord> = BaseOptions<T> & (CursorQueryOptions | OffsetQueryOptions<T>);
@@ -46,7 +47,7 @@ export type QueryOptions<T extends XataRecord> = BaseOptions<T> & (CursorQueryOp
  */
 export class Query<Record extends XataRecord, Result extends XataRecord = Record> implements Paginable<Record, Result> {
   #table: { name: string; schema?: Schemas.Table };
-  #repository: Repository<Record>;
+  #repository: RestRepository<Record>;
   #data: QueryOptions<Record> = { filter: {} };
 
   // Implements pagination
@@ -54,7 +55,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   readonly records: RecordArray<Result> = new RecordArray<Result>(this, []);
 
   constructor(
-    repository: Repository<Record> | null,
+    repository: RestRepository<Record> | null,
     table: { name: string; schema?: Schemas.Table },
     data: Partial<QueryOptions<Record>>,
     rawParent?: Partial<QueryOptions<Record>>
@@ -76,7 +77,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     this.#data.filter.$not = data.filter?.$not ?? parent?.filter?.$not;
     this.#data.filter.$none = data.filter?.$none ?? parent?.filter?.$none;
     this.#data.sort = data.sort ?? parent?.sort;
-    this.#data.columns = data.columns ?? parent?.columns ?? ['*'];
+    this.#data.columns = data.columns ?? parent?.columns;
     this.#data.pagination = data.pagination ?? parent?.pagination;
     this.#data.cache = data.cache ?? parent?.cache;
 
@@ -210,8 +211,8 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param direction The direction. Either ascending or descending.
    * @returns A new Query object.
    */
-  sort<F extends SelectableColumn<Record>>(column: F, direction: SortDirection = 'asc'): Query<Record, Result> {
-    const originalSort = [this.#data.sort ?? []].flat() as SortFilter<Record>[];
+  sort<F extends ColumnsByValue<Record, any>>(column: F, direction: SortDirection = 'asc'): Query<Record, Result> {
+    const originalSort = [this.#data.sort ?? []].flat() as SortFilter<Record, any>[];
     const sort = [...originalSort, { column, direction }];
     return new Query<Record, Result>(this.#repository, this.#table, { sort }, this.#data);
   }
@@ -461,6 +462,21 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
     // Method overloading does not provide type inference for the return type.
     return records[0] as unknown as Result;
+  }
+
+  async summarize<
+    Expression extends Dictionary<SummarizeExpression<Record>>,
+    Columns extends SelectableColumn<Record>[]
+  >(params: SummarizeParams<Record, Expression, Columns> = {}): Promise<SummarizeResult<Record, Expression, Columns>> {
+    const { summaries, summariesFilter, ...options } = params;
+    const query = new Query<Record, Result>(
+      this.#repository,
+      this.#table,
+      options as Partial<QueryOptions<Record>>,
+      this.#data
+    );
+
+    return this.#repository.summarizeTable(query, summaries, summariesFilter as Schemas.FilterExpression) as any;
   }
 
   /**
