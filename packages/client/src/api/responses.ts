@@ -69,6 +69,15 @@ export type SummarizeResponse = {
   summaries: Record<string, any>[];
 };
 
+/**
+ * @example {"aggs":{"dailyUniqueUsers":{"values":[{"key":"2022-02-22T22:22:22Z","uniqueUsers":134},{"key":"2022-02-23T22:22:22Z","uniqueUsers":90}]}}}
+ */
+export type AggResponse = {
+  aggs?: {
+    [key: string]: Schemas.AggResponse;
+  };
+};
+
 export type SearchResponse = {
   records: Schemas.XataRecord[];
   warning?: string;

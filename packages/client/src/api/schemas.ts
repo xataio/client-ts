@@ -552,6 +552,193 @@ export type SummaryExpressionList = {
  */
 export type SummaryExpression = Record<string, any>;
 
+/**
+ * The description of the aggregations you wish to receive.
+ *
+ * @example {"totalCount":{"count":"*"},"dailyActiveUsers":{"dateHistogram":{"column":"date","interval":"1d"},"aggs":{"uniqueUsers":{"uniqueCount":{"column":"userID"}}}}}
+ */
+export type AggExpressionMap = {
+  [key: string]: AggExpression;
+};
+
+/**
+ * The description of a single aggregation operation. It is an object with only one key-value pair.
+ * The key represents the aggreagtion type, while the value is an object with the configuration of
+ * the aggreagtion.
+ *
+ * @x-go-type xata.AggExpression
+ */
+export type AggExpression =
+  | {
+      count?: CountAgg;
+    }
+  | {
+      sum?: SumAgg;
+    }
+  | {
+      max?: MaxAgg;
+    }
+  | {
+      min?: MinAgg;
+    }
+  | {
+      average?: AverageAgg;
+    }
+  | {
+      uniqueCount?: UniqueCountAgg;
+    }
+  | {
+      dateHistogram?: DateHistogramAgg;
+    }
+  | {
+      topValues?: TopValuesAgg;
+    }
+  | {
+      numericHistogram?: NumericHistogramAgg;
+    };
+
+/**
+ * Count the number of records with an optional filter.
+ */
+export type CountAgg =
+  | {
+      filter?: FilterExpression;
+    }
+  | '*';
+
+/**
+ * The sum of the numeric values in a particular column.
+ */
+export type SumAgg = {
+  /**
+   * The column on which to compute the sum. Must be a numeric type.
+   */
+  column: string;
+};
+
+/**
+ * The max of the numeric values in a particular column.
+ */
+export type MaxAgg = {
+  /**
+   * The column on which to compute the max. Must be a numeric type.
+   */
+  column: string;
+};
+
+/**
+ * The min of the numeric values in a particular column.
+ */
+export type MinAgg = {
+  /**
+   * The column on which to compute the min. Must be a numeric type.
+   */
+  column: string;
+};
+
+/**
+ * The average of the numeric values in a particular column.
+ */
+export type AverageAgg = {
+  /**
+   * The column on which to compute the average. Must be a numeric type.
+   */
+  column: string;
+};
+
+/**
+ * Count the number of distinct values in a particular column.
+ */
+export type UniqueCountAgg = {
+  /**
+   * The column from where to count the unique values.
+   */
+  column: string;
+  /**
+   * The threshold under which the unique count is exact. If the number of unique
+   * values in the column is higher than this threshold, the results are approximative.
+   * Maximum value is 40,000, default value is 3000.
+   */
+  precisionThreshold?: number;
+};
+
+/**
+ * Split data into buckets by a datetime column. Accepts sub-aggregations for each bucket.
+ */
+export type DateHistogramAgg = {
+  /**
+   * The column to use for bucketing. Must be of type datetime.
+   */
+  column: string;
+  /**
+   * The fixed interval to use when bucketing.
+   * It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
+   *
+   * @pattern ^(\d+)(d|h|m|s|ms)$
+   */
+  interval?: string;
+  /**
+   * The calendar-aware interval to use when bucketing. Possible values are: `minute`,
+   * `hour`, `day`, `week`, `month`, `quarter`, `year`.
+   */
+  calendarInterval?: 'minute' | 'hour' | 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /**
+   * The timezone to use for bucketing. By default, UTC is assumed.
+   * The accepted format is as an ISO 8601 UTC offset. For example: `+01:00` or
+   * `-08:00`.
+   *
+   * @pattern ^[+-][01]\d:[0-5]\d$
+   */
+  timezone?: string;
+  aggs?: AggExpressionMap;
+};
+
+/**
+ * Split data into buckets by the unique values in a column. Accepts sub-aggregations for each bucket.
+ * The top values as ordered by the number of records (`$count``) are returned.
+ */
+export type TopValuesAgg = {
+  /**
+   * The column to use for bucketing. Accepted types are `string`, `email`, `int`, `float`, or `bool`.
+   */
+  column: string;
+  aggs?: AggExpressionMap;
+  /**
+   * The maximum number of unique values to return.
+   *
+   * @default 10
+   * @maximum 1000
+   */
+  size?: number;
+};
+
+/**
+ * Split data into buckets by dynamic numeric ranges. Accepts sub-aggregations for each bucket.
+ */
+export type NumericHistogramAgg = {
+  /**
+   * The column to use for bucketing. Must be of numeric type.
+   */
+  column: string;
+  /**
+   * The numeric interval to use for bucketing. The resulting buckets will be ranges
+   * with this value as size.
+   *
+   * @minimum 0
+   */
+  interval: number;
+  /**
+   * By default the bucket keys start with 0 and then continue in `interval` steps. The bucket
+   * boundaries can be shiftend by using the offset option. For example, if the `interval` is 100,
+   * but you prefer the bucket boundaries to be `[50, 150), [150, 250), etc.`, you can set `offset`
+   * to 50.
+   *
+   * @default 0
+   */
+  offset?: number;
+  aggs?: AggExpressionMap;
+};
+
 export type HighlightExpression = {
   /**
    * Set to `false` to disable highlighting. By default it is `true`.
@@ -800,6 +987,51 @@ export type RecordsMetadata = {
      */
     more: boolean;
   };
+};
+
+export type AggResponse =
+  | (number | null)
+  | {
+      values: ({
+        $key: string | number;
+        $count: number;
+      } & {
+        [key: string]: AggResponse;
+      })[];
+    };
+
+/**
+ * Metadata of databases
+ */
+export type CPDatabaseMetadata = {
+  /**
+   * The machine-readable name of a database
+   */
+  name: string;
+  /**
+   * Region where this database is hosted
+   */
+  region: string;
+  /**
+   * The time this database was created
+   */
+  createdAt: DateTime;
+  /**
+   * Metadata about the database for display in Xata user interfaces
+   */
+  ui?: {
+    /**
+     * The user-selected color for this database across interfaces
+     */
+    color?: string;
+  };
+};
+
+export type CPListDatabasesResponse = {
+  /**
+   * A list of databases in a Xata workspace
+   */
+  databases?: CPDatabaseMetadata[];
 };
 
 /**

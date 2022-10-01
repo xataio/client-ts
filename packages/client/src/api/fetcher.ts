@@ -74,7 +74,7 @@ function buildBaseUrl({
   apiUrl: string;
   pathParams?: Partial<Record<string, string | number>>;
 }): string {
-  if (pathParams?.workspace === undefined) return `${apiUrl}${path}`;
+  if (pathParams?.workspace === undefined || !path.startsWith('/db')) return `${apiUrl}${path}`;
 
   const url = typeof workspacesApiUrl === 'string' ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
   return url.replace('{workspaceId}', String(pathParams.workspace));

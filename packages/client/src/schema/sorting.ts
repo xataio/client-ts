@@ -1,27 +1,30 @@
 import { isObject, isString } from '../util/lang';
-import { SingleOrArray, StringKeys, Values } from '../util/types';
+import { SingleOrArray, Values } from '../util/types';
 import { XataRecord } from './record';
-import { SelectableColumn } from './selection';
+import { ColumnsByValue } from './selection';
 
 export type SortDirection = 'asc' | 'desc';
-export type SortFilterExtended<T extends XataRecord> = {
-  column: SelectableColumn<T>;
+export type SortFilterExtended<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> = {
+  column: Columns;
   direction?: SortDirection;
 };
 
-export type SortFilter<T extends XataRecord> = SelectableColumn<T> | SortFilterExtended<T> | SortFilterBase<T>;
+export type SortFilter<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> =
+  | Columns
+  | SortFilterExtended<T, Columns>
+  | SortFilterBase<T, Columns>;
 
-type SortFilterBase<T extends XataRecord> = {
-  [Key in StringKeys<T>]: SortDirection;
-};
+type SortFilterBase<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> = Values<{
+  [Key in Columns]: { [K in Key]: SortDirection };
+}>;
 
-export type ApiSortFilter<T extends XataRecord> = SingleOrArray<
+export type ApiSortFilter<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> = SingleOrArray<
   Values<{
-    [Key in SelectableColumn<T>]: { [K in Key]: SortDirection };
+    [Key in Columns]: { [K in Key]: SortDirection };
   }>
 >;
 
-export function isSortFilterString<T extends XataRecord>(value: any): value is SelectableColumn<T> {
+export function isSortFilterString<T extends XataRecord>(value: any): value is ColumnsByValue<T, any> {
   return isString(value);
 }
 
@@ -33,15 +36,17 @@ export function isSortFilterObject<T extends XataRecord>(filter: SortFilter<T>):
   return isObject(filter) && !isSortFilterBase(filter) && filter.column !== undefined;
 }
 
-export function buildSortFilter<T extends XataRecord>(filter: SingleOrArray<SortFilter<T>>): ApiSortFilter<T> {
+export function buildSortFilter<T extends XataRecord>(
+  filter: SingleOrArray<SortFilter<T, any>>
+): ApiSortFilter<T, any> {
   if (isSortFilterString(filter)) {
-    return { [filter]: 'asc' } as { [key in SelectableColumn<T>]: SortDirection };
+    return { [filter]: 'asc' } as { [key in ColumnsByValue<T, any>]: SortDirection };
   } else if (Array.isArray(filter)) {
-    return filter.map((item) => buildSortFilter(item)) as { [key in SelectableColumn<T>]: SortDirection }[];
+    return filter.map((item) => buildSortFilter(item)) as { [key in ColumnsByValue<T, any>]: SortDirection }[];
   } else if (isSortFilterBase(filter)) {
-    return filter as { [key in SelectableColumn<T>]: SortDirection };
+    return filter as { [key in ColumnsByValue<T, any>]: SortDirection };
   } else if (isSortFilterObject(filter)) {
-    return { [filter.column]: filter.direction ?? 'asc' } as { [key in SelectableColumn<T>]: SortDirection };
+    return { [filter.column]: filter.direction ?? 'asc' } as { [key in ColumnsByValue<T, any>]: SortDirection };
   } else {
     throw new Error(`Invalid sort filter: ${filter}`);
   }

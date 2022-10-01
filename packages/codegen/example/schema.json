@@ -6,12 +6,49 @@
       "columns": [
         {
           "name": "name",
-          "type": "string",
-          "description": "Name of the team"
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "text"
         },
         {
           "name": "labels",
           "type": "multiple"
+        },
+        {
+          "name": "index",
+          "type": "int"
+        },
+        {
+          "name": "rating",
+          "type": "float"
+        },
+        {
+          "name": "founded_date",
+          "type": "datetime"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "settings",
+          "type": "object",
+          "columns": [
+            {
+              "name": "plan",
+              "type": "string"
+            },
+            {
+              "name": "dark",
+              "type": "bool"
+            },
+            {
+              "name": "labels",
+              "type": "multiple"
+            }
+          ]
         },
         {
           "name": "owner",
@@ -31,9 +68,39 @@
           "unique": true
         },
         {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "settings",
+          "type": "object",
+          "columns": [
+            {
+              "name": "plan",
+              "type": "string"
+            },
+            {
+              "name": "dark",
+              "type": "bool"
+            },
+            {
+              "name": "labels",
+              "type": "multiple"
+            }
+          ]
+        },
+        {
           "name": "full_name",
           "type": "string",
           "notNull": true
+        },
+        {
+          "name": "index",
+          "type": "int"
+        },
+        {
+          "name": "rating",
+          "type": "float"
         },
         {
           "name": "birthDate",
@@ -59,6 +126,30 @@
           "link": {
             "table": "teams"
           }
+        },
+        {
+          "name": "pet",
+          "type": "link",
+          "link": {
+            "table": "pets"
+          }
+        }
+      ]
+    },
+    {
+      "name": "pets",
+      "columns": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "num_legs",
+          "type": "int"
         }
       ]
     }

@@ -6,7 +6,7 @@ import {
   PropertyFilter,
   StringTypeFilter
 } from './filters';
-import { SelectableColumn } from './selection';
+import { ColumnsByValue, SelectableColumn } from './selection';
 
 /**
  * Operator to restrict results to only values that are greater than the given value.
@@ -71,12 +71,12 @@ export const le = lessThanEquals;
 /**
  * Operator to restrict results to only values that are not null.
  */
-export const exists = <T>(column: SelectableColumn<T>): ExistanceFilter<T> => ({ $exists: column });
+export const exists = <T>(column?: ColumnsByValue<T, any>): ExistanceFilter<T> => ({ $exists: column });
 
 /**
  * Operator to restrict results to only values that are null.
  */
-export const notExists = <T>(column: SelectableColumn<T>): ExistanceFilter<T> => ({ $notExists: column });
+export const notExists = <T>(column?: ColumnsByValue<T, any>): ExistanceFilter<T> => ({ $notExists: column });
 
 /**
  * Operator to restrict results to only values that start with the given prefix.

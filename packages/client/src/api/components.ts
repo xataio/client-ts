@@ -4139,7 +4139,7 @@ export type SummarizeTableError = Fetcher.ErrorWrapper<
 >;
 
 export type SummarizeTableRequestBody = {
-  filters?: Schemas.FilterExpression;
+  filter?: Schemas.FilterExpression;
   columns?: Schemas.ColumnsProjection;
   summaries?: Schemas.SummaryExpressionList;
   sort?: Schemas.SortExpression;
@@ -4186,7 +4186,7 @@ export type SummarizeTableVariables = {
  * will count all rows in each group with non-null product names.
  * - Set `sort: [{"total_sales": "desc"}]` in order to bring the rows with
  * the highest total_sales field to the top.
- * - Set `having: {"total_sales": {"$ge": 10}}` to only send back data
+ * - Set `summariesFilter: {"total_sales": {"$ge": 10}}` to only send back data
  * with greater than or equal to 10 units.
  *
  * `columns`: tells Xata how to create each group. If you add `product_id`
@@ -4218,6 +4218,287 @@ export const summarizeTable = (variables: SummarizeTableVariables, signal?: Abor
     ...variables,
     signal
   });
+
+export type AggregateTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+};
+
+export type AggregateTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type AggregateTableRequestBody = {
+  filter?: Schemas.FilterExpression;
+  aggs?: Schemas.AggExpressionMap;
+};
+
+export type AggregateTableVariables = {
+  body?: AggregateTableRequestBody;
+  pathParams: AggregateTablePathParams;
+} & FetcherExtraProps;
+
+/**
+ * This endpoint allows you to run aggragations (analytics) on the data from one table.
+ * While the summary endpoint is served from a transactional store and the results are strongly
+ * consistent, the aggregate endpoint is served from our columnar store and the results are
+ * only eventually consistent. On the other hand, the aggregate endpoint uses a
+ * store that is more appropiate for analytics, makes use of approximative algorithms
+ * (e.g for cardinality), and is generally faster and can do more complex aggregations.
+ */
+export const aggregateTable = (variables: AggregateTableVariables, signal?: AbortSignal) =>
+  fetch<Responses.AggResponse, AggregateTableError, AggregateTableRequestBody, {}, {}, AggregateTablePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/aggregate',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type CPGetDatabaseListPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+};
+
+export type CPGetDatabaseListError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type CPGetDatabaseListVariables = {
+  pathParams: CPGetDatabaseListPathParams;
+} & FetcherExtraProps;
+
+/**
+ * List all databases available in your Workspace.
+ */
+export const cPGetDatabaseList = (variables: CPGetDatabaseListVariables, signal?: AbortSignal) =>
+  fetch<Schemas.CPListDatabasesResponse, CPGetDatabaseListError, undefined, {}, {}, CPGetDatabaseListPathParams>({
+    url: '/workspaces/{workspaceId}/dbs',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type CPCreateDatabasePathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPCreateDatabaseError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type CPCreateDatabaseResponse = {
+  /**
+   * @minLength 1
+   */
+  databaseName?: string;
+  branchName?: string;
+};
+
+export type CPCreateDatabaseRequestBody = {
+  /**
+   * @minLength 1
+   */
+  branchName?: string;
+  /**
+   * @minLength 1
+   */
+  region: string;
+  ui?: {
+    color?: string;
+  };
+  metadata?: Schemas.BranchMetadata;
+};
+
+export type CPCreateDatabaseVariables = {
+  body: CPCreateDatabaseRequestBody;
+  pathParams: CPCreateDatabasePathParams;
+} & FetcherExtraProps;
+
+/**
+ * Create Database with identifier name
+ */
+export const cPCreateDatabase = (variables: CPCreateDatabaseVariables, signal?: AbortSignal) =>
+  fetch<
+    CPCreateDatabaseResponse,
+    CPCreateDatabaseError,
+    CPCreateDatabaseRequestBody,
+    {},
+    {},
+    CPCreateDatabasePathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'put', ...variables, signal });
+
+export type CPDeleteDatabasePathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPDeleteDatabaseError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CPDeleteDatabaseVariables = {
+  pathParams: CPDeleteDatabasePathParams;
+} & FetcherExtraProps;
+
+/**
+ * Delete a database and all of its branches and tables permanently.
+ */
+export const cPDeleteDatabase = (variables: CPDeleteDatabaseVariables, signal?: AbortSignal) =>
+  fetch<undefined, CPDeleteDatabaseError, undefined, {}, {}, CPDeleteDatabasePathParams>({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type CPGetCPDatabaseMetadataPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPGetCPDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CPGetCPDatabaseMetadataVariables = {
+  pathParams: CPGetCPDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Retrieve metadata of the given database
+ */
+export const cPGetCPDatabaseMetadata = (variables: CPGetCPDatabaseMetadataVariables, signal?: AbortSignal) =>
+  fetch<Schemas.CPDatabaseMetadata, CPGetCPDatabaseMetadataError, undefined, {}, {}, CPGetCPDatabaseMetadataPathParams>(
+    { url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'get', ...variables, signal }
+  );
+
+export type CPUpdateCPDatabaseMetadataPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type CPUpdateCPDatabaseMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CPUpdateCPDatabaseMetadataRequestBody = {
+  ui?: {
+    /**
+     * @minLength 1
+     */
+    color?: string;
+  };
+};
+
+export type CPUpdateCPDatabaseMetadataVariables = {
+  body?: CPUpdateCPDatabaseMetadataRequestBody;
+  pathParams: CPUpdateCPDatabaseMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Update the color of the selected database
+ */
+export const cPUpdateCPDatabaseMetadata = (variables: CPUpdateCPDatabaseMetadataVariables, signal?: AbortSignal) =>
+  fetch<
+    Schemas.CPDatabaseMetadata,
+    CPUpdateCPDatabaseMetadataError,
+    CPUpdateCPDatabaseMetadataRequestBody,
+    {},
+    {},
+    CPUpdateCPDatabaseMetadataPathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'patch', ...variables, signal });
 
 export const operationsByTag = {
   users: { getUser, updateUser, deleteUser, getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
@@ -4300,6 +4581,14 @@ export const operationsByTag = {
     queryTable,
     searchTable,
     searchBranch,
-    summarizeTable
+    summarizeTable,
+    aggregateTable
+  },
+  databases: {
+    cPGetDatabaseList,
+    cPCreateDatabase,
+    cPDeleteDatabase,
+    cPGetCPDatabaseMetadata,
+    cPUpdateCPDatabaseMetadata
   }
 };

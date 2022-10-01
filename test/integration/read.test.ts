@@ -103,7 +103,7 @@ describe('record read', () => {
   test('read multiple with falsy values', async () => {
     const items = [null, undefined, false, 0, ''];
 
-    // @ts-ignore
+    // @ts-expect-error
     const result = await xata.db.teams.read(items);
 
     expect(result).toHaveLength(items.length);
@@ -116,7 +116,7 @@ describe('record read', () => {
     expect(Object.getOwnPropertyDescriptor(team, 'name')?.writable).toBe(false);
 
     try {
-      // @ts-ignore
+      // @ts-expect-error
       team.name = 'New name';
 
       throw new Error('Unknown error');
@@ -128,7 +128,7 @@ describe('record read', () => {
   test('read multiple with falsy values, throws', async () => {
     const items = [null, undefined, false, 0, ''];
 
-    // @ts-ignore
+    // @ts-expect-error
     expect(xata.db.teams.readOrThrow(items)).rejects.toThrow();
   });
 

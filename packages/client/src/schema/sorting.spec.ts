@@ -24,6 +24,10 @@ const simpleSorting: ApiSortFilter<Record> = { name: 'asc' };
 // Array of simple sorting
 const arrayOfSimpleSorting: ApiSortFilter<Record> = [{ name: 'asc' }, { age: 'desc' }];
 
+// Sort with wildcard is not allowed
+//@ts-expect-error
+const sortWithWildcard: ApiSortFilter<Record> = { '*': 'asc' };
+
 test('fake test', () => {
   // This is a fake test to make sure that the type definitions in this file are working
 });
