@@ -618,4 +618,49 @@ describe('summarize', () => {
     expect(result.summaries[0].pet?.type).toBe('dog');
     expect(result.summaries[0].avg_rating).toBe(40);
   });
+
+  test('filter, columns, summaries, complex summariesFilter', async () => {
+    const result = await xata.db.users.summarize({
+      columns: ['pet.type'],
+      filter: {
+        $any: [{ 'pet.type': 'dog' }, { 'pet.type': 'cat' }]
+      },
+      summaries: {
+        total: { count: '*' },
+        max_num_legs: { max: 'pet.num_legs' },
+        average_rating: { avg: 'rating' }
+      },
+      summariesFilter: {
+        $any: [
+          {
+            'pet.type': 'dog',
+            $any: [{ max_num_legs: { $ge: 4 }, total: 2 }, { average_rating: { $ge: 10.0 } }]
+          },
+          {
+            $any: [
+              { 'pet.type': 'cat', total: 2, max_num_legs: { $gt: 4 } },
+              { 'pet.type': 'cat', average_rating: 10.5 }
+            ]
+          }
+        ]
+      }
+    });
+
+    //expect(result.summaries).toMatchInlineSnapshot();
+
+    expect(result.summaries).toBe([
+      {
+        pet: { type: 'cat' },
+        total: 1,
+        max_num_legs: 4,
+        average_rating: 10.5
+      },
+      {
+        pet: { type: 'dog' },
+        total: 2,
+        max_num_legs: 4,
+        average_rating: 25.25
+      }
+    ]);
+  });
 });
