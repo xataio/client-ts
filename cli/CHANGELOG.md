@@ -1,5 +1,14 @@
 # @xata.io/cli
 
+## 0.9.5
+
+### Patch Changes
+
+- [#303](https://github.com/xataio/client-ts/pull/303) [`ad0cccb`](https://github.com/xataio/client-ts/commit/ad0cccb11cd4f9bb4bd7e44672d3375821e700fe) Thanks [@gimenete](https://github.com/gimenete)! - Add profiles for host parsing
+
+- Updated dependencies [[`4a41680`](https://github.com/xataio/client-ts/commit/4a416803761a1c944ef9a76b794020ead6c8f477), [`ad0cccb`](https://github.com/xataio/client-ts/commit/ad0cccb11cd4f9bb4bd7e44672d3375821e700fe), [`e1d6add`](https://github.com/xataio/client-ts/commit/e1d6addf84c55648bc0d908887b6bd020b429801), [`4a41680`](https://github.com/xataio/client-ts/commit/4a416803761a1c944ef9a76b794020ead6c8f477)]:
+  - @xata.io/client@0.18.6
+
 ## 0.9.4
 
 ### Patch Changes
