@@ -21,6 +21,7 @@ import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
 import { compact, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
+import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
 import { CacheImpl } from './cache';
@@ -668,10 +669,13 @@ export class RestRepository<Record extends XataRecord>
     );
 
     this.#table = options.table;
-    this.#getFetchProps = options.pluginOptions.getFetchProps;
     this.#db = options.db;
     this.#cache = options.pluginOptions.cache;
     this.#schemaTables = options.schemaTables;
+    this.#getFetchProps = async () => {
+      const props = await options.pluginOptions.getFetchProps();
+      return { ...props, sessionID: generateUUID() };
+    };
 
     const trace = options.pluginOptions.trace ?? defaultTrace;
     this.#trace = async <T>(
@@ -1409,7 +1413,6 @@ export class RestRepository<Record extends XataRecord>
       const result = await summarizeTable({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
         body: {
-          //@ts-ignore TODO FIXME Remove trailing (s)
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
           columns: data.columns,
