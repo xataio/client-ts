@@ -59,10 +59,9 @@ type SummarizeValuePick<Record extends XataRecord, Expression extends Dictionary
     : never;
 };
 
-type SummarizeFilter<
-  Record extends XataRecord,
-  Expression extends Dictionary<SummarizeExpression<Record>>
-> = Filter<Record> & Filter<SummarizeValuePick<Record, Expression>>;
+type SummarizeFilter<Record extends XataRecord, Expression extends Dictionary<SummarizeExpression<Record>>> = Filter<
+  Record & SummarizeValuePick<Record, Expression>
+>;
 
 type SummarizeResultItem<
   Record extends XataRecord,
