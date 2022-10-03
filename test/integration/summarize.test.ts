@@ -446,18 +446,20 @@ describe('summarize', () => {
       }
     });
 
-    //expect(result.summaries).toMatchInlineSnapshot();
-
-    expect(result.summaries).toBe([
-      {
-        pet: { name: 'Otis' },
-        dark_set: 1,
-        min_legs: 4,
-        max_legs: 4,
-        sum_index: 10,
-        avg_rating: 10.5
-      }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "avg_rating": 10.5,
+          "dark_set": 1,
+          "max_legs": 4,
+          "min_legs": 4,
+          "pet": {
+            "name": "Otis",
+          },
+          "sum_index": 10,
+        },
+      ]
+    `);
 
     expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].pet?.name).toBe('Otis');
@@ -492,38 +494,69 @@ describe('summarize', () => {
       sort: [{ column: 'pet.type', direction: 'asc' }]
     });
 
-    //expect(result.summaries).toMatchInlineSnapshot();
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "pet": {
+            "type": "cat",
+          },
+          "test_avg_float": 10.5,
+          "test_avg_int": 4,
+          "test_count": 0,
+          "test_count_all": 1,
+          "test_count_linked": 1,
+          "test_max_float": 10.5,
+          "test_max_int": 4,
+          "test_min_float": 10.5,
+          "test_min_int": 4,
+          "test_sum_float": 10.5,
+          "test_sum_int": 4,
+        },
+        {
+          "pet": {
+            "type": "dog",
+          },
+          "test_avg_float": 25.25,
+          "test_avg_int": 3.5,
+          "test_count": 1,
+          "test_count_all": 2,
+          "test_count_linked": 2,
+          "test_max_float": 40,
+          "test_max_int": 4,
+          "test_min_float": 10.5,
+          "test_min_int": 3,
+          "test_sum_float": 50.5,
+          "test_sum_int": 7,
+        },
+      ]
+    `);
 
-    expect(result.summaries).toBe([
-      {
-        pet: { type: 'cat' },
-        test_count_all: 1,
-        test_count: 0,
-        test_count_linked: 1,
-        test_min_int: 4,
-        test_min_float: 10.5,
-        test_max_int: 4,
-        test_max_float: 10.5,
-        test_sum_int: 4,
-        test_sum_float: 10.5,
-        test_avg_int: 4,
-        test_avg_float: 10.5
-      },
-      {
-        pet: { type: 'dog' },
-        test_count_all: 2,
-        test_count: 1,
-        test_count_linked: 2,
-        test_min_int: 3,
-        test_min_float: 10.5,
-        test_max_int: 4,
-        test_max_float: 40,
-        test_sum_int: 7,
-        test_sum_float: 50.5,
-        test_avg_int: 3.5,
-        test_avg_float: 25.25
-      }
-    ]);
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].pet?.type).toBe('cat');
+    expect(result.summaries[0].test_count_all).toBe(1);
+    expect(result.summaries[0].test_count).toBe(0);
+    expect(result.summaries[0].test_count_linked).toBe(1);
+    expect(result.summaries[0].test_min_int).toBe(4);
+    expect(result.summaries[0].test_min_float).toBe(10.5);
+    expect(result.summaries[0].test_max_int).toBe(4);
+    expect(result.summaries[0].test_max_float).toBe(10.5);
+    expect(result.summaries[0].test_sum_int).toBe(4);
+    expect(result.summaries[0].test_sum_float).toBe(10.5);
+    expect(result.summaries[0].test_avg_int).toBe(4);
+    expect(result.summaries[0].test_avg_float).toBe(10.5);
+
+    expect(result.summaries[1].pet?.type).toBe('dog');
+    expect(result.summaries[1].test_count_all).toBe(2);
+    expect(result.summaries[1].test_count).toBe(1);
+    expect(result.summaries[1].test_count_linked).toBe(2);
+    expect(result.summaries[1].test_min_int).toBe(3);
+    expect(result.summaries[1].test_min_float).toBe(10.5);
+    expect(result.summaries[1].test_max_int).toBe(4);
+    expect(result.summaries[1].test_max_float).toBe(40);
+    expect(result.summaries[1].test_sum_int).toBe(7);
+    expect(result.summaries[1].test_sum_float).toBe(50.5);
+    expect(result.summaries[1].test_avg_int).toBe(3.5);
+    expect(result.summaries[1].test_avg_float).toBe(25.25);
   });
 
   test('summariesFilter with min', async () => {
@@ -537,14 +570,22 @@ describe('summarize', () => {
       }
     });
 
-    //expect(result.summaries).toMatchInlineSnapshot();
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "min_rating": 40,
+          "pet": {
+            "name": "Lyra",
+            "type": "dog",
+          },
+        },
+      ]
+    `);
 
-    expect(result.summaries).toBe([
-      {
-        pet: { name: 'Lyra', type: 'dog' },
-        min_rating: 40
-      }
-    ]);
+    expect(result.summaries.length).toBe(1);
+    expect(result.summaries[0].pet?.name).toBe('Lyra');
+    expect(result.summaries[0].pet?.type).toBe('dog');
+    expect(result.summaries[0].min_rating).toBe(40);
   });
 
   test('summariesFilter with max', async () => {
@@ -558,18 +599,32 @@ describe('summarize', () => {
       }
     });
 
-    //expect(result.summaries).toMatchInlineSnapshot();
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "max_rating": 10.5,
+          "pet": {
+            "name": "Otis",
+            "type": "dog",
+          },
+        },
+        {
+          "max_rating": 10.5,
+          "pet": {
+            "name": "Toffee",
+            "type": "cat",
+          },
+        },
+      ]
+    `);
 
-    expect(result.summaries).toBe([
-      {
-        pet: { name: 'Otis', type: 'dog' },
-        max_rating: 10.5
-      },
-      {
-        pet: { name: 'Toffee', type: 'cat' },
-        max_rating: 10.5
-      }
-    ]);
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].pet?.name).toBe('Otis');
+    expect(result.summaries[0].pet?.type).toBe('dog');
+    expect(result.summaries[0].max_rating).toBe(10.5);
+    expect(result.summaries[1].pet?.name).toBe('Toffee');
+    expect(result.summaries[1].pet?.type).toBe('cat');
+    expect(result.summaries[1].max_rating).toBe(10.5);
   });
 
   test('summariesFilter with sum', async () => {
@@ -583,14 +638,22 @@ describe('summarize', () => {
       }
     });
 
-    //expect(result.summaries).toMatchInlineSnapshot();
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "pet": {
+            "name": "Lyra",
+            "type": "dog",
+          },
+          "sum_rating": 40,
+        },
+      ]
+    `);
 
-    expect(result.summaries).toBe([
-      {
-        pet: { name: 'Lyra', type: 'dog' },
-        sum_rating: 40
-      }
-    ]);
+    expect(result.summaries.length).toBe(1);
+    expect(result.summaries[0].pet?.name).toBe('Lyra');
+    expect(result.summaries[0].pet?.type).toBe('dog');
+    expect(result.summaries[0].sum_rating).toBe(40);
   });
 
   test('summariesFilter with avg', async () => {
@@ -604,14 +667,17 @@ describe('summarize', () => {
       }
     });
 
-    //expect(result.summaries).toMatchInlineSnapshot();
-
-    expect(result.summaries).toBe([
-      {
-        pet: { name: 'Lyra', type: 'dog' },
-        avg_rating: 40
-      }
-    ]);
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "avg_rating": 40,
+          "pet": {
+            "name": "Lyra",
+            "type": "dog",
+          },
+        },
+      ]
+    `);
 
     expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].pet?.name).toBe('Lyra');
@@ -646,21 +712,35 @@ describe('summarize', () => {
       }
     });
 
-    //expect(result.summaries).toMatchInlineSnapshot();
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "average_rating": 10.5,
+          "max_num_legs": 4,
+          "pet": {
+            "type": "cat",
+          },
+          "total": 1,
+        },
+        {
+          "average_rating": 25.25,
+          "max_num_legs": 4,
+          "pet": {
+            "type": "dog",
+          },
+          "total": 2,
+        },
+      ]
+    `);
 
-    expect(result.summaries).toBe([
-      {
-        pet: { type: 'cat' },
-        total: 1,
-        max_num_legs: 4,
-        average_rating: 10.5
-      },
-      {
-        pet: { type: 'dog' },
-        total: 2,
-        max_num_legs: 4,
-        average_rating: 25.25
-      }
-    ]);
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].pet?.type).toBe('cat');
+    expect(result.summaries[0].total).toBe(1);
+    expect(result.summaries[0].max_num_legs).toBe(4);
+    expect(result.summaries[0].average_rating).toBe(10.5);
+    expect(result.summaries[1].pet?.type).toBe('dog');
+    expect(result.summaries[1].total).toBe(2);
+    expect(result.summaries[1].max_num_legs).toBe(4);
+    expect(result.summaries[1].average_rating).toBe(25.25);
   });
 });
