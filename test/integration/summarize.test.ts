@@ -58,11 +58,11 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(2);
-    expect(result.summaries[0].index).toBe(10);
-    expect(result.summaries[0].rating).toBe(10.5);
-    expect(result.summaries[1].index).toBe(30);
-    expect(result.summaries[1].rating).toBe(40.0);
+    expect(result.summaries.length).toBeCloseTo(2);
+    expect(result.summaries[0].index).toBeCloseTo(10);
+    expect(result.summaries[0].rating).toBeCloseTo(10.5);
+    expect(result.summaries[1].index).toBeCloseTo(30);
+    expect(result.summaries[1].rating).toBeCloseTo(40.0);
   });
 
   test('group by without any common groups', async () => {
@@ -85,13 +85,13 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(3);
+    expect(result.summaries.length).toBeCloseTo(3);
     expect(result.summaries[0].name).toBe('A');
-    expect(result.summaries[0].rating).toBe(10.5);
+    expect(result.summaries[0].rating).toBeCloseTo(10.5);
     expect(result.summaries[1].name).toBe('B');
-    expect(result.summaries[1].rating).toBe(10.5);
+    expect(result.summaries[1].rating).toBeCloseTo(10.5);
     expect(result.summaries[2].name).toBe('C');
-    expect(result.summaries[2].rating).toBe(40.0);
+    expect(result.summaries[2].rating).toBeCloseTo(40.0);
   });
 
   test('group by with wildcard columns', async () => {
@@ -127,7 +127,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(3);
+    expect(result.summaries.length).toBeCloseTo(3);
     expect(result.summaries[0].settings?.plan).toBe('free');
     expect(result.summaries[0].settings?.dark).toBe(null);
     expect(result.summaries[1].settings?.plan).toBe('paid');
@@ -176,19 +176,19 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(3);
+    expect(result.summaries.length).toBeCloseTo(3);
     expect(result.summaries[0].name).toBe('A');
     expect(result.summaries[0].settings?.plan).toBe('paid');
     expect(result.summaries[0].pet?.type).toBe('dog');
-    expect(result.summaries[0].pet?.num_legs).toBe(4);
+    expect(result.summaries[0].pet?.num_legs).toBeCloseTo(4);
     expect(result.summaries[1].name).toBe('B');
     expect(result.summaries[1].settings?.plan).toBe('free');
     expect(result.summaries[1].pet?.type).toBe('cat');
-    expect(result.summaries[1].pet?.num_legs).toBe(4);
+    expect(result.summaries[1].pet?.num_legs).toBeCloseTo(4);
     expect(result.summaries[2].name).toBe('C');
     expect(result.summaries[2].settings?.plan).toBe('paid');
     expect(result.summaries[2].pet?.type).toBe('dog');
-    expect(result.summaries[2].pet?.num_legs).toBe(3);
+    expect(result.summaries[2].pet?.num_legs).toBeCloseTo(3);
   });
 
   test('count without groups', async () => {
@@ -212,11 +212,11 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(1);
-    expect(result.summaries[0].all).toBe(3);
-    expect(result.summaries[0].col).toBe(3);
-    expect(result.summaries[0].obj_with_null).toBe(1);
-    expect(result.summaries[0].link).toBe(3);
+    expect(result.summaries.length).toBeCloseTo(1);
+    expect(result.summaries[0].all).toBeCloseTo(3);
+    expect(result.summaries[0].col).toBeCloseTo(3);
+    expect(result.summaries[0].obj_with_null).toBeCloseTo(1);
+    expect(result.summaries[0].link).toBeCloseTo(3);
   });
 
   test('count with groups', async () => {
@@ -244,13 +244,13 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(2);
-    expect(result.summaries[0].index).toBe(10);
-    expect(result.summaries[0].pet?.num_legs).toBe(4);
-    expect(result.summaries[0].nl).toBe(2);
-    expect(result.summaries[1].index).toBe(30);
-    expect(result.summaries[1].pet?.num_legs).toBe(3);
-    expect(result.summaries[1].nl).toBe(1);
+    expect(result.summaries.length).toBeCloseTo(2);
+    expect(result.summaries[0].index).toBeCloseTo(10);
+    expect(result.summaries[0].pet?.num_legs).toBeCloseTo(4);
+    expect(result.summaries[0].nl).toBeCloseTo(2);
+    expect(result.summaries[1].index).toBeCloseTo(30);
+    expect(result.summaries[1].pet?.num_legs).toBeCloseTo(3);
+    expect(result.summaries[1].nl).toBeCloseTo(1);
   });
 
   test('count with sort on group', async () => {
@@ -288,16 +288,16 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(3);
-    expect(result.summaries[0].index).toBe(10);
+    expect(result.summaries.length).toBeCloseTo(3);
+    expect(result.summaries[0].index).toBeCloseTo(10);
     expect(result.summaries[0].pet?.type).toBe('dog');
-    expect(result.summaries[0].nl).toBe(1);
-    expect(result.summaries[1].index).toBe(10);
+    expect(result.summaries[0].nl).toBeCloseTo(1);
+    expect(result.summaries[1].index).toBeCloseTo(10);
     expect(result.summaries[1].pet?.type).toBe('cat');
-    expect(result.summaries[1].nl).toBe(1);
-    expect(result.summaries[2].index).toBe(30);
+    expect(result.summaries[1].nl).toBeCloseTo(1);
+    expect(result.summaries[2].index).toBeCloseTo(30);
     expect(result.summaries[2].pet?.type).toBe('dog');
-    expect(result.summaries[2].nl).toBe(1);
+    expect(result.summaries[2].nl).toBeCloseTo(1);
   });
 
   test('count with sort on summary', async () => {
@@ -319,11 +319,11 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(2);
-    expect(result.summaries[0].index).toBe(10);
-    expect(result.summaries[0].total).toBe(2);
-    expect(result.summaries[1].index).toBe(30);
-    expect(result.summaries[1].total).toBe(1);
+    expect(result.summaries.length).toBeCloseTo(2);
+    expect(result.summaries[0].index).toBeCloseTo(10);
+    expect(result.summaries[0].total).toBeCloseTo(2);
+    expect(result.summaries[1].index).toBeCloseTo(30);
+    expect(result.summaries[1].total).toBeCloseTo(1);
   });
 
   test('count with sort on group and count', async () => {
@@ -359,13 +359,13 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(3);
+    expect(result.summaries.length).toBeCloseTo(3);
     expect(result.summaries[0].pet?.name).toBe('Otis');
-    expect(result.summaries[0].dark_set).toBe(1);
+    expect(result.summaries[0].dark_set).toBeCloseTo(1);
     expect(result.summaries[1].pet?.name).toBe('Lyra');
-    expect(result.summaries[1].dark_set).toBe(0);
+    expect(result.summaries[1].dark_set).toBeCloseTo(0);
     expect(result.summaries[2].pet?.name).toBe('Toffee');
-    expect(result.summaries[2].dark_set).toBe(0);
+    expect(result.summaries[2].dark_set).toBeCloseTo(0);
   });
 
   test('summarize with no results', async () => {
@@ -377,7 +377,7 @@ describe('summarize', () => {
 
     expect(result.summaries).toMatchInlineSnapshot('[]');
 
-    expect(result.summaries.length).toBe(0);
+    expect(result.summaries.length).toBeCloseTo(0);
   });
 
   test('filter on id', async () => {
@@ -398,9 +398,9 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(1);
+    expect(result.summaries.length).toBeCloseTo(1);
     expect(result.summaries[0].name).toBe('A');
-    expect(result.summaries[0].total).toBe(1);
+    expect(result.summaries[0].total).toBeCloseTo(1);
   });
 
   test('filter should create joins', async () => {
@@ -420,9 +420,9 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(1);
+    expect(result.summaries.length).toBeCloseTo(1);
     expect(result.summaries[0].name).toBe('B');
-    expect(result.summaries[0].dark_set).toBe(0);
+    expect(result.summaries[0].dark_set).toBeCloseTo(0);
   });
 
   test('group by, count, sort, filter', async () => {
@@ -450,10 +450,10 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBe(2);
+    expect(result.summaries.length).toBeCloseTo(2);
     expect(result.summaries[0].pet?.name).toBe('Lyra');
-    expect(result.summaries[0].dark_set).toBe(0);
+    expect(result.summaries[0].dark_set).toBeCloseTo(0);
     expect(result.summaries[1].pet?.name).toBe('Otis');
-    expect(result.summaries[1].dark_set).toBe(1);
+    expect(result.summaries[1].dark_set).toBeCloseTo(1);
   });
 });
