@@ -2,6 +2,7 @@ import { Flags } from '@oclif/core';
 import { CompareSchemaResult, createProcessor, parseCSVFile, parseCSVStream, TableInfo } from '@xata.io/importer';
 import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
+import { pluralize } from '../../utils.js';
 
 export default class ImportCSV extends BaseCommand {
   static description = 'Import a CSV file';
@@ -104,7 +105,7 @@ export default class ImportCSV extends BaseCommand {
         return Boolean(await this.shouldContinue(compare, table, create));
       },
       onBatchProcessed: async (rows) => {
-        this.info(`${chalk.bold(rows)} rows processed`);
+        this.info(`${chalk.bold(rows)} ${pluralize('row', rows)} processed`);
       }
     });
 
