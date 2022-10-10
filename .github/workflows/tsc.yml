@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ['next', 'beta', '4.8']
+        target: ['next', 'beta', '~4.8', '~4.7']
 
     steps:
       - name: 🛑 Cancel Previous Runs
@@ -29,8 +29,11 @@ jobs:
       - name: 📥 Install project dependencies
         run: npm install
 
-      - name: 👷🏻‍♀️ Compile
+      - name: 🚦 Install TypeScript ${{ matrix.target }}
         run: npm install typescript@${{ matrix.target }}
 
-      - name: 🚀 Type-check TS v${{ matrix.target }}
+      - name: 👷🏻‍♀️ Compile
+        run: npm run build
+
+      - name: 🚀 Type-check code
         run: npx lerna exec tsc
