@@ -28,11 +28,11 @@ export function isSortFilterString<T extends XataRecord>(value: any): value is C
   return isString(value);
 }
 
-export function isSortFilterBase<T extends XataRecord>(filter: SortFilter<T>): filter is SortFilterBase<T> {
+export function isSortFilterBase<T extends XataRecord>(filter: SortFilter<T, any>): filter is SortFilterBase<T> {
   return isObject(filter) && Object.values(filter).every((value) => value === 'asc' || value === 'desc');
 }
 
-export function isSortFilterObject<T extends XataRecord>(filter: SortFilter<T>): filter is SortFilterExtended<T> {
+export function isSortFilterObject<T extends XataRecord>(filter: SortFilter<T, any>): filter is SortFilterExtended<T> {
   return isObject(filter) && !isSortFilterBase(filter) && filter.column !== undefined;
 }
 
