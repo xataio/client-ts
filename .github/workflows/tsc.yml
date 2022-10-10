@@ -1,0 +1,37 @@
+name: TypeScript E2E Test
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tsc:
+    name: TypeScript Version Check
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ['next', 'beta', '4.8']
+
+    steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: 📥 Install project dependencies
+        run: npm install
+
+      - name: 👷🏻‍♀️ Compile
+        run: npm install typescript@${{ matrix.target }}
+
+      - name: 🚀 Type-check TS v${{ matrix.target }}
+        run: npx lerna exec tsc
