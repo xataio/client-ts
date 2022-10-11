@@ -360,6 +360,27 @@ export type MigrationColumnOp =
     }
   | {
       renameColumn: ColumnOpRename;
+    }
+  | {
+      modifyColumnKind: ColumnOpModifyKind;
+    }
+  | {
+      addUnique: ColumnOpAddUnique;
+    }
+  | {
+      removeUnique: ColumnOpRemoveUnique;
+    }
+  | {
+      addNotNull: ColumnOpAddNotNull;
+    }
+  | {
+      removeNotNull: ColumnOpRemoveNotNull;
+    }
+  | {
+      addDefaultValue: ColumnOpAddDefaultValue;
+    }
+  | {
+      removeDefaultValue: ColumnOpRemoveDefaultValue;
     };
 
 /**
@@ -407,6 +428,63 @@ export type ColumnOpRename = {
   table?: string;
   oldName: string;
   newName: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ColumnOpModifyKind = {
+  table?: string;
+  ['new']: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ColumnOpAddUnique = {
+  table?: string;
+  columnName: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ColumnOpRemoveUnique = {
+  table?: string;
+  columnName: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ColumnOpAddNotNull = {
+  table?: string;
+  columnName: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ColumnOpRemoveNotNull = {
+  table?: string;
+  columnName: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ColumnOpAddDefaultValue = {
+  table?: string;
+  columnName: string;
+  defaultValue: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ColumnOpRemoveDefaultValue = {
+  table?: string;
+  columnName: string;
 };
 
 export type MigrationRequest = {
