@@ -4444,7 +4444,7 @@ export type CPGetCPDatabaseMetadataVariables = {
  */
 export const cPGetCPDatabaseMetadata = (variables: CPGetCPDatabaseMetadataVariables, signal?: AbortSignal) =>
   fetch<Schemas.CPDatabaseMetadata, CPGetCPDatabaseMetadataError, undefined, {}, {}, CPGetCPDatabaseMetadataPathParams>(
-    { url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'get', ...variables, signal }
+    { url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'get', ...variables, signal }
   );
 
 export type CPUpdateCPDatabaseMetadataPathParams = {
@@ -4498,7 +4498,7 @@ export const cPUpdateCPDatabaseMetadata = (variables: CPUpdateCPDatabaseMetadata
     {},
     {},
     CPUpdateCPDatabaseMetadataPathParams
-  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'patch', ...variables, signal });
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'patch', ...variables, signal });
 
 export type ListRegionsPathParams = {
   /**
