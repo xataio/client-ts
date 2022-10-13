@@ -9,7 +9,7 @@ export default {
 
     const id = Math.round(Math.random() * 100000);
 
-    const { databaseName } = await api.databases.createDatabase(workspace, `sdk-e2e-test-${id}`);
+    const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`);
 
     await api.tables.createTable(workspace, databaseName, 'main', 'teams');
     await api.tables.createTable(workspace, databaseName, 'main', 'users');
@@ -28,7 +28,7 @@ export default {
     const users = await xata.db.users.getAll();
     const teams = await xata.db.teams.getAll();
 
-    await api.databases.deleteDatabase(workspace, databaseName);
+    await api.database.deleteDatabase(workspace, databaseName);
 
     return new Response(JSON.stringify({ users, teams }));
   }

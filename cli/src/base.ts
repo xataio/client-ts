@@ -291,7 +291,7 @@ export abstract class BaseCommand extends Command {
 
   async getDatabase(workspace: string, options: { allowCreate?: boolean } = {}) {
     const xata = await this.getXataClient();
-    const databases = await xata.databases.getDatabaseList(workspace);
+    const databases = await xata.database.getDatabaseList(workspace);
     const dbs = databases.databases || [];
 
     if (dbs.length > 0) {

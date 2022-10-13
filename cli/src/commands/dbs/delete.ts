@@ -37,7 +37,7 @@ export default class DatabasesDelete extends BaseCommand {
     if (!confirm) return this.exit(1);
     if (confirm !== database) return this.error('The database name did not match');
 
-    await xata.databases.deleteDatabase(workspace, database);
+    await xata.database.deleteDatabase(workspace, database);
 
     if (this.jsonEnabled()) return {};
 

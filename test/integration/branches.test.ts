@@ -105,7 +105,7 @@ describe('getBranch', () => {
     fetch.mockClear();
 
     // @ts-expect-error
-    const resolveBranch = await api.databases.resolveBranch(workspace, database, undefined, null);
+    const resolveBranch = await api.branches.resolveBranch(workspace, database, undefined, null);
 
     expect(resolveBranch).toMatchInlineSnapshot(`
       {

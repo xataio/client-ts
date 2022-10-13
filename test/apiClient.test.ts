@@ -34,7 +34,7 @@ describe('API Client Integration Tests', () => {
       slug: 'sdk-integration-api-client'
     });
 
-    const { databaseName } = await api.databases.createDatabase(workspace, `test-data-${workspace}`);
+    const { databaseName } = await api.database.createDatabase(workspace, `test-data-${workspace}`);
 
     await api.branches.createBranch(workspace, databaseName, 'branch');
     await api.tables.createTable(workspace, databaseName, 'branch', 'table');

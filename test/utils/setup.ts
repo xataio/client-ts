@@ -69,7 +69,7 @@ export async function setUpTestEnvironment(
   const id = Date.now().toString(36);
 
   const api = new XataApiClient({ apiKey, fetch, host });
-  const { databaseName: database } = await api.databases.createDatabase(
+  const { databaseName: database } = await api.database.createDatabase(
     workspace,
     `sdk-integration-test-${prefix}-${id}`
   );
@@ -106,7 +106,7 @@ export async function setUpTestEnvironment(
     },
     afterAll: async () => {
       try {
-        await api.databases.deleteDatabase(workspace, database);
+        await api.database.deleteDatabase(workspace, database);
       } catch (e) {
         // Ignore error, delete database during ES snapshot fails
         console.error('Delete database failed', e);
