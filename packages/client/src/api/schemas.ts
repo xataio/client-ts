@@ -304,16 +304,14 @@ export type ColumnMigration = {
  * @x-internal true
  */
 export type Commit = {
-  meta?: {
-    title?: string;
-    message?: string;
-    id: string;
-    parentID?: string;
-    mergeParentID?: string;
-    status: string;
-    createdAt: DateTime;
-    modifiedAt?: DateTime;
-  };
+  title?: string;
+  message?: string;
+  id: string;
+  parentID?: string;
+  mergeParentID?: string;
+  status: string;
+  createdAt: DateTime;
+  modifiedAt?: DateTime;
   operations: MigrationOp[];
 };
 
@@ -695,7 +693,7 @@ export type DateHistogramAgg = {
 
 /**
  * Split data into buckets by the unique values in a column. Accepts sub-aggregations for each bucket.
- * The top values as ordered by the number of records (`$count``) are returned.
+ * The top values as ordered by the number of records (`$count`) are returned.
  */
 export type TopValuesAgg = {
   /**
@@ -899,7 +897,7 @@ export type PageConfig = {
    */
   last?: string;
   /**
-   * Set page size. If the size is missing it is read from the cursor. If no cursor is given xata will choose the default page size.
+   * Set page size. If the size is missing it is read from the cursor. If no cursor is given Xata will choose the default page size.
    *
    * @default 20
    */
@@ -1031,7 +1029,18 @@ export type CPListDatabasesResponse = {
   /**
    * A list of databases in a Xata workspace
    */
-  databases?: CPDatabaseMetadata[];
+  databases: CPDatabaseMetadata[];
+};
+
+export type ListRegionsResponse = {
+  /**
+   * A list of regions where databases can be created
+   */
+  regions: Region[];
+};
+
+export type Region = {
+  id: string;
 };
 
 /**
