@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.9.6
+
+### Patch Changes
+
+- [#683](https://github.com/xataio/client-ts/pull/683) [`d436629`](https://github.com/xataio/client-ts/commit/d436629611442f6de81dea2d8e7196c0b2743c96) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix random-data success message with tables flag
+
 ## 0.9.5
 
 ### Patch Changes
