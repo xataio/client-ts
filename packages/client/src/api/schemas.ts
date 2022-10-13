@@ -101,6 +101,78 @@ export type DatabaseMetadata = {
    */
   name: string;
   /**
+   * Region where this database is hosted
+   */
+  region: string;
+  /**
+   * The time this database was created
+   */
+  createdAt: DateTime;
+  /**
+   * Metadata about the database for display in Xata user interfaces
+   */
+  ui?: {
+    /**
+     * The user-selected color for this database across interfaces
+     */
+    color?: string;
+  };
+};
+
+export type ListDatabasesResponse = {
+  /**
+   * A list of databases in a Xata workspace
+   */
+  databases: DatabaseMetadata[];
+};
+
+/**
+ * @example {"repository":"github.com/my/repository","branch":"feature-login","stage":"testing","labels":["epic-100"]}
+ * @x-go-type xata.BranchMetadata
+ */
+export type BranchMetadata = {
+  /**
+   * @minLength 1
+   */
+  repository?: string;
+  branch?: BranchName;
+  /**
+   * @minLength 1
+   */
+  stage?: string;
+  labels?: string[];
+};
+
+/**
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type BranchName = string;
+
+/**
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type DBName = string;
+
+export type ListRegionsResponse = {
+  /**
+   * A list of regions where databases can be created
+   */
+  regions: Region[];
+};
+
+export type Region = {
+  id: string;
+};
+
+/**
+ * Metadata of databases
+ */
+export type DEPRECATEDDatabaseMetadata = {
+  /**
+   * The machine-readable name of a database
+   */
+  name: string;
+  /**
    * The time this database was created
    */
   createdAt: DateTime;
@@ -119,11 +191,11 @@ export type DatabaseMetadata = {
   };
 };
 
-export type ListDatabasesResponse = {
+export type DEPRECATEDListDatabasesResponse = {
   /**
    * A list of databases in a Xata workspace
    */
-  databases?: DatabaseMetadata[];
+  databases?: DEPRECATEDDatabaseMetadata[];
 };
 
 export type ListBranchesResponse = {
@@ -141,23 +213,6 @@ export type ListGitBranchesResponse = {
 export type Branch = {
   name: string;
   createdAt: DateTime;
-};
-
-/**
- * @example {"repository":"github.com/my/repository","branch":"feature-login","stage":"testing","labels":["epic-100"]}
- * @x-go-type xata.BranchMetadata
- */
-export type BranchMetadata = {
-  /**
-   * @minLength 1
-   */
-  repository?: string;
-  branch?: BranchName;
-  /**
-   * @minLength 1
-   */
-  stage?: string;
-  labels?: string[];
 };
 
 export type DBBranch = {
@@ -229,16 +284,6 @@ export type RevLink = {
   linkID: string;
   table: string;
 };
-
-/**
- * @pattern [a-zA-Z0-9_\-~]+
- */
-export type BranchName = string;
-
-/**
- * @pattern [a-zA-Z0-9_\-~]+
- */
-export type DBName = string;
 
 /**
  * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -997,51 +1042,6 @@ export type AggResponse =
         [key: string]: AggResponse;
       })[];
     };
-
-/**
- * Metadata of databases
- */
-export type CPDatabaseMetadata = {
-  /**
-   * The machine-readable name of a database
-   */
-  name: string;
-  /**
-   * Region where this database is hosted
-   */
-  region: string;
-  /**
-   * The time this database was created
-   */
-  createdAt: DateTime;
-  /**
-   * Metadata about the database for display in Xata user interfaces
-   */
-  ui?: {
-    /**
-     * The user-selected color for this database across interfaces
-     */
-    color?: string;
-  };
-};
-
-export type CPListDatabasesResponse = {
-  /**
-   * A list of databases in a Xata workspace
-   */
-  databases: CPDatabaseMetadata[];
-};
-
-export type ListRegionsResponse = {
-  /**
-   * A list of regions where databases can be created
-   */
-  regions: Region[];
-};
-
-export type Region = {
-  id: string;
-};
 
 /**
  * Xata Table Record Metadata

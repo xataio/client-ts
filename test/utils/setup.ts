@@ -25,6 +25,8 @@ if (apiKey === '') throw new Error('XATA_API_KEY environment variable is not set
 const workspace = process.env.XATA_WORKSPACE ?? '';
 if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
 
+const region = process.env.XATA_REGION || 'eu-west-1';
+
 const host = parseProviderString(process.env.XATA_API_PROVIDER);
 const fetch = vi.fn(realFetch);
 
@@ -71,7 +73,8 @@ export async function setUpTestEnvironment(
   const api = new XataApiClient({ apiKey, fetch, host });
   const { databaseName: database } = await api.database.createDatabase(
     workspace,
-    `sdk-integration-test-${prefix}-${id}`
+    `sdk-integration-test-${prefix}-${id}`,
+    { region }
   );
 
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace);

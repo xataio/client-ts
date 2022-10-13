@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { XataApiClient, BaseClient } from '@xata.io/client';
 
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
-  const { XATA_WORKSPACE: workspace, XATA_API_KEY: apiKey } = process.env;
+  const { XATA_WORKSPACE: workspace, XATA_API_KEY: apiKey, XATA_REGION: region = 'eu-west-1' } = process.env;
   if (!workspace || !apiKey) {
     throw new Error('XATA_WORKSPACE and XATA_API_KEY are required');
   }
@@ -12,7 +12,7 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
 
   const id = Math.round(Math.random() * 100000);
 
-  const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`);
+  const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`, { region });
 
   await api.tables.createTable(workspace, databaseName, 'main', 'teams');
   await api.tables.createTable(workspace, databaseName, 'main', 'users');

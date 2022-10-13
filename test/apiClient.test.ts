@@ -8,6 +8,7 @@ import { XataApiClient } from '../packages/client/src';
 dotenv.config({ path: join(process.cwd(), '.env') });
 
 const api = new XataApiClient({ fetch, apiKey: process.env.XATA_API_KEY });
+const region = process.env.XATA_REGION || 'eu-west-1';
 
 describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace', async () => {
@@ -34,7 +35,7 @@ describe('API Client Integration Tests', () => {
       slug: 'sdk-integration-api-client'
     });
 
-    const { databaseName } = await api.database.createDatabase(workspace, `test-data-${workspace}`);
+    const { databaseName } = await api.database.createDatabase(workspace, `test-data-${workspace}`, { region });
 
     await api.branches.createBranch(workspace, databaseName, 'branch');
     await api.tables.createTable(workspace, databaseName, 'branch', 'table');

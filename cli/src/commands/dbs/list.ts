@@ -25,13 +25,12 @@ export default class DatabasesList extends BaseCommand {
       (await this.getWorkspace());
 
     const xata = await this.getXataClient();
-    const databaseList = await xata.database.getDatabaseList(workspace);
-    const dbs = databaseList.databases || [];
+    const { databases: dbs = [] } = await xata.database.getDatabaseList(workspace);
 
     if (this.jsonEnabled()) return dbs;
 
-    const headers = ['Database name', 'Created at', '# branches'];
-    const rows = dbs.map((b) => [b.name, this.formatDate(b.createdAt), String(b.numberOfBranches)]);
+    const headers = ['Database name', 'Created at'];
+    const rows = dbs.map((b) => [b.name, this.formatDate(b.createdAt)]);
     this.printTable(headers, rows, ['l', 'l', 'r']);
   }
 }

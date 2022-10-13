@@ -31,7 +31,6 @@ export class XataApiClient {
     tables: TableApi;
     records: RecordsApi;
     searchAndFilter: SearchAndFilterApi;
-    databases: DatabasesApi;
   }> = {};
 
   constructor(options: XataApiClientOptions = {}) {
@@ -106,11 +105,6 @@ export class XataApiClient {
   public get searchAndFilter() {
     if (!this.#namespaces.searchAndFilter) this.#namespaces.searchAndFilter = new SearchAndFilterApi(this.#extraProps);
     return this.#namespaces.searchAndFilter;
-  }
-
-  public get databases() {
-    if (!this.#namespaces.databases) this.#namespaces.databases = new DatabasesApi(this.#extraProps);
-    return this.#namespaces.databases;
   }
 }
 
@@ -262,58 +256,6 @@ class InvitesApi {
   public resendWorkspaceMemberInvite(workspaceId: Schemas.WorkspaceID, inviteId: Schemas.InviteID): Promise<void> {
     return operationsByTag.invites.resendWorkspaceMemberInvite({
       pathParams: { workspaceId, inviteId },
-      ...this.extraProps
-    });
-  }
-}
-
-class DatabaseApi {
-  constructor(private extraProps: FetcherExtraProps) {}
-
-  public getDatabaseList(workspace: Schemas.WorkspaceID): Promise<Schemas.ListDatabasesResponse> {
-    return operationsByTag.database.getDatabaseList({
-      pathParams: { workspace },
-      ...this.extraProps
-    });
-  }
-
-  public createDatabase(
-    workspace: Schemas.WorkspaceID,
-    dbName: Schemas.DBName,
-    options: Types.CreateDatabaseRequestBody = {}
-  ): Promise<Types.CreateDatabaseResponse> {
-    return operationsByTag.database.createDatabase({
-      pathParams: { workspace, dbName },
-      body: options,
-      ...this.extraProps
-    });
-  }
-
-  public deleteDatabase(workspace: Schemas.WorkspaceID, dbName: Schemas.DBName): Promise<void> {
-    return operationsByTag.database.deleteDatabase({
-      pathParams: { workspace, dbName },
-      ...this.extraProps
-    });
-  }
-
-  public getDatabaseMetadata(
-    workspace: Schemas.WorkspaceID,
-    dbName: Schemas.DBName
-  ): Promise<Schemas.DatabaseMetadata> {
-    return operationsByTag.database.getDatabaseMetadata({
-      pathParams: { workspace, dbName },
-      ...this.extraProps
-    });
-  }
-
-  public updateDatabaseMetadata(
-    workspace: Schemas.WorkspaceID,
-    dbName: Schemas.DBName,
-    options: Types.UpdateDatabaseMetadataRequestBody = {}
-  ): Promise<Schemas.DatabaseMetadata> {
-    return operationsByTag.database.updateDatabaseMetadata({
-      pathParams: { workspace, dbName },
-      body: options,
       ...this.extraProps
     });
   }
@@ -993,21 +935,11 @@ class MigrationsApi {
     });
   }
 }
-class DatabasesApi {
+class DatabaseApi {
   constructor(private extraProps: FetcherExtraProps) {}
 
-  /**
-  * 
-  *  cPGetDatabaseList,
-    cPCreateDatabase,
-    cPDeleteDatabase,
-    cPGetCPDatabaseMetadata,
-    cPUpdateCPDatabaseMetadata,
-    listRegions
-  */
-
-  public getDatabaseList(workspaceId: Schemas.WorkspaceID): Promise<Schemas.CPListDatabasesResponse> {
-    return operationsByTag.databases.cPGetDatabaseList({
+  public getDatabaseList(workspaceId: Schemas.WorkspaceID): Promise<Schemas.ListDatabasesResponse> {
+    return operationsByTag.database.getDatabaseList({
       pathParams: { workspaceId },
       ...this.extraProps
     });
@@ -1016,9 +948,9 @@ class DatabasesApi {
   public createDatabase(
     workspaceId: Schemas.WorkspaceID,
     dbName: Schemas.DBName,
-    options: Components.CPCreateDatabaseRequestBody
-  ): Promise<Components.CPCreateDatabaseResponse> {
-    return operationsByTag.databases.cPCreateDatabase({
+    options: Components.CreateDatabaseRequestBody
+  ): Promise<Components.CreateDatabaseResponse> {
+    return operationsByTag.database.createDatabase({
       pathParams: { workspaceId, dbName },
       body: options,
       ...this.extraProps
@@ -1026,7 +958,7 @@ class DatabasesApi {
   }
 
   public deleteDatabase(workspaceId: Schemas.WorkspaceID, dbName: Schemas.DBName): Promise<void> {
-    return operationsByTag.databases.cPDeleteDatabase({
+    return operationsByTag.database.deleteDatabase({
       pathParams: { workspaceId, dbName },
       ...this.extraProps
     });
@@ -1035,8 +967,8 @@ class DatabasesApi {
   public getDatabaseMetadata(
     workspaceId: Schemas.WorkspaceID,
     dbName: Schemas.DBName
-  ): Promise<Schemas.CPDatabaseMetadata> {
-    return operationsByTag.databases.cPGetCPDatabaseMetadata({
+  ): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.database.getDatabaseMetadata({
       pathParams: { workspaceId, dbName },
       ...this.extraProps
     });
@@ -1045,9 +977,9 @@ class DatabasesApi {
   public updateDatabaseMetadata(
     workspaceId: Schemas.WorkspaceID,
     dbName: Schemas.DBName,
-    metadata: Schemas.CPDatabaseMetadata
-  ): Promise<Schemas.CPDatabaseMetadata> {
-    return operationsByTag.databases.cPUpdateCPDatabaseMetadata({
+    metadata: Schemas.DatabaseMetadata
+  ): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.database.updateDatabaseMetadata({
       pathParams: { workspaceId, dbName },
       body: metadata,
       ...this.extraProps
@@ -1055,7 +987,7 @@ class DatabasesApi {
   }
 
   public listRegions(workspaceId: Schemas.WorkspaceID): Promise<Schemas.ListRegionsResponse> {
-    return operationsByTag.databases.listRegions({
+    return operationsByTag.database.listRegions({
       pathParams: { workspaceId },
       ...this.extraProps
     });

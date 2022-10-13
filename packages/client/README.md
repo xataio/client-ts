@@ -247,7 +247,7 @@ Once you have initialized the API client, the operations are organized following
 
 ```ts
 const { id: workspace } = await api.workspaces.createWorkspace({ name: 'example' });
-const { databaseName } = await api.databases.createDatabase(workspace, 'database');
+const { databaseName } = await api.database.createDatabase(workspace, 'database', { region: 'eu-west-1' });
 
 await api.branches.createBranch(workspace, databaseName, 'branch');
 await api.tables.createTable(workspace, databaseName, 'branch', 'table');

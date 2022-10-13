@@ -3,13 +3,16 @@ import { XataClient } from '../../../packages/codegen/example/xata';
 
 async function main() {
   // @ts-ignore
+  const region = XATA_REGION || 'eu-west-1';
+
+  // @ts-ignore
   const workspace = XATA_WORKSPACE;
 
   const api = new XataApiClient({ apiKey: XATA_API_KEY });
 
   const id = Math.round(Math.random() * 100000);
 
-  const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`);
+  const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`, { region });
 
   await api.tables.createTable(workspace, databaseName, 'main', 'teams');
   await api.tables.createTable(workspace, databaseName, 'main', 'users');

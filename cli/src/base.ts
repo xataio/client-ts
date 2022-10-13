@@ -291,8 +291,7 @@ export abstract class BaseCommand extends Command {
 
   async getDatabase(workspace: string, options: { allowCreate?: boolean } = {}) {
     const xata = await this.getXataClient();
-    const databases = await xata.database.getDatabaseList(workspace);
-    const dbs = databases.databases || [];
+    const { databases: dbs = [] } = await xata.database.getDatabaseList(workspace);
 
     if (dbs.length > 0) {
       const choices = dbs.map((db) => ({
@@ -312,14 +311,16 @@ export abstract class BaseCommand extends Command {
       });
       if (!database) return this.error('No database selected');
       if (database === 'create') {
-        return this.createDatabase(workspace);
+        const { databaseName } = await this.createDatabase(workspace);
+        return databaseName;
       } else {
         return database;
       }
     } else if (!options.allowCreate) {
       return this.error('No databases found, please create one first');
     } else {
-      return this.createDatabase(workspace);
+      const { databaseName } = await this.createDatabase(workspace);
+      return databaseName;
     }
   }
 
@@ -375,19 +376,35 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  async createDatabase(workspace: string) {
+  async createDatabase(workspace: string, options?: { overrideName?: string; overrideRegion?: string }) {
     const xata = await this.getXataClient();
-    const { name } = await this.prompt({
-      type: 'text',
-      name: 'name',
-      message: 'New database name',
-      initial: path.parse(process.cwd()).name
-    });
+    const { name } = await this.prompt(
+      {
+        type: 'text',
+        name: 'name',
+        message: 'New database name',
+        initial: path.parse(process.cwd()).name
+      },
+      options?.overrideName
+    );
     if (!name) return this.error('No database name provided');
 
-    await xata.database.createDatabase(workspace, name);
+    const { regions } = await xata.database.listRegions(workspace);
+    const { region } = await this.prompt(
+      {
+        type: 'select',
+        name: 'region',
+        message: 'Select a region',
+        // TODO: Get metadata and add a better title
+        choices: regions.map(({ id }) => ({ title: id, value: id }))
+      },
+      options?.overrideRegion
+    );
+    if (!region) return this.error('No region selected');
 
-    return name;
+    const result = await xata.database.createDatabase(workspace, name, { region });
+
+    return result;
   }
 
   async createBranch(workspace: string, database: string): Promise<string> {

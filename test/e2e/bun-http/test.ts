@@ -3,6 +3,8 @@ import { XataClient } from '../../../packages/codegen/example/xata';
 import { isObject } from '../shared';
 
 async function handleResponse() {
+  const region = process.env.XATA_REGION || 'eu-west-1';
+
   const workspace = process.env.XATA_WORKSPACE;
   if (!workspace) throw new Error('XATA_WORKSPACE environment variable is not set');
 
@@ -10,7 +12,7 @@ async function handleResponse() {
 
   const id = Math.round(Math.random() * 100000);
 
-  const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`);
+  const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`, { region });
 
   await api.tables.createTable(workspace, databaseName, 'main', 'teams');
   await api.tables.createTable(workspace, databaseName, 'main', 'users');

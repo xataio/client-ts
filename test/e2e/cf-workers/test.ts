@@ -3,13 +3,13 @@ import { XataApiClient, BaseClient } from '@xata.io/client';
 
 export default {
   async fetch(_request: Request, env: Record<string, string>): Promise<Response> {
-    const { XATA_WORKSPACE: workspace, XATA_API_KEY: apiKey } = env;
+    const { XATA_WORKSPACE: workspace, XATA_API_KEY: apiKey, XATA_REGION: region = 'eu-west-1' } = env;
 
     const api = new XataApiClient({ apiKey });
 
     const id = Math.round(Math.random() * 100000);
 
-    const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`);
+    const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`, { region });
 
     await api.tables.createTable(workspace, databaseName, 'main', 'teams');
     await api.tables.createTable(workspace, databaseName, 'main', 'users');
