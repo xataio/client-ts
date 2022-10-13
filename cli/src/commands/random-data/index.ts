@@ -35,8 +35,8 @@ export default class RandomData extends BaseCommand {
       this.error('Could not resolve the current branch');
     }
 
-    const { tables } = branchDetails.schema;
-    if (tables.length === 0) {
+    const { tables: schemaTables } = branchDetails.schema;
+    if (schemaTables.length === 0) {
       this.warn(
         `Your database has no tables. To create one, use ${chalk.bold(
           'xata schema edit'
@@ -45,11 +45,10 @@ export default class RandomData extends BaseCommand {
       this.log();
     }
 
-    const { table: tableName, records: totalRecords = 25 } = flags;
+    const { table: tablesFlag = [], records: totalRecords = 25 } = flags;
+    const tables = tablesFlag.length > 0 ? schemaTables.filter((t) => tablesFlag.includes(t.name)) : schemaTables;
 
     for (const table of tables) {
-      if (tableName && !tableName.includes(table.name)) continue;
-
       const records: Record<string, unknown>[] = [];
       for (let index = 0; index < totalRecords; index++) {
         records.push(this.randomRecord(table.columns));
