@@ -304,16 +304,14 @@ export type ColumnMigration = {
  * @x-internal true
  */
 export type Commit = {
-  meta?: {
-    title?: string;
-    message?: string;
-    id: string;
-    parentID?: string;
-    mergeParentID?: string;
-    status: string;
-    createdAt: DateTime;
-    modifiedAt?: DateTime;
-  };
+  title?: string;
+  message?: string;
+  id: string;
+  parentID?: string;
+  mergeParentID?: string;
+  status: string;
+  createdAt: DateTime;
+  modifiedAt?: DateTime;
   operations: MigrationOp[];
 };
 
@@ -1031,7 +1029,18 @@ export type CPListDatabasesResponse = {
   /**
    * A list of databases in a Xata workspace
    */
-  databases?: CPDatabaseMetadata[];
+  databases: CPDatabaseMetadata[];
+};
+
+export type ListRegionsResponse = {
+  /**
+   * A list of regions where databases can be created
+   */
+  regions: Region[];
+};
+
+export type Region = {
+  id: string;
 };
 
 /**

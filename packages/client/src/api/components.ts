@@ -199,36 +199,6 @@ export const deleteUserAPIKey = (variables: DeleteUserAPIKeyVariables, signal?: 
     signal
   });
 
-export type CreateWorkspaceError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type CreateWorkspaceVariables = {
-  body: Schemas.WorkspaceMeta;
-} & FetcherExtraProps;
-
-/**
- * Creates a new workspace with the user requesting it as its single owner.
- */
-export const createWorkspace = (variables: CreateWorkspaceVariables, signal?: AbortSignal) =>
-  fetch<Schemas.Workspace, CreateWorkspaceError, Schemas.WorkspaceMeta, {}, {}, {}>({
-    url: '/workspaces',
-    method: 'post',
-    ...variables,
-    signal
-  });
-
 export type GetWorkspacesListError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -262,6 +232,36 @@ export const getWorkspacesList = (variables: GetWorkspacesListVariables, signal?
   fetch<GetWorkspacesListResponse, GetWorkspacesListError, undefined, {}, {}, {}>({
     url: '/workspaces',
     method: 'get',
+    ...variables,
+    signal
+  });
+
+export type CreateWorkspaceError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CreateWorkspaceVariables = {
+  body: Schemas.WorkspaceMeta;
+} & FetcherExtraProps;
+
+/**
+ * Creates a new workspace with the user requesting it as its single owner.
+ */
+export const createWorkspace = (variables: CreateWorkspaceVariables, signal?: AbortSignal) =>
+  fetch<Schemas.Workspace, CreateWorkspaceError, Schemas.WorkspaceMeta, {}, {}, {}>({
+    url: '/workspaces',
+    method: 'post',
     ...variables,
     signal
   });
@@ -649,47 +649,6 @@ export const cancelWorkspaceMemberInvite = (variables: CancelWorkspaceMemberInvi
     signal
   });
 
-export type ResendWorkspaceMemberInvitePathParams = {
-  /**
-   * Workspace ID
-   */
-  workspaceId: Schemas.WorkspaceID;
-  /**
-   * Invite identifier
-   */
-  inviteId: Schemas.InviteID;
-};
-
-export type ResendWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type ResendWorkspaceMemberInviteVariables = {
-  pathParams: ResendWorkspaceMemberInvitePathParams;
-} & FetcherExtraProps;
-
-/**
- * This operation provides a way to resend an Invite notification. Invite notifications can only be sent for Invites not yet accepted.
- */
-export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInviteVariables, signal?: AbortSignal) =>
-  fetch<undefined, ResendWorkspaceMemberInviteError, undefined, {}, {}, ResendWorkspaceMemberInvitePathParams>({
-    url: '/workspaces/{workspaceId}/invites/{inviteId}/resend',
-    method: 'post',
-    ...variables,
-    signal
-  });
-
 export type AcceptWorkspaceMemberInvitePathParams = {
   /**
    * Workspace ID
@@ -726,6 +685,47 @@ export type AcceptWorkspaceMemberInviteVariables = {
 export const acceptWorkspaceMemberInvite = (variables: AcceptWorkspaceMemberInviteVariables, signal?: AbortSignal) =>
   fetch<undefined, AcceptWorkspaceMemberInviteError, undefined, {}, {}, AcceptWorkspaceMemberInvitePathParams>({
     url: '/workspaces/{workspaceId}/invites/{inviteKey}/accept',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type ResendWorkspaceMemberInvitePathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * Invite identifier
+   */
+  inviteId: Schemas.InviteID;
+};
+
+export type ResendWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type ResendWorkspaceMemberInviteVariables = {
+  pathParams: ResendWorkspaceMemberInvitePathParams;
+} & FetcherExtraProps;
+
+/**
+ * This operation provides a way to resend an Invite notification. Invite notifications can only be sent for Invites not yet accepted.
+ */
+export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInviteVariables, signal?: AbortSignal) =>
+  fetch<undefined, ResendWorkspaceMemberInviteError, undefined, {}, {}, ResendWorkspaceMemberInvitePathParams>({
+    url: '/workspaces/{workspaceId}/invites/{inviteId}/resend',
     method: 'post',
     ...variables,
     signal
@@ -979,6 +979,265 @@ export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariable
     UpdateDatabaseMetadataPathParams
   >({ url: '/dbs/{dbName}/metadata', method: 'patch', ...variables, signal });
 
+export type GetBranchDetailsPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type GetBranchDetailsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetBranchDetailsVariables = {
+  pathParams: GetBranchDetailsPathParams;
+} & FetcherExtraProps;
+
+export const getBranchDetails = (variables: GetBranchDetailsVariables, signal?: AbortSignal) =>
+  fetch<Schemas.DBBranch, GetBranchDetailsError, undefined, {}, {}, GetBranchDetailsPathParams>({
+    url: '/db/{dbBranchName}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type CreateBranchPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type CreateBranchQueryParams = {
+  /**
+   * Name of source branch to branch the new schema from
+   */
+  from?: string;
+};
+
+export type CreateBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CreateBranchResponse = {
+  /**
+   * @minLength 1
+   */
+  databaseName: string;
+  branchName: string;
+};
+
+export type CreateBranchRequestBody = {
+  /**
+   * Select the branch to fork from. Defaults to 'main'
+   */
+  from?: string;
+  metadata?: Schemas.BranchMetadata;
+};
+
+export type CreateBranchVariables = {
+  body?: CreateBranchRequestBody;
+  pathParams: CreateBranchPathParams;
+  queryParams?: CreateBranchQueryParams;
+} & FetcherExtraProps;
+
+export const createBranch = (variables: CreateBranchVariables, signal?: AbortSignal) =>
+  fetch<
+    CreateBranchResponse,
+    CreateBranchError,
+    CreateBranchRequestBody,
+    {},
+    CreateBranchQueryParams,
+    CreateBranchPathParams
+  >({ url: '/db/{dbBranchName}', method: 'put', ...variables, signal });
+
+export type DeleteBranchPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type DeleteBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteBranchVariables = {
+  pathParams: DeleteBranchPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Delete the branch in the database and all its resources
+ */
+export const deleteBranch = (variables: DeleteBranchVariables, signal?: AbortSignal) =>
+  fetch<undefined, DeleteBranchError, undefined, {}, {}, DeleteBranchPathParams>({
+    url: '/db/{dbBranchName}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type UpdateBranchMetadataPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type UpdateBranchMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateBranchMetadataVariables = {
+  body?: Schemas.BranchMetadata;
+  pathParams: UpdateBranchMetadataPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Update the branch metadata
+ */
+export const updateBranchMetadata = (variables: UpdateBranchMetadataVariables, signal?: AbortSignal) =>
+  fetch<undefined, UpdateBranchMetadataError, Schemas.BranchMetadata, {}, {}, UpdateBranchMetadataPathParams>({
+    url: '/db/{dbBranchName}/metadata',
+    method: 'put',
+    ...variables,
+    signal
+  });
+
+export type GetBranchMetadataPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type GetBranchMetadataError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetBranchMetadataVariables = {
+  pathParams: GetBranchMetadataPathParams;
+} & FetcherExtraProps;
+
+export const getBranchMetadata = (variables: GetBranchMetadataVariables, signal?: AbortSignal) =>
+  fetch<Schemas.BranchMetadata, GetBranchMetadataError, undefined, {}, {}, GetBranchMetadataPathParams>({
+    url: '/db/{dbBranchName}/metadata',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type GetBranchStatsPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type GetBranchStatsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetBranchStatsResponse = {
+  timestamp: string;
+  interval: string;
+  resolution: string;
+  numberOfRecords?: Schemas.MetricsDatapoint[];
+  writesOverTime?: Schemas.MetricsDatapoint[];
+  readsOverTime?: Schemas.MetricsDatapoint[];
+  readLatency?: Schemas.MetricsLatency;
+  writeLatency?: Schemas.MetricsLatency;
+  warning?: string;
+};
+
+export type GetBranchStatsVariables = {
+  pathParams: GetBranchStatsPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Get branch usage metrics.
+ */
+export const getBranchStats = (variables: GetBranchStatsVariables, signal?: AbortSignal) =>
+  fetch<GetBranchStatsResponse, GetBranchStatsError, undefined, {}, {}, GetBranchStatsPathParams>({
+    url: '/db/{dbBranchName}/stats',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type GetGitBranchesMappingPathParams = {
   /**
    * The Database Name
@@ -1228,6 +1487,141 @@ export const resolveBranch = (variables: ResolveBranchVariables, signal?: AbortS
     ...variables,
     signal
   });
+
+export type GetBranchMigrationHistoryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type GetBranchMigrationHistoryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetBranchMigrationHistoryResponse = {
+  startedFrom?: Schemas.StartedFromMetadata;
+  migrations?: Schemas.BranchMigration[];
+};
+
+export type GetBranchMigrationHistoryRequestBody = {
+  limit?: number;
+  startFrom?: string;
+};
+
+export type GetBranchMigrationHistoryVariables = {
+  body?: GetBranchMigrationHistoryRequestBody;
+  pathParams: GetBranchMigrationHistoryPathParams;
+} & FetcherExtraProps;
+
+export const getBranchMigrationHistory = (variables: GetBranchMigrationHistoryVariables, signal?: AbortSignal) =>
+  fetch<
+    GetBranchMigrationHistoryResponse,
+    GetBranchMigrationHistoryError,
+    GetBranchMigrationHistoryRequestBody,
+    {},
+    {},
+    GetBranchMigrationHistoryPathParams
+  >({ url: '/db/{dbBranchName}/migrations', method: 'get', ...variables, signal });
+
+export type GetBranchMigrationPlanPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type GetBranchMigrationPlanError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetBranchMigrationPlanVariables = {
+  body: Schemas.Schema;
+  pathParams: GetBranchMigrationPlanPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Compute a migration plan from a target schema the branch should be migrated too.
+ */
+export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariables, signal?: AbortSignal) =>
+  fetch<
+    Responses.BranchMigrationPlan,
+    GetBranchMigrationPlanError,
+    Schemas.Schema,
+    {},
+    {},
+    GetBranchMigrationPlanPathParams
+  >({ url: '/db/{dbBranchName}/migrations/plan', method: 'post', ...variables, signal });
+
+export type ExecuteBranchMigrationPlanPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+};
+
+export type ExecuteBranchMigrationPlanError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type ExecuteBranchMigrationPlanRequestBody = {
+  version: number;
+  migration: Schemas.BranchMigration;
+};
+
+export type ExecuteBranchMigrationPlanVariables = {
+  body: ExecuteBranchMigrationPlanRequestBody;
+  pathParams: ExecuteBranchMigrationPlanPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Apply a migration plan to the branch
+ */
+export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlanVariables, signal?: AbortSignal) =>
+  fetch<
+    undefined,
+    ExecuteBranchMigrationPlanError,
+    ExecuteBranchMigrationPlanRequestBody,
+    {},
+    {},
+    ExecuteBranchMigrationPlanPathParams
+  >({ url: '/db/{dbBranchName}/migrations/execute', method: 'post', ...variables, signal });
 
 export type QueryMigrationRequestsPathParams = {
   /**
@@ -1636,7 +2030,7 @@ export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables,
     signal
   });
 
-export type GetBranchDetailsPathParams = {
+export type GetBranchSchemaHistoryPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
@@ -1644,7 +2038,7 @@ export type GetBranchDetailsPathParams = {
   workspace: string;
 };
 
-export type GetBranchDetailsError = Fetcher.ErrorWrapper<
+export type GetBranchSchemaHistoryError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -1659,326 +2053,53 @@ export type GetBranchDetailsError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type GetBranchDetailsVariables = {
-  pathParams: GetBranchDetailsPathParams;
+export type GetBranchSchemaHistoryResponse = {
+  meta: {
+    /**
+     * last record id
+     */
+    cursor: string;
+    /**
+     * true if more records can be fetch
+     */
+    more: boolean;
+  };
+  logs: Schemas.Commit[];
+};
+
+export type GetBranchSchemaHistoryRequestBody = {
+  page?: {
+    /**
+     * Query the next page that follow the cursor.
+     */
+    after?: string;
+    /**
+     * Query the previous page before the cursor.
+     */
+    before?: string;
+    /**
+     * Set page size. If the size is missing it is read from the cursor. If no cursor is given xata will choose the default page size.
+     *
+     * @default 20
+     */
+    size?: number;
+  };
+};
+
+export type GetBranchSchemaHistoryVariables = {
+  body?: GetBranchSchemaHistoryRequestBody;
+  pathParams: GetBranchSchemaHistoryPathParams;
 } & FetcherExtraProps;
 
-export const getBranchDetails = (variables: GetBranchDetailsVariables, signal?: AbortSignal) =>
-  fetch<Schemas.DBBranch, GetBranchDetailsError, undefined, {}, {}, GetBranchDetailsPathParams>({
-    url: '/db/{dbBranchName}',
-    method: 'get',
-    ...variables,
-    signal
-  });
-
-export type CreateBranchPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type CreateBranchQueryParams = {
-  /**
-   * Name of source branch to branch the new schema from
-   */
-  from?: string;
-};
-
-export type CreateBranchError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type CreateBranchResponse = {
-  /**
-   * @minLength 1
-   */
-  databaseName: string;
-  branchName: string;
-};
-
-export type CreateBranchRequestBody = {
-  /**
-   * Select the branch to fork from. Defaults to 'main'
-   */
-  from?: string;
-  metadata?: Schemas.BranchMetadata;
-};
-
-export type CreateBranchVariables = {
-  body?: CreateBranchRequestBody;
-  pathParams: CreateBranchPathParams;
-  queryParams?: CreateBranchQueryParams;
-} & FetcherExtraProps;
-
-export const createBranch = (variables: CreateBranchVariables, signal?: AbortSignal) =>
+export const getBranchSchemaHistory = (variables: GetBranchSchemaHistoryVariables, signal?: AbortSignal) =>
   fetch<
-    CreateBranchResponse,
-    CreateBranchError,
-    CreateBranchRequestBody,
-    {},
-    CreateBranchQueryParams,
-    CreateBranchPathParams
-  >({ url: '/db/{dbBranchName}', method: 'put', ...variables, signal });
-
-export type DeleteBranchPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type DeleteBranchError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type DeleteBranchVariables = {
-  pathParams: DeleteBranchPathParams;
-} & FetcherExtraProps;
-
-/**
- * Delete the branch in the database and all its resources
- */
-export const deleteBranch = (variables: DeleteBranchVariables, signal?: AbortSignal) =>
-  fetch<undefined, DeleteBranchError, undefined, {}, {}, DeleteBranchPathParams>({
-    url: '/db/{dbBranchName}',
-    method: 'delete',
-    ...variables,
-    signal
-  });
-
-export type UpdateBranchMetadataPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type UpdateBranchMetadataError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type UpdateBranchMetadataVariables = {
-  body?: Schemas.BranchMetadata;
-  pathParams: UpdateBranchMetadataPathParams;
-} & FetcherExtraProps;
-
-/**
- * Update the branch metadata
- */
-export const updateBranchMetadata = (variables: UpdateBranchMetadataVariables, signal?: AbortSignal) =>
-  fetch<undefined, UpdateBranchMetadataError, Schemas.BranchMetadata, {}, {}, UpdateBranchMetadataPathParams>({
-    url: '/db/{dbBranchName}/metadata',
-    method: 'put',
-    ...variables,
-    signal
-  });
-
-export type GetBranchMetadataPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type GetBranchMetadataError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GetBranchMetadataVariables = {
-  pathParams: GetBranchMetadataPathParams;
-} & FetcherExtraProps;
-
-export const getBranchMetadata = (variables: GetBranchMetadataVariables, signal?: AbortSignal) =>
-  fetch<Schemas.BranchMetadata, GetBranchMetadataError, undefined, {}, {}, GetBranchMetadataPathParams>({
-    url: '/db/{dbBranchName}/metadata',
-    method: 'get',
-    ...variables,
-    signal
-  });
-
-export type GetBranchMigrationHistoryPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type GetBranchMigrationHistoryError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GetBranchMigrationHistoryResponse = {
-  startedFrom?: Schemas.StartedFromMetadata;
-  migrations?: Schemas.BranchMigration[];
-};
-
-export type GetBranchMigrationHistoryRequestBody = {
-  limit?: number;
-  startFrom?: string;
-};
-
-export type GetBranchMigrationHistoryVariables = {
-  body?: GetBranchMigrationHistoryRequestBody;
-  pathParams: GetBranchMigrationHistoryPathParams;
-} & FetcherExtraProps;
-
-export const getBranchMigrationHistory = (variables: GetBranchMigrationHistoryVariables, signal?: AbortSignal) =>
-  fetch<
-    GetBranchMigrationHistoryResponse,
-    GetBranchMigrationHistoryError,
-    GetBranchMigrationHistoryRequestBody,
+    GetBranchSchemaHistoryResponse,
+    GetBranchSchemaHistoryError,
+    GetBranchSchemaHistoryRequestBody,
     {},
     {},
-    GetBranchMigrationHistoryPathParams
-  >({ url: '/db/{dbBranchName}/migrations', method: 'get', ...variables, signal });
-
-export type ExecuteBranchMigrationPlanPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type ExecuteBranchMigrationPlanError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type ExecuteBranchMigrationPlanRequestBody = {
-  version: number;
-  migration: Schemas.BranchMigration;
-};
-
-export type ExecuteBranchMigrationPlanVariables = {
-  body: ExecuteBranchMigrationPlanRequestBody;
-  pathParams: ExecuteBranchMigrationPlanPathParams;
-} & FetcherExtraProps;
-
-/**
- * Apply a migration plan to the branch
- */
-export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlanVariables, signal?: AbortSignal) =>
-  fetch<
-    undefined,
-    ExecuteBranchMigrationPlanError,
-    ExecuteBranchMigrationPlanRequestBody,
-    {},
-    {},
-    ExecuteBranchMigrationPlanPathParams
-  >({ url: '/db/{dbBranchName}/migrations/execute', method: 'post', ...variables, signal });
-
-export type GetBranchMigrationPlanPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type GetBranchMigrationPlanError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GetBranchMigrationPlanVariables = {
-  body: Schemas.Schema;
-  pathParams: GetBranchMigrationPlanPathParams;
-} & FetcherExtraProps;
-
-/**
- * Compute a migration plan from a target schema the branch should be migrated too.
- */
-export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariables, signal?: AbortSignal) =>
-  fetch<
-    Responses.BranchMigrationPlan,
-    GetBranchMigrationPlanError,
-    Schemas.Schema,
-    {},
-    {},
-    GetBranchMigrationPlanPathParams
-  >({ url: '/db/{dbBranchName}/migrations/plan', method: 'post', ...variables, signal });
+    GetBranchSchemaHistoryPathParams
+  >({ url: '/db/{dbBranchName}/schema/history', method: 'post', ...variables, signal });
 
 export type CompareBranchWithUserSchemaPathParams = {
   /**
@@ -2199,127 +2320,6 @@ export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables,
     {},
     ApplyBranchSchemaEditPathParams
   >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables, signal });
-
-export type GetBranchSchemaHistoryPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type GetBranchSchemaHistoryError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GetBranchSchemaHistoryResponse = {
-  meta: {
-    /**
-     * last record id
-     */
-    cursor: string;
-    /**
-     * true if more records can be fetch
-     */
-    more: boolean;
-  };
-  logs: Schemas.Commit[];
-};
-
-export type GetBranchSchemaHistoryRequestBody = {
-  page?: {
-    /**
-     * Query the next page that follow the cursor.
-     */
-    after?: string;
-    /**
-     * Query the previous page before the cursor.
-     */
-    before?: string;
-    /**
-     * Set page size. If the size is missing it is read from the cursor. If no cursor is given xata will choose the default page size.
-     *
-     * @default 20
-     */
-    size?: number;
-  };
-};
-
-export type GetBranchSchemaHistoryVariables = {
-  body?: GetBranchSchemaHistoryRequestBody;
-  pathParams: GetBranchSchemaHistoryPathParams;
-} & FetcherExtraProps;
-
-export const getBranchSchemaHistory = (variables: GetBranchSchemaHistoryVariables, signal?: AbortSignal) =>
-  fetch<
-    GetBranchSchemaHistoryResponse,
-    GetBranchSchemaHistoryError,
-    GetBranchSchemaHistoryRequestBody,
-    {},
-    {},
-    GetBranchSchemaHistoryPathParams
-  >({ url: '/db/{dbBranchName}/schema/history', method: 'post', ...variables, signal });
-
-export type GetBranchStatsPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-};
-
-export type GetBranchStatsError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.SimpleError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GetBranchStatsResponse = {
-  timestamp: string;
-  interval: string;
-  resolution: string;
-  numberOfRecords?: Schemas.MetricsDatapoint[];
-  writesOverTime?: Schemas.MetricsDatapoint[];
-  readsOverTime?: Schemas.MetricsDatapoint[];
-  readLatency?: Schemas.MetricsLatency;
-  writeLatency?: Schemas.MetricsLatency;
-  warning?: string;
-};
-
-export type GetBranchStatsVariables = {
-  pathParams: GetBranchStatsPathParams;
-} & FetcherExtraProps;
-
-/**
- * Get branch usage metrics.
- */
-export const getBranchStats = (variables: GetBranchStatsVariables, signal?: AbortSignal) =>
-  fetch<GetBranchStatsResponse, GetBranchStatsError, undefined, {}, {}, GetBranchStatsPathParams>({
-    url: '/db/{dbBranchName}/stats',
-    method: 'get',
-    ...variables,
-    signal
-  });
 
 export type CreateTablePathParams = {
   /**
@@ -2702,52 +2702,6 @@ export const getColumn = (variables: GetColumnVariables, signal?: AbortSignal) =
     signal
   });
 
-export type DeleteColumnPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  /**
-   * The Table name
-   */
-  tableName: Schemas.TableName;
-  /**
-   * The Column name
-   */
-  columnName: Schemas.ColumnName;
-  workspace: string;
-};
-
-export type DeleteColumnError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type DeleteColumnVariables = {
-  pathParams: DeleteColumnPathParams;
-} & FetcherExtraProps;
-
-/**
- * Deletes the specified column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
- */
-export const deleteColumn = (variables: DeleteColumnVariables, signal?: AbortSignal) =>
-  fetch<Responses.MigrationIdResponse, DeleteColumnError, undefined, {}, {}, DeleteColumnPathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
-    method: 'delete',
-    ...variables,
-    signal
-  });
-
 export type UpdateColumnPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -2798,6 +2752,52 @@ export const updateColumn = (variables: UpdateColumnVariables, signal?: AbortSig
   fetch<Responses.MigrationIdResponse, UpdateColumnError, UpdateColumnRequestBody, {}, {}, UpdateColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
     method: 'patch',
+    ...variables,
+    signal
+  });
+
+export type DeleteColumnPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+};
+
+export type DeleteColumnError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteColumnVariables = {
+  pathParams: DeleteColumnPathParams;
+} & FetcherExtraProps;
+
+/**
+ * Deletes the specified column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ */
+export const deleteColumn = (variables: DeleteColumnVariables, signal?: AbortSignal) =>
+  fetch<Responses.MigrationIdResponse, DeleteColumnError, undefined, {}, {}, DeleteColumnPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
+    method: 'delete',
     ...variables,
     signal
   });
@@ -2854,6 +2854,60 @@ export const insertRecord = (variables: InsertRecordVariables, signal?: AbortSig
     InsertRecordQueryParams,
     InsertRecordPathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/data', method: 'post', ...variables, signal });
+
+export type GetRecordPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  workspace: string;
+};
+
+export type GetRecordQueryParams = {
+  /**
+   * Column filters
+   */
+  columns?: Schemas.ColumnsProjection;
+};
+
+export type GetRecordError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetRecordVariables = {
+  pathParams: GetRecordPathParams;
+  queryParams?: GetRecordQueryParams;
+} & FetcherExtraProps;
+
+/**
+ * Retrieve record by ID
+ */
+export const getRecord = (variables: GetRecordVariables, signal?: AbortSignal) =>
+  fetch<Responses.RecordResponse, GetRecordError, undefined, {}, GetRecordQueryParams, GetRecordPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type InsertRecordWithIDPathParams = {
   /**
@@ -3083,60 +3137,6 @@ export const deleteRecord = (variables: DeleteRecordVariables, signal?: AbortSig
   fetch<Responses.RecordResponse, DeleteRecordError, undefined, {}, DeleteRecordQueryParams, DeleteRecordPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
     method: 'delete',
-    ...variables,
-    signal
-  });
-
-export type GetRecordPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  /**
-   * The Table name
-   */
-  tableName: Schemas.TableName;
-  /**
-   * The Record name
-   */
-  recordId: Schemas.RecordID;
-  workspace: string;
-};
-
-export type GetRecordQueryParams = {
-  /**
-   * Column filters
-   */
-  columns?: Schemas.ColumnsProjection;
-};
-
-export type GetRecordError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GetRecordVariables = {
-  pathParams: GetRecordPathParams;
-  queryParams?: GetRecordQueryParams;
-} & FetcherExtraProps;
-
-/**
- * Retrieve record by ID
- */
-export const getRecord = (variables: GetRecordVariables, signal?: AbortSignal) =>
-  fetch<Responses.RecordResponse, GetRecordError, undefined, {}, GetRecordQueryParams, GetRecordPathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
-    method: 'get',
     ...variables,
     signal
   });
@@ -3983,68 +3983,6 @@ export const queryTable = (variables: QueryTableVariables, signal?: AbortSignal)
     signal
   });
 
-export type SearchTablePathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  /**
-   * The Table name
-   */
-  tableName: Schemas.TableName;
-  workspace: string;
-};
-
-export type SearchTableError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type SearchTableRequestBody = {
-  /**
-   * The query string.
-   *
-   * @minLength 1
-   */
-  query: string;
-  fuzziness?: Schemas.FuzzinessExpression;
-  target?: Schemas.TargetExpression;
-  prefix?: Schemas.PrefixExpression;
-  filter?: Schemas.FilterExpression;
-  highlight?: Schemas.HighlightExpression;
-  boosters?: Schemas.BoosterExpression[];
-};
-
-export type SearchTableVariables = {
-  body: SearchTableRequestBody;
-  pathParams: SearchTablePathParams;
-} & FetcherExtraProps;
-
-/**
- * Run a free text search operation in a particular table.
- *
- * The endpoint accepts a `query` parameter that is used for the free text search and a set of structured filters (via the `filter` parameter) that are applied before the search. The `filter` parameter uses the same syntax as the [query endpoint](/api-reference/db/db_branch_name/tables/table_name/) with the following exceptions:
- * * filters `$contains`, `$startsWith`, `$endsWith` don't work on columns of type `text`
- * * filtering on columns of type `multiple` is currently unsupported
- */
-export const searchTable = (variables: SearchTableVariables, signal?: AbortSignal) =>
-  fetch<Responses.SearchResponse, SearchTableError, SearchTableRequestBody, {}, {}, SearchTablePathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/search',
-    method: 'post',
-    ...variables,
-    signal
-  });
-
 export type SearchBranchPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -4106,6 +4044,68 @@ export type SearchBranchVariables = {
 export const searchBranch = (variables: SearchBranchVariables, signal?: AbortSignal) =>
   fetch<Responses.SearchResponse, SearchBranchError, SearchBranchRequestBody, {}, {}, SearchBranchPathParams>({
     url: '/db/{dbBranchName}/search',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type SearchTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+};
+
+export type SearchTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type SearchTableRequestBody = {
+  /**
+   * The query string.
+   *
+   * @minLength 1
+   */
+  query: string;
+  fuzziness?: Schemas.FuzzinessExpression;
+  target?: Schemas.TargetExpression;
+  prefix?: Schemas.PrefixExpression;
+  filter?: Schemas.FilterExpression;
+  highlight?: Schemas.HighlightExpression;
+  boosters?: Schemas.BoosterExpression[];
+};
+
+export type SearchTableVariables = {
+  body: SearchTableRequestBody;
+  pathParams: SearchTablePathParams;
+} & FetcherExtraProps;
+
+/**
+ * Run a free text search operation in a particular table.
+ *
+ * The endpoint accepts a `query` parameter that is used for the free text search and a set of structured filters (via the `filter` parameter) that are applied before the search. The `filter` parameter uses the same syntax as the [query endpoint](/api-reference/db/db_branch_name/tables/table_name/) with the following exceptions:
+ * * filters `$contains`, `$startsWith`, `$endsWith` don't work on columns of type `text`
+ * * filtering on columns of type `multiple` is currently unsupported
+ */
+export const searchTable = (variables: SearchTableVariables, signal?: AbortSignal) =>
+  fetch<Responses.SearchResponse, SearchTableError, SearchTableRequestBody, {}, {}, SearchTablePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/search',
     method: 'post',
     ...variables,
     signal
@@ -4331,7 +4331,7 @@ export type CPCreateDatabaseResponse = {
   /**
    * @minLength 1
    */
-  databaseName?: string;
+  databaseName: string;
   branchName?: string;
 };
 
@@ -4444,7 +4444,7 @@ export type CPGetCPDatabaseMetadataVariables = {
  */
 export const cPGetCPDatabaseMetadata = (variables: CPGetCPDatabaseMetadataVariables, signal?: AbortSignal) =>
   fetch<Schemas.CPDatabaseMetadata, CPGetCPDatabaseMetadataError, undefined, {}, {}, CPGetCPDatabaseMetadataPathParams>(
-    { url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'get', ...variables, signal }
+    { url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'get', ...variables, signal }
   );
 
 export type CPUpdateCPDatabaseMetadataPathParams = {
@@ -4498,36 +4498,62 @@ export const cPUpdateCPDatabaseMetadata = (variables: CPUpdateCPDatabaseMetadata
     {},
     {},
     CPUpdateCPDatabaseMetadataPathParams
-  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/metadata', method: 'patch', ...variables, signal });
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'patch', ...variables, signal });
+
+export type ListRegionsPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+};
+
+export type ListRegionsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type ListRegionsVariables = {
+  pathParams: ListRegionsPathParams;
+} & FetcherExtraProps;
+
+/**
+ * List regions available to create a database on
+ */
+export const listRegions = (variables: ListRegionsVariables, signal?: AbortSignal) =>
+  fetch<Schemas.ListRegionsResponse, ListRegionsError, undefined, {}, {}, ListRegionsPathParams>({
+    url: '/workspaces/{workspaceId}/regions',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export const operationsByTag = {
-  users: { getUser, updateUser, deleteUser, getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
+  users: { getUser, updateUser, deleteUser },
+  authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
   workspaces: {
-    createWorkspace,
     getWorkspacesList,
+    createWorkspace,
     getWorkspace,
     updateWorkspace,
     deleteWorkspace,
     getWorkspaceMembersList,
     updateWorkspaceMemberRole,
-    removeWorkspaceMember,
+    removeWorkspaceMember
+  },
+  invites: {
     inviteWorkspaceMember,
     updateWorkspaceMemberInvite,
     cancelWorkspaceMemberInvite,
-    resendWorkspaceMemberInvite,
-    acceptWorkspaceMemberInvite
+    acceptWorkspaceMemberInvite,
+    resendWorkspaceMemberInvite
   },
-  database: {
-    getDatabaseList,
-    createDatabase,
-    deleteDatabase,
-    getDatabaseMetadata,
-    updateDatabaseMetadata,
-    getGitBranchesMapping,
-    addGitBranchesEntry,
-    removeGitBranchesEntry,
-    resolveBranch
-  },
+  database: { getDatabaseList, createDatabase, deleteDatabase, getDatabaseMetadata, updateDatabaseMetadata },
   branch: {
     getBranchList,
     getBranchDetails,
@@ -4535,7 +4561,22 @@ export const operationsByTag = {
     deleteBranch,
     updateBranchMetadata,
     getBranchMetadata,
-    getBranchStats
+    getBranchStats,
+    getGitBranchesMapping,
+    addGitBranchesEntry,
+    removeGitBranchesEntry,
+    resolveBranch
+  },
+  migrations: {
+    getBranchMigrationHistory,
+    getBranchMigrationPlan,
+    executeBranchMigrationPlan,
+    getBranchSchemaHistory,
+    compareBranchWithUserSchema,
+    compareBranchSchemas,
+    updateBranchSchema,
+    previewBranchSchemaEdit,
+    applyBranchSchemaEdit
   },
   migrationRequests: {
     queryMigrationRequests,
@@ -4547,17 +4588,6 @@ export const operationsByTag = {
     getMigrationRequestIsMerged,
     mergeMigrationRequest
   },
-  branchSchema: {
-    getBranchMigrationHistory,
-    executeBranchMigrationPlan,
-    getBranchMigrationPlan,
-    compareBranchWithUserSchema,
-    compareBranchSchemas,
-    updateBranchSchema,
-    previewBranchSchemaEdit,
-    applyBranchSchemaEdit,
-    getBranchSchemaHistory
-  },
   table: {
     createTable,
     deleteTable,
@@ -4567,28 +4597,25 @@ export const operationsByTag = {
     getTableColumns,
     addTableColumn,
     getColumn,
-    deleteColumn,
-    updateColumn
+    updateColumn,
+    deleteColumn
   },
   records: {
     insertRecord,
+    getRecord,
     insertRecordWithID,
     updateRecordWithID,
     upsertRecordWithID,
     deleteRecord,
-    getRecord,
-    bulkInsertTableRecords,
-    queryTable,
-    searchTable,
-    searchBranch,
-    summarizeTable,
-    aggregateTable
+    bulkInsertTableRecords
   },
+  searchAndFilter: { queryTable, searchBranch, searchTable, summarizeTable, aggregateTable },
   databases: {
     cPGetDatabaseList,
     cPCreateDatabase,
     cPDeleteDatabase,
     cPGetCPDatabaseMetadata,
-    cPUpdateCPDatabaseMetadata
+    cPUpdateCPDatabaseMetadata,
+    listRegions
   }
 };
