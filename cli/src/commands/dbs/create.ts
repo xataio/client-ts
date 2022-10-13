@@ -29,7 +29,7 @@ export default class DatabasesCreate extends BaseCommand {
 
     const xata = await this.getXataClient();
 
-    const result = await xata.databases.createDatabase(workspace, database);
+    const result = await xata.database.createDatabase(workspace, database);
 
     if (this.jsonEnabled()) return result;
 
