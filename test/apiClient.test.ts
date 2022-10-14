@@ -2,12 +2,19 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { describe, expect, test } from 'vitest';
-import { XataApiClient } from '../packages/client/src';
+import { parseProviderString, XataApiClient } from '../packages/client/src';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
 
-const api = new XataApiClient({ fetch, apiKey: process.env.XATA_API_KEY });
+const host = parseProviderString(process.env.XATA_API_PROVIDER);
+if (host === null) {
+  throw new Error(
+    `Invalid XATA_API_PROVIDER environment variable, expected either "production", "staging" or "apiUrl,workspacesUrl"`
+  );
+}
+
+const api = new XataApiClient({ fetch, apiKey: process.env.XATA_API_KEY, host });
 const region = process.env.XATA_REGION || 'eu-west-1';
 
 describe('API Client Integration Tests', () => {
