@@ -1,4 +1,5 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
+import { isString } from '../util/lang';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
@@ -74,10 +75,13 @@ function buildBaseUrl({
   apiUrl: string;
   pathParams?: Partial<Record<string, string | number>>;
 }): string {
-  if (pathParams?.workspace === undefined || !path.startsWith('/db')) return `${apiUrl}${path}`;
+  // Workspace APIs start with `/db/`, we will improve this in the OpenAPI spec later on
+  if (pathParams?.workspace !== undefined && path.startsWith('/db/')) {
+    const url = isString(workspacesApiUrl) ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
+    return url.replace('{workspaceId}', String(pathParams.workspace));
+  }
 
-  const url = typeof workspacesApiUrl === 'string' ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
-  return url.replace('{workspaceId}', String(pathParams.workspace));
+  return `${apiUrl}${path}`;
 }
 
 // The host header is needed by Node.js on localhost.
