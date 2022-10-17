@@ -1,11 +1,11 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
 import { getAPIKey } from '../util/apiKey';
-import { getFetchImplementation } from '../util/fetch';
+import { FetchImpl, getFetchImplementation } from '../util/fetch';
 import { isString } from '../util/lang';
 import type * as Components from './components';
 import type * as Types from './components';
 import { operationsByTag } from './components';
-import type { FetcherExtraProps, FetchImpl } from './fetcher';
+import type { FetcherExtraProps } from './fetcher';
 import { getHostUrl, HostProvider } from './providers';
 import type * as Responses from './responses';
 import type * as Schemas from './schemas';

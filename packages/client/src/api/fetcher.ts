@@ -1,4 +1,5 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
+import { FetchImpl } from '../util/fetch';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
@@ -24,20 +25,6 @@ const resolveUrl = (
 
   return url.replace(/\{\w*\}/g, (key) => cleanPathParams[key.slice(1, -1)]) + queryString;
 };
-
-// Typed only the subset of the spec we actually use (to be able to build a simple mock)
-export type FetchImpl = (
-  url: string,
-  init?: { body?: string; headers?: Record<string, string>; method?: string; signal?: any }
-) => Promise<{
-  ok: boolean;
-  status: number;
-  url: string;
-  json(): Promise<any>;
-  headers?: {
-    get(name: string): string | null;
-  };
-}>;
 
 export type WorkspaceApiUrlBuilder = (path: string, pathParams: Partial<Record<string, string | number>>) => string;
 
