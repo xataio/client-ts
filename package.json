@@ -11,7 +11,8 @@
     "postinstall": "lerna bootstrap",
     "build": "lerna run build",
     "size": "npm run build && size-limit",
-    "openapi-gen": "openapi-codegen xatabase"
+    "openapi-gen-control": "openapi-codegen controlPlane",
+    "openapi-gen-data": "openapi-codegen dataPlane"
   },
   "repository": {
     "type": "git",

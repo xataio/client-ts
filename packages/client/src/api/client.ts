@@ -10,6 +10,8 @@ import { getHostUrl, HostProvider } from './providers';
 import type * as Responses from './responses';
 import type * as Schemas from './schemas';
 
+export type ApiExtraProps = Omit<FetcherExtraProps, 'endpoint'>;
+
 export interface XataApiClientOptions {
   fetch?: FetchImpl;
   apiKey?: string;
@@ -18,7 +20,7 @@ export interface XataApiClientOptions {
 }
 
 export class XataApiClient {
-  #extraProps: FetcherExtraProps;
+  #extraProps: ApiExtraProps;
   #namespaces: Partial<{
     user: UserApi;
     authentication: AuthenticationApi;
@@ -109,7 +111,7 @@ export class XataApiClient {
 }
 
 class UserApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public getUser(): Promise<Schemas.UserWithID> {
     return operationsByTag.users.getUser({ ...this.extraProps });
@@ -125,7 +127,7 @@ class UserApi {
 }
 
 class AuthenticationApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public getUserAPIKeys(): Promise<Types.GetUserAPIKeysResponse> {
     return operationsByTag.authentication.getUserAPIKeys({ ...this.extraProps });
@@ -147,7 +149,7 @@ class AuthenticationApi {
 }
 
 class WorkspaceApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public getWorkspacesList(): Promise<Types.GetWorkspacesListResponse> {
     return operationsByTag.workspaces.getWorkspacesList({ ...this.extraProps });
@@ -213,7 +215,7 @@ class WorkspaceApi {
 }
 
 class InvitesApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public inviteWorkspaceMember(
     workspaceId: Schemas.WorkspaceID,
@@ -262,7 +264,7 @@ class InvitesApi {
 }
 
 class BranchApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public getBranchList(workspace: Schemas.WorkspaceID, dbName: Schemas.DBName): Promise<Schemas.ListBranchesResponse> {
     return operationsByTag.branch.getBranchList({
@@ -392,7 +394,7 @@ class BranchApi {
 }
 
 class TableApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public createTable(
     workspace: Schemas.WorkspaceID,
@@ -527,7 +529,7 @@ class TableApi {
 }
 
 class RecordsApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public insertRecord(
     workspace: Schemas.WorkspaceID,
@@ -644,7 +646,7 @@ class RecordsApi {
 }
 
 class SearchAndFilterApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public queryTable(
     workspace: Schemas.WorkspaceID,
@@ -717,7 +719,7 @@ class SearchAndFilterApi {
 }
 
 class MigrationRequestsApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public queryMigrationRequests(
     workspace: Schemas.WorkspaceID,
@@ -815,7 +817,7 @@ class MigrationRequestsApi {
 }
 
 class MigrationsApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
   public getBranchMigrationHistory(
     workspace: Schemas.WorkspaceID,
@@ -936,10 +938,10 @@ class MigrationsApi {
   }
 }
 class DatabaseApi {
-  constructor(private extraProps: FetcherExtraProps) {}
+  constructor(private extraProps: ApiExtraProps) {}
 
-  public getDatabaseList(workspaceId: Schemas.WorkspaceID): Promise<Schemas.ListDatabasesResponse> {
-    return operationsByTag.database.getDatabaseList({
+  public getDatabaseList(workspaceId: Schemas.WorkspaceID): Promise<Schemas.CPListDatabasesResponse> {
+    return operationsByTag.databases.cPGetDatabaseList({
       pathParams: { workspaceId },
       ...this.extraProps
     });
@@ -948,9 +950,9 @@ class DatabaseApi {
   public createDatabase(
     workspaceId: Schemas.WorkspaceID,
     dbName: Schemas.DBName,
-    options: Components.CreateDatabaseRequestBody
+    options: Components.CPCreateDatabaseRequestBody
   ): Promise<Components.CreateDatabaseResponse> {
-    return operationsByTag.database.createDatabase({
+    return operationsByTag.databases.cPCreateDatabase({
       pathParams: { workspaceId, dbName },
       body: options,
       ...this.extraProps
@@ -958,7 +960,7 @@ class DatabaseApi {
   }
 
   public deleteDatabase(workspaceId: Schemas.WorkspaceID, dbName: Schemas.DBName): Promise<void> {
-    return operationsByTag.database.deleteDatabase({
+    return operationsByTag.databases.cPDeleteDatabase({
       pathParams: { workspaceId, dbName },
       ...this.extraProps
     });
@@ -967,8 +969,8 @@ class DatabaseApi {
   public getDatabaseMetadata(
     workspaceId: Schemas.WorkspaceID,
     dbName: Schemas.DBName
-  ): Promise<Schemas.DatabaseMetadata> {
-    return operationsByTag.database.getDatabaseMetadata({
+  ): Promise<Schemas.CPDatabaseMetadata> {
+    return operationsByTag.databases.cPGetCPDatabaseMetadata({
       pathParams: { workspaceId, dbName },
       ...this.extraProps
     });
@@ -978,8 +980,8 @@ class DatabaseApi {
     workspaceId: Schemas.WorkspaceID,
     dbName: Schemas.DBName,
     metadata: Schemas.DatabaseMetadata
-  ): Promise<Schemas.DatabaseMetadata> {
-    return operationsByTag.database.updateDatabaseMetadata({
+  ): Promise<Schemas.CPDatabaseMetadata> {
+    return operationsByTag.databases.cPUpdateCPDatabaseMetadata({
       pathParams: { workspaceId, dbName },
       body: metadata,
       ...this.extraProps
@@ -987,7 +989,7 @@ class DatabaseApi {
   }
 
   public listRegions(workspaceId: Schemas.WorkspaceID): Promise<Schemas.ListRegionsResponse> {
-    return operationsByTag.database.listRegions({
+    return operationsByTag.databases.listRegions({
       pathParams: { workspaceId },
       ...this.extraProps
     });

@@ -1,6 +1,7 @@
 import { SchemaPluginResult } from '.';
 import {
   aggregateTable,
+  ApiExtraProps,
   bulkInsertTableRecords,
   deleteRecord,
   getBranchDetails,
@@ -14,7 +15,6 @@ import {
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
-import { FetcherExtraProps } from '../api/fetcher';
 import { FuzzinessExpression, HighlightExpression, PrefixExpression, RecordsMetadata } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
@@ -650,7 +650,7 @@ export class RestRepository<Record extends XataRecord>
   implements Repository<Record>
 {
   #table: string;
-  #getFetchProps: () => Promise<FetcherExtraProps>;
+  #getFetchProps: () => Promise<ApiExtraProps>;
   #db: SchemaPluginResult<any>;
   #cache: CacheImpl;
   #schemaTables?: Schemas.Table[];

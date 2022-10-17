@@ -17,10 +17,12 @@ export function getHostUrl(provider: HostProvider, type: keyof ProviderBuilder):
 const providers: Record<HostAliases, ProviderBuilder> = {
   production: {
     main: 'https://api.xata.io',
+    // TODO: Add region
     workspaces: 'https://{workspaceId}.xata.sh'
   },
   staging: {
     main: 'https://staging.xatabase.co',
+    // TODO: Add region
     workspaces: 'https://{workspaceId}.staging.xatabase.co'
   }
 };

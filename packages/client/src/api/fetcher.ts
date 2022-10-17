@@ -43,6 +43,7 @@ export type FetchImpl = (
 export type WorkspaceApiUrlBuilder = (path: string, pathParams: Partial<Record<string, string | number>>) => string;
 
 export type FetcherExtraProps = {
+  endpoint: 'controlPlane' | 'dataPlane';
   apiUrl: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   fetchImpl: FetchImpl;
@@ -65,18 +66,20 @@ export type FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
 } & FetcherExtraProps;
 
 function buildBaseUrl({
+  endpoint,
   path,
   workspacesApiUrl,
   apiUrl,
   pathParams
 }: {
+  endpoint: 'controlPlane' | 'dataPlane';
   path: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   apiUrl: string;
   pathParams?: Partial<Record<string, string | number>>;
 }): string {
   // Workspace APIs start with `/db/`, we will improve this in the OpenAPI spec later on
-  if (pathParams?.workspace !== undefined && path.startsWith('/db/')) {
+  if (pathParams?.workspace !== undefined && endpoint === 'dataPlane') {
     const url = isString(workspacesApiUrl) ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
     return url.replace('{workspaceId}', String(pathParams.workspace));
   }
@@ -109,6 +112,7 @@ export async function fetch<
   queryParams,
   fetchImpl,
   apiKey,
+  endpoint,
   apiUrl,
   workspacesApiUrl,
   trace,
@@ -119,7 +123,7 @@ export async function fetch<
   return trace(
     `${method.toUpperCase()} ${path}`,
     async ({ setAttributes }) => {
-      const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
+      const baseUrl = buildBaseUrl({ endpoint, path, workspacesApiUrl, pathParams, apiUrl });
       const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
       // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts

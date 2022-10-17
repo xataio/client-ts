@@ -1,4 +1,4 @@
-import { Schemas } from './api';
+import { ApiExtraProps, Schemas } from './api';
 import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
@@ -97,14 +97,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID() };
     }
 
-    async #getFetchProps({
-      fetch,
-      apiKey,
-      databaseURL,
-      branch,
-      trace,
-      clientID
-    }: SafeOptions): Promise<FetcherExtraProps> {
+    async #getFetchProps({ fetch, apiKey, databaseURL, branch, trace, clientID }: SafeOptions): Promise<ApiExtraProps> {
       const branchValue = await this.#evaluateBranch(branch);
       if (!branchValue) throw new Error('Unable to resolve branch value');
 
