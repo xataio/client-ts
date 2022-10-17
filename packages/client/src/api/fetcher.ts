@@ -78,7 +78,6 @@ function buildBaseUrl({
   apiUrl: string;
   pathParams?: Partial<Record<string, string | number>>;
 }): string {
-  // Workspace APIs start with `/db/`, we will improve this in the OpenAPI spec later on
   if (pathParams?.workspace !== undefined && endpoint === 'dataPlane') {
     const url = isString(workspacesApiUrl) ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
     return url.replace('{workspaceId}', String(pathParams.workspace));
