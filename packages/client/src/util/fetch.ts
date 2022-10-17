@@ -24,3 +24,52 @@ export function getFetchImplementation(userFetch?: FetchImpl) {
   }
   return fetchImpl;
 }
+
+export class ApiRequestPool<RequestItem extends any> {
+  #fetch?: FetchImpl;
+  #queue: Array<Function>;
+  #concurrency: number;
+
+  running: number;
+  started: number;
+
+  constructor(concurrency: number = 10) {
+    this.#queue = [];
+    this.#concurrency = concurrency;
+
+    this.running = 0;
+    this.started = 0;
+  }
+
+  setFetch(fetch: FetchImpl) {
+    this.#fetch = fetch;
+  }
+
+  #enqueue<Result extends RequestItem>(task: () => Promise<Result> | Result): Promise<Result> {
+    const promise = new Promise<Result>((resolve) => this.#queue.push(resolve))
+      .finally(() => {
+        this.started--;
+        this.running++;
+      })
+      .then(() => task())
+      .finally(() => {
+        this.running--;
+
+        const next = this.#queue.shift();
+        if (next !== undefined) {
+          this.started++;
+          next();
+        }
+      });
+
+    if (this.#queue.length > 0 && this.running + this.started < this.#concurrency) {
+      const next = this.#queue.shift();
+      if (next !== undefined) {
+        this.started++;
+        next();
+      }
+    }
+
+    return promise;
+  }
+}
