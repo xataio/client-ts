@@ -23,9 +23,7 @@ describe('branches create', () => {
   test('fails if the branch name is not provided', async () => {
     const config = await Config.load();
     const command = new BranchesCreate([], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(`
       [Error: Missing 1 required arg:
@@ -44,9 +42,7 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA', '--no-git'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
@@ -63,9 +59,7 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA', '--no-git'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
     expect(BranchesCreate.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
@@ -96,9 +90,7 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow(
       'Git cannot be found. Please install it or use the --no-git flag to disable integrating xata branches with git branches.'
@@ -111,9 +103,7 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow(
       'The working directory has uncommited changes. Please commit or stash them before creating a branch. Or use the --no-git flag to disable integrating xata branches with git branches.'
@@ -128,9 +118,7 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow(
       'The working directory is not under git version control. Please initialize or clone a git repository or use the --no-git flag to disable integrating xata branches with git branches.'
@@ -147,9 +135,7 @@ describe('branches create', () => {
 
       const config = await Config.load();
       const command = new BranchesCreate(['featureA'], config as Config);
-      command.projectConfig = {
-        databaseURL: 'https://test-1234.xata.sh/db/test'
-      };
+      command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
       expect(BranchesCreate.enableJsonFlag).toBe(true);
       vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
@@ -193,9 +179,7 @@ describe('branches create', () => {
 
       const config = await Config.load();
       const command = new BranchesCreate(['featureA', '--from', 'base'], config as Config);
-      command.projectConfig = {
-        databaseURL: 'https://test-1234.xata.sh/db/test'
-      };
+      command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
       expect(BranchesCreate.enableJsonFlag).toBe(true);
       vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);

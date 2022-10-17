@@ -10,23 +10,22 @@ export default class DatabasesCreate extends BaseCommand {
     ...this.commonFlags,
     workspace: Flags.string({
       description: 'Workspace id the database will belongs to'
+    }),
+    region: Flags.string({
+      description: 'Region where the database will be created'
     })
   };
 
-  static args = [
-    { name: 'database', description: 'The new database name', required: false },
-    { name: 'region', description: 'The region where the database will be created', required: false }
-  ];
+  static args = [{ name: 'database', description: 'The new database name', required: false }];
 
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
     const { args, flags } = await this.parse(DatabasesCreate);
-    const { database, region } = args;
 
     const workspace = flags.workspace || (await this.getWorkspace());
 
-    const result = await this.createDatabase(workspace, { overrideName: database, overrideRegion: region });
+    const result = await this.createDatabase(workspace, { overrideName: args.database, overrideRegion: flags.region });
 
     if (this.jsonEnabled()) return result;
 

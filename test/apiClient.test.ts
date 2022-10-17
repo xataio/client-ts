@@ -67,7 +67,8 @@ describe('API Client Integration Tests', () => {
 
 async function getWorkspace(id: string): Promise<Schemas.Workspace> {
   try {
-    return await api.workspaces.getWorkspace(id);
+    const result = await api.workspaces.getWorkspace(id);
+    return result;
   } catch (error) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return getWorkspace(id);

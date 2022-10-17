@@ -29,9 +29,7 @@ describe('branches link', () => {
 
     const config = await Config.load();
     const command = new BranchesLink([], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
@@ -42,16 +40,11 @@ describe('branches link', () => {
   });
 
   test.each([[false], [true]])('performs the linking with JSON enabled = %o', async (json) => {
-    fetchMock.mockReturnValue({
-      ok: true,
-      json: async () => ({})
-    });
+    fetchMock.mockReturnValue({ ok: true, json: async () => ({}) });
 
     const config = await Config.load();
     const command = new BranchesLink(['--git', 'foo', '--xata', 'bar'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
 
     expect(BranchesLink.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
