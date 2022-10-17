@@ -7,7 +7,8 @@ import type * as Schemas from './schemas';
 export * from './client';
 export * from './components';
 export * from './providers';
-export type { FetcherExtraProps, FetchImpl } from './fetcher';
+export type { FetcherExtraProps } from './fetcher';
+export type { FetchImpl } from '../util/fetch';
 export { operationsByTag as Operations };
 export type { Responses, Schemas };
 

@@ -1,6 +1,19 @@
-import { FetchImpl } from '../api/fetcher';
+// Typed only the subset of the spec we actually use (to be able to build a simple mock)
+export type FetchImpl = (
+  url: string,
+  init?: { body?: string; headers?: Record<string, string>; method?: string; signal?: any }
+) => Promise<{
+  ok: boolean;
+  status: number;
+  url: string;
+  json(): Promise<any>;
+  headers?: {
+    get(name: string): string | null;
+  };
+}>;
 
 export function getFetchImplementation(userFetch?: FetchImpl) {
+  // @ts-ignore - fetch might not be a global
   const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
   const fetchImpl = userFetch ?? globalFetch;
   if (!fetchImpl) {
