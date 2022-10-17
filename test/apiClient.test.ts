@@ -2,7 +2,7 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { describe, expect, test } from 'vitest';
-import { parseProviderString, XataApiClient } from '../packages/client/src';
+import { parseProviderString, Schemas, XataApiClient } from '../packages/client/src';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -27,7 +27,7 @@ describe('API Client Integration Tests', () => {
     expect(workspace.id).toBeDefined();
     expect(workspace.name).toBe('foo');
 
-    const foo = await api.workspaces.getWorkspace(workspace.id);
+    const foo = await getWorkspace(workspace.id);
     expect(foo.id).toBe(workspace.id);
     expect(foo.slug).toBe('foo');
 
@@ -41,6 +41,8 @@ describe('API Client Integration Tests', () => {
       name: 'sdk-integration-api-client',
       slug: 'sdk-integration-api-client'
     });
+
+    await getWorkspace(workspace);
 
     const { databaseName } = await api.database.createDatabase(workspace, `test-data-${workspace}`, { region });
 
@@ -62,3 +64,12 @@ describe('API Client Integration Tests', () => {
     await api.workspaces.deleteWorkspace(workspace);
   });
 });
+
+async function getWorkspace(id: string): Promise<Schemas.Workspace> {
+  try {
+    return await api.workspaces.getWorkspace(id);
+  } catch (error) {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    return getWorkspace(id);
+  }
+}
