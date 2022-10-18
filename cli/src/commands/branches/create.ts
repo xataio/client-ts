@@ -48,7 +48,7 @@ export default class BranchesCreate extends BaseCommand {
         const currentBranch = currentGitBranch();
         if (currentBranch !== branch) {
           const { branch: gitBase } = from
-            ? await xata.branches.resolveBranch(workspace, database, from)
+            ? await xata.branches.resolveBranch({ workspace, database, gitBranch: from })
             : { branch: defaultGitBranch() };
 
           createBranch(branch, gitBase);
@@ -64,7 +64,7 @@ export default class BranchesCreate extends BaseCommand {
       }
     }
 
-    const result = await xata.branches.createBranch(workspace, database, branch, from);
+    const result = await xata.branches.createBranch({ workspace, database, branch, from });
 
     if (this.jsonEnabled()) return result;
 

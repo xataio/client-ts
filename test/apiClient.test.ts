@@ -19,58 +19,71 @@ const region = process.env.XATA_REGION || 'eu-west-1';
 
 describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace', async () => {
-    const workspace = await api.workspaces.createWorkspace({
-      name: 'foo',
-      slug: 'foo'
+    const { id: workspace, name } = await api.workspaces.createWorkspace({
+      data: { name: 'foo', slug: 'foo' }
     });
 
-    expect(workspace.id).toBeDefined();
-    expect(workspace.name).toBe('foo');
+    expect(workspace).toBeDefined();
+    expect(name).toBe('foo');
 
-    const foo = await getWorkspace(workspace.id);
-    expect(foo.id).toBe(workspace.id);
+    const foo = await getWorkspace(workspace);
+    expect(foo.id).toBe(workspace);
     expect(foo.slug).toBe('foo');
 
-    await api.workspaces.deleteWorkspace(workspace.id);
+    await api.workspaces.deleteWorkspace({ workspace });
 
-    await expect(api.workspaces.getWorkspace(workspace.id)).rejects.toHaveProperty('message');
+    await expect(api.workspaces.getWorkspace({ workspace })).rejects.toHaveProperty('message');
   });
 
   test('Create workspace with database, branch, table and records', async () => {
     const { id: workspace } = await api.workspaces.createWorkspace({
-      name: 'sdk-integration-api-client',
-      slug: 'sdk-integration-api-client'
+      data: {
+        name: 'sdk-integration-api-client',
+        slug: 'sdk-integration-api-client'
+      }
     });
 
     await getWorkspace(workspace);
 
-    const { databaseName } = await api.database.createDatabase(workspace, `test-data-${workspace}`, { region });
-
-    await api.branches.createBranch(workspace, databaseName, 'branch');
-    await api.tables.createTable(workspace, databaseName, 'branch', 'table');
-    await api.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
-      columns: [{ name: 'email', type: 'string' }]
+    const { databaseName: database } = await api.database.createDatabase({
+      workspace,
+      database: `test-data-${workspace}`,
+      data: { region }
     });
 
-    const { id: recordId } = await api.records.insertRecord(workspace, databaseName, 'branch', 'table', {
-      email: 'example@foo.bar'
+    await api.branches.createBranch({ workspace, database, branch: 'branch' });
+    await api.tables.createTable({ workspace, database, branch: 'branch', table: 'table' });
+    await api.tables.setTableSchema({
+      workspace,
+      database,
+      branch: 'branch',
+      table: 'table',
+      schema: { columns: [{ name: 'email', type: 'string' }] }
     });
 
-    const record = await api.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
+    const { id } = await api.records.insertRecord({
+      workspace,
+      database,
+      branch: 'branch',
+      table: 'table',
+      record: { email: 'example@foo.bar' }
+    });
+
+    const record = await api.records.getRecord({ workspace, database, branch: 'branch', table: 'table', id });
 
     expect(record.id).toBeDefined();
     expect(record.email).toEqual('example@foo.bar');
 
-    await api.workspaces.deleteWorkspace(workspace);
+    await api.workspaces.deleteWorkspace({ workspace });
   });
 });
 
-async function getWorkspace(id: string): Promise<Schemas.Workspace> {
+async function getWorkspace(workspace: string): Promise<Schemas.Workspace> {
   try {
-    const result = await api.workspaces.getWorkspace(id);
+    const result = await api.workspaces.getWorkspace({ workspace });
     return result;
   } catch (error) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    return getWorkspace(id);
+    return getWorkspace(workspace);
   }
 }

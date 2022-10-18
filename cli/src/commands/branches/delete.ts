@@ -34,7 +34,7 @@ export default class BranchesDelete extends BaseCommand {
     if (!confirm) return this.exit(1);
     if (confirm !== branch) return this.error('The branch name did not match');
 
-    await xata.branches.deleteBranch(workspace, database, branch);
+    await xata.branches.deleteBranch({ workspace, database, branch });
 
     if (this.jsonEnabled()) return {};
 

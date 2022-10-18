@@ -20,8 +20,8 @@ export default class BranchesList extends BaseCommand {
     const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
-    const { branches } = await xata.branches.getBranchList(workspace, database);
-    const { mapping } = await xata.branches.getGitBranchesMapping(workspace, database);
+    const { branches } = await xata.branches.getBranchList({ workspace, database });
+    const { mapping } = await xata.branches.getGitBranchesMapping({ workspace, database });
 
     const git = isGitRepo();
     const gitBranches = git ? listBranches() : [];

@@ -201,8 +201,9 @@ describe('branches create', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2);
       expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test/resolveBranch?gitBranch=base');
       expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
-      expect(fetchMock.mock.calls[1][0]).toEqual('https://test-1234.xata.sh/db/test:featureA?from=base');
+      expect(fetchMock.mock.calls[1][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
       expect(fetchMock.mock.calls[1][1].method).toEqual('PUT');
+      expect(fetchMock.mock.calls[1][1].body).toMatchInlineSnapshot('"{\\"from\\":\\"base\\"}"');
 
       expect(createBranch).toHaveBeenCalledOnce();
       expect(createBranch.mock.calls[0][0]).toEqual('featureA');

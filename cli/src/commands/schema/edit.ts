@@ -115,7 +115,7 @@ Beware that this can lead to ${chalk.bold(
     this.branch = branch;
 
     const xata = await this.getXataClient();
-    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+    const branchDetails = await xata.branches.getBranchDetails({ workspace, database, branch });
     if (!branchDetails) this.error('Could not get the schema from the current branch');
 
     if (flags.source) {
@@ -633,11 +633,15 @@ Beware that this can lead to ${chalk.bold(
     for (const table of this.tables) {
       if (table.added) {
         this.info(`Creating table ${table.name}`);
-        await xata.tables.createTable(workspace, database, branch, table.name);
+        await xata.tables.createTable({ workspace, database, branch, table: table.name });
       } else if (table.initialName) {
         this.info(`Renaming table ${table.initialName} to ${table.name}`);
-        await xata.tables.updateTable(workspace, database, branch, table.initialName, {
-          name: table.name
+        await xata.tables.updateTable({
+          workspace,
+          database,
+          branch,
+          table: table.initialName,
+          update: { name: table.name }
         });
       }
 
@@ -645,11 +649,16 @@ Beware that this can lead to ${chalk.bold(
         const linkedTable = this.tables.find((t) => (t.initialName || t.name) === column.link?.table);
         if (column.deleted || linkedTable?.deleted) {
           this.info(`Deleting column ${table.name}.${column.name}`);
-          await xata.tables.deleteColumn(workspace, database, branch, table.name, column.name);
+          await xata.tables.deleteColumn({ workspace, database, branch, table: table.name, column: column.name });
         } else if (column.initialName) {
           this.info(`Renaming column ${table.name}.${column.initialName} to ${table.name}.${column.name}`);
-          await xata.tables.updateColumn(workspace, database, branch, table.name, column.initialName, {
-            name: column.name
+          await xata.tables.updateColumn({
+            workspace,
+            database,
+            branch,
+            table: table.name,
+            column: column.initialName,
+            update: { name: column.name }
           });
         }
       }
@@ -659,17 +668,23 @@ Beware that this can lead to ${chalk.bold(
     for (const table of this.tables) {
       if (table.deleted) {
         this.info(`Deleting table ${table.name}`);
-        await xata.tables.deleteTable(workspace, database, branch, table.name);
+        await xata.tables.deleteTable({ workspace, database, branch, table: table.name });
         continue;
       }
 
       for (const column of table.columns) {
         if (table.added || column.added) {
           this.info(`Adding column ${table.name}.${column.name}`);
-          await xata.tables.addTableColumn(workspace, database, branch, table.name, {
-            name: column.name,
-            type: column.type,
-            link: column.link
+          await xata.tables.addTableColumn({
+            workspace,
+            database,
+            branch,
+            table: table.name,
+            column: {
+              name: column.name,
+              type: column.type,
+              link: column.link
+            }
           });
         }
       }

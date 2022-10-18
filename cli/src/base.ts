@@ -266,7 +266,7 @@ export abstract class BaseCommand extends Command {
         message: 'New workspace name'
       });
       if (!name) return this.error('No workspace name provided');
-      const workspace = await xata.workspaces.createWorkspace({ name });
+      const workspace = await xata.workspaces.createWorkspace({ data: { name } });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
@@ -291,7 +291,7 @@ export abstract class BaseCommand extends Command {
 
   async getDatabase(workspace: string, options: { allowCreate?: boolean } = {}) {
     const xata = await this.getXataClient();
-    const { databases: dbs = [] } = await xata.database.getDatabaseList(workspace);
+    const { databases: dbs = [] } = await xata.database.getDatabaseList({ workspace });
 
     if (dbs.length > 0) {
       const choices = dbs.map((db) => ({
@@ -330,7 +330,7 @@ export abstract class BaseCommand extends Command {
     options: { allowEmpty?: boolean; allowCreate?: boolean; title?: string } = {}
   ): Promise<string> {
     const xata = await this.getXataClient();
-    const { branches = [] } = await xata.branches.getBranchList(workspace, database);
+    const { branches = [] } = await xata.branches.getBranchList({ workspace, database });
 
     const EMPTY_CHOICE = '$empty';
     const CREATE_CHOICE = '$create';
@@ -389,7 +389,7 @@ export abstract class BaseCommand extends Command {
     );
     if (!name) return this.error('No database name provided');
 
-    const { regions } = await xata.database.listRegions(workspace);
+    const { regions } = await xata.database.listRegions({ workspace });
     const { region } = await this.prompt(
       {
         type: 'select',
@@ -402,7 +402,7 @@ export abstract class BaseCommand extends Command {
     );
     if (!region) return this.error('No region selected');
 
-    const result = await xata.database.createDatabase(workspace, name, { region });
+    const result = await xata.database.createDatabase({ workspace, database: name, data: { region } });
 
     return result;
   }
@@ -423,9 +423,9 @@ export abstract class BaseCommand extends Command {
     });
 
     if (!from) {
-      await xata.branches.createBranch(workspace, database, name);
+      await xata.branches.createBranch({ workspace, database, branch: name });
     } else {
-      await xata.branches.createBranch(workspace, database, name, from);
+      await xata.branches.createBranch({ workspace, database, branch: name, from });
     }
 
     return name;
@@ -537,7 +537,7 @@ export abstract class BaseCommand extends Command {
 
   async deploySchema(workspace: string, database: string, branch: string, schema: Schemas.Schema) {
     const xata = await this.getXataClient();
-    const plan = await xata.migrations.getBranchMigrationPlan(workspace, database, branch, schema);
+    const plan = await xata.migrations.getBranchMigrationPlan({ workspace, database, branch, schema });
 
     const { newTables, removedTables, renamedTables, tableMigrations } = plan.migration;
 
@@ -561,7 +561,7 @@ export abstract class BaseCommand extends Command {
       });
       if (!confirm) return this.exit(1);
 
-      await xata.migrations.executeBranchMigrationPlan(workspace, database, branch, plan);
+      await xata.migrations.executeBranchMigrationPlan({ workspace, database, branch, plan });
     }
   }
 

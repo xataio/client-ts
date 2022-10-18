@@ -71,11 +71,11 @@ export async function setUpTestEnvironment(
   const id = Date.now().toString(36);
 
   const api = new XataApiClient({ apiKey, fetch, host });
-  const { databaseName: database } = await api.database.createDatabase(
+  const { databaseName: database } = await api.database.createDatabase({
     workspace,
-    `sdk-integration-test-${prefix}-${id}`,
-    { region }
-  );
+    database: `sdk-integration-test-${prefix}-${id}`,
+    data: { region }
+  });
 
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace);
 
@@ -88,18 +88,36 @@ export async function setUpTestEnvironment(
     trace
   };
 
-  await api.tables.createTable(workspace, database, 'main', 'teams');
-  await api.tables.createTable(workspace, database, 'main', 'pets');
-  await api.tables.createTable(workspace, database, 'main', 'users');
+  await api.tables.createTable({ workspace, database, branch: 'main', table: 'teams' });
+  await api.tables.createTable({ workspace, database, branch: 'main', table: 'pets' });
+  await api.tables.createTable({ workspace, database, branch: 'main', table: 'users' });
 
   const teamColumns = schema.tables.find(({ name }) => name === 'teams')?.columns;
   const petColumns = schema.tables.find(({ name }) => name === 'pets')?.columns;
   const userColumns = schema.tables.find(({ name }) => name === 'users')?.columns;
   if (!teamColumns || !userColumns || !petColumns) throw new Error('Unable to find tables');
 
-  await api.tables.setTableSchema(workspace, database, 'main', 'teams', { columns: teamColumns });
-  await api.tables.setTableSchema(workspace, database, 'main', 'pets', { columns: petColumns });
-  await api.tables.setTableSchema(workspace, database, 'main', 'users', { columns: userColumns });
+  await api.tables.setTableSchema({
+    workspace,
+    database,
+    branch: 'main',
+    table: 'teams',
+    schema: { columns: teamColumns }
+  });
+  await api.tables.setTableSchema({
+    workspace,
+    database,
+    branch: 'main',
+    table: 'pets',
+    schema: { columns: petColumns }
+  });
+  await api.tables.setTableSchema({
+    workspace,
+    database,
+    branch: 'main',
+    table: 'users',
+    schema: { columns: userColumns }
+  });
 
   let span: Span | undefined;
 
@@ -109,7 +127,7 @@ export async function setUpTestEnvironment(
     },
     afterAll: async () => {
       try {
-        await api.database.deleteDatabase(workspace, database);
+        await api.database.deleteDatabase({ workspace, database });
       } catch (e) {
         // Ignore error, delete database during ES snapshot fails
         console.error('Delete database failed', e);

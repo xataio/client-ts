@@ -573,9 +573,13 @@ describe('integration tests', () => {
   });
 
   test('Pagination default value', async () => {
-    await api.tables.createTable(workspace, database, 'main', 'planes');
-    await api.tables.setTableSchema(workspace, database, 'main', 'planes', {
-      columns: [{ name: 'name', type: 'string' }]
+    await api.tables.createTable({ workspace, database, branch: 'main', table: 'planes' });
+    await api.tables.setTableSchema({
+      workspace,
+      database,
+      branch: 'main',
+      table: 'planes',
+      schema: { columns: [{ name: 'name', type: 'string' }] }
     });
 
     const planes = Array.from({ length: PAGINATION_DEFAULT_SIZE + 50 }, (_, index) => ({ name: `Plane ${index}` }));
