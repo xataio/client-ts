@@ -456,4 +456,24 @@ describe('summarize', () => {
     expect(result.summaries[1].pet?.name).toBe('Otis');
     expect(result.summaries[1].dark_set).toBeCloseTo(1);
   });
+
+  test('group by without any common groups and send pagination size', async () => {
+    const result = await xata.db.users
+      .select(['name', 'rating'])
+      .sort('name', 'asc')
+      .summarize({ pagination: { size: 1 } });
+
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "A",
+          "rating": 10.5,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBeCloseTo(1);
+    expect(result.summaries[0].name).toBe('A');
+    expect(result.summaries[0].rating).toBeCloseTo(10.5);
+  });
 });
