@@ -1416,6 +1416,7 @@ export class RestRepository<Record extends XataRecord>
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
           columns: data.columns,
+          page: data.pagination?.size !== undefined ? { size: data.pagination?.size } : undefined,
           summaries,
           summariesFilter
         },

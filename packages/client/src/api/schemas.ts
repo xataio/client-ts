@@ -899,7 +899,7 @@ export type PageConfig = {
    */
   last?: string;
   /**
-   * Set page size. If the size is missing it is read from the cursor. If no cursor is given xata will choose the default page size.
+   * Set page size. If the size is missing it is read from the cursor. If no cursor is given Xata will choose the default page size.
    *
    * @default 20
    */
