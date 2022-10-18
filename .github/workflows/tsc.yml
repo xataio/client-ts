@@ -8,6 +8,7 @@ jobs:
   tsc:
     name: TypeScript Version Check
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.head_ref == 'changeset-release/main' }}
 
     strategy:
       fail-fast: false
