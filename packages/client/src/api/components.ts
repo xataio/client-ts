@@ -4144,6 +4144,17 @@ export type SummarizeTableRequestBody = {
   summaries?: Schemas.SummaryExpressionList;
   sort?: Schemas.SortExpression;
   summariesFilter?: Schemas.FilterExpression;
+  page?: {
+    /**
+     * The number of records returned by summarize. If the amount of data you have exceeds this, or you have
+     * more complex reporting requirements, we recommend that you use the aggregate endpoint instead.
+     *
+     * @default 20
+     * @maximum 1000
+     * @minimum 1
+     */
+    size?: number;
+  };
 };
 
 export type SummarizeTableVariables = {
@@ -4210,6 +4221,9 @@ export type SummarizeTableVariables = {
  * note: This is a much slower to use than `filter`. We recommend using
  * `filter` wherever possible and `summariesFilter` when it's not
  * possible to use `filter`.
+ *
+ * `page.size`: tells Xata how many records to return. If unspecified, Xata
+ * will return the default size.
  */
 export const summarizeTable = (variables: SummarizeTableVariables, signal?: AbortSignal) =>
   fetch<Responses.SummarizeResponse, SummarizeTableError, SummarizeTableRequestBody, {}, {}, SummarizeTablePathParams>({
