@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { CompareSchemaResult, createProcessor, parseCSVFile, parseCSVStream, TableInfo } from '@xata.io/importer';
+import { CompareSchemaResult, createProcessor, parseCSVFile, parseCSVStream } from '@xata.io/importer';
 import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
 import { pluralize } from '../../utils.js';
@@ -80,34 +80,31 @@ export default class ImportCSV extends BaseCommand {
       'null-value': nullValue
     } = flags;
 
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
 
     const xata = await this.getXataClient();
 
-    const tableInfo: TableInfo = {
-      workspaceID: workspace,
-      database: database,
-      branch,
-      tableName: table
-    };
-
-    const options = createProcessor(xata, tableInfo, {
-      types: splitCommas(types),
-      columns: splitCommas(columns),
-      noheader: Boolean(noHeader),
-      batchSize,
-      maxRows,
-      skipRows,
-      delimiter,
-      nullValue,
-      ignoreColumnNormalization,
-      shouldContinue: async (compare) => {
-        return Boolean(await this.shouldContinue(compare, table, create));
-      },
-      onBatchProcessed: async (rows) => {
-        this.info(`${chalk.bold(rows)} ${pluralize('row', rows)} processed`);
+    const options = createProcessor(
+      xata,
+      { workspace, region, database, branch, table },
+      {
+        types: splitCommas(types),
+        columns: splitCommas(columns),
+        noheader: Boolean(noHeader),
+        batchSize,
+        maxRows,
+        skipRows,
+        delimiter,
+        nullValue,
+        ignoreColumnNormalization,
+        shouldContinue: async (compare) => {
+          return Boolean(await this.shouldContinue(compare, table, create));
+        },
+        onBatchProcessed: async (rows) => {
+          this.info(`${chalk.bold(rows)} ${pluralize('row', rows)} processed`);
+        }
       }
-    });
+    );
 
     if (file === '-') {
       await parseCSVStream(process.stdin, options);

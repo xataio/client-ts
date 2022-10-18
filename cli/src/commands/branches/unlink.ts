@@ -26,7 +26,7 @@ export default class BranchesCreate extends BaseCommand {
       this.error('Git cannot be found. Please install it to unlink a branch.');
     }
 
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
+    const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
 
@@ -36,7 +36,7 @@ export default class BranchesCreate extends BaseCommand {
         this.error('Could not resolve the current git branch');
       }
 
-      const result = await xata.branches.removeGitBranchesEntry({ workspace, database, gitBranch });
+      const result = await xata.branches.removeGitBranchesEntry({ workspace, region, database, gitBranch });
 
       if (this.jsonEnabled()) return result;
 

@@ -1,4 +1,4 @@
-import { getBranchDetails, resolveBranch } from '../api';
+import { getBranchDetails, parseWorkspacesUrlParts, resolveBranch } from '../api';
 import { FetchImpl } from '../api/fetcher';
 import { defaultTrace } from '../schema/tracing';
 import { getAPIKey } from './apiKey';
@@ -45,7 +45,10 @@ async function resolveXataBranch(gitBranch: string | undefined, options?: Branch
     );
 
   const [protocol, , host, , dbName] = databaseURL.split('/');
-  const [workspace] = host.split('.');
+  const urlParts = parseWorkspacesUrlParts(host);
+  if (!urlParts) throw new Error(`Unable to parse workspace and region: ${databaseURL}`);
+  const { workspace, region } = urlParts;
+
   const { fallbackBranch } = getEnvironment();
 
   const { branch } = await resolveBranch({
@@ -53,7 +56,7 @@ async function resolveXataBranch(gitBranch: string | undefined, options?: Branch
     apiUrl: databaseURL,
     fetchImpl: getFetchImplementation(options?.fetchImpl),
     workspacesApiUrl: `${protocol}//${host}`,
-    pathParams: { dbName, workspace },
+    pathParams: { dbName, workspace, region },
     queryParams: { gitBranch, fallbackBranch },
     trace: defaultTrace
   });
@@ -75,15 +78,17 @@ async function getDatabaseBranch(branch: string, options?: BranchResolutionOptio
     );
 
   const [protocol, , host, , database] = databaseURL.split('/');
-  const [workspace] = host.split('.');
-  const dbBranchName = `${database}:${branch}`;
+  const urlParts = parseWorkspacesUrlParts(host);
+  if (!urlParts) throw new Error(`Unable to parse workspace and region: ${databaseURL}`);
+  const { workspace, region } = urlParts;
+
   try {
     return await getBranchDetails({
       apiKey,
       apiUrl: databaseURL,
       fetchImpl: getFetchImplementation(options?.fetchImpl),
       workspacesApiUrl: `${protocol}//${host}`,
-      pathParams: { dbBranchName, workspace },
+      pathParams: { dbBranchName: `${database}:${branch}`, workspace, region },
       trace: defaultTrace
     });
   } catch (err) {

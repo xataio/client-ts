@@ -40,6 +40,7 @@ export type TestEnvironmentResult = {
   baseClient: BaseClient;
   database: string;
   workspace: string;
+  region: string;
   clientOptions: {
     databaseURL: string;
     fetch: typeof fetch;
@@ -77,7 +78,7 @@ export async function setUpTestEnvironment(
     data: { region }
   });
 
-  const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace);
+  const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace).replace('{region}', region);
 
   const clientOptions = {
     databaseURL: `${workspaceUrl}/db/${database}`,
@@ -88,9 +89,9 @@ export async function setUpTestEnvironment(
     trace
   };
 
-  await api.tables.createTable({ workspace, database, branch: 'main', table: 'teams' });
-  await api.tables.createTable({ workspace, database, branch: 'main', table: 'pets' });
-  await api.tables.createTable({ workspace, database, branch: 'main', table: 'users' });
+  await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'teams' });
+  await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'pets' });
+  await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'users' });
 
   const teamColumns = schema.tables.find(({ name }) => name === 'teams')?.columns;
   const petColumns = schema.tables.find(({ name }) => name === 'pets')?.columns;
@@ -99,6 +100,7 @@ export async function setUpTestEnvironment(
 
   await api.tables.setTableSchema({
     workspace,
+    region,
     database,
     branch: 'main',
     table: 'teams',
@@ -106,6 +108,7 @@ export async function setUpTestEnvironment(
   });
   await api.tables.setTableSchema({
     workspace,
+    region,
     database,
     branch: 'main',
     table: 'pets',
@@ -113,6 +116,7 @@ export async function setUpTestEnvironment(
   });
   await api.tables.setTableSchema({
     workspace,
+    region,
     database,
     branch: 'main',
     table: 'users',
@@ -145,7 +149,7 @@ export async function setUpTestEnvironment(
   const client = new XataClient(clientOptions);
   const baseClient = new BaseClient(clientOptions);
 
-  return { api, client, baseClient, clientOptions, database, workspace, hooks };
+  return { api, client, baseClient, clientOptions, database, workspace, region, hooks };
 }
 
 async function setupTracing() {

@@ -10,7 +10,7 @@ import type * as Responses from './dataPlaneResponses';
 
 export type GetDatabaseListPathParams = {
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetDatabaseListError = Fetcher.ErrorWrapper<
@@ -45,7 +45,7 @@ export type GetBranchListPathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetBranchListError = Fetcher.ErrorWrapper<
@@ -84,7 +84,7 @@ export type CreateDatabasePathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type CreateDatabaseError = Fetcher.ErrorWrapper<
@@ -142,7 +142,7 @@ export type DeleteDatabasePathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type DeleteDatabaseError = Fetcher.ErrorWrapper<
@@ -185,7 +185,7 @@ export type GetDatabaseMetadataPathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetDatabaseMetadataError = Fetcher.ErrorWrapper<
@@ -224,7 +224,7 @@ export type UpdateDatabaseMetadataPathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type UpdateDatabaseMetadataError = Fetcher.ErrorWrapper<
@@ -275,7 +275,7 @@ export type GetBranchDetailsPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetBranchDetailsError = Fetcher.ErrorWrapper<
@@ -311,7 +311,7 @@ export type CreateBranchPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type CreateBranchQueryParams = {
@@ -375,7 +375,7 @@ export type DeleteBranchPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type DeleteBranchError = Fetcher.ErrorWrapper<
@@ -418,7 +418,7 @@ export type UpdateBranchMetadataPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type UpdateBranchMetadataError = Fetcher.ErrorWrapper<
@@ -458,7 +458,7 @@ export type GetBranchMetadataPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetBranchMetadataError = Fetcher.ErrorWrapper<
@@ -494,7 +494,7 @@ export type GetBranchStatsPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetBranchStatsError = Fetcher.ErrorWrapper<
@@ -545,7 +545,7 @@ export type GetGitBranchesMappingPathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetGitBranchesMappingError = Fetcher.ErrorWrapper<
@@ -603,7 +603,7 @@ export type AddGitBranchesEntryPathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type AddGitBranchesEntryError = Fetcher.ErrorWrapper<
@@ -671,7 +671,7 @@ export type RemoveGitBranchesEntryPathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type RemoveGitBranchesEntryQueryParams = {
@@ -722,7 +722,7 @@ export type ResolveBranchPathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type ResolveBranchQueryParams = {
@@ -801,7 +801,7 @@ export type GetBranchMigrationHistoryPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetBranchMigrationHistoryError = Fetcher.ErrorWrapper<
@@ -850,7 +850,7 @@ export type GetBranchMigrationPlanPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetBranchMigrationPlanError = Fetcher.ErrorWrapper<
@@ -892,7 +892,7 @@ export type ExecuteBranchMigrationPlanPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type ExecuteBranchMigrationPlanError = Fetcher.ErrorWrapper<
@@ -939,7 +939,7 @@ export type QueryMigrationRequestsPathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type QueryMigrationRequestsError = Fetcher.ErrorWrapper<
@@ -990,7 +990,7 @@ export type CreateMigrationRequestPathParams = {
    */
   dbName: Schemas.DBName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type CreateMigrationRequestError = Fetcher.ErrorWrapper<
@@ -1056,7 +1056,7 @@ export type GetMigrationRequestPathParams = {
    */
   mrNumber: number;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetMigrationRequestError = Fetcher.ErrorWrapper<
@@ -1096,7 +1096,7 @@ export type UpdateMigrationRequestPathParams = {
    */
   mrNumber: number;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type UpdateMigrationRequestError = Fetcher.ErrorWrapper<
@@ -1154,7 +1154,7 @@ export type ListMigrationRequestsCommitsPathParams = {
    */
   mrNumber: number;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type ListMigrationRequestsCommitsError = Fetcher.ErrorWrapper<
@@ -1230,7 +1230,7 @@ export type CompareMigrationRequestPathParams = {
    */
   mrNumber: number;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type CompareMigrationRequestError = Fetcher.ErrorWrapper<
@@ -1272,7 +1272,7 @@ export type GetMigrationRequestIsMergedPathParams = {
    */
   mrNumber: number;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetMigrationRequestIsMergedError = Fetcher.ErrorWrapper<
@@ -1318,7 +1318,7 @@ export type MergeMigrationRequestPathParams = {
    */
   mrNumber: number;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type MergeMigrationRequestError = Fetcher.ErrorWrapper<
@@ -1354,7 +1354,7 @@ export type GetBranchSchemaHistoryPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetBranchSchemaHistoryError = Fetcher.ErrorWrapper<
@@ -1426,7 +1426,7 @@ export type CompareBranchWithUserSchemaPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type CompareBranchWithUserSchemaError = Fetcher.ErrorWrapper<
@@ -1473,7 +1473,7 @@ export type CompareBranchSchemasPathParams = {
    */
   branchName: Schemas.BranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type CompareBranchSchemasError = Fetcher.ErrorWrapper<
@@ -1512,7 +1512,7 @@ export type UpdateBranchSchemaPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type UpdateBranchSchemaError = Fetcher.ErrorWrapper<
@@ -1551,7 +1551,7 @@ export type PreviewBranchSchemaEditPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type PreviewBranchSchemaEditError = Fetcher.ErrorWrapper<
@@ -1600,7 +1600,7 @@ export type ApplyBranchSchemaEditPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type ApplyBranchSchemaEditError = Fetcher.ErrorWrapper<
@@ -1647,7 +1647,7 @@ export type CreateTablePathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type CreateTableError = Fetcher.ErrorWrapper<
@@ -1703,7 +1703,7 @@ export type DeleteTablePathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type DeleteTableError = Fetcher.ErrorWrapper<
@@ -1746,7 +1746,7 @@ export type UpdateTablePathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type UpdateTableError = Fetcher.ErrorWrapper<
@@ -1809,7 +1809,7 @@ export type GetTableSchemaPathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetTableSchemaError = Fetcher.ErrorWrapper<
@@ -1853,7 +1853,7 @@ export type SetTableSchemaPathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type SetTableSchemaError = Fetcher.ErrorWrapper<
@@ -1904,7 +1904,7 @@ export type GetTableColumnsPathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetTableColumnsError = Fetcher.ErrorWrapper<
@@ -1952,7 +1952,7 @@ export type AddTableColumnPathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type AddTableColumnError = Fetcher.ErrorWrapper<
@@ -1999,7 +1999,7 @@ export type GetColumnPathParams = {
    */
   columnName: Schemas.ColumnName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetColumnError = Fetcher.ErrorWrapper<
@@ -2046,7 +2046,7 @@ export type UpdateColumnPathParams = {
    */
   columnName: Schemas.ColumnName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type UpdateColumnError = Fetcher.ErrorWrapper<
@@ -2103,7 +2103,7 @@ export type DeleteColumnPathParams = {
    */
   columnName: Schemas.ColumnName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type DeleteColumnError = Fetcher.ErrorWrapper<
@@ -2146,7 +2146,7 @@ export type InsertRecordPathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type InsertRecordQueryParams = {
@@ -2204,7 +2204,7 @@ export type GetRecordPathParams = {
    */
   recordId: Schemas.RecordID;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type GetRecordQueryParams = {
@@ -2259,7 +2259,7 @@ export type InsertRecordWithIDPathParams = {
    */
   recordId: Schemas.RecordID;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type InsertRecordWithIDQueryParams = {
@@ -2323,7 +2323,7 @@ export type UpdateRecordWithIDPathParams = {
    */
   recordId: Schemas.RecordID;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type UpdateRecordWithIDQueryParams = {
@@ -2383,7 +2383,7 @@ export type UpsertRecordWithIDPathParams = {
    */
   recordId: Schemas.RecordID;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type UpsertRecordWithIDQueryParams = {
@@ -2443,7 +2443,7 @@ export type DeleteRecordPathParams = {
    */
   recordId: Schemas.RecordID;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type DeleteRecordQueryParams = {
@@ -2493,7 +2493,7 @@ export type BulkInsertTableRecordsPathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type BulkInsertTableRecordsQueryParams = {
@@ -2555,7 +2555,7 @@ export type QueryTablePathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type QueryTableError = Fetcher.ErrorWrapper<
@@ -3333,7 +3333,7 @@ export type SearchBranchPathParams = {
    */
   dbBranchName: Schemas.DBBranchName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type SearchBranchError = Fetcher.ErrorWrapper<
@@ -3404,7 +3404,7 @@ export type SearchTablePathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type SearchTableError = Fetcher.ErrorWrapper<
@@ -3467,7 +3467,7 @@ export type SummarizeTablePathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type SummarizeTableError = Fetcher.ErrorWrapper<
@@ -3592,7 +3592,7 @@ export type AggregateTablePathParams = {
    */
   tableName: Schemas.TableName;
   workspace: string;
-  region?: string;
+  region: string;
 };
 
 export type AggregateTableError = Fetcher.ErrorWrapper<

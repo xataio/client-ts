@@ -17,13 +17,11 @@ export function getHostUrl(provider: HostProvider, type: keyof ProviderBuilder):
 const providers: Record<HostAliases, ProviderBuilder> = {
   production: {
     main: 'https://api.xata.io',
-    // TODO: Add region
-    workspaces: 'https://{workspaceId}.xata.sh'
+    workspaces: 'https://{workspaceId}.{region}.xata.sh'
   },
   staging: {
     main: 'https://staging.xatabase.co',
-    // TODO: Add region
-    workspaces: 'https://{workspaceId}.staging.xatabase.co'
+    workspaces: 'https://{workspaceId}.staging.{region}.xatabase.co'
   }
 };
 
@@ -43,4 +41,15 @@ export function parseProviderString(provider = 'production'): HostProvider | nul
   const [main, workspaces] = provider.split(',');
   if (!main || !workspaces) return null;
   return { main, workspaces };
+}
+
+export function parseWorkspacesUrlParts(url: string): { workspace: string; region: string } | null {
+  const regex = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))?\.xata\.sh.*/;
+  const regexStaging = /(?:https:\/\/)?([^.]+)\.staging(?:\.([^.]+))?\.xatabase\.co.*/;
+
+  const match = url.match(regex) || url.match(regexStaging);
+  if (!match) return null;
+
+  // Region is optional for now, so we default to 'EU'
+  return { workspace: match[1], region: match[2] ?? 'eu-west-1' };
 }

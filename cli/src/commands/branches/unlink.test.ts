@@ -30,13 +30,15 @@ describe('branches unlink', () => {
 
     const config = await Config.load();
     const command = new BranchesUnlink([], config as Config);
-    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
     const gitBranch = currentGitBranch();
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual(`https://test-1234.xata.sh/dbs/test/gitBranches?gitBranch=${gitBranch}`);
+    expect(fetchMock.mock.calls[0][0]).toEqual(
+      `https://test-1234.eu-west-1.xata.sh/dbs/test/gitBranches?gitBranch=${gitBranch}`
+    );
     expect(fetchMock.mock.calls[0][1].method).toEqual('DELETE');
   });
 
@@ -48,7 +50,7 @@ describe('branches unlink', () => {
 
     const config = await Config.load();
     const command = new BranchesUnlink(['--git', 'foo'], config as Config);
-    command.projectConfig = { databaseURL: 'https://test-1234.xata.sh/db/test' };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     expect(BranchesUnlink.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
@@ -64,7 +66,9 @@ describe('branches unlink', () => {
     }
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test/gitBranches?gitBranch=foo');
+    expect(fetchMock.mock.calls[0][0]).toEqual(
+      'https://test-1234.eu-west-1.xata.sh/dbs/test/gitBranches?gitBranch=foo'
+    );
     expect(fetchMock.mock.calls[0][1].method).toEqual('DELETE');
 
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);

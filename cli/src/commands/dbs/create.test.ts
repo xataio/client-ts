@@ -80,7 +80,8 @@ describe('databases create', () => {
     if (json) {
       expect(result).toMatchInlineSnapshot(`
         {
-          "databaseName": "hello-world",
+          "name": "hello-world",
+          "region": "eu-west-1",
         }
       `);
     } else {

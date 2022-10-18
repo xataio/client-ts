@@ -29,14 +29,14 @@ export default class BranchesCreate extends BaseCommand {
       this.error('Git cannot be found. Please install it to link branches.');
     }
 
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
+    const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
 
     try {
       const {
         git: gitBranch = currentGitBranch(),
-        xata: xataBranch = await this.getBranch(workspace, database, { allowCreate: true })
+        xata: xataBranch = await this.getBranch(workspace, region, database, { allowCreate: true })
       } = flags;
 
       if (!gitBranch) {
@@ -45,7 +45,7 @@ export default class BranchesCreate extends BaseCommand {
         this.error('Could not resolve the xata branch');
       }
 
-      const result = await xata.branches.addGitBranchesEntry({ workspace, database, gitBranch, xataBranch });
+      const result = await xata.branches.addGitBranchesEntry({ workspace, region, database, gitBranch, xataBranch });
 
       if (this.jsonEnabled()) return result;
 

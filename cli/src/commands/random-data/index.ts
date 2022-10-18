@@ -28,9 +28,9 @@ export default class RandomData extends BaseCommand {
   async run(): Promise<void> {
     const { flags } = await this.parse(RandomData);
 
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
-    const branchDetails = await xata.branches.getBranchDetails({ workspace, database, branch });
+    const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
     if (!branchDetails) {
       this.error('Could not resolve the current branch');
     }
@@ -53,7 +53,7 @@ export default class RandomData extends BaseCommand {
       for (let index = 0; index < totalRecords; index++) {
         records.push(this.randomRecord(table.columns));
       }
-      await xata.records.bulkInsertTableRecords({ workspace, database, branch, table: table.name, records });
+      await xata.records.bulkInsertTableRecords({ workspace, region, database, branch, table: table.name, records });
 
       this.info(
         `Inserted ${chalk.bold(totalRecords)} random ${pluralize('record', totalRecords)} in the ${chalk.bold(

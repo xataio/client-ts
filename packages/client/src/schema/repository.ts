@@ -764,6 +764,7 @@ export class RestRepository<Record extends XataRecord>
       pathParams: {
         workspace: '{workspaceId}',
         dbBranchName: '{dbBranch}',
+        region: '{region}',
         tableName: this.#table
       },
       queryParams: { columns },
@@ -788,6 +789,7 @@ export class RestRepository<Record extends XataRecord>
       pathParams: {
         workspace: '{workspaceId}',
         dbBranchName: '{dbBranch}',
+        region: '{region}',
         tableName: this.#table,
         recordId
       },
@@ -806,7 +808,12 @@ export class RestRepository<Record extends XataRecord>
     const records = objects.map((object) => transformObjectLinks(object));
 
     const response = await bulkInsertTableRecords({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table
+      },
       queryParams: { columns },
       body: { records },
       ...fetchProps
@@ -880,6 +887,7 @@ export class RestRepository<Record extends XataRecord>
             pathParams: {
               workspace: '{workspaceId}',
               dbBranchName: '{dbBranch}',
+              region: '{region}',
               tableName: this.#table,
               recordId: id
             },
@@ -1091,7 +1099,13 @@ export class RestRepository<Record extends XataRecord>
 
     try {
       const response = await updateRecordWithID({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table,
+          recordId
+        },
         queryParams: { columns },
         body: record,
         ...fetchProps
@@ -1177,7 +1191,13 @@ export class RestRepository<Record extends XataRecord>
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table,
+        recordId
+      },
       queryParams: { columns },
       body: object,
       ...fetchProps
@@ -1306,7 +1326,13 @@ export class RestRepository<Record extends XataRecord>
 
     try {
       const response = await deleteRecord({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table,
+          recordId
+        },
         queryParams: { columns },
         ...fetchProps
       });
@@ -1336,7 +1362,12 @@ export class RestRepository<Record extends XataRecord>
       const fetchProps = await this.#getFetchProps();
 
       const { records } = await searchTable({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
         body: {
           query,
           fuzziness: options.fuzziness,
@@ -1363,7 +1394,12 @@ export class RestRepository<Record extends XataRecord>
       const fetchProps = await this.#getFetchProps();
 
       const result = await aggregateTable({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
         body: { aggs, filter: filter as Schemas.FilterExpression },
         ...fetchProps
       });
@@ -1381,7 +1417,12 @@ export class RestRepository<Record extends XataRecord>
 
       const fetchProps = await this.#getFetchProps();
       const { meta, records: objects } = await queryTable({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
         body: {
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
@@ -1411,7 +1452,12 @@ export class RestRepository<Record extends XataRecord>
 
       const fetchProps = await this.#getFetchProps();
       const result = await summarizeTable({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
         body: {
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
@@ -1450,7 +1496,7 @@ export class RestRepository<Record extends XataRecord>
     const fetchProps = await this.#getFetchProps();
 
     const { schema } = await getBranchDetails({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
       ...fetchProps
     });
 

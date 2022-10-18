@@ -53,7 +53,7 @@ export default defineConfig({
       context.openAPIDocument = addPathParam({
         openAPIDocument: context.openAPIDocument,
         pathParam: 'region',
-        required: false
+        required: true
       });
 
       const { schemasFiles } = await generateSchemaTypes(context, { filenamePrefix });

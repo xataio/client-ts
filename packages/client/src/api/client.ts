@@ -1,7 +1,6 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
 import { getAPIKey } from '../util/apiKey';
 import { getFetchImplementation } from '../util/fetch';
-import { isString } from '../util/lang';
 import type * as Components from './components';
 import type * as Types from './components';
 import { operationsByTag } from './components';
@@ -307,47 +306,53 @@ class BranchApi {
 
   public getBranchList({
     workspace,
+    region,
     database
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
   }): Promise<Schemas.ListBranchesResponse> {
     return operationsByTag.branch.getBranchList({
-      pathParams: { workspace, dbName: database },
+      pathParams: { workspace, region, dbName: database },
       ...this.extraProps
     });
   }
 
   public getBranchDetails({
     workspace,
+    region,
     database,
     branch
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
   }): Promise<Schemas.DBBranch> {
     return operationsByTag.branch.getBranchDetails({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
     });
   }
 
   public createBranch({
     workspace,
+    region,
     database,
     branch,
     from,
     metadata
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     from?: string;
     metadata?: Schemas.BranchMetadata;
   }): Promise<Types.CreateBranchResponse> {
     return operationsByTag.branch.createBranch({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: { from, metadata },
       ...this.extraProps
     });
@@ -355,32 +360,36 @@ class BranchApi {
 
   public deleteBranch({
     workspace,
+    region,
     database,
     branch
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
   }): Promise<Components.DeleteBranchResponse> {
     return operationsByTag.branch.deleteBranch({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
     });
   }
 
   public updateBranchMetadata({
     workspace,
+    region,
     database,
     branch,
     metadata
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     metadata: Schemas.BranchMetadata;
   }): Promise<void> {
     return operationsByTag.branch.updateBranchMetadata({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: metadata,
       ...this.extraProps
     });
@@ -388,60 +397,68 @@ class BranchApi {
 
   public getBranchMetadata({
     workspace,
+    region,
     database,
     branch
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
   }): Promise<Schemas.BranchMetadata> {
     return operationsByTag.branch.getBranchMetadata({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
     });
   }
 
   public getBranchStats({
     workspace,
+    region,
     database,
     branch
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
   }): Promise<Types.GetBranchStatsResponse> {
     return operationsByTag.branch.getBranchStats({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
     });
   }
 
   public getGitBranchesMapping({
     workspace,
+    region,
     database
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
   }): Promise<Schemas.ListGitBranchesResponse> {
     return operationsByTag.branch.getGitBranchesMapping({
-      pathParams: { workspace, dbName: database },
+      pathParams: { workspace, region, dbName: database },
       ...this.extraProps
     });
   }
 
   public addGitBranchesEntry({
     workspace,
+    region,
     database,
     gitBranch,
     xataBranch
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     gitBranch: string;
     xataBranch: Schemas.BranchName;
   }): Promise<Types.AddGitBranchesEntryResponse> {
     return operationsByTag.branch.addGitBranchesEntry({
-      pathParams: { workspace, dbName: database },
+      pathParams: { workspace, region, dbName: database },
       body: { gitBranch, xataBranch },
       ...this.extraProps
     });
@@ -449,15 +466,17 @@ class BranchApi {
 
   public removeGitBranchesEntry({
     workspace,
+    region,
     database,
     gitBranch
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     gitBranch: string;
   }): Promise<void> {
     return operationsByTag.branch.removeGitBranchesEntry({
-      pathParams: { workspace, dbName: database },
+      pathParams: { workspace, region, dbName: database },
       queryParams: { gitBranch },
       ...this.extraProps
     });
@@ -465,17 +484,19 @@ class BranchApi {
 
   public resolveBranch({
     workspace,
+    region,
     database,
     gitBranch,
     fallbackBranch
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     gitBranch?: string;
     fallbackBranch?: string;
   }): Promise<Types.ResolveBranchResponse> {
     return operationsByTag.branch.resolveBranch({
-      pathParams: { workspace, dbName: database },
+      pathParams: { workspace, region, dbName: database },
       queryParams: { gitBranch, fallbackBranch },
       ...this.extraProps
     });
@@ -487,53 +508,59 @@ class TableApi {
 
   public createTable({
     workspace,
+    region,
     database,
     branch,
     table
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
   }): Promise<Types.CreateTableResponse> {
     return operationsByTag.table.createTable({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       ...this.extraProps
     });
   }
 
   public deleteTable({
     workspace,
+    region,
     database,
     branch,
     table
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
   }): Promise<Components.DeleteTableResponse> {
     return operationsByTag.table.deleteTable({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       ...this.extraProps
     });
   }
 
   public updateTable({
     workspace,
+    region,
     database,
     branch,
     table,
     update
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
     update: Types.UpdateTableRequestBody;
   }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.updateTable({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       body: update,
       ...this.extraProps
     });
@@ -541,36 +568,40 @@ class TableApi {
 
   public getTableSchema({
     workspace,
+    region,
     database,
     branch,
     table
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
   }): Promise<Types.GetTableSchemaResponse> {
     return operationsByTag.table.getTableSchema({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       ...this.extraProps
     });
   }
 
   public setTableSchema({
     workspace,
+    region,
     database,
     branch,
     table,
     schema
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
     schema: Types.SetTableSchemaRequestBody;
   }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.setTableSchema({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       body: schema,
       ...this.extraProps
     });
@@ -578,36 +609,40 @@ class TableApi {
 
   public getTableColumns({
     workspace,
+    region,
     database,
     branch,
     table
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
   }): Promise<Types.GetTableColumnsResponse> {
     return operationsByTag.table.getTableColumns({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       ...this.extraProps
     });
   }
 
   public addTableColumn({
     workspace,
+    region,
     database,
     branch,
     table,
     column
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
     column: Schemas.Column;
   }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.addTableColumn({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       body: column,
       ...this.extraProps
     });
@@ -615,25 +650,28 @@ class TableApi {
 
   public getColumn({
     workspace,
+    region,
     database,
     branch,
     table,
     column
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
     column: Schemas.ColumnName;
   }): Promise<Schemas.Column> {
     return operationsByTag.table.getColumn({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, columnName: column },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, columnName: column },
       ...this.extraProps
     });
   }
 
   public updateColumn({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -641,6 +679,7 @@ class TableApi {
     update
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -648,7 +687,7 @@ class TableApi {
     update: Types.UpdateColumnRequestBody;
   }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.updateColumn({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, columnName: column },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, columnName: column },
       body: update,
       ...this.extraProps
     });
@@ -656,19 +695,21 @@ class TableApi {
 
   public deleteColumn({
     workspace,
+    region,
     database,
     branch,
     table,
     column
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
     column: Schemas.ColumnName;
   }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.deleteColumn({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, columnName: column },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, columnName: column },
       ...this.extraProps
     });
   }
@@ -679,6 +720,7 @@ class RecordsApi {
 
   public insertRecord({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -686,6 +728,7 @@ class RecordsApi {
     columns
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -693,7 +736,7 @@ class RecordsApi {
     columns?: Schemas.ColumnsProjection;
   }): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.insertRecord({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       queryParams: { columns },
       body: record,
       ...this.extraProps
@@ -702,6 +745,7 @@ class RecordsApi {
 
   public getRecord({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -709,6 +753,7 @@ class RecordsApi {
     columns
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -716,7 +761,7 @@ class RecordsApi {
     columns?: Schemas.ColumnsProjection;
   }): Promise<Schemas.XataRecord> {
     return operationsByTag.records.getRecord({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
       queryParams: { columns },
       ...this.extraProps
     });
@@ -724,6 +769,7 @@ class RecordsApi {
 
   public insertRecordWithID({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -734,6 +780,7 @@ class RecordsApi {
     ifVersion
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -744,7 +791,7 @@ class RecordsApi {
     ifVersion?: number;
   }): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.insertRecordWithID({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
       queryParams: { columns, createOnly, ifVersion },
       body: record,
       ...this.extraProps
@@ -753,6 +800,7 @@ class RecordsApi {
 
   public updateRecordWithID({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -762,6 +810,7 @@ class RecordsApi {
     ifVersion
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -771,7 +820,7 @@ class RecordsApi {
     ifVersion?: number;
   }): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.updateRecordWithID({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
       queryParams: { columns, ifVersion },
       body: record,
       ...this.extraProps
@@ -780,6 +829,7 @@ class RecordsApi {
 
   public upsertRecordWithID({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -789,6 +839,7 @@ class RecordsApi {
     ifVersion
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -798,7 +849,7 @@ class RecordsApi {
     ifVersion?: number;
   }): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.upsertRecordWithID({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
       queryParams: { columns, ifVersion },
       body: record,
       ...this.extraProps
@@ -807,6 +858,7 @@ class RecordsApi {
 
   public deleteRecord({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -814,6 +866,7 @@ class RecordsApi {
     columns
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -821,7 +874,7 @@ class RecordsApi {
     columns?: Schemas.ColumnsProjection;
   }): Promise<Responses.RecordUpdateResponse> {
     return operationsByTag.records.deleteRecord({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, recordId: id },
       queryParams: { columns },
       ...this.extraProps
     });
@@ -829,6 +882,7 @@ class RecordsApi {
 
   public bulkInsertTableRecords({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -836,6 +890,7 @@ class RecordsApi {
     columns
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -843,7 +898,7 @@ class RecordsApi {
     columns?: Schemas.ColumnsProjection;
   }): Promise<Responses.BulkInsertResponse> {
     return operationsByTag.records.bulkInsertTableRecords({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       queryParams: { columns },
       body: { records },
       ...this.extraProps
@@ -856,6 +911,7 @@ class SearchAndFilterApi {
 
   public queryTable({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -865,6 +921,7 @@ class SearchAndFilterApi {
     columns
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -874,7 +931,7 @@ class SearchAndFilterApi {
     columns?: Schemas.ColumnsProjection;
   }): Promise<Responses.QueryResponse> {
     return operationsByTag.searchAndFilter.queryTable({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       body: { filter, sort, page, columns },
       ...this.extraProps
     });
@@ -882,6 +939,7 @@ class SearchAndFilterApi {
 
   public searchTable({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -894,6 +952,7 @@ class SearchAndFilterApi {
     boosters
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -906,7 +965,7 @@ class SearchAndFilterApi {
     boosters?: Schemas.BoosterExpression[];
   }): Promise<Responses.SearchResponse> {
     return operationsByTag.searchAndFilter.searchTable({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       body: { query, fuzziness, target, prefix, filter, highlight, boosters },
       ...this.extraProps
     });
@@ -914,6 +973,7 @@ class SearchAndFilterApi {
 
   public searchBranch({
     workspace,
+    region,
     database,
     branch,
     tables,
@@ -923,6 +983,7 @@ class SearchAndFilterApi {
     highlight
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     tables?: (
@@ -940,7 +1001,7 @@ class SearchAndFilterApi {
     highlight?: Schemas.HighlightExpression;
   }): Promise<Responses.SearchResponse> {
     return operationsByTag.searchAndFilter.searchBranch({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: { tables, query, fuzziness, prefix, highlight },
       ...this.extraProps
     });
@@ -948,6 +1009,7 @@ class SearchAndFilterApi {
 
   public summarizeTable({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -959,6 +1021,7 @@ class SearchAndFilterApi {
     page
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -970,7 +1033,7 @@ class SearchAndFilterApi {
     page?: { size?: number };
   }): Promise<Responses.SummarizeResponse> {
     return operationsByTag.searchAndFilter.summarizeTable({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       body: { filter, columns, summaries, sort, summariesFilter, page },
       ...this.extraProps
     });
@@ -978,6 +1041,7 @@ class SearchAndFilterApi {
 
   public aggregateTable({
     workspace,
+    region,
     database,
     branch,
     table,
@@ -985,6 +1049,7 @@ class SearchAndFilterApi {
     aggs
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
@@ -992,7 +1057,7 @@ class SearchAndFilterApi {
     aggs?: Schemas.AggExpressionMap;
   }): Promise<Responses.AggResponse> {
     return operationsByTag.searchAndFilter.aggregateTable({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
       body: { filter, aggs },
       ...this.extraProps
     });
@@ -1004,6 +1069,7 @@ class MigrationRequestsApi {
 
   public queryMigrationRequests({
     workspace,
+    region,
     database,
     filter,
     sort,
@@ -1011,6 +1077,7 @@ class MigrationRequestsApi {
     columns
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     filter?: Schemas.FilterExpression;
     sort?: Schemas.SortExpression;
@@ -1018,7 +1085,7 @@ class MigrationRequestsApi {
     columns?: Schemas.ColumnsProjection;
   }): Promise<Components.QueryMigrationRequestsResponse> {
     return operationsByTag.migrationRequests.queryMigrationRequests({
-      pathParams: { workspace, dbName: database },
+      pathParams: { workspace, region, dbName: database },
       body: { filter, sort, page, columns },
       ...this.extraProps
     });
@@ -1026,15 +1093,17 @@ class MigrationRequestsApi {
 
   public createMigrationRequest({
     workspace,
+    region,
     database,
     migration
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     migration: Components.CreateMigrationRequestRequestBody;
   }): Promise<Components.CreateMigrationRequestResponse> {
     return operationsByTag.migrationRequests.createMigrationRequest({
-      pathParams: { workspace, dbName: database },
+      pathParams: { workspace, region, dbName: database },
       body: migration,
       ...this.extraProps
     });
@@ -1042,32 +1111,36 @@ class MigrationRequestsApi {
 
   public getMigrationRequest({
     workspace,
+    region,
     database,
     migrationRequest
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     migrationRequest: number;
   }): Promise<Schemas.MigrationRequest> {
     return operationsByTag.migrationRequests.getMigrationRequest({
-      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
       ...this.extraProps
     });
   }
 
   public updateMigrationRequest({
     workspace,
+    region,
     database,
     migrationRequest,
     update
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     migrationRequest: number;
     update: Components.UpdateMigrationRequestRequestBody;
   }): Promise<void> {
     return operationsByTag.migrationRequests.updateMigrationRequest({
-      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
       body: update,
       ...this.extraProps
     });
@@ -1075,17 +1148,19 @@ class MigrationRequestsApi {
 
   public listMigrationRequestsCommits({
     workspace,
+    region,
     database,
     migrationRequest,
     page
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     migrationRequest: number;
     page?: { after?: string; before?: string; size?: number };
   }): Promise<Components.ListMigrationRequestsCommitsResponse> {
     return operationsByTag.migrationRequests.listMigrationRequestsCommits({
-      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
       body: { page },
       ...this.extraProps
     });
@@ -1093,45 +1168,51 @@ class MigrationRequestsApi {
 
   public compareMigrationRequest({
     workspace,
+    region,
     database,
     migrationRequest
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     migrationRequest: number;
   }): Promise<Responses.SchemaCompareResponse> {
     return operationsByTag.migrationRequests.compareMigrationRequest({
-      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
       ...this.extraProps
     });
   }
 
   public getMigrationRequestIsMerged({
     workspace,
+    region,
     database,
     migrationRequest
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     migrationRequest: number;
   }): Promise<Components.GetMigrationRequestIsMergedResponse> {
     return operationsByTag.migrationRequests.getMigrationRequestIsMerged({
-      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
       ...this.extraProps
     });
   }
 
   public mergeMigrationRequest({
     workspace,
+    region,
     database,
     migrationRequest
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     migrationRequest: number;
   }): Promise<Schemas.Commit> {
     return operationsByTag.migrationRequests.mergeMigrationRequest({
-      pathParams: { workspace, dbName: database, mrNumber: migrationRequest },
+      pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
       ...this.extraProps
     });
   }
@@ -1142,19 +1223,21 @@ class MigrationsApi {
 
   public getBranchMigrationHistory({
     workspace,
+    region,
     database,
     branch,
     limit,
     startFrom
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     limit?: number;
     startFrom?: string;
   }): Promise<Types.GetBranchMigrationHistoryResponse> {
     return operationsByTag.migrations.getBranchMigrationHistory({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: { limit, startFrom },
       ...this.extraProps
     });
@@ -1162,17 +1245,19 @@ class MigrationsApi {
 
   public getBranchMigrationPlan({
     workspace,
+    region,
     database,
     branch,
     schema
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     schema: Schemas.Schema;
   }): Promise<Responses.BranchMigrationPlan> {
     return operationsByTag.migrations.getBranchMigrationPlan({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: schema,
       ...this.extraProps
     });
@@ -1180,17 +1265,19 @@ class MigrationsApi {
 
   public executeBranchMigrationPlan({
     workspace,
+    region,
     database,
     branch,
     plan
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     plan: Types.ExecuteBranchMigrationPlanRequestBody;
   }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.migrations.executeBranchMigrationPlan({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: plan,
       ...this.extraProps
     });
@@ -1198,17 +1285,19 @@ class MigrationsApi {
 
   public getBranchSchemaHistory({
     workspace,
+    region,
     database,
     branch,
     page
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     page?: { after?: string; before?: string; size?: number };
   }): Promise<Types.GetBranchSchemaHistoryResponse> {
     return operationsByTag.migrations.getBranchSchemaHistory({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: { page },
       ...this.extraProps
     });
@@ -1216,17 +1305,19 @@ class MigrationsApi {
 
   public compareBranchWithUserSchema({
     workspace,
+    region,
     database,
     branch,
     schema
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     schema: Schemas.Schema;
   }): Promise<Responses.SchemaCompareResponse> {
     return operationsByTag.migrations.compareBranchWithUserSchema({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: { schema },
       ...this.extraProps
     });
@@ -1234,19 +1325,21 @@ class MigrationsApi {
 
   public compareBranchSchemas({
     workspace,
+    region,
     database,
     branch,
     compare,
     schema
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     compare: Schemas.BranchName;
     schema: Schemas.Schema;
   }): Promise<Responses.SchemaCompareResponse> {
     return operationsByTag.migrations.compareBranchSchemas({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}`, branchName: compare },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, branchName: compare },
       body: { schema },
       ...this.extraProps
     });
@@ -1254,17 +1347,19 @@ class MigrationsApi {
 
   public updateBranchSchema({
     workspace,
+    region,
     database,
     branch,
     migration
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     migration: Schemas.Migration;
   }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.migrations.updateBranchSchema({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: migration,
       ...this.extraProps
     });
@@ -1272,17 +1367,19 @@ class MigrationsApi {
 
   public previewBranchSchemaEdit({
     workspace,
+    region,
     database,
     branch,
     migration
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     migration: Schemas.Migration;
   }): Promise<Components.PreviewBranchSchemaEditResponse> {
     return operationsByTag.migrations.previewBranchSchemaEdit({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: migration,
       ...this.extraProps
     });
@@ -1290,17 +1387,19 @@ class MigrationsApi {
 
   public applyBranchSchemaEdit({
     workspace,
+    region,
     database,
     branch,
     edits
   }: {
     workspace: Schemas.WorkspaceID;
+    region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     edits: Schemas.SchemaEditScript;
   }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.migrations.applyBranchSchemaEdit({
-      pathParams: { workspace, dbBranchName: `${database}:${branch}` },
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: { edits },
       ...this.extraProps
     });

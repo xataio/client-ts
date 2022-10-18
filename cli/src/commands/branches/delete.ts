@@ -17,7 +17,7 @@ export default class BranchesDelete extends BaseCommand {
 
   async run(): Promise<void | unknown> {
     const { flags, args } = await this.parse(BranchesDelete);
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
+    const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
     const branch = args.branch;
 
     const xata = await this.getXataClient();
@@ -34,7 +34,7 @@ export default class BranchesDelete extends BaseCommand {
     if (!confirm) return this.exit(1);
     if (confirm !== branch) return this.error('The branch name did not match');
 
-    await xata.branches.deleteBranch({ workspace, database, branch });
+    await xata.branches.deleteBranch({ workspace, region, database, branch });
 
     if (this.jsonEnabled()) return {};
 

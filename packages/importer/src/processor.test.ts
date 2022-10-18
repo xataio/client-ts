@@ -146,8 +146,9 @@ describe('compareSquema', () => {
 const dumbTableInfo: TableInfo = {
   branch: 'main',
   database: 'test',
-  tableName: 'foo',
-  workspaceID: 'test-1234'
+  table: 'foo',
+  workspace: 'test-1234',
+  region: 'us-east-1'
 };
 
 describe('createProcessor', () => {
@@ -238,12 +239,14 @@ describe('createProcessor', () => {
     expect(shouldContinue).toHaveBeenCalled();
     expect(createTable).toHaveBeenCalledWith({
       workspace: 'test-1234',
+      region: 'us-east-1',
       database: 'test',
       branch: 'main',
       table: 'foo'
     });
     expect(addTableColumn).toHaveBeenCalledWith({
       workspace: 'test-1234',
+      region: 'us-east-1',
       database: 'test',
       branch: 'main',
       table: 'foo',
@@ -255,6 +258,7 @@ describe('createProcessor', () => {
 
     expect(bulkInsertTableRecords).toHaveBeenCalledWith({
       workspace: 'test-1234',
+      region: 'us-east-1',
       database: 'test',
       branch: 'main',
       table: 'foo',
@@ -306,6 +310,7 @@ describe('createProcessor', () => {
     expect(createTable).not.toHaveBeenCalled();
     expect(addTableColumn).toHaveBeenCalledWith({
       workspace: 'test-1234',
+      region: 'us-east-1',
       database: 'test',
       branch: 'main',
       table: 'foo',
@@ -314,6 +319,7 @@ describe('createProcessor', () => {
 
     expect(bulkInsertTableRecords).toHaveBeenCalledWith({
       workspace: 'test-1234',
+      region: 'us-east-1',
       database: 'test',
       branch: 'main',
       table: 'foo',

@@ -7,6 +7,7 @@ import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
 let api: XataApiClient;
 let workspace: string;
+let region: string;
 let database: string;
 let hooks: TestEnvironmentResult['hooks'];
 let fetch: TestEnvironmentResult['clientOptions']['fetch'];
@@ -23,6 +24,7 @@ beforeAll(async (ctx) => {
   api = result.api;
   hooks = result.hooks;
   workspace = result.workspace;
+  region = result.region;
   database = result.database;
   fetch = result.clientOptions.fetch;
 
@@ -59,7 +61,7 @@ describe('getBranch', () => {
   test('uses an env variable if it is set', async () => {
     const branch = 'using-env-variable';
 
-    await api.branches.createBranch({ workspace, database, branch });
+    await api.branches.createBranch({ workspace, region, database, branch });
 
     process.env = { NODE_ENV: 'development', XATA_BRANCH: branch };
     expect(await getCurrentBranchName(branchOptions)).toEqual(branch);
@@ -85,7 +87,7 @@ describe('getBranch', () => {
     process.env = { NODE_ENV: 'development' };
     if (gitBranch) {
       try {
-        await api.branches.createBranch({ workspace, database, branch: gitBranch });
+        await api.branches.createBranch({ workspace, region, database, branch: gitBranch });
       } catch (e) {
         // If the branch already exists, ignore the error
       }
@@ -106,6 +108,7 @@ describe('getBranch', () => {
 
     const resolveBranch = await api.branches.resolveBranch({
       workspace,
+      region,
       database,
       // @ts-expect-error
       gitBranch: null,

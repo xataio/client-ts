@@ -70,7 +70,7 @@ function buildBaseUrl({
   path,
   workspacesApiUrl,
   apiUrl,
-  pathParams
+  pathParams = {}
 }: {
   endpoint: 'controlPlane' | 'dataPlane';
   path: string;
@@ -78,9 +78,16 @@ function buildBaseUrl({
   apiUrl: string;
   pathParams?: Partial<Record<string, string | number>>;
 }): string {
-  if (pathParams?.workspace !== undefined && endpoint === 'dataPlane') {
+  if (endpoint === 'dataPlane') {
     const url = isString(workspacesApiUrl) ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
-    return url.replace('{workspaceId}', String(pathParams.workspace));
+
+    const urlWithWorkspace = isString(pathParams.workspace)
+      ? url.replace('{workspaceId}', String(pathParams.workspace))
+      : url;
+
+    return isString(pathParams.region)
+      ? urlWithWorkspace.replace('{region}', String(pathParams.region))
+      : urlWithWorkspace;
   }
 
   return `${apiUrl}${path}`;
