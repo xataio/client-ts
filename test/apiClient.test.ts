@@ -26,7 +26,8 @@ describe('API Client Integration Tests', () => {
     expect(workspace).toBeDefined();
     expect(name).toBe('foo');
 
-    const foo = await getWorkspace(workspace);
+    const foo = await api.workspaces.getWorkspace({ workspace });
+
     expect(foo.id).toBe(workspace);
     expect(foo.slug).toBe('foo');
 
@@ -43,13 +44,13 @@ describe('API Client Integration Tests', () => {
       }
     });
 
-    await getWorkspace(workspace);
-
     const { databaseName: database } = await api.database.createDatabase({
       workspace,
       database: `test-data-${workspace}`,
       data: { region }
     });
+
+    await waitForReplication(workspace, database);
 
     await api.branches.createBranch({ workspace, database, branch: 'branch' });
     await api.tables.createTable({ workspace, database, branch: 'branch', table: 'table' });
@@ -78,12 +79,11 @@ describe('API Client Integration Tests', () => {
   });
 });
 
-async function getWorkspace(workspace: string): Promise<Schemas.Workspace> {
+async function waitForReplication(workspace: string, database: string): Promise<void> {
   try {
-    const result = await api.workspaces.getWorkspace({ workspace });
-    return result;
+    await api.branches.getBranchList({ workspace, database });
   } catch (error) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    return getWorkspace(workspace);
+    return await waitForReplication(workspace, database);
   }
 }
