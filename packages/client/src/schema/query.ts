@@ -28,7 +28,8 @@ type BaseOptions<T extends XataRecord> = {
 type CursorQueryOptions = {
   pagination?: CursorNavigationOptions & OffsetNavigationOptions;
   filter?: never;
-  sort?: never;
+  // Fix for TS 4.7 not inferring `never` for `sort`
+  sort?: never | unknown;
 };
 
 type OffsetQueryOptions<T extends XataRecord> = {
@@ -539,7 +540,7 @@ function cleanParent<Record extends XataRecord>(
   parent?: Partial<QueryOptions<Record>>
 ) {
   if (isCursorPaginationOptions(data.pagination)) {
-    return { ...parent, sorting: undefined, filter: undefined };
+    return { ...parent, sort: undefined, filter: undefined };
   }
 
   return parent;
