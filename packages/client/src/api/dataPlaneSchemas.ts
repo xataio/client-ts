@@ -220,11 +220,13 @@ export type Commit = {
   id: string;
   parentID?: string;
   mergeParentID?: string;
-  status: string;
+  status: MigrationStatus;
   createdAt: DateTime;
   modifiedAt?: DateTime;
   operations: MigrationOp[];
 };
+
+export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
 /**
  * Branch schema migration.

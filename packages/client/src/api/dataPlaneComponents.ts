@@ -104,6 +104,7 @@ export type CreateDatabaseResponse = {
    */
   databaseName: string;
   branchName?: string;
+  status: Schemas.MigrationStatus;
 };
 
 export type CreateDatabaseRequestBody = {
@@ -159,6 +160,10 @@ export type DeleteDatabaseError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type DeleteDatabaseResponse = {
+  status: Schemas.MigrationStatus;
+};
+
 export type DeleteDatabaseVariables = {
   pathParams: DeleteDatabasePathParams;
 } & DataPlaneFetcherExtraProps;
@@ -167,7 +172,7 @@ export type DeleteDatabaseVariables = {
  * Delete a database and all of its branches and tables permanently.
  */
 export const deleteDatabase = (variables: DeleteDatabaseVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, DeleteDatabaseError, undefined, {}, {}, DeleteDatabasePathParams>({
+  dataPlaneFetch<DeleteDatabaseResponse, DeleteDatabaseError, undefined, {}, {}, DeleteDatabasePathParams>({
     url: '/dbs/{dbName}',
     method: 'delete',
     ...variables,
@@ -337,6 +342,7 @@ export type CreateBranchResponse = {
    */
   databaseName: string;
   branchName: string;
+  status: Schemas.MigrationStatus;
 };
 
 export type CreateBranchRequestBody = {
@@ -387,6 +393,10 @@ export type DeleteBranchError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type DeleteBranchResponse = {
+  status: Schemas.MigrationStatus;
+};
+
 export type DeleteBranchVariables = {
   pathParams: DeleteBranchPathParams;
 } & DataPlaneFetcherExtraProps;
@@ -395,7 +405,7 @@ export type DeleteBranchVariables = {
  * Delete the branch in the database and all its resources
  */
 export const deleteBranch = (variables: DeleteBranchVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, DeleteBranchError, undefined, {}, {}, DeleteBranchPathParams>({
+  dataPlaneFetch<DeleteBranchResponse, DeleteBranchError, undefined, {}, {}, DeleteBranchPathParams>({
     url: '/db/{dbBranchName}',
     method: 'delete',
     ...variables,
@@ -915,7 +925,7 @@ export type ExecuteBranchMigrationPlanVariables = {
  */
 export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlanVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    undefined,
+    Responses.SchemaUpdateResponse,
     ExecuteBranchMigrationPlanError,
     ExecuteBranchMigrationPlanRequestBody,
     {},
@@ -1520,11 +1530,6 @@ export type UpdateBranchSchemaError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type UpdateBranchSchemaResponse = {
-  id: string;
-  parentID: string;
-};
-
 export type UpdateBranchSchemaVariables = {
   body: Schemas.Migration;
   pathParams: UpdateBranchSchemaPathParams;
@@ -1532,7 +1537,7 @@ export type UpdateBranchSchemaVariables = {
 
 export const updateBranchSchema = (variables: UpdateBranchSchemaVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    UpdateBranchSchemaResponse,
+    Responses.SchemaUpdateResponse,
     UpdateBranchSchemaError,
     Schemas.Migration,
     {},
@@ -1613,11 +1618,6 @@ export type ApplyBranchSchemaEditError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type ApplyBranchSchemaEditResponse = {
-  id: string;
-  parentID: string;
-};
-
 export type ApplyBranchSchemaEditRequestBody = {
   edits: Schemas.SchemaEditScript;
 };
@@ -1629,7 +1629,7 @@ export type ApplyBranchSchemaEditVariables = {
 
 export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    ApplyBranchSchemaEditResponse,
+    Responses.SchemaUpdateResponse,
     ApplyBranchSchemaEditError,
     ApplyBranchSchemaEditRequestBody,
     {},
@@ -1675,6 +1675,7 @@ export type CreateTableResponse = {
    * @minLength 1
    */
   tableName: string;
+  status: Schemas.MigrationStatus;
 };
 
 export type CreateTableVariables = {
@@ -1716,6 +1717,10 @@ export type DeleteTableError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type DeleteTableResponse = {
+  status: Schemas.MigrationStatus;
+};
+
 export type DeleteTableVariables = {
   pathParams: DeleteTablePathParams;
 } & DataPlaneFetcherExtraProps;
@@ -1724,7 +1729,7 @@ export type DeleteTableVariables = {
  * Deletes the table with the given name.
  */
 export const deleteTable = (variables: DeleteTableVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, DeleteTableError, undefined, {}, {}, DeleteTablePathParams>({
+  dataPlaneFetch<DeleteTableResponse, DeleteTableError, undefined, {}, {}, DeleteTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}',
     method: 'delete',
     ...variables,
@@ -1785,12 +1790,14 @@ export type UpdateTableVariables = {
  * ```
  */
 export const updateTable = (variables: UpdateTableVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, UpdateTableError, UpdateTableRequestBody, {}, {}, UpdateTablePathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}',
-    method: 'patch',
-    ...variables,
-    signal
-  });
+  dataPlaneFetch<
+    Responses.SchemaUpdateResponse,
+    UpdateTableError,
+    UpdateTableRequestBody,
+    {},
+    {},
+    UpdateTablePathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}', method: 'patch', ...variables, signal });
 
 export type GetTableSchemaPathParams = {
   /**
@@ -1878,12 +1885,14 @@ export type SetTableSchemaVariables = {
 } & DataPlaneFetcherExtraProps;
 
 export const setTableSchema = (variables: SetTableSchemaVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, SetTableSchemaError, SetTableSchemaRequestBody, {}, {}, SetTableSchemaPathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/schema',
-    method: 'put',
-    ...variables,
-    signal
-  });
+  dataPlaneFetch<
+    Responses.SchemaUpdateResponse,
+    SetTableSchemaError,
+    SetTableSchemaRequestBody,
+    {},
+    {},
+    SetTableSchemaPathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/schema', method: 'put', ...variables, signal });
 
 export type GetTableColumnsPathParams = {
   /**
@@ -1972,12 +1981,9 @@ export type AddTableColumnVariables = {
  * passing `"name": "address.city"` will auto-create the `address` object if it doesn't exist.
  */
 export const addTableColumn = (variables: AddTableColumnVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Responses.MigrationIdResponse, AddTableColumnError, Schemas.Column, {}, {}, AddTableColumnPathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/columns',
-    method: 'post',
-    ...variables,
-    signal
-  });
+  dataPlaneFetch<Responses.SchemaUpdateResponse, AddTableColumnError, Schemas.Column, {}, {}, AddTableColumnPathParams>(
+    { url: '/db/{dbBranchName}/tables/{tableName}/columns', method: 'post', ...variables, signal }
+  );
 
 export type GetColumnPathParams = {
   /**
@@ -2075,7 +2081,7 @@ export type UpdateColumnVariables = {
  */
 export const updateColumn = (variables: UpdateColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    Responses.MigrationIdResponse,
+    Responses.SchemaUpdateResponse,
     UpdateColumnError,
     UpdateColumnRequestBody,
     {},
@@ -2123,7 +2129,7 @@ export type DeleteColumnVariables = {
  * Deletes the specified column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
  */
 export const deleteColumn = (variables: DeleteColumnVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Responses.MigrationIdResponse, DeleteColumnError, undefined, {}, {}, DeleteColumnPathParams>({
+  dataPlaneFetch<Responses.SchemaUpdateResponse, DeleteColumnError, undefined, {}, {}, DeleteColumnPathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
     method: 'delete',
     ...variables,

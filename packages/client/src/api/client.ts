@@ -361,7 +361,7 @@ class BranchApi {
     workspace: Schemas.WorkspaceID;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
-  }): Promise<void> {
+  }): Promise<Components.DeleteBranchResponse> {
     return operationsByTag.branch.deleteBranch({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
@@ -512,7 +512,7 @@ class TableApi {
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
-  }): Promise<void> {
+  }): Promise<Components.DeleteTableResponse> {
     return operationsByTag.table.deleteTable({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
       ...this.extraProps
@@ -531,7 +531,7 @@ class TableApi {
     branch: Schemas.BranchName;
     table: Schemas.TableName;
     update: Types.UpdateTableRequestBody;
-  }): Promise<void> {
+  }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.updateTable({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
       body: update,
@@ -568,7 +568,7 @@ class TableApi {
     branch: Schemas.BranchName;
     table: Schemas.TableName;
     schema: Types.SetTableSchemaRequestBody;
-  }): Promise<void> {
+  }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.setTableSchema({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
       body: schema,
@@ -605,7 +605,7 @@ class TableApi {
     branch: Schemas.BranchName;
     table: Schemas.TableName;
     column: Schemas.Column;
-  }): Promise<Responses.MigrationIdResponse> {
+  }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.addTableColumn({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table },
       body: column,
@@ -646,7 +646,7 @@ class TableApi {
     table: Schemas.TableName;
     column: Schemas.ColumnName;
     update: Types.UpdateColumnRequestBody;
-  }): Promise<Responses.MigrationIdResponse> {
+  }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.updateColumn({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, columnName: column },
       body: update,
@@ -666,7 +666,7 @@ class TableApi {
     branch: Schemas.BranchName;
     table: Schemas.TableName;
     column: Schemas.ColumnName;
-  }): Promise<Responses.MigrationIdResponse> {
+  }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.table.deleteColumn({
       pathParams: { workspace, dbBranchName: `${database}:${branch}`, tableName: table, columnName: column },
       ...this.extraProps
@@ -1188,7 +1188,7 @@ class MigrationsApi {
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     plan: Types.ExecuteBranchMigrationPlanRequestBody;
-  }): Promise<void> {
+  }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.migrations.executeBranchMigrationPlan({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       body: plan,
@@ -1262,7 +1262,7 @@ class MigrationsApi {
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     migration: Schemas.Migration;
-  }): Promise<Components.UpdateBranchSchemaResponse> {
+  }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.migrations.updateBranchSchema({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       body: migration,
@@ -1298,7 +1298,7 @@ class MigrationsApi {
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     edits: Schemas.SchemaEditScript;
-  }): Promise<Components.ApplyBranchSchemaEditResponse> {
+  }): Promise<Responses.SchemaUpdateResponse> {
     return operationsByTag.migrations.applyBranchSchemaEdit({
       pathParams: { workspace, dbBranchName: `${database}:${branch}` },
       body: { edits },
@@ -1338,7 +1338,7 @@ class DatabaseApi {
   }: {
     workspace: Schemas.WorkspaceID;
     database: Schemas.DBName;
-  }): Promise<void> {
+  }): Promise<Components.CPDeleteDatabaseResponse> {
     return operationsByTag.databases.cPDeleteDatabase({
       pathParams: { workspaceId: workspace, dbName: database },
       ...this.extraProps

@@ -153,6 +153,8 @@ export type BranchName = string;
  */
 export type DBName = string;
 
+export type MigrationStatus = 'completed' | 'pending' | 'failed';
+
 export type ListRegionsResponse = {
   /**
    * A list of regions where databases can be created

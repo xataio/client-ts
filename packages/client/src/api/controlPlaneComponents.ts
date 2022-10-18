@@ -812,6 +812,7 @@ export type CPCreateDatabaseResponse = {
    */
   databaseName: string;
   branchName?: string;
+  status: Schemas.MigrationStatus;
 };
 
 export type CPCreateDatabaseRequestBody = {
@@ -873,6 +874,10 @@ export type CPDeleteDatabaseError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type CPDeleteDatabaseResponse = {
+  status: Schemas.MigrationStatus;
+};
+
 export type CPDeleteDatabaseVariables = {
   pathParams: CPDeleteDatabasePathParams;
 } & ControlPlaneFetcherExtraProps;
@@ -881,7 +886,7 @@ export type CPDeleteDatabaseVariables = {
  * Delete a database and all of its branches and tables permanently.
  */
 export const cPDeleteDatabase = (variables: CPDeleteDatabaseVariables, signal?: AbortSignal) =>
-  controlPlaneFetch<undefined, CPDeleteDatabaseError, undefined, {}, {}, CPDeleteDatabasePathParams>({
+  controlPlaneFetch<CPDeleteDatabaseResponse, CPDeleteDatabaseError, undefined, {}, {}, CPDeleteDatabasePathParams>({
     url: '/workspaces/{workspaceId}/dbs/{dbName}',
     method: 'delete',
     ...variables,
