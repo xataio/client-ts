@@ -192,7 +192,7 @@ export type Schema = {
 export type SchemaEditScript = {
   sourceMigrationID?: string;
   targetMigrationID?: string;
-  tables: TableEdit[];
+  operations: MigrationOp[];
 };
 
 export type Table = {
@@ -200,15 +200,6 @@ export type Table = {
   name: TableName;
   columns: Column[];
   revLinks?: RevLink[];
-};
-
-/**
- * @x-internal true
- */
-export type TableEdit = {
-  oldName?: string;
-  newName?: string;
-  columns?: MigrationColumnOp[];
 };
 
 /**
@@ -304,18 +295,18 @@ export type ColumnMigration = {
  * @x-internal true
  */
 export type Commit = {
-  meta?: {
-    title?: string;
-    message?: string;
-    id: string;
-    parentID?: string;
-    mergeParentID?: string;
-    status: string;
-    createdAt: DateTime;
-    modifiedAt?: DateTime;
-  };
+  title?: string;
+  message?: string;
+  id: string;
+  parentID?: string;
+  mergeParentID?: string;
+  status: MigrationStatus;
+  createdAt: DateTime;
+  modifiedAt?: DateTime;
   operations: MigrationOp[];
 };
+
+export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
 /**
  * Branch schema migration.
@@ -409,15 +400,20 @@ export type ColumnOpRename = {
   newName: string;
 };
 
+/**
+ * The migration request number.
+ *
+ * @minimum 0
+ * @x-go-type migration.RequestNumber
+ */
+export type MigrationRequestNumber = number;
+
 export type MigrationRequest = {
-  /**
-   * The migration request number.
-   */
-  number: number;
+  number?: MigrationRequestNumber;
   /**
    * Migration request creation timestamp.
    */
-  createdAt: DateTime;
+  createdAt?: DateTime;
   /**
    * Last modified timestamp.
    */
@@ -430,23 +426,23 @@ export type MigrationRequest = {
    * Timestamp when the migration request was merged.
    */
   mergedAt?: DateTime;
-  status: 'open' | 'closed' | 'merging' | 'merged';
+  status?: 'open' | 'closed' | 'merging' | 'merged';
   /**
    * The migration request title.
    */
-  title: string;
+  title?: string;
   /**
    * The migration request body with detailed description.
    */
-  body: string;
+  body?: string;
   /**
    * Name of the source branch.
    */
-  source: string;
+  source?: string;
   /**
    * Name of the target branch.
    */
-  target: string;
+  target?: string;
 };
 
 export type SortExpression =
@@ -695,7 +691,7 @@ export type DateHistogramAgg = {
 
 /**
  * Split data into buckets by the unique values in a column. Accepts sub-aggregations for each bucket.
- * The top values as ordered by the number of records (`$count``) are returned.
+ * The top values as ordered by the number of records (`$count`) are returned.
  */
 export type TopValuesAgg = {
   /**
@@ -1031,7 +1027,18 @@ export type CPListDatabasesResponse = {
   /**
    * A list of databases in a Xata workspace
    */
-  databases?: CPDatabaseMetadata[];
+  databases: CPDatabaseMetadata[];
+};
+
+export type ListRegionsResponse = {
+  /**
+   * A list of regions where databases can be created
+   */
+  regions: Region[];
+};
+
+export type Region = {
+  id: string;
 };
 
 /**
