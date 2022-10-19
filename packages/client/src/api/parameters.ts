@@ -25,7 +25,7 @@ export type DBBranchNameParam = Schemas.DBBranchName;
 
 export type DBNameParam = Schemas.DBName;
 
-export type MigrationRequestNumber = number;
+export type MigrationRequestNumberParam = Schemas.MigrationRequestNumber;
 
 export type RecordIDParam = Schemas.RecordID;
 
