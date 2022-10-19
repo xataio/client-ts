@@ -758,7 +758,7 @@ export class RestRepository<Record extends XataRecord>
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
     const fetchProps = await this.#getFetchProps();
 
-    const record = transformObjectLinks(object);
+    const record = await this.#cleanSaveRecord(object);
 
     const response = await insertRecord({
       pathParams: {
@@ -782,7 +782,7 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const record = transformObjectLinks(object);
+    const record = await this.#cleanSaveRecord(object);
 
     const response = await insertRecordWithID({
       pathParams: {
@@ -803,7 +803,7 @@ export class RestRepository<Record extends XataRecord>
   async #bulkInsertTableRecords(objects: EditableData<Record>[], columns: SelectableColumn<Record>[] = ['*']) {
     const fetchProps = await this.#getFetchProps();
 
-    const records = objects.map((object) => transformObjectLinks(object));
+    const records = await Promise.all(objects.map((object) => this.#cleanSaveRecord(object)));
 
     const response = await bulkInsertTableRecords({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
@@ -1087,7 +1087,7 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const record = transformObjectLinks(object);
+    const record = await this.#cleanSaveRecord(object);
 
     try {
       const response = await updateRecordWithID({
@@ -1176,10 +1176,12 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
+    const record = await this.#cleanSaveRecord(object);
+
     const response = await upsertRecordWithID({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
       queryParams: { columns },
-      body: object,
+      body: record,
       ...fetchProps
     });
 
@@ -1457,17 +1459,30 @@ export class RestRepository<Record extends XataRecord>
     this.#schemaTables = schema.tables;
     return schema.tables;
   }
+
+  async #cleanSaveRecord(object: any): Promise<Record> {
+    const schema = await this.#getSchemaTables();
+    const table = schema.find((table) => table.name === this.#table);
+    if (!table) return object;
+
+    return Object.entries(object).reduce((acc, [key, value]) => {
+      // Identifier column is not in the columns
+      if (key === 'id') return { ...acc, id: value };
+
+      const column = table.columns.find((column) => column.name === key);
+
+      // Ignore internal properties and columns not in the schema
+      if (key === 'xata' || column === undefined) return acc;
+
+      // Transform links to identifier
+      if (isIdentifiable(value) && column.type === 'link') {
+        return { ...acc, [key]: value.id };
+      }
+
+      return { ...acc, [key]: value };
+    }, {} as Record);
+  }
 }
-
-const transformObjectLinks = (object: any) => {
-  return Object.entries(object).reduce((acc, [key, value]) => {
-    // Ignore internal properties
-    if (key === 'xata') return acc;
-
-    // Transform links to identifier
-    return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
-  }, {});
-};
 
 export const initObject = <T>(
   db: Record<string, Repository<any>>,

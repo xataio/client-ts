@@ -200,4 +200,24 @@ describe('record creation', () => {
     // @ts-expect-error
     await expect(xata.db.users.create({})).rejects.toThrowError();
   });
+
+  test("create multiple objects with extra properties that are ignored and don't throw", async () => {
+    // @ts-expect-error
+    const users = (await xata.db.users.create([
+      { full_name: 'John Doe 6', email: 'john6@doe.com', extra: 'extra' },
+      { full_name: 'John Doe 7', email: 'john7@doe.com', foo: 2 }
+    ])) as any[];
+
+    expect(users).toHaveLength(2);
+    expect(users[0]?.id).toBeDefined();
+    expect(users[0]?.read).toBeDefined();
+    expect(users[0]?.full_name).toBe('John Doe 6');
+    expect(users[0]?.email).toBe('john6@doe.com');
+    expect(users[0]?.extra).not.toBeDefined();
+    expect(users[1]?.id).toBeDefined();
+    expect(users[1]?.read).toBeDefined();
+    expect(users[1]?.full_name).toBe('John Doe 7');
+    expect(users[1]?.email).toBe('john7@doe.com');
+    expect(users[1]?.foo).not.toBeDefined();
+  });
 });
