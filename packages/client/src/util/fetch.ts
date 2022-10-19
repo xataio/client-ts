@@ -27,7 +27,7 @@ export function getFetchImplementation(userFetch?: FetchImpl) {
 
 export class ApiRequestPool {
   #fetch?: FetchImpl;
-  #queue: Array<() => any>;
+  #queue: Array<(...params: any[]) => any>;
   #concurrency: number;
 
   running: number;

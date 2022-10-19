@@ -3,7 +3,7 @@ import { ApiRequestPool, FetchImpl } from '../util/fetch';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
-const pool = new ApiRequestPool<any>();
+const pool = new ApiRequestPool();
 
 const resolveUrl = (
   url: string,
