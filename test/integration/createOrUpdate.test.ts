@@ -75,4 +75,13 @@ describe('record create or update', () => {
     const updatedTeams = await xata.db.teams.createOrUpdate([]);
     expect(updatedTeams).toHaveLength(0);
   });
+
+  test('create or update many without getting rate limited', async () => {
+    const newUsers = Array.from({ length: 1000 }).map((_, i) => ({ id: `user-${i}`, full_name: `user-${i}` }));
+    const result = await xata.db.users.createOrUpdate(newUsers, ['id']);
+
+    console.log(result);
+    expect(result).toHaveLength(1000);
+    expect(result.every((item) => item.id)).toBeTruthy();
+  });
 });

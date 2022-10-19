@@ -1,7 +1,9 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
-import { FetchImpl } from '../util/fetch';
+import { ApiRequestPool, FetchImpl } from '../util/fetch';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
+
+const pool = new ApiRequestPool<any>();
 
 const resolveUrl = (
   url: string,
@@ -99,6 +101,8 @@ export async function fetch<
   clientID,
   sessionID
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
+  pool.setFetch(fetchImpl);
+
   return trace(
     `${method.toUpperCase()} ${path}`,
     async ({ setAttributes }) => {
@@ -113,7 +117,7 @@ export async function fetch<
         [TraceAttributes.HTTP_TARGET]: resolveUrl(path, queryParams, pathParams)
       });
 
-      const response = await fetchImpl(url, {
+      const response = await pool.request(url, {
         method: method.toUpperCase(),
         body: body ? JSON.stringify(body) : undefined,
         headers: {

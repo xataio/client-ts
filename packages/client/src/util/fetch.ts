@@ -1,8 +1,5 @@
-// Typed only the subset of the spec we actually use (to be able to build a simple mock)
-export type FetchImpl = (
-  url: string,
-  init?: { body?: string; headers?: Record<string, string>; method?: string; signal?: any }
-) => Promise<{
+type RequestInit = { body?: string; headers?: Record<string, string>; method?: string; signal?: any };
+type Response = {
   ok: boolean;
   status: number;
   url: string;
@@ -10,7 +7,10 @@ export type FetchImpl = (
   headers?: {
     get(name: string): string | null;
   };
-}>;
+};
+
+// Typed only the subset of the spec we actually use (to be able to build a simple mock)
+export type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>;
 
 export function getFetchImplementation(userFetch?: FetchImpl) {
   // @ts-ignore - fetch might not be a global
@@ -25,15 +25,15 @@ export function getFetchImplementation(userFetch?: FetchImpl) {
   return fetchImpl;
 }
 
-export class ApiRequestPool<RequestItem extends any> {
+export class ApiRequestPool {
   #fetch?: FetchImpl;
-  #queue: Array<Function>;
+  #queue: Array<() => any>;
   #concurrency: number;
 
   running: number;
   started: number;
 
-  constructor(concurrency: number = 10) {
+  constructor(concurrency = 10) {
     this.#queue = [];
     this.#concurrency = concurrency;
 
@@ -45,7 +45,25 @@ export class ApiRequestPool<RequestItem extends any> {
     this.#fetch = fetch;
   }
 
-  #enqueue<Result extends RequestItem>(task: () => Promise<Result> | Result): Promise<Result> {
+  getFetch(): FetchImpl {
+    if (!this.#fetch) {
+      throw new Error('Fetch not set');
+    }
+
+    return this.#fetch;
+  }
+
+  request(url: string, options?: RequestInit): Promise<Response> {
+    const fetch = this.getFetch();
+
+    return this.#enqueue(async () => {
+      const response = await fetch(url, options);
+      // TODO: Check headers
+      return response;
+    });
+  }
+
+  #enqueue<Result>(task: () => Promise<Result> | Result): Promise<Result> {
     const promise = new Promise<Result>((resolve) => this.#queue.push(resolve))
       .finally(() => {
         this.started--;
