@@ -44,6 +44,8 @@ describe('API Client Integration Tests', () => {
       }
     });
 
+    await waitForReplication(workspace);
+
     const { databaseName: database } = await api.database.createDatabase({
       workspace,
       database: `test-data-${workspace}`,
@@ -81,9 +83,13 @@ describe('API Client Integration Tests', () => {
   });
 });
 
-async function waitForReplication(workspace: string, database: string): Promise<void> {
+async function waitForReplication(workspace: string, database?: string): Promise<void> {
   try {
-    await api.branches.getBranchList({ workspace, region, database });
+    if (database === undefined) {
+      await api.database.getDatabaseList({ workspace });
+    } else {
+      await api.branches.getBranchList({ workspace, database, region });
+    }
   } catch (error) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return await waitForReplication(workspace, database);

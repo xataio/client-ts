@@ -44,6 +44,8 @@ export function parseProviderString(provider = 'production'): HostProvider | nul
 }
 
 export function parseWorkspacesUrlParts(url: string): { workspace: string; region: string } | null {
+  if (!isString(url)) return null;
+
   const regex = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))?\.xata\.sh.*/;
   const regexStaging = /(?:https:\/\/)?([^.]+)\.staging(?:\.([^.]+))?\.xatabase\.co.*/;
 
