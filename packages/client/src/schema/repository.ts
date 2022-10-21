@@ -758,7 +758,9 @@ export class RestRepository<Record extends XataRecord>
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
     const fetchProps = await this.#getFetchProps();
 
-    const record = await this.#cleanSaveRecord(object);
+    const schema = await this.#getSchemaTables();
+    const table = schema.find((table) => table.name === this.#table);
+    const record = cleanSaveRecord<Record>(object, table?.columns ?? []);
 
     const response = await insertRecord({
       pathParams: {
@@ -782,7 +784,9 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const record = await this.#cleanSaveRecord(object);
+    const schema = await this.#getSchemaTables();
+    const table = schema.find((table) => table.name === this.#table);
+    const record = cleanSaveRecord<Record>(object, table?.columns ?? []);
 
     const response = await insertRecordWithID({
       pathParams: {
@@ -803,7 +807,9 @@ export class RestRepository<Record extends XataRecord>
   async #bulkInsertTableRecords(objects: EditableData<Record>[], columns: SelectableColumn<Record>[] = ['*']) {
     const fetchProps = await this.#getFetchProps();
 
-    const records = await Promise.all(objects.map((object) => this.#cleanSaveRecord(object)));
+    const schema = await this.#getSchemaTables();
+    const table = schema.find((table) => table.name === this.#table);
+    const records = objects.map((object) => cleanSaveRecord<Record>(object, table?.columns ?? []));
 
     const response = await bulkInsertTableRecords({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
@@ -1087,7 +1093,9 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const record = await this.#cleanSaveRecord(object);
+    const schema = await this.#getSchemaTables();
+    const table = schema.find((table) => table.name === this.#table);
+    const record = cleanSaveRecord<Record>(object, table?.columns ?? []);
 
     try {
       const response = await updateRecordWithID({
@@ -1176,7 +1184,9 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const record = await this.#cleanSaveRecord(object);
+    const schema = await this.#getSchemaTables();
+    const table = schema.find((table) => table.name === this.#table);
+    const record = cleanSaveRecord<Record>(object, table?.columns ?? []);
 
     const response = await upsertRecordWithID({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
@@ -1459,29 +1469,30 @@ export class RestRepository<Record extends XataRecord>
     this.#schemaTables = schema.tables;
     return schema.tables;
   }
+}
 
-  async #cleanSaveRecord(object: any): Promise<Record> {
-    const schema = await this.#getSchemaTables();
-    const table = schema.find((table) => table.name === this.#table);
-    if (!table) return object;
+function cleanSaveRecord<T>(object: any, tableColumns: Schemas.Column[]): T {
+  return Object.entries(object).reduce((acc, [key, value]) => {
+    // Identifier column is not in the columns
+    if (key === 'id') return { ...acc, id: value };
 
-    return Object.entries(object).reduce((acc, [key, value]) => {
-      // Identifier column is not in the columns
-      if (key === 'id') return { ...acc, id: value };
+    const column = tableColumns.find((column) => column.name === key);
 
-      const column = table.columns.find((column) => column.name === key);
+    // Ignore internal properties and columns not in the schema
+    if (key === 'xata' || column === undefined) return acc;
 
-      // Ignore internal properties and columns not in the schema
-      if (key === 'xata' || column === undefined) return acc;
+    // Transform links to identifier
+    if (isIdentifiable(value) && column.type === 'link') {
+      return { ...acc, [key]: value.id };
+    }
 
-      // Transform links to identifier
-      if (isIdentifiable(value) && column.type === 'link') {
-        return { ...acc, [key]: value.id };
-      }
+    // Transform objects
+    if (isObject(value) && column.type === 'object' && column.columns !== undefined) {
+      return { ...acc, [key]: cleanSaveRecord(value, column.columns) };
+    }
 
-      return { ...acc, [key]: value };
-    }, {} as Record);
-  }
+    return { ...acc, [key]: value };
+  }, {} as T);
 }
 
 export const initObject = <T>(
