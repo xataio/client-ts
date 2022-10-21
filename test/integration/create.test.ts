@@ -205,7 +205,7 @@ describe('record creation', () => {
     // @ts-expect-error
     const users = (await xata.db.users.create([
       { full_name: 'John Doe 6', email: 'john6@doe.com', extra: 'extra' },
-      { full_name: 'John Doe 7', email: 'john7@doe.com', foo: 2 }
+      { full_name: 'John Doe 7', email: 'john7@doe.com', foo: 2, address: { street: 'foo', latitude: 2 } }
     ])) as any[];
 
     expect(users).toHaveLength(2);
@@ -219,5 +219,8 @@ describe('record creation', () => {
     expect(users[1]?.full_name).toBe('John Doe 7');
     expect(users[1]?.email).toBe('john7@doe.com');
     expect(users[1]?.foo).not.toBeDefined();
+    expect(users[1]?.address).toBeDefined();
+    expect(users[1]?.address?.street).toBe('foo');
+    expect(users[1]?.address?.latitude).not.toBeDefined();
   });
 });
