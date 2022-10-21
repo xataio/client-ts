@@ -192,7 +192,7 @@ export type Schema = {
 export type SchemaEditScript = {
   sourceMigrationID?: string;
   targetMigrationID?: string;
-  tables: TableEdit[];
+  operations: MigrationOp[];
 };
 
 export type Table = {
@@ -202,27 +202,17 @@ export type Table = {
   revLinks?: RevLink[];
 };
 
-/**
- * @x-internal true
- */
-export type TableEdit = {
-  oldName?: string;
-  newName?: string;
-  columns?: MigrationColumnOp[];
-};
-
-/**
- * @x-go-type xata.Column
- */
 export type Column = {
   name: string;
   type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
-  link?: {
-    table: string;
-  };
+  link?: ColumnLink;
   notNull?: boolean;
   unique?: boolean;
   columns?: Column[];
+};
+
+export type ColumnLink = {
+  table: string;
 };
 
 export type RevLink = {
@@ -304,18 +294,18 @@ export type ColumnMigration = {
  * @x-internal true
  */
 export type Commit = {
-  meta?: {
-    title?: string;
-    message?: string;
-    id: string;
-    parentID?: string;
-    mergeParentID?: string;
-    status: string;
-    createdAt: DateTime;
-    modifiedAt?: DateTime;
-  };
+  title?: string;
+  message?: string;
+  id: string;
+  parentID?: string;
+  mergeParentID?: string;
+  status: MigrationStatus;
+  createdAt: DateTime;
+  modifiedAt?: DateTime;
   operations: MigrationOp[];
 };
+
+export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
 /**
  * Branch schema migration.
@@ -388,7 +378,7 @@ export type TableOpRename = {
  * @x-internal true
  */
 export type ColumnOpAdd = {
-  table?: string;
+  table: string;
   column: Column;
 };
 
@@ -396,7 +386,7 @@ export type ColumnOpAdd = {
  * @x-internal true
  */
 export type ColumnOpRemove = {
-  table?: string;
+  table: string;
   column: string;
 };
 
@@ -404,20 +394,25 @@ export type ColumnOpRemove = {
  * @x-internal true
  */
 export type ColumnOpRename = {
-  table?: string;
+  table: string;
   oldName: string;
   newName: string;
 };
 
+/**
+ * The migration request number.
+ *
+ * @minimum 0
+ * @x-go-type migration.RequestNumber
+ */
+export type MigrationRequestNumber = number;
+
 export type MigrationRequest = {
-  /**
-   * The migration request number.
-   */
-  number: number;
+  number?: MigrationRequestNumber;
   /**
    * Migration request creation timestamp.
    */
-  createdAt: DateTime;
+  createdAt?: DateTime;
   /**
    * Last modified timestamp.
    */
@@ -430,23 +425,23 @@ export type MigrationRequest = {
    * Timestamp when the migration request was merged.
    */
   mergedAt?: DateTime;
-  status: 'open' | 'closed' | 'merging' | 'merged';
+  status?: 'open' | 'closed' | 'merging' | 'merged';
   /**
    * The migration request title.
    */
-  title: string;
+  title?: string;
   /**
    * The migration request body with detailed description.
    */
-  body: string;
+  body?: string;
   /**
    * Name of the source branch.
    */
-  source: string;
+  source?: string;
   /**
    * Name of the target branch.
    */
-  target: string;
+  target?: string;
 };
 
 export type SortExpression =
@@ -527,6 +522,10 @@ export type FilterExpression = {
  *
  * @example {"all_users":{"count":"*"}}
  * @example {"total_created":{"count":"created_at"}}
+ * @example {"min_cost":{"min":"cost"}}
+ * @example {"max_happiness":{"max":"happiness"}}
+ * @example {"total_revenue":{"sum":"revenue"}}
+ * @example {"average_speed":{"average":"speed"}}
  * @x-go-type xbquery.SummaryList
  */
 export type SummaryExpressionList = {
@@ -541,11 +540,28 @@ export type SummaryExpressionList = {
  * an object, i.e. if `settings` is an object with `dark_mode` as a field, you may summarize
  * `settings.dark_mode` but not `settings` nor `settings.*`.
  *
- * We currently support the `count` operation. When using `count`, one can set a column name
- * as the value. Xata will return the total number times this column is non-null in each group.
+ * We currently support several aggregation functions. Not all functions can be run on all column
+ * types.
  *
- * Alternately, if you'd like to count the total rows in each group - irregardless of null/not null
- * status - you can set `count` to `*` to count everything.
+ * - `count` is used to count the number of records in each group. Use `{"count": "*"}` to count
+ *   all columns present, otherwise `{"count": "<column_path>"}` to count the number of non-null
+ *   values are present at column path.
+ *
+ *   Count can be used on any column type, and always returns an int.
+ *
+ * - `min` calculates the minimum value in each group. `min` is compatible with most types;
+ *   string, multiple, text, email, int, float, and datetime. It returns a value of the same
+ *   type as operated on. This means that `{"lowest_latency": {"min": "latency"}}` where
+ *   `latency` is an int, will always return an int.
+ *
+ * - `max` calculates the maximum value in each group. `max` shares the same compatibility as
+ *   `min`.
+ *
+ * - `sum` adds up all values in a group. `sum` can be run on `int` and `float` types, and will
+ *   return a value of the same type as requested.
+ *
+ * - `average` averages all values in a group. `average` can be run on `int` and `float` types, and
+ *   always returns a float.
  *
  * @example {"count":"deleted_at"}
  * @x-go-type xbquery.Summary
@@ -695,7 +711,7 @@ export type DateHistogramAgg = {
 
 /**
  * Split data into buckets by the unique values in a column. Accepts sub-aggregations for each bucket.
- * The top values as ordered by the number of records (`$count``) are returned.
+ * The top values as ordered by the number of records (`$count`) are returned.
  */
 export type TopValuesAgg = {
   /**
@@ -1031,7 +1047,18 @@ export type CPListDatabasesResponse = {
   /**
    * A list of databases in a Xata workspace
    */
-  databases?: CPDatabaseMetadata[];
+  databases: CPDatabaseMetadata[];
+};
+
+export type ListRegionsResponse = {
+  /**
+   * A list of regions where databases can be created
+   */
+  regions: Region[];
+};
+
+export type Region = {
+  id: string;
 };
 
 /**
