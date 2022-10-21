@@ -6,7 +6,7 @@ let xata: XataClient;
 let hooks: TestEnvironmentResult['hooks'];
 
 beforeAll(async (ctx) => {
-  const result = await setUpTestEnvironment('dates');
+  const result = await setUpTestEnvironment('update');
 
   xata = result.client;
   hooks = result.hooks;
@@ -106,5 +106,11 @@ describe('record update', () => {
 
     expect(updatedTeam2).toBeNull();
     expect(versionC).toBe(undefined);
+
+    const updatedTeam3 = await team.update({ name: 'Team cars' }, { ifVersion: versionA });
+    const { version: versionD } = updatedTeam3?.getMetadata() || {};
+
+    expect(updatedTeam3).toBeNull();
+    expect(versionD).toBe(undefined);
   });
 });
