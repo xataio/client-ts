@@ -390,7 +390,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param object Object containing the column names with their values to be persisted in the table.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
    * @returns The full persisted record.
@@ -402,7 +402,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param object Object containing the column names with their values to be persisted in the table.
    * @returns The full persisted record.
    */
@@ -410,7 +410,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param id A unique id.
    * @param object The column names and the values to be persisted.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
@@ -424,7 +424,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param id A unique id.
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
@@ -436,7 +436,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
    * @returns Array of the persisted records.
@@ -448,11 +448,79 @@ export abstract class Repository<Record extends XataRecord> extends Query<
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @returns Array of the persisted records.
    */
   abstract createOrUpdate(
+    objects: Array<EditableData<Record> & Identifiable>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param object Object containing the column names with their values to be persisted in the table.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The full persisted record.
+   */
+  abstract createOrReplace<K extends SelectableColumn<Record>>(
+    object: EditableData<Record> & Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param object Object containing the column names with their values to be persisted in the table.
+   * @returns The full persisted record.
+   */
+  abstract createOrReplace(object: EditableData<Record> & Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param id A unique id.
+   * @param object The column names and the values to be persisted.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The full persisted record.
+   */
+  abstract createOrReplace<K extends SelectableColumn<Record>>(
+    id: string,
+    object: Omit<EditableData<Record>, 'id'>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param id A unique id.
+   * @param object The column names and the values to be persisted.
+   * @returns The full persisted record.
+   */
+  abstract createOrReplace(
+    id: string,
+    object: Omit<EditableData<Record>, 'id'>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param objects Array of objects with the column names and the values to be stored in the table.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns Array of the persisted records.
+   */
+  abstract createOrReplace<K extends SelectableColumn<Record>>(
+    objects: Array<EditableData<Record> & Identifiable>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param objects Array of objects with the column names and the values to be stored in the table.
+   * @returns Array of the persisted records.
+   */
+  abstract createOrReplace(
     objects: Array<EditableData<Record> & Identifiable>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
@@ -734,7 +802,7 @@ export class RestRepository<Record extends XataRecord>
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isStringArray(c) ? c : undefined;
-        return this.#insertRecordWithId(a, b, columns);
+        return this.#insertRecordWithId(a, b, columns, { createOnly: true });
       }
 
       // Create one record with id as property
@@ -742,7 +810,7 @@ export class RestRepository<Record extends XataRecord>
         if (a.id === '') throw new Error("The id can't be empty");
 
         const columns = isStringArray(b) ? b : undefined;
-        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns);
+        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: true });
       }
 
       // Create one record without id
@@ -778,7 +846,8 @@ export class RestRepository<Record extends XataRecord>
   async #insertRecordWithId(
     recordId: string,
     object: EditableData<Record>,
-    columns: SelectableColumn<Record>[] = ['*']
+    columns: SelectableColumn<Record>[] = ['*'],
+    { createOnly }: { createOnly: boolean }
   ) {
     const fetchProps = await this.#getFetchProps();
 
@@ -792,7 +861,7 @@ export class RestRepository<Record extends XataRecord>
         recordId
       },
       body: record,
-      queryParams: { createOnly: true, columns },
+      queryParams: { createOnly, columns },
       ...fetchProps
     });
 
@@ -1185,6 +1254,62 @@ export class RestRepository<Record extends XataRecord>
 
     const schemaTables = await this.#getSchemaTables();
     return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+  }
+
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    object: EditableData<Record> & Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async createOrReplace(object: EditableData<Record> & Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    id: string,
+    object: Omit<EditableData<Record>, 'id'>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async createOrReplace(
+    id: string,
+    object: Omit<EditableData<Record>, 'id'>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    objects: Array<EditableData<Record> & Identifiable>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
+  async createOrReplace(
+    objects: Array<EditableData<Record> & Identifiable>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    a: string | EditableData<Record> | EditableData<Record>[],
+    b?: EditableData<Record> | Omit<EditableData<Record>, 'id'> | K[],
+    c?: K[]
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Array<Readonly<SelectedPick<Record, ['*']>>>
+    | Readonly<SelectedPick<Record, K[]>>
+    | Array<Readonly<SelectedPick<Record, K[]>>>
+  > {
+    return this.#trace('createOrReplace', async () => {
+      // Create or replace many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
+
+        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        return this.#bulkInsertTableRecords(a, columns);
+      }
+
+      // Create or replace one record with id as param
+      if (isString(a) && isObject(b)) {
+        const columns = isStringArray(c) ? c : undefined;
+        return this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: false });
+      }
+
+      // Create or replace one record with id as property
+      if (isObject(a) && isString(a.id)) {
+        const columns = isStringArray(c) ? c : undefined;
+        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: false });
+      }
+
+      throw new Error('Invalid arguments for createOrReplace method');
+    });
   }
 
   async delete<K extends SelectableColumn<Record>>(
