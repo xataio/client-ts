@@ -28,6 +28,10 @@ export function isStringArray(value: any): value is string[] {
   return isDefined(value) && Array.isArray(value) && value.every(isString);
 }
 
+export function isNumber(value: any): value is number {
+  return isDefined(value) && typeof value === 'number';
+}
+
 export function toBase64(value: string): string {
   try {
     return btoa(value);

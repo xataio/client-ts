@@ -112,18 +112,18 @@ const user = await xata.db.users.create({
 });
 ```
 
-If you want to create a record with a specific ID, you can invoke `insert()`.
+If you want to create a record with a specific ID, you can provide the id as parameter to the `create()` method.
 
 ```ts
-const user = await xata.db.users.insert('user_admin', {
+const user = await xata.db.users.create('user_admin', {
   fullName: 'John Smith'
 });
 ```
 
-And if you want to create or insert a record with a specific ID, you can invoke `updateOrInsert()`.
+And if you want to create or update a record with a specific ID, you can invoke `createOrUpdate()` with an id parameter.
 
 ```ts
-const user = await xata.db.users.updateOrInsert('user_admin', {
+const user = await xata.db.users.createOrUpdate('user_admin', {
   fullName: 'John Smith'
 });
 ```
