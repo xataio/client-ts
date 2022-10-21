@@ -192,7 +192,7 @@ export type Schema = {
 export type SchemaEditScript = {
   sourceMigrationID?: string;
   targetMigrationID?: string;
-  tables: TableEdit[];
+  operations: MigrationOp[];
 };
 
 export type Table = {
@@ -202,27 +202,17 @@ export type Table = {
   revLinks?: RevLink[];
 };
 
-/**
- * @x-internal true
- */
-export type TableEdit = {
-  oldName?: string;
-  newName?: string;
-  columns?: MigrationColumnOp[];
-};
-
-/**
- * @x-go-type xata.Column
- */
 export type Column = {
   name: string;
   type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
-  link?: {
-    table: string;
-  };
+  link?: ColumnLink;
   notNull?: boolean;
   unique?: boolean;
   columns?: Column[];
+};
+
+export type ColumnLink = {
+  table: string;
 };
 
 export type RevLink = {
@@ -304,18 +294,18 @@ export type ColumnMigration = {
  * @x-internal true
  */
 export type Commit = {
-  meta?: {
-    title?: string;
-    message?: string;
-    id: string;
-    parentID?: string;
-    mergeParentID?: string;
-    status: string;
-    createdAt: DateTime;
-    modifiedAt?: DateTime;
-  };
+  title?: string;
+  message?: string;
+  id: string;
+  parentID?: string;
+  mergeParentID?: string;
+  status: MigrationStatus;
+  createdAt: DateTime;
+  modifiedAt?: DateTime;
   operations: MigrationOp[];
 };
+
+export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
 /**
  * Branch schema migration.
@@ -388,7 +378,7 @@ export type TableOpRename = {
  * @x-internal true
  */
 export type ColumnOpAdd = {
-  table?: string;
+  table: string;
   column: Column;
 };
 
@@ -396,7 +386,7 @@ export type ColumnOpAdd = {
  * @x-internal true
  */
 export type ColumnOpRemove = {
-  table?: string;
+  table: string;
   column: string;
 };
 
@@ -404,20 +394,25 @@ export type ColumnOpRemove = {
  * @x-internal true
  */
 export type ColumnOpRename = {
-  table?: string;
+  table: string;
   oldName: string;
   newName: string;
 };
 
+/**
+ * The migration request number.
+ *
+ * @minimum 0
+ * @x-go-type migration.RequestNumber
+ */
+export type MigrationRequestNumber = number;
+
 export type MigrationRequest = {
-  /**
-   * The migration request number.
-   */
-  number: number;
+  number?: MigrationRequestNumber;
   /**
    * Migration request creation timestamp.
    */
-  createdAt: DateTime;
+  createdAt?: DateTime;
   /**
    * Last modified timestamp.
    */
@@ -430,23 +425,23 @@ export type MigrationRequest = {
    * Timestamp when the migration request was merged.
    */
   mergedAt?: DateTime;
-  status: 'open' | 'closed' | 'merging' | 'merged';
+  status?: 'open' | 'closed' | 'merging' | 'merged';
   /**
    * The migration request title.
    */
-  title: string;
+  title?: string;
   /**
    * The migration request body with detailed description.
    */
-  body: string;
+  body?: string;
   /**
    * Name of the source branch.
    */
-  source: string;
+  source?: string;
   /**
    * Name of the target branch.
    */
-  target: string;
+  target?: string;
 };
 
 export type SortExpression =
@@ -695,7 +690,7 @@ export type DateHistogramAgg = {
 
 /**
  * Split data into buckets by the unique values in a column. Accepts sub-aggregations for each bucket.
- * The top values as ordered by the number of records (`$count``) are returned.
+ * The top values as ordered by the number of records (`$count`) are returned.
  */
 export type TopValuesAgg = {
   /**
@@ -1001,6 +996,102 @@ export type AggResponse =
     };
 
 /**
+ * Insert operation
+ *
+ * @x-go-type TxOperation
+ */
+export type TransactionInsert = {
+  /**
+   * The table name
+   */
+  table: string;
+  /**
+   * The operation name; needs to be set to `insert`
+   */
+  type: 'insert';
+  /**
+   * The record to insert. The `id` field is optional; when specified, it will be used as the ID for the record.
+   */
+  record: {
+    [key: string]: any;
+  };
+  /**
+   * The version of the record you expect to be overwriting. Only valid with an
+   * explicit ID is also set in the `record` key.
+   */
+  ifVersion?: number;
+  /**
+   * createOnly is used to change how Xata acts when an explicit ID is set in the `record` key.
+   *
+   * If `createOnly` is set to `true`, Xata will only attempt to insert the record. If there's a conflict, Xata
+   * will cancel the transaction.
+   *
+   * If `createOnly` is set to `false`, Xata will attempt to insert the record. If there's no
+   * conflict, the record is inserted. If there is a conflict, Xata will replace the record.
+   */
+  createOnly?: boolean;
+};
+
+/**
+ * Update operation
+ *
+ * @x-go-type TxOperation
+ */
+export type TransactionUpdate = {
+  /**
+   * The table name
+   */
+  table: string;
+  /**
+   * The operation name; needs to be set to `update`
+   */
+  type: 'update';
+  id: RecordID;
+  /**
+   * The fields of the record you'd like to update
+   */
+  fields: {
+    [key: string]: any;
+  };
+  /**
+   * The version of the record you expect to be updating
+   */
+  ifVersion?: number;
+  /**
+   * Xata will insert this record if it cannot be found.
+   */
+  upsert?: boolean;
+};
+
+/**
+ * Delete operation
+ *
+ * @x-go-type TxOperation
+ */
+export type TransactionDelete = {
+  /**
+   * The table name
+   */
+  table: string;
+  /**
+   * The operation name; needs to be set to `delete`
+   */
+  type: 'delete';
+  id: RecordID;
+};
+
+/**
+ * A result from a single operation
+ */
+export type TransactionOperationResult = {
+  /**
+   * The number of affected rows
+   */
+  rows: number;
+  id?: RecordID;
+};
+
+/**
  * Metadata of databases
  */
 export type CPDatabaseMetadata = {
@@ -1031,7 +1122,18 @@ export type CPListDatabasesResponse = {
   /**
    * A list of databases in a Xata workspace
    */
-  databases?: CPDatabaseMetadata[];
+  databases: CPDatabaseMetadata[];
+};
+
+export type ListRegionsResponse = {
+  /**
+   * A list of regions where databases can be created
+   */
+  regions: Region[];
+};
+
+export type Region = {
+  id: string;
 };
 
 /**

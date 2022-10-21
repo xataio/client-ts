@@ -65,6 +65,15 @@ export type QueryResponse = {
   meta: Schemas.RecordsMetadata;
 };
 
+export type SchemaUpdateResponse = {
+  /**
+   * @minLength 1
+   */
+  migrationID: string;
+  parentMigrationID: string;
+  status: Schemas.MigrationStatus;
+};
+
 export type SummarizeResponse = {
   summaries: Record<string, any>[];
 };
@@ -91,4 +100,23 @@ export type MigrationIdResponse = {
    * @minLength 1
    */
   migrationID: string;
+};
+
+/**
+ * @x-go-type TxResponse
+ */
+export type TransactionResponse = {
+  /**
+   * Whether the operation was a success or failure
+   */
+  ok: boolean;
+  /**
+   * An ordered array of results from the submitted operations that were executed
+   */
+  results?: Schemas.TransactionOperationResult[];
+  /**
+   * The error message from the operation. The message includes the index of the failing operation
+   * as well as a reason.
+   */
+  error?: string;
 };
