@@ -12,7 +12,8 @@
     "build": "lerna run build",
     "size": "npm run build && size-limit",
     "openapi-gen-control": "openapi-codegen controlPlane",
-    "openapi-gen-data": "openapi-codegen dataPlane"
+    "openapi-gen-data": "openapi-codegen dataPlane",
+    "openapi-gen": "npm run openapi-gen-control && npm run openapi-gen-data"
   },
   "repository": {
     "type": "git",

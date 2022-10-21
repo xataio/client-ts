@@ -1118,7 +1118,7 @@ class MigrationRequestsApi {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
-    migrationRequest: number;
+    migrationRequest: Schemas.MigrationRequestNumber;
   }): Promise<Schemas.MigrationRequest> {
     return operationsByTag.migrationRequests.getMigrationRequest({
       pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
@@ -1136,7 +1136,7 @@ class MigrationRequestsApi {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
-    migrationRequest: number;
+    migrationRequest: Schemas.MigrationRequestNumber;
     update: Components.UpdateMigrationRequestRequestBody;
   }): Promise<void> {
     return operationsByTag.migrationRequests.updateMigrationRequest({
@@ -1156,7 +1156,7 @@ class MigrationRequestsApi {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
-    migrationRequest: number;
+    migrationRequest: Schemas.MigrationRequestNumber;
     page?: { after?: string; before?: string; size?: number };
   }): Promise<Components.ListMigrationRequestsCommitsResponse> {
     return operationsByTag.migrationRequests.listMigrationRequestsCommits({
@@ -1175,7 +1175,7 @@ class MigrationRequestsApi {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
-    migrationRequest: number;
+    migrationRequest: Schemas.MigrationRequestNumber;
   }): Promise<Responses.SchemaCompareResponse> {
     return operationsByTag.migrationRequests.compareMigrationRequest({
       pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
@@ -1192,7 +1192,7 @@ class MigrationRequestsApi {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
-    migrationRequest: number;
+    migrationRequest: Schemas.MigrationRequestNumber;
   }): Promise<Components.GetMigrationRequestIsMergedResponse> {
     return operationsByTag.migrationRequests.getMigrationRequestIsMerged({
       pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
@@ -1209,7 +1209,7 @@ class MigrationRequestsApi {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
-    migrationRequest: number;
+    migrationRequest: Schemas.MigrationRequestNumber;
   }): Promise<Schemas.Commit> {
     return operationsByTag.migrationRequests.mergeMigrationRequest({
       pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
@@ -1370,17 +1370,17 @@ class MigrationsApi {
     region,
     database,
     branch,
-    migration
+    data
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
-    migration: Schemas.Migration;
+    data: { edits?: Schemas.SchemaEditScript };
   }): Promise<Components.PreviewBranchSchemaEditResponse> {
     return operationsByTag.migrations.previewBranchSchemaEdit({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: migration,
+      body: data,
       ...this.extraProps
     });
   }

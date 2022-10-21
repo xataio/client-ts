@@ -103,7 +103,7 @@ export type Schema = {
 export type SchemaEditScript = {
   sourceMigrationID?: string;
   targetMigrationID?: string;
-  tables: TableEdit[];
+  operations: MigrationOp[];
 };
 
 export type Table = {
@@ -113,27 +113,17 @@ export type Table = {
   revLinks?: RevLink[];
 };
 
-/**
- * @x-internal true
- */
-export type TableEdit = {
-  oldName?: string;
-  newName?: string;
-  columns?: MigrationColumnOp[];
-};
-
-/**
- * @x-go-type xata.Column
- */
 export type Column = {
   name: string;
   type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
-  link?: {
-    table: string;
-  };
+  link?: ColumnLink;
   notNull?: boolean;
   unique?: boolean;
   columns?: Column[];
+};
+
+export type ColumnLink = {
+  table: string;
 };
 
 export type RevLink = {
@@ -299,7 +289,7 @@ export type TableOpRename = {
  * @x-internal true
  */
 export type ColumnOpAdd = {
-  table?: string;
+  table: string;
   column: Column;
 };
 
@@ -307,7 +297,7 @@ export type ColumnOpAdd = {
  * @x-internal true
  */
 export type ColumnOpRemove = {
-  table?: string;
+  table: string;
   column: string;
 };
 
@@ -315,20 +305,25 @@ export type ColumnOpRemove = {
  * @x-internal true
  */
 export type ColumnOpRename = {
-  table?: string;
+  table: string;
   oldName: string;
   newName: string;
 };
 
+/**
+ * The migration request number.
+ *
+ * @minimum 0
+ * @x-go-type migration.RequestNumber
+ */
+export type MigrationRequestNumber = number;
+
 export type MigrationRequest = {
-  /**
-   * The migration request number.
-   */
-  number: number;
+  number?: MigrationRequestNumber;
   /**
    * Migration request creation timestamp.
    */
-  createdAt: DateTime;
+  createdAt?: DateTime;
   /**
    * Last modified timestamp.
    */
@@ -341,23 +336,23 @@ export type MigrationRequest = {
    * Timestamp when the migration request was merged.
    */
   mergedAt?: DateTime;
-  status: 'open' | 'closed' | 'merging' | 'merged';
+  status?: 'open' | 'closed' | 'merging' | 'merged';
   /**
    * The migration request title.
    */
-  title: string;
+  title?: string;
   /**
    * The migration request body with detailed description.
    */
-  body: string;
+  body?: string;
   /**
    * Name of the source branch.
    */
-  source: string;
+  source?: string;
   /**
    * Name of the target branch.
    */
-  target: string;
+  target?: string;
 };
 
 export type SortExpression =

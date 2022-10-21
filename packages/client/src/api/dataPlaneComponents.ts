@@ -1054,7 +1054,7 @@ export type GetMigrationRequestPathParams = {
   /**
    * The migration request number.
    */
-  mrNumber: number;
+  mrNumber: Schemas.MigrationRequestNumber;
   workspace: string;
   region: string;
 };
@@ -1094,7 +1094,7 @@ export type UpdateMigrationRequestPathParams = {
   /**
    * The migration request number.
    */
-  mrNumber: number;
+  mrNumber: Schemas.MigrationRequestNumber;
   workspace: string;
   region: string;
 };
@@ -1152,7 +1152,7 @@ export type ListMigrationRequestsCommitsPathParams = {
   /**
    * The migration request number.
    */
-  mrNumber: number;
+  mrNumber: Schemas.MigrationRequestNumber;
   workspace: string;
   region: string;
 };
@@ -1228,7 +1228,7 @@ export type CompareMigrationRequestPathParams = {
   /**
    * The migration request number.
    */
-  mrNumber: number;
+  mrNumber: Schemas.MigrationRequestNumber;
   workspace: string;
   region: string;
 };
@@ -1270,7 +1270,7 @@ export type GetMigrationRequestIsMergedPathParams = {
   /**
    * The migration request number.
    */
-  mrNumber: number;
+  mrNumber: Schemas.MigrationRequestNumber;
   workspace: string;
   region: string;
 };
@@ -1316,7 +1316,7 @@ export type MergeMigrationRequestPathParams = {
   /**
    * The migration request number.
    */
-  mrNumber: number;
+  mrNumber: Schemas.MigrationRequestNumber;
   workspace: string;
   region: string;
 };
@@ -1576,7 +1576,6 @@ export type PreviewBranchSchemaEditResponse = {
 
 export type PreviewBranchSchemaEditRequestBody = {
   edits?: Schemas.SchemaEditScript;
-  operations?: Schemas.MigrationOp[];
 };
 
 export type PreviewBranchSchemaEditVariables = {
