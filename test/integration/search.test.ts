@@ -1,10 +1,12 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
-import { XataClient } from '../../packages/codegen/example/xata';
-import { mockUsers } from '../mock_data';
+import { Teams, XataClient } from '../../packages/codegen/example/xata';
+import { mockUsers as users } from '../mock_data';
 import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 
 let xata: XataClient;
 let hooks: TestEnvironmentResult['hooks'];
+
+let teams: Partial<Teams>[];
 
 beforeAll(async (ctx) => {
   const result = await setUpTestEnvironment('search');
@@ -14,7 +16,7 @@ beforeAll(async (ctx) => {
 
   await hooks.beforeAll(ctx);
 
-  await xata.db.users.create(mockUsers);
+  await xata.db.users.create(users);
 
   const ownerAnimals = await xata.db.users.filter('full_name', 'Owner of team animals').getFirst();
   const ownerFruits = await xata.db.users.filter('full_name', 'Owner of team fruits').getFirst();
@@ -22,22 +24,24 @@ beforeAll(async (ctx) => {
     throw new Error('Could not find owner of team animals or owner of team fruits');
   }
 
-  await xata.db.teams.create({
-    name: 'Team fruits',
-    labels: ['apple', 'banana', 'orange'],
-    owner: ownerFruits
-  });
+  teams = [
+    {
+      name: 'Team fruits',
+      labels: ['apple', 'banana', 'orange'],
+      owner: ownerFruits
+    },
+    {
+      name: 'Team animals',
+      labels: ['monkey', 'lion', 'eagle', 'dolphin'],
+      owner: ownerAnimals
+    },
+    {
+      name: 'Mixed team fruits & animals',
+      labels: ['monkey', 'banana', 'apple', 'dolphin']
+    }
+  ];
 
-  await xata.db.teams.create({
-    name: 'Team animals',
-    labels: ['monkey', 'lion', 'eagle', 'dolphin'],
-    owner: ownerAnimals
-  });
-
-  await xata.db.teams.create({
-    name: 'Mixed team fruits & animals',
-    labels: ['monkey', 'banana', 'apple', 'dolphin']
-  });
+  await xata.db.teams.create(teams);
 
   await waitForSearchIndexing();
 });
@@ -188,8 +192,9 @@ describe('search', () => {
 });
 
 async function waitForSearchIndexing(): Promise<void> {
-  const { users = [], teams = [] } = await xata.search.byTable('fruits');
-  if (users.length === 0 || teams.length === 0) {
+  const { aggs: teamAggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
+  const { aggs: userAggs } = await xata.db.users.aggregate({ total: { count: '*' } });
+  if (teams === undefined || teamAggs.total !== teams.length || userAggs.total !== users.length) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return waitForSearchIndexing();
   }
