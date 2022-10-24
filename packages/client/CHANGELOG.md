@@ -1,5 +1,23 @@
 # @xata.io/client
 
+## 0.19.0
+
+### Minor Changes
+
+- [#692](https://github.com/xataio/client-ts/pull/692) [`c14f431`](https://github.com/xataio/client-ts/commit/c14f431db020036ab2b059bcc52a5d56b321c8e7) Thanks [@SferaDev](https://github.com/SferaDev)! - Add multi region endpoint support
+
+- [#692](https://github.com/xataio/client-ts/pull/692) [`c8def01`](https://github.com/xataio/client-ts/commit/c8def013e9e2d5b634cdb2850f757a0b3e9e0a6d) Thanks [@SferaDev](https://github.com/SferaDev)! - Update OpenAPI spec methods
+
+### Patch Changes
+
+- [#667](https://github.com/xataio/client-ts/pull/667) [`f80f051`](https://github.com/xataio/client-ts/commit/f80f05118dd0588861b8229114a469f016ef77ac) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow sending page size to summarize endpoint
+
+- [#676](https://github.com/xataio/client-ts/pull/676) [`2e341e5`](https://github.com/xataio/client-ts/commit/2e341e5c6140f9c4ddd74e479049992c26c43ea2) Thanks [@SferaDev](https://github.com/SferaDev)! - Support TS 4.7+
+
+- [#709](https://github.com/xataio/client-ts/pull/709) [`f2f749f`](https://github.com/xataio/client-ts/commit/f2f749f4c64246a303da8d4a617773fc55c1d021) Thanks [@SferaDev](https://github.com/SferaDev)! - Add ifVersion flag to insert/update/upsert operations
+
+- [#709](https://github.com/xataio/client-ts/pull/709) [`f2f749f`](https://github.com/xataio/client-ts/commit/f2f749f4c64246a303da8d4a617773fc55c1d021) Thanks [@SferaDev](https://github.com/SferaDev)! - Add createOrReplace operation to repository
+
 ## 0.18.6
 
 ### Patch Changes
