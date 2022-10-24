@@ -95,7 +95,7 @@ export type InviteKey = string;
 /**
  * Metadata of databases
  */
-export type CPDatabaseMetadata = {
+export type DatabaseMetadata = {
   /**
    * The machine-readable name of a database
    */
@@ -119,11 +119,11 @@ export type CPDatabaseMetadata = {
   };
 };
 
-export type CPListDatabasesResponse = {
+export type ListDatabasesResponse = {
   /**
    * A list of databases in a Xata workspace
    */
-  databases: CPDatabaseMetadata[];
+  databases: DatabaseMetadata[];
 };
 
 /**
