@@ -6,7 +6,7 @@
 /**
  * Metadata of databases
  */
-export type DatabaseMetadata = {
+export type DEPRECATEDDatabaseMetadata = {
   /**
    * The machine-readable name of a database
    */
@@ -30,11 +30,11 @@ export type DatabaseMetadata = {
   };
 };
 
-export type ListDatabasesResponse = {
+export type DEPRECATEDListDatabasesResponse = {
   /**
    * A list of databases in a Xata workspace
    */
-  databases?: DatabaseMetadata[];
+  databases?: DEPRECATEDDatabaseMetadata[];
 };
 
 export type ListBranchesResponse = {
