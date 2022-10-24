@@ -146,8 +146,9 @@ describe('compareSquema', () => {
 const dumbTableInfo: TableInfo = {
   branch: 'main',
   database: 'test',
-  tableName: 'foo',
-  workspaceID: 'test-1234'
+  table: 'foo',
+  workspace: 'test-1234',
+  region: 'us-east-1'
 };
 
 describe('createProcessor', () => {
@@ -236,15 +237,33 @@ describe('createProcessor', () => {
     await callback([['foo']], [' 你好. buenos días '], 1);
 
     expect(shouldContinue).toHaveBeenCalled();
-    expect(createTable).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo');
-    expect(addTableColumn).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', {
-      name: 'niHao.buenosDias',
-      type: 'string'
+    expect(createTable).toHaveBeenCalledWith({
+      workspace: 'test-1234',
+      region: 'us-east-1',
+      database: 'test',
+      branch: 'main',
+      table: 'foo'
+    });
+    expect(addTableColumn).toHaveBeenCalledWith({
+      workspace: 'test-1234',
+      region: 'us-east-1',
+      database: 'test',
+      branch: 'main',
+      table: 'foo',
+      column: {
+        name: 'niHao.buenosDias',
+        type: 'string'
+      }
     });
 
-    expect(bulkInsertTableRecords).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', [
-      { ['niHao.buenosDias']: 'foo' }
-    ]);
+    expect(bulkInsertTableRecords).toHaveBeenCalledWith({
+      workspace: 'test-1234',
+      region: 'us-east-1',
+      database: 'test',
+      branch: 'main',
+      table: 'foo',
+      records: [{ ['niHao.buenosDias']: 'foo' }]
+    });
   });
 
   test('calls shuldContinue, continues, updates a table and inserts the records', async () => {
@@ -289,8 +308,22 @@ describe('createProcessor', () => {
 
     expect(shouldContinue).toHaveBeenCalled();
     expect(createTable).not.toHaveBeenCalled();
-    expect(addTableColumn).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', { name: 'a', type: 'int' });
+    expect(addTableColumn).toHaveBeenCalledWith({
+      workspace: 'test-1234',
+      region: 'us-east-1',
+      database: 'test',
+      branch: 'main',
+      table: 'foo',
+      column: { name: 'a', type: 'int' }
+    });
 
-    expect(bulkInsertTableRecords).toHaveBeenCalledWith('test-1234', 'test', 'main', 'foo', [{ a: 1 }]);
+    expect(bulkInsertTableRecords).toHaveBeenCalledWith({
+      workspace: 'test-1234',
+      region: 'us-east-1',
+      database: 'test',
+      branch: 'main',
+      table: 'foo',
+      records: [{ a: 1 }]
+    });
   });
 });

@@ -106,7 +106,7 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
     const { tables, fuzziness, highlight, prefix } = options ?? {};
 
     const { records } = await searchBranch({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
       // @ts-ignore https://github.com/xataio/client-ts/issues/313
       body: { tables, query, fuzziness, prefix, highlight },
       ...fetchProps
@@ -120,7 +120,7 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
     const fetchProps = await getFetchProps();
 
     const { schema } = await getBranchDetails({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
       ...fetchProps
     });
 

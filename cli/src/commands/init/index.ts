@@ -70,7 +70,7 @@ export default class Init extends BaseCommand {
       }
     }
 
-    const { workspace, database, databaseURL } = await this.getParsedDatabaseURL(flags.db, true);
+    const { workspace, region, database, databaseURL } = await this.getParsedDatabaseURL(flags.db, true);
 
     this.projectConfig = { databaseURL };
 
@@ -78,11 +78,11 @@ export default class Init extends BaseCommand {
 
     await this.writeConfig();
 
-    await this.writeEnvFile(workspace, database);
+    await this.writeEnvFile(workspace, region, database);
 
     if (flags.schema) {
       const branch = await this.getCurrentBranchName(databaseURL);
-      await this.readAndDeploySchema(workspace, database, branch, flags.schema);
+      await this.readAndDeploySchema(workspace, region, database, branch, flags.schema);
     }
 
     await Codegen.runIfConfigured(this.projectConfig);
@@ -216,7 +216,7 @@ export default class Init extends BaseCommand {
     await this.updateConfig();
   }
 
-  async writeEnvFile(workspace: string, database: string) {
+  async writeEnvFile(workspace: string, region: string, database: string) {
     let envFile = ENV_FILES[ENV_FILES.length - 1];
     for (const file of ENV_FILES) {
       if (await this.access(file)) {
@@ -240,7 +240,7 @@ export default class Init extends BaseCommand {
       'The fallback branch will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitly)'
     );
 
-    const fallbackBranch = await this.getBranch(workspace, database, {
+    const fallbackBranch = await this.getBranch(workspace, region, database, {
       allowEmpty: true,
       allowCreate: true,
       title: 'Choose a default development branch (fallback branch).'
@@ -304,10 +304,10 @@ export default class Init extends BaseCommand {
     this.info(`Added ${envFile} to .gitignore`);
   }
 
-  async readAndDeploySchema(workspace: string, database: string, branch: string, file: string) {
+  async readAndDeploySchema(workspace: string, region: string, database: string, branch: string, file: string) {
     this.info('Reading schema file...');
     const schema = await this.parseSchema(file);
-    await this.deploySchema(workspace, database, branch, schema);
+    await this.deploySchema(workspace, region, database, branch, schema);
   }
 
   async parseSchema(file: string) {

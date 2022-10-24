@@ -1,8 +1,10 @@
 import { XataApiClient } from '../../../packages/client/src';
 import { XataClient } from '../../../packages/codegen/example/xata';
-import { teamColumns, userColumns } from '../../mock_data';
 
 async function main() {
+  // @ts-ignore
+  const region = XATA_REGION || 'eu-west-1';
+
   // @ts-ignore
   const workspace = XATA_WORKSPACE;
 
@@ -10,7 +12,7 @@ async function main() {
 
   const id = Math.round(Math.random() * 100000);
 
-  const { databaseName } = await api.databases.createDatabase(workspace, `sdk-e2e-test-${id}`);
+  const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`, { region });
 
   await api.tables.createTable(workspace, databaseName, 'main', 'teams');
   await api.tables.createTable(workspace, databaseName, 'main', 'users');
@@ -29,9 +31,59 @@ async function main() {
   const users = await xata.db.users.getAll();
   const teams = await xata.db.teams.getAll();
 
-  await api.databases.deleteDatabase(workspace, databaseName);
+  await api.database.deleteDatabase(workspace, databaseName);
 
   return { users, teams };
 }
+
+const userColumns: any[] = [
+  {
+    name: 'email',
+    type: 'email'
+  },
+  {
+    name: 'full_name',
+    type: 'string'
+  },
+  {
+    name: 'address',
+    type: 'object',
+    columns: [
+      {
+        name: 'street',
+        type: 'string'
+      },
+      {
+        name: 'zipcode',
+        type: 'int'
+      }
+    ]
+  },
+  {
+    name: 'team',
+    type: 'link',
+    link: {
+      table: 'teams'
+    }
+  }
+];
+
+const teamColumns: any[] = [
+  {
+    name: 'name',
+    type: 'string'
+  },
+  {
+    name: 'labels',
+    type: 'multiple'
+  },
+  {
+    name: 'owner',
+    type: 'link',
+    link: {
+      table: 'users'
+    }
+  }
+];
 
 main();
