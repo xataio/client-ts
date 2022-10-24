@@ -749,14 +749,14 @@ export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInvi
     ResendWorkspaceMemberInvitePathParams
   >({ url: '/workspaces/{workspaceId}/invites/{inviteId}/resend', method: 'post', ...variables, signal });
 
-export type CPGetDatabaseListPathParams = {
+export type GetDatabaseListPathParams = {
   /**
    * Workspace ID
    */
   workspaceId: Schemas.WorkspaceID;
 };
 
-export type CPGetDatabaseListError = Fetcher.ErrorWrapper<
+export type GetDatabaseListError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -767,24 +767,22 @@ export type CPGetDatabaseListError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type CPGetDatabaseListVariables = {
-  pathParams: CPGetDatabaseListPathParams;
+export type GetDatabaseListVariables = {
+  pathParams: GetDatabaseListPathParams;
 } & ControlPlaneFetcherExtraProps;
 
 /**
  * List all databases available in your Workspace.
  */
-export const cPGetDatabaseList = (variables: CPGetDatabaseListVariables, signal?: AbortSignal) =>
-  controlPlaneFetch<
-    Schemas.CPListDatabasesResponse,
-    CPGetDatabaseListError,
-    undefined,
-    {},
-    {},
-    CPGetDatabaseListPathParams
-  >({ url: '/workspaces/{workspaceId}/dbs', method: 'get', ...variables, signal });
+export const getDatabaseList = (variables: GetDatabaseListVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<Schemas.ListDatabasesResponse, GetDatabaseListError, undefined, {}, {}, GetDatabaseListPathParams>({
+    url: '/workspaces/{workspaceId}/dbs',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
-export type CPCreateDatabasePathParams = {
+export type CreateDatabasePathParams = {
   /**
    * Workspace ID
    */
@@ -795,7 +793,7 @@ export type CPCreateDatabasePathParams = {
   dbName: Schemas.DBName;
 };
 
-export type CPCreateDatabaseError = Fetcher.ErrorWrapper<
+export type CreateDatabaseError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -806,7 +804,7 @@ export type CPCreateDatabaseError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type CPCreateDatabaseResponse = {
+export type CreateDatabaseResponse = {
   /**
    * @minLength 1
    */
@@ -815,7 +813,7 @@ export type CPCreateDatabaseResponse = {
   status: Schemas.MigrationStatus;
 };
 
-export type CPCreateDatabaseRequestBody = {
+export type CreateDatabaseRequestBody = {
   /**
    * @minLength 1
    */
@@ -830,25 +828,25 @@ export type CPCreateDatabaseRequestBody = {
   metadata?: Schemas.BranchMetadata;
 };
 
-export type CPCreateDatabaseVariables = {
-  body: CPCreateDatabaseRequestBody;
-  pathParams: CPCreateDatabasePathParams;
+export type CreateDatabaseVariables = {
+  body: CreateDatabaseRequestBody;
+  pathParams: CreateDatabasePathParams;
 } & ControlPlaneFetcherExtraProps;
 
 /**
  * Create Database with identifier name
  */
-export const cPCreateDatabase = (variables: CPCreateDatabaseVariables, signal?: AbortSignal) =>
+export const createDatabase = (variables: CreateDatabaseVariables, signal?: AbortSignal) =>
   controlPlaneFetch<
-    CPCreateDatabaseResponse,
-    CPCreateDatabaseError,
-    CPCreateDatabaseRequestBody,
+    CreateDatabaseResponse,
+    CreateDatabaseError,
+    CreateDatabaseRequestBody,
     {},
     {},
-    CPCreateDatabasePathParams
+    CreateDatabasePathParams
   >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'put', ...variables, signal });
 
-export type CPDeleteDatabasePathParams = {
+export type DeleteDatabasePathParams = {
   /**
    * Workspace ID
    */
@@ -859,7 +857,7 @@ export type CPDeleteDatabasePathParams = {
   dbName: Schemas.DBName;
 };
 
-export type CPDeleteDatabaseError = Fetcher.ErrorWrapper<
+export type DeleteDatabaseError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -874,26 +872,26 @@ export type CPDeleteDatabaseError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type CPDeleteDatabaseResponse = {
+export type DeleteDatabaseResponse = {
   status: Schemas.MigrationStatus;
 };
 
-export type CPDeleteDatabaseVariables = {
-  pathParams: CPDeleteDatabasePathParams;
+export type DeleteDatabaseVariables = {
+  pathParams: DeleteDatabasePathParams;
 } & ControlPlaneFetcherExtraProps;
 
 /**
  * Delete a database and all of its branches and tables permanently.
  */
-export const cPDeleteDatabase = (variables: CPDeleteDatabaseVariables, signal?: AbortSignal) =>
-  controlPlaneFetch<CPDeleteDatabaseResponse, CPDeleteDatabaseError, undefined, {}, {}, CPDeleteDatabasePathParams>({
+export const deleteDatabase = (variables: DeleteDatabaseVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<DeleteDatabaseResponse, DeleteDatabaseError, undefined, {}, {}, DeleteDatabasePathParams>({
     url: '/workspaces/{workspaceId}/dbs/{dbName}',
     method: 'delete',
     ...variables,
     signal
   });
 
-export type CPGetCPDatabaseMetadataPathParams = {
+export type GetDatabaseMetadataPathParams = {
   /**
    * Workspace ID
    */
@@ -904,7 +902,7 @@ export type CPGetCPDatabaseMetadataPathParams = {
   dbName: Schemas.DBName;
 };
 
-export type CPGetCPDatabaseMetadataError = Fetcher.ErrorWrapper<
+export type GetDatabaseMetadataError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -919,24 +917,24 @@ export type CPGetCPDatabaseMetadataError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type CPGetCPDatabaseMetadataVariables = {
-  pathParams: CPGetCPDatabaseMetadataPathParams;
+export type GetDatabaseMetadataVariables = {
+  pathParams: GetDatabaseMetadataPathParams;
 } & ControlPlaneFetcherExtraProps;
 
 /**
  * Retrieve metadata of the given database
  */
-export const cPGetCPDatabaseMetadata = (variables: CPGetCPDatabaseMetadataVariables, signal?: AbortSignal) =>
+export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables, signal?: AbortSignal) =>
   controlPlaneFetch<
-    Schemas.CPDatabaseMetadata,
-    CPGetCPDatabaseMetadataError,
+    Schemas.DatabaseMetadata,
+    GetDatabaseMetadataError,
     undefined,
     {},
     {},
-    CPGetCPDatabaseMetadataPathParams
+    GetDatabaseMetadataPathParams
   >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'get', ...variables, signal });
 
-export type CPUpdateCPDatabaseMetadataPathParams = {
+export type UpdateDatabaseMetadataPathParams = {
   /**
    * Workspace ID
    */
@@ -947,7 +945,7 @@ export type CPUpdateCPDatabaseMetadataPathParams = {
   dbName: Schemas.DBName;
 };
 
-export type CPUpdateCPDatabaseMetadataError = Fetcher.ErrorWrapper<
+export type UpdateDatabaseMetadataError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -962,7 +960,7 @@ export type CPUpdateCPDatabaseMetadataError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type CPUpdateCPDatabaseMetadataRequestBody = {
+export type UpdateDatabaseMetadataRequestBody = {
   ui?: {
     /**
      * @minLength 1
@@ -971,22 +969,22 @@ export type CPUpdateCPDatabaseMetadataRequestBody = {
   };
 };
 
-export type CPUpdateCPDatabaseMetadataVariables = {
-  body?: CPUpdateCPDatabaseMetadataRequestBody;
-  pathParams: CPUpdateCPDatabaseMetadataPathParams;
+export type UpdateDatabaseMetadataVariables = {
+  body?: UpdateDatabaseMetadataRequestBody;
+  pathParams: UpdateDatabaseMetadataPathParams;
 } & ControlPlaneFetcherExtraProps;
 
 /**
  * Update the color of the selected database
  */
-export const cPUpdateCPDatabaseMetadata = (variables: CPUpdateCPDatabaseMetadataVariables, signal?: AbortSignal) =>
+export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariables, signal?: AbortSignal) =>
   controlPlaneFetch<
-    Schemas.CPDatabaseMetadata,
-    CPUpdateCPDatabaseMetadataError,
-    CPUpdateCPDatabaseMetadataRequestBody,
+    Schemas.DatabaseMetadata,
+    UpdateDatabaseMetadataError,
+    UpdateDatabaseMetadataRequestBody,
     {},
     {},
-    CPUpdateCPDatabaseMetadataPathParams
+    UpdateDatabaseMetadataPathParams
   >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'patch', ...variables, signal });
 
 export type ListRegionsPathParams = {
@@ -1043,11 +1041,11 @@ export const operationsByTag = {
     resendWorkspaceMemberInvite
   },
   databases: {
-    cPGetDatabaseList,
-    cPCreateDatabase,
-    cPDeleteDatabase,
-    cPGetCPDatabaseMetadata,
-    cPUpdateCPDatabaseMetadata,
+    getDatabaseList,
+    createDatabase,
+    deleteDatabase,
+    getDatabaseMetadata,
+    updateDatabaseMetadata,
     listRegions
   }
 };
