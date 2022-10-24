@@ -201,9 +201,6 @@ export type ColumnMigration = {
   ['new']: Column;
 };
 
-/**
- * @x-internal true
- */
 export type Commit = {
   title?: string;
   message?: string;
@@ -220,8 +217,6 @@ export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
 /**
  * Branch schema migration.
- *
- * @x-internal true
  */
 export type Migration = {
   parentID?: string;
@@ -230,14 +225,9 @@ export type Migration = {
 
 /**
  * Branch schema migration operations.
- *
- * @x-internal true
  */
 export type MigrationOp = MigrationTableOp | MigrationColumnOp;
 
-/**
- * @x-internal true
- */
 export type MigrationTableOp =
   | {
       addTable: TableOpAdd;
@@ -249,9 +239,6 @@ export type MigrationTableOp =
       renameTable: TableOpRename;
     };
 
-/**
- * @x-internal true
- */
 export type MigrationColumnOp =
   | {
       addColumn: ColumnOpAdd;
@@ -263,47 +250,29 @@ export type MigrationColumnOp =
       renameColumn: ColumnOpRename;
     };
 
-/**
- * @x-internal true
- */
 export type TableOpAdd = {
   table: string;
 };
 
-/**
- * @x-internal true
- */
 export type TableOpRemove = {
   table: string;
 };
 
-/**
- * @x-internal true
- */
 export type TableOpRename = {
   oldName: string;
   newName: string;
 };
 
-/**
- * @x-internal true
- */
 export type ColumnOpAdd = {
   table: string;
   column: Column;
 };
 
-/**
- * @x-internal true
- */
 export type ColumnOpRemove = {
   table: string;
   column: string;
 };
 
-/**
- * @x-internal true
- */
 export type ColumnOpRename = {
   table: string;
   oldName: string;
