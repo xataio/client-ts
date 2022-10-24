@@ -4,7 +4,7 @@ import { LoaderFunction } from '@remix-run/cloudflare';
 import { XataApiClient, BaseClient } from '@xata.io/client';
 
 export const loader: LoaderFunction = async ({ context }: { context: Record<string, any> }) => {
-  const { XATA_WORKSPACE: workspace, XATA_API_KEY: apiKey } = context;
+  const { XATA_WORKSPACE: workspace, XATA_API_KEY: apiKey, XATA_REGION: region = 'eu-west-1' } = context;
   if (!workspace || !apiKey) {
     throw new Error('XATA_WORKSPACE and XATA_API_KEY are required');
   }
@@ -13,7 +13,7 @@ export const loader: LoaderFunction = async ({ context }: { context: Record<stri
 
   const id = Math.round(Math.random() * 100000);
 
-  const { databaseName } = await api.databases.createDatabase(workspace, `sdk-e2e-test-${id}`);
+  const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`, { region });
 
   await api.tables.createTable(workspace, databaseName, 'main', 'teams');
   await api.tables.createTable(workspace, databaseName, 'main', 'users');
@@ -32,7 +32,7 @@ export const loader: LoaderFunction = async ({ context }: { context: Record<stri
   const users = await xata.db.users.getAll();
   const teams = await xata.db.teams.getAll();
 
-  await api.databases.deleteDatabase(workspace, databaseName);
+  await api.database.deleteDatabase(workspace, databaseName);
 
   return new Response(JSON.stringify({ users, teams }));
 };

@@ -24,6 +24,7 @@ let xata: XataClient;
 let api: XataApiClient;
 let baseClient: BaseClient;
 let workspace: string;
+let region: string;
 let database: string;
 let hooks: TestEnvironmentResult['hooks'];
 
@@ -34,6 +35,7 @@ beforeAll(async (ctx) => {
   api = result.api;
   baseClient = result.baseClient;
   workspace = result.workspace;
+  region = result.region;
   database = result.database;
   hooks = result.hooks;
 
@@ -573,9 +575,14 @@ describe('integration tests', () => {
   });
 
   test('Pagination default value', async () => {
-    await api.tables.createTable(workspace, database, 'main', 'planes');
-    await api.tables.setTableSchema(workspace, database, 'main', 'planes', {
-      columns: [{ name: 'name', type: 'string' }]
+    await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'planes' });
+    await api.tables.setTableSchema({
+      workspace,
+      region,
+      database,
+      branch: 'main',
+      table: 'planes',
+      schema: { columns: [{ name: 'name', type: 'string' }] }
     });
 
     const planes = Array.from({ length: PAGINATION_DEFAULT_SIZE + 50 }, (_, index) => ({ name: `Plane ${index}` }));

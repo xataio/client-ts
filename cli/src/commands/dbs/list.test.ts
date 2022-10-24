@@ -33,7 +33,7 @@ describe('databases list', () => {
     await expect(list.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces/test-1234/dbs');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
   });
 
@@ -41,13 +41,7 @@ describe('databases list', () => {
     fetchMock.mockReturnValue({
       ok: true,
       json: async () => ({
-        databases: [
-          {
-            name: 'test',
-            createdAt: '2020-01-01T00:00:00.000Z',
-            numberOfBranches: 3
-          }
-        ]
+        databases: [{ name: 'test', createdAt: '2020-01-01T00:00:00.000Z' }]
       })
     });
 
@@ -69,7 +63,6 @@ describe('databases list', () => {
           {
             "createdAt": "2020-01-01T00:00:00.000Z",
             "name": "test",
-            "numberOfBranches": 3,
           },
         ]
       `);
@@ -78,7 +71,7 @@ describe('databases list', () => {
     }
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces/test-1234/dbs');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 
     expect(printTable).toHaveBeenCalledTimes(json ? 0 : 1);
@@ -89,13 +82,11 @@ describe('databases list', () => {
           [
             "Database name",
             "Created at",
-            "# branches",
           ],
           [
             [
               "test",
               "Jan 1, 2020, 12:00 AM",
-              "3",
             ],
           ],
           [

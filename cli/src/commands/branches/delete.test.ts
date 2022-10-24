@@ -25,9 +25,7 @@ describe('branches delete', () => {
   test('exists if the user does not confirm', async () => {
     const config = await Config.load();
     const command = new BranchesDelete(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     promptsMock.mockReturnValue({});
 
@@ -37,9 +35,7 @@ describe('branches delete', () => {
   test('exists if the user did not enter the branch name correctly', async () => {
     const config = await Config.load();
     const command = new BranchesDelete(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     promptsMock.mockReturnValue({ confirm: 'nope' });
 
@@ -57,14 +53,12 @@ describe('branches delete', () => {
 
     const config = await Config.load();
     const command = new BranchesDelete(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.eu-west-1.xata.sh/db/test:featureA');
     expect(fetchMock.mock.calls[0][1].method).toEqual('DELETE');
   });
 
@@ -77,9 +71,7 @@ describe('branches delete', () => {
 
     const config = await Config.load();
     const command = new BranchesDelete(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     expect(BranchesDelete.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
@@ -95,7 +87,7 @@ describe('branches delete', () => {
     }
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.eu-west-1.xata.sh/db/test:featureA');
     expect(fetchMock.mock.calls[0][1].method).toEqual('DELETE');
 
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);

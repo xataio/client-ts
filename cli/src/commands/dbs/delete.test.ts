@@ -68,7 +68,7 @@ describe('databases delete', () => {
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/foo');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces/test-1234/dbs/foo');
     expect(fetchMock.mock.calls[0][1].method).toEqual('DELETE');
   });
 
@@ -96,7 +96,7 @@ describe('databases delete', () => {
     }
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/foo');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces/test-1234/dbs/foo');
     expect(fetchMock.mock.calls[0][1].method).toEqual('DELETE');
 
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
