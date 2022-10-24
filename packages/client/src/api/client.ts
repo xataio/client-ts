@@ -1408,8 +1408,8 @@ class MigrationsApi {
 class DatabaseApi {
   constructor(private extraProps: ApiExtraProps) {}
 
-  public getDatabaseList({ workspace }: { workspace: Schemas.WorkspaceID }): Promise<Schemas.CPListDatabasesResponse> {
-    return operationsByTag.databases.cPGetDatabaseList({
+  public getDatabaseList({ workspace }: { workspace: Schemas.WorkspaceID }): Promise<Schemas.ListDatabasesResponse> {
+    return operationsByTag.databases.getDatabaseList({
       pathParams: { workspaceId: workspace },
       ...this.extraProps
     });
@@ -1422,9 +1422,9 @@ class DatabaseApi {
   }: {
     workspace: Schemas.WorkspaceID;
     database: Schemas.DBName;
-    data: Components.CPCreateDatabaseRequestBody;
+    data: Components.CreateDatabaseRequestBody;
   }): Promise<Components.CreateDatabaseResponse> {
-    return operationsByTag.databases.cPCreateDatabase({
+    return operationsByTag.databases.createDatabase({
       pathParams: { workspaceId: workspace, dbName: database },
       body: data,
       ...this.extraProps
@@ -1437,8 +1437,8 @@ class DatabaseApi {
   }: {
     workspace: Schemas.WorkspaceID;
     database: Schemas.DBName;
-  }): Promise<Components.CPDeleteDatabaseResponse> {
-    return operationsByTag.databases.cPDeleteDatabase({
+  }): Promise<Components.DeleteDatabaseResponse> {
+    return operationsByTag.databases.deleteDatabase({
       pathParams: { workspaceId: workspace, dbName: database },
       ...this.extraProps
     });
@@ -1450,8 +1450,8 @@ class DatabaseApi {
   }: {
     workspace: Schemas.WorkspaceID;
     database: Schemas.DBName;
-  }): Promise<Schemas.CPDatabaseMetadata> {
-    return operationsByTag.databases.cPGetCPDatabaseMetadata({
+  }): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.databases.getDatabaseMetadata({
       pathParams: { workspaceId: workspace, dbName: database },
       ...this.extraProps
     });
@@ -1465,8 +1465,8 @@ class DatabaseApi {
     workspace: Schemas.WorkspaceID;
     database: Schemas.DBName;
     metadata: Schemas.DatabaseMetadata;
-  }): Promise<Schemas.CPDatabaseMetadata> {
-    return operationsByTag.databases.cPUpdateCPDatabaseMetadata({
+  }): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.databases.updateDatabaseMetadata({
       pathParams: { workspaceId: workspace, dbName: database },
       body: metadata,
       ...this.extraProps
