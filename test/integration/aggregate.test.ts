@@ -5,6 +5,74 @@ import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
 let xata: XataClient;
 let hooks: TestEnvironmentResult['hooks'];
 
+const teams = [
+  {
+    name: 'r1',
+    email: 'r1+1@a.com',
+    settings: {
+      plan: 'free',
+      dark: true,
+      labels: ['label1', 'label2']
+    },
+    description: 'longer text goes here',
+    index: 6,
+    rating: 1,
+    founded_date: new Date('2022-01-01T09:00:00.000Z')
+  },
+  {
+    name: 'r1',
+    email: 'r1+2@a.com',
+    settings: {
+      plan: 'free',
+      dark: false,
+      labels: ['label1', 'label2']
+    },
+    description: 'longer text goes here',
+    index: 8,
+    rating: 2.2,
+    founded_date: new Date('2022-01-01T18:00:00.000Z')
+  },
+  {
+    name: 'r2',
+    email: 'r2+1@b.com',
+    settings: {
+      plan: 'paid',
+      dark: true,
+      labels: ['label2', 'label3']
+    },
+    description: 'longer text goes here',
+    index: 3,
+    rating: 3.1,
+    founded_date: new Date('2022-01-05T09:00:00.000Z')
+  },
+  {
+    name: 'r2',
+    email: 'r2+2@b.com',
+    settings: {
+      plan: 'paid',
+      dark: false,
+      labels: ['label2', 'label3']
+    },
+    description: 'longer text goes here',
+    index: 2,
+    rating: 4,
+    founded_date: new Date('2022-01-05T18:00:00.000Z')
+  },
+  {
+    name: 'r3',
+    email: 'r3@b.com',
+    settings: {
+      plan: 'free',
+      dark: true,
+      labels: ['label5', 'label6']
+    },
+    description: 'longer text goes here',
+    index: 12,
+    rating: 5.3,
+    founded_date: new Date('2022-01-10T09:00:00.000Z')
+  }
+];
+
 beforeAll(async (ctx) => {
   const result = await setUpTestEnvironment('aggregate');
 
@@ -13,73 +81,7 @@ beforeAll(async (ctx) => {
 
   await hooks.beforeAll(ctx);
 
-  await xata.db.teams.create([
-    {
-      name: 'r1',
-      email: 'r1+1@a.com',
-      settings: {
-        plan: 'free',
-        dark: true,
-        labels: ['label1', 'label2']
-      },
-      description: 'longer text goes here',
-      index: 6,
-      rating: 1,
-      founded_date: new Date('2022-01-01T09:00:00.000Z')
-    },
-    {
-      name: 'r1',
-      email: 'r1+2@a.com',
-      settings: {
-        plan: 'free',
-        dark: false,
-        labels: ['label1', 'label2']
-      },
-      description: 'longer text goes here',
-      index: 8,
-      rating: 2.2,
-      founded_date: new Date('2022-01-01T18:00:00.000Z')
-    },
-    {
-      name: 'r2',
-      email: 'r2+1@b.com',
-      settings: {
-        plan: 'paid',
-        dark: true,
-        labels: ['label2', 'label3']
-      },
-      description: 'longer text goes here',
-      index: 3,
-      rating: 3.1,
-      founded_date: new Date('2022-01-05T09:00:00.000Z')
-    },
-    {
-      name: 'r2',
-      email: 'r2+2@b.com',
-      settings: {
-        plan: 'paid',
-        dark: false,
-        labels: ['label2', 'label3']
-      },
-      description: 'longer text goes here',
-      index: 2,
-      rating: 4,
-      founded_date: new Date('2022-01-05T18:00:00.000Z')
-    },
-    {
-      name: 'r3',
-      email: 'r3@b.com',
-      settings: {
-        plan: 'free',
-        dark: true,
-        labels: ['label5', 'label6']
-      },
-      description: 'longer text goes here',
-      index: 12,
-      rating: 5.3,
-      founded_date: new Date('2022-01-10T09:00:00.000Z')
-    }
-  ]);
+  await xata.db.teams.create(teams);
 
   await waitForSearchIndexing();
 });
@@ -305,8 +307,8 @@ describe('aggregate', () => {
 });
 
 async function waitForSearchIndexing(): Promise<void> {
-  const { teams = [] } = await xata.search.byTable('longer');
-  if (teams.length === 0) {
+  const { aggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
+  if (aggs.total !== teams.length) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return waitForSearchIndexing();
   }

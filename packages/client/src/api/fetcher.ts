@@ -1,4 +1,5 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
+import { isString } from '../util/lang';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
@@ -42,6 +43,7 @@ export type FetchImpl = (
 export type WorkspaceApiUrlBuilder = (path: string, pathParams: Partial<Record<string, string | number>>) => string;
 
 export type FetcherExtraProps = {
+  endpoint: 'controlPlane' | 'dataPlane';
   apiUrl: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   fetchImpl: FetchImpl;
@@ -64,20 +66,31 @@ export type FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
 } & FetcherExtraProps;
 
 function buildBaseUrl({
+  endpoint,
   path,
   workspacesApiUrl,
   apiUrl,
-  pathParams
+  pathParams = {}
 }: {
+  endpoint: 'controlPlane' | 'dataPlane';
   path: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
   apiUrl: string;
   pathParams?: Partial<Record<string, string | number>>;
 }): string {
-  if (pathParams?.workspace === undefined || !path.startsWith('/db')) return `${apiUrl}${path}`;
+  if (endpoint === 'dataPlane') {
+    const url = isString(workspacesApiUrl) ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
 
-  const url = typeof workspacesApiUrl === 'string' ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
-  return url.replace('{workspaceId}', String(pathParams.workspace));
+    const urlWithWorkspace = isString(pathParams.workspace)
+      ? url.replace('{workspaceId}', String(pathParams.workspace))
+      : url;
+
+    return isString(pathParams.region)
+      ? urlWithWorkspace.replace('{region}', String(pathParams.region))
+      : urlWithWorkspace;
+  }
+
+  return `${apiUrl}${path}`;
 }
 
 // The host header is needed by Node.js on localhost.
@@ -105,6 +118,7 @@ export async function fetch<
   queryParams,
   fetchImpl,
   apiKey,
+  endpoint,
   apiUrl,
   workspacesApiUrl,
   trace,
@@ -115,7 +129,7 @@ export async function fetch<
   return trace(
     `${method.toUpperCase()} ${path}`,
     async ({ setAttributes }) => {
-      const baseUrl = buildBaseUrl({ path, workspacesApiUrl, pathParams, apiUrl });
+      const baseUrl = buildBaseUrl({ endpoint, path, workspacesApiUrl, pathParams, apiUrl });
       const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
       // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts

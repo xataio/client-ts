@@ -23,9 +23,7 @@ describe('branches create', () => {
   test('fails if the branch name is not provided', async () => {
     const config = await Config.load();
     const command = new BranchesCreate([], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(`
       [Error: Missing 1 required arg:
@@ -44,14 +42,12 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA', '--no-git'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.eu-west-1.xata.sh/db/test:featureA');
     expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
   });
 
@@ -63,9 +59,7 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA', '--no-git'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     expect(BranchesCreate.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
@@ -81,7 +75,7 @@ describe('branches create', () => {
     }
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.eu-west-1.xata.sh/db/test:featureA');
     expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
 
     expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
@@ -96,9 +90,7 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow(
       'Git cannot be found. Please install it or use the --no-git flag to disable integrating xata branches with git branches.'
@@ -111,9 +103,7 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow(
       'The working directory has uncommited changes. Please commit or stash them before creating a branch. Or use the --no-git flag to disable integrating xata branches with git branches.'
@@ -128,9 +118,7 @@ describe('branches create', () => {
 
     const config = await Config.load();
     const command = new BranchesCreate(['featureA'], config as Config);
-    command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
-    };
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow(
       'The working directory is not under git version control. Please initialize or clone a git repository or use the --no-git flag to disable integrating xata branches with git branches.'
@@ -147,9 +135,7 @@ describe('branches create', () => {
 
       const config = await Config.load();
       const command = new BranchesCreate(['featureA'], config as Config);
-      command.projectConfig = {
-        databaseURL: 'https://test-1234.xata.sh/db/test'
-      };
+      command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
       expect(BranchesCreate.enableJsonFlag).toBe(true);
       vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
@@ -165,7 +151,7 @@ describe('branches create', () => {
       }
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/db/test:featureA');
+      expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.eu-west-1.xata.sh/db/test:featureA');
       expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
 
       expect(createBranch).toHaveBeenCalledOnce();
@@ -193,9 +179,7 @@ describe('branches create', () => {
 
       const config = await Config.load();
       const command = new BranchesCreate(['featureA', '--from', 'base'], config as Config);
-      command.projectConfig = {
-        databaseURL: 'https://test-1234.xata.sh/db/test'
-      };
+      command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
       expect(BranchesCreate.enableJsonFlag).toBe(true);
       vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
@@ -215,10 +199,13 @@ describe('branches create', () => {
       }
 
       expect(fetchMock).toHaveBeenCalledTimes(2);
-      expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test/resolveBranch?gitBranch=base');
+      expect(fetchMock.mock.calls[0][0]).toEqual(
+        'https://test-1234.eu-west-1.xata.sh/dbs/test/resolveBranch?gitBranch=base'
+      );
       expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
-      expect(fetchMock.mock.calls[1][0]).toEqual('https://test-1234.xata.sh/db/test:featureA?from=base');
+      expect(fetchMock.mock.calls[1][0]).toEqual('https://test-1234.eu-west-1.xata.sh/db/test:featureA');
       expect(fetchMock.mock.calls[1][1].method).toEqual('PUT');
+      expect(fetchMock.mock.calls[1][1].body).toMatchInlineSnapshot('"{\\"from\\":\\"base\\"}"');
 
       expect(createBranch).toHaveBeenCalledOnce();
       expect(createBranch.mock.calls[0][0]).toEqual('featureA');

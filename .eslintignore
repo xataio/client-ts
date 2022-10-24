@@ -6,4 +6,5 @@ dist
 bin
 
 # Generated files
-packages/client/src/api/components.ts
+packages/client/src/api/dataPlaneComponents.ts
+packages/client/src/api/controlPlaneComponents.ts

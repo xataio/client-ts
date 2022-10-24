@@ -17,11 +17,11 @@ export default class BranchesList extends BaseCommand {
 
   async run(): Promise<any> {
     const { flags } = await this.parse(BranchesList);
-    const { workspace, database } = await this.getParsedDatabaseURL(flags.db);
+    const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
-    const { branches } = await xata.branches.getBranchList(workspace, database);
-    const { mapping } = await xata.databases.getGitBranchesMapping(workspace, database);
+    const { branches } = await xata.branches.getBranchList({ workspace, region, database });
+    const { mapping } = await xata.branches.getGitBranchesMapping({ workspace, region, database });
 
     const git = isGitRepo();
     const gitBranches = git ? listBranches() : [];

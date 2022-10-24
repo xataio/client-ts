@@ -37,17 +37,15 @@ export default class Shell extends BaseCommand {
     if (!apiKey) {
       this.error('No API key found. Either use the XATA_API_KEY environment variable or run `xata auth login`');
     }
-    const { protocol, host, databaseURL, workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(
-      flags.db,
-      flags.branch
-    );
+    const { protocol, host, databaseURL, workspace, region, database, branch } =
+      await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
 
     // Generate the file in the same dir than this package's code so it
     // can import @xata.io/client
     const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
     try {
       const xata = await this.getXataClient();
-      const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+      const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
       const { schema } = branchDetails;
 
       // TODO: remove formatVersion
