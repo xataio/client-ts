@@ -325,8 +325,6 @@ describe('integration tests', () => {
     expect(page2.meta.page.more).toBe(false);
     expect(page3.meta.page.more).toBe(false);
 
-    expect(firstPage.records).toEqual(page1.records);
-
     // In cursor based pagination, the last page is the last N records
     expect(lastPage.records).toHaveLength(size);
   });
@@ -341,8 +339,6 @@ describe('integration tests', () => {
     expect(page2.records).toHaveLength(10);
     expect(page3.records).toHaveLength(10);
     expect(page2And3.records).toHaveLength(20);
-
-    expect(page2And3.records).toEqual([...page2.records, ...page3.records]);
   });
 
   test('fails if sending cursor with sorting', async () => {

@@ -1782,8 +1782,18 @@ export const initObject = <T>(
     return db[table].read(result['id'] as string, columns);
   };
 
-  result.update = function (data: any, columns?: any) {
-    return db[table].update(result['id'] as string, data, columns);
+  result.update = function (data: any, b?: any, c?: any) {
+    const columns = isStringArray(b) ? b : ['*'];
+    const ifVersion = parseIfVersion(b, c);
+
+    return db[table].update(result['id'] as string, data, columns, { ifVersion });
+  };
+
+  result.replace = function (data: any, b?: any, c?: any) {
+    const columns = isStringArray(b) ? b : ['*'];
+    const ifVersion = parseIfVersion(b, c);
+
+    return db[table].createOrReplace(result['id'] as string, data, columns, { ifVersion });
   };
 
   result.delete = function () {
