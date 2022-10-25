@@ -1552,6 +1552,7 @@ export class RestRepository<Record extends XataRecord>
     const operations = recordIds.map((id) => ({ delete: { table: this.#table, id } }));
 
     try {
+      // TODO: Add support for columns in transaction bulk delete
       const objects = await this.read(recordIds, columns);
 
       await branchTransaction({
