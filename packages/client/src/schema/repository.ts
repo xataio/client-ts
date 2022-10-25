@@ -2,6 +2,7 @@ import { SchemaPluginResult } from '.';
 import {
   aggregateTable,
   ApiExtraProps,
+  branchTransaction,
   bulkInsertTableRecords,
   deleteRecord,
   getBranchDetails,
@@ -1440,12 +1441,13 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        if (a.length > 100) {
-          // TODO: Implement bulk delete when API has support for it
-          console.warn('Bulk delete operation is not optimized in the Xata API yet, this request might be slow');
-        }
+        const ids = a.map((o) => {
+          if (isString(o)) return o;
+          if (isString(o.id)) return o.id;
+          throw new Error('Invalid arguments for delete method');
+        });
 
-        return Promise.all(a.map((id) => this.delete(id as any, b as any)));
+        return this.#deleteRecords(ids, b);
       }
 
       // Delete one record with id as param
@@ -1535,6 +1537,34 @@ export class RestRepository<Record extends XataRecord>
 
       const schemaTables = await this.#getSchemaTables();
       return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+    } catch (e) {
+      if (isObject(e) && e.status === 404) {
+        return null;
+      }
+
+      throw e;
+    }
+  }
+
+  async #deleteRecords(recordIds: string[], columns: SelectableColumn<Record>[] = ['*']) {
+    const fetchProps = await this.#getFetchProps();
+
+    const operations = recordIds.map((id) => ({ delete: { table: this.#table, id } }));
+
+    try {
+      const objects = await this.read(recordIds, columns);
+
+      await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...fetchProps
+      });
+
+      return objects;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
