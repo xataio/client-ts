@@ -97,9 +97,6 @@ export type Schema = {
   tablesOrder?: string[];
 };
 
-/**
- * @x-internal true
- */
 export type SchemaEditScript = {
   sourceMigrationID?: string;
   targetMigrationID?: string;
