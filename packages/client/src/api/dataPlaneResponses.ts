@@ -79,6 +79,26 @@ export type SearchResponse = {
   warning?: string;
 };
 
+/**
+ * @x-go-type TxResponse
+ */
+export type TransactionSucceeded = {
+  /**
+   * An ordered array of results from the submitted operations that were executed
+   */
+  results: (Schemas.TransactionResultInsert | Schemas.TransactionResultUpdate | Schemas.TransactionResultDelete)[];
+};
+
+/**
+ * @x-go-type TxResponse
+ */
+export type TransactionFailed = {
+  /**
+   * An array of errors from the submitted operations.
+   */
+  errors: Schemas.TransactionError[];
+};
+
 export type BadRequestError = {
   id?: string;
   message: string;
