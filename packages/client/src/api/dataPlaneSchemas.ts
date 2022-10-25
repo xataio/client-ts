@@ -876,6 +876,139 @@ export type AggResponse =
     };
 
 /**
+ * A transaction operation
+ */
+export type TransactionOperation =
+  | {
+      insert: TransactionInsert;
+    }
+  | {
+      update: TransactionUpdate;
+    }
+  | {
+      ['delete']: TransactionDelete;
+    };
+
+/**
+ * Insert operation
+ *
+ * @x-go-type TxOperation
+ */
+export type TransactionInsert = {
+  /**
+   * The table name
+   */
+  table: string;
+  /**
+   * The record to insert. The `id` field is optional; when specified, it will be used as the ID for the record.
+   */
+  record: {
+    [key: string]: any;
+  };
+  /**
+   * The version of the record you expect to be overwriting. Only valid with an
+   * explicit ID is also set in the `record` key.
+   */
+  ifVersion?: number;
+  /**
+   * createOnly is used to change how Xata acts when an explicit ID is set in the `record` key.
+   *
+   * If `createOnly` is set to `true`, Xata will only attempt to insert the record. If there's a conflict, Xata
+   * will cancel the transaction.
+   *
+   * If `createOnly` is set to `false`, Xata will attempt to insert the record. If there's no
+   * conflict, the record is inserted. If there is a conflict, Xata will replace the record.
+   */
+  createOnly?: boolean;
+};
+
+/**
+ * Update operation
+ *
+ * @x-go-type TxOperation
+ */
+export type TransactionUpdate = {
+  /**
+   * The table name
+   */
+  table: string;
+  id: RecordID;
+  /**
+   * The fields of the record you'd like to update
+   */
+  fields: {
+    [key: string]: any;
+  };
+  /**
+   * The version of the record you expect to be updating
+   */
+  ifVersion?: number;
+  /**
+   * Xata will insert this record if it cannot be found.
+   */
+  upsert?: boolean;
+};
+
+/**
+ * A delete operation. The transaction will continue if no record matches the ID.
+ *
+ * @x-go-type TxOperation
+ */
+export type TransactionDelete = {
+  /**
+   * The table name
+   */
+  table: string;
+  id: RecordID;
+};
+
+/**
+ * A result from an insert operation.
+ */
+export type TransactionResultInsert = {
+  /**
+   * The number of affected rows
+   */
+  rows: number;
+  id: RecordID;
+};
+
+/**
+ * A result from an update operation.
+ */
+export type TransactionResultUpdate = {
+  /**
+   * The number of affected rows
+   */
+  rows: number;
+  id: RecordID;
+};
+
+/**
+ * A result from a delete operation.
+ */
+export type TransactionResultDelete = {
+  /**
+   * The number of affected rows
+   */
+  rows: number;
+};
+
+/**
+ * An error message from a failing transaction operation
+ */
+export type TransactionError = {
+  /**
+   * The index of the failing operation
+   */
+  index?: number;
+  /**
+   * The error message
+   */
+  message: string;
+};
+
+/**
  * @format date-time
  * @x-go-type string
  */
