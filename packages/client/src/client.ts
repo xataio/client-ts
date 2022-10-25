@@ -19,6 +19,7 @@ export type BaseClientOptions = {
   branch?: BranchStrategyOption;
   cache?: CacheImpl;
   trace?: TraceFunction;
+  enableBrowser?: boolean;
 };
 
 type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch'>> & {
@@ -76,6 +77,15 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     }
 
     #parseOptions(options?: BaseClientOptions): SafeOptions {
+      const enableBrowser = options?.enableBrowser ?? false;
+
+      // If is running from the browser and the user didn't pass `enableBrowser` we throw an error
+      if (typeof window !== 'undefined' && !enableBrowser) {
+        throw new Error(
+          'You are trying to use Xata from the browser, which is potentially a non-secure environment. If you understand the security concerns, pass `enableBrowser: true` to the client options to remove this error.'
+        );
+      }
+
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
       const apiKey = options?.apiKey || getAPIKey();
@@ -94,7 +104,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         throw new Error('Option databaseURL is required');
       }
 
-      return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID() };
+      return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID(), enableBrowser };
     }
 
     async #getFetchProps({ fetch, apiKey, databaseURL, branch, trace, clientID }: SafeOptions): Promise<ApiExtraProps> {
