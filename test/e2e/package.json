@@ -5,7 +5,7 @@
   "scripts": {},
   "dependencies": {
     "@remix-run/dev": "latest",
-    "@types/node": "^18.11.4",
+    "@types/node": "^18.11.5",
     "create-next-app": "latest",
     "cross-fetch": "^3.1.5",
     "edge-runtime": "latest",
