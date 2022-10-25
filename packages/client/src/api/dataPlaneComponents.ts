@@ -8,12 +8,12 @@ import { dataPlaneFetch, DataPlaneFetcherExtraProps } from './dataPlaneFetcher';
 import type * as Schemas from './dataPlaneSchemas';
 import type * as Responses from './dataPlaneResponses';
 
-export type GetDatabaseListPathParams = {
+export type DEPRECATEDgetDatabaseListPathParams = {
   workspace: string;
   region: string;
 };
 
-export type GetDatabaseListError = Fetcher.ErrorWrapper<
+export type DEPRECATEDgetDatabaseListError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -24,20 +24,22 @@ export type GetDatabaseListError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type GetDatabaseListVariables = {
-  pathParams: GetDatabaseListPathParams;
+export type DEPRECATEDgetDatabaseListVariables = {
+  pathParams: DEPRECATEDgetDatabaseListPathParams;
 } & DataPlaneFetcherExtraProps;
 
 /**
  * List all databases available in your Workspace.
  */
-export const getDatabaseList = (variables: GetDatabaseListVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.ListDatabasesResponse, GetDatabaseListError, undefined, {}, {}, GetDatabaseListPathParams>({
-    url: '/dbs',
-    method: 'get',
-    ...variables,
-    signal
-  });
+export const dEPRECATEDgetDatabaseList = (variables: DEPRECATEDgetDatabaseListVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.DEPRECATEDListDatabasesResponse,
+    DEPRECATEDgetDatabaseListError,
+    undefined,
+    {},
+    {},
+    DEPRECATEDgetDatabaseListPathParams
+  >({ url: '/dbs', method: 'get', ...variables, signal });
 
 export type GetBranchListPathParams = {
   /**
@@ -78,7 +80,7 @@ export const getBranchList = (variables: GetBranchListVariables, signal?: AbortS
     signal
   });
 
-export type CreateDatabasePathParams = {
+export type DEPRECATEDcreateDatabasePathParams = {
   /**
    * The Database Name
    */
@@ -87,7 +89,7 @@ export type CreateDatabasePathParams = {
   region: string;
 };
 
-export type CreateDatabaseError = Fetcher.ErrorWrapper<
+export type DEPRECATEDcreateDatabaseError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -98,7 +100,7 @@ export type CreateDatabaseError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type CreateDatabaseResponse = {
+export type DEPRECATEDcreateDatabaseResponse = {
   /**
    * @minLength 1
    */
@@ -107,7 +109,7 @@ export type CreateDatabaseResponse = {
   status: Schemas.MigrationStatus;
 };
 
-export type CreateDatabaseRequestBody = {
+export type DEPRECATEDcreateDatabaseRequestBody = {
   /**
    * @minLength 1
    */
@@ -118,25 +120,25 @@ export type CreateDatabaseRequestBody = {
   metadata?: Schemas.BranchMetadata;
 };
 
-export type CreateDatabaseVariables = {
-  body?: CreateDatabaseRequestBody;
-  pathParams: CreateDatabasePathParams;
+export type DEPRECATEDcreateDatabaseVariables = {
+  body?: DEPRECATEDcreateDatabaseRequestBody;
+  pathParams: DEPRECATEDcreateDatabasePathParams;
 } & DataPlaneFetcherExtraProps;
 
 /**
  * Create Database with identifier name
  */
-export const createDatabase = (variables: CreateDatabaseVariables, signal?: AbortSignal) =>
+export const dEPRECATEDcreateDatabase = (variables: DEPRECATEDcreateDatabaseVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    CreateDatabaseResponse,
-    CreateDatabaseError,
-    CreateDatabaseRequestBody,
+    DEPRECATEDcreateDatabaseResponse,
+    DEPRECATEDcreateDatabaseError,
+    DEPRECATEDcreateDatabaseRequestBody,
     {},
     {},
-    CreateDatabasePathParams
+    DEPRECATEDcreateDatabasePathParams
   >({ url: '/dbs/{dbName}', method: 'put', ...variables, signal });
 
-export type DeleteDatabasePathParams = {
+export type DEPRECATEDdeleteDatabasePathParams = {
   /**
    * The Database Name
    */
@@ -145,7 +147,7 @@ export type DeleteDatabasePathParams = {
   region: string;
 };
 
-export type DeleteDatabaseError = Fetcher.ErrorWrapper<
+export type DEPRECATEDdeleteDatabaseError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -160,26 +162,28 @@ export type DeleteDatabaseError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type DeleteDatabaseResponse = {
+export type DEPRECATEDdeleteDatabaseResponse = {
   status: Schemas.MigrationStatus;
 };
 
-export type DeleteDatabaseVariables = {
-  pathParams: DeleteDatabasePathParams;
+export type DEPRECATEDdeleteDatabaseVariables = {
+  pathParams: DEPRECATEDdeleteDatabasePathParams;
 } & DataPlaneFetcherExtraProps;
 
 /**
  * Delete a database and all of its branches and tables permanently.
  */
-export const deleteDatabase = (variables: DeleteDatabaseVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<DeleteDatabaseResponse, DeleteDatabaseError, undefined, {}, {}, DeleteDatabasePathParams>({
-    url: '/dbs/{dbName}',
-    method: 'delete',
-    ...variables,
-    signal
-  });
+export const dEPRECATEDdeleteDatabase = (variables: DEPRECATEDdeleteDatabaseVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    DEPRECATEDdeleteDatabaseResponse,
+    DEPRECATEDdeleteDatabaseError,
+    undefined,
+    {},
+    {},
+    DEPRECATEDdeleteDatabasePathParams
+  >({ url: '/dbs/{dbName}', method: 'delete', ...variables, signal });
 
-export type GetDatabaseMetadataPathParams = {
+export type DEPRECATEDgetDatabaseMetadataPathParams = {
   /**
    * The Database Name
    */
@@ -188,7 +192,7 @@ export type GetDatabaseMetadataPathParams = {
   region: string;
 };
 
-export type GetDatabaseMetadataError = Fetcher.ErrorWrapper<
+export type DEPRECATEDgetDatabaseMetadataError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -203,22 +207,27 @@ export type GetDatabaseMetadataError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type GetDatabaseMetadataVariables = {
-  pathParams: GetDatabaseMetadataPathParams;
+export type DEPRECATEDgetDatabaseMetadataVariables = {
+  pathParams: DEPRECATEDgetDatabaseMetadataPathParams;
 } & DataPlaneFetcherExtraProps;
 
 /**
  * Retrieve metadata of the given database
  */
-export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.DatabaseMetadata, GetDatabaseMetadataError, undefined, {}, {}, GetDatabaseMetadataPathParams>({
-    url: '/dbs/{dbName}/metadata',
-    method: 'get',
-    ...variables,
-    signal
-  });
+export const dEPRECATEDgetDatabaseMetadata = (
+  variables: DEPRECATEDgetDatabaseMetadataVariables,
+  signal?: AbortSignal
+) =>
+  dataPlaneFetch<
+    Schemas.DEPRECATEDDatabaseMetadata,
+    DEPRECATEDgetDatabaseMetadataError,
+    undefined,
+    {},
+    {},
+    DEPRECATEDgetDatabaseMetadataPathParams
+  >({ url: '/dbs/{dbName}/metadata', method: 'get', ...variables, signal });
 
-export type UpdateDatabaseMetadataPathParams = {
+export type DEPRECATEDupdateDatabaseMetadataPathParams = {
   /**
    * The Database Name
    */
@@ -227,7 +236,7 @@ export type UpdateDatabaseMetadataPathParams = {
   region: string;
 };
 
-export type UpdateDatabaseMetadataError = Fetcher.ErrorWrapper<
+export type DEPRECATEDupdateDatabaseMetadataError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -242,7 +251,7 @@ export type UpdateDatabaseMetadataError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type UpdateDatabaseMetadataRequestBody = {
+export type DEPRECATEDupdateDatabaseMetadataRequestBody = {
   ui?: {
     /**
      * @minLength 1
@@ -251,22 +260,25 @@ export type UpdateDatabaseMetadataRequestBody = {
   };
 };
 
-export type UpdateDatabaseMetadataVariables = {
-  body?: UpdateDatabaseMetadataRequestBody;
-  pathParams: UpdateDatabaseMetadataPathParams;
+export type DEPRECATEDupdateDatabaseMetadataVariables = {
+  body?: DEPRECATEDupdateDatabaseMetadataRequestBody;
+  pathParams: DEPRECATEDupdateDatabaseMetadataPathParams;
 } & DataPlaneFetcherExtraProps;
 
 /**
  * Update the color of the selected database
  */
-export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariables, signal?: AbortSignal) =>
+export const dEPRECATEDupdateDatabaseMetadata = (
+  variables: DEPRECATEDupdateDatabaseMetadataVariables,
+  signal?: AbortSignal
+) =>
   dataPlaneFetch<
-    Schemas.DatabaseMetadata,
-    UpdateDatabaseMetadataError,
-    UpdateDatabaseMetadataRequestBody,
+    Schemas.DEPRECATEDDatabaseMetadata,
+    DEPRECATEDupdateDatabaseMetadataError,
+    DEPRECATEDupdateDatabaseMetadataRequestBody,
     {},
     {},
-    UpdateDatabaseMetadataPathParams
+    DEPRECATEDupdateDatabaseMetadataPathParams
   >({ url: '/dbs/{dbName}/metadata', method: 'patch', ...variables, signal });
 
 export type GetBranchDetailsPathParams = {
@@ -3638,7 +3650,13 @@ export const aggregateTable = (variables: AggregateTableVariables, signal?: Abor
   >({ url: '/db/{dbBranchName}/tables/{tableName}/aggregate', method: 'post', ...variables, signal });
 
 export const operationsByTag = {
-  database: { getDatabaseList, createDatabase, deleteDatabase, getDatabaseMetadata, updateDatabaseMetadata },
+  database: {
+    dEPRECATEDgetDatabaseList,
+    dEPRECATEDcreateDatabase,
+    dEPRECATEDdeleteDatabase,
+    dEPRECATEDgetDatabaseMetadata,
+    dEPRECATEDupdateDatabaseMetadata
+  },
   branch: {
     getBranchList,
     getBranchDetails,
