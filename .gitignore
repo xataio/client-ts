@@ -104,4 +104,7 @@ dist
 # TernJS port file
 .tern-port
 
+# NPM config
+.npmrc
+
 .DS_Store
