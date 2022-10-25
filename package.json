@@ -8,12 +8,11 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky install",
-    "postinstall": "lerna bootstrap",
     "build": "lerna run build",
-    "size": "npm run build && size-limit",
+    "size": "pnpm run build && size-limit",
     "openapi-gen-control": "openapi-codegen controlPlane",
     "openapi-gen-data": "openapi-codegen dataPlane",
-    "openapi-gen": "npm run openapi-gen-control && npm run openapi-gen-data"
+    "openapi-gen": "pnpm run openapi-gen-control && pnpm run openapi-gen-data"
   },
   "repository": {
     "type": "git",
@@ -44,6 +43,7 @@
     "cross-fetch": "^3.1.5",
     "doctoc": "^2.2.1",
     "dotenv": "^16.0.3",
+    "esbuild": "^0.15.12",
     "eslint": "^8.26.0",
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.26.0",
@@ -53,6 +53,7 @@
     "msw": "^0.47.4",
     "node-fetch": "=2.6.7",
     "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
     "rollup": "^3.2.3",
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-dts": "^5.0.0",
@@ -68,7 +69,7 @@
   },
   "lint-staged": {
     "codegen/src/*.{js,ts,tsx}": [
-      "npm run build-example",
+      "pnpm run build-example",
       "git add codegen/example"
     ],
     "*.{js,ts,tsx}": [

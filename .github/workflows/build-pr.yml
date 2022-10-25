@@ -55,22 +55,22 @@ jobs:
             You can install it by running:
 
             ```
-            npm install @xata.io/client@${{ steps.version.outputs.TAG }}
+            pnpm install @xata.io/client@${{ steps.version.outputs.TAG }}
             ```
 
             To test the CLI, run:
 
             ```
-            npx @xata.io/cli@${{ steps.version.outputs.TAG }}
+            pnpx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 
             [Pull request has been updated, please wait for latest changes to be pushed to npm...]
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Compile
-        run: npm run build
+        run: pnpm run build
 
       - name: Configure npm registry token
         if: ${{ steps.secrets.outputs.exist == 'true' }}
@@ -80,7 +80,7 @@ jobs:
 
       - name: Publish build
         if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
-        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --exact --no-verify-access --yes
+        run: pnpx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --exact --no-verify-access --yes
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
@@ -106,13 +106,13 @@ jobs:
             You can install it by running:
 
             ```
-            npm install @xata.io/client@${{ steps.version.outputs.TAG }}
+            pnpm install @xata.io/client@${{ steps.version.outputs.TAG }}
             ```
 
             To test the CLI, run:
 
             ```
-            npx @xata.io/cli@${{ steps.version.outputs.TAG }}
+            pnpx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
 
   test:
@@ -143,13 +143,13 @@ jobs:
         id: secrets
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Compile
-        run: npm run build
+        run: pnpm run build
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Test
         if: ${{ steps.secrets.outputs.exist == 'true' }}

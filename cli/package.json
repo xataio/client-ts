@@ -125,8 +125,8 @@
     "build": "shx rm -rf dist && tsc -b && cp src/*.html dist",
     "lint": "eslint . --ext .ts --config .eslintrc",
     "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "npm run lint",
-    "prepack": "npm run build && oclif manifest && oclif readme",
+    "posttest": "pnpm run lint",
+    "prepack": "pnpm run build && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
     "start": "node ./bin/run.js"
   },

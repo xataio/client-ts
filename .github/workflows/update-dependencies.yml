@@ -21,15 +21,17 @@ jobs:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
           cache: 'npm'
 
+      - uses: pnpm/action-setup@v2.2.4
+
       - name: Check for updates
         uses: mathiasvr/command-output@v1
         id: ncu
         with:
-          run: npx -y npm-check-updates -u -t latest --deep --filterVersion "/^[^=]/"
+          run: pnpx -y npm-check-updates -u -t latest --deep --filterVersion "/^[^=]/"
 
       - name: Install new versions
         run: |
-          npm install && lerna exec npm install
+          pnpm install
           git add .
 
       - name: Create Pull Request

@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "prepack": "npm run build",
+    "prepack": "pnpm run build",
     "prebuild": "node ../../scripts/add-version-file.mjs"
   },
   "peerDependencies": {

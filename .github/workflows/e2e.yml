@@ -27,14 +27,16 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      - uses: pnpm/action-setup@v2.2.4
+
       - name: ⎔ Setup bun
         uses: antongolub/action-setup-bun@v1
 
       - name: 📥 Install project dependencies
-        run: npm install
+        run: pnpm install
 
       - name: 👷🏻‍♀️ Compile
-        run: npm run build
+        run: pnpm run build
 
       - name: 📥 Install test dependencies
         uses: bahmutov/npm-install@v1
@@ -43,7 +45,7 @@ jobs:
           useLockFile: false
 
       - name: 🚀 Deploy to ${{ matrix.target }}
-        run: npx ts-node ${{ matrix.target }}
+        run: pnpx ts-node ${{ matrix.target }}
         working-directory: ./test/e2e
         env:
           VERSION_TAG: 0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)

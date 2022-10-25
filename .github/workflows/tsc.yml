@@ -27,14 +27,16 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      - uses: pnpm/action-setup@v2.2.4
+
       - name: 📥 Install project dependencies
-        run: npm install
+        run: pnpm install
 
       - name: 🚦 Install TypeScript ${{ matrix.target }}
-        run: npm install typescript@${{ matrix.target }}
+        run: pnpm install typescript@${{ matrix.target }}
 
       - name: 👷🏻‍♀️ Compile
-        run: npm run build
+        run: pnpm run build
 
       - name: 🚀 Type-check code
-        run: npx lerna exec tsc
+        run: pnpx lerna exec tsc
