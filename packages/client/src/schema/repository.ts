@@ -1804,7 +1804,7 @@ export const initObject = <T>(
     return xata;
   };
 
-  for (const prop of ['read', 'update', 'delete', 'getMetadata']) {
+  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata']) {
     Object.defineProperty(result, prop, { enumerable: false });
   }
 
