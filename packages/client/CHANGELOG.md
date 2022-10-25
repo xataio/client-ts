@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.19.1
+
+### Patch Changes
+
+- [#723](https://github.com/xataio/client-ts/pull/723) [`ad5feeb`](https://github.com/xataio/client-ts/commit/ad5feebad5983f724ea4067b884bfae428447470) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix replace operation not hidden
+
 ## 0.19.0
 
 ### Minor Changes
