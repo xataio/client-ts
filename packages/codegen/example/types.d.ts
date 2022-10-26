@@ -92,6 +92,7 @@ declare const tables: readonly [
         readonly name: 'full_name';
         readonly type: 'string';
         readonly notNull: true;
+        readonly defaultValue: 'John Doe';
       },
       {
         readonly name: 'index';

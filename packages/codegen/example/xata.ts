@@ -38,7 +38,12 @@ const tables = [
           { name: 'labels', type: 'multiple' }
         ]
       },
-      { name: 'full_name', type: 'string', notNull: true },
+      {
+        name: 'full_name',
+        type: 'string',
+        notNull: true,
+        defaultValue: 'John Doe'
+      },
       { name: 'index', type: 'int' },
       { name: 'rating', type: 'float' },
       { name: 'birthDate', type: 'datetime' },
