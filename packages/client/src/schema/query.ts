@@ -23,6 +23,7 @@ import { SummarizeExpression, SummarizeParams, SummarizeResult } from './summari
 type BaseOptions<T extends XataRecord> = {
   columns?: SelectableColumn<T>[];
   cache?: number;
+  fetchOptions?: Record<string, unknown>;
 };
 
 type CursorQueryOptions = {
