@@ -115,6 +115,7 @@ export type Column = {
   type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
   link?: ColumnLink;
   notNull?: boolean;
+  defaultValue?: string;
   unique?: boolean;
   columns?: Column[];
 };
