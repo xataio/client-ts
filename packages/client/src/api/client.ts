@@ -918,7 +918,8 @@ class SearchAndFilterApi {
     filter,
     sort,
     page,
-    columns
+    columns,
+    consistency
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
@@ -929,10 +930,11 @@ class SearchAndFilterApi {
     sort?: Schemas.SortExpression;
     page?: Schemas.PageConfig;
     columns?: Schemas.ColumnsProjection;
+    consistency?: 'strong' | 'eventual';
   }): Promise<Responses.QueryResponse> {
     return operationsByTag.searchAndFilter.queryTable({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
-      body: { filter, sort, page, columns },
+      body: { filter, sort, page, columns, consistency },
       ...this.extraProps
     });
   }
