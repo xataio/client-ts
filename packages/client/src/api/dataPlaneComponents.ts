@@ -3617,7 +3617,8 @@ export type SummarizeTableVariables = {
  * `columns`: tells Xata how to create each group. If you add `product_id`
  * we will create a new group for every unique `product_id`.
  *
- * `summaries`: tells Xata which calculations to run on each group.
+ * `summaries`: tells Xata which calculations to run on each group. Xata
+ * currently supports count, min, max, sum, average.
  *
  * `sort`: tells Xata in which order you'd like to see results. You may
  * sort by fields specified in `columns` as well as the summary names
@@ -3625,8 +3626,8 @@ export type SummarizeTableVariables = {
  *
  * note: Sorting on summarized values can be slower on very large tables;
  * this will impact your rate limit significantly more than other queries.
- * Try use `filter` [coming soon] to reduce the amount of data being
- * processed in order to reduce impact on your limits.
+ * Try use `filter` to reduce the amount of data being processed in order
+ * to reduce impact on your limits.
  *
  * `summariesFilter`: tells Xata how to filter the results of a summary.
  * It has the same syntax as `filter`, however, by using `summariesFilter`
