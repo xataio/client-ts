@@ -2682,7 +2682,6 @@ export type QueryTableVariables = {
  *
  * ```json {"truncate": true}
  * {
- *   "formatVersion": "1.0",
  *   "tables": [
  *     {
  *       "name": "teams",
