@@ -9,7 +9,7 @@ export type SummarizeExpression<O extends XataRecord> = ExactlyOne<{
   min: ColumnsByValue<O, string | number | Date | any[]>;
   max: ColumnsByValue<O, string | number | Date | any[]>;
   sum: ColumnsByValue<O, number>;
-  avg: ColumnsByValue<O, number>;
+  average: ColumnsByValue<O, number>;
 }>;
 
 export type SummarizeParams<

@@ -425,7 +425,7 @@ describe('summarize', () => {
     expect(result.summaries[0].dark_set).toBe(0);
   });
 
-  test('filter, group by, count, min, max, avg, sum, sort, summariesFilter', async () => {
+  test('filter, group by, count, min, max, average, sum, sort, summariesFilter', async () => {
     const result = await xata.db.users.summarize({
       columns: ['pet.name'],
       summaries: {
@@ -433,7 +433,7 @@ describe('summarize', () => {
         min_legs: { min: 'pet.num_legs' },
         max_legs: { max: 'pet.num_legs' },
         sum_index: { sum: 'index' },
-        avg_rating: { avg: 'rating' }
+        avg_rating: { average: 'rating' }
       },
       sort: [{ column: 'pet.name', direction: 'asc' }],
       filter: { 'pet.type': 'dog' },
@@ -488,8 +488,8 @@ describe('summarize', () => {
         test_sum_int: { sum: 'pet.num_legs' },
         test_sum_float: { sum: 'rating' },
         // avg
-        test_avg_int: { avg: 'pet.num_legs' },
-        test_avg_float: { avg: 'rating' }
+        test_avg_int: { average: 'pet.num_legs' },
+        test_avg_float: { average: 'rating' }
       },
       sort: [{ column: 'pet.type', direction: 'asc' }]
     });
@@ -660,7 +660,7 @@ describe('summarize', () => {
     const result = await xata.db.users.summarize({
       columns: ['pet.name', 'pet.type'],
       summaries: {
-        avg_rating: { avg: 'rating' }
+        avg_rating: { average: 'rating' }
       },
       summariesFilter: {
         avg_rating: { $gt: 10.5 }
@@ -694,7 +694,7 @@ describe('summarize', () => {
       summaries: {
         total: { count: '*' },
         max_num_legs: { max: 'pet.num_legs' },
-        average_rating: { avg: 'rating' }
+        average_rating: { average: 'rating' }
       },
       summariesFilter: {
         $any: [
