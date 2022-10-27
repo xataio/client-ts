@@ -1018,7 +1018,8 @@ class SearchAndFilterApi {
     summaries,
     sort,
     summariesFilter,
-    page
+    page,
+    consistency
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
@@ -1031,10 +1032,11 @@ class SearchAndFilterApi {
     sort?: Schemas.SortExpression;
     summariesFilter?: Schemas.FilterExpression;
     page?: { size?: number };
+    consistency?: 'strong' | 'eventual';
   }): Promise<Responses.SummarizeResponse> {
     return operationsByTag.searchAndFilter.summarizeTable({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
-      body: { filter, columns, summaries, sort, summariesFilter, page },
+      body: { filter, columns, summaries, sort, summariesFilter, page, consistency },
       ...this.extraProps
     });
   }
