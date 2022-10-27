@@ -766,11 +766,11 @@ export type PageConfig = {
   /**
    * Query the first page from the cursor.
    */
-  first?: string;
+  start?: string;
   /**
    * Query the last page from the cursor.
    */
-  last?: string;
+  end?: string;
   /**
    * Set page size. If the size is missing it is read from the cursor. If no cursor is given Xata will choose the default page size.
    *

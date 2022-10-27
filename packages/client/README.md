@@ -187,8 +187,8 @@ page.hasNextPage(); // Boolean
 
 const nextPage = await page.nextPage(); // Page object
 const previousPage = await page.previousPage(); // Page object
-const firstPage = await page.firstPage(); // Page object
-const lastPage = await page.lastPage(); // Page object
+const startPage = await page.startPage(); // Page object
+const endPage = await page.endPage(); // Page object
 ```
 
 If you want to use an iterator, both the Repository and the Query classes implement an `AsyncIterable`. Alternatively you can use `getIterator()` and customize the batch size of the iterator:

@@ -329,8 +329,8 @@ It contains:
 - `hasNextPage`: Function that returns a boolean indicating if there is a next page.
 - `nextPage`: Async function that can be used to get the next page.
 - `previousPage`: Async function that can be used to get the previous page.
-- `firstPage`: Async function that can be used to get the first page.
-- `lastPage`: Async function that can be used to get the last page.
+- `startPage`: Async function that can be used to get the start page.
+- `endPage`: Async function that can be used to get the end page.
 - `meta`: Information about the current page and its cursor.
 
 ```ts
@@ -344,14 +344,14 @@ page2.records; // Array of `XataRecord` objects.
 const page1 = await page2.previousPage();
 page1.records; // Array of `XataRecord` objects.
 
-const firstPage = await page1.firstPage();
-firstPage.records; // Array of `XataRecord` objects.
+const startPage = await page1.startPage();
+startPage.records; // Array of `XataRecord` objects.
 ```
 
 The `Repository` class implements the `Query` interface, so you can use it to paginate the records in the table too.
 
 ```ts
-const page = await xata.db.users.firstPage();
+const page = await xata.db.users.startPage();
 page.records; // Array of `XataRecord` objects.
 ```
 
