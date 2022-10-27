@@ -3325,12 +3325,14 @@ export type QueryTableVariables = {
  *
  * - `after`: Return the next page 'after' the current cursor
  * - `before`: Return the previous page 'before' the current cursor.
- * - `first`: Return the first page in the table from a cursor.
- * - `last`: Return the last N records in the table from a cursor, where N is the `page.size` parameter.
+ * - `start`: Resets the given cursor position to the beginning of the query result set.
+ * Will return the first N records from the query result, where N is the `page.size` parameter.
+ * - `end`: Resets the give cursor position to the end for the query result set.
+ * Returns the last N records from the query result, where N is the `page.size` parameter.
  *
  * The request will fail if an invalid cursor value is given to `page.before`,
- * `page.after`, `page.first` , or `page.last`. No other cursor setting can be
- * used if `page.first` or `page.last` is set in a query.
+ * `page.after`, `page.start` , or `page.end`. No other cursor setting can be
+ * used if `page.start` or `page.end` is set in a query.
  *
  * If both `page.before` and `page.after` parameters are present we treat the
  * request as a range query. The range query will return all entries after
@@ -3352,14 +3354,14 @@ export type QueryTableVariables = {
  *   returned is empty, but `page.meta.cursor` will include a cursor that can be
  *   used to "tail" the table from the end waiting for new data to be inserted.
  * - `page.before=end`: This cursor returns the last page.
- * - `page.first=<cursor>`: Go to first page. This is equivalent to querying the
- *   first page without a cursor but `filter` and `sort` . Yet the `page.first`
+ * - `page.start=<cursor>`: Start at the beginning of the result set of the <cursor> query. This is equivalent to querying the
+ *   first page without a cursor but applying `filter` and `sort` . Yet the `page.start`
  *   cursor can be convenient at times as user code does not need to remember the
  *   filter, sort, columns or page size configuration. All these information are
  *   read from the cursor.
- * - `page.last=<cursor>`: Go to the end of the table. This is equivalent to querying the
+ * - `page.end=<cursor>`: Move to the end of the result set of the <cursor> query. This is equivalent to querying the
  *   last page with `page.before=end`, `filter`, and `sort` . Yet the
- *   `page.last` cursor can be more convenient at times as user code does not
+ *   `page.end` cursor can be more convenient at times as user code does not
  *   need to remember the filter, sort, columns or page size configuration. All
  *   these information are read from the cursor.
  *
