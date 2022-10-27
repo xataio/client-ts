@@ -309,26 +309,26 @@ describe('integration tests', () => {
 
   test('returns many records with cursor', async () => {
     const size = Math.floor(mockUsers.length / 1.5);
-    const lastPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
+    const endPageSize = mockUsers.length - Math.floor(mockUsers.length / 1.5);
 
     const page1 = await xata.db.users.getPaginated({ pagination: { size } });
     const page2 = await page1.nextPage();
     const page3 = await page2.nextPage();
-    const firstPage = await page3.firstPage();
-    const lastPage = await page2.lastPage();
+    const startPage = await page3.startPage();
+    const endPage = await page2.endPage();
 
     expect(page1.records).toHaveLength(size);
-    expect(page2.records).toHaveLength(lastPageSize);
+    expect(page2.records).toHaveLength(endPageSize);
     expect(page3.records).toHaveLength(0);
 
     expect(page1.meta.page.more).toBe(true);
     expect(page2.meta.page.more).toBe(false);
     expect(page3.meta.page.more).toBe(false);
 
-    expect(firstPage.records.length).toEqual(page1.records.length);
+    expect(startPage.records.length).toEqual(page1.records.length);
 
     // In cursor based pagination, the last page is the last N records
-    expect(lastPage.records).toHaveLength(size);
+    expect(endPage.records).toHaveLength(size);
   });
 
   test('returns many records with cursor passing a offset/size', async () => {
