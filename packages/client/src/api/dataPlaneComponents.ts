@@ -2632,6 +2632,12 @@ export type QueryTableRequestBody = {
   sort?: Schemas.SortExpression;
   page?: Schemas.PageConfig;
   columns?: Schemas.ColumnsProjection;
+  /**
+   * The consistency level for this request.
+   *
+   * @default strong
+   */
+  consistency?: 'strong' | 'eventual';
 };
 
 export type QueryTableVariables = {
@@ -3544,6 +3550,12 @@ export type SummarizeTableRequestBody = {
   summaries?: Schemas.SummaryExpressionList;
   sort?: Schemas.SortExpression;
   summariesFilter?: Schemas.FilterExpression;
+  /**
+   * The consistency level for this request.
+   *
+   * @default strong
+   */
+  consistency?: 'strong' | 'eventual';
   page?: {
     /**
      * The number of records returned by summarize. If the amount of data you have exceeds this, or you have
