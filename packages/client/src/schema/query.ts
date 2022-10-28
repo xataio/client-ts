@@ -23,6 +23,7 @@ import { SummarizeExpression, SummarizeParams, SummarizeResult } from './summari
 type BaseOptions<T extends XataRecord> = {
   columns?: SelectableColumn<T>[];
   cache?: number;
+  fetchOptions?: Record<string, unknown>;
 };
 
 type CursorQueryOptions = {
@@ -81,6 +82,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     this.#data.columns = data.columns ?? parent?.columns;
     this.#data.pagination = data.pagination ?? parent?.pagination;
     this.#data.cache = data.cache ?? parent?.cache;
+    this.#data.fetchOptions = data.fetchOptions ?? parent?.fetchOptions;
 
     this.any = this.any.bind(this);
     this.all = this.all.bind(this);

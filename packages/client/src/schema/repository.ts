@@ -1625,6 +1625,7 @@ export class RestRepository<Record extends XataRecord>
           page: data.pagination,
           columns: data.columns ?? ['*']
         },
+        fetchOptions: data.fetchOptions,
         ...fetchProps
       });
 

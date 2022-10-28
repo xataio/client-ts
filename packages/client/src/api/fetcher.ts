@@ -52,6 +52,7 @@ export type FetcherExtraProps = {
   signal?: AbortSignal;
   clientID?: string;
   sessionID?: string;
+  fetchOptions?: Record<string, unknown>;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
@@ -124,7 +125,8 @@ export async function fetch<
   trace,
   signal,
   clientID,
-  sessionID
+  sessionID,
+  fetchOptions = {}
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   return trace(
     `${method.toUpperCase()} ${path}`,
@@ -141,6 +143,7 @@ export async function fetch<
       });
 
       const response = await fetchImpl(url, {
+        ...fetchOptions,
         method: method.toUpperCase(),
         body: body ? JSON.stringify(body) : undefined,
         headers: {
