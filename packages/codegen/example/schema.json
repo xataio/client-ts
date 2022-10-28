@@ -91,7 +91,9 @@
         },
         {
           "name": "full_name",
-          "type": "string"
+          "type": "string",
+          "notNull": true,
+          "defaultValue": "John Doe"
         },
         {
           "name": "index",

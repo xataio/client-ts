@@ -8,7 +8,6 @@ import { readFile, writeFile } from 'fs/promises';
 import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
-import { features } from '../../feature-flags.js';
 import { parseSchemaFile } from '../../schema.js';
 import { reportBugURL } from '../../utils.js';
 import Codegen from '../codegen/index.js';
@@ -307,7 +306,8 @@ Beware that this can lead to ${chalk.bold(
     const metadata = [
       getType(),
       column.unique ? chalk.gray.italic('unique') : '',
-      column.notNull ? chalk.gray.italic('not null') : ''
+      column.notNull ? chalk.gray.italic('not null') : '',
+      column.defaultValue ? chalk.gray.italic(`default: ${column.defaultValue}`) : ''
     ]
       .filter(Boolean)
       .join(' ');
@@ -367,11 +367,9 @@ Beware that this can lead to ${chalk.bold(
     Description: \${description}
          Unique: \${unique}`;
 
-    if (features.notNull) {
-      template += `
+    template += `
        Not null: \${notNull}
-        Default: \${default}`;
-    }
+  Default value: \${defaultValue}`;
 
     type ColumnEditState = {
       values: {
@@ -379,7 +377,7 @@ Beware that this can lead to ${chalk.bold(
         type?: string;
         link?: string;
         notNull?: string;
-        default?: string;
+        defaultValue?: string;
         unique?: string;
         description?: string;
       };
@@ -392,7 +390,7 @@ Beware that this can lead to ${chalk.bold(
         type: column?.type || '',
         link: column?.link?.table || '',
         notNull: column?.notNull ? 'true' : '',
-        default: '', // TODO
+        defaultValue: column?.defaultValue || '',
         unique: column?.unique ? 'true' : '',
         description: column?.description || ''
       },
@@ -440,7 +438,6 @@ Beware that this can lead to ${chalk.bold(
           name: 'notNull',
           message: 'Whether the column is not nullable (true/false)',
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
-            if (!features.notNull) return true;
             return validateOptionalBoolean(value);
           }
         },
@@ -449,12 +446,11 @@ Beware that this can lead to ${chalk.bold(
           message: 'An optional column description'
         },
         {
-          name: 'default',
+          name: 'defaultValue',
           message: 'Default value for if not nullable',
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
-            if (!features.notNull) return true;
             if (parseBoolean(state.values.notNull) === true && state.values.type) {
-              if (parseDefaultValue(state.values.type, value) == null) {
+              if (parseDefaultValue(state.values.type, value) === undefined) {
                 return `Invalid default value for column type ${state.values.type}`;
               }
             }
@@ -477,9 +473,8 @@ Beware that this can lead to ${chalk.bold(
         type: values.type,
         link: values.link && values.type === 'link' ? { table: values.link } : undefined,
         unique: unique || undefined,
-        notNull: notNull || undefined
-        // TODO: add default once the backend supports it
-        // default: values.default !== '' ? parseDefaultValue(values.type, values.default) : undefined,
+        notNull: notNull || undefined,
+        defaultValue: values.defaultValue !== '' ? parseDefaultValue(values.type, values.defaultValue) : undefined
         // TODO: add description once the backend supports it
         // description: values.description
       };
@@ -696,7 +691,10 @@ Beware that this can lead to ${chalk.bold(
             column: {
               name: column.name,
               type: column.type,
-              link: column.link
+              link: column.link,
+              unique: column.unique,
+              notNull: column.notNull,
+              defaultValue: column.defaultValue
             }
           });
         }
@@ -723,27 +721,25 @@ function validateOptionalBoolean(value?: string) {
   return true;
 }
 
-function parseDefaultValue(type: string, val: string) {
-  const num = val.length > 0 ? +val : null;
+function parseDefaultValue(type: string, val: string): string | undefined {
+  const num = String(val).length > 0 ? +val : undefined;
 
-  if (type === 'int') {
-    return Number.isSafeInteger(num) && val !== '' ? num : null;
+  if (type === 'string') {
+    return String(val);
+  } else if (type === 'int') {
+    return Number.isSafeInteger(num) && val !== '' ? String(num) : undefined;
   } else if (type === 'float') {
-    return Number.isFinite(num) && val !== '' ? num : null;
+    return Number.isFinite(num) && val !== '' ? String(num) : undefined;
   } else if (type === 'bool') {
-    return parseBoolean(val);
-  } else if (type === 'multiple') {
-    return val
-      .split(',')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+    return String(parseBoolean(val));
   } else if (type === 'email') {
-    return val || null;
+    return val || undefined;
   } else if (type === 'link') {
-    return val ? String(val) : null;
+    return val ? String(val) : undefined;
   } else if (type === 'datetime') {
     const date = new Date(val);
-    return isNaN(date.getTime()) ? null : date;
+    return isNaN(date.getTime()) ? undefined : date.toISOString();
+  } else {
+    return undefined;
   }
-  return null;
 }
