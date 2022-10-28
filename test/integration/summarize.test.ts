@@ -405,7 +405,7 @@ describe('summarize', () => {
     expect(result.summaries[1].name).toBe('A');
     expect(result.summaries[1].total_account_value).toBeCloseTo(5);
     expect(result.summaries[2].name).toBe('C');
-    expect(result.summaries[2].total_account_value).toBeUndefined();
+    expect(result.summaries[2].total_account_value).toBeNull();
   });
 
   test('sort desc puts nulls last', async () => {
@@ -417,16 +417,16 @@ describe('summarize', () => {
     expect(result.summaries).toMatchInlineSnapshot(`
       [
         {
-          "name": "C",
-          "total_account_value": null,
-        },
-        {
           "name": "A",
           "total_account_value": 5,
         },
         {
           "name": "B",
           "total_account_value": 3,
+        },
+        {
+          "name": "C",
+          "total_account_value": null,
         },
       ]
     `);
@@ -437,7 +437,7 @@ describe('summarize', () => {
     expect(result.summaries[1].name).toBe('B');
     expect(result.summaries[1].total_account_value).toBeCloseTo(3);
     expect(result.summaries[2].name).toBe('C');
-    expect(result.summaries[2].total_account_value).toBeUndefined();
+    expect(result.summaries[2].total_account_value).toBeNull();
   });
 
   test('summarize with no results', async () => {
