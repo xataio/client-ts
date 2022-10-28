@@ -58,7 +58,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(2);
+    expect(result.summaries.length).toBe(2);
     expect(result.summaries[0].index).toBeCloseTo(10);
     expect(result.summaries[0].rating).toBeCloseTo(10.5);
     expect(result.summaries[1].index).toBeCloseTo(30);
@@ -85,7 +85,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(3);
+    expect(result.summaries.length).toBe(3);
     expect(result.summaries[0].name).toBe('A');
     expect(result.summaries[0].rating).toBeCloseTo(10.5);
     expect(result.summaries[1].name).toBe('B');
@@ -127,7 +127,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(3);
+    expect(result.summaries.length).toBe(3);
     expect(result.summaries[0].settings?.plan).toBe('free');
     expect(result.summaries[0].settings?.dark).toBe(null);
     expect(result.summaries[1].settings?.plan).toBe('paid');
@@ -176,7 +176,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(3);
+    expect(result.summaries.length).toBe(3);
     expect(result.summaries[0].name).toBe('A');
     expect(result.summaries[0].settings?.plan).toBe('paid');
     expect(result.summaries[0].pet?.type).toBe('dog');
@@ -212,7 +212,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(1);
+    expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].all).toBeCloseTo(3);
     expect(result.summaries[0].col).toBeCloseTo(3);
     expect(result.summaries[0].obj_with_null).toBeCloseTo(1);
@@ -244,7 +244,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(2);
+    expect(result.summaries.length).toBe(2);
     expect(result.summaries[0].index).toBeCloseTo(10);
     expect(result.summaries[0].pet?.num_legs).toBeCloseTo(4);
     expect(result.summaries[0].nl).toBeCloseTo(2);
@@ -288,7 +288,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(3);
+    expect(result.summaries.length).toBe(3);
     expect(result.summaries[0].index).toBeCloseTo(10);
     expect(result.summaries[0].pet?.type).toBe('dog');
     expect(result.summaries[0].nl).toBeCloseTo(1);
@@ -319,7 +319,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(2);
+    expect(result.summaries.length).toBe(2);
     expect(result.summaries[0].index).toBeCloseTo(10);
     expect(result.summaries[0].total).toBeCloseTo(2);
     expect(result.summaries[1].index).toBeCloseTo(30);
@@ -359,7 +359,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(3);
+    expect(result.summaries.length).toBe(3);
     expect(result.summaries[0].pet?.name).toBe('Otis');
     expect(result.summaries[0].dark_set).toBeCloseTo(1);
     expect(result.summaries[1].pet?.name).toBe('Lyra');
@@ -377,7 +377,7 @@ describe('summarize', () => {
 
     expect(result.summaries).toMatchInlineSnapshot('[]');
 
-    expect(result.summaries.length).toBeCloseTo(0);
+    expect(result.summaries.length).toBe(0);
   });
 
   test('filter on id', async () => {
@@ -398,7 +398,7 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(1);
+    expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].name).toBe('A');
     expect(result.summaries[0].total).toBeCloseTo(1);
   });
@@ -420,60 +420,328 @@ describe('summarize', () => {
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(1);
+    expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].name).toBe('B');
     expect(result.summaries[0].dark_set).toBeCloseTo(0);
   });
 
-  test('group by, count, sort, filter', async () => {
+  test('filter, group by, count, min, max, average, sum, sort, summariesFilter', async () => {
     const result = await xata.db.users.summarize({
       columns: ['pet.name'],
-      summaries: { dark_set: { count: 'settings.dark' } },
+      summaries: {
+        dark_set: { count: 'settings.dark' },
+        min_legs: { min: 'pet.num_legs' },
+        max_legs: { max: 'pet.num_legs' },
+        sum_index: { sum: 'index' },
+        avg_rating: { average: 'rating' }
+      },
       sort: [{ column: 'pet.name', direction: 'asc' }],
-      filter: { 'pet.type': 'dog' }
+      filter: { 'pet.type': 'dog' },
+      summariesFilter: {
+        dark_set: { $ge: 1 },
+        min_legs: { $ge: 4 },
+        max_legs: { $le: 10 },
+        sum_index: 10,
+        avg_rating: 10.5
+      }
     });
 
     expect(result.summaries).toMatchInlineSnapshot(`
       [
         {
-          "dark_set": 0,
-          "pet": {
-            "name": "Lyra",
-          },
-        },
-        {
+          "avg_rating": 10.5,
           "dark_set": 1,
+          "max_legs": 4,
+          "min_legs": 4,
           "pet": {
             "name": "Otis",
           },
+          "sum_index": 10,
         },
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(2);
-    expect(result.summaries[0].pet?.name).toBe('Lyra');
-    expect(result.summaries[0].dark_set).toBeCloseTo(0);
-    expect(result.summaries[1].pet?.name).toBe('Otis');
-    expect(result.summaries[1].dark_set).toBeCloseTo(1);
+    expect(result.summaries.length).toBe(1);
+    expect(result.summaries[0].pet?.name).toBe('Otis');
+    expect(result.summaries[0].dark_set).toBeCloseTo(1);
+    expect(result.summaries[0].min_legs).toBeCloseTo(4);
+    expect(result.summaries[0].max_legs).toBeCloseTo(4);
+    expect(result.summaries[0].sum_index).toBeCloseTo(10);
+    expect(result.summaries[0].avg_rating).toBeCloseTo(10.5);
   });
 
-  test('group by without any common groups and send pagination size', async () => {
-    const result = await xata.db.users
-      .select(['name', 'rating'])
-      .sort('name', 'asc')
-      .summarize({ pagination: { size: 1 } });
+  test('all aggregates', async () => {
+    const result = await xata.db.users.summarize({
+      columns: ['pet.type'],
+      summaries: {
+        // count
+        test_count_all: { count: '*' },
+        test_count: { count: 'settings.dark' },
+        test_count_linked: { count: 'pet.num_legs' },
+        // min
+        test_min_int: { min: 'pet.num_legs' },
+        test_min_float: { min: 'rating' },
+        // max
+        test_max_int: { max: 'pet.num_legs' },
+        test_max_float: { max: 'rating' },
+        // sum
+        test_sum_int: { sum: 'pet.num_legs' },
+        test_sum_float: { sum: 'rating' },
+        // avg
+        test_avg_int: { average: 'pet.num_legs' },
+        test_avg_float: { average: 'rating' }
+      },
+      sort: [{ column: 'pet.type', direction: 'asc' }]
+    });
 
     expect(result.summaries).toMatchInlineSnapshot(`
       [
         {
-          "name": "A",
-          "rating": 10.5,
+          "pet": {
+            "type": "cat",
+          },
+          "test_avg_float": 10.5,
+          "test_avg_int": 4,
+          "test_count": 0,
+          "test_count_all": 1,
+          "test_count_linked": 1,
+          "test_max_float": 10.5,
+          "test_max_int": 4,
+          "test_min_float": 10.5,
+          "test_min_int": 4,
+          "test_sum_float": 10.5,
+          "test_sum_int": 4,
+        },
+        {
+          "pet": {
+            "type": "dog",
+          },
+          "test_avg_float": 25.25,
+          "test_avg_int": 3.5,
+          "test_count": 1,
+          "test_count_all": 2,
+          "test_count_linked": 2,
+          "test_max_float": 40,
+          "test_max_int": 4,
+          "test_min_float": 10.5,
+          "test_min_int": 3,
+          "test_sum_float": 50.5,
+          "test_sum_int": 7,
         },
       ]
     `);
 
-    expect(result.summaries.length).toBeCloseTo(1);
-    expect(result.summaries[0].name).toBe('A');
-    expect(result.summaries[0].rating).toBeCloseTo(10.5);
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].pet?.type).toBe('cat');
+    expect(result.summaries[0].test_count_all).toBeCloseTo(1);
+    expect(result.summaries[0].test_count).toBeCloseTo(0);
+    expect(result.summaries[0].test_count_linked).toBeCloseTo(1);
+    expect(result.summaries[0].test_min_int).toBeCloseTo(4);
+    expect(result.summaries[0].test_min_float).toBeCloseTo(10.5);
+    expect(result.summaries[0].test_max_int).toBeCloseTo(4);
+    expect(result.summaries[0].test_max_float).toBeCloseTo(10.5);
+    expect(result.summaries[0].test_sum_int).toBeCloseTo(4);
+    expect(result.summaries[0].test_sum_float).toBeCloseTo(10.5);
+    expect(result.summaries[0].test_avg_int).toBeCloseTo(4);
+    expect(result.summaries[0].test_avg_float).toBeCloseTo(10.5);
+
+    expect(result.summaries[1].pet?.type).toBe('dog');
+    expect(result.summaries[1].test_count_all).toBeCloseTo(2);
+    expect(result.summaries[1].test_count).toBeCloseTo(1);
+    expect(result.summaries[1].test_count_linked).toBeCloseTo(2);
+    expect(result.summaries[1].test_min_int).toBeCloseTo(3);
+    expect(result.summaries[1].test_min_float).toBeCloseTo(10.5);
+    expect(result.summaries[1].test_max_int).toBeCloseTo(4);
+    expect(result.summaries[1].test_max_float).toBeCloseTo(40);
+    expect(result.summaries[1].test_sum_int).toBeCloseTo(7);
+    expect(result.summaries[1].test_sum_float).toBeCloseTo(50.5);
+    expect(result.summaries[1].test_avg_int).toBeCloseTo(3.5);
+    expect(result.summaries[1].test_avg_float).toBeCloseTo(25.25);
+  });
+
+  test('summariesFilter with min', async () => {
+    const result = await xata.db.users.summarize({
+      columns: ['pet.name', 'pet.type'],
+      summaries: {
+        min_rating: { min: 'rating' }
+      },
+      summariesFilter: {
+        min_rating: { $gt: 10.6 }
+      }
+    });
+
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "min_rating": 40,
+          "pet": {
+            "name": "Lyra",
+            "type": "dog",
+          },
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(1);
+    expect(result.summaries[0].pet?.name).toBe('Lyra');
+    expect(result.summaries[0].pet?.type).toBe('dog');
+    expect(result.summaries[0].min_rating).toBeCloseTo(40);
+  });
+
+  test('summariesFilter with max', async () => {
+    const result = await xata.db.users.summarize({
+      columns: ['pet.name', 'pet.type'],
+      summaries: {
+        max_rating: { max: 'rating' }
+      },
+      summariesFilter: {
+        max_rating: { $le: 10.5 }
+      },
+      sort: ['pet.name']
+    });
+
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "max_rating": 10.5,
+          "pet": {
+            "name": "Otis",
+            "type": "dog",
+          },
+        },
+        {
+          "max_rating": 10.5,
+          "pet": {
+            "name": "Toffee",
+            "type": "cat",
+          },
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].pet?.name).toBe('Otis');
+    expect(result.summaries[0].pet?.type).toBe('dog');
+    expect(result.summaries[0].max_rating).toBeCloseTo(10.5);
+    expect(result.summaries[1].pet?.name).toBe('Toffee');
+    expect(result.summaries[1].pet?.type).toBe('cat');
+    expect(result.summaries[1].max_rating).toBeCloseTo(10.5);
+  });
+
+  test('summariesFilter with sum', async () => {
+    const result = await xata.db.users.summarize({
+      columns: ['pet.name', 'pet.type'],
+      summaries: {
+        sum_rating: { sum: 'rating' }
+      },
+      summariesFilter: {
+        sum_rating: { $gt: 10.5 }
+      }
+    });
+
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "pet": {
+            "name": "Lyra",
+            "type": "dog",
+          },
+          "sum_rating": 40,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(1);
+    expect(result.summaries[0].pet?.name).toBe('Lyra');
+    expect(result.summaries[0].pet?.type).toBe('dog');
+    expect(result.summaries[0].sum_rating).toBeCloseTo(40);
+  });
+
+  test('summariesFilter with avg', async () => {
+    const result = await xata.db.users.summarize({
+      columns: ['pet.name', 'pet.type'],
+      summaries: {
+        avg_rating: { average: 'rating' }
+      },
+      summariesFilter: {
+        avg_rating: { $gt: 10.5 }
+      }
+    });
+
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "avg_rating": 40,
+          "pet": {
+            "name": "Lyra",
+            "type": "dog",
+          },
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(1);
+    expect(result.summaries[0].pet?.name).toBe('Lyra');
+    expect(result.summaries[0].pet?.type).toBe('dog');
+    expect(result.summaries[0].avg_rating).toBeCloseTo(40);
+  });
+
+  test('filter, columns, summaries, complex summariesFilter', async () => {
+    const result = await xata.db.users.summarize({
+      columns: ['pet.type'],
+      filter: {
+        $any: [{ 'pet.type': 'dog' }, { 'pet.type': 'cat' }]
+      },
+      summaries: {
+        total: { count: '*' },
+        max_num_legs: { max: 'pet.num_legs' },
+        average_rating: { average: 'rating' }
+      },
+      summariesFilter: {
+        $any: [
+          {
+            'pet.type': 'dog',
+            $any: [{ max_num_legs: { $ge: 4 }, total: 2 }, { average_rating: { $ge: 10.0 } }]
+          },
+          {
+            $any: [
+              { 'pet.type': 'cat', total: 2, max_num_legs: { $gt: 4 } },
+              { 'pet.type': 'cat', average_rating: 10.5 }
+            ]
+          }
+        ]
+      }
+    });
+
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "average_rating": 10.5,
+          "max_num_legs": 4,
+          "pet": {
+            "type": "cat",
+          },
+          "total": 1,
+        },
+        {
+          "average_rating": 25.25,
+          "max_num_legs": 4,
+          "pet": {
+            "type": "dog",
+          },
+          "total": 2,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(2);
+    expect(result.summaries[0].pet?.type).toBe('cat');
+    expect(result.summaries[0].total).toBeCloseTo(1);
+    expect(result.summaries[0].max_num_legs).toBeCloseTo(4);
+    expect(result.summaries[0].average_rating).toBeCloseTo(10.5);
+    expect(result.summaries[1].pet?.type).toBe('dog');
+    expect(result.summaries[1].total).toBeCloseTo(2);
+    expect(result.summaries[1].max_num_legs).toBeCloseTo(4);
+    expect(result.summaries[1].average_rating).toBeCloseTo(25.25);
   });
 });
