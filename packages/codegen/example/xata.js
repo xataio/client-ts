@@ -39,7 +39,7 @@ const tables = [
           { name: 'labels', type: 'multiple' }
         ]
       },
-      { name: 'full_name', type: 'string', notNull: true },
+      { name: 'full_name', type: 'string' },
       { name: 'index', type: 'int' },
       { name: 'rating', type: 'float' },
       { name: 'birthDate', type: 'datetime' },
@@ -52,7 +52,8 @@ const tables = [
         ]
       },
       { name: 'team', type: 'link', link: { table: 'teams' } },
-      { name: 'pet', type: 'link', link: { table: 'pets' } }
+      { name: 'pet', type: 'link', link: { table: 'pets' } },
+      { name: 'account_value', type: 'int' }
     ]
   },
   {

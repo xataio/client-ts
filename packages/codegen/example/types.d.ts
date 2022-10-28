@@ -91,7 +91,6 @@ declare const tables: readonly [
       {
         readonly name: 'full_name';
         readonly type: 'string';
-        readonly notNull: true;
       },
       {
         readonly name: 'index';
@@ -132,6 +131,10 @@ declare const tables: readonly [
         readonly link: {
           readonly table: 'pets';
         };
+      },
+      {
+        readonly name: 'account_value';
+        readonly type: 'int';
       }
     ];
   },
