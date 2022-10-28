@@ -596,7 +596,8 @@ describe('summarize', () => {
       },
       summariesFilter: {
         max_rating: { $le: 10.5 }
-      }
+      },
+      sort: ['pet.name']
     });
 
     expect(result.summaries).toMatchInlineSnapshot(`
