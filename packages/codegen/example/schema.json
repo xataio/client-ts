@@ -134,6 +134,10 @@
           "link": {
             "table": "pets"
           }
+        },
+        {
+          "name": "account_value",
+          "type": "int"
         }
       ]
     },

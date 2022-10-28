@@ -20,8 +20,16 @@ beforeAll(async (ctx) => {
   ]);
 
   await xata.db.users.create([
-    { full_name: 'A', name: 'A', index: 10, rating: 10.5, settings: { plan: 'paid', dark: true }, pet: pet1.id },
-    { full_name: 'B', name: 'B', index: 10, rating: 10.5, settings: { plan: 'free' }, pet: pet2.id },
+    {
+      full_name: 'A',
+      name: 'A',
+      index: 10,
+      rating: 10.5,
+      settings: { plan: 'paid', dark: true },
+      pet: pet1.id,
+      account_value: 5
+    },
+    { full_name: 'B', name: 'B', index: 10, rating: 10.5, settings: { plan: 'free' }, pet: pet2.id, account_value: 3 },
     { full_name: 'C', name: 'C', index: 30, rating: 40.0, settings: { plan: 'paid' }, pet: pet3.id }
   ]);
 });
@@ -366,6 +374,70 @@ describe('summarize', () => {
     expect(result.summaries[1].dark_set).toBeCloseTo(0);
     expect(result.summaries[2].pet?.name).toBe('Toffee');
     expect(result.summaries[2].dark_set).toBeCloseTo(0);
+  });
+
+  test('sort asc puts nulls last', async () => {
+    const result = await xata.db.users.select(['name']).summarize({
+      summaries: { total_account_value: { sum: 'account_value' } },
+      sort: [{ column: 'total_account_value', direction: 'asc' }]
+    });
+
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "B",
+          "total_account_value": 3,
+        },
+        {
+          "name": "A",
+          "total_account_value": 5,
+        },
+        {
+          "name": "C",
+          "total_account_value": null,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(3);
+    expect(result.summaries[0].name).toBe('B');
+    expect(result.summaries[0].total_account_value).toBeCloseTo(3);
+    expect(result.summaries[1].name).toBe('A');
+    expect(result.summaries[1].total_account_value).toBeCloseTo(5);
+    expect(result.summaries[2].name).toBe('C');
+    expect(result.summaries[2].total_account_value).toBeNull();
+  });
+
+  test('sort desc puts nulls last', async () => {
+    const result = await xata.db.users.select(['name']).summarize({
+      summaries: { total_account_value: { sum: 'account_value' } },
+      sort: [{ column: 'total_account_value', direction: 'desc' }]
+    });
+
+    expect(result.summaries).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "A",
+          "total_account_value": 5,
+        },
+        {
+          "name": "B",
+          "total_account_value": 3,
+        },
+        {
+          "name": "C",
+          "total_account_value": null,
+        },
+      ]
+    `);
+
+    expect(result.summaries.length).toBe(3);
+    expect(result.summaries[0].name).toBe('A');
+    expect(result.summaries[0].total_account_value).toBeCloseTo(5);
+    expect(result.summaries[1].name).toBe('B');
+    expect(result.summaries[1].total_account_value).toBeCloseTo(3);
+    expect(result.summaries[2].name).toBe('C');
+    expect(result.summaries[2].total_account_value).toBeNull();
   });
 
   test('summarize with no results', async () => {

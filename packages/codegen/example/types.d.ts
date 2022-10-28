@@ -133,6 +133,10 @@ declare const tables: readonly [
         readonly link: {
           readonly table: 'pets';
         };
+      },
+      {
+        readonly name: 'account_value';
+        readonly type: 'int';
       }
     ];
   },
