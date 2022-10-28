@@ -449,7 +449,7 @@ Beware that this can lead to ${chalk.bold(
           message: 'Default value for if not nullable',
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
             if (parseBoolean(state.values.notNull) === true && state.values.type) {
-              if (parseDefaultValue(state.values.type, value) == null) {
+              if (parseDefaultValue(state.values.type, value) === undefined) {
                 return `Invalid default value for column type ${state.values.type}`;
               }
             }
