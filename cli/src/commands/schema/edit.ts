@@ -306,7 +306,8 @@ Beware that this can lead to ${chalk.bold(
     const metadata = [
       getType(),
       column.unique ? chalk.gray.italic('unique') : '',
-      column.notNull ? chalk.gray.italic('not null') : ''
+      column.notNull ? chalk.gray.italic('not null') : '',
+      column.defaultValue ? chalk.gray.italic(`default: ${column.defaultValue}`) : ''
     ]
       .filter(Boolean)
       .join(' ');
@@ -690,7 +691,10 @@ Beware that this can lead to ${chalk.bold(
             column: {
               name: column.name,
               type: column.type,
-              link: column.link
+              link: column.link,
+              unique: column.unique,
+              notNull: column.notNull,
+              defaultValue: column.defaultValue
             }
           });
         }
