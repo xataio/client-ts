@@ -1,5 +1,21 @@
 # @xata.io/client
 
+## 0.20.0
+
+### Minor Changes
+
+- [#737](https://github.com/xataio/client-ts/pull/737) [`6cbeaa0`](https://github.com/xataio/client-ts/commit/6cbeaa00050b5aa99ab7c98052a906487263e026) Thanks [@SferaDev](https://github.com/SferaDev)! - Rename first to start and last to end in pagination
+
+### Patch Changes
+
+- [#732](https://github.com/xataio/client-ts/pull/732) [`a5a9aa5`](https://github.com/xataio/client-ts/commit/a5a9aa59987faa1d3d701d7431b8a96031e01ac7) Thanks [@SferaDev](https://github.com/SferaDev)! - [Experimental] Allow passing fetch options in some queries
+
+- [#735](https://github.com/xataio/client-ts/pull/735) [`c64b2eb`](https://github.com/xataio/client-ts/commit/c64b2eb9add70e75d419d418ab9608caac0dbfa1) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for default values
+
+- [#730](https://github.com/xataio/client-ts/pull/730) [`485b217`](https://github.com/xataio/client-ts/commit/485b217079c4b2091d697e68622c48eddd130ceb) Thanks [@SferaDev](https://github.com/SferaDev)! - Add more summarize functions
+
+- [#730](https://github.com/xataio/client-ts/pull/730) [`4d7499c`](https://github.com/xataio/client-ts/commit/4d7499ccbb135691350334fd8022f7a5da41c5f2) Thanks [@SferaDev](https://github.com/SferaDev)! - Add a check for browser execution
+
 ## 0.19.1
 
 ### Patch Changes
