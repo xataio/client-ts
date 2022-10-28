@@ -6,11 +6,10 @@ import { SortFilter } from './sorting';
 
 export type SummarizeExpression<O extends XataRecord> = ExactlyOne<{
   count: ColumnsByValue<O, any> | '*';
-  // TODO: Add for other summarize expressions, PR not merged in the backend yet
-  //min: ColumnsByValue<O, string | number | Date | any[]>;
-  //max: ColumnsByValue<O, string | number | Date | any[]>;
-  //sum: ColumnsByValue<O, number>;
-  //avg: ColumnsByValue<O, number>;
+  min: ColumnsByValue<O, string | number | Date | any[]>;
+  max: ColumnsByValue<O, string | number | Date | any[]>;
+  sum: ColumnsByValue<O, number>;
+  average: ColumnsByValue<O, number>;
 }>;
 
 export type SummarizeParams<
@@ -39,7 +38,7 @@ type SummarizeExpressionResultTypes<Value> = {
   min: Value;
   max: Value;
   sum: number;
-  avg: number;
+  average: number;
 };
 
 type SummarizeSort<
@@ -61,10 +60,9 @@ type SummarizeValuePick<Record extends XataRecord, Expression extends Dictionary
     : never;
 };
 
-type SummarizeFilter<
-  Record extends XataRecord,
-  Expression extends Dictionary<SummarizeExpression<Record>>
-> = Filter<Record> & Filter<SummarizeValuePick<Record, Expression>>;
+type SummarizeFilter<Record extends XataRecord, Expression extends Dictionary<SummarizeExpression<Record>>> = Filter<
+  Record & SummarizeValuePick<Record, Expression>
+>;
 
 type SummarizeResultItem<
   Record extends XataRecord,
