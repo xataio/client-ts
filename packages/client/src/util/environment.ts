@@ -57,7 +57,7 @@ export function getEnvironment(): Environment {
 
 export function getEnableBrowserVariable() {
   try {
-    if (isObject(process) && isObject(process.env)) {
+    if (isObject(process) && isObject(process.env) && process.env.XATA_ENABLE_BROWSER !== undefined) {
       return process.env.XATA_ENABLE_BROWSER === 'true';
     }
   } catch (err) {
@@ -65,7 +65,7 @@ export function getEnableBrowserVariable() {
   }
 
   try {
-    if (isObject(Deno) && isObject(Deno.env)) {
+    if (isObject(Deno) && isObject(Deno.env) && Deno.env.get('XATA_ENABLE_BROWSER') !== undefined) {
       return Deno.env.get('XATA_ENABLE_BROWSER') === 'true';
     }
   } catch (err) {
