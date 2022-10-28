@@ -2,4 +2,4 @@
 '@xata.io/client': patch
 ---
 
-Allow passing fetch options in some queries
+[Experimental] Allow passing fetch options in some queries
