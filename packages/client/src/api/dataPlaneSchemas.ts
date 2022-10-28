@@ -97,9 +97,6 @@ export type Schema = {
   tablesOrder?: string[];
 };
 
-/**
- * @x-internal true
- */
 export type SchemaEditScript = {
   sourceMigrationID?: string;
   targetMigrationID?: string;
@@ -118,6 +115,7 @@ export type Column = {
   type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
   link?: ColumnLink;
   notNull?: boolean;
+  defaultValue?: string;
   unique?: boolean;
   columns?: Column[];
 };
@@ -402,6 +400,10 @@ export type FilterExpression = {
  *
  * @example {"all_users":{"count":"*"}}
  * @example {"total_created":{"count":"created_at"}}
+ * @example {"min_cost":{"min":"cost"}}
+ * @example {"max_happiness":{"max":"happiness"}}
+ * @example {"total_revenue":{"sum":"revenue"}}
+ * @example {"average_speed":{"average":"speed"}}
  * @x-go-type xbquery.SummaryList
  */
 export type SummaryExpressionList = {
@@ -416,11 +418,28 @@ export type SummaryExpressionList = {
  * an object, i.e. if `settings` is an object with `dark_mode` as a field, you may summarize
  * `settings.dark_mode` but not `settings` nor `settings.*`.
  *
- * We currently support the `count` operation. When using `count`, one can set a column name
- * as the value. Xata will return the total number times this column is non-null in each group.
+ * We currently support several aggregation functions. Not all functions can be run on all column
+ * types.
  *
- * Alternately, if you'd like to count the total rows in each group - irregardless of null/not null
- * status - you can set `count` to `*` to count everything.
+ * - `count` is used to count the number of records in each group. Use `{"count": "*"}` to count
+ *   all columns present, otherwise `{"count": "<column_path>"}` to count the number of non-null
+ *   values are present at column path.
+ *
+ *   Count can be used on any column type, and always returns an int.
+ *
+ * - `min` calculates the minimum value in each group. `min` is compatible with most types;
+ *   string, multiple, text, email, int, float, and datetime. It returns a value of the same
+ *   type as operated on. This means that `{"lowest_latency": {"min": "latency"}}` where
+ *   `latency` is an int, will always return an int.
+ *
+ * - `max` calculates the maximum value in each group. `max` shares the same compatibility as
+ *   `min`.
+ *
+ * - `sum` adds up all values in a group. `sum` can be run on `int` and `float` types, and will
+ *   return a value of the same type as requested.
+ *
+ * - `average` averages all values in a group. `average` can be run on `int` and `float` types, and
+ *   always returns a float.
  *
  * @example {"count":"deleted_at"}
  * @x-go-type xbquery.Summary
@@ -768,11 +787,11 @@ export type PageConfig = {
   /**
    * Query the first page from the cursor.
    */
-  first?: string;
+  start?: string;
   /**
    * Query the last page from the cursor.
    */
-  last?: string;
+  end?: string;
   /**
    * Set page size. If the size is missing it is read from the cursor. If no cursor is given Xata will choose the default page size.
    *
@@ -874,6 +893,139 @@ export type AggResponse =
         [key: string]: AggResponse;
       })[];
     };
+
+/**
+ * A transaction operation
+ */
+export type TransactionOperation =
+  | {
+      insert: TransactionInsert;
+    }
+  | {
+      update: TransactionUpdate;
+    }
+  | {
+      ['delete']: TransactionDelete;
+    };
+
+/**
+ * Insert operation
+ *
+ * @x-go-type TxOperation
+ */
+export type TransactionInsert = {
+  /**
+   * The table name
+   */
+  table: string;
+  /**
+   * The record to insert. The `id` field is optional; when specified, it will be used as the ID for the record.
+   */
+  record: {
+    [key: string]: any;
+  };
+  /**
+   * The version of the record you expect to be overwriting. Only valid with an
+   * explicit ID is also set in the `record` key.
+   */
+  ifVersion?: number;
+  /**
+   * createOnly is used to change how Xata acts when an explicit ID is set in the `record` key.
+   *
+   * If `createOnly` is set to `true`, Xata will only attempt to insert the record. If there's a conflict, Xata
+   * will cancel the transaction.
+   *
+   * If `createOnly` is set to `false`, Xata will attempt to insert the record. If there's no
+   * conflict, the record is inserted. If there is a conflict, Xata will replace the record.
+   */
+  createOnly?: boolean;
+};
+
+/**
+ * Update operation
+ *
+ * @x-go-type TxOperation
+ */
+export type TransactionUpdate = {
+  /**
+   * The table name
+   */
+  table: string;
+  id: RecordID;
+  /**
+   * The fields of the record you'd like to update
+   */
+  fields: {
+    [key: string]: any;
+  };
+  /**
+   * The version of the record you expect to be updating
+   */
+  ifVersion?: number;
+  /**
+   * Xata will insert this record if it cannot be found.
+   */
+  upsert?: boolean;
+};
+
+/**
+ * A delete operation. The transaction will continue if no record matches the ID.
+ *
+ * @x-go-type TxOperation
+ */
+export type TransactionDelete = {
+  /**
+   * The table name
+   */
+  table: string;
+  id: RecordID;
+};
+
+/**
+ * A result from an insert operation.
+ */
+export type TransactionResultInsert = {
+  /**
+   * The number of affected rows
+   */
+  rows: number;
+  id: RecordID;
+};
+
+/**
+ * A result from an update operation.
+ */
+export type TransactionResultUpdate = {
+  /**
+   * The number of affected rows
+   */
+  rows: number;
+  id: RecordID;
+};
+
+/**
+ * A result from a delete operation.
+ */
+export type TransactionResultDelete = {
+  /**
+   * The number of affected rows
+   */
+  rows: number;
+};
+
+/**
+ * An error message from a failing transaction operation
+ */
+export type TransactionError = {
+  /**
+   * The index of the failing operation
+   */
+  index?: number;
+  /**
+   * The error message
+   */
+  message: string;
+};
 
 /**
  * @format date-time
