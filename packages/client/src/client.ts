@@ -8,6 +8,7 @@ import { SearchPlugin, SearchPluginResult } from './search';
 import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
 import { getCurrentBranchName, getDatabaseURL } from './util/config';
+import { getEnableBrowserVariable } from './util/environment';
 import { getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
@@ -19,6 +20,7 @@ export type BaseClientOptions = {
   branch?: BranchStrategyOption;
   cache?: CacheImpl;
   trace?: TraceFunction;
+  enableBrowser?: boolean;
 };
 
 type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch'>> & {
@@ -76,6 +78,16 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     }
 
     #parseOptions(options?: BaseClientOptions): SafeOptions {
+      // If is running from the browser and the user didn't pass `enableBrowser` we throw an error
+      const enableBrowser = options?.enableBrowser ?? getEnableBrowserVariable() ?? false;
+      // @ts-ignore Window is not defined in Node
+      const isBrowser = typeof window !== 'undefined';
+      if (isBrowser && !enableBrowser) {
+        throw new Error(
+          'You are trying to use Xata from the browser, which is potentially a non-secure environment. If you understand the security concerns, such as leaking your credentials, pass `enableBrowser: true` to the client options to remove this error.'
+        );
+      }
+
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
       const apiKey = options?.apiKey || getAPIKey();
@@ -94,7 +106,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         throw new Error('Option databaseURL is required');
       }
 
-      return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID() };
+      return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID(), enableBrowser };
     }
 
     async #getFetchProps({ fetch, apiKey, databaseURL, branch, trace, clientID }: SafeOptions): Promise<ApiExtraProps> {
