@@ -6,6 +6,7 @@ export type Column = {
   type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
   unique?: boolean;
   notNull?: boolean;
+  defaultValue?: string;
   description?: string;
   link?: {
     table: string;
@@ -19,6 +20,7 @@ export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
     type: z.enum(['bool', 'int', 'float', 'string', 'text', 'email', 'multiple', 'link', 'object', 'datetime']),
     unique: z.boolean().optional(),
     notNull: z.boolean().optional(),
+    defaultValue: z.string().optional(),
     description: z.string().optional(),
     link: z
       .object({
