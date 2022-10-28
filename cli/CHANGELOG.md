@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.10.1
+
+### Patch Changes
+
+- [#735](https://github.com/xataio/client-ts/pull/735) [`c64b2eb`](https://github.com/xataio/client-ts/commit/c64b2eb9add70e75d419d418ab9608caac0dbfa1) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove feature flag for defaultValue
+
+- Updated dependencies [[`6cbeaa0`](https://github.com/xataio/client-ts/commit/6cbeaa00050b5aa99ab7c98052a906487263e026), [`a5a9aa5`](https://github.com/xataio/client-ts/commit/a5a9aa59987faa1d3d701d7431b8a96031e01ac7), [`c64b2eb`](https://github.com/xataio/client-ts/commit/c64b2eb9add70e75d419d418ab9608caac0dbfa1), [`485b217`](https://github.com/xataio/client-ts/commit/485b217079c4b2091d697e68622c48eddd130ceb), [`4d7499c`](https://github.com/xataio/client-ts/commit/4d7499ccbb135691350334fd8022f7a5da41c5f2)]:
+  - @xata.io/client@0.20.0
+  - @xata.io/importer@0.3.1
+
 ## 0.10.0
 
 ### Minor Changes
