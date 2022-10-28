@@ -55,6 +55,30 @@ export function getEnvironment(): Environment {
   };
 }
 
+export function getEnableBrowserVariable() {
+  try {
+    if (isObject(process) && isObject(process.env)) {
+      return process.env.XATA_ENABLE_BROWSER === 'true';
+    }
+  } catch (err) {
+    // Ignore: Should never happen
+  }
+
+  try {
+    if (isObject(Deno) && isObject(Deno.env)) {
+      return Deno.env.get('XATA_ENABLE_BROWSER') === 'true';
+    }
+  } catch (err) {
+    // Ignore: Will fail if not using --allow-env
+  }
+
+  try {
+    return XATA_ENABLE_BROWSER === true || XATA_ENABLE_BROWSER === 'true';
+  } catch (err) {
+    return undefined;
+  }
+}
+
 function getGlobalApiKey(): string | undefined {
   try {
     return XATA_API_KEY;

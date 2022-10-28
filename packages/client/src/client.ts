@@ -8,6 +8,7 @@ import { SearchPlugin, SearchPluginResult } from './search';
 import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
 import { getCurrentBranchName, getDatabaseURL } from './util/config';
+import { getEnableBrowserVariable } from './util/environment';
 import { getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
@@ -77,11 +78,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     }
 
     #parseOptions(options?: BaseClientOptions): SafeOptions {
-      const enableBrowser = options?.enableBrowser ?? false;
-
       // If is running from the browser and the user didn't pass `enableBrowser` we throw an error
+      const enableBrowser = options?.enableBrowser ?? getEnableBrowserVariable() ?? false;
       // @ts-ignore Window is not defined in Node
-      const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+      const isBrowser = typeof window !== 'undefined';
       if (isBrowser && !enableBrowser) {
         throw new Error(
           'You are trying to use Xata from the browser, which is potentially a non-secure environment. If you understand the security concerns, such as leaking your credentials, pass `enableBrowser: true` to the client options to remove this error.'
