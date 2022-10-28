@@ -8,6 +8,7 @@ async function main() {
     extend: (context) => {
       context.XATA_API_KEY = process.env.XATA_API_KEY;
       context.XATA_WORKSPACE = process.env.XATA_WORKSPACE;
+      context.XATA_REGION = process.env.XATA_REGION;
       return context;
     }
   });

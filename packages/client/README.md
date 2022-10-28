@@ -112,18 +112,18 @@ const user = await xata.db.users.create({
 });
 ```
 
-If you want to create a record with a specific ID, you can invoke `insert()`.
+If you want to create a record with a specific ID, you can provide the id as parameter to the `create()` method.
 
 ```ts
-const user = await xata.db.users.insert('user_admin', {
+const user = await xata.db.users.create('user_admin', {
   fullName: 'John Smith'
 });
 ```
 
-And if you want to create or insert a record with a specific ID, you can invoke `updateOrInsert()`.
+And if you want to create or update a record with a specific ID, you can invoke `createOrUpdate()` with an id parameter.
 
 ```ts
-const user = await xata.db.users.updateOrInsert('user_admin', {
+const user = await xata.db.users.createOrUpdate('user_admin', {
   fullName: 'John Smith'
 });
 ```
@@ -187,8 +187,8 @@ page.hasNextPage(); // Boolean
 
 const nextPage = await page.nextPage(); // Page object
 const previousPage = await page.previousPage(); // Page object
-const firstPage = await page.firstPage(); // Page object
-const lastPage = await page.lastPage(); // Page object
+const startPage = await page.startPage(); // Page object
+const endPage = await page.endPage(); // Page object
 ```
 
 If you want to use an iterator, both the Repository and the Query classes implement an `AsyncIterable`. Alternatively you can use `getIterator()` and customize the batch size of the iterator:
@@ -247,7 +247,7 @@ Once you have initialized the API client, the operations are organized following
 
 ```ts
 const { id: workspace } = await api.workspaces.createWorkspace({ name: 'example' });
-const { databaseName } = await api.databases.createDatabase(workspace, 'database');
+const { databaseName } = await api.database.createDatabase(workspace, 'database', { region: 'eu-west-1' });
 
 await api.branches.createBranch(workspace, databaseName, 'branch');
 await api.tables.createTable(workspace, databaseName, 'branch', 'table');

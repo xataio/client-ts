@@ -30,13 +30,13 @@ describe('branches list', () => {
     const config = await Config.load();
     const command = new BranchesList([], config as Config);
     command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
+      databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test'
     };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.eu-west-1.xata.sh/dbs/test');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
   });
 
@@ -57,7 +57,7 @@ describe('branches list', () => {
     const config = await Config.load();
     const command = new BranchesList([], config as Config);
     command.projectConfig = {
-      databaseURL: 'https://test-1234.xata.sh/db/test'
+      databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test'
     };
     command.locale = 'en-US';
     command.timeZone = 'UTC';
@@ -76,7 +76,7 @@ describe('branches list', () => {
     }
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.xata.sh/dbs/test');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.eu-west-1.xata.sh/dbs/test');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 
     expect(printTable).toHaveBeenCalledTimes(json ? 0 : 1);

@@ -68,11 +68,11 @@ export default class Codegen extends BaseCommand {
     }
 
     const xata = await this.getXataClient();
-    const { workspace, database, branch, databaseURL } = await this.getParsedDatabaseURLWithBranch(
+    const { workspace, region, database, branch, databaseURL } = await this.getParsedDatabaseURLWithBranch(
       flags.db,
       flags.branch
     );
-    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+    const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
     const { schema } = branchDetails;
 
     const codegenBranch = flags['inject-branch'] ? branch : undefined;

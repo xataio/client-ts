@@ -1,6 +1,7 @@
 import { SchemaPluginResult } from '.';
 import {
   aggregateTable,
+  ApiExtraProps,
   bulkInsertTableRecords,
   deleteRecord,
   getBranchDetails,
@@ -14,12 +15,11 @@ import {
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
-import { FetcherExtraProps } from '../api/fetcher';
 import { FuzzinessExpression, HighlightExpression, PrefixExpression, RecordsMetadata } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
-import { compact, isObject, isString, isStringArray } from '../util/lang';
+import { compact, isNumber, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -49,7 +49,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    */
   abstract create<K extends SelectableColumn<Record>>(
     object: Omit<EditableData<Record>, 'id'> & Partial<Identifiable>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
   /*
@@ -58,7 +59,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract create(
-    object: Omit<EditableData<Record>, 'id'> & Partial<Identifiable>
+    object: Omit<EditableData<Record>, 'id'> & Partial<Identifiable>,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
@@ -71,7 +73,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
   abstract create<K extends SelectableColumn<Record>>(
     id: string,
     object: Omit<EditableData<Record>, 'id'>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
   /**
@@ -80,7 +83,11 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @param object Object containing the column names with their values to be stored in the table.
    * @returns The full persisted record.
    */
-  abstract create(id: string, object: Omit<EditableData<Record>, 'id'>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  abstract create(
+    id: string,
+    object: Omit<EditableData<Record>, 'id'>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates multiple records in the table.
@@ -262,7 +269,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    */
   abstract update<K extends SelectableColumn<Record>>(
     object: Partial<EditableData<Record>> & Identifiable,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
 
   /**
@@ -271,7 +279,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record, null if the record could not be found.
    */
   abstract update(
-    object: Partial<EditableData<Record>> & Identifiable
+    object: Partial<EditableData<Record>> & Identifiable,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
 
   /**
@@ -284,7 +293,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
   abstract update<K extends SelectableColumn<Record>>(
     id: string,
     object: Partial<EditableData<Record>>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
 
   /**
@@ -295,7 +305,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    */
   abstract update(
     id: string,
-    object: Partial<EditableData<Record>>
+    object: Partial<EditableData<Record>>,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
 
   /**
@@ -327,7 +338,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    */
   abstract updateOrThrow<K extends SelectableColumn<Record>>(
     object: Partial<EditableData<Record>> & Identifiable,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
   /**
@@ -337,7 +349,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If the record could not be found.
    */
   abstract updateOrThrow(
-    object: Partial<EditableData<Record>> & Identifiable
+    object: Partial<EditableData<Record>> & Identifiable,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
@@ -351,7 +364,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
   abstract updateOrThrow<K extends SelectableColumn<Record>>(
     id: string,
     object: Partial<EditableData<Record>>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
   /**
@@ -363,7 +377,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    */
   abstract updateOrThrow(
     id: string,
-    object: Partial<EditableData<Record>>
+    object: Partial<EditableData<Record>>,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
@@ -390,27 +405,31 @@ export abstract class Repository<Record extends XataRecord> extends Query<
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param object Object containing the column names with their values to be persisted in the table.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
    * @returns The full persisted record.
    */
   abstract createOrUpdate<K extends SelectableColumn<Record>>(
     object: EditableData<Record> & Identifiable,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param object Object containing the column names with their values to be persisted in the table.
    * @returns The full persisted record.
    */
-  abstract createOrUpdate(object: EditableData<Record> & Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  abstract createOrUpdate(
+    object: EditableData<Record> & Identifiable,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param id A unique id.
    * @param object The column names and the values to be persisted.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
@@ -419,24 +438,26 @@ export abstract class Repository<Record extends XataRecord> extends Query<
   abstract createOrUpdate<K extends SelectableColumn<Record>>(
     id: string,
     object: Omit<EditableData<Record>, 'id'>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param id A unique id.
    * @param object The column names and the values to be persisted.
    * @returns The full persisted record.
    */
   abstract createOrUpdate(
     id: string,
-    object: Omit<EditableData<Record>, 'id'>
+    object: Omit<EditableData<Record>, 'id'>,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
    * @returns Array of the persisted records.
@@ -448,11 +469,85 @@ export abstract class Repository<Record extends XataRecord> extends Query<
 
   /**
    * Creates or updates a single record. If a record exists with the given id,
-   * it will be update, otherwise a new record will be created.
+   * it will be partially updated, otherwise a new record will be created.
    * @param objects Array of objects with the column names and the values to be stored in the table.
    * @returns Array of the persisted records.
    */
   abstract createOrUpdate(
+    objects: Array<EditableData<Record> & Identifiable>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param object Object containing the column names with their values to be persisted in the table.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The full persisted record.
+   */
+  abstract createOrReplace<K extends SelectableColumn<Record>>(
+    object: EditableData<Record> & Identifiable,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param object Object containing the column names with their values to be persisted in the table.
+   * @returns The full persisted record.
+   */
+  abstract createOrReplace(
+    object: EditableData<Record> & Identifiable,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param id A unique id.
+   * @param object The column names and the values to be persisted.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns The full persisted record.
+   */
+  abstract createOrReplace<K extends SelectableColumn<Record>>(
+    id: string,
+    object: Omit<EditableData<Record>, 'id'>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param id A unique id.
+   * @param object The column names and the values to be persisted.
+   * @returns The full persisted record.
+   */
+  abstract createOrReplace(
+    id: string,
+    object: Omit<EditableData<Record>, 'id'>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param objects Array of objects with the column names and the values to be stored in the table.
+   * @param columns Array of columns to be returned. If not specified, first level columns will be returned.
+   * @returns Array of the persisted records.
+   */
+  abstract createOrReplace<K extends SelectableColumn<Record>>(
+    objects: Array<EditableData<Record> & Identifiable>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
+
+  /**
+   * Creates or replaces a single record. If a record exists with the given id,
+   * it will be replaced, otherwise a new record will be created.
+   * @param objects Array of objects with the column names and the values to be stored in the table.
+   * @returns Array of the persisted records.
+   */
+  abstract createOrReplace(
     objects: Array<EditableData<Record> & Identifiable>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
@@ -650,7 +745,7 @@ export class RestRepository<Record extends XataRecord>
   implements Repository<Record>
 {
   #table: string;
-  #getFetchProps: () => Promise<FetcherExtraProps>;
+  #getFetchProps: () => Promise<ApiExtraProps>;
   #db: SchemaPluginResult<any>;
   #cache: CacheImpl;
   #schemaTables?: Schemas.Table[];
@@ -694,15 +789,24 @@ export class RestRepository<Record extends XataRecord>
 
   async create<K extends SelectableColumn<Record>>(
     object: EditableData<Record> & Partial<Identifiable>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
-  async create(object: EditableData<Record> & Partial<Identifiable>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create(
+    object: EditableData<Record> & Partial<Identifiable>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async create<K extends SelectableColumn<Record>>(
     id: string,
     object: EditableData<Record>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
-  async create(id: string, object: EditableData<Record>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create(
+    id: string,
+    object: EditableData<Record>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async create<K extends SelectableColumn<Record>>(
     objects: Array<EditableData<Record> & Partial<Identifiable>>,
     columns: K[]
@@ -712,8 +816,9 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async create<K extends SelectableColumn<Record>>(
     a: string | (EditableData<Record> & Partial<Identifiable>) | Array<EditableData<Record> & Partial<Identifiable>>,
-    b?: EditableData<Record> | K[],
-    c?: K[]
+    b?: EditableData<Record> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
   ): Promise<
     | Readonly<SelectedPick<Record, K[]>>
     | Readonly<SelectedPick<Record, K[]>>[]
@@ -721,6 +826,8 @@ export class RestRepository<Record extends XataRecord>
     | Readonly<SelectedPick<Record, ['*']>>[]
   > {
     return this.#trace('create', async () => {
+      const ifVersion = parseIfVersion(b, c, d);
+
       // Create many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
@@ -734,7 +841,7 @@ export class RestRepository<Record extends XataRecord>
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isStringArray(c) ? c : undefined;
-        return this.#insertRecordWithId(a, b, columns);
+        return this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: true, ifVersion });
       }
 
       // Create one record with id as property
@@ -742,7 +849,7 @@ export class RestRepository<Record extends XataRecord>
         if (a.id === '') throw new Error("The id can't be empty");
 
         const columns = isStringArray(b) ? b : undefined;
-        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns);
+        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: true, ifVersion });
       }
 
       // Create one record without id
@@ -764,6 +871,7 @@ export class RestRepository<Record extends XataRecord>
       pathParams: {
         workspace: '{workspaceId}',
         dbBranchName: '{dbBranch}',
+        region: '{region}',
         tableName: this.#table
       },
       queryParams: { columns },
@@ -778,7 +886,8 @@ export class RestRepository<Record extends XataRecord>
   async #insertRecordWithId(
     recordId: string,
     object: EditableData<Record>,
-    columns: SelectableColumn<Record>[] = ['*']
+    columns: SelectableColumn<Record>[] = ['*'],
+    { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
   ) {
     const fetchProps = await this.#getFetchProps();
 
@@ -788,11 +897,12 @@ export class RestRepository<Record extends XataRecord>
       pathParams: {
         workspace: '{workspaceId}',
         dbBranchName: '{dbBranch}',
+        region: '{region}',
         tableName: this.#table,
         recordId
       },
       body: record,
-      queryParams: { createOnly: true, columns },
+      queryParams: { createOnly, columns, ifVersion },
       ...fetchProps
     });
 
@@ -806,7 +916,12 @@ export class RestRepository<Record extends XataRecord>
     const records = objects.map((object) => transformObjectLinks(object));
 
     const response = await bulkInsertTableRecords({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table
+      },
       queryParams: { columns },
       body: { records },
       ...fetchProps
@@ -880,6 +995,7 @@ export class RestRepository<Record extends XataRecord>
             pathParams: {
               workspace: '{workspaceId}',
               dbBranchName: '{dbBranch}',
+              region: '{region}',
               tableName: this.#table,
               recordId: id
             },
@@ -959,19 +1075,23 @@ export class RestRepository<Record extends XataRecord>
 
   async update<K extends SelectableColumn<Record>>(
     object: Partial<EditableData<Record>> & Identifiable,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
   async update(
-    object: Partial<EditableData<Record>> & Identifiable
+    object: Partial<EditableData<Record>> & Identifiable,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
   async update<K extends SelectableColumn<Record>>(
     id: string,
     object: Partial<EditableData<Record>>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
   async update(
     id: string,
-    object: Partial<EditableData<Record>>
+    object: Partial<EditableData<Record>>,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
   async update<K extends SelectableColumn<Record>>(
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
@@ -982,8 +1102,9 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async update<K extends SelectableColumn<Record>>(
     a: string | (Partial<EditableData<Record>> & Identifiable) | Array<Partial<EditableData<Record>> & Identifiable>,
-    b?: Partial<EditableData<Record>> | K[],
-    c?: K[]
+    b?: Partial<EditableData<Record>> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
     | Array<Readonly<SelectedPick<Record, ['*']>> | null>
@@ -992,6 +1113,8 @@ export class RestRepository<Record extends XataRecord>
     | null
   > {
     return this.#trace('update', async () => {
+      const ifVersion = parseIfVersion(b, c, d);
+
       // Update many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
@@ -1008,13 +1131,13 @@ export class RestRepository<Record extends XataRecord>
       // Update one record with id as param
       if (isString(a) && isObject(b)) {
         const columns = isStringArray(c) ? c : undefined;
-        return this.#updateRecordWithID(a, b, columns);
+        return this.#updateRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
       }
 
       // Update one record with id as property
       if (isObject(a) && isString(a.id)) {
         const columns = isStringArray(b) ? b : undefined;
-        return this.#updateRecordWithID(a.id, { ...a, id: undefined }, columns);
+        return this.#updateRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
       }
 
       throw new Error('Invalid arguments for update method');
@@ -1023,19 +1146,23 @@ export class RestRepository<Record extends XataRecord>
 
   async updateOrThrow<K extends SelectableColumn<Record>>(
     object: Partial<EditableData<Record>> & Identifiable,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async updateOrThrow(
-    object: Partial<EditableData<Record>> & Identifiable
+    object: Partial<EditableData<Record>> & Identifiable,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
     id: string,
     object: Partial<EditableData<Record>>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async updateOrThrow(
     id: string,
-    object: Partial<EditableData<Record>>
+    object: Partial<EditableData<Record>>,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
@@ -1046,8 +1173,9 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
     a: string | (Partial<EditableData<Record>> & Identifiable) | Array<Partial<EditableData<Record>> & Identifiable>,
-    b?: Partial<EditableData<Record>> | K[],
-    c?: K[]
+    b?: Partial<EditableData<Record>> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
     | Array<Readonly<SelectedPick<Record, ['*']>>>
@@ -1055,7 +1183,7 @@ export class RestRepository<Record extends XataRecord>
     | Array<Readonly<SelectedPick<Record, K[]>>>
   > {
     return this.#trace('updateOrThrow', async () => {
-      const result = await this.update(a as any, b as any, c as any);
+      const result = await this.update(a as any, b as any, c as any, d as any);
 
       if (Array.isArray(result)) {
         const missingIds = compact(
@@ -1083,7 +1211,8 @@ export class RestRepository<Record extends XataRecord>
   async #updateRecordWithID(
     recordId: string,
     object: Partial<EditableData<Record>>,
-    columns: SelectableColumn<Record>[] = ['*']
+    columns: SelectableColumn<Record>[] = ['*'],
+    { ifVersion }: { ifVersion?: number }
   ) {
     const fetchProps = await this.#getFetchProps();
 
@@ -1091,8 +1220,14 @@ export class RestRepository<Record extends XataRecord>
 
     try {
       const response = await updateRecordWithID({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-        queryParams: { columns },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table,
+          recordId
+        },
+        queryParams: { columns, ifVersion },
         body: record,
         ...fetchProps
       });
@@ -1110,17 +1245,23 @@ export class RestRepository<Record extends XataRecord>
 
   async createOrUpdate<K extends SelectableColumn<Record>>(
     object: EditableData<Record> & Identifiable,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
-  async createOrUpdate(object: EditableData<Record> & Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async createOrUpdate(
+    object: EditableData<Record> & Identifiable,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<Record>>(
     id: string,
     object: Omit<EditableData<Record>, 'id'>,
-    columns: K[]
+    columns: K[],
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async createOrUpdate(
     id: string,
-    object: Omit<EditableData<Record>, 'id'>
+    object: Omit<EditableData<Record>, 'id'>,
+    options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<Record>>(
     objects: Array<EditableData<Record> & Identifiable>,
@@ -1131,8 +1272,9 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async createOrUpdate<K extends SelectableColumn<Record>>(
     a: string | EditableData<Record> | EditableData<Record>[],
-    b?: EditableData<Record> | Omit<EditableData<Record>, 'id'> | K[],
-    c?: K[]
+    b?: EditableData<Record> | Omit<EditableData<Record>, 'id'> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
     | Array<Readonly<SelectedPick<Record, ['*']>>>
@@ -1140,6 +1282,8 @@ export class RestRepository<Record extends XataRecord>
     | Array<Readonly<SelectedPick<Record, K[]>>>
   > {
     return this.#trace('createOrUpdate', async () => {
+      const ifVersion = parseIfVersion(b, c, d);
+
       // Create or update many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
@@ -1156,13 +1300,13 @@ export class RestRepository<Record extends XataRecord>
       // Create or update one record with id as param
       if (isString(a) && isObject(b)) {
         const columns = isStringArray(c) ? c : undefined;
-        return this.#upsertRecordWithID(a, b, columns);
+        return this.#upsertRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
       }
 
       // Create or update one record with id as property
       if (isObject(a) && isString(a.id)) {
         const columns = isStringArray(c) ? c : undefined;
-        return this.#upsertRecordWithID(a.id, { ...a, id: undefined }, columns);
+        return this.#upsertRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
       }
 
       throw new Error('Invalid arguments for createOrUpdate method');
@@ -1172,19 +1316,91 @@ export class RestRepository<Record extends XataRecord>
   async #upsertRecordWithID(
     recordId: string,
     object: Omit<EditableData<Record>, 'id'>,
-    columns: SelectableColumn<Record>[] = ['*']
+    columns: SelectableColumn<Record>[] = ['*'],
+    { ifVersion }: { ifVersion?: number }
   ) {
     const fetchProps = await this.#getFetchProps();
 
     const response = await upsertRecordWithID({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
-      queryParams: { columns },
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table,
+        recordId
+      },
+      queryParams: { columns, ifVersion },
       body: object,
       ...fetchProps
     });
 
     const schemaTables = await this.#getSchemaTables();
     return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+  }
+
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    object: EditableData<Record> & Identifiable,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async createOrReplace(
+    object: EditableData<Record> & Identifiable,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    id: string,
+    object: Omit<EditableData<Record>, 'id'>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async createOrReplace(
+    id: string,
+    object: Omit<EditableData<Record>, 'id'>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    objects: Array<EditableData<Record> & Identifiable>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
+  async createOrReplace(
+    objects: Array<EditableData<Record> & Identifiable>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    a: string | EditableData<Record> | EditableData<Record>[],
+    b?: EditableData<Record> | Omit<EditableData<Record>, 'id'> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Array<Readonly<SelectedPick<Record, ['*']>>>
+    | Readonly<SelectedPick<Record, K[]>>
+    | Array<Readonly<SelectedPick<Record, K[]>>>
+  > {
+    return this.#trace('createOrReplace', async () => {
+      const ifVersion = parseIfVersion(b, c, d);
+
+      // Create or replace many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
+
+        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        return this.#bulkInsertTableRecords(a, columns);
+      }
+
+      // Create or replace one record with id as param
+      if (isString(a) && isObject(b)) {
+        const columns = isStringArray(c) ? c : undefined;
+        return this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: false, ifVersion });
+      }
+
+      // Create or replace one record with id as property
+      if (isObject(a) && isString(a.id)) {
+        const columns = isStringArray(c) ? c : undefined;
+        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: false, ifVersion });
+      }
+
+      throw new Error('Invalid arguments for createOrReplace method');
+    });
   }
 
   async delete<K extends SelectableColumn<Record>>(
@@ -1306,7 +1522,13 @@ export class RestRepository<Record extends XataRecord>
 
     try {
       const response = await deleteRecord({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table, recordId },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table,
+          recordId
+        },
         queryParams: { columns },
         ...fetchProps
       });
@@ -1336,7 +1558,12 @@ export class RestRepository<Record extends XataRecord>
       const fetchProps = await this.#getFetchProps();
 
       const { records } = await searchTable({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
         body: {
           query,
           fuzziness: options.fuzziness,
@@ -1363,7 +1590,12 @@ export class RestRepository<Record extends XataRecord>
       const fetchProps = await this.#getFetchProps();
 
       const result = await aggregateTable({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
         body: { aggs, filter: filter as Schemas.FilterExpression },
         ...fetchProps
       });
@@ -1381,7 +1613,12 @@ export class RestRepository<Record extends XataRecord>
 
       const fetchProps = await this.#getFetchProps();
       const { meta, records: objects } = await queryTable({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
         body: {
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
@@ -1411,11 +1648,17 @@ export class RestRepository<Record extends XataRecord>
 
       const fetchProps = await this.#getFetchProps();
       const result = await summarizeTable({
-        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', tableName: this.#table },
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
         body: {
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
           columns: data.columns,
+          page: data.pagination?.size !== undefined ? { size: data.pagination?.size } : undefined,
           summaries,
           summariesFilter
         },
@@ -1449,7 +1692,7 @@ export class RestRepository<Record extends XataRecord>
     const fetchProps = await this.#getFetchProps();
 
     const { schema } = await getBranchDetails({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}' },
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
       ...fetchProps
     });
 
@@ -1539,8 +1782,18 @@ export const initObject = <T>(
     return db[table].read(result['id'] as string, columns);
   };
 
-  result.update = function (data: any, columns?: any) {
-    return db[table].update(result['id'] as string, data, columns);
+  result.update = function (data: any, b?: any, c?: any) {
+    const columns = isStringArray(b) ? b : ['*'];
+    const ifVersion = parseIfVersion(b, c);
+
+    return db[table].update(result['id'] as string, data, columns, { ifVersion });
+  };
+
+  result.replace = function (data: any, b?: any, c?: any) {
+    const columns = isStringArray(b) ? b : ['*'];
+    const ifVersion = parseIfVersion(b, c);
+
+    return db[table].createOrReplace(result['id'] as string, data, columns, { ifVersion });
   };
 
   result.delete = function () {
@@ -1551,7 +1804,7 @@ export const initObject = <T>(
     return xata;
   };
 
-  for (const prop of ['read', 'update', 'delete', 'getMetadata']) {
+  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata']) {
     Object.defineProperty(result, prop, { enumerable: false });
   }
 
@@ -1582,4 +1835,14 @@ function isValidColumn(columns: string[], column: Schemas.Column) {
 
   // Normal columns
   return columns.includes(column.name);
+}
+
+function parseIfVersion(...args: any[]): number | undefined {
+  for (const arg of args) {
+    if (isObject(arg) && isNumber(arg.ifVersion)) {
+      return arg.ifVersion;
+    }
+  }
+
+  return undefined;
 }

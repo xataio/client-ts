@@ -59,10 +59,10 @@ describe('summarize', () => {
     `);
 
     expect(result.summaries.length).toBe(2);
-    expect(result.summaries[0].index).toBe(10);
-    expect(result.summaries[0].rating).toBe(10.5);
-    expect(result.summaries[1].index).toBe(30);
-    expect(result.summaries[1].rating).toBe(40.0);
+    expect(result.summaries[0].index).toBeCloseTo(10);
+    expect(result.summaries[0].rating).toBeCloseTo(10.5);
+    expect(result.summaries[1].index).toBeCloseTo(30);
+    expect(result.summaries[1].rating).toBeCloseTo(40.0);
   });
 
   test('group by without any common groups', async () => {
@@ -87,11 +87,11 @@ describe('summarize', () => {
 
     expect(result.summaries.length).toBe(3);
     expect(result.summaries[0].name).toBe('A');
-    expect(result.summaries[0].rating).toBe(10.5);
+    expect(result.summaries[0].rating).toBeCloseTo(10.5);
     expect(result.summaries[1].name).toBe('B');
-    expect(result.summaries[1].rating).toBe(10.5);
+    expect(result.summaries[1].rating).toBeCloseTo(10.5);
     expect(result.summaries[2].name).toBe('C');
-    expect(result.summaries[2].rating).toBe(40.0);
+    expect(result.summaries[2].rating).toBeCloseTo(40.0);
   });
 
   test('group by with wildcard columns', async () => {
@@ -180,15 +180,15 @@ describe('summarize', () => {
     expect(result.summaries[0].name).toBe('A');
     expect(result.summaries[0].settings?.plan).toBe('paid');
     expect(result.summaries[0].pet?.type).toBe('dog');
-    expect(result.summaries[0].pet?.num_legs).toBe(4);
+    expect(result.summaries[0].pet?.num_legs).toBeCloseTo(4);
     expect(result.summaries[1].name).toBe('B');
     expect(result.summaries[1].settings?.plan).toBe('free');
     expect(result.summaries[1].pet?.type).toBe('cat');
-    expect(result.summaries[1].pet?.num_legs).toBe(4);
+    expect(result.summaries[1].pet?.num_legs).toBeCloseTo(4);
     expect(result.summaries[2].name).toBe('C');
     expect(result.summaries[2].settings?.plan).toBe('paid');
     expect(result.summaries[2].pet?.type).toBe('dog');
-    expect(result.summaries[2].pet?.num_legs).toBe(3);
+    expect(result.summaries[2].pet?.num_legs).toBeCloseTo(3);
   });
 
   test('count without groups', async () => {
@@ -213,10 +213,10 @@ describe('summarize', () => {
     `);
 
     expect(result.summaries.length).toBe(1);
-    expect(result.summaries[0].all).toBe(3);
-    expect(result.summaries[0].col).toBe(3);
-    expect(result.summaries[0].obj_with_null).toBe(1);
-    expect(result.summaries[0].link).toBe(3);
+    expect(result.summaries[0].all).toBeCloseTo(3);
+    expect(result.summaries[0].col).toBeCloseTo(3);
+    expect(result.summaries[0].obj_with_null).toBeCloseTo(1);
+    expect(result.summaries[0].link).toBeCloseTo(3);
   });
 
   test('count with groups', async () => {
@@ -245,12 +245,12 @@ describe('summarize', () => {
     `);
 
     expect(result.summaries.length).toBe(2);
-    expect(result.summaries[0].index).toBe(10);
-    expect(result.summaries[0].pet?.num_legs).toBe(4);
-    expect(result.summaries[0].nl).toBe(2);
-    expect(result.summaries[1].index).toBe(30);
-    expect(result.summaries[1].pet?.num_legs).toBe(3);
-    expect(result.summaries[1].nl).toBe(1);
+    expect(result.summaries[0].index).toBeCloseTo(10);
+    expect(result.summaries[0].pet?.num_legs).toBeCloseTo(4);
+    expect(result.summaries[0].nl).toBeCloseTo(2);
+    expect(result.summaries[1].index).toBeCloseTo(30);
+    expect(result.summaries[1].pet?.num_legs).toBeCloseTo(3);
+    expect(result.summaries[1].nl).toBeCloseTo(1);
   });
 
   test('count with sort on group', async () => {
@@ -289,15 +289,15 @@ describe('summarize', () => {
     `);
 
     expect(result.summaries.length).toBe(3);
-    expect(result.summaries[0].index).toBe(10);
+    expect(result.summaries[0].index).toBeCloseTo(10);
     expect(result.summaries[0].pet?.type).toBe('dog');
-    expect(result.summaries[0].nl).toBe(1);
-    expect(result.summaries[1].index).toBe(10);
+    expect(result.summaries[0].nl).toBeCloseTo(1);
+    expect(result.summaries[1].index).toBeCloseTo(10);
     expect(result.summaries[1].pet?.type).toBe('cat');
-    expect(result.summaries[1].nl).toBe(1);
-    expect(result.summaries[2].index).toBe(30);
+    expect(result.summaries[1].nl).toBeCloseTo(1);
+    expect(result.summaries[2].index).toBeCloseTo(30);
     expect(result.summaries[2].pet?.type).toBe('dog');
-    expect(result.summaries[2].nl).toBe(1);
+    expect(result.summaries[2].nl).toBeCloseTo(1);
   });
 
   test('count with sort on summary', async () => {
@@ -320,10 +320,10 @@ describe('summarize', () => {
     `);
 
     expect(result.summaries.length).toBe(2);
-    expect(result.summaries[0].index).toBe(10);
-    expect(result.summaries[0].total).toBe(2);
-    expect(result.summaries[1].index).toBe(30);
-    expect(result.summaries[1].total).toBe(1);
+    expect(result.summaries[0].index).toBeCloseTo(10);
+    expect(result.summaries[0].total).toBeCloseTo(2);
+    expect(result.summaries[1].index).toBeCloseTo(30);
+    expect(result.summaries[1].total).toBeCloseTo(1);
   });
 
   test('count with sort on group and count', async () => {
@@ -361,11 +361,11 @@ describe('summarize', () => {
 
     expect(result.summaries.length).toBe(3);
     expect(result.summaries[0].pet?.name).toBe('Otis');
-    expect(result.summaries[0].dark_set).toBe(1);
+    expect(result.summaries[0].dark_set).toBeCloseTo(1);
     expect(result.summaries[1].pet?.name).toBe('Lyra');
-    expect(result.summaries[1].dark_set).toBe(0);
+    expect(result.summaries[1].dark_set).toBeCloseTo(0);
     expect(result.summaries[2].pet?.name).toBe('Toffee');
-    expect(result.summaries[2].dark_set).toBe(0);
+    expect(result.summaries[2].dark_set).toBeCloseTo(0);
   });
 
   test('summarize with no results', async () => {
@@ -400,7 +400,7 @@ describe('summarize', () => {
 
     expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].name).toBe('A');
-    expect(result.summaries[0].total).toBe(1);
+    expect(result.summaries[0].total).toBeCloseTo(1);
   });
 
   test('filter should create joins', async () => {
@@ -422,7 +422,7 @@ describe('summarize', () => {
 
     expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].name).toBe('B');
-    expect(result.summaries[0].dark_set).toBe(0);
+    expect(result.summaries[0].dark_set).toBeCloseTo(0);
   });
 
   test('filter, group by, count, min, max, average, sum, sort, summariesFilter', async () => {
@@ -463,11 +463,11 @@ describe('summarize', () => {
 
     expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].pet?.name).toBe('Otis');
-    expect(result.summaries[0].dark_set).toBe(1);
-    expect(result.summaries[0].min_legs).toBe(4);
-    expect(result.summaries[0].max_legs).toBe(4);
-    expect(result.summaries[0].sum_index).toBe(10);
-    expect(result.summaries[0].avg_rating).toBe(10.5);
+    expect(result.summaries[0].dark_set).toBeCloseTo(1);
+    expect(result.summaries[0].min_legs).toBeCloseTo(4);
+    expect(result.summaries[0].max_legs).toBeCloseTo(4);
+    expect(result.summaries[0].sum_index).toBeCloseTo(10);
+    expect(result.summaries[0].avg_rating).toBeCloseTo(10.5);
   });
 
   test('all aggregates', async () => {
@@ -533,30 +533,30 @@ describe('summarize', () => {
 
     expect(result.summaries.length).toBe(2);
     expect(result.summaries[0].pet?.type).toBe('cat');
-    expect(result.summaries[0].test_count_all).toBe(1);
-    expect(result.summaries[0].test_count).toBe(0);
-    expect(result.summaries[0].test_count_linked).toBe(1);
-    expect(result.summaries[0].test_min_int).toBe(4);
-    expect(result.summaries[0].test_min_float).toBe(10.5);
-    expect(result.summaries[0].test_max_int).toBe(4);
-    expect(result.summaries[0].test_max_float).toBe(10.5);
-    expect(result.summaries[0].test_sum_int).toBe(4);
-    expect(result.summaries[0].test_sum_float).toBe(10.5);
-    expect(result.summaries[0].test_avg_int).toBe(4);
-    expect(result.summaries[0].test_avg_float).toBe(10.5);
+    expect(result.summaries[0].test_count_all).toBeCloseTo(1);
+    expect(result.summaries[0].test_count).toBeCloseTo(0);
+    expect(result.summaries[0].test_count_linked).toBeCloseTo(1);
+    expect(result.summaries[0].test_min_int).toBeCloseTo(4);
+    expect(result.summaries[0].test_min_float).toBeCloseTo(10.5);
+    expect(result.summaries[0].test_max_int).toBeCloseTo(4);
+    expect(result.summaries[0].test_max_float).toBeCloseTo(10.5);
+    expect(result.summaries[0].test_sum_int).toBeCloseTo(4);
+    expect(result.summaries[0].test_sum_float).toBeCloseTo(10.5);
+    expect(result.summaries[0].test_avg_int).toBeCloseTo(4);
+    expect(result.summaries[0].test_avg_float).toBeCloseTo(10.5);
 
     expect(result.summaries[1].pet?.type).toBe('dog');
-    expect(result.summaries[1].test_count_all).toBe(2);
-    expect(result.summaries[1].test_count).toBe(1);
-    expect(result.summaries[1].test_count_linked).toBe(2);
-    expect(result.summaries[1].test_min_int).toBe(3);
-    expect(result.summaries[1].test_min_float).toBe(10.5);
-    expect(result.summaries[1].test_max_int).toBe(4);
-    expect(result.summaries[1].test_max_float).toBe(40);
-    expect(result.summaries[1].test_sum_int).toBe(7);
-    expect(result.summaries[1].test_sum_float).toBe(50.5);
-    expect(result.summaries[1].test_avg_int).toBe(3.5);
-    expect(result.summaries[1].test_avg_float).toBe(25.25);
+    expect(result.summaries[1].test_count_all).toBeCloseTo(2);
+    expect(result.summaries[1].test_count).toBeCloseTo(1);
+    expect(result.summaries[1].test_count_linked).toBeCloseTo(2);
+    expect(result.summaries[1].test_min_int).toBeCloseTo(3);
+    expect(result.summaries[1].test_min_float).toBeCloseTo(10.5);
+    expect(result.summaries[1].test_max_int).toBeCloseTo(4);
+    expect(result.summaries[1].test_max_float).toBeCloseTo(40);
+    expect(result.summaries[1].test_sum_int).toBeCloseTo(7);
+    expect(result.summaries[1].test_sum_float).toBeCloseTo(50.5);
+    expect(result.summaries[1].test_avg_int).toBeCloseTo(3.5);
+    expect(result.summaries[1].test_avg_float).toBeCloseTo(25.25);
   });
 
   test('summariesFilter with min', async () => {
@@ -585,7 +585,7 @@ describe('summarize', () => {
     expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].pet?.name).toBe('Lyra');
     expect(result.summaries[0].pet?.type).toBe('dog');
-    expect(result.summaries[0].min_rating).toBe(40);
+    expect(result.summaries[0].min_rating).toBeCloseTo(40);
   });
 
   test('summariesFilter with max', async () => {
@@ -621,10 +621,10 @@ describe('summarize', () => {
     expect(result.summaries.length).toBe(2);
     expect(result.summaries[0].pet?.name).toBe('Otis');
     expect(result.summaries[0].pet?.type).toBe('dog');
-    expect(result.summaries[0].max_rating).toBe(10.5);
+    expect(result.summaries[0].max_rating).toBeCloseTo(10.5);
     expect(result.summaries[1].pet?.name).toBe('Toffee');
     expect(result.summaries[1].pet?.type).toBe('cat');
-    expect(result.summaries[1].max_rating).toBe(10.5);
+    expect(result.summaries[1].max_rating).toBeCloseTo(10.5);
   });
 
   test('summariesFilter with sum', async () => {
@@ -653,7 +653,7 @@ describe('summarize', () => {
     expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].pet?.name).toBe('Lyra');
     expect(result.summaries[0].pet?.type).toBe('dog');
-    expect(result.summaries[0].sum_rating).toBe(40);
+    expect(result.summaries[0].sum_rating).toBeCloseTo(40);
   });
 
   test('summariesFilter with avg', async () => {
@@ -682,7 +682,7 @@ describe('summarize', () => {
     expect(result.summaries.length).toBe(1);
     expect(result.summaries[0].pet?.name).toBe('Lyra');
     expect(result.summaries[0].pet?.type).toBe('dog');
-    expect(result.summaries[0].avg_rating).toBe(40);
+    expect(result.summaries[0].avg_rating).toBeCloseTo(40);
   });
 
   test('filter, columns, summaries, complex summariesFilter', async () => {
@@ -735,12 +735,12 @@ describe('summarize', () => {
 
     expect(result.summaries.length).toBe(2);
     expect(result.summaries[0].pet?.type).toBe('cat');
-    expect(result.summaries[0].total).toBe(1);
-    expect(result.summaries[0].max_num_legs).toBe(4);
-    expect(result.summaries[0].average_rating).toBe(10.5);
+    expect(result.summaries[0].total).toBeCloseTo(1);
+    expect(result.summaries[0].max_num_legs).toBeCloseTo(4);
+    expect(result.summaries[0].average_rating).toBeCloseTo(10.5);
     expect(result.summaries[1].pet?.type).toBe('dog');
-    expect(result.summaries[1].total).toBe(2);
-    expect(result.summaries[1].max_num_legs).toBe(4);
-    expect(result.summaries[1].average_rating).toBe(25.25);
+    expect(result.summaries[1].total).toBeCloseTo(2);
+    expect(result.summaries[1].max_num_legs).toBeCloseTo(4);
+    expect(result.summaries[1].average_rating).toBeCloseTo(25.25);
   });
 });

@@ -18,10 +18,11 @@ export type CompareSchemaResult = {
 };
 
 export type TableInfo = {
-  workspaceID: string;
+  workspace: string;
+  region: string;
   database: string;
   branch: string;
-  tableName: string;
+  table: string;
 };
 
 type ProcessorOptions = Omit<ParseOptions, 'callback'> & {
@@ -77,12 +78,12 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
 }
 
 export async function findTable(xata: XataApiClient, tableInfo: TableInfo): Promise<Schemas.Table | undefined> {
-  const { workspaceID, database, branch, tableName: name } = tableInfo;
-  const branchDetails = await xata.branches.getBranchDetails(workspaceID, database, branch);
+  const { workspace, region, database, branch, table } = tableInfo;
+  const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
   const { schema } = branchDetails;
   const { tables } = schema;
 
-  return tables.find((t) => t.name === name);
+  return tables.find((t) => t.name === table);
 }
 
 export function compareSchema(
@@ -134,17 +135,24 @@ export function compareSchema(
 }
 
 export async function updateSchema(xata: XataApiClient, tableInfo: TableInfo, changes: CompareSchemaResult) {
-  const { workspaceID, database, branch, tableName } = tableInfo;
+  const { workspace, region, database, branch, table } = tableInfo;
 
   if (changes.missingTable) {
-    await xata.tables.createTable(workspaceID, database, branch, tableName);
+    await xata.tables.createTable({ workspace, region, database, branch, table });
   }
 
   for (const column of changes.missingColumns) {
     if (column.column === 'id') continue;
-    await xata.tables.addTableColumn(workspaceID, database, branch, tableName, {
-      name: column.column,
-      type: column.type as Schemas.Column['type']
+    await xata.tables.addTableColumn({
+      workspace,
+      region,
+      database,
+      branch,
+      table,
+      column: {
+        name: column.column,
+        type: column.type as Schemas.Column['type']
+      }
     });
   }
 }
@@ -155,7 +163,7 @@ export async function batchUpsert(
   columns: string[],
   values: Array<ReturnType<typeof parseRow>>
 ) {
-  const { workspaceID, database, branch, tableName } = tableInfo;
+  const { workspace, region, database, branch, table } = tableInfo;
 
   const records = values.map((row) => {
     const record: Record<string, unknown> = {};
@@ -166,7 +174,7 @@ export async function batchUpsert(
   });
 
   try {
-    await xata.records.bulkInsertTableRecords(workspaceID, database, branch, tableName, records);
+    await xata.records.bulkInsertTableRecords({ workspace, region, database, branch, table, records });
   } catch (e) {
     console.error(e);
   }

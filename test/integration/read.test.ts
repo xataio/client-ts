@@ -152,4 +152,17 @@ describe('record read', () => {
     // @ts-expect-error
     expect(copy?.owner?.full_name).not.toBeDefined();
   });
+
+  test('replace team with record method', async () => {
+    const team = await xata.db.teams.create({ name: 'Team ships', email: 'shipm4@test.com' });
+
+    expect(team.read).toBeDefined();
+    expect(team.email).toBe('shipm4@test.com');
+
+    const replacedTeam = await team.replace({ name: 'Team boats' });
+
+    expect(replacedTeam?.id).toBe(team.id);
+    expect(replacedTeam?.read).toBeDefined();
+    expect(replacedTeam?.email).toBeNull();
+  });
 });

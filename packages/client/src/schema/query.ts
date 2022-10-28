@@ -28,7 +28,8 @@ type BaseOptions<T extends XataRecord> = {
 type CursorQueryOptions = {
   pagination?: CursorNavigationOptions & OffsetNavigationOptions;
   filter?: never;
-  sort?: never;
+  // Fix for TS 4.7 not inferring `never` for `sort`
+  sort?: never | unknown;
 };
 
 type OffsetQueryOptions<T extends XataRecord> = {
@@ -494,7 +495,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns A new page object.
    */
   nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.firstPage(size, offset);
+    return this.startPage(size, offset);
   }
 
   /**
@@ -503,15 +504,15 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns A new page object
    */
   previousPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.firstPage(size, offset);
+    return this.startPage(size, offset);
   }
 
   /**
-   * Retrieve first page of records
+   * Retrieve start page of records
    *
    * @returns A new page object
    */
-  firstPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+  startPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.getPaginated({ pagination: { size, offset } });
   }
 
@@ -520,7 +521,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    *
    * @returns A new page object
    */
-  lastPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+  endPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.getPaginated({ pagination: { size, offset, before: 'end' } });
   }
 
@@ -539,7 +540,7 @@ function cleanParent<Record extends XataRecord>(
   parent?: Partial<QueryOptions<Record>>
 ) {
   if (isCursorPaginationOptions(data.pagination)) {
-    return { ...parent, sorting: undefined, filter: undefined };
+    return { ...parent, sort: undefined, filter: undefined };
   }
 
   return parent;

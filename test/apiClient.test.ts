@@ -2,55 +2,96 @@ import fetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { describe, expect, test } from 'vitest';
-import { XataApiClient } from '../packages/client/src';
+import { parseProviderString, Schemas, XataApiClient } from '../packages/client/src';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
 
-const api = new XataApiClient({ fetch, apiKey: process.env.XATA_API_KEY });
+const host = parseProviderString(process.env.XATA_API_PROVIDER);
+if (host === null) {
+  throw new Error(
+    `Invalid XATA_API_PROVIDER environment variable, expected either "production", "staging" or "apiUrl,workspacesUrl"`
+  );
+}
+
+const api = new XataApiClient({ fetch, apiKey: process.env.XATA_API_KEY, host });
+const region = process.env.XATA_REGION || 'eu-west-1';
 
 describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace', async () => {
-    const workspace = await api.workspaces.createWorkspace({
-      name: 'foo',
-      slug: 'foo'
+    const { id: workspace, name } = await api.workspaces.createWorkspace({
+      data: { name: 'foo', slug: 'foo' }
     });
 
-    expect(workspace.id).toBeDefined();
-    expect(workspace.name).toBe('foo');
+    expect(workspace).toBeDefined();
+    expect(name).toBe('foo');
 
-    const foo = await api.workspaces.getWorkspace(workspace.id);
-    expect(foo.id).toBe(workspace.id);
+    const foo = await api.workspaces.getWorkspace({ workspace });
+
+    expect(foo.id).toBe(workspace);
     expect(foo.slug).toBe('foo');
 
-    await api.workspaces.deleteWorkspace(workspace.id);
+    await api.workspaces.deleteWorkspace({ workspace });
 
-    await expect(api.workspaces.getWorkspace(workspace.id)).rejects.toHaveProperty('message');
+    await expect(api.workspaces.getWorkspace({ workspace })).rejects.toHaveProperty('message');
   });
 
   test('Create workspace with database, branch, table and records', async () => {
     const { id: workspace } = await api.workspaces.createWorkspace({
-      name: 'sdk-integration-api-client',
-      slug: 'sdk-integration-api-client'
+      data: {
+        name: 'sdk-integration-api-client',
+        slug: 'sdk-integration-api-client'
+      }
     });
 
-    const { databaseName } = await api.databases.createDatabase(workspace, `test-data-${workspace}`);
+    await waitForReplication(workspace);
 
-    await api.branches.createBranch(workspace, databaseName, 'branch');
-    await api.tables.createTable(workspace, databaseName, 'branch', 'table');
-    await api.tables.setTableSchema(workspace, databaseName, 'branch', 'table', {
-      columns: [{ name: 'email', type: 'string' }]
+    const { databaseName: database } = await api.database.createDatabase({
+      workspace,
+      database: `test-data-${workspace}`,
+      data: { region }
     });
 
-    const { id: recordId } = await api.records.insertRecord(workspace, databaseName, 'branch', 'table', {
-      email: 'example@foo.bar'
+    await waitForReplication(workspace, database);
+
+    await api.branches.createBranch({ workspace, region, database, branch: 'branch' });
+    await api.tables.createTable({ workspace, region, database, branch: 'branch', table: 'table' });
+    await api.tables.setTableSchema({
+      workspace,
+      region,
+      database,
+      branch: 'branch',
+      table: 'table',
+      schema: { columns: [{ name: 'email', type: 'string' }] }
     });
 
-    const record = await api.records.getRecord(workspace, databaseName, 'branch', 'table', recordId);
+    const { id } = await api.records.insertRecord({
+      workspace,
+      region,
+      database,
+      branch: 'branch',
+      table: 'table',
+      record: { email: 'example@foo.bar' }
+    });
+
+    const record = await api.records.getRecord({ workspace, region, database, branch: 'branch', table: 'table', id });
 
     expect(record.id).toBeDefined();
     expect(record.email).toEqual('example@foo.bar');
 
-    await api.workspaces.deleteWorkspace(workspace);
+    await api.workspaces.deleteWorkspace({ workspace });
   });
 });
+
+async function waitForReplication(workspace: string, database?: string): Promise<void> {
+  try {
+    if (database === undefined) {
+      await api.database.getDatabaseList({ workspace });
+    } else {
+      await api.branches.getBranchList({ workspace, database, region });
+    }
+  } catch (error) {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    return await waitForReplication(workspace, database);
+  }
+}

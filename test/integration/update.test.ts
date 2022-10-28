@@ -6,7 +6,7 @@ let xata: XataClient;
 let hooks: TestEnvironmentResult['hooks'];
 
 beforeAll(async (ctx) => {
-  const result = await setUpTestEnvironment('dates');
+  const result = await setUpTestEnvironment('update');
 
   xata = result.client;
   hooks = result.hooks;
@@ -89,5 +89,28 @@ describe('record update', () => {
     expect(team3[1]).toBeDefined();
     expect(team3[1]?.id).toBe(valid.id);
     expect(team3[1]?.name).toBe('Team boats');
+  });
+
+  test('update item with if version', async () => {
+    const team = await xata.db.teams.create({ name: 'Team ships' });
+    const { version: versionA } = team.getMetadata();
+
+    const updatedTeam = await xata.db.teams.update(team.id, { name: 'Team boats' }, { ifVersion: versionA });
+    const { version: versionB } = updatedTeam?.getMetadata() || {};
+
+    expect(updatedTeam?.id).toBe(team.id);
+    expect(versionB).toBe(versionA + 1);
+
+    const updatedTeam2 = await xata.db.teams.update(team.id, { name: 'Team planes' }, { ifVersion: versionA });
+    const { version: versionC } = updatedTeam2?.getMetadata() || {};
+
+    expect(updatedTeam2).toBeNull();
+    expect(versionC).toBe(undefined);
+
+    const updatedTeam3 = await team.update({ name: 'Team cars' }, { ifVersion: versionA });
+    const { version: versionD } = updatedTeam3?.getMetadata() || {};
+
+    expect(updatedTeam3).toBeNull();
+    expect(versionD).toBe(undefined);
   });
 });

@@ -13,7 +13,7 @@ clearEnvVariables();
 beforeEach(() => {
   process.env.XATA_API_KEY = '1234abcdef';
   process.env.XATA_BRANCH = 'main';
-  process.env.XATA_DATABASE_URL = 'https://mock.xata.sh/db/xata';
+  process.env.XATA_DATABASE_URL = 'https://mock.eu-west-1.xata.sh/db/xata';
 });
 
 afterEach(() => {
@@ -54,7 +54,7 @@ describe('schema dump', () => {
 
     expect(writeFile).not.toHaveBeenCalled();
 
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://mock.xata.sh/db/xata:main');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://mock.eu-west-1.xata.sh/db/xata:main');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
   });
 
@@ -75,7 +75,7 @@ describe('schema dump', () => {
 
     expect(writeFile).toHaveBeenCalledWith('schema.json', JSON.stringify(mockSchema, null, 2));
 
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://mock.xata.sh/db/xata:main');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://mock.eu-west-1.xata.sh/db/xata:main');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
   });
 });

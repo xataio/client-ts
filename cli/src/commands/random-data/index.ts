@@ -28,15 +28,15 @@ export default class RandomData extends BaseCommand {
   async run(): Promise<void> {
     const { flags } = await this.parse(RandomData);
 
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
-    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+    const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
     if (!branchDetails) {
       this.error('Could not resolve the current branch');
     }
 
-    const { tables } = branchDetails.schema;
-    if (tables.length === 0) {
+    const { tables: schemaTables } = branchDetails.schema;
+    if (schemaTables.length === 0) {
       this.warn(
         `Your database has no tables. To create one, use ${chalk.bold(
           'xata schema edit'
@@ -45,16 +45,15 @@ export default class RandomData extends BaseCommand {
       this.log();
     }
 
-    const { table: tableName, records: totalRecords = 25 } = flags;
+    const { table: tablesFlag = [], records: totalRecords = 25 } = flags;
+    const tables = tablesFlag.length > 0 ? schemaTables.filter((t) => tablesFlag.includes(t.name)) : schemaTables;
 
     for (const table of tables) {
-      if (tableName && !tableName.includes(table.name)) continue;
-
       const records: Record<string, unknown>[] = [];
       for (let index = 0; index < totalRecords; index++) {
         records.push(this.randomRecord(table.columns));
       }
-      await xata.records.bulkInsertTableRecords(workspace, database, branch, table.name, records);
+      await xata.records.bulkInsertTableRecords({ workspace, region, database, branch, table: table.name, records });
 
       this.info(
         `Inserted ${chalk.bold(totalRecords)} random ${pluralize('record', totalRecords)} in the ${chalk.bold(

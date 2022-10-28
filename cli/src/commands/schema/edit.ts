@@ -89,6 +89,7 @@ export default class EditSchema extends BaseCommand {
   branchDetails: Schemas.DBBranch | undefined;
   tables: EditableTable[] = [];
   workspace!: string;
+  region!: string;
   database!: string;
   branch!: string;
 
@@ -109,13 +110,14 @@ Beware that this can lead to ${chalk.bold(
       this.log();
     }
 
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     this.workspace = workspace;
+    this.region = region;
     this.database = database;
     this.branch = branch;
 
     const xata = await this.getXataClient();
-    const branchDetails = await xata.branches.getBranchDetails(workspace, database, branch);
+    const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
     if (!branchDetails) this.error('Could not get the schema from the current branch');
 
     if (flags.source) {
@@ -164,7 +166,7 @@ Beware that this can lead to ${chalk.bold(
       this.error('The schema is not valid. See the errors above');
     }
 
-    await this.deploySchema(this.workspace, this.database, this.branch, result.data);
+    await this.deploySchema(this.workspace, this.region, this.database, this.branch, result.data);
   }
 
   async showInteractiveEditing(branchDetails: Schemas.DBBranch) {
@@ -624,6 +626,7 @@ Beware that this can lead to ${chalk.bold(
     }
 
     const workspace = this.workspace;
+    const region = this.region;
     const database = this.database;
 
     const xata = await this.getXataClient();
@@ -633,11 +636,16 @@ Beware that this can lead to ${chalk.bold(
     for (const table of this.tables) {
       if (table.added) {
         this.info(`Creating table ${table.name}`);
-        await xata.tables.createTable(workspace, database, branch, table.name);
+        await xata.tables.createTable({ workspace, region, database, branch, table: table.name });
       } else if (table.initialName) {
         this.info(`Renaming table ${table.initialName} to ${table.name}`);
-        await xata.tables.updateTable(workspace, database, branch, table.initialName, {
-          name: table.name
+        await xata.tables.updateTable({
+          workspace,
+          region,
+          database,
+          branch,
+          table: table.initialName,
+          update: { name: table.name }
         });
       }
 
@@ -645,11 +653,24 @@ Beware that this can lead to ${chalk.bold(
         const linkedTable = this.tables.find((t) => (t.initialName || t.name) === column.link?.table);
         if (column.deleted || linkedTable?.deleted) {
           this.info(`Deleting column ${table.name}.${column.name}`);
-          await xata.tables.deleteColumn(workspace, database, branch, table.name, column.name);
+          await xata.tables.deleteColumn({
+            workspace,
+            region,
+            database,
+            branch,
+            table: table.name,
+            column: column.name
+          });
         } else if (column.initialName) {
           this.info(`Renaming column ${table.name}.${column.initialName} to ${table.name}.${column.name}`);
-          await xata.tables.updateColumn(workspace, database, branch, table.name, column.initialName, {
-            name: column.name
+          await xata.tables.updateColumn({
+            workspace,
+            region,
+            database,
+            branch,
+            table: table.name,
+            column: column.initialName,
+            update: { name: column.name }
           });
         }
       }
@@ -659,17 +680,24 @@ Beware that this can lead to ${chalk.bold(
     for (const table of this.tables) {
       if (table.deleted) {
         this.info(`Deleting table ${table.name}`);
-        await xata.tables.deleteTable(workspace, database, branch, table.name);
+        await xata.tables.deleteTable({ workspace, region, database, branch, table: table.name });
         continue;
       }
 
       for (const column of table.columns) {
         if (table.added || column.added) {
           this.info(`Adding column ${table.name}.${column.name}`);
-          await xata.tables.addTableColumn(workspace, database, branch, table.name, {
-            name: column.name,
-            type: column.type,
-            link: column.link
+          await xata.tables.addTableColumn({
+            workspace,
+            region,
+            database,
+            branch,
+            table: table.name,
+            column: {
+              name: column.name,
+              type: column.type,
+              link: column.link
+            }
           });
         }
       }

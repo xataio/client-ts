@@ -22,6 +22,7 @@ export type SummarizeParams<
   filter?: Filter<Record>;
   columns?: Columns;
   sort?: SummarizeSort<Record, Expression>;
+  pagination?: { size: number };
 };
 
 export type SummarizeResult<
@@ -37,13 +38,13 @@ type SummarizeExpressionResultTypes<Value> = {
   min: Value;
   max: Value;
   sum: number;
-  avg: number;
+  average: number;
 };
 
 type SummarizeSort<
   Record extends XataRecord,
   Expression extends Dictionary<SummarizeExpression<Record>>
-> = SingleOrArray<SortFilter<Record, SelectableColumn<Record> | StringKeys<Expression>>>;
+> = SingleOrArray<SortFilter<Record, ColumnsByValue<Record, any> | StringKeys<Expression>>>;
 
 type SummarizeValuePick<Record extends XataRecord, Expression extends Dictionary<SummarizeExpression<Record>>> = {
   [K in StringKeys<Expression>]: StringKeys<Expression[K]> extends infer SummarizeOperation

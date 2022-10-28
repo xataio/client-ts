@@ -1,5 +1,25 @@
 # @xata.io/cli
 
+## 0.10.0
+
+### Minor Changes
+
+- [#692](https://github.com/xataio/client-ts/pull/692) [`c14f431`](https://github.com/xataio/client-ts/commit/c14f431db020036ab2b059bcc52a5d56b321c8e7) Thanks [@SferaDev](https://github.com/SferaDev)! - Add multi region endpoint support
+
+- [#692](https://github.com/xataio/client-ts/pull/692) [`c8def01`](https://github.com/xataio/client-ts/commit/c8def013e9e2d5b634cdb2850f757a0b3e9e0a6d) Thanks [@SferaDev](https://github.com/SferaDev)! - Update OpenAPI spec methods
+
+### Patch Changes
+
+- Updated dependencies [[`f80f051`](https://github.com/xataio/client-ts/commit/f80f05118dd0588861b8229114a469f016ef77ac), [`c14f431`](https://github.com/xataio/client-ts/commit/c14f431db020036ab2b059bcc52a5d56b321c8e7), [`2e341e5`](https://github.com/xataio/client-ts/commit/2e341e5c6140f9c4ddd74e479049992c26c43ea2), [`c8def01`](https://github.com/xataio/client-ts/commit/c8def013e9e2d5b634cdb2850f757a0b3e9e0a6d), [`f2f749f`](https://github.com/xataio/client-ts/commit/f2f749f4c64246a303da8d4a617773fc55c1d021), [`f2f749f`](https://github.com/xataio/client-ts/commit/f2f749f4c64246a303da8d4a617773fc55c1d021)]:
+  - @xata.io/client@0.19.0
+  - @xata.io/importer@0.3.0
+
+## 0.9.6
+
+### Patch Changes
+
+- [#683](https://github.com/xataio/client-ts/pull/683) [`d436629`](https://github.com/xataio/client-ts/commit/d436629611442f6de81dea2d8e7196c0b2743c96) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix random-data success message with tables flag
+
 ## 0.9.5
 
 ### Patch Changes
