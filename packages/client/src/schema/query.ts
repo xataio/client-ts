@@ -497,7 +497,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns A new page object.
    */
   nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.firstPage(size, offset);
+    return this.startPage(size, offset);
   }
 
   /**
@@ -506,15 +506,15 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns A new page object
    */
   previousPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.firstPage(size, offset);
+    return this.startPage(size, offset);
   }
 
   /**
-   * Retrieve first page of records
+   * Retrieve start page of records
    *
    * @returns A new page object
    */
-  firstPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+  startPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.getPaginated({ pagination: { size, offset } });
   }
 
@@ -523,7 +523,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    *
    * @returns A new page object
    */
-  lastPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+  endPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
     return this.getPaginated({ pagination: { size, offset, before: 'end' } });
   }
 
