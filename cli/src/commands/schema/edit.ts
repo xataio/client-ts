@@ -718,9 +718,11 @@ function validateOptionalBoolean(value?: string) {
 }
 
 function parseDefaultValue(type: string, val: string): string | undefined {
-  const num = val.length > 0 ? +val : undefined;
+  const num = String(val).length > 0 ? +val : undefined;
 
-  if (type === 'int') {
+  if (type === 'string') {
+    return String(val);
+  } else if (type === 'int') {
     return Number.isSafeInteger(num) && val !== '' ? String(num) : undefined;
   } else if (type === 'float') {
     return Number.isFinite(num) && val !== '' ? String(num) : undefined;
