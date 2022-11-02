@@ -2670,6 +2670,8 @@ export type QueryTableVariables = {
  * }
  * ```
  *
+ * For usage, see also the [API Guide](https://xata.io/docs/api-guide/get).
+ *
  * ### Column selection
  *
  * If the `columns` array is not specified, all columns are included. For link
@@ -3041,9 +3043,8 @@ export type QueryTableVariables = {
  *
  * #### Partial match
  *
- * `$contains` is the simplest operator for partial matching. We should generally
- * discourage overusing `$contains` because it typically can't make use of
- * indices.
+ * `$contains` is the simplest operator for partial matching. Note that `$contains` operator can
+ * cause performance issues at scale, because indices cannot be used.
  *
  * ```json
  * {
@@ -3073,7 +3074,7 @@ export type QueryTableVariables = {
  *
  * If you want to match a string that contains a wildcard character, you can escape them using a backslash (`\`). You can escape a backslash by usign another backslash.
  *
- * We could also have `$endsWith` and `$startsWith` operators:
+ * You can also use the `$endsWith` and `$startsWith` operators:
  *
  * ```json
  * {
@@ -3695,6 +3696,8 @@ export type AggregateTableVariables = {
  * only eventually consistent. On the other hand, the aggregate endpoint uses a
  * store that is more appropiate for analytics, makes use of approximative algorithms
  * (e.g for cardinality), and is generally faster and can do more complex aggregations.
+ *
+ * For usage, see the [API Guide](https://xata.io/docs/api-guide/aggregate).
  */
 export const aggregateTable = (variables: AggregateTableVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
