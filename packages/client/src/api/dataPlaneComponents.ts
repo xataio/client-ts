@@ -957,7 +957,7 @@ export type BranchTransactionPathParams = {
 export type BranchTransactionError = Fetcher.ErrorWrapper<
   | {
       status: 400;
-      payload: Responses.TransactionFailed;
+      payload: Responses.TransactionFailure;
     }
   | {
       status: 401;
@@ -980,7 +980,7 @@ export type BranchTransactionVariables = {
 
 export const branchTransaction = (variables: BranchTransactionVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    Responses.TransactionSucceeded,
+    Responses.TransactionSuccess,
     BranchTransactionError,
     BranchTransactionRequestBody,
     {},

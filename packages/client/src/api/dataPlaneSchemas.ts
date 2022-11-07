@@ -899,21 +899,19 @@ export type AggResponse =
  */
 export type TransactionOperation =
   | {
-      insert: TransactionInsert;
+      insert: TransactionInsertOp;
     }
   | {
-      update: TransactionUpdate;
+      update: TransactionUpdateOp;
     }
   | {
-      ['delete']: TransactionDelete;
+      ['delete']: TransactionDeleteOp;
     };
 
 /**
  * Insert operation
- *
- * @x-go-type TxOperation
  */
-export type TransactionInsert = {
+export type TransactionInsertOp = {
   /**
    * The table name
    */
@@ -943,10 +941,8 @@ export type TransactionInsert = {
 
 /**
  * Update operation
- *
- * @x-go-type TxOperation
  */
-export type TransactionUpdate = {
+export type TransactionUpdateOp = {
   /**
    * The table name
    */
@@ -970,10 +966,8 @@ export type TransactionUpdate = {
 
 /**
  * A delete operation. The transaction will continue if no record matches the ID.
- *
- * @x-go-type TxOperation
  */
-export type TransactionDelete = {
+export type TransactionDeleteOp = {
   /**
    * The table name
    */
@@ -986,6 +980,10 @@ export type TransactionDelete = {
  */
 export type TransactionResultInsert = {
   /**
+   * The type of operation who's result is being returned.
+   */
+  operation: 'insert';
+  /**
    * The number of affected rows
    */
   rows: number;
@@ -997,7 +995,11 @@ export type TransactionResultInsert = {
  */
 export type TransactionResultUpdate = {
   /**
-   * The number of affected rows
+   * The type of operation who's result is being returned.
+   */
+  operation: 'update';
+  /**
+   * The number of updated rows
    */
   rows: number;
   id: RecordID;
@@ -1008,13 +1010,19 @@ export type TransactionResultUpdate = {
  */
 export type TransactionResultDelete = {
   /**
-   * The number of affected rows
+   * The type of operation who's result is being returned.
+   */
+  operation: 'delete';
+  /**
+   * The number of deleted rows
    */
   rows: number;
 };
 
 /**
  * An error message from a failing transaction operation
+ *
+ * @x-go-type xata.ErrTxOp
  */
 export type TransactionError = {
   /**
