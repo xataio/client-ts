@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.20.1
+
+### Patch Changes
+
+- [#744](https://github.com/xataio/client-ts/pull/744) [`98298ca`](https://github.com/xataio/client-ts/commit/98298ca1312a2256ee3e9d2700a9f3d3e316abe5) Thanks [@xata-bot](https://github.com/xata-bot)! - Add deno entry point
+
 ## 0.20.0
 
 ### Minor Changes
