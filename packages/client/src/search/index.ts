@@ -7,7 +7,7 @@ import { Filter } from '../schema/filters';
 import { BaseData, XataRecord, XataRecordMetadata } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
-import { Awaited, GetArrayInnerType, StringKeys, Values } from '../util/types';
+import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 import { Boosters } from './boosters';
 import { TargetColumn } from './target';
 

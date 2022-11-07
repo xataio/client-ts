@@ -1,5 +1,5 @@
 import { ApiExtraProps, Schemas } from './api';
-import { FetchImpl } from './api/fetcher';
+import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
@@ -10,7 +10,7 @@ import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStra
 import { getCurrentBranchName, getDatabaseURL } from './util/config';
 import { getEnableBrowserVariable } from './util/environment';
 import { getFetchImplementation } from './util/fetch';
-import { AllRequired, Awaited, StringKeys } from './util/types';
+import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
 
 export type BaseClientOptions = {
