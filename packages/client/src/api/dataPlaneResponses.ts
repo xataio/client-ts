@@ -80,9 +80,9 @@ export type SearchResponse = {
 };
 
 /**
- * @x-go-type TxResponse
+ * @x-go-type TxSuccess
  */
-export type TransactionSucceeded = {
+export type TransactionSuccess = {
   /**
    * An ordered array of results from the submitted operations that were executed
    */
@@ -90,9 +90,9 @@ export type TransactionSucceeded = {
 };
 
 /**
- * @x-go-type TxResponse
+ * @x-go-type TxFailure
  */
-export type TransactionFailed = {
+export type TransactionFailure = {
   /**
    * An array of errors from the submitted operations.
    */
