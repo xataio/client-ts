@@ -1,5 +1,6 @@
 import { deserialize, serialize } from '../serializer';
 import { Request } from '../util/request';
+import { Awaited } from '../util/types';
 
 type XataWorkerContext<XataClient> = { xata: XataClient; request: Request; env: Record<string, string | undefined> };
 
