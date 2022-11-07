@@ -18,6 +18,6 @@
     "outDir": "dist",
     "declaration": true
   },
-  "include": ["src", "mod.ts"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }
