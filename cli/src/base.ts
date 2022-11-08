@@ -1,5 +1,6 @@
 import { Command, Flags } from '@oclif/core';
 import {
+  compareBranchWithUserSchema,
   getAPIKey,
   getCurrentBranchName,
   getHostUrl,
@@ -557,20 +558,12 @@ export abstract class BaseCommand extends Command {
 
   async deploySchema(workspace: string, region: string, database: string, branch: string, schema: Schemas.Schema) {
     const xata = await this.getXataClient();
-    const plan = await xata.migrations.getBranchMigrationPlan({ workspace, region, database, branch, schema });
+    const compare = await xata.migrations.compareBranchWithUserSchema({ workspace, region, database, branch, schema });
 
-    const { newTables, removedTables, renamedTables, tableMigrations } = plan.migration;
-
-    function isEmpty(obj?: object) {
-      if (obj == null) return true;
-      if (Array.isArray(obj)) return obj.length === 0;
-      return Object.keys(obj).length === 0;
-    }
-
-    if (isEmpty(newTables) && isEmpty(removedTables) && isEmpty(renamedTables) && isEmpty(tableMigrations)) {
+    if (compare.edits.operations.length === 0) {
       this.log('Your schema is up to date');
     } else {
-      this.printMigration(plan.migration);
+      this.printMigration(compare);
       this.log();
 
       const { confirm } = await this.prompt({
@@ -581,65 +574,42 @@ export abstract class BaseCommand extends Command {
       });
       if (!confirm) return this.exit(1);
 
-      await xata.migrations.executeBranchMigrationPlan({ workspace, region, database, branch, plan });
+      await xata.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits: compare.edits });
     }
   }
 
-  printMigration(migration: Schemas.BranchMigration) {
-    if (migration.title) {
-      this.log(`* ${migration.title} [status: ${migration.status}]`);
-    }
-    if (migration.id) {
-      this.log(`ID: ${migration.id}`);
-    }
-    if (migration.lastGitRevision) {
-      this.log(`git commit sha: ${migration.lastGitRevision}`);
-      if (migration.localChanges) {
-        this.log(' + local changes');
+  printMigration(migration: Awaited<ReturnType<typeof compareBranchWithUserSchema>>) {
+    for (const operation of migration.edits.operations) {
+      if ('addTable' in operation) {
+        this.log(` ${chalk.bgWhite.blue('CREATE table ')} ${operation.addTable.table}`);
       }
-      this.log();
-    }
-    if (migration.createdAt) {
-      this.log(`Date ${this.formatDate(migration.createdAt)}`);
-    }
 
-    if (migration.newTables) {
-      for (const tableName of Object.keys(migration.newTables)) {
-        this.log(` ${chalk.bgWhite.blue('CREATE table ')} ${tableName}`);
+      if ('removeTable' in operation) {
+        this.log(` ${chalk.bgWhite.red('DROP table ')} ${operation.removeTable.table}`);
       }
-    }
 
-    if (migration.removedTables) {
-      for (const tableName of migration.removedTables) {
-        this.log(` ${chalk.bgWhite.red('DELETE table ')} ${tableName}`);
+      if ('renameTable' in operation) {
+        this.log(
+          ` ${chalk.bgWhite.blue('RENAME table ')} ${operation.renameTable.oldName} to ${operation.renameTable.newName}`
+        );
       }
-    }
 
-    if (migration.renamedTables) {
-      for (const renamedTable of migration.renamedTables) {
-        this.log(` ${chalk.bgWhite.blue('RENAME table ')} ${renamedTable.oldName} to ${renamedTable.newName}`);
+      if ('addColumn' in operation) {
+        this.log(` ${chalk.bgWhite.blue('ADD column ')} ${operation.addColumn.table}.${operation.addColumn.column}`);
       }
-    }
 
-    if (migration.tableMigrations) {
-      for (const [tableName, tableMigration] of Object.entries(migration.tableMigrations)) {
-        this.log();
-        this.log(`Table ${tableName}:`);
-        if (tableMigration.newColumns) {
-          for (const columnName of Object.keys(tableMigration.newColumns)) {
-            this.log(` ${chalk.bgWhite.blue('ADD column ')} ${columnName}`);
-          }
-        }
-        if (tableMigration.removedColumns) {
-          for (const columnName of tableMigration.removedColumns) {
-            this.log(` ${chalk.bgWhite.red('DELETE column ')} ${columnName}`);
-          }
-        }
-        if (tableMigration.modifiedColumns) {
-          for (const columnMigration of tableMigration.modifiedColumns) {
-            this.log(` ${chalk.bgWhite.red('MODIFY column ')} ${columnMigration.old.name}`);
-          }
-        }
+      if ('removeColumn' in operation) {
+        this.log(
+          ` ${chalk.bgWhite.red('DROP column ')} ${operation.removeColumn.table}.${operation.removeColumn.column}`
+        );
+      }
+
+      if ('renameColumn' in operation) {
+        this.log(
+          ` ${chalk.bgWhite.blue('RENAME column ')} ${operation.renameColumn.table}.${
+            operation.renameColumn.oldName
+          } to ${operation.renameColumn.newName}`
+        );
       }
     }
   }
