@@ -10,8 +10,8 @@ export interface Paginable<Record extends XataRecord, Result extends XataRecord 
 
   nextPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
   previousPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
-  firstPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
-  lastPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
+  startPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
+  endPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
 
   hasNextPage(): boolean;
 }
@@ -58,23 +58,23 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
   }
 
   /**
-   * Retrieves the first page of results.
+   * Retrieves the start page of results.
    * @param size Maximum number of results to be retrieved.
    * @param offset Number of results to skip when retrieving the results.
-   * @returns The first page or results.
+   * @returns The start page or results.
    */
-  async firstPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.#query.getPaginated({ pagination: { size, offset, first: this.meta.page.cursor } });
+  async startPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+    return this.#query.getPaginated({ pagination: { size, offset, start: this.meta.page.cursor } });
   }
 
   /**
-   * Retrieves the last page of results.
+   * Retrieves the end page of results.
    * @param size Maximum number of results to be retrieved.
    * @param offset Number of results to skip when retrieving the results.
-   * @returns The last page or results.
+   * @returns The end page or results.
    */
-  async lastPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
-    return this.#query.getPaginated({ pagination: { size, offset, last: this.meta.page.cursor } });
+  async endPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+    return this.#query.getPaginated({ pagination: { size, offset, end: this.meta.page.cursor } });
   }
 
   /**
@@ -86,7 +86,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
   }
 }
 
-export type CursorNavigationOptions = { first?: string } | { last?: string } | { after?: string; before?: string };
+export type CursorNavigationOptions = { start?: string } | { end?: string } | { after?: string; before?: string };
 export type OffsetNavigationOptions = { size?: number; offset?: number };
 
 export const PAGINATION_MAX_SIZE = 200;
@@ -99,7 +99,7 @@ export function isCursorPaginationOptions(
 ): options is CursorNavigationOptions {
   return (
     isDefined(options) &&
-    (isDefined(options.first) || isDefined(options.last) || isDefined(options.after) || isDefined(options.before))
+    (isDefined(options.start) || isDefined(options.end) || isDefined(options.after) || isDefined(options.before))
   );
 }
 
@@ -159,22 +159,22 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
   }
 
   /**
-   * Retrieve first page of records
+   * Retrieve start page of records
    *
    * @returns A new array of objects
    */
-  async firstPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
-    const newPage = await this.#page.firstPage(size, offset);
+  async startPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+    const newPage = await this.#page.startPage(size, offset);
     return new RecordArray(newPage);
   }
 
   /**
-   * Retrieve last page of records
+   * Retrieve end page of records
    *
    * @returns A new array of objects
    */
-  async lastPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
-    const newPage = await this.#page.lastPage(size, offset);
+  async endPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+    const newPage = await this.#page.endPage(size, offset);
     return new RecordArray(newPage);
   }
 

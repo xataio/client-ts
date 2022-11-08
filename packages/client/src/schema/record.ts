@@ -129,13 +129,15 @@ export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> 
 }
 
 export type EditableData<O extends XataRecord> = Identifiable &
-  Omit<
-    {
-      [K in keyof O]: O[K] extends XataRecord
-        ? { id: string } | string
-        : NonNullable<O[K]> extends XataRecord
-        ? { id: string } | string | null | undefined
-        : O[K];
-    },
-    keyof XataRecord
+  Partial<
+    Omit<
+      {
+        [K in keyof O]: O[K] extends XataRecord
+          ? { id: string } | string
+          : NonNullable<O[K]> extends XataRecord
+          ? { id: string } | string | null | undefined
+          : O[K];
+      },
+      keyof XataRecord
+    >
   >;

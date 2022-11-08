@@ -97,9 +97,6 @@ export type Schema = {
   tablesOrder?: string[];
 };
 
-/**
- * @x-internal true
- */
 export type SchemaEditScript = {
   sourceMigrationID?: string;
   targetMigrationID?: string;
@@ -118,6 +115,7 @@ export type Column = {
   type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
   link?: ColumnLink;
   notNull?: boolean;
+  defaultValue?: string;
   unique?: boolean;
   columns?: Column[];
 };
@@ -305,7 +303,7 @@ export type MigrationRequest = {
    * Timestamp when the migration request was merged.
    */
   mergedAt?: DateTime;
-  status?: 'open' | 'closed' | 'merging' | 'merged';
+  status?: 'open' | 'closed' | 'merging' | 'merged' | 'failed';
   /**
    * The migration request title.
    */
@@ -402,6 +400,10 @@ export type FilterExpression = {
  *
  * @example {"all_users":{"count":"*"}}
  * @example {"total_created":{"count":"created_at"}}
+ * @example {"min_cost":{"min":"cost"}}
+ * @example {"max_happiness":{"max":"happiness"}}
+ * @example {"total_revenue":{"sum":"revenue"}}
+ * @example {"average_speed":{"average":"speed"}}
  * @x-go-type xbquery.SummaryList
  */
 export type SummaryExpressionList = {
@@ -416,11 +418,28 @@ export type SummaryExpressionList = {
  * an object, i.e. if `settings` is an object with `dark_mode` as a field, you may summarize
  * `settings.dark_mode` but not `settings` nor `settings.*`.
  *
- * We currently support the `count` operation. When using `count`, one can set a column name
- * as the value. Xata will return the total number times this column is non-null in each group.
+ * We currently support several aggregation functions. Not all functions can be run on all column
+ * types.
  *
- * Alternately, if you'd like to count the total rows in each group - irregardless of null/not null
- * status - you can set `count` to `*` to count everything.
+ * - `count` is used to count the number of records in each group. Use `{"count": "*"}` to count
+ *   all columns present, otherwise `{"count": "<column_path>"}` to count the number of non-null
+ *   values are present at column path.
+ *
+ *   Count can be used on any column type, and always returns an int.
+ *
+ * - `min` calculates the minimum value in each group. `min` is compatible with most types;
+ *   string, multiple, text, email, int, float, and datetime. It returns a value of the same
+ *   type as operated on. This means that `{"lowest_latency": {"min": "latency"}}` where
+ *   `latency` is an int, will always return an int.
+ *
+ * - `max` calculates the maximum value in each group. `max` shares the same compatibility as
+ *   `min`.
+ *
+ * - `sum` adds up all values in a group. `sum` can be run on `int` and `float` types, and will
+ *   return a value of the same type as requested.
+ *
+ * - `average` averages all values in a group. `average` can be run on `int` and `float` types, and
+ *   always returns a float.
  *
  * @example {"count":"deleted_at"}
  * @x-go-type xbquery.Summary
@@ -768,11 +787,11 @@ export type PageConfig = {
   /**
    * Query the first page from the cursor.
    */
-  first?: string;
+  start?: string;
   /**
    * Query the last page from the cursor.
    */
-  last?: string;
+  end?: string;
   /**
    * Set page size. If the size is missing it is read from the cursor. If no cursor is given Xata will choose the default page size.
    *
@@ -880,21 +899,19 @@ export type AggResponse =
  */
 export type TransactionOperation =
   | {
-      insert: TransactionInsert;
+      insert: TransactionInsertOp;
     }
   | {
-      update: TransactionUpdate;
+      update: TransactionUpdateOp;
     }
   | {
-      ['delete']: TransactionDelete;
+      ['delete']: TransactionDeleteOp;
     };
 
 /**
  * Insert operation
- *
- * @x-go-type TxOperation
  */
-export type TransactionInsert = {
+export type TransactionInsertOp = {
   /**
    * The table name
    */
@@ -924,10 +941,8 @@ export type TransactionInsert = {
 
 /**
  * Update operation
- *
- * @x-go-type TxOperation
  */
-export type TransactionUpdate = {
+export type TransactionUpdateOp = {
   /**
    * The table name
    */
@@ -951,10 +966,8 @@ export type TransactionUpdate = {
 
 /**
  * A delete operation. The transaction will continue if no record matches the ID.
- *
- * @x-go-type TxOperation
  */
-export type TransactionDelete = {
+export type TransactionDeleteOp = {
   /**
    * The table name
    */
@@ -967,6 +980,10 @@ export type TransactionDelete = {
  */
 export type TransactionResultInsert = {
   /**
+   * The type of operation who's result is being returned.
+   */
+  operation: 'insert';
+  /**
    * The number of affected rows
    */
   rows: number;
@@ -978,7 +995,11 @@ export type TransactionResultInsert = {
  */
 export type TransactionResultUpdate = {
   /**
-   * The number of affected rows
+   * The type of operation who's result is being returned.
+   */
+  operation: 'update';
+  /**
+   * The number of updated rows
    */
   rows: number;
   id: RecordID;
@@ -989,13 +1010,19 @@ export type TransactionResultUpdate = {
  */
 export type TransactionResultDelete = {
   /**
-   * The number of affected rows
+   * The type of operation who's result is being returned.
+   */
+  operation: 'delete';
+  /**
+   * The number of deleted rows
    */
   rows: number;
 };
 
 /**
  * An error message from a failing transaction operation
+ *
+ * @x-go-type xata.ErrTxOp
  */
 export type TransactionError = {
   /**

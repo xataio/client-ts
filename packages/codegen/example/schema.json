@@ -92,7 +92,8 @@
         {
           "name": "full_name",
           "type": "string",
-          "notNull": true
+          "notNull": true,
+          "defaultValue": "John Doe"
         },
         {
           "name": "index",
@@ -133,6 +134,10 @@
           "link": {
             "table": "pets"
           }
+        },
+        {
+          "name": "account_value",
+          "type": "int"
         }
       ]
     },
