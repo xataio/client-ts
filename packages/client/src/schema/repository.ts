@@ -839,8 +839,11 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        const columns = isStringArray(b) ? b : undefined;
-        return this.#bulkInsertTableRecords(a, columns);
+        const ids = await this.#insertRecords(a, { ifVersion, createOnly: true });
+
+        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        const result = await this.read(ids as string[], columns);
+        return result;
       }
 
       // Create one record with id as param
@@ -848,7 +851,7 @@ export class RestRepository<Record extends XataRecord>
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isStringArray(c) ? c : undefined;
-        return this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: true, ifVersion });
+        return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: true, ifVersion });
       }
 
       // Create one record with id as property
@@ -856,7 +859,7 @@ export class RestRepository<Record extends XataRecord>
         if (a.id === '') throw new Error("The id can't be empty");
 
         const columns = isStringArray(b) ? b : undefined;
-        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: true, ifVersion });
+        return await this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: true, ifVersion });
       }
 
       // Create one record without id
@@ -917,29 +920,30 @@ export class RestRepository<Record extends XataRecord>
     return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
-  async #bulkInsertTableRecords(objects: EditableData<Record>[], columns: SelectableColumn<Record>[] = ['*']) {
+  async #insertRecords(
+    objects: EditableData<Record>[],
+    { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
+  ) {
     const fetchProps = await this.#getFetchProps();
 
-    const records = objects.map((object) => transformObjectLinks(object));
+    const operations: TransactionOperation[] = objects.map((record) => ({
+      insert: { table: this.#table, record, createOnly, ifVersion }
+    }));
 
-    const response = await bulkInsertTableRecords({
+    const { results } = await branchTransaction({
       pathParams: {
         workspace: '{workspaceId}',
         dbBranchName: '{dbBranch}',
-        region: '{region}',
-        tableName: this.#table
+        region: '{region}'
       },
-      queryParams: { columns },
-      body: { records },
+      body: { operations },
       ...fetchProps
     });
 
-    if (!isResponseWithRecords(response)) {
-      throw new Error("Request included columns but server didn't include them");
-    }
-
-    const schemaTables = await this.#getSchemaTables();
-    return response.records?.map((item) => initObject(this.#db, schemaTables, this.#table, item, columns)) as any;
+    return results.map((result) => {
+      if (result.operation === 'insert') return result.id;
+      return null;
+    });
   }
 
   async read<K extends SelectableColumn<Record>>(
@@ -1252,6 +1256,8 @@ export class RestRepository<Record extends XataRecord>
       if (isObject(e) && e.status === 404) {
         return null;
       }
+
+      throw e;
     }
   }
 
@@ -1421,8 +1427,11 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
+        const ids = await this.#insertRecords(a, { ifVersion, createOnly: false });
+
         const columns = isStringArray(b) ? b : (['*'] as K[]);
-        return this.#bulkInsertTableRecords(a, columns);
+        const result = await this.read(ids as string[], columns);
+        return result;
       }
 
       // Create or replace one record with id as param
