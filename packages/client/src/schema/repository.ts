@@ -1283,7 +1283,10 @@ export class RestRepository<Record extends XataRecord>
       ...fetchProps
     });
 
-    return results;
+    return results.map((result) => {
+      if (result.operation === 'update') return result.id;
+      return null;
+    });
   }
 
   async createOrUpdate<K extends SelectableColumn<Record>>(
@@ -1606,7 +1609,7 @@ export class RestRepository<Record extends XataRecord>
 
     const operations: TransactionOperation[] = recordIds.map((id) => ({ delete: { table: this.#table, id } }));
 
-    const { results } = await branchTransaction({
+    await branchTransaction({
       pathParams: {
         workspace: '{workspaceId}',
         dbBranchName: '{dbBranch}',
@@ -1615,8 +1618,6 @@ export class RestRepository<Record extends XataRecord>
       body: { operations },
       ...fetchProps
     });
-
-    return results;
   }
 
   async search(
