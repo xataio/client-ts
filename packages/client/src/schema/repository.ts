@@ -25,7 +25,7 @@ import {
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
-import { compact, isNumber, isObject, isString, isStringArray } from '../util/lang';
+import { chunk, compact, isNumber, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -39,6 +39,8 @@ import { SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
+
+const BULK_OPERATION_MAX_SIZE = 1000;
 
 /**
  * Common interface for performing operations on a table.
@@ -927,24 +929,36 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const operations: TransactionOperation[] = objects.map((object) => ({
-      insert: { table: this.#table, record: transformObjectLinks(object), createOnly, ifVersion }
-    }));
+    const chunkedOperations: TransactionOperation[][] = chunk(
+      objects.map((object) => ({
+        insert: { table: this.#table, record: transformObjectLinks(object), createOnly, ifVersion }
+      })),
+      BULK_OPERATION_MAX_SIZE
+    );
 
-    const { results } = await branchTransaction({
-      pathParams: {
-        workspace: '{workspaceId}',
-        dbBranchName: '{dbBranch}',
-        region: '{region}'
-      },
-      body: { operations },
-      ...fetchProps
-    });
+    const ids = [];
 
-    return results.map((result) => {
-      if (result.operation === 'insert') return result.id;
-      return null;
-    });
+    for (const operations of chunkedOperations) {
+      const { results } = await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...fetchProps
+      });
+
+      for (const result of results) {
+        if (result.operation === 'insert') {
+          ids.push(result.id);
+        } else {
+          ids.push(null);
+        }
+      }
+    }
+
+    return ids;
   }
 
   async read<K extends SelectableColumn<Record>>(
@@ -1268,24 +1282,36 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const operations: TransactionOperation[] = objects.map(({ id, ...object }) => ({
-      update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(object) }
-    }));
+    const chunkedOperations: TransactionOperation[][] = chunk(
+      objects.map(({ id, ...object }) => ({
+        update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(object) }
+      })),
+      BULK_OPERATION_MAX_SIZE
+    );
 
-    const { results } = await branchTransaction({
-      pathParams: {
-        workspace: '{workspaceId}',
-        dbBranchName: '{dbBranch}',
-        region: '{region}'
-      },
-      body: { operations },
-      ...fetchProps
-    });
+    const ids = [];
 
-    return results.map((result) => {
-      if (result.operation === 'update') return result.id;
-      return null;
-    });
+    for (const operations of chunkedOperations) {
+      const { results } = await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...fetchProps
+      });
+
+      for (const result of results) {
+        if (result.operation === 'update') {
+          ids.push(result.id);
+        } else {
+          ids.push(null);
+        }
+      }
+    }
+
+    return ids;
   }
 
   async createOrUpdate<K extends SelectableColumn<Record>>(
@@ -1608,17 +1634,22 @@ export class RestRepository<Record extends XataRecord>
   async #deleteRecords(recordIds: string[]) {
     const fetchProps = await this.#getFetchProps();
 
-    const operations: TransactionOperation[] = recordIds.map((id) => ({ delete: { table: this.#table, id } }));
+    const chunkedOperations: TransactionOperation[][] = chunk(
+      recordIds.map((id) => ({ delete: { table: this.#table, id } })),
+      BULK_OPERATION_MAX_SIZE
+    );
 
-    await branchTransaction({
-      pathParams: {
-        workspace: '{workspaceId}',
-        dbBranchName: '{dbBranch}',
-        region: '{region}'
-      },
-      body: { operations },
-      ...fetchProps
-    });
+    for (const operations of chunkedOperations) {
+      await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...fetchProps
+      });
+    }
   }
 
   async search(

@@ -223,4 +223,15 @@ describe('record creation', () => {
       xata.db.users.create([user1, { full_name: 'John Doe 5', email: 'doe5@john.net' }])
     ).rejects.toThrowError();
   });
+
+  test('create more than the operation max', async () => {
+    const users = await xata.db.users.create(
+      Array.from({ length: 1500 }, (_, i) => ({
+        full_name: `John Doe ${i}`,
+        email: `doe${i}@maxout.com`
+      }))
+    );
+
+    expect(users).toHaveLength(1500);
+  });
 });
