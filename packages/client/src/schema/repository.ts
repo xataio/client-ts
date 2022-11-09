@@ -3,7 +3,6 @@ import {
   aggregateTable,
   ApiExtraProps,
   branchTransaction,
-  bulkInsertTableRecords,
   deleteRecord,
   getBranchDetails,
   getRecord,
@@ -928,8 +927,8 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const operations: TransactionOperation[] = objects.map((record) => ({
-      insert: { table: this.#table, record, createOnly, ifVersion }
+    const operations: TransactionOperation[] = objects.map((object) => ({
+      insert: { table: this.#table, record: transformObjectLinks(object), createOnly, ifVersion }
     }));
 
     const { results } = await branchTransaction({
@@ -1269,8 +1268,8 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const operations: TransactionOperation[] = objects.map(({ id, ...fields }) => ({
-      update: { table: this.#table, id, ifVersion, upsert, fields }
+    const operations: TransactionOperation[] = objects.map(({ id, ...object }) => ({
+      update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(object) }
     }));
 
     const { results } = await branchTransaction({
