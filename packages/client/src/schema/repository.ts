@@ -16,7 +16,13 @@ import {
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
-import { FuzzinessExpression, HighlightExpression, PrefixExpression, RecordsMetadata } from '../api/schemas';
+import {
+  FuzzinessExpression,
+  HighlightExpression,
+  PrefixExpression,
+  RecordsMetadata,
+  TransactionOperation
+} from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
@@ -1120,13 +1126,20 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        if (a.length > 100) {
-          // TODO: Implement bulk update when API has support for it
-          console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
-        }
+        // TODO: Transaction API fails fast if one of the records is not found
+        const existing = await this.read(a, ['id']);
+        const updates = a.filter((_item, index) => existing[index] !== null);
+
+        await this.#updateRecords(updates as Array<Partial<EditableData<Record>> & Identifiable>, {
+          ifVersion,
+          upsert: false
+        });
 
         const columns = isStringArray(b) ? b : (['*'] as K[]);
-        return Promise.all(a.map((object) => this.update(object, columns)));
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(a, columns);
+        return result;
       }
 
       // Update one record with id as param
@@ -1239,9 +1252,30 @@ export class RestRepository<Record extends XataRecord>
       if (isObject(e) && e.status === 404) {
         return null;
       }
-
-      throw e;
     }
+  }
+
+  async #updateRecords(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
+    { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
+  ) {
+    const fetchProps = await this.#getFetchProps();
+
+    const operations: TransactionOperation[] = objects.map(({ id, ...fields }) => ({
+      update: { table: this.#table, id, ifVersion, upsert, fields }
+    }));
+
+    const { results } = await branchTransaction({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}'
+      },
+      body: { operations },
+      ...fetchProps
+    });
+
+    return results;
   }
 
   async createOrUpdate<K extends SelectableColumn<Record>>(
@@ -1289,13 +1323,16 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        if (a.length > 100) {
-          // TODO: Implement bulk update when API has support for it
-          console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
-        }
+        await this.#updateRecords(a as Array<Partial<EditableData<Record>> & Identifiable>, {
+          ifVersion,
+          upsert: true
+        });
 
         const columns = isStringArray(b) ? b : (['*'] as K[]);
-        return Promise.all(a.map((object) => this.createOrUpdate(object as any, columns)));
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(a, columns);
+        return result;
       }
 
       // Create or update one record with id as param
@@ -1447,7 +1484,14 @@ export class RestRepository<Record extends XataRecord>
           throw new Error('Invalid arguments for delete method');
         });
 
-        return this.#deleteRecords(ids, b);
+        const columns = isStringArray(b) ? b : (['*'] as K[]);
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(a as any, columns);
+
+        await this.#deleteRecords(ids);
+
+        return result;
       }
 
       // Delete one record with id as param
@@ -1546,33 +1590,22 @@ export class RestRepository<Record extends XataRecord>
     }
   }
 
-  async #deleteRecords(recordIds: string[], columns: SelectableColumn<Record>[] = ['*']) {
+  async #deleteRecords(recordIds: string[]) {
     const fetchProps = await this.#getFetchProps();
 
-    const operations = recordIds.map((id) => ({ delete: { table: this.#table, id } }));
+    const operations: TransactionOperation[] = recordIds.map((id) => ({ delete: { table: this.#table, id } }));
 
-    try {
-      // TODO: Add support for columns in transaction bulk delete
-      const objects = await this.read(recordIds, columns);
+    const { results } = await branchTransaction({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}'
+      },
+      body: { operations },
+      ...fetchProps
+    });
 
-      await branchTransaction({
-        pathParams: {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}'
-        },
-        body: { operations },
-        ...fetchProps
-      });
-
-      return objects;
-    } catch (e) {
-      if (isObject(e) && e.status === 404) {
-        return null;
-      }
-
-      throw e;
-    }
+    return results;
   }
 
   async search(
