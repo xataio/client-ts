@@ -842,6 +842,8 @@ export class RestRepository<Record extends XataRecord>
         const ids = await this.#insertRecords(a, { ifVersion, createOnly: true });
 
         const columns = isStringArray(b) ? b : (['*'] as K[]);
+
+        // TODO: Transaction API does not support column projection
         const result = await this.read(ids as string[], columns);
         return result;
       }
