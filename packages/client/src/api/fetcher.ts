@@ -145,11 +145,6 @@ export async function fetch<
         signal
       });
 
-      // No content
-      if (response.status === 204) {
-        return {} as unknown as TData;
-      }
-
       const { host, protocol } = parseUrl(response.url);
       const requestId = response.headers?.get('x-request-id') ?? undefined;
       setAttributes({
@@ -159,6 +154,16 @@ export async function fetch<
         [TraceAttributes.HTTP_HOST]: host,
         [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', '')
       });
+
+      // No content
+      if (response.status === 204) {
+        return {} as unknown as TData;
+      }
+
+      // Rate limit exceeded
+      if (response.status === 429) {
+        throw new FetcherError(response.status, 'Rate limit exceeded', requestId);
+      }
 
       try {
         const jsonResponse = await response.json();
