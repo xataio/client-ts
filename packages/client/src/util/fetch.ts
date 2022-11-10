@@ -70,7 +70,7 @@ export class ApiRequestPool {
 
       if (context.stalled) {
         const stalledTime = new Date().getTime() - context.start.getTime();
-        console.warn(`A request to Xata hit your workspace limits, was retried and stalled for ${stalledTime} seconds`);
+        console.warn(`A request to Xata hit your workspace limits, was retried and stalled for ${stalledTime}ms`);
       }
 
       return response;
