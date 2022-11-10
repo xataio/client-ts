@@ -1,3 +1,5 @@
+import { parseNumber, timeout } from './lang';
+
 type RequestInit = { body?: string; headers?: Record<string, string>; method?: string; signal?: any };
 type Response = {
   ok: boolean;
@@ -53,12 +55,24 @@ export class ApiRequestPool {
     return this.#fetch;
   }
 
-  request(url: string, options?: RequestInit): Promise<Response> {
+  request(url: string, options?: RequestInit, context = { start: new Date(), stalled: false }): Promise<Response> {
     const fetch = this.getFetch();
 
     return this.#enqueue(async () => {
       const response = await fetch(url, options);
-      // TODO: Check headers
+
+      if (response.status === 429) {
+        const rateLimitReset = parseNumber(response.headers?.get('x-ratelimit-reset')) ?? 1;
+
+        await timeout(rateLimitReset * 1000);
+        return await this.request(url, options, { ...context, stalled: true });
+      }
+
+      if (context.stalled) {
+        const stalledTime = new Date().getTime() - context.start.getTime();
+        console.warn(`A request to Xata hit your workspace limits, was retried and stalled for ${stalledTime} seconds`);
+      }
+
       return response;
     });
   }
