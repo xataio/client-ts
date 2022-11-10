@@ -1,5 +1,15 @@
 # @xata.io/client
 
+## 0.20.2
+
+### Patch Changes
+
+- [#756](https://github.com/xataio/client-ts/pull/756) [`27b73745`](https://github.com/xataio/client-ts/commit/27b737451227cf12774115ccb70649f6bbf76180) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix update method with id in payload
+
+- [#726](https://github.com/xataio/client-ts/pull/726) [`47a1f878`](https://github.com/xataio/client-ts/commit/47a1f87850a7178dad656a16d2584eee6ce68f29) Thanks [@SferaDev](https://github.com/SferaDev)! - Use transactions API internally for bulk operations
+
+- [#726](https://github.com/xataio/client-ts/pull/726) [`adde9b10`](https://github.com/xataio/client-ts/commit/adde9b10708182295dee07c203c7bf737806e49e) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow sending bulk operations of more than the limit
+
 ## 0.20.1
 
 ### Patch Changes
