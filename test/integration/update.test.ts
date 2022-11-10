@@ -113,4 +113,38 @@ describe('record update', () => {
     expect(updatedTeam3).toBeNull();
     expect(versionD).toBe(undefined);
   });
+
+  test('update item with id column', async () => {
+    const team = await xata.db.teams.create({ name: 'Team ships' });
+
+    const update1 = await xata.db.teams.update(team.id, { name: 'Team boats' });
+
+    expect(update1?.id).toBe(team.id);
+    expect(update1?.name).toBe('Team boats');
+
+    const update2 = await xata.db.teams.update({ id: team.id, name: 'Team planes' });
+
+    expect(update2?.id).toBe(team.id);
+    expect(update2?.name).toBe('Team planes');
+
+    const update3 = await xata.db.teams.update([{ id: team.id, name: 'Team cars' }]);
+
+    expect(update3[0]?.id).toBe(team.id);
+    expect(update3[0]?.name).toBe('Team cars');
+
+    const update4 = await update1?.update({ name: 'Team trains' });
+
+    expect(update4?.id).toBe(team.id);
+    expect(update4?.name).toBe('Team trains');
+
+    const update5 = await update1?.update({ id: update1?.id, name: 'Team boats' });
+
+    expect(update5?.id).toBe(team.id);
+    expect(update5?.name).toBe('Team boats');
+
+    const copy = await update2?.read();
+
+    expect(copy?.id).toBe(team.id);
+    expect(copy?.name).toBe('Team boats');
+  });
 });
