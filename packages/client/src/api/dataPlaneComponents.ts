@@ -3186,20 +3186,25 @@ export type QueryTableVariables = {
  *
  * #### Working with arrays
  *
- * To test that an array contains a value, use `$includes`.
+ * To test that an array contains a value, use `$includesAny`.
  *
  * ```json
  * {
  *   "filter": {
  *     "<array_name>": {
- *       "$includes": "value"
+ *       "$includesAny": "value"
  *     }
  *   }
  * }
  * ```
  *
- * The `$includes` operator accepts a custom predicate that will check if any
- * array values matches the predicate. For example a complex predicate can include
+ * ##### `includesAny`
+ *
+ * The `$includesAny` operator accepts a custom predicate that will check if
+ * any value in the array column matches the predicate. The `$includes` operator is a
+ * synonym for the `$includesAny` operator.
+ *
+ * For example a complex predicate can include
  * the `$all` , `$contains` and `$endsWith` operators:
  *
  * ```json
@@ -3217,11 +3222,26 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * The `$includes` all operator succeeds if any column in the array matches the
- * predicate. The `$includesAll` operator succeeds if all array items match the
- * predicate. The `$includesNone` operator succeeds if no array item matches the
- * predicate. The `$includes` operator is a synonym for the `$includesAny`
- * operator.
+ * ##### `includesNone`
+ *
+ * The `$includesNone` operator succeeds if no array item matches the
+ * predicate.
+ *
+ * ```json
+ * {
+ *   "filter": {
+ *     "settings.labels": {
+ *       "$includesNone": [{ "$contains": "label" }]
+ *     }
+ *   }
+ * }
+ * ```
+ * The above matches if none of the array values contain the string "label".
+ *
+ * ##### `includesAll`
+ *
+ * The `$includesAll` operator succeeds if all array items match the
+ * predicate.
  *
  * Here is an example of using the `$includesAll` operator:
  *
@@ -3235,7 +3255,7 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * The above matches if all label values contain the string "labels".
+ * The above matches if all array values contain the string "label".
  *
  * ### Sorting
  *
