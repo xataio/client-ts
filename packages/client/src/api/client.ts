@@ -904,6 +904,26 @@ class RecordsApi {
       ...this.extraProps
     });
   }
+
+  public branchTransaction({
+    workspace,
+    region,
+    database,
+    branch,
+    operations
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    operations: Schemas.TransactionOperation[];
+  }): Promise<Responses.TransactionSuccess> {
+    return operationsByTag.records.branchTransaction({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { operations },
+      ...this.extraProps
+    });
+  }
 }
 
 class SearchAndFilterApi {

@@ -201,4 +201,37 @@ describe('record creation', () => {
 
     expect(result.full_name).toBe('John Doe');
   });
+
+  test('create and fail if already exists', async () => {
+    const user1 = await xata.db.users.create({ full_name: 'John Doe 3', email: 'doe3@john.net' });
+
+    expect(user1.id).toBeDefined();
+    expect(user1.read).toBeDefined();
+    expect(user1.full_name).toBe('John Doe 3');
+
+    await expect(xata.db.users.create(user1)).rejects.toThrowError();
+  });
+
+  test('create multiple fails if one of them already exists', async () => {
+    const user1 = await xata.db.users.create({ full_name: 'John Doe 4', email: 'doe4@john.net' });
+
+    expect(user1.id).toBeDefined();
+    expect(user1.read).toBeDefined();
+    expect(user1.full_name).toBe('John Doe 4');
+
+    await expect(
+      xata.db.users.create([user1, { full_name: 'John Doe 5', email: 'doe5@john.net' }])
+    ).rejects.toThrowError();
+  });
+
+  test('create more than the operation max', async () => {
+    const users = await xata.db.users.create(
+      Array.from({ length: 1500 }, (_, i) => ({
+        full_name: `John Doe ${i}`,
+        email: `doe${i}@maxout.com`
+      }))
+    );
+
+    expect(users).toHaveLength(1500);
+  });
 });
