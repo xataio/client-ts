@@ -473,7 +473,7 @@ describe('Repository.update', () => {
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": "{\\"id\\":\\"rec_1234\\",\\"name\\":\\"Ada\\"}",
+          "body": "{\\"name\\":\\"Ada\\"}",
           "method": "PATCH",
           "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
         },

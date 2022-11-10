@@ -1249,7 +1249,8 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
-    const record = transformObjectLinks(object);
+    // Ensure id is not present in the update payload
+    const { id: _id, ...record } = transformObjectLinks(object);
 
     try {
       const response = await updateRecordWithID({
@@ -1817,7 +1818,7 @@ const transformObjectLinks = (object: any) => {
 
     // Transform links to identifier
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
-  }, {});
+  }, {} as Record<string, unknown>);
 };
 
 export const initObject = <T>(

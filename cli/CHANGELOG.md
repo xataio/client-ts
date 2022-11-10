@@ -1,5 +1,14 @@
 # @xata.io/cli
 
+## 0.10.2
+
+### Patch Changes
+
+- [#753](https://github.com/xataio/client-ts/pull/753) [`28dfbb7d`](https://github.com/xataio/client-ts/commit/28dfbb7d9dd109093d54999459ea22c94826b8ba) Thanks [@gimenete](https://github.com/gimenete)! - Use new migrations API for schema deploy
+
+- Updated dependencies [[`27b73745`](https://github.com/xataio/client-ts/commit/27b737451227cf12774115ccb70649f6bbf76180), [`47a1f878`](https://github.com/xataio/client-ts/commit/47a1f87850a7178dad656a16d2584eee6ce68f29), [`adde9b10`](https://github.com/xataio/client-ts/commit/adde9b10708182295dee07c203c7bf737806e49e)]:
+  - @xata.io/client@0.20.2
+
 ## 0.10.1
 
 ### Patch Changes
