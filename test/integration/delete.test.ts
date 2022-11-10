@@ -44,7 +44,15 @@ describe('record deletion', () => {
   test('delete multiple teams with id list', async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
-    await xata.db.teams.delete(teams.map((team) => team.id));
+    const result = await xata.db.teams.delete(teams.map((team) => team.id));
+
+    expect(result.length).toBe(2);
+    expect(result[0]?.id).toBe(teams[0].id);
+    expect(result[1]?.id).toBe(teams[1].id);
+    expect(result[0]?.read).toBeDefined();
+    expect(result[1]?.read).toBeDefined();
+    expect(result[0]?.name).toBe('Team cars');
+    expect(result[1]?.name).toBe('Team planes');
 
     const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
@@ -72,6 +80,25 @@ describe('record deletion', () => {
 
     const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 
+    expect(apiTeams).toHaveLength(0);
+  });
+
+  test('delete multiple teams with invalid', async () => {
+    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
+
+    const result = await xata.db.teams.delete([...teams, { id: 'invalid' }]);
+
+    expect(result.length).toBe(3);
+    expect(result[0]?.id).toBe(teams[0].id);
+    expect(result[1]?.id).toBe(teams[1].id);
+    expect(result[0]?.read).toBeDefined();
+    expect(result[1]?.read).toBeDefined();
+    expect(result[0]?.name).toBe('Team cars');
+    expect(result[1]?.name).toBe('Team planes');
+    expect(result[2]).toBeNull();
+    console.log(result);
+
+    const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
     expect(apiTeams).toHaveLength(0);
   });
 
