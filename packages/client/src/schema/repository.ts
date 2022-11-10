@@ -1216,6 +1216,7 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const fetchProps = await this.#getFetchProps();
 
+    // Ensure id is not present in the update payload
     const { id: _id, ...record } = transformObjectLinks(object);
 
     try {
