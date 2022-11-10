@@ -1,10 +1,10 @@
 import { Command, Flags } from '@oclif/core';
 import {
-  compareBranchWithUserSchema,
   getAPIKey,
   getCurrentBranchName,
   getHostUrl,
   parseWorkspacesUrlParts,
+  Responses,
   Schemas,
   XataApiClient
 } from '@xata.io/client';
@@ -578,7 +578,7 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  printMigration(migration: Awaited<ReturnType<typeof compareBranchWithUserSchema>>) {
+  printMigration(migration: Responses.SchemaCompareResponse) {
     for (const operation of migration.edits.operations) {
       if ('addTable' in operation) {
         this.log(` ${chalk.bgWhite.blue('CREATE table ')} ${operation.addTable.table}`);
