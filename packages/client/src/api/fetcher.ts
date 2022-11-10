@@ -1,8 +1,10 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
-import { FetchImpl } from '../util/fetch';
+import { ApiRequestPool, FetchImpl } from '../util/fetch';
 import { isString } from '../util/lang';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
+
+const pool = new ApiRequestPool();
 
 const resolveUrl = (
   url: string,
@@ -115,7 +117,9 @@ export async function fetch<
   sessionID,
   fetchOptions = {}
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
-  return trace(
+  pool.setFetch(fetchImpl);
+
+  return await trace(
     `${method.toUpperCase()} ${path}`,
     async ({ setAttributes }) => {
       const baseUrl = buildBaseUrl({ endpoint, path, workspacesApiUrl, pathParams, apiUrl });
@@ -129,7 +133,7 @@ export async function fetch<
         [TraceAttributes.HTTP_TARGET]: resolveUrl(path, queryParams, pathParams)
       });
 
-      const response = await fetchImpl(url, {
+      const response = await pool.request(url, {
         ...fetchOptions,
         method: method.toUpperCase(),
         body: body ? JSON.stringify(body) : undefined,
