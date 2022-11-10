@@ -2,7 +2,7 @@ import { SchemaPluginResult } from '.';
 import {
   aggregateTable,
   ApiExtraProps,
-  bulkInsertTableRecords,
+  branchTransaction,
   deleteRecord,
   getBranchDetails,
   getRecord,
@@ -15,11 +15,17 @@ import {
   updateRecordWithID,
   upsertRecordWithID
 } from '../api';
-import { FuzzinessExpression, HighlightExpression, PrefixExpression, RecordsMetadata } from '../api/schemas';
+import {
+  FuzzinessExpression,
+  HighlightExpression,
+  PrefixExpression,
+  RecordsMetadata,
+  TransactionOperation
+} from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
-import { compact, isNumber, isObject, isString, isStringArray } from '../util/lang';
+import { chunk, compact, isNumber, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -33,6 +39,8 @@ import { SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
+
+const BULK_OPERATION_MAX_SIZE = 1000;
 
 /**
  * Common interface for performing operations on a table.
@@ -832,8 +840,13 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        const columns = isStringArray(b) ? b : undefined;
-        return this.#bulkInsertTableRecords(a, columns);
+        const ids = await this.#insertRecords(a, { ifVersion, createOnly: true });
+
+        const columns = isStringArray(b) ? b : (['*'] as K[]);
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(ids as string[], columns);
+        return result;
       }
 
       // Create one record with id as param
@@ -841,7 +854,7 @@ export class RestRepository<Record extends XataRecord>
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isStringArray(c) ? c : undefined;
-        return this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: true, ifVersion });
+        return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: true, ifVersion });
       }
 
       // Create one record with id as property
@@ -849,7 +862,7 @@ export class RestRepository<Record extends XataRecord>
         if (a.id === '') throw new Error("The id can't be empty");
 
         const columns = isStringArray(b) ? b : undefined;
-        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: true, ifVersion });
+        return await this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: true, ifVersion });
       }
 
       // Create one record without id
@@ -910,29 +923,42 @@ export class RestRepository<Record extends XataRecord>
     return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
-  async #bulkInsertTableRecords(objects: EditableData<Record>[], columns: SelectableColumn<Record>[] = ['*']) {
+  async #insertRecords(
+    objects: EditableData<Record>[],
+    { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
+  ) {
     const fetchProps = await this.#getFetchProps();
 
-    const records = objects.map((object) => transformObjectLinks(object));
+    const chunkedOperations: TransactionOperation[][] = chunk(
+      objects.map((object) => ({
+        insert: { table: this.#table, record: transformObjectLinks(object), createOnly, ifVersion }
+      })),
+      BULK_OPERATION_MAX_SIZE
+    );
 
-    const response = await bulkInsertTableRecords({
-      pathParams: {
-        workspace: '{workspaceId}',
-        dbBranchName: '{dbBranch}',
-        region: '{region}',
-        tableName: this.#table
-      },
-      queryParams: { columns },
-      body: { records },
-      ...fetchProps
-    });
+    const ids = [];
 
-    if (!isResponseWithRecords(response)) {
-      throw new Error("Request included columns but server didn't include them");
+    for (const operations of chunkedOperations) {
+      const { results } = await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...fetchProps
+      });
+
+      for (const result of results) {
+        if (result.operation === 'insert') {
+          ids.push(result.id);
+        } else {
+          ids.push(null);
+        }
+      }
     }
 
-    const schemaTables = await this.#getSchemaTables();
-    return response.records?.map((item) => initObject(this.#db, schemaTables, this.#table, item, columns)) as any;
+    return ids;
   }
 
   async read<K extends SelectableColumn<Record>>(
@@ -1119,13 +1145,20 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        if (a.length > 100) {
-          // TODO: Implement bulk update when API has support for it
-          console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
-        }
+        // TODO: Transaction API fails fast if one of the records is not found
+        const existing = await this.read(a, ['id']);
+        const updates = a.filter((_item, index) => existing[index] !== null);
+
+        await this.#updateRecords(updates as Array<Partial<EditableData<Record>> & Identifiable>, {
+          ifVersion,
+          upsert: false
+        });
 
         const columns = isStringArray(b) ? b : (['*'] as K[]);
-        return Promise.all(a.map((object) => this.update(object, columns)));
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(a, columns);
+        return result;
       }
 
       // Update one record with id as param
@@ -1243,6 +1276,44 @@ export class RestRepository<Record extends XataRecord>
     }
   }
 
+  async #updateRecords(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
+    { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
+  ) {
+    const fetchProps = await this.#getFetchProps();
+
+    const chunkedOperations: TransactionOperation[][] = chunk(
+      objects.map(({ id, ...object }) => ({
+        update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(object) }
+      })),
+      BULK_OPERATION_MAX_SIZE
+    );
+
+    const ids = [];
+
+    for (const operations of chunkedOperations) {
+      const { results } = await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...fetchProps
+      });
+
+      for (const result of results) {
+        if (result.operation === 'update') {
+          ids.push(result.id);
+        } else {
+          ids.push(null);
+        }
+      }
+    }
+
+    return ids;
+  }
+
   async createOrUpdate<K extends SelectableColumn<Record>>(
     object: EditableData<Record> & Identifiable,
     columns: K[],
@@ -1288,13 +1359,16 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        if (a.length > 100) {
-          // TODO: Implement bulk update when API has support for it
-          console.warn('Bulk update operation is not optimized in the Xata API yet, this request might be slow');
-        }
+        await this.#updateRecords(a as Array<Partial<EditableData<Record>> & Identifiable>, {
+          ifVersion,
+          upsert: true
+        });
 
         const columns = isStringArray(b) ? b : (['*'] as K[]);
-        return Promise.all(a.map((object) => this.createOrUpdate(object as any, columns)));
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(a, columns);
+        return result;
       }
 
       // Create or update one record with id as param
@@ -1383,8 +1457,13 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
+        const ids = await this.#insertRecords(a, { ifVersion, createOnly: false });
+
         const columns = isStringArray(b) ? b : (['*'] as K[]);
-        return this.#bulkInsertTableRecords(a, columns);
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(ids as string[], columns);
+        return result;
       }
 
       // Create or replace one record with id as param
@@ -1440,12 +1519,20 @@ export class RestRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        if (a.length > 100) {
-          // TODO: Implement bulk delete when API has support for it
-          console.warn('Bulk delete operation is not optimized in the Xata API yet, this request might be slow');
-        }
+        const ids = a.map((o) => {
+          if (isString(o)) return o;
+          if (isString(o.id)) return o.id;
+          throw new Error('Invalid arguments for delete method');
+        });
 
-        return Promise.all(a.map((id) => this.delete(id as any, b as any)));
+        const columns = isStringArray(b) ? b : (['*'] as K[]);
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(a as any, columns);
+
+        await this.#deleteRecords(ids);
+
+        return result;
       }
 
       // Delete one record with id as param
@@ -1541,6 +1628,27 @@ export class RestRepository<Record extends XataRecord>
       }
 
       throw e;
+    }
+  }
+
+  async #deleteRecords(recordIds: string[]) {
+    const fetchProps = await this.#getFetchProps();
+
+    const chunkedOperations: TransactionOperation[][] = chunk(
+      recordIds.map((id) => ({ delete: { table: this.#table, id } })),
+      BULK_OPERATION_MAX_SIZE
+    );
+
+    for (const operations of chunkedOperations) {
+      await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...fetchProps
+      });
     }
   }
 

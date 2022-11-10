@@ -62,6 +62,11 @@ describe('record create or update', () => {
 
     expect(updatedTeams).toHaveLength(2);
     expect(updatedTeams[0].read).toBeDefined();
+    expect(updatedTeams[1].read).toBeDefined();
+    expect(updatedTeams[0].id).toBe(teams[0].id);
+    expect(updatedTeams[1].id).toBe(teams[1].id);
+    expect(updatedTeams[0].name).toBe('Team boats');
+    expect(updatedTeams[1].name).toBe('Team boats');
 
     const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
 

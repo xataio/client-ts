@@ -80,7 +80,7 @@ describe('record update', () => {
     const team2 = await xata.db.teams.update({ id: 'invalid', name: 'Team boats' });
     const team3 = await xata.db.teams.update([
       { id: 'invalid', name: 'Team boats' },
-      { id: valid.id, name: 'Team boats' }
+      { id: valid.id, name: 'Team boats 2' }
     ]);
 
     expect(team1).toBeNull();
@@ -88,7 +88,7 @@ describe('record update', () => {
     expect(team3[0]).toBeNull();
     expect(team3[1]).toBeDefined();
     expect(team3[1]?.id).toBe(valid.id);
-    expect(team3[1]?.name).toBe('Team boats');
+    expect(team3[1]?.name).toBe('Team boats 2');
   });
 
   test('update item with if version', async () => {
