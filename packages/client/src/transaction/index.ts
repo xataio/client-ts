@@ -1,30 +1,21 @@
 import { branchTransaction } from '../api';
-import { TransactionSuccess } from '../api/responses';
 import { XataPlugin, XataPluginOptions } from '../plugins';
-import { BaseData, XataRecord } from '../schema/record';
-import { StringKeys } from '../util/types';
+import { XataRecord } from '../schema/record';
+import { Narrow, StringKeys } from '../util/types';
+import { TransactionOperation, TransactionResults } from './operations';
 
-export type TransactionOperation<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> =
-  | {
-      insert: { table: Tables; record: Schemas[Tables]; ifVersion?: number; createOnly?: boolean };
-    }
-  | {
-      update: { table: Tables; id: string; fields: Schemas[Tables]; ifVersion?: number; upsert?: boolean };
-    }
-  | {
-      delete: { table: Tables; id: string };
-    };
-
-export type TransactionPluginResult<Schemas extends Record<string, BaseData>> = {
-  run: <Tables extends StringKeys<Schemas>>(
-    operations: TransactionOperation<Schemas, Tables>[]
-  ) => Promise<TransactionSuccess>;
+export type TransactionPluginResult<Schemas extends Record<string, XataRecord>> = {
+  run: <Tables extends StringKeys<Schemas>, Operations extends TransactionOperation<Schemas, Tables>[]>(
+    operations: Narrow<Operations>
+  ) => Promise<TransactionResults<Schemas, Tables, Operations>>;
 };
 
 export class TransactionPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   build({ getFetchProps }: XataPluginOptions): TransactionPluginResult<Schemas> {
     return {
-      run: async <Tables extends StringKeys<Schemas>>(operations: TransactionOperation<Schemas, Tables>[]) => {
+      run: async <Tables extends StringKeys<Schemas>, Operations extends TransactionOperation<Schemas, Tables>[]>(
+        operations: Narrow<Operations>
+      ) => {
         const fetchProps = await getFetchProps();
 
         const response = await branchTransaction({
@@ -33,7 +24,7 @@ export class TransactionPlugin<Schemas extends Record<string, XataRecord>> exten
           ...fetchProps
         });
 
-        return response;
+        return response as any;
       }
     };
   }
