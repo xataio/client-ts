@@ -1,9 +1,8 @@
 import { getBranchDetails, parseWorkspacesUrlParts, resolveBranch } from '../api';
-import { FetchImpl } from '../api/fetcher';
 import { defaultTrace } from '../schema/tracing';
 import { getAPIKey } from './apiKey';
 import { getEnvironment, getGitBranch } from './environment';
-import { getFetchImplementation } from './fetch';
+import { FetchImpl, getFetchImplementation } from './fetch';
 import { isObject } from './lang';
 
 type BranchResolutionOptions = {
