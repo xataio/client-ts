@@ -6,7 +6,7 @@ process.env.FORCE_COLOR = '0';
 export default defineConfig({
   test: {
     // TODO: Parallelize tests and mark integration tests as long-running
-    testTimeout: 50000,
+    testTimeout: 120000,
     hookTimeout: 120000
   }
 });
