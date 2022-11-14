@@ -94,7 +94,7 @@ export class ApiRequestPool {
         }
       });
 
-    if (this.#queue.length > 0 && this.running + this.started < this.#concurrency) {
+    if (this.running + this.started < this.#concurrency) {
       const next = this.#queue.shift();
       if (next !== undefined) {
         this.started++;
