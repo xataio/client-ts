@@ -1,6 +1,7 @@
 import { TraceFunction } from '../schema/tracing';
+import { FetchImpl } from '../util/fetch';
 import { PossibleErrors } from './errors';
-import { fetch, FetchImpl, WorkspaceApiUrlBuilder } from './fetcher';
+import { fetch, WorkspaceApiUrlBuilder } from './fetcher';
 
 export type DataPlaneFetcherExtraProps = {
   apiUrl: string;

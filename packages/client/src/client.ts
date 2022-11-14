@@ -1,5 +1,4 @@
 import { ApiExtraProps, Schemas } from './api';
-import { FetcherExtraProps, FetchImpl } from './api/fetcher';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
@@ -9,7 +8,7 @@ import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
 import { getCurrentBranchName, getDatabaseURL } from './util/config';
 import { getEnableBrowserVariable } from './util/environment';
-import { getFetchImplementation } from './util/fetch';
+import { FetchImpl, getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
 
