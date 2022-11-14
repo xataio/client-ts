@@ -116,3 +116,173 @@ describe('insert transactions', () => {
     await xata.db.users.delete({ id: 'j0' });
   });
 });
+
+describe('update transactions', () => {
+  test('update records', async () => {
+    await xata.transactions.run([
+      { insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 1 } } },
+      { insert: { table: 'teams', record: { id: 'i1', name: 'b', index: 10 } } },
+      { insert: { table: 'teams', record: { id: 'i2', name: 'c', index: 100 } } }
+    ]);
+
+    const response = await xata.transactions.run([
+      { update: { table: 'teams', id: 'i0', fields: { name: 'a1' } } },
+      { update: { table: 'teams', id: 'i1', fields: { name: 'b1' } } },
+      { update: { table: 'teams', id: 'i2', fields: { name: 'c1' } } },
+      { update: { table: 'teams', id: 'i2', fields: { name: 'c1.1' } } }
+    ]);
+
+    expect(response.results).toEqual([
+      { operation: 'update', id: 'i0', rows: 1 },
+      { operation: 'update', id: 'i1', rows: 1 },
+      { operation: 'update', id: 'i2', rows: 1 },
+      { operation: 'update', id: 'i2', rows: 1 }
+    ]);
+
+    const records = await xata.db.teams.read(['i0', 'i1', 'i2']);
+    expect(records[0]?.name).toEqual('a1');
+    expect(records[1]?.name).toEqual('b1');
+    expect(records[2]?.name).toEqual('c1.1');
+
+    await xata.db.teams.delete(['i0', 'i1', 'i2']);
+  });
+
+  test('update ifVersion', async () => {
+    await xata.transactions.run([
+      { insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } },
+      { insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 1 } } }
+    ]);
+
+    const response = await xata.transactions.run([
+      { update: { table: 'teams', id: 'i0', fields: { name: 'c', index: 2 }, ifVersion: 1 } }
+    ]);
+
+    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1 }]);
+
+    const record = await xata.db.teams.read('i0');
+    expect(record?.name).toEqual('c');
+    expect(record?.index).toEqual(2);
+
+    await xata.db.teams.delete('i0');
+  });
+
+  test('update an insert from same tx', async () => {
+    await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 0 } } }]);
+
+    const response = await xata.transactions.run([
+      { insert: { table: 'teams', record: { id: 'i1', name: 'b', index: 1 } } },
+      { update: { table: 'teams', id: 'i0', fields: { name: 'c', index: 2 } } },
+      { update: { table: 'teams', id: 'i1', fields: { name: 'd', index: 3 } } }
+    ]);
+
+    expect(response.results).toEqual([
+      { operation: 'insert', id: 'i1', rows: 1 },
+      { operation: 'update', id: 'i0', rows: 1 },
+      { operation: 'update', id: 'i1', rows: 1 }
+    ]);
+
+    const records = await xata.db.teams.read(['i0', 'i1']);
+    expect(records[0]?.name).toEqual('c');
+    expect(records[0]?.index).toEqual(2);
+    expect(records[1]?.name).toEqual('d');
+    expect(records[1]?.index).toEqual(3);
+
+    await xata.db.teams.delete(['i0', 'i1']);
+  });
+
+  test('upsert should insert record if it does not exist', async () => {
+    const response = await xata.transactions.run([
+      { update: { table: 'teams', id: 'i0', fields: { name: 'a', index: 0 }, upsert: true } }
+    ]);
+
+    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1 }]);
+
+    const record = await xata.db.teams.read('i0');
+    expect(record?.name).toEqual('a');
+    expect(record?.index).toEqual(0);
+
+    await xata.db.teams.delete('i0');
+  });
+
+  test('upsert should update record if it already exists', async () => {
+    await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
+
+    const response = await xata.transactions.run([
+      { update: { table: 'teams', id: 'i0', fields: { name: 'b', index: 1 }, upsert: true } }
+    ]);
+
+    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1 }]);
+
+    const record = await xata.db.teams.read('i0');
+    expect(record?.name).toEqual('b');
+    expect(record?.index).toEqual(1);
+
+    await xata.db.teams.delete('i0');
+  });
+
+  test('upsert with ifVersion', async () => {
+    await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
+    // update i0 to version 1
+    await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 1 } } }]);
+
+    const response = await xata.transactions.run([
+      { update: { table: 'teams', id: 'i0', fields: { name: 'c' }, upsert: true, ifVersion: 1 } }
+    ]);
+
+    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1 }]);
+
+    const record = await xata.db.teams.read('i0');
+    expect(record?.name).toEqual('c');
+    expect(record?.index).toEqual(1);
+
+    await xata.db.teams.delete('i0');
+  });
+});
+
+describe('delete transactions', () => {
+  test('delete a record', async () => {
+    await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
+
+    const response = await xata.transactions.run([{ delete: { table: 'teams', id: 'i0' } }]);
+
+    expect(response.results).toEqual([{ operation: 'delete', rows: 1 }]);
+
+    const record = await xata.db.teams.read('i0');
+    expect(record).toBeNull();
+  });
+
+  test('delete a record from same transaction', async () => {
+    const response = await xata.transactions.run([
+      { insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } },
+      { delete: { table: 'teams', id: 'i0' } }
+    ]);
+
+    expect(response.results).toEqual([
+      { operation: 'insert', id: 'i0', rows: 1 },
+      { operation: 'delete', rows: 1 }
+    ]);
+
+    const record = await xata.db.teams.read('i0');
+    expect(record).toBeNull();
+  });
+
+  test('delete that affects no records does not abort transaction', async () => {
+    await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
+
+    const response = await xata.transactions.run([
+      { insert: { table: 'teams', record: { id: 'i1', name: 'b', index: 1 } } },
+      { delete: { table: 'teams', id: 'i2' } }
+    ]);
+
+    expect(response.results).toEqual([
+      { operation: 'insert', id: 'i1', rows: 1 },
+      { operation: 'delete', rows: 0 }
+    ]);
+
+    const record = await xata.db.teams.read('i1');
+    expect(record?.name).toEqual('b');
+    expect(record?.index).toEqual(1);
+
+    await xata.db.teams.delete('i1');
+  });
+});
