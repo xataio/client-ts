@@ -43,10 +43,12 @@ type TransactionOperationSingleResult<
   Schema extends Record<string, BaseData>,
   Table extends StringKeys<Schema>,
   Operation extends TransactionOperation<Schema, Table>
-> = Operation extends { insert: { table: Table } }
+> = Operation extends { insert: { table: Table; record: { id: infer Id } } }
+  ? { operation: 'insert'; id: Id; rows: number }
+  : Operation extends { insert: { table: Table } }
   ? { operation: 'insert'; id: string; rows: number }
-  : Operation extends { update: { table: Table } }
-  ? { operation: 'update'; id: string; rows: number }
+  : Operation extends { update: { table: Table; id: infer Id } }
+  ? { operation: 'update'; id: Id; rows: number }
   : Operation extends { delete: { table: Table } }
   ? { operation: 'delete'; rows: number }
   : never;
