@@ -421,25 +421,25 @@ export type SummaryExpressionList = {
  * We currently support several aggregation functions. Not all functions can be run on all column
  * types.
  *
- * - `count` is used to count the number of records in each group. Use `{"count": "*"}` to count
- *   all columns present, otherwise `{"count": "<column_path>"}` to count the number of non-null
- *   values are present at column path.
+ *   - `count` is used to count the number of records in each group. Use `{"count": "*"}` to count
+ *     all columns present, otherwise `{"count": "<column_path>"}` to count the number of non-null
+ *     values are present at column path.
  *
- *   Count can be used on any column type, and always returns an int.
+ *     Count can be used on any column type, and always returns an int.
  *
- * - `min` calculates the minimum value in each group. `min` is compatible with most types;
- *   string, multiple, text, email, int, float, and datetime. It returns a value of the same
- *   type as operated on. This means that `{"lowest_latency": {"min": "latency"}}` where
- *   `latency` is an int, will always return an int.
+ *   - `min` calculates the minimum value in each group. `min` is compatible with most types;
+ *     string, multiple, text, email, int, float, and datetime. It returns a value of the same
+ *     type as operated on. This means that `{"lowest_latency": {"min": "latency"}}` where
+ *     `latency` is an int, will always return an int.
  *
- * - `max` calculates the maximum value in each group. `max` shares the same compatibility as
- *   `min`.
+ *   - `max` calculates the maximum value in each group. `max` shares the same compatibility as
+ *     `min`.
  *
- * - `sum` adds up all values in a group. `sum` can be run on `int` and `float` types, and will
- *   return a value of the same type as requested.
+ *   - `sum` adds up all values in a group. `sum` can be run on `int` and `float` types, and will
+ *     return a value of the same type as requested.
  *
- * - `average` averages all values in a group. `average` can be run on `int` and `float` types, and
- *   always returns a float.
+ *   - `average` averages all values in a group. `average` can be run on `int` and `float` types, and
+ *     always returns a float.
  *
  * @example {"count":"deleted_at"}
  * @x-go-type xbquery.Summary
@@ -652,12 +652,24 @@ export type HighlightExpression = {
 export type BoosterExpression =
   | {
       valueBooster?: ValueBooster;
+      /**
+       * Only apply this booster to the records for which the provided filter matches.
+       */
+      ifMatchesFilter?: FilterExpression;
     }
   | {
       numericBooster?: NumericBooster;
+      /**
+       * Only apply this booster to the records for which the provided filter matches.
+       */
+      ifMatchesFilter?: FilterExpression;
     }
   | {
       dateBooster?: DateBooster;
+      /**
+       * Only apply this booster to the records for which the provided filter matches.
+       */
+      ifMatchesFilter?: FilterExpression;
     };
 
 /**
@@ -690,6 +702,20 @@ export type NumericBooster = {
    * The factor with which to multiply the value of the column before adding it to the item score.
    */
   factor: number;
+  /**
+   * Modifier to be applied to the column value, before being multiplied with the factor. The possible values are:
+   *   - none (default).
+   *   - log: common logarithm (base 10)
+   *   - log1p: add 1 then take the common logarithm. This ensures that the value is positive if the
+   *     value is between 0 and 1.
+   *   - ln: natural logarithm (base e)
+   *   - ln1p: add 1 then take the natural logarithm. This ensures that the value is positive if the
+   *     value is between 0 and 1.
+   *   - square: raise the value to the power of two.
+   *   - sqrt: take the square root of the value.
+   *   - reciprocal: reciprocate the value (if the value is `x`, the reciprocal is `1/x`).
+   */
+  modifier?: 'none' | 'log' | 'log1p' | 'ln' | 'ln1p' | 'square' | 'sqrt' | 'reciprocal';
 };
 
 /**
