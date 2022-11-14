@@ -234,4 +234,67 @@ describe('record creation', () => {
 
     expect(users).toHaveLength(1500);
   });
+
+  test('create with emoji and special characters', async () => {
+    const teams = await xata.db.teams.create([
+      { name: 'Team \n🚗', labels: ['\t🚗', '\n🚙', '\r\n🚕'], description: '\t🚗\n🚙\r\n🚕' },
+      {
+        name: 'Team \t🚀',
+        labels: ['🚀', '🚁', '🛸'],
+        description: `This is a long description
+      that takes several
+      lines to fill in 😜`
+      }
+    ]);
+
+    expect(teams).toHaveLength(2);
+    expect(teams[0].id).toBeDefined();
+    expect(teams[0].name).toMatchInlineSnapshot(`
+      "Team 
+      🚗"
+    `);
+    expect(teams[0].labels).toMatchInlineSnapshot(`
+      [
+        "	🚗",
+        "
+      🚙",
+        "
+      🚕",
+      ]
+    `);
+    expect(teams[0].description).toMatchInlineSnapshot(`
+      "	🚗
+      🚙
+      🚕"
+    `);
+
+    expect(teams[1].id).toBeDefined();
+    expect(teams[1].name).toMatchInlineSnapshot('"Team 	🚀"');
+    expect(teams[1].labels).toMatchInlineSnapshot(`
+      [
+        "🚀",
+        "🚁",
+        "🛸",
+      ]
+    `);
+    expect(teams[1].description).toMatchInlineSnapshot(`
+      "This is a long description
+            that takes several
+            lines to fill in 😜"
+    `);
+
+    await teams[1].update({
+      description: `This is a new description\tAnd it also has special characters
+    &pound;©Å‰|®¸Øm*¿?èUäæ³¦ïµ'Óp@³aÎ>ÍÄL>öcâN9&¶¦c¢=¿î!?ã×\n\r\n\t😇`
+    });
+
+    const team = await teams[1].read();
+
+    expect(team?.description).toMatchInlineSnapshot(`
+      "This is a new description	And it also has special characters
+          &pound;©Å‰|®¸Øm*¿?èUäæ³¦ïµ'Óp@³aÎ>ÍÄL>öcâN9&¶¦c¢=¿î!?ã×
+
+      	😇"
+    `);
+  });
 });
