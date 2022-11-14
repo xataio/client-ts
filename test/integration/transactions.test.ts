@@ -38,7 +38,7 @@ describe('insert transactions', () => {
 
     expect(response.results).toEqual([{ operation: 'insert', id: expect.any(String), rows: 1 }]);
 
-    await xata.db.teams.delete({ id: response.results[0].id });
+    await xata.db.teams.delete({ id: response.results[0]?.id });
   });
 
   test('insert by ID', async () => {
@@ -110,7 +110,7 @@ describe('insert transactions', () => {
       { operation: 'insert', id: 'j0', rows: 1 }
     ]);
 
-    await xata.db.teams.delete({ id: response.results[0].id });
+    await xata.db.teams.delete({ id: response.results[0]?.id });
     await xata.db.teams.delete({ id: 'i1' });
     await xata.db.users.delete({ id: 'j1' });
     await xata.db.users.delete({ id: 'j0' });

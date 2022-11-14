@@ -1,32 +1,53 @@
-import { BaseData } from '../schema';
-import { StringKeys } from '../util/types';
+import { BaseData, EditableData, XataRecord } from '../schema';
+import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
-export type TransactionOperation<Schema extends Record<string, BaseData>, Table extends StringKeys<Schema>> =
-  | InsertTransactionOperation<Schema, Table>
-  | UpdateTransactionOperation<Schema, Table>
-  | DeleteTransactionOperation<Schema, Table>;
+export type TransactionOperation<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> =
+  | {
+      insert: Values<{
+        [Model in GetArrayInnerType<NonNullable<Tables[]>>]: { table: Model } & InsertTransactionOperation<
+          Schemas[Model] & XataRecord
+        >;
+      }>;
+    }
+  | {
+      update: Values<{
+        [Model in GetArrayInnerType<NonNullable<Tables[]>>]: { table: Model } & UpdateTransactionOperation<
+          Schemas[Model] & XataRecord
+        >;
+      }>;
+    }
+  | {
+      delete: Values<{
+        [Model in GetArrayInnerType<NonNullable<Tables[]>>]: { table: Model } & DeleteTransactionOperation;
+      }>;
+    };
 
-export type InsertTransactionOperation<Schema extends Record<string, BaseData>, Table extends StringKeys<Schema>> = {
-  insert: { table: Table; record: Partial<Schema[Table]>; ifVersion?: number; createOnly?: boolean };
+export type InsertTransactionOperation<O extends XataRecord> = {
+  record: Partial<EditableData<O>>;
+  ifVersion?: number;
+  createOnly?: boolean;
 };
 
-export type UpdateTransactionOperation<Schema extends Record<string, BaseData>, Table extends StringKeys<Schema>> = {
-  update: { table: Table; id: string; fields: Partial<Schema[Table]>; ifVersion?: number; upsert?: boolean };
+export type UpdateTransactionOperation<O extends XataRecord> = {
+  id: string;
+  fields: Partial<EditableData<O>>;
+  ifVersion?: number;
+  upsert?: boolean;
 };
 
-export type DeleteTransactionOperation<Schema extends Record<string, BaseData>, Table extends StringKeys<Schema>> = {
-  delete: { table: Table; id: string };
+export type DeleteTransactionOperation = {
+  id: string;
 };
 
 type TransactionOperationSingleResult<
   Schema extends Record<string, BaseData>,
   Table extends StringKeys<Schema>,
   Operation extends TransactionOperation<Schema, Table>
-> = Operation extends InsertTransactionOperation<Schema, Table>
+> = Operation extends { insert: { table: Table } }
   ? { operation: 'insert'; id: string; rows: number }
-  : Operation extends UpdateTransactionOperation<Schema, Table>
+  : Operation extends { update: { table: Table } }
   ? { operation: 'update'; id: string; rows: number }
-  : Operation extends DeleteTransactionOperation<Schema, Table>
+  : Operation extends { delete: { table: Table } }
   ? { operation: 'delete'; rows: number }
   : never;
 
