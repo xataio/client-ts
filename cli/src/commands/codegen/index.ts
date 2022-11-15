@@ -76,9 +76,8 @@ export default class Codegen extends BaseCommand {
     const { schema } = branchDetails;
 
     const codegenBranch = flags['inject-branch'] ? branch : undefined;
-    // TODO: remove formatVersion
     const result = await generate({
-      schema: { formatVersion: '1.0', ...schema },
+      schema,
       databaseURL,
       language,
       moduleType,
