@@ -172,8 +172,8 @@ export declare type DatabaseSchema = {
   pets: PetsRecord;
 };
 declare const DatabaseClient: any;
-declare class XataClient extends DatabaseClient<DatabaseSchema> {
+export declare class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions);
 }
-declare const getXataClient: () => XataClient;
-export { XataClient, getXataClient };
+export declare const getXataClient: () => XataClient;
+export {};

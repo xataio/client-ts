@@ -93,7 +93,7 @@ const DatabaseClient = buildClient();
 
 const defaultOptions = { databaseURL: 'https://test-r5vcv5.xata.sh/db/test' };
 
-class XataClient extends DatabaseClient<DatabaseSchema> {
+export class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
     super({ ...defaultOptions, ...options }, tables);
   }
@@ -101,11 +101,9 @@ class XataClient extends DatabaseClient<DatabaseSchema> {
 
 let instance: XataClient | undefined = undefined;
 
-const getXataClient = () => {
+export const getXataClient = () => {
   if (instance) return instance;
 
   instance = new XataClient();
   return instance;
 };
-
-export { XataClient, getXataClient };
