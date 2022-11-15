@@ -50,40 +50,10 @@ function buildImports({
     `;
   }
 
-  if (language === 'typescript') {
-    return `
+  return `
       import { ${codeImports} } from '@xata.io/client';
       import type { ${typeImports} } from '@xata.io/client';
     `;
-  }
-
-  if (language === 'javascript' && moduleType === 'cjs') {
-    return `
-      const { ${codeImports} } = require('@xata.io/client');
-    `;
-  }
-
-  if (language === 'javascript') {
-    return `
-      import { ${codeImports} } from '@xata.io/client';
-    `;
-  }
-
-  throw new Error(`[Imports] Unsupported language: ${language}`);
-}
-
-function buildExports({
-  language,
-  moduleType,
-  includeWorkers
-}: Pick<GenerateOptions, 'language' | 'moduleType' | 'includeWorkers'>) {
-  const codeExports = compact(['XataClient', 'getXataClient', includeWorkers ? 'xataWorker' : undefined]).join(', ');
-
-  if (language === 'javascript' && moduleType === 'cjs') {
-    return `module.exports = { ${codeExports} };`;
-  }
-
-  return `export { ${codeExports} };`;
 }
 
 function buildCode({ databaseURL, branch, language, moduleType, includeWorkers, schema }: GenerateOptions) {
@@ -130,7 +100,7 @@ function buildCode({ databaseURL, branch, language, moduleType, includeWorkers, 
 
     ${language === 'javascript' ? `/** @typedef { import('./types').DatabaseSchema } DatabaseSchema */` : ''}
     ${language === 'javascript' ? `/** @extends DatabaseClient<DatabaseSchema> */` : ''}
-    class XataClient extends DatabaseClient<DatabaseSchema> {
+    export class XataClient extends DatabaseClient<DatabaseSchema> {
       constructor(options?: BaseClientOptions) {
         super({ ...defaultOptions, ...options}, tables);
       }
@@ -139,7 +109,7 @@ function buildCode({ databaseURL, branch, language, moduleType, includeWorkers, 
     let instance: XataClient | undefined = undefined;
 
     ${language === 'javascript' ? `/** @type { () => XataClient } */` : ''}
-    const getXataClient = () => {
+    export const getXataClient = () => {
       if (instance) return instance;
 
       instance = new XataClient();
@@ -149,14 +119,12 @@ function buildCode({ databaseURL, branch, language, moduleType, includeWorkers, 
     ${
       includeWorkers
         ? `
-      const xataWorker = buildWorkerRunner<XataClient>({
+      export const xataWorker = buildWorkerRunner<XataClient>({
         workspace: '<your-workspace-slug>',
         worker: "<your-workspace-id>",
       });`
         : ''
     }
-
-    ${buildExports({ language, moduleType, includeWorkers }).trim()}
   `;
 }
 
