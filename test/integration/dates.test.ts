@@ -39,7 +39,7 @@ describe('dates', () => {
   test('add a record without a date (optional)', async () => {
     const record = await xata.db.users.create({ full_name: 'optional' });
 
-    expect(record.birthDate).toBeUndefined();
+    expect(record.birthDate).toBeNull();
   });
 
   test('filter date with operators', async () => {
