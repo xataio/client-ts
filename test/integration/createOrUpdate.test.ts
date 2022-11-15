@@ -87,5 +87,5 @@ describe('record create or update', () => {
 
     expect(result).toHaveLength(1000);
     expect(result.every((item) => item.id)).toBeTruthy();
-  });
+  }, 100000);
 });
