@@ -55,7 +55,8 @@ export class ApiRequestPool {
     return this.#fetch;
   }
 
-  request(url: string, options?: RequestInit, context = { start: new Date() }): Promise<Response> {
+  request(url: string, options?: RequestInit): Promise<Response> {
+    const start = new Date();
     const fetch = this.getFetch();
 
     const runRequest = async (stalled = false): Promise<Response> => {
@@ -69,7 +70,7 @@ export class ApiRequestPool {
       }
 
       if (stalled) {
-        const stalledTime = new Date().getTime() - context.start.getTime();
+        const stalledTime = new Date().getTime() - start.getTime();
         console.warn(`A request to Xata hit your workspace limits, was retried and stalled for ${stalledTime}ms`);
       }
 
