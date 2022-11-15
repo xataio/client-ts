@@ -56,14 +56,11 @@ export async function generate({
   const imports =
     language === 'javascript' && moduleType === 'cjs'
       ? `
-    const { BaseClientOptions, buildClient, ${
-      includeWorkers ? 'buildWorkerRunner, ' : ''
-    } SchemaInference, XataRecord } = require('@xata.io/client');
+    const { buildClient${includeWorkers ? ', buildWorkerRunner' : ''} } = require('@xata.io/client');
   `
       : `
-    import { BaseClientOptions, buildClient, ${
-      includeWorkers ? 'buildWorkerRunner, ' : ''
-    } SchemaInference, XataRecord } from '@xata.io/client';
+    import { buildClient, ${includeWorkers ? ', buildWorkerRunner' : ''} } from '@xata.io/client';
+    import type { BaseClientOptions, SchemaInference, XataRecord } from '@xata.io/client';
   `;
 
   const code = `
