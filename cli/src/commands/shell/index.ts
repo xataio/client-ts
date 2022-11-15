@@ -48,12 +48,7 @@ export default class Shell extends BaseCommand {
       const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
       const { schema } = branchDetails;
 
-      // TODO: remove formatVersion
-      const { transpiled } = await generate({
-        language: 'javascript',
-        databaseURL,
-        schema: { formatVersion: '1.0', ...schema }
-      });
+      const { transpiled } = await generate({ language: 'javascript', databaseURL, schema });
       await fs.writeFile(tempFile, transpiled);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
