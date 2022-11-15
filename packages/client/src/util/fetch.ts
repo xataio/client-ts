@@ -55,25 +55,29 @@ export class ApiRequestPool {
     return this.#fetch;
   }
 
-  request(url: string, options?: RequestInit, context = { start: new Date(), stalled: false }): Promise<Response> {
+  request(url: string, options?: RequestInit, context = { start: new Date() }): Promise<Response> {
     const fetch = this.getFetch();
 
-    return this.#enqueue(async () => {
+    const runRequest = async (stalled = false): Promise<Response> => {
       const response = await fetch(url, options);
 
       if (response.status === 429) {
         const rateLimitReset = parseNumber(response.headers?.get('x-ratelimit-reset')) ?? 1;
 
         await timeout(rateLimitReset * 1000);
-        return await this.request(url, options, { ...context, stalled: true });
+        return await runRequest(true);
       }
 
-      if (context.stalled) {
+      if (stalled) {
         const stalledTime = new Date().getTime() - context.start.getTime();
         console.warn(`A request to Xata hit your workspace limits, was retried and stalled for ${stalledTime}ms`);
       }
 
       return response;
+    };
+
+    return this.#enqueue(async () => {
+      return await runRequest();
     });
   }
 
