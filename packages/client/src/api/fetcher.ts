@@ -41,6 +41,7 @@ export type FetcherExtraProps = {
   signal?: AbortSignal;
   clientID?: string;
   sessionID?: string;
+  clientName?: string;
   fetchOptions?: Record<string, unknown>;
 };
 
@@ -115,6 +116,7 @@ export async function fetch<
   signal,
   clientID,
   sessionID,
+  clientName,
   fetchOptions = {}
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   pool.setFetch(fetchImpl);
@@ -139,9 +141,9 @@ export async function fetch<
         body: body ? JSON.stringify(body) : undefined,
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': `Xata client-ts/${VERSION}`,
           'X-Xata-Client-ID': clientID ?? '',
           'X-Xata-Session-ID': sessionID ?? '',
+          'X-Xata-Agent': `client=TS_SDK; version=${VERSION}; ${clientName ? `service=${clientName};` : ''}`,
           ...headers,
           ...hostHeader(fullUrl),
           Authorization: `Bearer ${apiKey}`
