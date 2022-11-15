@@ -285,7 +285,9 @@ export default class Init extends BaseCommand {
         return;
       } catch (err) {
         if (err instanceof Error && err.message.includes('Invalid API key')) {
-          this.info('Waiting until the new API key is ready to be used...');
+          if (retries % 2 === 0) {
+            this.info('Waiting until the new API key is ready to be used...');
+          }
           await new Promise((resolve) => setTimeout(resolve, 1000));
         } else {
           throw err;
