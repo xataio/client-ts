@@ -85,12 +85,13 @@ export default class Codegen extends BaseCommand {
       includeWorkers: flags['experimental-workers'] ?? false
     });
 
-    const { transpiled: code, declarations } = result;
+    const { typescript, javascript, types } = result;
+    const code = language === 'typescript' ? typescript : javascript;
 
     await mkdir(dir, { recursive: true });
     await writeFile(output, code);
-    if (declarations && (flags.declarations || this.projectConfig?.codegen?.declarations)) {
-      await writeFile(path.join(dir, 'types.d.ts'), declarations);
+    if (types && (flags.declarations || this.projectConfig?.codegen?.declarations)) {
+      await writeFile(path.join(dir, 'types.d.ts'), types);
     }
 
     this.success(`Your XataClient is generated at ./${relative(process.cwd(), output)}`);

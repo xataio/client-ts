@@ -24,7 +24,9 @@ describe('generate', () => {
       databaseURL: 'https://workspace-1234.xata.sh/db/dbname'
     });
 
-    expect(stableVersion(output.transpiled)).toMatchSnapshot();
+    expect(stableVersion(output.typescript)).toMatchSnapshot();
+    expect(stableVersion(output.javascript)).toMatchSnapshot();
+    expect(stableVersion(output.types ?? '')).toMatchSnapshot();
   });
 
   it('should respect case naming', async () => {
@@ -53,7 +55,7 @@ describe('generate', () => {
       databaseURL: 'https://workspace-1234.xata.sh/db/dbname'
     });
 
-    expect(stableVersion(output.transpiled)).toMatchSnapshot();
+    expect(stableVersion(output.typescript)).toMatchSnapshot();
   });
 
   it('should inject branch if passed', async () => {
@@ -71,7 +73,7 @@ describe('generate', () => {
       branch: 'feature-branch'
     });
 
-    expect(stableVersion(output.transpiled)).toMatchSnapshot();
+    expect(stableVersion(output.typescript)).toMatchSnapshot();
   });
 
   it('should generate CJS code', async () => {
@@ -90,7 +92,7 @@ describe('generate', () => {
       branch: 'feature-branch'
     });
 
-    expect(stableVersion(output.transpiled)).toMatchSnapshot();
+    expect(stableVersion(output.javascript)).toMatchSnapshot();
   });
 
   it('should ignore CJS for TS code', async () => {
@@ -109,7 +111,7 @@ describe('generate', () => {
       branch: 'feature-branch'
     });
 
-    expect(stableVersion(output.transpiled)).toMatchSnapshot();
+    expect(stableVersion(output.typescript)).toMatchSnapshot();
   });
 
   it('should generate Deno code', async () => {
@@ -128,7 +130,7 @@ describe('generate', () => {
       branch: 'feature-branch'
     });
 
-    expect(stableVersion(output.transpiled)).toMatchSnapshot();
+    expect(stableVersion(output.typescript)).toMatchSnapshot();
   });
 });
 
