@@ -75,15 +75,16 @@ const DatabaseClient = buildClient();
 const defaultOptions = { databaseURL: 'https://test-r5vcv5.xata.sh/db/test' };
 /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
 /** @extends DatabaseClient<DatabaseSchema> */
-export class XataClient extends DatabaseClient {
+class XataClient extends DatabaseClient {
   constructor(options) {
     super({ ...defaultOptions, ...options }, tables);
   }
 }
 let instance = undefined;
 /** @type { () => XataClient } */
-export const getXataClient = () => {
+const getXataClient = () => {
   if (instance) return instance;
   instance = new XataClient();
   return instance;
 };
+export { XataClient, getXataClient };

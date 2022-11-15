@@ -131,18 +131,19 @@ export default class Init extends BaseCommand {
               title: 'Generate JavaScript code with CJS (require)',
               value: 'cjs'
             },
+            { title: 'Generate TypeScript code with Deno imports', value: 'deno' },
             { title: 'Install the JavaScript SDK only, with no code generation', value: 'js' }
           ]
         },
         flags.module
       );
 
-      if (['ts', 'esm', 'cjs'].includes(codegen)) {
+      if (['ts', 'esm', 'cjs', 'deno'].includes(codegen)) {
         const { file } = await this.prompt({
           type: 'text',
           name: 'file',
           message: 'Choose the output file for the code generator',
-          initial: `src/xata.${codegen === 'ts' ? 'ts' : 'js'}`
+          initial: `src/xata.${codegen === 'ts' || codegen === 'deno' ? 'ts' : 'js'}`
         });
         if (!file) return this.error('You must provide an output file');
 
@@ -184,13 +185,31 @@ export default class Init extends BaseCommand {
   }
 
   async getPackageManager() {
-    const packageManager = (await this.access('yarn.lock')) ? 'yarn' : 'npm';
-    if (!which.sync(packageManager, { nothrow: true })) {
-      this.error(
-        `Looks like ${packageManager} is not installed or is not in the PATH. This made impossible to install the code generator`
+    const packageManager = await this.guessPackageManager();
+
+    if (!packageManager) {
+      this.warn('Could not detect a package manager. Please install the @xata.io/client package manually.');
+      return null;
+    } else if (!which.sync(packageManager.name, { nothrow: true })) {
+      this.warn(
+        `Looks like ${packageManager} is not installed or is not in the PATH. Please install the @xata.io/client package manually.`
       );
+      return null;
+    } else {
+      return packageManager;
     }
-    return packageManager;
+  }
+
+  async guessPackageManager() {
+    if (await this.access('package-lock.json')) {
+      return { name: 'npm', args: ['install', '--save'] };
+    } else if (await this.access('yarn.lock')) {
+      return { name: 'yarn', args: ['add'] };
+    } else if (await this.access('pnpm-lock.yaml')) {
+      return { name: 'pnpm', args: ['add'] };
+    } else {
+      return null;
+    }
   }
 
   async access(path: string) {
@@ -203,9 +222,11 @@ export default class Init extends BaseCommand {
   }
 
   async installPackage(pkg: string) {
-    const command = await this.getPackageManager();
-    const subcommand = command === 'yarn' ? 'add' : 'install';
-    await this.runCommand(command, [subcommand, pkg]);
+    const packageManager = await this.getPackageManager();
+    if (!packageManager) return;
+
+    const { name, args } = packageManager;
+    await this.runCommand(name, [...args, pkg]);
   }
 
   async writeConfig() {

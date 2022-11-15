@@ -84,8 +84,8 @@ export default class Codegen extends BaseCommand {
       branch: codegenBranch,
       includeWorkers: flags['experimental-workers'] ?? false
     });
-    const code = result.transpiled;
-    const declarations = result.declarations;
+
+    const { transpiled: code, declarations } = result;
 
     await mkdir(dir, { recursive: true });
     await writeFile(output, code);

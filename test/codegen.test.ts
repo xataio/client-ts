@@ -93,7 +93,7 @@ describe('generate', () => {
     expect(stableVersion(output.transpiled)).toMatchSnapshot();
   });
 
-  it('should ignore moduleType for TS code', async () => {
+  it('should ignore CJS for TS code', async () => {
     const output = await generate({
       schema: {
         tables: [
@@ -105,6 +105,25 @@ describe('generate', () => {
       },
       language: 'typescript',
       moduleType: 'cjs',
+      databaseURL: 'https://workspace-1234.xata.sh/db/dbname',
+      branch: 'feature-branch'
+    });
+
+    expect(stableVersion(output.transpiled)).toMatchSnapshot();
+  });
+
+  it('should generate Deno code', async () => {
+    const output = await generate({
+      schema: {
+        tables: [
+          {
+            name: 'users',
+            columns: [{ name: 'name', type: 'string' }]
+          }
+        ]
+      },
+      language: 'typescript',
+      moduleType: 'deno',
       databaseURL: 'https://workspace-1234.xata.sh/db/dbname',
       branch: 'feature-branch'
     });
