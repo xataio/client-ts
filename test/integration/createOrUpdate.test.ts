@@ -82,10 +82,10 @@ describe('record create or update', () => {
   });
 
   test('create or update many without getting rate limited', async () => {
-    const newUsers = Array.from({ length: 1000 }).map((_, i) => ({ id: `user-${i}`, full_name: `user-${i}` }));
+    const newUsers = Array.from({ length: 250 }).map((_, i) => ({ id: `user-${i}`, full_name: `user-${i}` }));
     const result = await Promise.all(newUsers.map((user) => xata.db.users.createOrUpdate(user, ['id'])));
 
-    expect(result).toHaveLength(1000);
+    expect(result).toHaveLength(250);
     expect(result.every((item) => item.id)).toBeTruthy();
   }, 100000);
 });
