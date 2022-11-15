@@ -254,8 +254,11 @@ export default class Init extends BaseCommand {
 
     if (!apiKey) {
       apiKey = await createAPIKeyThroughWebUI();
+      this.apiKeyLocation = 'new';
       // Any following API call must use this API key
       process.env.XATA_API_KEY = apiKey;
+
+      await this.waitUntilAPIKeyIsValid(workspace, region, database);
     }
     this.info(
       'The fallback branch will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitly)'
@@ -290,6 +293,29 @@ export default class Init extends BaseCommand {
     await writeFile(envFile, content);
 
     await this.ignoreEnvFile(envFile);
+  }
+
+  // New API keys need to be replicated until can be used in a particular region/database
+  async waitUntilAPIKeyIsValid(workspace: string, region: string, database: string) {
+    const xata = await this.getXataClient();
+    const maxRetries = 10;
+    let retries = 0;
+    while (retries++ < maxRetries) {
+      try {
+        await xata.branches.getBranchList({ workspace, region, database });
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.message.includes('Invalid API key')) {
+          if (retries % 2 === 0) {
+            this.info('Waiting until the new API key is ready to be used...');
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } else {
+          throw err;
+        }
+      }
+    }
+    this.error(`The new API key could not be used after ${maxRetries} seconds. Please try again.`);
   }
 
   async ignoreEnvFile(envFile: string) {
