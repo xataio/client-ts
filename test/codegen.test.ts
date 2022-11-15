@@ -10,7 +10,6 @@ describe('generate', () => {
   it('should respect numbers in names', async () => {
     const output = await generate({
       schema: {
-        formatVersion: '1.0',
         tables: [
           {
             name: '1teams-case',
@@ -31,7 +30,6 @@ describe('generate', () => {
   it('should respect case naming', async () => {
     const output = await generate({
       schema: {
-        formatVersion: '1.0',
         tables: [
           {
             name: 'teams_Like',
@@ -61,7 +59,6 @@ describe('generate', () => {
   it('should inject branch if passed', async () => {
     const output = await generate({
       schema: {
-        formatVersion: '1.0',
         tables: [
           {
             name: 'users',
@@ -80,7 +77,6 @@ describe('generate', () => {
   it('should generate CJS code', async () => {
     const output = await generate({
       schema: {
-        formatVersion: '1.0',
         tables: [
           {
             name: 'users',
@@ -100,7 +96,6 @@ describe('generate', () => {
   it('should ignore moduleType for TS code', async () => {
     const output = await generate({
       schema: {
-        formatVersion: '1.0',
         tables: [
           {
             name: 'users',

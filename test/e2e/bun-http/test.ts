@@ -12,17 +12,34 @@ async function handleResponse() {
 
   const id = Math.round(Math.random() * 100000);
 
-  const { databaseName } = await api.database.createDatabase(workspace, `sdk-e2e-test-${id}`, { region });
+  const { databaseName: database } = await api.database.createDatabase({
+    workspace,
+    database: `sdk-e2e-test-${id}`,
+    data: { region }
+  });
 
-  await api.tables.createTable(workspace, databaseName, 'main', 'teams');
-  await api.tables.createTable(workspace, databaseName, 'main', 'users');
-  await api.tables.setTableSchema(workspace, databaseName, 'main', 'teams', { columns: teamColumns });
-  await api.tables.setTableSchema(workspace, databaseName, 'main', 'users', { columns: userColumns });
+  await api.tables.createTable({ workspace, database, region, branch: 'main', table: 'teams' });
+  await api.tables.createTable({ workspace, database, region, branch: 'main', table: 'users' });
+  await api.tables.setTableSchema({
+    workspace,
+    database,
+    region,
+    branch: 'main',
+    table: 'teams',
+    schema: { columns: teamColumns }
+  });
+  await api.tables.setTableSchema({
+    workspace,
+    database,
+    region,
+    branch: 'main',
+    table: 'users',
+    schema: { columns: userColumns }
+  });
 
   const xata = new XataClient({
-    databaseURL: `https://${workspace}.xata.sh/db/${databaseName}`,
-    branch: 'main',
-    apiKey: process.env.XATA_API_KEY
+    databaseURL: `https://${workspace}.${region}.xata.sh/db/${database}`,
+    branch: 'main'
   });
 
   const team = await xata.db.teams.create({ name: 'Team 1' });
@@ -31,7 +48,7 @@ async function handleResponse() {
   const users = await xata.db.users.getAll();
   const teams = await xata.db.teams.getAll();
 
-  await api.database.deleteDatabase(workspace, databaseName);
+  await api.database.deleteDatabase({ workspace, database });
 
   return { users, teams };
 }
