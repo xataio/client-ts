@@ -1922,10 +1922,6 @@ export const initObject = <T>(
   return result as T;
 };
 
-function isResponseWithRecords(value: any): value is { records: Schemas.XataRecord[] } {
-  return isObject(value) && Array.isArray(value.records);
-}
-
 function extractId(value: any): string | undefined {
   if (isString(value)) return value;
   if (isObject(value) && isString(value.id)) return value.id;
