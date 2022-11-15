@@ -1,4 +1,4 @@
-import { BaseClientOptions, SchemaInference, XataRecord } from '../../client/src';
+import type { BaseClientOptions, SchemaInference, XataRecord } from '../../client/src';
 declare const tables: readonly [
   {
     readonly name: 'teams';
@@ -172,8 +172,8 @@ export declare type DatabaseSchema = {
   pets: PetsRecord;
 };
 declare const DatabaseClient: any;
-export declare class XataClient extends DatabaseClient<DatabaseSchema> {
+declare class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions);
 }
-export declare const getXataClient: () => XataClient;
-export {};
+declare const getXataClient: () => XataClient;
+export { XataClient, getXataClient };
