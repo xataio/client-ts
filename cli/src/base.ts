@@ -48,7 +48,8 @@ export const projectConfigSchema = z.object({
       'es2020',
       'es2021',
       'esnext'
-    ])
+    ]),
+    workersBuildId: z.string().optional()
   })
 });
 

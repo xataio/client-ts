@@ -42,9 +42,8 @@ export default class Codegen extends BaseCommand {
     'javascript-output-target': Flags.string({
       description: 'The output target for the generated javascript code.'
     }),
-    'experimental-workers': Flags.boolean({
-      description: 'Add xata workers to the generated code',
-      hidden: true
+    'worker-id': Flags.string({
+      description: 'Xata worker deployment id'
     })
   };
 
@@ -55,6 +54,7 @@ export default class Codegen extends BaseCommand {
     const output = flags.output || this.projectConfig?.codegen?.output;
     const moduleType = this.projectConfig?.codegen?.moduleType;
     const javascriptTarget = flags['javascript-output-target'] || this.projectConfig?.codegen?.javascriptTarget;
+    const workersBuildId = flags['worker-id'] || this.projectConfig?.codegen?.workersBuildId;
 
     if (!output) {
       return this.error(
@@ -95,7 +95,8 @@ export default class Codegen extends BaseCommand {
       moduleType,
       javascriptTarget,
       branch: codegenBranch,
-      includeWorkers: flags['experimental-workers'] ?? false
+      workspace,
+      workersBuildId
     });
 
     const { typescript, javascript, types } = result;

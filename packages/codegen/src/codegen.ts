@@ -14,7 +14,8 @@ export type GenerateOptions = {
   moduleType?: ModuleType;
   javascriptTarget?: JavascriptTarget;
   branch?: string;
-  includeWorkers?: boolean;
+  workspace?: string;
+  workersBuildId?: string;
   existingCode?: string;
 };
 
@@ -50,10 +51,13 @@ export async function generate({
   language,
   moduleType,
   javascriptTarget,
-  includeWorkers,
+  workspace,
+  workersBuildId,
   schema,
   existingCode
 }: GenerateOptions) {
+  const includeWorkers = workspace !== undefined && workersBuildId !== undefined;
+
   // For now don't read external fs or tsconfig.json
   const project = new Project({
     useInMemoryFileSystem: true,
@@ -294,10 +298,7 @@ export async function generate({
   if (includeWorkers) {
     const xataWorker = sourceFile.getVariableDeclaration('xataWorker');
     const xataWorkerContent = `
-      buildWorkerRunner<XataClient>({
-        workspace: '<your-workspace-slug>',
-        worker: "<your-workspace-id>",
-      })`;
+      buildWorkerRunner<XataClient>(${JSON.stringify({ workspace, worker: workersBuildId })})`;
 
     if (!xataWorker) {
       sourceFile.addVariableStatement({

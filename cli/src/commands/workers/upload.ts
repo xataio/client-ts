@@ -8,7 +8,6 @@ const UPLOAD_ENDPOINT = 'https://app.xata.io/api/workers';
 
 export default class Upload extends BaseCommand {
   static description = 'Compile and upload xata workers';
-  static hidden = true;
 
   static flags = {
     ...this.databaseURLFlag,
