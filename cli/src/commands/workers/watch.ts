@@ -5,7 +5,6 @@ import { buildWatcher, compileWorkers } from '../../workers.js';
 
 export default class WorkersCompile extends BaseCommand {
   static description = 'Extract and compile xata workers';
-  static hidden = true;
 
   static flags = {
     ...this.databaseURLFlag,

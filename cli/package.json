@@ -111,6 +111,9 @@
       },
       "workspaces": {
         "description": "Create, list or delete workspaces"
+      },
+      "workers": {
+        "description": "Run and compile Xata Workers"
       }
     },
     "additionalHelpFlags": [

@@ -1,7 +1,9 @@
-import { deserialize, serialize } from '../serializer';
+import { deserialize, serialize, SerializerResult } from '../serializer';
 import { Request } from '../util/request';
 
 type XataWorkerContext<XataClient> = { xata: XataClient; request: Request; env: Record<string, string | undefined> };
+
+type XataWorkerResult<T extends (...args: any) => any> = SerializerResult<Awaited<ReturnType<T>>>;
 
 type RemoveFirst<T> = T extends [any, ...infer U] ? U : never;
 
@@ -15,7 +17,7 @@ export function buildWorkerRunner<XataClient>(config: WorkerRunnerConfig) {
     name: string,
     _worker: WorkerFunction
   ) {
-    return async (...args: RemoveFirst<Parameters<WorkerFunction>>): Promise<Awaited<ReturnType<typeof _worker>>> => {
+    return async (...args: RemoveFirst<Parameters<WorkerFunction>>): Promise<XataWorkerResult<typeof _worker>> => {
       const url =
         process.env.NODE_ENV === 'development'
           ? `http://localhost:64749/${name}`

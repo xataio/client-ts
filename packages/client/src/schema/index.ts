@@ -1,4 +1,4 @@
-import type { Schemas } from '../api';
+import { Table } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isString } from '../util/lang';
 import { XataRecord } from './record';
@@ -24,9 +24,9 @@ export type SchemaPluginResult<Schemas extends Record<string, XataRecord>> = {
 
 export class SchemaPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   #tables: Record<string, Repository<any>> = {};
-  #schemaTables?: Schemas.Table[];
+  #schemaTables?: Table[];
 
-  constructor(schemaTables?: Schemas.Table[]) {
+  constructor(schemaTables?: Table[]) {
     super();
 
     this.#schemaTables = schemaTables;
