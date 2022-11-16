@@ -20,6 +20,7 @@ import {
   HighlightExpression,
   PrefixExpression,
   RecordsMetadata,
+  SearchPageConfig,
   TransactionOperation
 } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
@@ -731,6 +732,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       highlight?: HighlightExpression;
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
+      page?: SearchPageConfig;
     }
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
 
@@ -1661,6 +1663,7 @@ export class RestRepository<Record extends XataRecord>
       highlight?: HighlightExpression;
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
+      page?: SearchPageConfig;
     } = {}
   ) {
     return this.#trace('search', async () => {
@@ -1679,7 +1682,8 @@ export class RestRepository<Record extends XataRecord>
           prefix: options.prefix,
           highlight: options.highlight,
           filter: options.filter as Schemas.FilterExpression,
-          boosters: options.boosters as Schemas.BoosterExpression[]
+          boosters: options.boosters as Schemas.BoosterExpression[],
+          page: options.page
         },
         ...fetchProps
       });
