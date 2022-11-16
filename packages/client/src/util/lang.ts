@@ -32,6 +32,21 @@ export function isNumber(value: any): value is number {
   return isDefined(value) && typeof value === 'number';
 }
 
+export function parseNumber(value: any): number | undefined {
+  if (isNumber(value)) {
+    return value;
+  }
+
+  if (isString(value)) {
+    const parsed = Number(value);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
+
 export function toBase64(value: string): string {
   try {
     return btoa(value);
@@ -77,4 +92,8 @@ export function chunk<T>(array: T[], chunkSize: number): T[][] {
   }
 
   return result;
+}
+
+export async function timeout(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

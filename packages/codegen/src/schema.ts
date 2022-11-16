@@ -37,7 +37,6 @@ export const tableSchema = z.object({
 export type Table = z.infer<typeof tableSchema>;
 
 export const xataDatabaseSchema = z.object({
-  formatVersion: z.literal('1.0'),
   tables: z.array(tableSchema)
 });
 
