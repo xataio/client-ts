@@ -3458,6 +3458,7 @@ export type SearchBranchRequestBody = {
   fuzziness?: Schemas.FuzzinessExpression;
   prefix?: Schemas.PrefixExpression;
   highlight?: Schemas.HighlightExpression;
+  page?: Schemas.SearchPageConfig;
 };
 
 export type SearchBranchVariables = {
@@ -3517,6 +3518,7 @@ export type SearchTableRequestBody = {
   filter?: Schemas.FilterExpression;
   highlight?: Schemas.HighlightExpression;
   boosters?: Schemas.BoosterExpression[];
+  page?: Schemas.SearchPageConfig;
 };
 
 export type SearchTableVariables = {
