@@ -1,3 +1,5 @@
+import { FunctionKeys } from '../util/types';
+
 // These will be used to set special fields to serialized objects.
 // So objects should not use this field names. I think that's fine. Another approach would be to generate two objects:
 // One containing the "data tree" and another containing the a tree with the type information.
@@ -73,3 +75,12 @@ export const serialize = <T>(data: T): string => {
 export const deserialize = <T>(json: string): T => {
   return defaultSerializer.fromJSON<T>(json);
 };
+
+export type SerializerResult<T> = T extends Record<string, any>
+  ? Omit<
+      {
+        [K in keyof T]: SerializerResult<T[K]>;
+      },
+      FunctionKeys<T>
+    >
+  : T; // TODO: Add support for arrays
