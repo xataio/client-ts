@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers, workerScriptSchema } from '../../workers.js';
+import Codegen from '../codegen/index.js';
 
 const UPLOAD_ENDPOINT = 'https://app.xata.io/api/workers';
 
@@ -43,7 +44,7 @@ export default class Upload extends BaseCommand {
           region,
           connection: {
             databaseUrl: databaseURL,
-            // TODO: Database scoped service API Key (backend generated maybe)
+            // TODO: Database scoped service API Key (backend generated)
             apiKey: profile.apiKey
           },
           environment,
@@ -60,8 +61,16 @@ export default class Upload extends BaseCommand {
 
         const { id } = responseSchema.parse(json);
 
-        // TODO: Update codegen file and save
-        this.info(`Worker: ${id}`);
+        this.info(`Successfully compiled worker ${id}`);
+
+        if (this.projectConfig?.codegen) {
+          this.log(`Running codegen...`);
+          this.projectConfig.codegen.workersBuildId = id;
+          await this.updateConfig();
+          await Codegen.run([]);
+        } else {
+          this.warn(`Unable to run codegen, no codegen config found`);
+        }
 
         await watcher.close();
 
