@@ -833,6 +833,26 @@ export type PageConfig = {
 };
 
 /**
+ * Pagination settings for the search endpoints.
+ */
+export type SearchPageConfig = {
+  /**
+   * Set page size.
+   *
+   * @default 25
+   * @maximum 200
+   */
+  size?: number;
+  /**
+   * Use offset to skip entries. To skip pages set offset to a multiple of size.
+   *
+   * @default 0
+   * @maximum 800
+   */
+  offset?: number;
+};
+
+/**
  * @example name
  * @example email
  * @example created_at
