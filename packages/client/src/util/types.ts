@@ -17,6 +17,10 @@ export type RequiredBy<T, K extends keyof T> = T & {
 
 export type GetArrayInnerType<T extends readonly any[]> = T[number];
 
+export type FunctionKeys<T> = {
+  [K in keyof T]: T[K] extends (...args: any) => any ? K : never;
+}[keyof T];
+
 export type AllRequired<T> = {
   [P in keyof T]-?: T[P];
 };

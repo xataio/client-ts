@@ -6,7 +6,7 @@ import {
   PropertyFilter,
   StringTypeFilter
 } from './filters';
-import { ColumnsByValue, SelectableColumn } from './selection';
+import { ColumnsByValue } from './selection';
 
 /**
  * Operator to restrict results to only values that are greater than the given value.

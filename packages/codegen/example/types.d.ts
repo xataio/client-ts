@@ -1,4 +1,4 @@
-import { BaseClientOptions, SchemaInference, XataRecord } from '../../client/src';
+import type { BaseClientOptions, SchemaInference, XataRecord } from '../../client/src';
 declare const tables: readonly [
   {
     readonly name: 'teams';
