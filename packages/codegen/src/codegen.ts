@@ -28,6 +28,13 @@ export type Language = 'typescript' | 'javascript';
 export type ModuleType = 'esm' | 'cjs' | 'deno';
 export type JavascriptTarget = keyof typeof ts.ScriptTarget | undefined;
 
+export function isValidJavascriptTarget(target?: string): target is JavascriptTarget {
+  return target !== undefined && target in ts.ScriptTarget;
+}
+
+// Enum.keys() returns 2x the number of keys
+export const javascriptTargets = Object.keys(ts.ScriptTarget).slice(Object.keys(ts.ScriptTarget).length / 2);
+
 function getTypeName(tableName: string) {
   const name = Case.pascal(tableName);
 
@@ -47,14 +54,12 @@ export async function generate({
   schema,
   existingCode
 }: GenerateOptions) {
-  const defaultTarget = moduleType === 'cjs' ? 'ES5' : 'ES2020';
-
   // For now don't read external fs or tsconfig.json
   const project = new Project({
     useInMemoryFileSystem: true,
     compilerOptions: {
       module: moduleType === 'cjs' ? ts.ModuleKind.CommonJS : ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget[javascriptTarget ?? defaultTarget]
+      target: ts.ScriptTarget[javascriptTarget ?? 'ES2020']
     }
   });
 
@@ -324,7 +329,6 @@ export async function generate({
   });
 
   const rawDeclarations = emitDeclarations(typescript);
-  console.log({ rawDeclarations, typescript });
   const types = rawDeclarations
     ? prettier.format(rawDeclarations, {
         parser: 'typescript',

@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { generate } from '@xata.io/codegen';
+import { generate, isValidJavascriptTarget, javascriptTargets } from '@xata.io/codegen';
 import chalk from 'chalk';
 import { mkdir, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
@@ -39,6 +39,9 @@ export default class Codegen extends BaseCommand {
       description:
         'Inject the branch name into the generated code. Useful if you have a build step and the branch name is not available at runtime'
     }),
+    'javascript-output-target': Flags.string({
+      description: 'The output target for the generated javascript code.'
+    }),
     'experimental-workers': Flags.boolean({
       description: 'Add xata workers to the generated code',
       hidden: true
@@ -51,12 +54,21 @@ export default class Codegen extends BaseCommand {
     const { flags } = await this.parse(Codegen);
     const output = flags.output || this.projectConfig?.codegen?.output;
     const moduleType = this.projectConfig?.codegen?.moduleType;
+    const javascriptTarget = flags['javascript-output-target'] || this.projectConfig?.codegen?.javascriptTarget;
 
     if (!output) {
       return this.error(
         `Please, specify an output file as a flag or in your project configuration file first with ${chalk.bold(
           'xata config set codegen.output <path>'
         )}`
+      );
+    }
+
+    if (javascriptTarget !== undefined && !isValidJavascriptTarget(javascriptTarget)) {
+      return this.error(
+        `Invalid javascript output target. Please use one of the following values: ${Object.keys(
+          javascriptTargets
+        ).join(', ')}`
       );
     }
 
@@ -81,6 +93,7 @@ export default class Codegen extends BaseCommand {
       databaseURL,
       language,
       moduleType,
+      javascriptTarget,
       branch: codegenBranch,
       includeWorkers: flags['experimental-workers'] ?? false
     });

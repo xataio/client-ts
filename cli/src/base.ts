@@ -36,7 +36,19 @@ export const projectConfigSchema = z.object({
   codegen: z.object({
     output: z.string(),
     moduleType: z.enum(['cjs', 'esm', 'deno']),
-    declarations: z.boolean()
+    declarations: z.boolean(),
+    javascriptTarget: z.enum([
+      'es5',
+      'es6',
+      'es2015',
+      'es2016',
+      'es2017',
+      'es2018',
+      'es2019',
+      'es2020',
+      'es2021',
+      'esnext'
+    ])
   })
 });
 
