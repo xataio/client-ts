@@ -652,24 +652,12 @@ export type HighlightExpression = {
 export type BoosterExpression =
   | {
       valueBooster?: ValueBooster;
-      /**
-       * Only apply this booster to the records for which the provided filter matches.
-       */
-      ifMatchesFilter?: FilterExpression;
     }
   | {
       numericBooster?: NumericBooster;
-      /**
-       * Only apply this booster to the records for which the provided filter matches.
-       */
-      ifMatchesFilter?: FilterExpression;
     }
   | {
       dateBooster?: DateBooster;
-      /**
-       * Only apply this booster to the records for which the provided filter matches.
-       */
-      ifMatchesFilter?: FilterExpression;
     };
 
 /**

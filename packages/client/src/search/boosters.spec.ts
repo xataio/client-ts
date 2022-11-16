@@ -43,12 +43,10 @@ const validBoosters7: Boosters<Record>[] = [
 const validBoosters8: Boosters<Record>[] = [
   { numericBooster: { column: 'upvotes', factor: 10, modifier: 'reciprocal' } },
   {
-    numericBooster: { column: 'upvotes', factor: 10 },
-    ifMatchesFilter: { 'obj.score': { $lt: 2.1 } }
+    numericBooster: { column: 'upvotes', factor: 10, ifMatchesFilter: { 'obj.score': { $lt: 2.1 } } }
   },
   {
-    numericBooster: { column: 'upvotes', factor: 10 },
-    ifMatchesFilter: { upvotes: { $lt: 4 } }
+    numericBooster: { column: 'upvotes', factor: 10, ifMatchesFilter: { upvotes: { $lt: 4 } } }
   }
 ];
 

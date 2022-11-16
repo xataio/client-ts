@@ -55,36 +55,44 @@ type ValueBooster<T extends string | number | boolean> = {
 export type Boosters<O extends XataRecord> = Values<{
   [K in SelectableColumn<O>]: NonNullable<ValueAtColumn<O, K>> extends Date
     ? {
-        dateBooster: { column: K } & DateBooster;
-        /**
-         * Only apply this booster to the records for which the provided filter matches.
-         */
-        ifMatchesFilter?: Filter<O>;
+        dateBooster: {
+          column: K;
+          /**
+           * Only apply this booster to the records for which the provided filter matches.
+           */
+          ifMatchesFilter?: Filter<O>;
+        } & DateBooster;
       }
     : NonNullable<ValueAtColumn<O, K>> extends number
     ? ExclusiveOr<
         {
-          numericBooster?: { column: K } & NumericBooster;
-          /**
-           * Only apply this booster to the records for which the provided filter matches.
-           */
-          ifMatchesFilter?: Filter<O>;
+          numericBooster?: {
+            column: K;
+            /**
+             * Only apply this booster to the records for which the provided filter matches.
+             */
+            ifMatchesFilter?: Filter<O>;
+          } & NumericBooster;
         },
         {
-          valueBooster?: { column: K } & ValueBooster<number>;
-          /**
-           * Only apply this booster to the records for which the provided filter matches.
-           */
-          ifMatchesFilter?: Filter<O>;
+          valueBooster?: {
+            column: K;
+            /**
+             * Only apply this booster to the records for which the provided filter matches.
+             */
+            ifMatchesFilter?: Filter<O>;
+          } & ValueBooster<number>;
         }
       >
     : NonNullable<ValueAtColumn<O, K>> extends string | boolean
     ? {
-        valueBooster: { column: K } & ValueBooster<NonNullable<ValueAtColumn<O, K>>>;
-        /**
-         * Only apply this booster to the records for which the provided filter matches.
-         */
-        ifMatchesFilter?: Filter<O>;
+        valueBooster: {
+          column: K;
+          /**
+           * Only apply this booster to the records for which the provided filter matches.
+           */
+          ifMatchesFilter?: Filter<O>;
+        } & ValueBooster<NonNullable<ValueAtColumn<O, K>>>;
       }
     : never;
 }>;
