@@ -306,9 +306,7 @@ export async function generate({
         declarations: [{ name: 'xataWorker', initializer: xataWorkerContent }],
         isExported: true,
         leadingTrivia:
-          language === 'javascript'
-            ? `/** @type { import('@xata.io/client').WorkerRunner<XataClient> } */\n`
-            : undefined,
+          language === 'javascript' ? `\n/** @type { import('@xata.io/client').WorkerRunner<XataClient> } */\n` : '\n',
         trailingTrivia: '\n'
       });
     } else {
