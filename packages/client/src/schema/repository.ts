@@ -1686,7 +1686,7 @@ export class RestRepository<Record extends XataRecord>
           highlight: options.highlight,
           filter: options.filter as Schemas.FilterExpression,
           boosters: options.boosters as Schemas.BoosterExpression[],
-          page: options.page
+          page: options.page,
           target: options.target as Schemas.TargetExpression
         },
         ...fetchProps
