@@ -50,6 +50,20 @@ type ValueBooster<T extends string | number | boolean> = {
    * The factor with which to multiply the score of the record.
    */
   factor: number;
+  /**
+   * Modifier to be applied to the column value, before being multiplied with the factor. The possible values are:
+   *   - none (default).
+   *   - log: common logarithm (base 10)
+   *   - log1p: add 1 then take the common logarithm. This ensures that the value is positive if the
+   *     value is between 0 and 1.
+   *   - ln: natural logarithm (base e)
+   *   - ln1p: add 1 then take the natural logarithm. This ensures that the value is positive if the
+   *     value is between 0 and 1.
+   *   - square: raise the value to the power of two.
+   *   - sqrt: take the square root of the value.
+   *   - reciprocal: reciprocate the value (if the value is `x`, the reciprocal is `1/x`).
+   */
+  modifier?: 'none' | 'log' | 'log1p' | 'ln' | 'ln1p' | 'square' | 'sqrt' | 'reciprocal';
 };
 
 export type Boosters<O extends XataRecord> = Values<{
