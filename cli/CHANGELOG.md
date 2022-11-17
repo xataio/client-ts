@@ -1,5 +1,26 @@
 # @xata.io/cli
 
+## 0.11.0
+
+### Minor Changes
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`cc22ec12`](https://github.com/xataio/client-ts/commit/cc22ec12cc435b5529f7e047555e4a7c79b86a54) Thanks [@SferaDev](https://github.com/SferaDev)! - Update codegen to incrementally update existing file
+
+### Patch Changes
+
+- [#769](https://github.com/xataio/client-ts/pull/769) [`1a740eec`](https://github.com/xataio/client-ts/commit/1a740eecb3e01eab1835e83296f5204985999281) Thanks [@gimenete](https://github.com/gimenete)! - Wait until a newly created API key is ready to be used
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174) Thanks [@SferaDev](https://github.com/SferaDev)! - Add pnpm support in xata init
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove beta for Workers
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174) Thanks [@SferaDev](https://github.com/SferaDev)! - Add deno support in codegen
+
+- Updated dependencies [[`b131040a`](https://github.com/xataio/client-ts/commit/b131040a2d142c4e71a2e586fbf05cd9295af9a1), [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174), [`7ea810dc`](https://github.com/xataio/client-ts/commit/7ea810dc083ec284447e3bd27bd0465f887481e6), [`d124cbfb`](https://github.com/xataio/client-ts/commit/d124cbfb93d3d591e79bbe9e94c4b6304d825e71), [`d124cbfb`](https://github.com/xataio/client-ts/commit/d124cbfb93d3d591e79bbe9e94c4b6304d825e71), [`fb5ccdf9`](https://github.com/xataio/client-ts/commit/fb5ccdf9fa95c37d54fbc5d9c0bb45872c831609), [`7da604d2`](https://github.com/xataio/client-ts/commit/7da604d27990e20ecadba6122434fca563e6a8c9), [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174), [`4ae00036`](https://github.com/xataio/client-ts/commit/4ae00036b53c6c89e02a1fcfdd992f1a3c22892c), [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174), [`9486bdcc`](https://github.com/xataio/client-ts/commit/9486bdccc0af567bc5f2e8f91592b0143c539c45), [`9486bdcc`](https://github.com/xataio/client-ts/commit/9486bdccc0af567bc5f2e8f91592b0143c539c45), [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174), [`cc22ec12`](https://github.com/xataio/client-ts/commit/cc22ec12cc435b5529f7e047555e4a7c79b86a54)]:
+  - @xata.io/client@0.21.0
+  - @xata.io/codegen@0.21.0
+  - @xata.io/importer@0.3.2
+
 ## 0.10.2
 
 ### Patch Changes

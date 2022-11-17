@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/plugin-client-cloudflare",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -21,6 +21,6 @@
   },
   "dependencies": {
     "@cloudflare/workers-types": "^3.18.0",
-    "@xata.io/client": "^0.20.2"
+    "@xata.io/client": "^0.21.0"
   }
 }

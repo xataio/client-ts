@@ -1,5 +1,31 @@
 # @xata.io/client
 
+## 0.21.0
+
+### Minor Changes
+
+- [#757](https://github.com/xataio/client-ts/pull/757) [`7da604d2`](https://github.com/xataio/client-ts/commit/7da604d27990e20ecadba6122434fca563e6a8c9) Thanks [@SferaDev](https://github.com/SferaDev)! - Add promise pool for retries
+
+### Patch Changes
+
+- [#764](https://github.com/xataio/client-ts/pull/764) [`b131040a`](https://github.com/xataio/client-ts/commit/b131040a2d142c4e71a2e586fbf05cd9295af9a1) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix bun
+
+- [#759](https://github.com/xataio/client-ts/pull/759) [`7ea810dc`](https://github.com/xataio/client-ts/commit/7ea810dc083ec284447e3bd27bd0465f887481e6) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose new transaction API
+
+- [#767](https://github.com/xataio/client-ts/pull/767) [`d124cbfb`](https://github.com/xataio/client-ts/commit/d124cbfb93d3d591e79bbe9e94c4b6304d825e71) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove formatVersion from schema
+
+- [#767](https://github.com/xataio/client-ts/pull/767) [`d124cbfb`](https://github.com/xataio/client-ts/commit/d124cbfb93d3d591e79bbe9e94c4b6304d825e71) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix null value returning on date columns
+
+- [#775](https://github.com/xataio/client-ts/pull/775) [`fb5ccdf9`](https://github.com/xataio/client-ts/commit/fb5ccdf9fa95c37d54fbc5d9c0bb45872c831609) Thanks [@SferaDev](https://github.com/SferaDev)! - Add missing target field to search
+
+- [#760](https://github.com/xataio/client-ts/pull/760) [`4ae00036`](https://github.com/xataio/client-ts/commit/4ae00036b53c6c89e02a1fcfdd992f1a3c22892c) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for filters in boosters
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove beta for Workers
+
+- [#771](https://github.com/xataio/client-ts/pull/771) [`9486bdcc`](https://github.com/xataio/client-ts/commit/9486bdccc0af567bc5f2e8f91592b0143c539c45) Thanks [@SferaDev](https://github.com/SferaDev)! - Add modifier for numeric booster
+
+- [#771](https://github.com/xataio/client-ts/pull/771) [`9486bdcc`](https://github.com/xataio/client-ts/commit/9486bdccc0af567bc5f2e8f91592b0143c539c45) Thanks [@SferaDev](https://github.com/SferaDev)! - Add pagination to search
+
 ## 0.20.2
 
 ### Patch Changes
