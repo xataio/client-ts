@@ -26,6 +26,7 @@ import {
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
+import { TargetColumn } from '../search/target';
 import { chunk, compact, isNumber, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
@@ -733,6 +734,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
       page?: SearchPageConfig;
+      target?: TargetColumn<Record>[];
     }
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
 
@@ -1664,6 +1666,7 @@ export class RestRepository<Record extends XataRecord>
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
       page?: SearchPageConfig;
+      target?: TargetColumn<Record>[];
     } = {}
   ) {
     return this.#trace('search', async () => {
@@ -1684,6 +1687,7 @@ export class RestRepository<Record extends XataRecord>
           filter: options.filter as Schemas.FilterExpression,
           boosters: options.boosters as Schemas.BoosterExpression[],
           page: options.page
+          target: options.target as Schemas.TargetExpression
         },
         ...fetchProps
       });
@@ -1885,6 +1889,7 @@ export const initObject = <T>(
       }
       default:
         result[column.name] = value ?? null;
+        
         if (column.notNull === true && value === null) {
           console.error(`Parse error, column ${column.name} is non nullable and value resolves null`);
         }
