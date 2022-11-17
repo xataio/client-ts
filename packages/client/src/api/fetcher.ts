@@ -138,8 +138,7 @@ export async function fetch<
       const xataAgent = compact([
         ['client', 'TS_SDK'],
         ['version', VERSION],
-        isDefined(clientName) ? ['service', clientName] : undefined,
-        isDefined(name) ? ['operation', name] : undefined
+        isDefined(clientName) ? ['service', clientName] : undefined
       ])
         .map(([key, value]) => `${key}=${value}`)
         .join('; ');
