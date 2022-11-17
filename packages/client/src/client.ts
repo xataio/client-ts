@@ -4,6 +4,7 @@ import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './sche
 import { CacheImpl, SimpleCache } from './schema/cache';
 import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
+import { TransactionPlugin, TransactionPluginResult } from './transaction';
 import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
 import { getCurrentBranchName, getDatabaseURL } from './util/config';
@@ -36,6 +37,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
+    transactions: TransactionPluginResult<any>;
 
     constructor(options: BaseClientOptions = {}, schemaTables?: Schemas.Table[]) {
       const safeOptions = this.#parseOptions(options);
@@ -49,10 +51,12 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const db = new SchemaPlugin(schemaTables).build(pluginOptions);
       const search = new SearchPlugin(db, schemaTables).build(pluginOptions);
+      const transactions = new TransactionPlugin().build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
       this.db = db;
       this.search = search;
+      this.transactions = transactions;
 
       for (const [key, namespace] of Object.entries(plugins ?? {})) {
         if (namespace === undefined) continue;
@@ -167,6 +171,7 @@ export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
     {
       db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
       search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
+      transactions: Awaited<ReturnType<TransactionPlugin<Schemas>['build']>>;
     },
     keyof Plugins
   > & {

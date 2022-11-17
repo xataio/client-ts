@@ -1843,11 +1843,11 @@ export const initObject = <T>(
 
     switch (column.type) {
       case 'datetime': {
-        const date = value !== undefined ? new Date(value as string) : undefined;
+        const date = value !== undefined ? new Date(value as string) : null;
 
-        if (date && isNaN(date.getTime())) {
+        if (date !== null && isNaN(date.getTime())) {
           console.error(`Failed to parse date ${value} for field ${column.name}`);
-        } else if (date) {
+        } else {
           result[column.name] = date;
         }
 
@@ -1921,10 +1921,6 @@ export const initObject = <T>(
   Object.freeze(result);
   return result as T;
 };
-
-function isResponseWithRecords(value: any): value is { records: Schemas.XataRecord[] } {
-  return isObject(value) && Array.isArray(value.records);
-}
 
 function extractId(value: any): string | undefined {
   if (isString(value)) return value;

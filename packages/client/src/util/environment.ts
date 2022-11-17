@@ -5,7 +5,7 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 ///<reference path="../types/global-deno.d.ts"/>
 
-import { isObject } from './lang';
+import { isDefined, isObject } from './lang';
 
 interface Environment {
   apiKey: string | undefined;
@@ -18,7 +18,8 @@ interface Environment {
 export function getEnvironment(): Environment {
   // Node.js: process.env
   try {
-    if (isObject(process) && isObject(process.env)) {
+    // Not using typeof process.env === 'object' because it's not working in some environments like Bun
+    if (isDefined(process) && isDefined(process.env)) {
       return {
         apiKey: process.env.XATA_API_KEY ?? getGlobalApiKey(),
         databaseURL: process.env.XATA_DATABASE_URL ?? getGlobalDatabaseURL(),

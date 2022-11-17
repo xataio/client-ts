@@ -1,6 +1,5 @@
-import type { Schemas } from '../api';
 import { getBranchDetails, searchBranch } from '../api';
-import { FuzzinessExpression, HighlightExpression, PrefixExpression } from '../api/schemas';
+import { FuzzinessExpression, HighlightExpression, PrefixExpression, Table } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';
@@ -57,9 +56,9 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
 };
 
 export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
-  #schemaTables?: Schemas.Table[];
+  #schemaTables?: Table[];
 
-  constructor(private db: SchemaPluginResult<Schemas>, schemaTables?: Schemas.Table[]) {
+  constructor(private db: SchemaPluginResult<Schemas>, schemaTables?: Table[]) {
     super();
     this.#schemaTables = schemaTables;
   }
@@ -115,7 +114,7 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
     return records;
   }
 
-  async #getSchemaTables(getFetchProps: XataPluginOptions['getFetchProps']): Promise<Schemas.Table[]> {
+  async #getSchemaTables(getFetchProps: XataPluginOptions['getFetchProps']): Promise<Table[]> {
     if (this.#schemaTables) return this.#schemaTables;
     const fetchProps = await getFetchProps();
 

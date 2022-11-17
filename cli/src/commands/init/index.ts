@@ -131,18 +131,19 @@ export default class Init extends BaseCommand {
               title: 'Generate JavaScript code with CJS (require)',
               value: 'cjs'
             },
+            { title: 'Generate TypeScript code with Deno imports', value: 'deno' },
             { title: 'Install the JavaScript SDK only, with no code generation', value: 'js' }
           ]
         },
         flags.module
       );
 
-      if (['ts', 'esm', 'cjs'].includes(codegen)) {
+      if (['ts', 'esm', 'cjs', 'deno'].includes(codegen)) {
         const { file } = await this.prompt({
           type: 'text',
           name: 'file',
           message: 'Choose the output file for the code generator',
-          initial: `src/xata.${codegen === 'ts' ? 'ts' : 'js'}`
+          initial: `src/xata.${codegen === 'ts' || codegen === 'deno' ? 'ts' : 'js'}`
         });
         if (!file) return this.error('You must provide an output file');
 
@@ -184,13 +185,31 @@ export default class Init extends BaseCommand {
   }
 
   async getPackageManager() {
-    const packageManager = (await this.access('yarn.lock')) ? 'yarn' : 'npm';
-    if (!which.sync(packageManager, { nothrow: true })) {
-      this.error(
-        `Looks like ${packageManager} is not installed or is not in the PATH. This made impossible to install the code generator`
+    const packageManager = await this.guessPackageManager();
+
+    if (!packageManager) {
+      this.warn('Could not detect a package manager. Please install the @xata.io/client package manually.');
+      return null;
+    } else if (!which.sync(packageManager.name, { nothrow: true })) {
+      this.warn(
+        `Looks like ${packageManager} is not installed or is not in the PATH. Please install the @xata.io/client package manually.`
       );
+      return null;
+    } else {
+      return packageManager;
     }
-    return packageManager;
+  }
+
+  async guessPackageManager() {
+    if (await this.access('package-lock.json')) {
+      return { name: 'npm', args: ['install', '--save'] };
+    } else if (await this.access('yarn.lock')) {
+      return { name: 'yarn', args: ['add'] };
+    } else if (await this.access('pnpm-lock.yaml')) {
+      return { name: 'pnpm', args: ['add'] };
+    } else {
+      return null;
+    }
   }
 
   async access(path: string) {
@@ -203,9 +222,11 @@ export default class Init extends BaseCommand {
   }
 
   async installPackage(pkg: string) {
-    const command = await this.getPackageManager();
-    const subcommand = command === 'yarn' ? 'add' : 'install';
-    await this.runCommand(command, [subcommand, pkg]);
+    const packageManager = await this.getPackageManager();
+    if (!packageManager) return;
+
+    const { name, args } = packageManager;
+    await this.runCommand(name, [...args, pkg]);
   }
 
   async writeConfig() {
@@ -233,8 +254,11 @@ export default class Init extends BaseCommand {
 
     if (!apiKey) {
       apiKey = await createAPIKeyThroughWebUI();
+      this.apiKeyLocation = 'new';
       // Any following API call must use this API key
       process.env.XATA_API_KEY = apiKey;
+
+      await this.waitUntilAPIKeyIsValid(workspace, region, database);
     }
     this.info(
       'The fallback branch will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitly)'
@@ -269,6 +293,29 @@ export default class Init extends BaseCommand {
     await writeFile(envFile, content);
 
     await this.ignoreEnvFile(envFile);
+  }
+
+  // New API keys need to be replicated until can be used in a particular region/database
+  async waitUntilAPIKeyIsValid(workspace: string, region: string, database: string) {
+    const xata = await this.getXataClient();
+    const maxRetries = 10;
+    let retries = 0;
+    while (retries++ < maxRetries) {
+      try {
+        await xata.branches.getBranchList({ workspace, region, database });
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.message.includes('Invalid API key')) {
+          if (retries % 2 === 0) {
+            this.info('Waiting until the new API key is ready to be used...');
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } else {
+          throw err;
+        }
+      }
+    }
+    this.error(`The new API key could not be used after ${maxRetries} seconds. Please try again.`);
   }
 
   async ignoreEnvFile(envFile: string) {

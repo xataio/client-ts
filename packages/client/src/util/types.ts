@@ -17,6 +17,10 @@ export type RequiredBy<T, K extends keyof T> = T & {
 
 export type GetArrayInnerType<T extends readonly any[]> = T[number];
 
+export type FunctionKeys<T> = {
+  [K in keyof T]: T[K] extends (...args: any) => any ? K : never;
+}[keyof T];
+
 export type AllRequired<T> = {
   [P in keyof T]-?: T[P];
 };
@@ -46,3 +50,16 @@ type Explode<T> = keyof T extends infer K
 export type AtMostOne<T> = Explode<Partial<T>>;
 export type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U];
 export type ExactlyOne<T> = AtMostOne<T> & AtLeastOne<T>;
+
+type Fn = (...args: any[]) => any;
+
+type NarrowRaw<A> =
+  | (A extends [] ? [] : never)
+  | (A extends Narrowable ? A : never)
+  | {
+      [K in keyof A]: A[K] extends Fn ? A[K] : NarrowRaw<A[K]>;
+    };
+type Narrowable = string | number | bigint | boolean;
+type Try<A1, A2, Catch = never> = A1 extends A2 ? A1 : Catch;
+
+export type Narrow<A> = Try<A, [], NarrowRaw<A>>;

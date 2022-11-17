@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { generate } from '@xata.io/codegen';
+import { generate, isValidJavascriptTarget, javascriptTargets } from '@xata.io/codegen';
 import chalk from 'chalk';
 import { mkdir, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
@@ -39,9 +39,11 @@ export default class Codegen extends BaseCommand {
       description:
         'Inject the branch name into the generated code. Useful if you have a build step and the branch name is not available at runtime'
     }),
-    'experimental-workers': Flags.boolean({
-      description: 'Add xata workers to the generated code',
-      hidden: true
+    'javascript-output-target': Flags.string({
+      description: 'The output target for the generated javascript code.'
+    }),
+    'worker-id': Flags.string({
+      description: 'Xata worker deployment id'
     })
   };
 
@@ -51,12 +53,22 @@ export default class Codegen extends BaseCommand {
     const { flags } = await this.parse(Codegen);
     const output = flags.output || this.projectConfig?.codegen?.output;
     const moduleType = this.projectConfig?.codegen?.moduleType;
+    const javascriptTarget = flags['javascript-output-target'] || this.projectConfig?.codegen?.javascriptTarget;
+    const workersBuildId = flags['worker-id'] || this.projectConfig?.codegen?.workersBuildId;
 
     if (!output) {
       return this.error(
         `Please, specify an output file as a flag or in your project configuration file first with ${chalk.bold(
           'xata config set codegen.output <path>'
         )}`
+      );
+    }
+
+    if (javascriptTarget !== undefined && !isValidJavascriptTarget(javascriptTarget)) {
+      return this.error(
+        `Invalid javascript output target. Please use one of the following values: ${Object.keys(
+          javascriptTargets
+        ).join(', ')}`
       );
     }
 
@@ -76,22 +88,24 @@ export default class Codegen extends BaseCommand {
     const { schema } = branchDetails;
 
     const codegenBranch = flags['inject-branch'] ? branch : undefined;
-    // TODO: remove formatVersion
     const result = await generate({
-      schema: { formatVersion: '1.0', ...schema },
+      schema,
       databaseURL,
       language,
       moduleType,
+      javascriptTarget,
       branch: codegenBranch,
-      includeWorkers: flags['experimental-workers'] ?? false
+      workspace,
+      workersBuildId
     });
-    const code = result.transpiled;
-    const declarations = result.declarations;
+
+    const { typescript, javascript, types } = result;
+    const code = language === 'typescript' ? typescript : javascript;
 
     await mkdir(dir, { recursive: true });
     await writeFile(output, code);
-    if (declarations && (flags.declarations || this.projectConfig?.codegen?.declarations)) {
-      await writeFile(path.join(dir, 'types.d.ts'), declarations);
+    if (types && (flags.declarations || this.projectConfig?.codegen?.declarations)) {
+      await writeFile(path.join(dir, 'types.d.ts'), types);
     }
 
     this.success(`Your XataClient is generated at ./${relative(process.cwd(), output)}`);
