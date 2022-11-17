@@ -143,7 +143,7 @@ export async function fetch<
           'Content-Type': 'application/json',
           'X-Xata-Client-ID': clientID ?? '',
           'X-Xata-Session-ID': sessionID ?? '',
-          'X-Xata-Agent': `client=TS_SDK; version=${VERSION}; service=${clientName ?? 'sdk'};`,
+          'X-Xata-Agent': `client=TS_SDK; version=${VERSION}; service=${clientName ?? 'unknown'};`,
           ...headers,
           ...hostHeader(fullUrl),
           Authorization: `Bearer ${apiKey}`
