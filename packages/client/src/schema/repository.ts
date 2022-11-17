@@ -732,6 +732,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       highlight?: HighlightExpression;
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
+      target?: TargetColumn<Record>[];
     }
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
 
