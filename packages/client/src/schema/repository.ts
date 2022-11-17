@@ -20,6 +20,7 @@ import {
   HighlightExpression,
   PrefixExpression,
   RecordsMetadata,
+  SearchPageConfig,
   TransactionOperation
 } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
@@ -732,6 +733,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       highlight?: HighlightExpression;
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
+      page?: SearchPageConfig;
       target?: TargetColumn<Record>[];
     }
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
@@ -1663,6 +1665,7 @@ export class RestRepository<Record extends XataRecord>
       highlight?: HighlightExpression;
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
+      page?: SearchPageConfig;
       target?: TargetColumn<Record>[];
     } = {}
   ) {
@@ -1683,6 +1686,7 @@ export class RestRepository<Record extends XataRecord>
           highlight: options.highlight,
           filter: options.filter as Schemas.FilterExpression,
           boosters: options.boosters as Schemas.BoosterExpression[],
+          page: options.page,
           target: options.target as Schemas.TargetExpression
         },
         ...fetchProps
@@ -1885,6 +1889,7 @@ export const initObject = <T>(
       }
       default:
         result[column.name] = value ?? null;
+        
         if (column.notNull === true && value === null) {
           console.error(`Parse error, column ${column.name} is non nullable and value resolves null`);
         }
