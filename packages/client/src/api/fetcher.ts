@@ -1,6 +1,6 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
-import { compact, isString } from '../util/lang';
+import { compact, isDefined, isString } from '../util/lang';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
@@ -138,8 +138,8 @@ export async function fetch<
       const xataAgent = compact([
         ['client', 'TS_SDK'],
         ['version', VERSION],
-        ['service', clientName ?? 'unknown'],
-        name !== undefined ? ['operation', name] : undefined
+        isDefined(clientName) ? ['service', clientName] : undefined,
+        isDefined(name) ? ['operation', name] : undefined
       ])
         .map(([key, value]) => `${key}=${value}`)
         .join('; ');

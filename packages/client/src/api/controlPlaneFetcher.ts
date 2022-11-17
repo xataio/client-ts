@@ -12,6 +12,7 @@ export type ControlPlaneFetcherExtraProps = {
   signal?: AbortSignal;
   clientID?: string;
   sessionID?: string;
+  clientName?: string;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };

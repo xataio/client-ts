@@ -24,9 +24,10 @@ export type BaseClientOptions = {
   clientName?: string;
 };
 
-type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch'>> & {
+type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch' | 'clientName'>> & {
   branch: () => Promise<string | undefined>;
   clientID: string;
+  clientName?: string;
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -97,7 +98,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const apiKey = options?.apiKey || getAPIKey();
       const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
-      const clientName = options?.clientName ?? 'sdk';
+      const clientName = options?.clientName;
       const branch = async () =>
         options?.branch !== undefined
           ? await this.#evaluateBranch(options.branch)
