@@ -25,6 +25,7 @@ import {
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
+import { TargetColumn } from '../search/target';
 import { chunk, compact, isNumber, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
@@ -1661,6 +1662,7 @@ export class RestRepository<Record extends XataRecord>
       highlight?: HighlightExpression;
       filter?: Filter<Record>;
       boosters?: Boosters<Record>[];
+      target?: TargetColumn<Record>[];
     } = {}
   ) {
     return this.#trace('search', async () => {
@@ -1679,7 +1681,8 @@ export class RestRepository<Record extends XataRecord>
           prefix: options.prefix,
           highlight: options.highlight,
           filter: options.filter as Schemas.FilterExpression,
-          boosters: options.boosters as Schemas.BoosterExpression[]
+          boosters: options.boosters as Schemas.BoosterExpression[],
+          target: options.target as Schemas.TargetExpression
         },
         ...fetchProps
       });
