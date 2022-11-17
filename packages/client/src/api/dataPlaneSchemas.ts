@@ -688,6 +688,10 @@ export type ValueBooster = {
    * The factor with which to multiply the score of the record.
    */
   factor: number;
+  /**
+   * Only apply this booster to the records for which the provided filter matches.
+   */
+  ifMatchesFilter?: FilterExpression;
 };
 
 /**
@@ -716,6 +720,10 @@ export type NumericBooster = {
    *   - reciprocal: reciprocate the value (if the value is `x`, the reciprocal is `1/x`).
    */
   modifier?: 'none' | 'log' | 'log1p' | 'ln' | 'ln1p' | 'square' | 'sqrt' | 'reciprocal';
+  /**
+   * Only apply this booster to the records for which the provided filter matches.
+   */
+  ifMatchesFilter?: FilterExpression;
 };
 
 /**
@@ -743,6 +751,10 @@ export type DateBooster = {
    * The decay factor to expect at "scale" distance from the "origin".
    */
   decay: number;
+  /**
+   * Only apply this booster to the records for which the provided filter matches.
+   */
+  ifMatchesFilter?: FilterExpression;
 };
 
 export type FilterList = FilterExpression | FilterExpression[];
