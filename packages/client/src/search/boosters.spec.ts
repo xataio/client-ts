@@ -40,6 +40,26 @@ const validBoosters7: Boosters<Record>[] = [
   { valueBooster: { column: 'upvotes', value: 10, factor: 75 }, numericBooster: { column: 'upvotes', factor: 100 } }
 ];
 
+const validBoosters8: Boosters<Record>[] = [
+  { numericBooster: { column: 'upvotes', factor: 10, modifier: 'reciprocal' } },
+  {
+    numericBooster: { column: 'upvotes', factor: 10, ifMatchesFilter: { 'obj.score': { $lt: 2.1 } } }
+  },
+  {
+    numericBooster: { column: 'upvotes', factor: 10, ifMatchesFilter: { upvotes: { $lt: 4 } } }
+  }
+];
+
+const invalidBoosters1: Boosters<Record>[] = [
+  // @ts-expect-error
+  { numericBooster: { column: 'name', factor: 50, modifier: 'invalid' } },
+  {
+    dateBooster: { column: 'createdAt', origin: '2020-01-21T00:00:00Z', scale: '1d', decay: 0.2 },
+    // @ts-expect-error
+    ifMatchesFilter: { noSuchColumn: 'test' }
+  }
+];
+
 test('fake test', () => {
   // This is a fake test to make sure that the type definitions in this file are working
 });
