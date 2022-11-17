@@ -96,7 +96,6 @@ describe('record deletion', () => {
     expect(result[0]?.name).toBe('Team cars');
     expect(result[1]?.name).toBe('Team planes');
     expect(result[2]).toBeNull();
-    console.log(result);
 
     const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
     expect(apiTeams).toHaveLength(0);
