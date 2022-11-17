@@ -125,8 +125,8 @@ export default class Shell extends BaseCommand {
     const { XataClient } = await import(tempFile);
     await fs.unlink(tempFile);
 
-    replServer.context.xata = new XataClient({ fetch, apiKey, host: profile.host });
-    replServer.context.api = new XataApiClient({ fetch, apiKey });
+    replServer.context.xata = new XataClient({ fetch, apiKey, host: profile.host, clientName: 'cli-shell' });
+    replServer.context.api = new XataApiClient({ fetch, apiKey, clientName: 'cli-shell' });
     replServer.context.api.GET = (path: string) => fetchApi('GET', path);
     replServer.context.api.POST = (path: string, body?: any) => fetchApi('POST', path, JSON.stringify(body));
     replServer.context.api.PATCH = (path: string, body?: any) => fetchApi('PATCH', path, JSON.stringify(body));

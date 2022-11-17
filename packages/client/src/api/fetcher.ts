@@ -1,6 +1,6 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
-import { isString } from '../util/lang';
+import { compact, isDefined, isString } from '../util/lang';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
@@ -41,6 +41,7 @@ export type FetcherExtraProps = {
   signal?: AbortSignal;
   clientID?: string;
   sessionID?: string;
+  clientName?: string;
   fetchOptions?: Record<string, unknown>;
 };
 
@@ -115,13 +116,14 @@ export async function fetch<
   signal,
   clientID,
   sessionID,
+  clientName,
   fetchOptions = {}
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   pool.setFetch(fetchImpl);
 
   return await trace(
     `${method.toUpperCase()} ${path}`,
-    async ({ setAttributes }) => {
+    async ({ name, setAttributes }) => {
       const baseUrl = buildBaseUrl({ endpoint, path, workspacesApiUrl, pathParams, apiUrl });
       const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
@@ -133,15 +135,23 @@ export async function fetch<
         [TraceAttributes.HTTP_TARGET]: resolveUrl(path, queryParams, pathParams)
       });
 
+      const xataAgent = compact([
+        ['client', 'TS_SDK'],
+        ['version', VERSION],
+        isDefined(clientName) ? ['service', clientName] : undefined
+      ])
+        .map(([key, value]) => `${key}=${value}`)
+        .join('; ');
+
       const response = await pool.request(url, {
         ...fetchOptions,
         method: method.toUpperCase(),
         body: body ? JSON.stringify(body) : undefined,
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': `Xata client-ts/${VERSION}`,
           'X-Xata-Client-ID': clientID ?? '',
           'X-Xata-Session-ID': sessionID ?? '',
+          'X-Xata-Agent': xataAgent,
           ...headers,
           ...hostHeader(fullUrl),
           Authorization: `Bearer ${apiKey}`

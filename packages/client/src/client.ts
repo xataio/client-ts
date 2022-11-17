@@ -21,11 +21,13 @@ export type BaseClientOptions = {
   cache?: CacheImpl;
   trace?: TraceFunction;
   enableBrowser?: boolean;
+  clientName?: string;
 };
 
-type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch'>> & {
+type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch' | 'clientName'>> & {
   branch: () => Promise<string | undefined>;
   clientID: string;
+  clientName?: string;
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -96,6 +98,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const apiKey = options?.apiKey || getAPIKey();
       const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
+      const clientName = options?.clientName;
       const branch = async () =>
         options?.branch !== undefined
           ? await this.#evaluateBranch(options.branch)
@@ -109,10 +112,18 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         throw new Error('Option databaseURL is required');
       }
 
-      return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID(), enableBrowser };
+      return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID(), enableBrowser, clientName };
     }
 
-    async #getFetchProps({ fetch, apiKey, databaseURL, branch, trace, clientID }: SafeOptions): Promise<ApiExtraProps> {
+    async #getFetchProps({
+      fetch,
+      apiKey,
+      databaseURL,
+      branch,
+      trace,
+      clientID,
+      clientName
+    }: SafeOptions): Promise<ApiExtraProps> {
       const branchValue = await this.#evaluateBranch(branch);
       if (!branchValue) throw new Error('Unable to resolve branch value');
 
@@ -127,7 +138,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
           return databaseURL + newPath;
         },
         trace,
-        clientID
+        clientID,
+        clientName
       };
     }
 

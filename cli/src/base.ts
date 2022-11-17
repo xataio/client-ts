@@ -235,7 +235,7 @@ export abstract class BaseCommand extends Command {
       });
     }
 
-    this.#xataClient = new XataApiClient({ apiKey, fetch, host });
+    this.#xataClient = new XataApiClient({ apiKey, fetch, host, clientName: 'cli' });
     return this.#xataClient;
   }
 

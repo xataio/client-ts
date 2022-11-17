@@ -11,15 +11,18 @@ interface User {
 }
 
 const buildClient = (options: Partial<BaseClientOptions> = {}) => {
-  const { apiKey = '1234', databaseURL = 'https://mock.xata.sh/db/xata', branch = 'main' } = options;
+  const { apiKey = '1234', databaseURL = 'https://mock.xata.sh/db/xata', branch = 'main', clientName } = options;
 
   const fetch = vi.fn(realFetch);
-  const client = new BaseClient({ fetch, apiKey, databaseURL, branch });
+  const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName });
 
   const users = client.db.users;
 
   return { fetch, client, users };
 };
+
+const getHeaders = (fetchMock: y<[input: RequestInfo | URL, init?: RequestInit | undefined], Promise<Response>>) =>
+  fetchMock.calls[0][1]?.headers as Record<string, string>;
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -254,6 +257,47 @@ describe('request', () => {
     expect(result?.a).toEqual(json.a);
     expect(result?.email).toBeNull();
     expect(result?.read).toBeDefined();
+  });
+
+  test('sets X-Xata-Agent header', async () => {
+    const { fetch, users } = buildClient();
+
+    fetch.mockImplementationOnce(async () => {
+      return {
+        ok: true,
+        json: async () => ({
+          records: [],
+          meta: { page: { cursor: '', more: false } }
+        })
+      } as Response;
+    });
+
+    await users.getFirst();
+
+    const xataAgentHeader = getHeaders(fetch.mock)?.['X-Xata-Agent'];
+
+    expect(xataAgentHeader).toContain(`client=TS_SDK; version=`);
+  });
+
+  test('sets X-Xata-Agent header with service', async () => {
+    const { fetch, users } = buildClient({ clientName: 'myService' });
+
+    fetch.mockImplementationOnce(async () => {
+      return {
+        ok: true,
+        json: async () => ({
+          records: [],
+          meta: { page: { cursor: '', more: false } }
+        })
+      } as Response;
+    });
+
+    await users.getFirst();
+
+    const xataAgentHeader = getHeaders(fetch.mock)?.['X-Xata-Agent'];
+
+    expect(xataAgentHeader).toContain(`client=TS_SDK; version=`);
+    expect(xataAgentHeader).toContain(`service=myService`);
   });
 });
 
