@@ -16,6 +16,7 @@ export interface XataApiClientOptions {
   apiKey?: string;
   host?: HostProvider;
   trace?: TraceFunction;
+  clientName?: string;
 }
 
 export class XataApiClient {
@@ -48,7 +49,8 @@ export class XataApiClient {
       workspacesApiUrl: getHostUrl(provider, 'workspaces'),
       fetchImpl: getFetchImplementation(options.fetch),
       apiKey,
-      trace
+      trace,
+      clientName: options.clientName
     };
   }
 

@@ -71,7 +71,7 @@ export async function setUpTestEnvironment(
   // Timestamp to avoid collisions
   const id = Date.now().toString(36);
 
-  const api = new XataApiClient({ apiKey, fetch, host });
+  const api = new XataApiClient({ apiKey, fetch, host, clientName: 'sdk-tests' });
   const { databaseName: database } = await api.database.createDatabase({
     workspace,
     database: `sdk-integration-test-${prefix}-${id}`,
@@ -86,7 +86,8 @@ export async function setUpTestEnvironment(
     apiKey,
     fetch,
     cache,
-    trace
+    trace,
+    clientName: 'sdk-tests'
   };
 
   await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'teams' });
