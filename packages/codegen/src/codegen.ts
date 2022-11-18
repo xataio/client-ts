@@ -221,6 +221,7 @@ export async function generate({
       leadingTrivia: '\n'
     });
   } else {
+    // TODO: merge with existing options
     defaultOptions.setInitializer(defaultOptionsContent);
   }
 

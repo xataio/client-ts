@@ -112,6 +112,8 @@ describe('record update', () => {
 
     expect(updatedTeam3).toBeNull();
     expect(versionD).toBe(undefined);
+
+    expect(xata.db.teams.updateOrThrow(team.id, { name: 'Team cars' }, { ifVersion: versionA })).rejects.toThrow();
   });
 
   test('update item with id column', async () => {
