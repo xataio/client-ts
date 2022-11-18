@@ -1165,16 +1165,21 @@ export class RestRepository<Record extends XataRecord>
         return result;
       }
 
-      // Update one record with id as param
-      if (isString(a) && isObject(b)) {
-        const columns = isStringArray(c) ? c : undefined;
-        return this.#updateRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
-      }
+      try {
+        // Update one record with id as param
+        if (isString(a) && isObject(b)) {
+          const columns = isStringArray(c) ? c : undefined;
+          return await this.#updateRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
+        }
 
-      // Update one record with id as property
-      if (isObject(a) && isString(a.id)) {
-        const columns = isStringArray(b) ? b : undefined;
-        return this.#updateRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
+        // Update one record with id as property
+        if (isObject(a) && isString(a.id)) {
+          const columns = isStringArray(b) ? b : undefined;
+          return await this.#updateRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
+        }
+      } catch (error: any) {
+        if (error.status === 422) return null;
+        throw error;
       }
 
       throw new Error('Invalid arguments for update method');
@@ -1889,7 +1894,7 @@ export const initObject = <T>(
       }
       default:
         result[column.name] = value ?? null;
-        
+
         if (column.notNull === true && value === null) {
           console.error(`Parse error, column ${column.name} is non nullable and value resolves null`);
         }
