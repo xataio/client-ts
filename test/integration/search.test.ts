@@ -203,6 +203,20 @@ describe('search', () => {
     expect(page1[0].id).toBe(owners[0].id);
     expect(page2[0].id).toBe(owners[1].id);
   });
+
+  test('global search with page and offset', async () => {
+    const { users: owners = [] } = await xata.search.byTable('Owner');
+    const { users: page1 = [] } = await xata.search.byTable('Owner', { page: { size: 1 } });
+    const { users: page2 = [] } = await xata.search.byTable('Owner', { page: { size: 1, offset: 1 } });
+
+    expect(page1.length).toBe(1);
+    expect(page2.length).toBe(1);
+
+    expect(page1[0].id).not.toBe(page2[0].id);
+
+    expect(page1[0].id).toBe(owners[0].id);
+    expect(page2[0].id).toBe(owners[1].id);
+  });
 });
 
 async function waitForSearchIndexing(): Promise<void> {
