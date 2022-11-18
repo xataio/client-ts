@@ -1,5 +1,23 @@
 # @xata.io/codegen
 
+## 0.21.0
+
+### Minor Changes
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`cc22ec12`](https://github.com/xataio/client-ts/commit/cc22ec12cc435b5529f7e047555e4a7c79b86a54) Thanks [@SferaDev](https://github.com/SferaDev)! - Update codegen to incrementally update existing file
+
+### Patch Changes
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174) Thanks [@SferaDev](https://github.com/SferaDev)! - Add pnpm support in xata init
+
+- [#767](https://github.com/xataio/client-ts/pull/767) [`d124cbfb`](https://github.com/xataio/client-ts/commit/d124cbfb93d3d591e79bbe9e94c4b6304d825e71) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove formatVersion from schema
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix exports in CJS
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove beta for Workers
+
+- [#766](https://github.com/xataio/client-ts/pull/766) [`bdae6668`](https://github.com/xataio/client-ts/commit/bdae6668fb571d29f1b1068a54f6866a80d9b174) Thanks [@SferaDev](https://github.com/SferaDev)! - Add deno support in codegen
+
 ## 0.18.0
 
 ### Patch Changes

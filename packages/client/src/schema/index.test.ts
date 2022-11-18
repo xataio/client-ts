@@ -21,8 +21,7 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
   return { fetch, client, users };
 };
 
-const getHeaders = (fetchMock: y<[input: RequestInfo | URL, init?: RequestInit | undefined], Promise<Response>>) =>
-  fetchMock.calls[0][1]?.headers as Record<string, string>;
+const getHeaders = (fetchMock: any) => fetchMock.calls[0][1]?.headers as Record<string, string>;
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
