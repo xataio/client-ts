@@ -44,15 +44,23 @@ export class CloudflareKVCache implements CacheImpl {
   }
 
   async #listAll(): Promise<string[]> {
-    const { keys, cursor } = await this.#kv.list();
+    const getKeys = async (cursor?: string): Promise<{ keys: string[]; cursor?: string }> => {
+      const result = await this.#kv.list({ cursor });
+      const keys = result.keys.map((key) => key.name);
+      const nextCursor = result.list_complete ? undefined : result.cursor;
+
+      return { keys, cursor: nextCursor };
+    };
+
+    const { keys, cursor } = await getKeys();
 
     let currentCursor = cursor;
     while (currentCursor) {
-      const { keys: nextKeys, cursor: nextCursor } = await this.#kv.list({ cursor: currentCursor });
+      const { keys: nextKeys, cursor: nextCursor } = await getKeys(currentCursor);
       keys.push(...nextKeys);
       currentCursor = nextCursor;
     }
 
-    return keys.map(({ name }) => name);
+    return keys;
   }
 }
