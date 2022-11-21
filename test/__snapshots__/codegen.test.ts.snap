@@ -343,11 +343,11 @@ declare const tables: readonly [
     ];
   }
 ];
-export declare type SchemaTables = typeof tables;
-export declare type InferredTypes = SchemaInference<SchemaTables>;
-export declare type $1teamsCase = InferredTypes[\\"1teams-case\\"];
-export declare type $1teamsCaseRecord = $1teamsCase & XataRecord;
-export declare type DatabaseSchema = {
+export type SchemaTables = typeof tables;
+export type InferredTypes = SchemaInference<SchemaTables>;
+export type $1teamsCase = InferredTypes[\\"1teams-case\\"];
+export type $1teamsCaseRecord = $1teamsCase & XataRecord;
+export type DatabaseSchema = {
   \\"1teams-case\\": $1teamsCaseRecord;
 };
 declare const DatabaseClient: any;
