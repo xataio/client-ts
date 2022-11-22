@@ -293,6 +293,10 @@ export type GetWorkspaceError = Fetcher.ErrorWrapper<
       payload: Responses.AuthError;
     }
   | {
+      status: 403;
+      payload: Responses.AuthError;
+    }
+  | {
       status: 404;
       payload: Responses.SimpleError;
     }
@@ -327,6 +331,10 @@ export type UpdateWorkspaceError = Fetcher.ErrorWrapper<
     }
   | {
       status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 403;
       payload: Responses.AuthError;
     }
   | {
@@ -368,6 +376,10 @@ export type DeleteWorkspaceError = Fetcher.ErrorWrapper<
       payload: Responses.AuthError;
     }
   | {
+      status: 403;
+      payload: Responses.AuthError;
+    }
+  | {
       status: 404;
       payload: Responses.SimpleError;
     }
@@ -402,6 +414,10 @@ export type GetWorkspaceMembersListError = Fetcher.ErrorWrapper<
     }
   | {
       status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 403;
       payload: Responses.AuthError;
     }
   | {
@@ -445,6 +461,10 @@ export type UpdateWorkspaceMemberRoleError = Fetcher.ErrorWrapper<
     }
   | {
       status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 403;
       payload: Responses.AuthError;
     }
   | {
@@ -496,6 +516,10 @@ export type RemoveWorkspaceMemberError = Fetcher.ErrorWrapper<
       payload: Responses.AuthError;
     }
   | {
+      status: 403;
+      payload: Responses.AuthError;
+    }
+  | {
       status: 404;
       payload: Responses.SimpleError;
     }
@@ -530,6 +554,10 @@ export type InviteWorkspaceMemberError = Fetcher.ErrorWrapper<
     }
   | {
       status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 403;
       payload: Responses.AuthError;
     }
   | {
@@ -589,6 +617,10 @@ export type UpdateWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
       payload: Responses.AuthError;
     }
   | {
+      status: 403;
+      payload: Responses.AuthError;
+    }
+  | {
       status: 404;
       payload: Responses.SimpleError;
     }
@@ -641,6 +673,10 @@ export type CancelWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
       payload: Responses.AuthError;
     }
   | {
+      status: 403;
+      payload: Responses.AuthError;
+    }
+  | {
       status: 404;
       payload: Responses.SimpleError;
     }
@@ -684,6 +720,10 @@ export type AcceptWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
       payload: Responses.AuthError;
     }
   | {
+      status: 403;
+      payload: Responses.AuthError;
+    }
+  | {
       status: 404;
       payload: Responses.SimpleError;
     }
@@ -724,6 +764,10 @@ export type ResendWorkspaceMemberInviteError = Fetcher.ErrorWrapper<
     }
   | {
       status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 403;
       payload: Responses.AuthError;
     }
   | {
