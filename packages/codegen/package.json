@@ -31,7 +31,7 @@
   "dependencies": {
     "case": "^1.6.3",
     "prettier": "^2.7.1",
-    "ts-morph": "^17.0.0",
+    "ts-morph": "^16.0.0",
     "typescript": "^4.9.3",
     "zod": "^3.19.1"
   },
