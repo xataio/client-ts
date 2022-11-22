@@ -28,6 +28,10 @@ export type DEPRECATEDDatabaseMetadata = {
      */
     color?: string;
   };
+  /**
+   * @x-internal true
+   */
+  newMigrations?: boolean;
 };
 
 export type DEPRECATEDListDatabasesResponse = {
