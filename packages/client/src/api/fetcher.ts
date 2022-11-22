@@ -148,6 +148,7 @@ export async function fetch<
         method: method.toUpperCase(),
         body: body ? JSON.stringify(body) : undefined,
         headers: {
+          'Accept-Encoding': 'identity',
           'Content-Type': 'application/json',
           'X-Xata-Client-ID': clientID ?? '',
           'X-Xata-Session-ID': sessionID ?? '',
