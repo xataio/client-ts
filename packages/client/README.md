@@ -110,6 +110,14 @@ Invoke the `create()` method in the repository. Example:
 const user = await xata.db.users.create({
   fullName: 'John Smith'
 });
+
+// With a linked record
+const team = await xata.db.teams.getFirst();
+
+const user = await xata.db.users.create({
+  fullName: 'John Smith',
+  team
+});
 ```
 
 If you want to create a record with a specific ID, you can provide the id as parameter to the `create()` method.
@@ -220,6 +228,20 @@ const updatedUser = await user.update({
 // Using a record id
 const updatedUser = await xata.db.users.update('rec_1234abcdef', {
   fullName: 'John Smith Jr.'
+});
+
+// Updating a link (with id)
+const updatedUser = await xata.db.users.update('rec_1234abcdef', {
+  fullName: 'John Smith Jr.'
+  team: 'rec_5678abcdef' // id of the team
+});
+
+// Updating a link (with record)
+const team = await xata.db.teams.getFirst();
+
+const updatedUser = await xata.db.users.update('rec_1234abcdef', {
+  fullName: 'John Smith Jr.'
+  team // record itself
 });
 ```
 
