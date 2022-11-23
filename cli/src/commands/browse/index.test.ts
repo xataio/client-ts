@@ -39,7 +39,7 @@ describe('browse', () => {
     const config = await Config.load();
     const command = new Browse([], config as Config);
     command.projectConfig = {
-      databaseURL: 'https://test-r5vcv5.xata.sh/db/test'
+      databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test'
     };
     process.env.XATA_BRANCH = 'main';
 
@@ -53,7 +53,7 @@ describe('browse', () => {
     const config = await Config.load();
     const command = new Browse(['--branch', 'foo'], config as Config);
     command.projectConfig = {
-      databaseURL: 'https://test-r5vcv5.xata.sh/db/test'
+      databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test'
     };
 
     await command.run();

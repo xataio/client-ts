@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 async function main() {
-  const databaseURL = 'https://test-r5vcv5.xata.sh/db/test';
+  const databaseURL = 'https://test-r5vcv5.eu-west-1.xata.sh/db/test';
   const schema = await parseSchemaFile(readFileSync(join(__dirname, 'schema.json'), 'utf-8'));
 
   const { typescript } = await generate({ schema, databaseURL, language: 'typescript' });

@@ -526,7 +526,8 @@ export abstract class BaseCommand extends Command {
     return getCurrentBranchName({
       fetchImpl: fetch,
       databaseURL,
-      apiKey: profile?.apiKey ?? undefined
+      apiKey: profile?.apiKey ?? undefined,
+      clientName: 'cli'
     });
   }
 
