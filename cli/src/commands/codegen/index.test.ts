@@ -45,7 +45,7 @@ describe('codegen', () => {
     const config = await Config.load();
     const command = new Codegen([], config as Config);
     command.projectConfig = {
-      databaseURL: 'https://test-r5vcv5.xata.sh/db/test',
+      databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test',
       codegen: {
         output: 'src/xata.ts'
       }
@@ -54,7 +54,7 @@ describe('codegen', () => {
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-r5vcv5.xata.sh/db/test:main');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-r5vcv5.eu-west-1.xata.sh/db/test:main');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
   });
 
@@ -71,7 +71,7 @@ describe('codegen', () => {
     const config = await Config.load();
     const command = new Codegen([], config as Config);
     command.projectConfig = {
-      databaseURL: 'https://test-r5vcv5.xata.sh/db/test',
+      databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test',
       codegen: {
         output: `src/xata.${ext}`,
         declarations: ext === 'js'
@@ -83,7 +83,7 @@ describe('codegen', () => {
     await command.run();
 
     expect(fetchMock).toHaveBeenCalled();
-    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-r5vcv5.xata.sh/db/test:main');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://test-r5vcv5.eu-west-1.xata.sh/db/test:main');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 
     expect(mkdirMock).toHaveBeenCalledOnce();
