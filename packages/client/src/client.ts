@@ -102,7 +102,12 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const branch = async () =>
         options?.branch !== undefined
           ? await this.#evaluateBranch(options.branch)
-          : await getCurrentBranchName({ apiKey, databaseURL, fetchImpl: options?.fetch });
+          : await getCurrentBranchName({
+              apiKey,
+              databaseURL,
+              fetchImpl: options?.fetch,
+              clientName: options?.clientName
+            });
 
       if (!apiKey) {
         throw new Error('Option apiKey is required');
