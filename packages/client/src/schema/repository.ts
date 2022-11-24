@@ -1745,7 +1745,8 @@ export class RestRepository<Record extends XataRecord>
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
           page: data.pagination,
-          columns: data.columns ?? ['*']
+          columns: data.columns ?? ['*'],
+          consistency: data.consistency
         },
         fetchOptions: data.fetchOptions,
         ...fetchProps
@@ -1781,6 +1782,7 @@ export class RestRepository<Record extends XataRecord>
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
           columns: data.columns,
+          consistency: data.consistency,
           page: data.pagination?.size !== undefined ? { size: data.pagination?.size } : undefined,
           summaries,
           summariesFilter
