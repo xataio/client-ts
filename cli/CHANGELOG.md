@@ -1,5 +1,14 @@
 # @xata.io/cli
 
+## 0.11.1
+
+### Patch Changes
+
+- [#784](https://github.com/xataio/client-ts/pull/784) [`cbe0609e`](https://github.com/xataio/client-ts/commit/cbe0609ec9d6650030efbda712a1eb243287525d) Thanks [@SferaDev](https://github.com/SferaDev)! - Update resolveBranch behaviour
+
+- Updated dependencies [[`93f5beed`](https://github.com/xataio/client-ts/commit/93f5beed77785b03409c614f5e2c3eca4c69c574), [`cbe0609e`](https://github.com/xataio/client-ts/commit/cbe0609ec9d6650030efbda712a1eb243287525d)]:
+  - @xata.io/client@0.21.2
+
 ## 0.11.0
 
 ### Minor Changes
