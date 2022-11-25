@@ -4,6 +4,9 @@ import chalk from 'chalk';
 import { mkdir, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
 import { BaseCommand, ProjectConfig } from '../../base.js';
+import { readJSON } from '../../utils.js';
+import { VERSION as sdkVersion } from '@xata.io/client';
+import semver from 'semver';
 
 export const languages: Record<string, 'javascript' | 'typescript'> = {
   '.js': 'javascript',
@@ -69,6 +72,24 @@ export default class Codegen extends BaseCommand {
         `Invalid javascript output target. Please use one of the following values: ${Object.keys(
           javascriptTargets
         ).join(', ')}`
+      );
+    }
+
+    const packageJSON = await readJSON('package.json');
+    if (!packageJSON) {
+      return this.error('Could not find package.json. Please run this command in the root of your project.');
+    }
+
+    const installedVersion: string | undefined = packageJSON.dependencies['@xata.io/client'];
+    if (!installedVersion) {
+      return this.error(
+        `Could not find @xata.io/client in your package.json. Please install it to use the codegen command.`
+      );
+    }
+
+    if (!semver.satisfies(installedVersion, `^${sdkVersion}`)) {
+      return this.error(
+        `The installed version of @xata.io/client (${installedVersion}) does not satisfy the required version (${sdkVersion}). Please update your package.json.`
       );
     }
 

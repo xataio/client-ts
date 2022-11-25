@@ -16,3 +16,4 @@ export * from './serializer';
 export * from './util/config';
 export * from './util/apiKey';
 export * from './workers';
+export * from './version';
