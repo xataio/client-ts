@@ -91,7 +91,7 @@ export type DatabaseSchema = {
 
 const DatabaseClient = buildClient();
 
-const defaultOptions = { databaseURL: 'https://test-r5vcv5.xata.sh/db/test' };
+const defaultOptions = { databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test' };
 
 export class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {

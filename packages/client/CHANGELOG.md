@@ -1,5 +1,19 @@
 # @xata.io/client
 
+## 0.21.2
+
+### Patch Changes
+
+- [#787](https://github.com/xataio/client-ts/pull/787) [`93f5beed`](https://github.com/xataio/client-ts/commit/93f5beed77785b03409c614f5e2c3eca4c69c574) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose consistency options
+
+- [#784](https://github.com/xataio/client-ts/pull/784) [`cbe0609e`](https://github.com/xataio/client-ts/commit/cbe0609ec9d6650030efbda712a1eb243287525d) Thanks [@SferaDev](https://github.com/SferaDev)! - Update resolveBranch behaviour
+
+## 0.21.1
+
+### Patch Changes
+
+- [#781](https://github.com/xataio/client-ts/pull/781) [`fdfa47de`](https://github.com/xataio/client-ts/commit/fdfa47de93ec772170ff00a4341fc14434347df5) Thanks [@SferaDev](https://github.com/SferaDev)! - Send header to disable encoding
+
 ## 0.21.0
 
 ### Minor Changes

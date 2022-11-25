@@ -72,7 +72,7 @@ const tables = [
 ];
 /** @type { import('../../client/src').ClientConstructor<{}> } */
 const DatabaseClient = buildClient();
-const defaultOptions = { databaseURL: 'https://test-r5vcv5.xata.sh/db/test' };
+const defaultOptions = { databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test' };
 /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
 /** @extends DatabaseClient<DatabaseSchema> */
 export class XataClient extends DatabaseClient {

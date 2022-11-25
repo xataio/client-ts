@@ -9,17 +9,14 @@ type BranchResolutionOptions = {
   databaseURL?: string;
   apiKey?: string;
   fetchImpl?: FetchImpl;
+  clientName?: string;
 };
 
 export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string> {
   const { branch, envBranch } = getEnvironment();
 
-  if (branch) {
-    const details = await getDatabaseBranch(branch, options);
-    if (details) return branch;
-
-    console.warn(`Branch ${branch} not found in Xata. Ignoring...`);
-  }
+  // If branch provided in env, use it
+  if (branch) return branch;
 
   const gitBranch = envBranch || (await getGitBranch());
   return resolveXataBranch(gitBranch, options);
@@ -57,7 +54,8 @@ async function resolveXataBranch(gitBranch: string | undefined, options?: Branch
     workspacesApiUrl: `${protocol}//${host}`,
     pathParams: { dbName, workspace, region },
     queryParams: { gitBranch, fallbackBranch },
-    trace: defaultTrace
+    trace: defaultTrace,
+    clientName: options?.clientName
   });
 
   return branch;
