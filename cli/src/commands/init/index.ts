@@ -1,19 +1,22 @@
 import { Flags } from '@oclif/core';
+import { VERSION as sdkVersion } from '@xata.io/client';
 import { ModuleType } from '@xata.io/codegen';
 import chalk from 'chalk';
-import { access, readFile, writeFile } from 'fs/promises';
+import dotenv from 'dotenv';
+import { readFile, writeFile } from 'fs/promises';
 import path, { extname } from 'path';
+import semver from 'semver';
 import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand, ENV_FILES } from '../../base.js';
 import { isIgnored } from '../../git.js';
 import { xataDatabaseSchema } from '../../schema.js';
+import { existsFile, readJSON } from '../../utils.js';
 import Browse from '../browse/index.js';
 import Codegen, { languages, unsupportedExtensionError } from '../codegen/index.js';
 import RandomData from '../random-data/index.js';
 import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
-import dotenv from 'dotenv';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 export default class Init extends BaseCommand {
@@ -180,7 +183,7 @@ export default class Init extends BaseCommand {
     }
 
     if (output || sdk) {
-      await this.installPackage('@xata.io/client');
+      await this.installSDK();
     }
   }
 
@@ -201,32 +204,38 @@ export default class Init extends BaseCommand {
   }
 
   async guessPackageManager() {
-    if (await this.access('package-lock.json')) {
+    if (await existsFile('package-lock.json')) {
       return { name: 'npm', args: ['install', '--save'] };
-    } else if (await this.access('yarn.lock')) {
+    } else if (await existsFile('yarn.lock')) {
       return { name: 'yarn', args: ['add'] };
-    } else if (await this.access('pnpm-lock.yaml')) {
+    } else if (await existsFile('pnpm-lock.yaml')) {
       return { name: 'pnpm', args: ['add'] };
     } else {
       return null;
     }
   }
 
-  async access(path: string) {
-    try {
-      await access(path);
-      return true;
-    } catch (err) {
-      return false;
-    }
-  }
+  async installSDK() {
+    const pkg = '@xata.io/client';
 
-  async installPackage(pkg: string) {
     const packageManager = await this.getPackageManager();
     if (!packageManager) return;
 
-    const { name, args } = packageManager;
-    await this.runCommand(name, [...args, pkg]);
+    const packageJSON = await readJSON('package.json');
+    if (!packageJSON) {
+      throw new Error('Could not find package.json. Please run this command in the root of your project.');
+    }
+
+    const installedVersion: string | undefined = packageJSON.dependencies[pkg];
+
+    if (installedVersion === undefined || semver.lt(installedVersion, sdkVersion)) {
+      const { name, args } = packageManager;
+      await this.runCommand(name, [...args, `${pkg}@${sdkVersion}`]);
+    } else if (semver.gt(installedVersion, sdkVersion)) {
+      this.warn(
+        `The CLI is not up to date. Please update it with ${chalk.bold('npm install -g @xata.io/cli')} to avoid errors.`
+      );
+    }
   }
 
   async writeConfig() {
@@ -240,7 +249,7 @@ export default class Init extends BaseCommand {
   async writeEnvFile(workspace: string, region: string, database: string) {
     let envFile = ENV_FILES[ENV_FILES.length - 1];
     for (const file of ENV_FILES) {
-      if (await this.access(file)) {
+      if (await existsFile(file)) {
         envFile = file;
         break;
       }
@@ -322,7 +331,7 @@ export default class Init extends BaseCommand {
     const ignored = await isIgnored(envFile);
     if (ignored) return;
 
-    const exists = await this.access('.gitignore');
+    const exists = await existsFile('.gitignore');
 
     const { confirm } = await this.prompt({
       type: 'confirm',
