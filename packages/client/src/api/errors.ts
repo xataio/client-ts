@@ -20,7 +20,7 @@ export class FetcherError extends ErrorWithCause {
     super(getMessage(data));
 
     this.status = status;
-    this.errors = isBulkError(data) ? data.errors : undefined;
+    this.errors = isBulkError(data) ? data.errors : [{ message: getMessage(data), status }];
     this.requestId = requestId;
 
     if (data instanceof Error) {

@@ -1,6 +1,7 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
 import { getAPIKey } from '../util/apiKey';
 import { FetchImpl, getFetchImplementation } from '../util/fetch';
+import { generateUUID } from '../util/uuid';
 import type * as Components from './components';
 import type * as Types from './components';
 import { operationsByTag } from './components';
@@ -39,6 +40,7 @@ export class XataApiClient {
     const provider = options.host ?? 'production';
     const apiKey = options.apiKey ?? getAPIKey();
     const trace = options.trace ?? defaultTrace;
+    const clientID = generateUUID();
 
     if (!apiKey) {
       throw new Error('Could not resolve a valid apiKey');
@@ -50,7 +52,8 @@ export class XataApiClient {
       fetchImpl: getFetchImplementation(options.fetch),
       apiKey,
       trace,
-      clientName: options.clientName
+      clientName: options.clientName,
+      clientID
     };
   }
 

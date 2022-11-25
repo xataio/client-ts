@@ -28,10 +28,10 @@ if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is no
 const region = process.env.XATA_REGION || 'eu-west-1';
 
 const host = parseProviderString(process.env.XATA_API_PROVIDER);
-const fetch = vi.fn(realFetch);
 
 export type EnvironmentOptions = {
   cache?: CacheImpl;
+  fetch?: any;
 };
 
 export type TestEnvironmentResult = {
@@ -58,13 +58,15 @@ export type TestEnvironmentResult = {
 
 export async function setUpTestEnvironment(
   prefix: string,
-  { cache }: EnvironmentOptions = {}
+  { cache, fetch: envFetch }: EnvironmentOptions = {}
 ): Promise<TestEnvironmentResult> {
   if (host === null) {
     throw new Error(
       `Invalid XATA_API_PROVIDER environment variable, expected either "production", "staging" or "apiUrl,workspacesUrl"`
     );
   }
+
+  const fetch = vi.fn(envFetch ?? realFetch);
 
   const { trace, tracer } = await setupTracing();
 

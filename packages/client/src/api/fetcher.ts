@@ -1,6 +1,7 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
 import { compact, isDefined, isString } from '../util/lang';
+import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
 
@@ -93,6 +94,8 @@ function hostHeader(url: string): { Host?: string } {
   return groups?.host ? { Host: groups.host } : {};
 }
 
+const defaultClientID = generateUUID();
+
 export async function fetch<
   TData,
   TError extends ErrorWrapper<{ status: unknown; payload: PossibleErrors }>,
@@ -104,7 +107,7 @@ export async function fetch<
   url: path,
   method,
   body,
-  headers,
+  headers: customHeaders,
   pathParams,
   queryParams,
   fetchImpl,
@@ -143,20 +146,22 @@ export async function fetch<
         .map(([key, value]) => `${key}=${value}`)
         .join('; ');
 
+      const headers = {
+        'Accept-Encoding': 'identity',
+        'Content-Type': 'application/json',
+        'X-Xata-Client-ID': clientID ?? defaultClientID,
+        'X-Xata-Session-ID': sessionID ?? generateUUID(),
+        'X-Xata-Agent': xataAgent,
+        ...customHeaders,
+        ...hostHeader(fullUrl),
+        Authorization: `Bearer ${apiKey}`
+      };
+
       const response = await pool.request(url, {
         ...fetchOptions,
         method: method.toUpperCase(),
         body: body ? JSON.stringify(body) : undefined,
-        headers: {
-          'Accept-Encoding': 'identity',
-          'Content-Type': 'application/json',
-          'X-Xata-Client-ID': clientID ?? '',
-          'X-Xata-Session-ID': sessionID ?? '',
-          'X-Xata-Agent': xataAgent,
-          ...headers,
-          ...hostHeader(fullUrl),
-          Authorization: `Bearer ${apiKey}`
-        },
+        headers,
         signal
       });
 
