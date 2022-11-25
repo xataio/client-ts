@@ -228,16 +228,14 @@ export default class Init extends BaseCommand {
 
     const installedVersion: string | undefined = packageJSON.dependencies[pkg];
 
-    if (installedVersion !== undefined && semver.lt(installedVersion, sdkVersion)) {
-      this.log(`Updating ${pkg} from version ${installedVersion} to ${sdkVersion}...`);
-    } else if (installedVersion !== undefined && semver.gt(installedVersion, sdkVersion)) {
+    if (installedVersion === undefined || semver.lt(installedVersion, sdkVersion)) {
+      const { name, args } = packageManager;
+      await this.runCommand(name, [...args, `${pkg}@${sdkVersion}`]);
+    } else if (semver.gt(installedVersion, sdkVersion)) {
       this.warn(
         `The CLI is not up to date. Please update it with ${chalk.bold('npm install -g @xata.io/cli')} to avoid errors.`
       );
     }
-
-    const { name, args } = packageManager;
-    await this.runCommand(name, [...args, `${pkg}@${sdkVersion}`]);
   }
 
   async writeConfig() {
