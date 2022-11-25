@@ -19,37 +19,59 @@ export class CloudflareKVCache implements CacheImpl {
   }
 
   async get<T>(key: string): Promise<T | null> {
-    const value = await this.#kv.get(key);
-    if (value === null) {
+    try {
+      const value = await this.#kv.get(key);
+      if (value === null) {
+        return null;
+      }
+
+      return deserialize(value);
+    } catch (e) {
+      // Ignore, KV namespace limit reached
+      console.error('KV namespace error', e);
       return null;
     }
-
-    return deserialize(value);
   }
 
   async set<T>(key: string, value: T): Promise<void> {
-    await this.#kv.put(key, serialize(value), { expirationTtl: this.defaultQueryTTL });
+    try {
+      await this.#kv.put(key, serialize(value), { expirationTtl: this.defaultQueryTTL });
+    } catch (e) {
+      // Ignore, KV namespace limit reached
+      console.error('KV namespace error', e);
+    }
   }
 
   async delete(key: string): Promise<void> {
-    await this.#kv.delete(key);
+    try {
+      await this.#kv.delete(key);
+    } catch (e) {
+      // Ignore, KV namespace limit reached
+      console.error('KV namespace error', e);
+    }
   }
 
   // FIXME: Binding does not support bulk operations yet.
   async clear(): Promise<void> {
     const keys = await this.#listAll();
     for (const key in keys) {
-      await this.#kv.delete(key);
+      await this.delete(key);
     }
   }
 
   async #listAll(): Promise<string[]> {
     const getKeys = async (cursor?: string): Promise<{ keys: string[]; cursor?: string }> => {
-      const result = await this.#kv.list({ cursor });
-      const keys = result.keys.map((key) => key.name);
-      const nextCursor = result.list_complete ? undefined : result.cursor;
+      try {
+        const result = await this.#kv.list({ cursor });
+        const keys = result.keys.map((key) => key.name);
+        const nextCursor = result.list_complete ? undefined : result.cursor;
 
-      return { keys, cursor: nextCursor };
+        return { keys, cursor: nextCursor };
+      } catch (e) {
+        // Ignore, KV namespace limit reached
+        console.error('KV namespace error', e);
+        return { keys: [] };
+      }
     };
 
     const { keys, cursor } = await getKeys();
