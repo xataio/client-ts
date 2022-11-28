@@ -166,9 +166,9 @@ export abstract class BaseCommand extends Command {
         // Temporal, to be removed in the future when everyone has migrated to the new format
         if (this.projectConfig.databaseURL) {
           const { region } = this.parseDatabaseURL(this.projectConfig.databaseURL);
-          if (!region) {
+          if (region === 'eu-west-1' && !this.projectConfig.databaseURL.includes('eu-west-1')) {
             throw new Error(
-              `Your databaseURL in the .xatarc file is missing the region. Please update it before continuing.`
+              `Your databaseURL in the .xatarc file is missing the region. Please update it and re-run codegen before continuing. If don't know how to proceed, please contact us at support@xata.io.`
             );
           }
         }
