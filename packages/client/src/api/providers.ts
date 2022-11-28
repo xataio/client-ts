@@ -46,12 +46,11 @@ export function parseProviderString(provider = 'production'): HostProvider | nul
 export function parseWorkspacesUrlParts(url: string): { workspace: string; region: string } | null {
   if (!isString(url)) return null;
 
-  const regex = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))?\.xata\.sh.*/;
-  const regexStaging = /(?:https:\/\/)?([^.]+)\.staging(?:\.([^.]+))?\.xatabase\.co.*/;
+  const regex = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh.*/;
+  const regexStaging = /(?:https:\/\/)?([^.]+)\.staging(?:\.([^.]+))\.xatabase\.co.*/;
 
   const match = url.match(regex) || url.match(regexStaging);
   if (!match) return null;
 
-  // Region is optional for now, so we default to 'EU'
-  return { workspace: match[1], region: match[2] ?? 'eu-west-1' };
+  return { workspace: match[1], region: match[2] };
 }

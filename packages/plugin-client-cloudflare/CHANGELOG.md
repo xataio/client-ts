@@ -1,5 +1,14 @@
 # @xata.io/plugin-client-cloudflare
 
+## 0.0.5
+
+### Patch Changes
+
+- [#779](https://github.com/xataio/client-ts/pull/779) [`d17755f4`](https://github.com/xataio/client-ts/commit/d17755f4e804927d37be26f6404b14282cca7740) Thanks [@SferaDev](https://github.com/SferaDev)! - Do not throw error if limit reached
+
+- Updated dependencies [[`6c96da45`](https://github.com/xataio/client-ts/commit/6c96da4533500ec236547f47310e99461d5457e8)]:
+  - @xata.io/client@0.21.3
+
 ## 0.0.4
 
 ### Patch Changes

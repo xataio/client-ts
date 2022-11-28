@@ -481,26 +481,21 @@ export abstract class BaseCommand extends Command {
     const { databaseURL, source } = await this.getDatabaseURL(databaseURLFlag, allowCreate);
 
     const info = this.parseDatabaseURL(databaseURL);
-    return {
-      ...info,
-      source
-    };
+    return { ...info, source };
   }
 
   parseDatabaseURL(databaseURL: string) {
     const [protocol, , host, , database] = databaseURL.split('/');
     const urlParts = parseWorkspacesUrlParts(host);
-    if (!urlParts) throw new Error(`Unable to parse workspace and region: ${databaseURL}`);
+    if (!urlParts) {
+      throw new Error(
+        `Unable to parse workspace and region in ${databaseURL}. Please check your .xatarc file and re-run codegen before continuing. If don't know how to proceed, please contact us at support@xata.io.`
+      );
+    }
+
     const { workspace, region } = urlParts;
 
-    return {
-      databaseURL,
-      protocol,
-      host,
-      database,
-      workspace,
-      region
-    };
+    return { databaseURL, protocol, host, database, workspace, region };
   }
 
   async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, branchFlag?: string, allowCreate?: boolean) {
