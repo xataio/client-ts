@@ -16,3 +16,4 @@ export type ParseOptions = {
 export { parseFile as parseCSVFile, parseStream as parseCSVStream, parseString as parseCSVString } from './csv';
 export { createProcessor } from './processor';
 export type { CompareSchemaResult, TableInfo } from './processor';
+export { guessTypes } from './utils';
