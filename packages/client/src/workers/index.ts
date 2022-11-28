@@ -15,9 +15,9 @@ type WorkerRunnerConfig = {
 export function buildWorkerRunner<XataClient>(config: WorkerRunnerConfig) {
   return function xataWorker<WorkerFunction extends (ctx: XataWorkerContext<XataClient>, ...args: any[]) => any>(
     name: string,
-    _worker: WorkerFunction
+    worker: WorkerFunction
   ) {
-    return async (...args: RemoveFirst<Parameters<WorkerFunction>>): Promise<XataWorkerResult<typeof _worker>> => {
+    return async (...args: RemoveFirst<Parameters<WorkerFunction>>): Promise<XataWorkerResult<typeof worker>> => {
       const url =
         process.env.NODE_ENV === 'development'
           ? `http://localhost:64749/${name}`
