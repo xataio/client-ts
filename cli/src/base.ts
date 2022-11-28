@@ -162,6 +162,16 @@ export abstract class BaseCommand extends Command {
       if (result.success) {
         this.projectConfig = result.data;
         this.projectConfigLocation = search.filepath;
+
+        // Temporal, to be removed in the future when everyone has migrated to the new format
+        if (this.projectConfig.databaseURL) {
+          const { region } = this.parseDatabaseURL(this.projectConfig.databaseURL);
+          if (!region) {
+            throw new Error(
+              `Your databaseURL in the .xatarc file is missing the region. Please update it before continuing.`
+            );
+          }
+        }
       } else {
         this.warn(`The configuration file ${search.filepath} was found, but could not be parsed:`);
         this.printZodError(result.error);
