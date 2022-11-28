@@ -162,16 +162,6 @@ export abstract class BaseCommand extends Command {
       if (result.success) {
         this.projectConfig = result.data;
         this.projectConfigLocation = search.filepath;
-
-        // Temporal, to be removed in the future when everyone has migrated to the new format
-        if (this.projectConfig.databaseURL) {
-          const { region } = this.parseDatabaseURL(this.projectConfig.databaseURL);
-          if (region === 'eu-west-1' && !this.projectConfig.databaseURL.includes('eu-west-1')) {
-            throw new Error(
-              `Your databaseURL in the .xatarc file is missing the region. Please update it and re-run codegen before continuing. If don't know how to proceed, please contact us at support@xata.io.`
-            );
-          }
-        }
       } else {
         this.warn(`The configuration file ${search.filepath} was found, but could not be parsed:`);
         this.printZodError(result.error);
@@ -491,26 +481,21 @@ export abstract class BaseCommand extends Command {
     const { databaseURL, source } = await this.getDatabaseURL(databaseURLFlag, allowCreate);
 
     const info = this.parseDatabaseURL(databaseURL);
-    return {
-      ...info,
-      source
-    };
+    return { ...info, source };
   }
 
   parseDatabaseURL(databaseURL: string) {
     const [protocol, , host, , database] = databaseURL.split('/');
     const urlParts = parseWorkspacesUrlParts(host);
-    if (!urlParts) throw new Error(`Unable to parse workspace and region: ${databaseURL}`);
+    if (!urlParts) {
+      throw new Error(
+        `Unable to parse workspace and region in ${databaseURL}. Please check your .xatarc file and re-run codegen before continuing. If don't know how to proceed, please contact us at support@xata.io.`
+      );
+    }
+
     const { workspace, region } = urlParts;
 
-    return {
-      databaseURL,
-      protocol,
-      host,
-      database,
-      workspace,
-      region
-    };
+    return { databaseURL, protocol, host, database, workspace, region };
   }
 
   async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, branchFlag?: string, allowCreate?: boolean) {
