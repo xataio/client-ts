@@ -21,6 +21,6 @@
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20221111.1",
-    "@xata.io/client": "^0.21.0"
+    "@xata.io/client": "^0.21.2"
   }
 }
