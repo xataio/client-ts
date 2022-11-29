@@ -68,7 +68,7 @@ export function buildWatcher<T extends WorkerScript>({
   return { watcher };
 }
 
-export async function compileWorkers(file: string): Promise<WorkerScript[]> {
+export async function compileWorkers(file: string, log: (string: string) => void): Promise<WorkerScript[]> {
   const external: string[] = [];
   const functions: Record<string, string> = {};
 
@@ -109,7 +109,7 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
                     const args = (path.parent as CallExpression).arguments as any[];
                     const workerName = args[0]?.value;
                     if (!workerName || typeof workerName !== 'string') {
-                      console.error(`Found a worker without a name in file ${file}`);
+                      log(`Found a worker without a name in file ${file}`);
                     } else {
                       functions[workerName] = path.toString();
                     }
@@ -122,7 +122,7 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
       ]
     });
   } catch (e) {
-    console.error(e);
+    log(`Error compiling workers in file ${file}: ${e}`);
     return [];
   }
 
@@ -152,7 +152,7 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
         modules: output.map((o) => ({ name: o.fileName, content: (o as OutputChunk).code }))
       });
     } catch (error) {
-      console.error(error);
+      log(`Error compiling worker ${name} in file ${file}: ${error}`);
     }
   }
 

@@ -32,9 +32,10 @@ export default class Upload extends BaseCommand {
     // TODO: Ask which local environment variables to include
     // TODO: Read and parse local environment variables to include as secrets
     const environment = {};
+    const log = (string: string) => this.log(string);
 
     const { watcher } = buildWatcher({
-      compile: (path) => compileWorkers(path),
+      compile: (path) => compileWorkers(path, log),
       run: async (workers) => {
         this.log(`Uploading ${workers.length} workers`);
 

@@ -23,9 +23,10 @@ export default class WorkersCompile extends BaseCommand {
 
     const { databaseURL } = await this.getDatabaseURL(flags.db);
     const { apiKey } = (await this.getProfile()) ?? {};
+    const log = (string: string) => this.log(string);
 
     buildWatcher({
-      compile: (path) => compileWorkers(path),
+      compile: (path) => compileWorkers(path, log),
       run: async (results) => {
         const mounts = results.flat().map(({ name, modules, main }) => [
           name,
@@ -54,7 +55,7 @@ export default class WorkersCompile extends BaseCommand {
             this.info(`Listening on port ${watchPort}`);
           });
         } catch (e) {
-          console.error("Couldn't start server", e);
+          this.error(`Couldn't start server: ${e}`);
         }
 
         return () => {
