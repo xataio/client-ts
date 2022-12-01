@@ -52,10 +52,15 @@ export function buildWatcher<T extends WorkerScript>({
 
   watcher
     .on('add', async (path) => {
+      console.log(`[watcher] add ${path}`);
       modules[path] = await compile(path);
     })
-    .on('change', updateModule)
-    .on('error', () => {
+    .on('change', async (path) => {
+      console.log(`[watcher] change ${path}`);
+      await updateModule(path);
+    })
+    .on('error', (error) => {
+      console.error(`[watcher] error ${error}`);
       throw new Error('Watcher error');
     })
     .on('ready', async () => {
@@ -69,6 +74,8 @@ export function buildWatcher<T extends WorkerScript>({
 }
 
 export async function compileWorkers(file: string): Promise<WorkerScript[]> {
+  console.log(`[compile] ${file}`);
+
   const external: string[] = [];
   const functions: Record<string, string> = {};
 
