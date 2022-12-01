@@ -22,7 +22,11 @@ export default class UploadSchema extends BaseCommand {
   async run(): Promise<void> {
     const { flags, args } = await this.parse(UploadSchema);
 
-    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
+      flags.db,
+      flags.branch,
+      true
+    );
 
     const xata = await this.getXataClient();
 
