@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.11.3
+
+### Patch Changes
+
+- [#804](https://github.com/xataio/client-ts/pull/804) [`96e49f35`](https://github.com/xataio/client-ts/commit/96e49f354edf0ff6a52047218b46c96056e82336) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix race condition with workers build step
+
 ## 0.11.2
 
 ### Patch Changes
