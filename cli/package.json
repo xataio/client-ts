@@ -58,6 +58,7 @@
     "relaxed-json": "^1.0.3",
     "rollup-plugin-esbuild": "^5.0.0",
     "rollup-plugin-hypothetical": "^2.1.1",
+    "rollup-plugin-import-cdn": "^0.2.2",
     "rollup-plugin-virtual-fs": "^4.0.1-alpha.0",
     "text-table": "^0.2.0",
     "tmp": "^0.2.1",

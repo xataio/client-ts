@@ -5,13 +5,14 @@ import presetTypeScript from '@babel/preset-typescript';
 import presetReact from '@babel/preset-react';
 import type { CallExpression, FunctionDeclaration } from '@babel/types';
 import commonjs from '@rollup/plugin-commonjs';
-import resolve from '@rollup/plugin-node-resolve';
 import virtual from '@rollup/plugin-virtual';
 import chokidar from 'chokidar';
+import { readFile } from 'fs/promises';
+import fetch from 'node-fetch';
 import { OutputChunk, rollup } from 'rollup';
+import { importCdn } from 'rollup-plugin-import-cdn';
 import ts from 'typescript';
 import { z } from 'zod';
-import { readFile } from 'fs/promises';
 
 type BuildWatcherOptions<T> = {
   compile: (path: string) => Promise<T[]>;
@@ -79,10 +80,7 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
   const functions: Record<string, string> = {};
 
   try {
-    const fileContents = await readFile(file, 'utf-8');
-
-    babel.transformSync(fileContents, {
-      filename: file,
+    babel.transformFileSync(file, {
       presets: [presetTypeScript, presetReact],
       plugins: [
         (): PluginItem => {
@@ -137,6 +135,8 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
 
   console.log(`[watcher] found ${Object.keys(functions).length} workers in ${file}`);
 
+  const versions = await getDependencyVersions();
+
   const compiledWorkers: WorkerScript[] = [];
 
   for (const [name, worker] of Object.entries(functions)) {
@@ -152,7 +152,7 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
       const bundle = await rollup({
         input: 'entry',
         output: { file: `file://bundle.js`, format: 'es' },
-        plugins: [virtual({ entry }), resolve(), commonjs()]
+        plugins: [importCdn({ fetchImpl: fetch, versions }), virtual({ entry }), commonjs()]
       });
 
       const { output } = await bundle.generate({});
@@ -169,6 +169,18 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
   }
 
   return compiledWorkers;
+}
+
+async function getDependencyVersions(): Promise<Record<string, string> | undefined> {
+  try {
+    const packageJson = await readFile('./package.json', 'utf8');
+    const { dependencies } = JSON.parse(packageJson);
+
+    return dependencies;
+  } catch (e) {
+    console.error(`[watcher] error reading package.json`);
+    return undefined;
+  }
 }
 
 function isXataWorker(path: NodePath): path is NodePath<FunctionDeclaration> {
