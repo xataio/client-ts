@@ -68,8 +68,7 @@ export function buildWatcher<T extends WorkerScript>({
     .on('ready', async () => {
       console.log('[watcher] ready');
 
-      const paths = Object.keys(modules);
-      for (const path of paths) {
+      for await (const path of Object.keys(modules)) {
         modules[path] = await compile(path);
       }
 
