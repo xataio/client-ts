@@ -5,6 +5,7 @@ import presetTypeScript from '@babel/preset-typescript';
 import presetReact from '@babel/preset-react';
 import type { CallExpression, FunctionDeclaration } from '@babel/types';
 import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
 import virtual from '@rollup/plugin-virtual';
 import chokidar from 'chokidar';
 import { readFile } from 'fs/promises';
@@ -155,7 +156,7 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
       const bundle = await rollup({
         input: 'entry',
         output: { file: `file://bundle.js`, format: 'es' },
-        plugins: [importCdn({ fetchImpl: fetch, versions }), virtual({ entry }), commonjs()]
+        plugins: [virtual({ entry }), importCdn({ fetchImpl: fetch, versions }), resolve(), commonjs()]
       });
 
       const { output } = await bundle.generate({});
