@@ -55,7 +55,7 @@ export function buildWatcher<T extends WorkerScript>({
   watcher
     .on('add', async (path) => {
       console.log(`[watcher] add ${path}`);
-      modules[path] = await compile(path);
+      modules[path] = [];
     })
     .on('change', async (path) => {
       console.log(`[watcher] change ${path}`);
@@ -67,6 +67,12 @@ export function buildWatcher<T extends WorkerScript>({
     })
     .on('ready', async () => {
       console.log('[watcher] ready');
+
+      const paths = Object.keys(modules);
+      for (const path of paths) {
+        modules[path] = await compile(path);
+      }
+
       if (run) {
         stopServer = await run(Object.values(modules).flat());
       }
