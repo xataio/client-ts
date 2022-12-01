@@ -65,7 +65,7 @@ export function buildWatcher<T extends WorkerScript>({
       throw new Error('Watcher error');
     })
     .on('ready', async () => {
-      console.log('Watcher ready');
+      console.log('[watcher] ready');
       if (run) {
         stopServer = await run(Object.values(modules).flat());
       }
@@ -75,17 +75,14 @@ export function buildWatcher<T extends WorkerScript>({
 }
 
 export async function compileWorkers(file: string): Promise<WorkerScript[]> {
-  console.log(`[compile] ${file}`);
-
   const external: string[] = [];
   const functions: Record<string, string> = {};
-
-  console.log('[compile] presets: ', [presetTypeScript, presetReact]);
 
   try {
     const fileContents = await readFile(file, 'utf-8');
 
     babel.transformSync(fileContents, {
+      filename: file,
       presets: [presetTypeScript, presetReact],
       plugins: [
         (): PluginItem => {
