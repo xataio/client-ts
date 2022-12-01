@@ -25,7 +25,9 @@ export default class WorkersCompile extends BaseCommand {
     const { apiKey } = (await this.getProfile()) ?? {};
 
     buildWatcher({
-      compile: (path) => compileWorkers(path),
+      compile: async (path) => {
+        return await compileWorkers(path);
+      },
       run: async (results) => {
         const mounts = results.flat().map(({ name, modules, main }) => [
           name,

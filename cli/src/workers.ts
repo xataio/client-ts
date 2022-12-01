@@ -138,8 +138,6 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
   const compiledWorkers: WorkerScript[] = [];
 
   for await (const [name, worker] of Object.entries(functions)) {
-    console.log(`[watcher] compiling worker ${name} in ${file}`);
-
     try {
       const code = workerCode(worker, external);
       const { outputText: entry } = ts.transpileModule(code, {
