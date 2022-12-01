@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.11.4
+
+### Patch Changes
+
+- [#808](https://github.com/xataio/client-ts/pull/808) [`463f740d`](https://github.com/xataio/client-ts/commit/463f740d8d272cbfd22330c9be0c31911edde5a2) Thanks [@SferaDev](https://github.com/SferaDev)! - Add schema upload command
+
 ## 0.11.3
 
 ### Patch Changes
