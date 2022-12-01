@@ -9,6 +9,7 @@ export default class UploadSchema extends BaseCommand {
 
   static flags = {
     ...this.databaseURLFlag,
+    ...this.yesFlag,
     branch: this.branchFlag,
     init: Flags.boolean({
       description: 'Only initialize the schema if it does not already exist',
@@ -47,6 +48,22 @@ export default class UploadSchema extends BaseCommand {
       branch,
       schema
     });
+
+    if (edits.operations.length === 0) {
+      this.info('Schema is up to date');
+      return;
+    }
+
+    this.printMigration({ edits });
+    this.log();
+
+    const { confirm } = await this.prompt({
+      type: 'confirm',
+      name: 'confirm',
+      message: `Do you want to apply the above migration into the ${branch} branch?`,
+      initial: true
+    });
+    if (!confirm) return this.exit(1);
 
     await xata.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits });
   }
