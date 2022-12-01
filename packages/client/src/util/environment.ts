@@ -16,6 +16,23 @@ interface Environment {
 }
 
 export function getEnvironment(): Environment {
+  // SvelteKit
+  try {
+    // @ts-ignore
+    const env = await import('$env/static/private');
+    if (typeof env !== 'object') throw new Error('Not SvelteKit');
+
+    return {
+      apiKey: env.XATA_API_KEY,
+      databaseURL: env.XATA_DATABASE_URL,
+      branch: process.env.XATA_BRANCH,
+      envBranch: env.VERCEL_GIT_COMMIT_REF ?? env.CF_PAGES_BRANCH ?? env.BRANCH,
+      fallbackBranch: env.XATA_FALLBACK_BRANCH
+    };
+  } catch (err) {
+    // Ignore: Should never happen
+  }
+
   // Node.js: process.env
   try {
     // Not using typeof process.env === 'object' because it's not working in some environments like Bun
