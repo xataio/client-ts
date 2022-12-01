@@ -135,6 +135,8 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
     return [];
   }
 
+  console.log(`[watcher] found ${Object.keys(functions).length} workers in ${file}`);
+
   const compiledWorkers: WorkerScript[] = [];
 
   for (const [name, worker] of Object.entries(functions)) {
@@ -161,6 +163,7 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
         modules: output.map((o) => ({ name: o.fileName, content: (o as OutputChunk).code }))
       });
     } catch (error) {
+      console.error(`[watcher] error compiling worker ${name} in file ${file}`);
       console.error(error);
     }
   }
