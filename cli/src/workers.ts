@@ -133,13 +133,13 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
     return [];
   }
 
-  console.log(`[watcher] found ${Object.keys(functions).length} workers in ${file}`);
-
   const versions = await getDependencyVersions();
 
   const compiledWorkers: WorkerScript[] = [];
 
-  for (const [name, worker] of Object.entries(functions)) {
+  for await (const [name, worker] of Object.entries(functions)) {
+    console.log(`[watcher] compiling worker ${name} in ${file}`);
+
     try {
       const code = workerCode(worker, external);
       const { outputText: entry } = ts.transpileModule(code, {
@@ -162,6 +162,8 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
         main: output[0].fileName,
         modules: output.map((o) => ({ name: o.fileName, content: (o as OutputChunk).code }))
       });
+
+      console.log(`[watcher] compiled worker ${name} in ${file}`);
     } catch (error) {
       console.error(`[watcher] error compiling worker ${name} in file ${file}`);
       console.error(error);
