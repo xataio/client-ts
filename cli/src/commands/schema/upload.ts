@@ -11,7 +11,7 @@ export default class UploadSchema extends BaseCommand {
     ...this.databaseURLFlag,
     ...this.yesFlag,
     branch: this.branchFlag,
-    init: Flags.boolean({
+    'create-only': Flags.boolean({
       description: 'Only initialize the schema if it does not already exist',
       default: false
     })
@@ -30,7 +30,7 @@ export default class UploadSchema extends BaseCommand {
 
     const xata = await this.getXataClient();
 
-    if (flags.init) {
+    if (flags['create-only']) {
       const { schema } = await xata.branches.getBranchDetails({ workspace, region, database, branch });
       if (schema.tables.length > 0) {
         this.info(
