@@ -11,6 +11,7 @@ import chokidar from 'chokidar';
 import { OutputChunk, rollup } from 'rollup';
 import ts from 'typescript';
 import { z } from 'zod';
+import { readFile } from 'fs/promises';
 
 type BuildWatcherOptions<T> = {
   compile: (path: string) => Promise<T[]>;
@@ -79,8 +80,12 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
   const external: string[] = [];
   const functions: Record<string, string> = {};
 
+  console.log('[compile] presets: ', [presetTypeScript, presetReact]);
+
   try {
-    babel.transformFileSync(file, {
+    const fileContents = await readFile(file, 'utf-8');
+
+    babel.transformSync(fileContents, {
       presets: [presetTypeScript, presetReact],
       plugins: [
         (): PluginItem => {
