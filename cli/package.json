@@ -19,7 +19,7 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@babel/core": "^7.20.2",
+    "@babel/core": "^7.20.5",
     "@babel/preset-react": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
     "@faker-js/faker": "^7.6.0",
@@ -66,7 +66,7 @@
     "zod": "^3.19.1"
   },
   "devDependencies": {
-    "@babel/types": "^7.20.2",
+    "@babel/types": "^7.20.5",
     "@types/babel__core": "^7.1.20",
     "@types/lodash.compact": "^3.0.7",
     "@types/lodash.get": "^4.4.7",
@@ -75,7 +75,7 @@
     "@types/text-table": "^0.2.2",
     "@types/tmp": "^0.2.3",
     "@types/which": "^2.0.1",
-    "eslint": "^8.28.0",
+    "eslint": "^8.29.0",
     "eslint-config-oclif": "^4",
     "eslint-config-oclif-typescript": "^1.0.3",
     "oclif": "^3",
