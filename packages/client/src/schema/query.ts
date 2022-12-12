@@ -30,8 +30,7 @@ type BaseOptions<T extends XataRecord> = {
 type CursorQueryOptions = {
   pagination?: CursorNavigationOptions & OffsetNavigationOptions;
   filter?: never;
-  // Fix for TS 4.7 not inferring `never` for `sort`
-  sort?: never | unknown;
+  sort?: never;
 };
 
 type OffsetQueryOptions<T extends XataRecord> = {
@@ -174,10 +173,10 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * })
    * ```
    *
-   * @param filters A filter object
+   * @param filter A filter object
    * @returns A new Query object.
    */
-  filter(filters?: Filter<Record>): Query<Record, Result>;
+  filter(filter?: Filter<Record>): Query<Record, Result>;
 
   filter(a: any, b?: any): Query<Record, Result> {
     if (arguments.length === 1) {
