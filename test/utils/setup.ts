@@ -8,7 +8,7 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import realFetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { File, Suite, TestContext, vi } from 'vitest';
+import { File, Mock, Suite, TestContext, vi } from 'vitest';
 import { BaseClient, CacheImpl, XataApiClient } from '../../packages/client/src';
 import { getHostUrl, parseProviderString } from '../../packages/client/src/api/providers';
 import { TraceAttributes } from '../../packages/client/src/schema/tracing';
@@ -43,7 +43,7 @@ export type TestEnvironmentResult = {
   region: string;
   clientOptions: {
     databaseURL: string;
-    fetch: typeof fetch;
+    fetch: Mock;
     apiKey: string;
     branch: string;
     cache?: CacheImpl;
