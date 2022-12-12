@@ -3,44 +3,6 @@
  *
  * @version 1.0
  */
-/**
- * Metadata of databases
- */
-export type DEPRECATEDDatabaseMetadata = {
-  /**
-   * The machine-readable name of a database
-   */
-  name: string;
-  /**
-   * The time this database was created
-   */
-  createdAt: DateTime;
-  /**
-   * The number of branches the database has
-   */
-  numberOfBranches: number;
-  /**
-   * Metadata about the database for display in Xata user interfaces
-   */
-  ui?: {
-    /**
-     * The user-selected color for this database across interfaces
-     */
-    color?: string;
-  };
-  /**
-   * @x-internal true
-   */
-  newMigrations?: boolean;
-};
-
-export type DEPRECATEDListDatabasesResponse = {
-  /**
-   * A list of databases in a Xata workspace
-   */
-  databases?: DEPRECATEDDatabaseMetadata[];
-};
-
 export type ListBranchesResponse = {
   databaseName: string;
   branches: Branch[];

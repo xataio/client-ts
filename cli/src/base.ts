@@ -587,7 +587,7 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  printMigration(migration: Responses.SchemaCompareResponse) {
+  printMigration(migration: { edits: Schemas.SchemaEditScript }) {
     for (const operation of migration.edits.operations) {
       if ('addTable' in operation) {
         this.log(` ${chalk.bgWhite.blue('CREATE table ')} ${operation.addTable.table}`);
@@ -604,7 +604,9 @@ export abstract class BaseCommand extends Command {
       }
 
       if ('addColumn' in operation) {
-        this.log(` ${chalk.bgWhite.blue('ADD column ')} ${operation.addColumn.table}.${operation.addColumn.column}`);
+        this.log(
+          ` ${chalk.bgWhite.blue('ADD column ')} ${operation.addColumn.table}.${operation.addColumn.column.name}`
+        );
       }
 
       if ('removeColumn' in operation) {
