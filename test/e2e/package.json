@@ -9,7 +9,7 @@
     "create-next-app": "latest",
     "cross-fetch": "^3.1.5",
     "edge-runtime": "latest",
-    "netlify-cli": "^12.2.9",
+    "netlify-cli": "^12.2.10",
     "next": "latest",
     "remix": "latest",
     "rollup-plugin-esbuild": "^5.0.0",
