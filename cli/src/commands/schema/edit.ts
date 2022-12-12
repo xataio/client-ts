@@ -737,6 +737,9 @@ function parseDefaultValue(type: string, val: string): string | undefined {
   } else if (type === 'link') {
     return val ? String(val) : undefined;
   } else if (type === 'datetime') {
+    // Date fields have special values
+    if (['now'].includes(val)) return val;
+
     const date = new Date(val);
     return isNaN(date.getTime()) ? undefined : date.toISOString();
   } else {
