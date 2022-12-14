@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ['next', 'beta', 'latest', '~4.7']
+        target: ['next', 'beta', 'latest', '~4.8', '~4.7']
 
     steps:
       - name: 🛑 Cancel Previous Runs
