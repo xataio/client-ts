@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.21.4
+
+### Patch Changes
+
+- [#816](https://github.com/xataio/client-ts/pull/816) [`a0149435`](https://github.com/xataio/client-ts/commit/a01494358ae3a8dd9d7eba3a276fe6f8b7827a33) Thanks [@SferaDev](https://github.com/SferaDev)! - Improve types for datetime fields accepting strings
+
 ## 0.21.3
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @xata.io/cli
 
+## 0.11.5
+
+### Patch Changes
+
+- [#800](https://github.com/xataio/client-ts/pull/800) [`c52addf5`](https://github.com/xataio/client-ts/commit/c52addf593b4f92a6084e37e6c4f6f114ed35f3d) Thanks [@gimenete](https://github.com/gimenete)! - Interactive schema editing is atomic now
+
+- [#816](https://github.com/xataio/client-ts/pull/816) [`a0149435`](https://github.com/xataio/client-ts/commit/a01494358ae3a8dd9d7eba3a276fe6f8b7827a33) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix now default value in schema edit
+
+- Updated dependencies [[`a0149435`](https://github.com/xataio/client-ts/commit/a01494358ae3a8dd9d7eba3a276fe6f8b7827a33)]:
+  - @xata.io/client@0.21.4
+
 ## 0.11.4
 
 ### Patch Changes
