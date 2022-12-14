@@ -36,6 +36,14 @@ describe('dates', () => {
     expect(record.birthDate?.toISOString()).toEqual(birthDate.toISOString());
   });
 
+  test("add a record with a string date (it's parsed)", async () => {
+    const birthDate = new Date();
+    const record = await xata.db.users.create({ full_name: 'foo2', birthDate: birthDate.toISOString() });
+
+    expect(record.birthDate instanceof Date).toEqual(true);
+    expect(record.birthDate?.toISOString()).toEqual(birthDate.toISOString());
+  });
+
   test('add a record without a date (optional)', async () => {
     const record = await xata.db.users.create({ full_name: 'optional' });
 
