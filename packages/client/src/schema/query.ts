@@ -78,7 +78,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     this.#data.filter.$all = data.filter?.$all ?? parent?.filter?.$all;
     this.#data.filter.$not = data.filter?.$not ?? parent?.filter?.$not;
     this.#data.filter.$none = data.filter?.$none ?? parent?.filter?.$none;
-    this.#data.sort = data.sort ?? parent?.sort;
+    this.#data.sort = (data.sort ?? parent?.sort) as QueryOptions<Record>['sort']; // Fix for TS =4.7
     this.#data.columns = data.columns ?? parent?.columns;
     this.#data.consistency = data.consistency ?? parent?.consistency;
     this.#data.pagination = data.pagination ?? parent?.pagination;
