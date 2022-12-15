@@ -109,6 +109,10 @@ export type DatabaseMetadata = {
    */
   createdAt: DateTime;
   /**
+   * @x-internal true
+   */
+  newMigrations?: boolean;
+  /**
    * Metadata about the database for display in Xata user interfaces
    */
   ui?: {
