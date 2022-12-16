@@ -48,6 +48,7 @@
     "enquirer": "^2.3.6",
     "env-editor": "^1.1.0",
     "ini": "^3.0.1",
+    "json5": "^2.2.2",
     "lodash.compact": "^3.0.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
