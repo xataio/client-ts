@@ -11,6 +11,7 @@ export type { FetcherExtraProps } from './fetcher';
 export type { FetchImpl } from '../util/fetch';
 export { operationsByTag as Operations };
 export type { Responses, Schemas };
+export { FetcherError } from './errors';
 
 export class XataApiPlugin implements XataPlugin {
   async build(options: XataPluginOptions) {
