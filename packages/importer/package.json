@@ -27,8 +27,8 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
-    "@xata.io/client": "^0.21.3",
-    "camelcase": "^7.0.0",
+    "@xata.io/client": "^0.21.4",
+    "camelcase": "^7.0.1",
     "csvtojson": "^2.0.10",
     "transliteration": "^2.3.5"
   },
