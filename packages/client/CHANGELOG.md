@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.21.5
+
+### Patch Changes
+
+- [#825](https://github.com/xataio/client-ts/pull/825) [`41c4d29f`](https://github.com/xataio/client-ts/commit/41c4d29f9f9fc7ce87b755e447a2030fe8c10d70) Thanks [@SferaDev](https://github.com/SferaDev)! - Export fetcher error
+
 ## 0.21.4
 
 ### Patch Changes
