@@ -68,7 +68,7 @@ export class Serializer {
 
 const defaultSerializer = new Serializer();
 
-type SerializedString<T> = string & { __type: T };
+type SerializedString<T> = string | (string & { __type: T });
 type DeserializedType<T> = T extends SerializedString<infer U> ? U : T;
 
 export const serialize = <T>(data: T): SerializedString<T> => {
