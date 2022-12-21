@@ -148,6 +148,8 @@ export type BranchMetadata = {
 };
 
 /**
+ * @maxLength 255
+ * @minLength 1
  * @pattern [a-zA-Z0-9_\-~]+
  */
 export type BranchName = string;
