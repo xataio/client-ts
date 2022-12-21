@@ -1933,7 +1933,7 @@ export const initObject = <T>(
   };
 
   record.toJSON = function () {
-    return data;
+    return JSON.parse(JSON.stringify(transformObjectLinks(data)));
   };
 
   for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata']) {

@@ -1,4 +1,4 @@
-import { EditableData, XataRecord } from '../schema/record';
+import { XataRecord } from '../schema/record';
 
 // These will be used to set special fields to serialized objects.
 // So objects should not use this field names. I think that's fine. Another approach would be to generate two objects:
@@ -75,7 +75,7 @@ export const serialize = <T>(data: T): SerializedString<T> => {
   return defaultSerializer.toJSON(data) as SerializedString<T>;
 };
 
-export const deserialize = <T extends SerializedString<any>>(json: T): DeserializedType<T> => {
+export const deserialize = <T extends SerializedString<any>>(json: T): SerializerResult<DeserializedType<T>> => {
   return defaultSerializer.fromJSON(json);
 };
 

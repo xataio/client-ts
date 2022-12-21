@@ -27,7 +27,7 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
   /**
    * Get a JSON representation of this record.
    */
-  toJSON(): Omit<OriginalRecord, keyof XataRecord>;
+  toJSON(): JSONData<OriginalRecord>;
 
   /**
    * Retrieves a refreshed copy of the current record from the database.
@@ -148,6 +148,26 @@ export type EditableData<O extends XataRecord> = Identifiable &
     Omit<
       {
         [K in keyof O]: EditableDataFields<O[K]>;
+      },
+      keyof XataRecord
+    >
+  >;
+
+type JSONDataFields<T> = T extends XataRecord
+  ? string
+  : NonNullable<T> extends XataRecord
+  ? string | null | undefined
+  : T extends Date
+  ? string
+  : NonNullable<T> extends Date
+  ? string | null | undefined
+  : T;
+
+type JSONData<O> = Identifiable &
+  Partial<
+    Omit<
+      {
+        [K in keyof O]: JSONDataFields<O[K]>;
       },
       keyof XataRecord
     >
