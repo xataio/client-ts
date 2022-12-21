@@ -68,8 +68,8 @@ export class Serializer {
 
 const defaultSerializer = new Serializer();
 
-type SerializedString<T> = string | (string & { __type: T });
-type DeserializedType<T> = T extends SerializedString<infer U> ? U : T;
+export type SerializedString<T> = string | (string & { __type: T });
+export type DeserializedType<T> = T extends SerializedString<infer U> ? U : T;
 
 export const serialize = <T>(data: T): SerializedString<T> => {
   return defaultSerializer.toJSON(data) as SerializedString<T>;
@@ -80,7 +80,12 @@ export const deserialize = <T extends SerializedString<any>>(json: T): Deseriali
 };
 
 export type SerializerResult<T> = T extends XataRecord
-  ? EditableData<T>
+  ? Omit<
+      {
+        [K in keyof T]: SerializerResult<T[K]>;
+      },
+      keyof XataRecord
+    >
   : T extends any[]
   ? SerializerResult<T[number]>[]
   : T;

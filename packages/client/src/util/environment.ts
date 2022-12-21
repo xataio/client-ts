@@ -124,9 +124,9 @@ export async function getGitBranch(): Promise<string | undefined> {
   // Node.js: child_process.execSync
   try {
     // CJS
-    if (typeof require === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      return require(nodeModule).execSync(fullCmd, execOptions).trim();
+    const req = require;
+    if (typeof req === 'function') {
+      return req(nodeModule).execSync(fullCmd, execOptions).trim();
     }
 
     // ESM
