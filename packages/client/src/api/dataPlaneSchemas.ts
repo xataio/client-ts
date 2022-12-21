@@ -96,6 +96,8 @@ export type RevLink = {
 };
 
 /**
+ * @maxLength 255
+ * @minLength 1
  * @pattern [a-zA-Z0-9_\-~]+
  */
 export type BranchName = string;
@@ -110,13 +112,15 @@ export type DBName = string;
 /**
  * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
  *
- * @maxLength 255
+ * @maxLength 511
  * @minLength 1
  * @pattern [a-zA-Z0-9_\-~]+:[a-zA-Z0-9_\-~]+
  */
 export type DBBranchName = string;
 
 /**
+ * @maxLength 255
+ * @minLength 1
  * @pattern [a-zA-Z0-9_\-~]+
  */
 export type TableName = string;
