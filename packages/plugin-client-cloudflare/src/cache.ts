@@ -1,4 +1,4 @@
-import { CacheImpl, serialize, deserialize, SerializedString } from '@xata.io/client';
+import { CacheImpl, serialize, deserialize } from '@xata.io/client';
 
 export type CloudflareKVCacheOptions = { namespace: KVNamespace; ttl?: number };
 
@@ -20,12 +20,12 @@ export class CloudflareKVCache implements CacheImpl {
 
   async get<T>(key: string): Promise<T | null> {
     try {
-      const value = await this.#kv.get<SerializedString<T>>(key);
+      const value = await this.#kv.get(key);
       if (value === null) {
         return null;
       }
 
-      return deserialize(value);
+      return deserialize(value) as T;
     } catch (e) {
       // Ignore, KV namespace limit reached
       console.error('KV namespace error', e);
