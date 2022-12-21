@@ -25,6 +25,11 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
   getMetadata(): XataRecordMetadata;
 
   /**
+   * Get a JSON representation of this record.
+   */
+  toJSON(): Omit<OriginalRecord, keyof XataRecord>;
+
+  /**
    * Retrieves a refreshed copy of the current record from the database.
    * @param columns The columns to retrieve. If not specified, all first level properties are retrieved.
    * @returns The persisted record with the selected columns, null if not found.
