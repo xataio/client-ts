@@ -116,9 +116,6 @@ export async function getGitBranch(): Promise<string | undefined> {
   const cmd = ['git', 'branch', '--show-current'];
   const fullCmd = cmd.join(' ');
 
-  // Avoid "Critical dependency: the request of a dependency is an expression" in Webpack
-  const req = ['req', 'uire'].join('');
-
   // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
   const nodeModule = ['child', 'process'].join('_');
 
@@ -126,15 +123,17 @@ export async function getGitBranch(): Promise<string | undefined> {
 
   // Node.js: child_process.execSync
   try {
-    // CJS
-    const childProcess = eval(req)(nodeModule);
-    if (isDefined(childProcess) && isDefined(childProcess.execSync)) {
-      return childProcess.execSync(fullCmd, execOptions).trim();
+    /* REMOVE_ESM_BUNDLE_START */
+    if (typeof require === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      return require(nodeModule).execSync(fullCmd, execOptions).trim();
     }
+    /* REMOVE_ESM_BUNDLE_END */
 
-    // ESM
+    /* REMOVE_CJS_BUNDLE_START */
     const { execSync } = await import(nodeModule);
     return execSync(fullCmd, execOptions).toString().trim();
+    /* REMOVE_CJS_BUNDLE_END */
   } catch (err) {
     // Ignore
   }

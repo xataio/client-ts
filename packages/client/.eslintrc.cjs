@@ -1,5 +1,5 @@
 module.exports = {
-  ignorePatterns: ["dist"],
+  ignorePatterns: ['dist'],
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
@@ -7,6 +7,6 @@ module.exports = {
   },
   rules: {
     '@typescript-eslint/no-floating-promises': 'error',
-    "@typescript-eslint/strict-boolean-expressions": ["error", { allowNullableString: true, allowNullableObject: true }],
+    '@typescript-eslint/strict-boolean-expressions': ['error', { allowNullableString: true, allowNullableObject: true }]
   }
 };
