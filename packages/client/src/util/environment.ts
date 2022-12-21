@@ -124,7 +124,7 @@ export async function getGitBranch(): Promise<string | undefined> {
   // Node.js: child_process.execSync
   try {
     // CJS
-    const req = require;
+    const req = eval('require');
     if (typeof req === 'function') {
       return req(nodeModule).execSync(fullCmd, execOptions).trim();
     }
