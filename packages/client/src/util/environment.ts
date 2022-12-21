@@ -117,7 +117,7 @@ export async function getGitBranch(): Promise<string | undefined> {
   const fullCmd = cmd.join(' ');
 
   // Avoid "Critical dependency: the request of a dependency is an expression" in Webpack
-  const req = 'require';
+  const req = ['req', 'uire'].join('');
 
   // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
   const nodeModule = ['child', 'process'].join('_');
