@@ -1936,7 +1936,7 @@ export const initObject = <T>(
     return JSON.parse(JSON.stringify(transformObjectLinks(data)));
   };
 
-  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata']) {
+  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toJSON']) {
     Object.defineProperty(record, prop, { enumerable: false });
   }
 
