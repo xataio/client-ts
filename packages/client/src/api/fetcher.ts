@@ -149,6 +149,9 @@ export async function fetch<
       const headers = {
         'Accept-Encoding': 'identity',
         'Content-Type': 'application/json',
+        // Add keepalive to avoid closing the connection
+        Connection: 'keep-alive',
+        KeepAlive: 'timeout=5, max=100',
         'X-Xata-Client-ID': clientID ?? defaultClientID,
         'X-Xata-Session-ID': sessionID ?? generateUUID(),
         'X-Xata-Agent': xataAgent,
