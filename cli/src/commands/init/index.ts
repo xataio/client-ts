@@ -21,9 +21,9 @@ export default class Init extends BaseCommand {
 
   static examples = [
     'Initialize a new project',
-    'xata init --db https://workspace-1234.region.xata.sh/db/database-name',
+    'xata init --db https://workspace-1234.us-east-1.xata.sh/db/database-name',
     'Initialize a new project using a schema dump',
-    'xata init --db https://workspace-1234.region.xata.sh/db/database-name --schema schema.json',
+    'xata init --db https://workspace-1234.us-east-1.xata.sh/db/database-name --schema schema.json',
     'Initialize a new project without flags. The workspace and database will be asked interactively',
     'xata init'
   ];
