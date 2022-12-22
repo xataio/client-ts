@@ -162,7 +162,9 @@ export async function fetch<
         method: method.toUpperCase(),
         body: body ? JSON.stringify(body) : undefined,
         headers,
-        signal
+        signal,
+        // @ts-ignore
+        keepalive: true
       });
 
       const { host, protocol } = parseUrl(response.url);
