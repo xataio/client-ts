@@ -1,6 +1,6 @@
 ---
 '@xata.io/plugin-client-cache': patch
-'@xata.io/importer': patch
+'@xata.io/client': patch
 ---
 
 Add branded types to serializer
