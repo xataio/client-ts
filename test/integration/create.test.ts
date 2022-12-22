@@ -27,11 +27,28 @@ afterEach(async (ctx) => {
 });
 
 describe('record creation', () => {
-  test('create single team without id', async () => {
-    const team = await xata.db.teams.create({ name: 'Team ships' });
+  test('create single user without id', async () => {
+    const user = await xata.db.users.create({ name: 'User ships', birthDate: new Date() });
 
-    expect(team.id).toBeDefined();
-    expect(team.name).toBe('Team ships');
+    expect(user.id).toBeDefined();
+    expect(user.name).toBe('User ships');
+    expect(user.read).toBeDefined();
+    expect(user.getMetadata).toBeDefined();
+    expect(user.birthDate).toBeInstanceOf(Date);
+  });
+
+  test('create user with team', async () => {
+    const team = await xata.db.teams.create({ name: 'Team ships' });
+    const user = await xata.db.users.create({ name: 'User ships', team });
+
+    expect(user.id).toBeDefined();
+    expect(user.name).toBe('User ships');
+    expect(user.read).toBeDefined();
+    expect(user.getMetadata).toBeDefined();
+    expect(user.team).toBeDefined();
+    expect(user.team?.id).toBe(team.id);
+    expect(user.team?.read).toBeDefined();
+    expect(user.team?.getMetadata).toBeDefined();
   });
 
   test('create multiple teams without ids', async () => {
