@@ -163,7 +163,7 @@ type JSONDataFields<T> = T extends XataRecord
   ? string | null | undefined
   : T;
 
-type JSONData<O> = Identifiable &
+export type JSONData<O> = Identifiable &
   Partial<
     Omit<
       {
