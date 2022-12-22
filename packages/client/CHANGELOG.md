@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.21.6
+
+### Patch Changes
+
+- [#828](https://github.com/xataio/client-ts/pull/828) [`039e35bf`](https://github.com/xataio/client-ts/commit/039e35bf9f01149f39bca39e1867908ca3468bb5) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix enableBrowser with Deno
+
+- [#828](https://github.com/xataio/client-ts/pull/828) [`039e35bf`](https://github.com/xataio/client-ts/commit/039e35bf9f01149f39bca39e1867908ca3468bb5) Thanks [@SferaDev](https://github.com/SferaDev)! - Add branded types to serializer
+
 ## 0.21.5
 
 ### Patch Changes

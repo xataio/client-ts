@@ -1,5 +1,14 @@
 # @xata.io/plugin-client-cache
 
+## 0.1.6
+
+### Patch Changes
+
+- [#828](https://github.com/xataio/client-ts/pull/828) [`039e35bf`](https://github.com/xataio/client-ts/commit/039e35bf9f01149f39bca39e1867908ca3468bb5) Thanks [@SferaDev](https://github.com/SferaDev)! - Add branded types to serializer
+
+- Updated dependencies [[`039e35bf`](https://github.com/xataio/client-ts/commit/039e35bf9f01149f39bca39e1867908ca3468bb5), [`039e35bf`](https://github.com/xataio/client-ts/commit/039e35bf9f01149f39bca39e1867908ca3468bb5)]:
+  - @xata.io/client@0.21.6
+
 ## 0.1.5
 
 ### Patch Changes
