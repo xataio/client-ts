@@ -25,6 +25,11 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
   getMetadata(): XataRecordMetadata;
 
   /**
+   * Get a JSON representation of this record.
+   */
+  toJSON(): JSONData<OriginalRecord>;
+
+  /**
    * Retrieves a refreshed copy of the current record from the database.
    * @param columns The columns to retrieve. If not specified, all first level properties are retrieved.
    * @returns The persisted record with the selected columns, null if not found.
@@ -143,6 +148,26 @@ export type EditableData<O extends XataRecord> = Identifiable &
     Omit<
       {
         [K in keyof O]: EditableDataFields<O[K]>;
+      },
+      keyof XataRecord
+    >
+  >;
+
+type JSONDataFields<T> = T extends XataRecord
+  ? string
+  : NonNullable<T> extends XataRecord
+  ? string | null | undefined
+  : T extends Date
+  ? string
+  : NonNullable<T> extends Date
+  ? string | null | undefined
+  : T;
+
+type JSONData<O> = Identifiable &
+  Partial<
+    Omit<
+      {
+        [K in keyof O]: JSONDataFields<O[K]>;
       },
       keyof XataRecord
     >

@@ -1932,7 +1932,11 @@ export const initObject = <T>(
     return xata;
   };
 
-  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata']) {
+  record.toJSON = function () {
+    return JSON.parse(JSON.stringify(transformObjectLinks(data)));
+  };
+
+  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toJSON']) {
     Object.defineProperty(record, prop, { enumerable: false });
   }
 

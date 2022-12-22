@@ -35,6 +35,16 @@ describe('record creation', () => {
     expect(user.read).toBeDefined();
     expect(user.getMetadata).toBeDefined();
     expect(user.birthDate).toBeInstanceOf(Date);
+
+    const json = user.toJSON();
+
+    expect(json.id).toBeDefined();
+    expect(json.name).toBe('User ships');
+    // @ts-expect-error
+    expect(json.read).not.toBeDefined();
+    // @ts-expect-error
+    expect(json.getMetadata).not.toBeDefined();
+    expect(typeof json.birthDate).toBe('string');
   });
 
   test('create user with team', async () => {
@@ -49,6 +59,21 @@ describe('record creation', () => {
     expect(user.team?.id).toBe(team.id);
     expect(user.team?.read).toBeDefined();
     expect(user.team?.getMetadata).toBeDefined();
+
+    const json = user.toJSON();
+
+    expect(json.id).toBeDefined();
+    expect(json.name).toBe('User ships');
+    // @ts-expect-error
+    expect(json.read).not.toBeDefined();
+    // @ts-expect-error
+    expect(json.getMetadata).not.toBeDefined();
+    expect(json.team).toBeDefined();
+    expect(json.team).toBe(team.id);
+    // @ts-expect-error
+    expect(json.team.read).not.toBeDefined();
+    // @ts-expect-error
+    expect(json.team.getMetadata).not.toBeDefined();
   });
 
   test('create multiple teams without ids', async () => {
