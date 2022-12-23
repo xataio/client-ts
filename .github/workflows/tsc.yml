@@ -26,11 +26,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 7
+          cache: 'pnpm'
 
       - name: 📥 Install project dependencies
         run: pnpm install --frozen-lockfile

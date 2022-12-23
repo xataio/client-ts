@@ -25,11 +25,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 7
+          cache: 'pnpm'
 
       - name: Set build version
         run: echo ::set-output name=TAG::0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
@@ -144,15 +140,10 @@ jobs:
         id: nvm
 
       - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
-          cache: 'npm'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 7
+          cache: 'pnpm'
 
       - name: Check secrets exist
         run: echo ::set-output name=exist::${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}
