@@ -91,7 +91,18 @@ jobs:
       - name: Publish build
         if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         run: |
-          echo '---\n'@xata.io/plugin-client-opentelemetry': patch\n'@xata.io/plugin-client-cloudflare': patch\n'@xata.io/plugin-client-cache': patch\n'@xata.io/importer': patch\n'@xata.io/codegen': patch\n'@xata.io/client': patch\n'@xata.io/cli': patch\n---\n\nForce canary build\n\n' > .changeset/force-canary-build.md
+          echo '---' > .changeset/force-canary-build.md
+          echo '@xata.io/plugin-client-opentelemetry': patch' >> .changeset/force-canary-build.md
+          echo '@xata.io/plugin-client-cloudflare': patch' >> .changeset/force-canary-build.md
+          echo '@xata.io/plugin-client-cache': patch' >> .changeset/force-canary-build.md
+          echo '@xata.io/importer': patch' >> .changeset/force-canary-build.md
+          echo '@xata.io/codegen': patch' >> .changeset/force-canary-build.md
+          echo '@xata.io/client': patch' >> .changeset/force-canary-build.md
+          echo '@xata.io/cli': patch' >> .changeset/force-canary-build.md
+          echo '---' >> .changeset/force-canary-build.md
+          echo '' >> .changeset/force-canary-build.md
+          echo 'Force canary build' >> .changeset/force-canary-build.md
+          echo '' >> .changeset/force-canary-build.md
           npx changeset version --snapshot ${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}
           npx changeset publish --tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-git-tag
 
