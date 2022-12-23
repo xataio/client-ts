@@ -11,8 +11,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "tsc": "tsc --noEmit",
-    "prepack": "npm run build"
+    "tsc": "tsc --noEmit"
   },
   "author": "",
   "license": "Apache-2.0",
