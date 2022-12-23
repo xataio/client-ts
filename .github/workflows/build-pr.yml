@@ -91,6 +91,7 @@ jobs:
       - name: Publish build
         if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         run: |
+          npx changeset add --empty
           npx changeset version --snapshot ${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}
           npx changeset publish --tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-git-tag
 
