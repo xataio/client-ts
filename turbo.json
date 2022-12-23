@@ -3,7 +3,7 @@
   "pipeline": {
     "add-version": {},
     "tsc": {
-      "dependsOn": ["add-version"],
+      "dependsOn": ["add-version", "^tsc"],
       "inputs": ["src/**"]
     },
     "build": {
