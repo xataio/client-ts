@@ -35,7 +35,7 @@ jobs:
         uses: antongolub/action-setup-bun@v1
 
       - name: 📥 Install project dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: 👷🏻‍♀️ Compile
         run: pnpm build

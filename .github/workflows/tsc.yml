@@ -33,7 +33,7 @@ jobs:
           version: 7
 
       - name: 📥 Install project dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: 🚦 Install TypeScript ${{ matrix.target }}
         run: pnpm add typescript@${{ matrix.target }}

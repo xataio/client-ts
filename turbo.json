@@ -1,12 +1,14 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
+    "add-version": {},
     "tsc": {
+      "dependsOn": ["add-version"],
       "inputs": ["src/**"]
+    },
+    "build": {
+      "dependsOn": ["tsc", "^build"],
+      "outputs": ["dist/**"]
     }
   }
 }
