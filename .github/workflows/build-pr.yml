@@ -21,7 +21,12 @@ jobs:
           # This branch is not pushed, it's just local to the workflow environment.
           git checkout -b test-branch-${{ github.sha }}
 
-      - name: ⎔ Setup node
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
+      - name: Setup node
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
