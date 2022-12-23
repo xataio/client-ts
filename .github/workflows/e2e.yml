@@ -26,14 +26,19 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
       - name: ⎔ Setup bun
         uses: antongolub/action-setup-bun@v1
 
       - name: 📥 Install project dependencies
-        run: npm install
+        run: pnpm install
 
       - name: 👷🏻‍♀️ Compile
-        run: npm run build
+        run: pnpm build
 
       - name: 📥 Install test dependencies
         uses: bahmutov/npm-install@v1

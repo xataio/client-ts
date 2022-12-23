@@ -14,6 +14,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
+    "tsc": "tsc --noEmit",
     "prepack": "npm run build",
     "prebuild": "node ../../scripts/add-version-file.mjs"
   },

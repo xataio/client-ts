@@ -10,8 +10,8 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf dist && rollup -c",
+    "tsc": "tsc --noEmit",
     "prepack": "npm run build"
   },
   "author": "",
@@ -21,6 +21,6 @@
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20221111.1",
-    "@xata.io/client": "^0.21.4"
+    "@xata.io/client": "workspace:*"
   }
 }

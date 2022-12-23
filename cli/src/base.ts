@@ -4,7 +4,6 @@ import {
   getCurrentBranchName,
   getHostUrl,
   parseWorkspacesUrlParts,
-  Responses,
   Schemas,
   XataApiClient
 } from '@xata.io/client';
