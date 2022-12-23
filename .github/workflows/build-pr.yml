@@ -102,7 +102,7 @@ jobs:
           echo '---' >> .changeset/force-canary-build.md
           echo '' >> .changeset/force-canary-build.md
           echo 'Force canary build' >> .changeset/force-canary-build.md
-          echo '' >> .changeset/force-canary-build.md
+          cat << EOF >> .changeset/force-canary-build.md
           npx changeset version --snapshot ${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}
           npx changeset publish --tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-git-tag
 
