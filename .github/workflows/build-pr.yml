@@ -105,8 +105,8 @@ jobs:
 
           EOF
 
-          npx changeset version --snapshot ${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}
-          npx changeset publish --tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-git-tag
+          pnpm dlx changeset version --snapshot ${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}
+          pnpm dlx changeset publish --tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-git-tag
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1

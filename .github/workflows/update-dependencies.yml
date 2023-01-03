@@ -30,7 +30,7 @@ jobs:
         uses: svr/command-output@v1
         id: ncu
         with:
-          run: npx -y npm-check-updates -u -t latest --deep --filterVersion "/^[^=]/"
+          run: pnpm dlx -y npm-check-updates -u -t latest --deep --filterVersion "/^[^=]/"
 
       - name: Install new versions
         run: |
