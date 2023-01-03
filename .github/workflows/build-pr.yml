@@ -21,10 +21,16 @@ jobs:
           # This branch is not pushed, it's just local to the workflow environment.
           git checkout -b test-branch-${{ github.sha }}
 
-      - name: ⎔ Setup node
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
+      - name: Setup node
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
+          cache: 'pnpm'
 
       - name: Set build version
         run: echo ::set-output name=TAG::0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
@@ -71,10 +77,10 @@ jobs:
             [Pull request has been updated, please wait for latest changes to be pushed to npm...]
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: Compile
-        run: npm run build
+        run: pnpm build
 
       - name: Configure npm registry token
         if: ${{ steps.secrets.outputs.exist == 'true' }}
@@ -84,7 +90,23 @@ jobs:
 
       - name: Publish build
         if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
-        run: npx lerna publish ${{ steps.version.outputs.TAG }} --no-git-tag-version --no-push --dist-tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --exact --no-verify-access --yes
+        run: |
+          cat << EOF > .changeset/force-canary-build.md
+          ---
+          '@xata.io/plugin-client-opentelemetry': patch
+          '@xata.io/plugin-client-cloudflare': patch
+          '@xata.io/plugin-client-cache': patch
+          '@xata.io/importer': patch
+          '@xata.io/codegen': patch
+          '@xata.io/client': patch
+          '@xata.io/cli': patch
+          ---
+          Force canary build
+
+          EOF
+
+          npx changeset version --snapshot ${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}
+          npx changeset publish --tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-git-tag
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
@@ -136,29 +158,34 @@ jobs:
         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
         id: nvm
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
       - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Check secrets exist
         run: echo ::set-output name=exist::${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}
         id: secrets
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: Compile
-        run: npm run build
+        run: pnpm build
 
       - name: Lint
-        run: npm run lint
+        run: pnpm lint
 
       - name: Test
         if: ${{ steps.secrets.outputs.exist == 'true' }}
         run: |
-          npm test
+          pnpm test
         env:
           XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}

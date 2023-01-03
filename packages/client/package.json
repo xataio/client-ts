@@ -14,8 +14,8 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "prepack": "npm run build",
-    "prebuild": "node ../../scripts/add-version-file.mjs"
+    "tsc": "tsc --noEmit",
+    "add-version": "node ../../scripts/add-version-file.mjs"
   },
   "peerDependencies": {
     "typescript": ">=4.5"

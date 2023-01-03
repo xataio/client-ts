@@ -126,7 +126,7 @@ export async function fetch<
 
   return await trace(
     `${method.toUpperCase()} ${path}`,
-    async ({ name, setAttributes }) => {
+    async ({ setAttributes }) => {
       const baseUrl = buildBaseUrl({ endpoint, path, workspacesApiUrl, pathParams, apiUrl });
       const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
