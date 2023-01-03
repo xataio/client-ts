@@ -22,19 +22,25 @@ jobs:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
+      - name: ⎔ Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
       - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
+          cache: 'pnpm'
 
       - name: 📥 Install project dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: 🚦 Install TypeScript ${{ matrix.target }}
-        run: npm install typescript@${{ matrix.target }}
+        run: pnpm add typescript@${{ matrix.target }}
 
       - name: 👷🏻‍♀️ Compile
-        run: npm run build
+        run: pnpm build
 
       - name: 🚀 Type-check code
-        run: npx lerna exec tsc
+        run: pnpm tsc

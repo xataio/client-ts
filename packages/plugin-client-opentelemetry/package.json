@@ -10,9 +10,8 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf dist && rollup -c",
-    "prepack": "npm run build"
+    "tsc": "tsc --noEmit"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -20,7 +19,7 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@xata.io/client": "^0.21.4",
+    "@xata.io/client": "workspace:*",
     "@opentelemetry/api": "^1.3.0"
   }
 }
