@@ -27,11 +27,12 @@
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
     "@xata.io/client": "workspace:*",
-    "camelcase": "^7.0.1",
-    "csvtojson": "^2.0.10",
-    "transliteration": "^2.3.5"
+    "any-date-parser": "^1.5.3",
+    "json5": "^2.2.3",
+    "papaparse": "^5.3.2",
+    "zod": "^3.20.2"
   },
   "devDependencies": {
-    "@types/csvtojson": "^2.0.0"
+    "@types/papaparse": "^5.3.7"
   }
 }
