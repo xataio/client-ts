@@ -85,8 +85,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     #parseOptions(options?: BaseClientOptions): SafeOptions {
       // If is running from the browser and the user didn't pass `enableBrowser` we throw an error
       const enableBrowser = options?.enableBrowser ?? getEnableBrowserVariable() ?? false;
-      // @ts-ignore Window is not defined in Node
-      const isBrowser = typeof window !== 'undefined';
+      // @ts-ignore Window, Deno are not globals
+      const isBrowser = typeof window !== 'undefined' && typeof Deno === 'undefined';
       if (isBrowser && !enableBrowser) {
         throw new Error(
           'You are trying to use Xata from the browser, which is potentially a non-secure environment. If you understand the security concerns, such as leaking your credentials, pass `enableBrowser: true` to the client options to remove this error.'

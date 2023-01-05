@@ -4,7 +4,6 @@ import {
   getCurrentBranchName,
   getHostUrl,
   parseWorkspacesUrlParts,
-  Responses,
   Schemas,
   XataApiClient
 } from '@xata.io/client';
@@ -83,7 +82,7 @@ export abstract class BaseCommand extends Command {
 
   static databaseURLFlag = {
     db: Flags.string({
-      helpValue: 'https://{workspace}.xata.sh/db/{database}',
+      helpValue: 'https://{workspace}.{region}.xata.sh/db/{database}',
       description: 'URL of the database'
     })
   };
@@ -230,7 +229,7 @@ export abstract class BaseCommand extends Command {
       this.error('Could not instantiate Xata client. No API key found.', {
         suggestions: [
           'Run `xata auth login`',
-          'Configure a project with `xata init --db=https://{workspace}.xata.sh/db/{database}`'
+          'Configure a project with `xata init --db=https://{workspace}.{region}.xata.sh/db/{database}`'
         ]
       });
     }

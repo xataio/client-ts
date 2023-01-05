@@ -25,7 +25,7 @@ export class CloudflareKVCache implements CacheImpl {
         return null;
       }
 
-      return deserialize(value);
+      return deserialize(value) as T;
     } catch (e) {
       // Ignore, KV namespace limit reached
       console.error('KV namespace error', e);

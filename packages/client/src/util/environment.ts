@@ -123,15 +123,17 @@ export async function getGitBranch(): Promise<string | undefined> {
 
   // Node.js: child_process.execSync
   try {
-    // CJS
+    /* REMOVE_ESM_BUNDLE_START */
     if (typeof require === 'function') {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       return require(nodeModule).execSync(fullCmd, execOptions).trim();
     }
+    /* REMOVE_ESM_BUNDLE_END */
 
-    // ESM
+    /* REMOVE_CJS_BUNDLE_START */
     const { execSync } = await import(nodeModule);
     return execSync(fullCmd, execOptions).toString().trim();
+    /* REMOVE_CJS_BUNDLE_END */
   } catch (err) {
     // Ignore
   }

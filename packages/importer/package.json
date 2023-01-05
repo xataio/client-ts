@@ -11,9 +11,8 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf dist && rollup -c",
-    "prepack": "npm run build"
+    "tsc": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -27,7 +26,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
-    "@xata.io/client": "^0.21.4",
+    "@xata.io/client": "workspace:*",
     "camelcase": "^7.0.1",
     "csvtojson": "^2.0.10",
     "transliteration": "^2.3.5"

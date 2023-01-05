@@ -15,21 +15,26 @@ jobs:
         run: echo ::set-output name=NVMRC::$(cat .nvmrc)
         id: nvm
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
       - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Check for updates
-        uses: mathiasvr/command-output@v1
+        uses: svr/command-output@v1
         id: ncu
         with:
           run: npx -y npm-check-updates -u -t latest --deep --filterVersion "/^[^=]/"
 
       - name: Install new versions
         run: |
-          npm install && lerna exec npm install
+          pnpm install
           git add .
 
       - name: Create Pull Request
