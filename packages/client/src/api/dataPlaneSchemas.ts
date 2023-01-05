@@ -372,12 +372,7 @@ export type FilterExpression = {
  * an object, i.e. if `settings` is an object with `dark_mode` as a field, you may summarize
  * `settings.dark_mode` but not `settings` nor `settings.*`.
  *
- * @example {"all_users":{"count":"*"}}
- * @example {"total_created":{"count":"created_at"}}
- * @example {"min_cost":{"min":"cost"}}
- * @example {"max_happiness":{"max":"happiness"}}
- * @example {"total_revenue":{"sum":"revenue"}}
- * @example {"average_speed":{"average":"speed"}}
+ * @example {"all_users":{"count":"*"},"total_created":{"count":"created_at"},"min_cost":{"min":"cost"},"max_happiness":{"max":"happiness"},"total_revenue":{"sum":"revenue"},"average_speed":{"average":"speed"}}
  * @x-go-type xbquery.SummaryList
  */
 export type SummaryExpressionList = {
@@ -423,7 +418,7 @@ export type SummaryExpression = Record<string, any>;
 /**
  * The description of the aggregations you wish to receive.
  *
- * @example {"totalCount":{"count":"*"},"dailyActiveUsers":{"dateHistogram":{"column":"date","interval":"1d"},"aggs":{"uniqueUsers":{"uniqueCount":{"column":"userID"}}}}}
+ * @example {"totalCount":{"count":"*"},"dailyActiveUsers":{"dateHistogram":{"column":"date","interval":"1d","aggs":{"uniqueUsers":{"uniqueCount":{"column":"userID"}}}}}}
  */
 export type AggExpressionMap = {
   [key: string]: AggExpression;
@@ -431,8 +426,8 @@ export type AggExpressionMap = {
 
 /**
  * The description of a single aggregation operation. It is an object with only one key-value pair.
- * The key represents the aggreagtion type, while the value is an object with the configuration of
- * the aggreagtion.
+ * The key represents the aggregation type, while the value is an object with the configuration of
+ * the aggregation.
  *
  * @x-go-type xata.AggExpression
  */
@@ -996,6 +991,13 @@ export type TransactionDeleteOp = {
 };
 
 /**
+ * An ordered array of results from the submitted operations.
+ */
+export type TransactionSuccess = {
+  results: (TransactionResultInsert | TransactionResultUpdate | TransactionResultDelete)[];
+};
+
+/**
  * A result from an insert operation.
  */
 export type TransactionResultInsert = {
@@ -1040,15 +1042,27 @@ export type TransactionResultDelete = {
 };
 
 /**
+ * An array of errors, with indicides, from the transaction.
+ */
+export type TransactionFailure = {
+  /**
+   * The request ID.
+   */
+  id: string;
+  /**
+   * An array of errors from the submitted operations.
+   */
+  errors: TransactionError[];
+};
+
+/**
  * An error message from a failing transaction operation
- *
- * @x-go-type xata.ErrTxOp
  */
 export type TransactionError = {
   /**
    * The index of the failing operation
    */
-  index?: number;
+  index: number;
   /**
    * The error message
    */

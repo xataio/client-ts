@@ -846,6 +846,14 @@ export type CreateDatabaseError = Fetcher.ErrorWrapper<
       status: 401;
       payload: Responses.AuthError;
     }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 423;
+      payload: Responses.SimpleError;
+    }
 >;
 
 export type CreateDatabaseResponse = {

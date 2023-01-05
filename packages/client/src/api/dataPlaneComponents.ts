@@ -112,6 +112,10 @@ export type CreateBranchError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 423;
+      payload: Responses.SimpleError;
+    }
 >;
 
 export type CreateBranchResponse = {
@@ -167,6 +171,10 @@ export type DeleteBranchError = Fetcher.ErrorWrapper<
     }
   | {
       status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
       payload: Responses.SimpleError;
     }
 >;
@@ -723,7 +731,7 @@ export type BranchTransactionPathParams = {
 export type BranchTransactionError = Fetcher.ErrorWrapper<
   | {
       status: 400;
-      payload: Responses.TransactionFailure;
+      payload: Schemas.TransactionFailure;
     }
   | {
       status: 401;
@@ -746,7 +754,7 @@ export type BranchTransactionVariables = {
 
 export const branchTransaction = (variables: BranchTransactionVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    Responses.TransactionSuccess,
+    Schemas.TransactionSuccess,
     BranchTransactionError,
     BranchTransactionRequestBody,
     {},
@@ -1580,6 +1588,10 @@ export type UpdateTableError = Fetcher.ErrorWrapper<
     }
   | {
       status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
       payload: Responses.SimpleError;
     }
 >;
