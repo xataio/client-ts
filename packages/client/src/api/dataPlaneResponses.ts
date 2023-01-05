@@ -66,7 +66,7 @@ export type SummarizeResponse = {
 };
 
 /**
- * @example {"aggs":{"dailyUniqueUsers":{"values":[{"key":"2022-02-22T22:22:22Z","uniqueUsers":134},{"key":"2022-02-23T22:22:22Z","uniqueUsers":90}]}}}
+ * @example {"aggs":{"dailyUniqueUsers":{"values":[{"$count":321,"$key":"2022-02-22T22:22:22Z","uniqueUsers":134},{"$count":202,"$key":"2022-02-23T22:22:22Z","uniqueUsers":90}]}}}
  */
 export type AggResponse = {
   aggs?: {
@@ -77,26 +77,6 @@ export type AggResponse = {
 export type SearchResponse = {
   records: Schemas.XataRecord[];
   warning?: string;
-};
-
-/**
- * @x-go-type TxSuccess
- */
-export type TransactionSuccess = {
-  /**
-   * An ordered array of results from the submitted operations that were executed
-   */
-  results: (Schemas.TransactionResultInsert | Schemas.TransactionResultUpdate | Schemas.TransactionResultDelete)[];
-};
-
-/**
- * @x-go-type TxFailure
- */
-export type TransactionFailure = {
-  /**
-   * An array of errors from the submitted operations.
-   */
-  errors: Schemas.TransactionError[];
 };
 
 export type BadRequestError = {

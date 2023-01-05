@@ -922,7 +922,7 @@ class RecordsApi {
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     operations: Schemas.TransactionOperation[];
-  }): Promise<Responses.TransactionSuccess> {
+  }): Promise<Schemas.TransactionSuccess> {
     return operationsByTag.records.branchTransaction({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: { operations },
