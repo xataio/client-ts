@@ -1843,9 +1843,9 @@ export const initObject = <T>(
   object: Record<string, unknown>,
   selectedColumns: string[]
 ) => {
-  const result: Dictionary<unknown> = {};
+  const data: Dictionary<unknown> = {};
   const { xata, ...rest } = object ?? {};
-  Object.assign(result, rest);
+  Object.assign(data, rest);
 
   const { columns } = schemaTables.find(({ name }) => name === table) ?? {};
   if (!columns) console.error(`Table ${table} not found in schema`);
@@ -1854,7 +1854,7 @@ export const initObject = <T>(
     // Ignore columns not selected
     if (!isValidColumn(selectedColumns, column)) continue;
 
-    const value = result[column.name];
+    const value = data[column.name];
 
     switch (column.type) {
       case 'datetime': {
@@ -1863,7 +1863,7 @@ export const initObject = <T>(
         if (date !== null && isNaN(date.getTime())) {
           console.error(`Failed to parse date ${value} for field ${column.name}`);
         } else {
-          result[column.name] = date;
+          data[column.name] = date;
         }
 
         break;
@@ -1887,15 +1887,15 @@ export const initObject = <T>(
             return acc;
           }, [] as string[]);
 
-          result[column.name] = initObject(db, schemaTables, linkTable, value, selectedLinkColumns);
+          data[column.name] = initObject(db, schemaTables, linkTable, value, selectedLinkColumns);
         } else {
-          result[column.name] = null;
+          data[column.name] = null;
         }
 
         break;
       }
       default:
-        result[column.name] = value ?? null;
+        data[column.name] = value ?? null;
 
         if (column.notNull === true && value === null) {
           console.error(`Parse error, column ${column.name} is non nullable and value resolves null`);
@@ -1904,38 +1904,40 @@ export const initObject = <T>(
     }
   }
 
-  result.read = function (columns?: any) {
-    return db[table].read(result['id'] as string, columns);
+  const record = { ...data };
+
+  record.read = function (columns?: any) {
+    return db[table].read(record['id'] as string, columns);
   };
 
-  result.update = function (data: any, b?: any, c?: any) {
+  record.update = function (data: any, b?: any, c?: any) {
     const columns = isStringArray(b) ? b : ['*'];
     const ifVersion = parseIfVersion(b, c);
 
-    return db[table].update(result['id'] as string, data, columns, { ifVersion });
+    return db[table].update(record['id'] as string, data, columns, { ifVersion });
   };
 
-  result.replace = function (data: any, b?: any, c?: any) {
+  record.replace = function (data: any, b?: any, c?: any) {
     const columns = isStringArray(b) ? b : ['*'];
     const ifVersion = parseIfVersion(b, c);
 
-    return db[table].createOrReplace(result['id'] as string, data, columns, { ifVersion });
+    return db[table].createOrReplace(record['id'] as string, data, columns, { ifVersion });
   };
 
-  result.delete = function () {
-    return db[table].delete(result['id'] as string);
+  record.delete = function () {
+    return db[table].delete(record['id'] as string);
   };
 
-  result.getMetadata = function () {
+  record.getMetadata = function () {
     return xata;
   };
 
   for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata']) {
-    Object.defineProperty(result, prop, { enumerable: false });
+    Object.defineProperty(record, prop, { enumerable: false });
   }
 
-  Object.freeze(result);
-  return result as T;
+  Object.freeze(record);
+  return record as T;
 };
 
 function extractId(value: any): string | undefined {

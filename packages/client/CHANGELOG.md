@@ -1,5 +1,31 @@
 # @xata.io/client
 
+## 0.21.6
+
+### Patch Changes
+
+- [#828](https://github.com/xataio/client-ts/pull/828) [`039e35bf`](https://github.com/xataio/client-ts/commit/039e35bf9f01149f39bca39e1867908ca3468bb5) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix enableBrowser with Deno
+
+- [#828](https://github.com/xataio/client-ts/pull/828) [`039e35bf`](https://github.com/xataio/client-ts/commit/039e35bf9f01149f39bca39e1867908ca3468bb5) Thanks [@SferaDev](https://github.com/SferaDev)! - Add branded types to serializer
+
+## 0.21.5
+
+### Patch Changes
+
+- [#825](https://github.com/xataio/client-ts/pull/825) [`41c4d29f`](https://github.com/xataio/client-ts/commit/41c4d29f9f9fc7ce87b755e447a2030fe8c10d70) Thanks [@SferaDev](https://github.com/SferaDev)! - Export fetcher error
+
+## 0.21.4
+
+### Patch Changes
+
+- [#816](https://github.com/xataio/client-ts/pull/816) [`a0149435`](https://github.com/xataio/client-ts/commit/a01494358ae3a8dd9d7eba3a276fe6f8b7827a33) Thanks [@SferaDev](https://github.com/SferaDev)! - Improve types for datetime fields accepting strings
+
+## 0.21.3
+
+### Patch Changes
+
+- [#792](https://github.com/xataio/client-ts/pull/792) [`6c96da45`](https://github.com/xataio/client-ts/commit/6c96da4533500ec236547f47310e99461d5457e8) Thanks [@SferaDev](https://github.com/SferaDev)! - Update workers return type helper
+
 ## 0.21.2
 
 ### Patch Changes

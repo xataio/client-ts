@@ -8,39 +8,6 @@ import { dataPlaneFetch, DataPlaneFetcherExtraProps } from './dataPlaneFetcher';
 import type * as Schemas from './dataPlaneSchemas';
 import type * as Responses from './dataPlaneResponses';
 
-export type DEPRECATEDgetDatabaseListPathParams = {
-  workspace: string;
-  region: string;
-};
-
-export type DEPRECATEDgetDatabaseListError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
->;
-
-export type DEPRECATEDgetDatabaseListVariables = {
-  pathParams: DEPRECATEDgetDatabaseListPathParams;
-} & DataPlaneFetcherExtraProps;
-
-/**
- * List all databases available in your Workspace.
- */
-export const dEPRECATEDgetDatabaseList = (variables: DEPRECATEDgetDatabaseListVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<
-    Schemas.DEPRECATEDListDatabasesResponse,
-    DEPRECATEDgetDatabaseListError,
-    undefined,
-    {},
-    {},
-    DEPRECATEDgetDatabaseListPathParams
-  >({ url: '/dbs', method: 'get', ...variables, signal });
-
 export type GetBranchListPathParams = {
   /**
    * The Database Name
@@ -79,207 +46,6 @@ export const getBranchList = (variables: GetBranchListVariables, signal?: AbortS
     ...variables,
     signal
   });
-
-export type DEPRECATEDcreateDatabasePathParams = {
-  /**
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  workspace: string;
-  region: string;
-};
-
-export type DEPRECATEDcreateDatabaseError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
->;
-
-export type DEPRECATEDcreateDatabaseResponse = {
-  /**
-   * @minLength 1
-   */
-  databaseName: string;
-  branchName?: string;
-  status: Schemas.MigrationStatus;
-};
-
-export type DEPRECATEDcreateDatabaseRequestBody = {
-  /**
-   * @minLength 1
-   */
-  branchName?: string;
-  ui?: {
-    color?: string;
-  };
-  metadata?: Schemas.BranchMetadata;
-};
-
-export type DEPRECATEDcreateDatabaseVariables = {
-  body?: DEPRECATEDcreateDatabaseRequestBody;
-  pathParams: DEPRECATEDcreateDatabasePathParams;
-} & DataPlaneFetcherExtraProps;
-
-/**
- * Create Database with identifier name
- */
-export const dEPRECATEDcreateDatabase = (variables: DEPRECATEDcreateDatabaseVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<
-    DEPRECATEDcreateDatabaseResponse,
-    DEPRECATEDcreateDatabaseError,
-    DEPRECATEDcreateDatabaseRequestBody,
-    {},
-    {},
-    DEPRECATEDcreateDatabasePathParams
-  >({ url: '/dbs/{dbName}', method: 'put', ...variables, signal });
-
-export type DEPRECATEDdeleteDatabasePathParams = {
-  /**
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  workspace: string;
-  region: string;
-};
-
-export type DEPRECATEDdeleteDatabaseError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type DEPRECATEDdeleteDatabaseResponse = {
-  status: Schemas.MigrationStatus;
-};
-
-export type DEPRECATEDdeleteDatabaseVariables = {
-  pathParams: DEPRECATEDdeleteDatabasePathParams;
-} & DataPlaneFetcherExtraProps;
-
-/**
- * Delete a database and all of its branches and tables permanently.
- */
-export const dEPRECATEDdeleteDatabase = (variables: DEPRECATEDdeleteDatabaseVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<
-    DEPRECATEDdeleteDatabaseResponse,
-    DEPRECATEDdeleteDatabaseError,
-    undefined,
-    {},
-    {},
-    DEPRECATEDdeleteDatabasePathParams
-  >({ url: '/dbs/{dbName}', method: 'delete', ...variables, signal });
-
-export type DEPRECATEDgetDatabaseMetadataPathParams = {
-  /**
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  workspace: string;
-  region: string;
-};
-
-export type DEPRECATEDgetDatabaseMetadataError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type DEPRECATEDgetDatabaseMetadataVariables = {
-  pathParams: DEPRECATEDgetDatabaseMetadataPathParams;
-} & DataPlaneFetcherExtraProps;
-
-/**
- * Retrieve metadata of the given database
- */
-export const dEPRECATEDgetDatabaseMetadata = (
-  variables: DEPRECATEDgetDatabaseMetadataVariables,
-  signal?: AbortSignal
-) =>
-  dataPlaneFetch<
-    Schemas.DEPRECATEDDatabaseMetadata,
-    DEPRECATEDgetDatabaseMetadataError,
-    undefined,
-    {},
-    {},
-    DEPRECATEDgetDatabaseMetadataPathParams
-  >({ url: '/dbs/{dbName}/metadata', method: 'get', ...variables, signal });
-
-export type DEPRECATEDupdateDatabaseMetadataPathParams = {
-  /**
-   * The Database Name
-   */
-  dbName: Schemas.DBName;
-  workspace: string;
-  region: string;
-};
-
-export type DEPRECATEDupdateDatabaseMetadataError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type DEPRECATEDupdateDatabaseMetadataRequestBody = {
-  ui?: {
-    /**
-     * @minLength 1
-     */
-    color?: string;
-  };
-};
-
-export type DEPRECATEDupdateDatabaseMetadataVariables = {
-  body?: DEPRECATEDupdateDatabaseMetadataRequestBody;
-  pathParams: DEPRECATEDupdateDatabaseMetadataPathParams;
-} & DataPlaneFetcherExtraProps;
-
-/**
- * Update the color of the selected database
- */
-export const dEPRECATEDupdateDatabaseMetadata = (
-  variables: DEPRECATEDupdateDatabaseMetadataVariables,
-  signal?: AbortSignal
-) =>
-  dataPlaneFetch<
-    Schemas.DEPRECATEDDatabaseMetadata,
-    DEPRECATEDupdateDatabaseMetadataError,
-    DEPRECATEDupdateDatabaseMetadataRequestBody,
-    {},
-    {},
-    DEPRECATEDupdateDatabaseMetadataPathParams
-  >({ url: '/dbs/{dbName}/metadata', method: 'patch', ...variables, signal });
 
 export type GetBranchDetailsPathParams = {
   /**
@@ -346,6 +112,10 @@ export type CreateBranchError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 423;
+      payload: Responses.SimpleError;
+    }
 >;
 
 export type CreateBranchResponse = {
@@ -401,6 +171,10 @@ export type DeleteBranchError = Fetcher.ErrorWrapper<
     }
   | {
       status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
       payload: Responses.SimpleError;
     }
 >;
@@ -957,7 +731,7 @@ export type BranchTransactionPathParams = {
 export type BranchTransactionError = Fetcher.ErrorWrapper<
   | {
       status: 400;
-      payload: Responses.TransactionFailure;
+      payload: Schemas.TransactionFailure;
     }
   | {
       status: 401;
@@ -980,7 +754,7 @@ export type BranchTransactionVariables = {
 
 export const branchTransaction = (variables: BranchTransactionVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    Responses.TransactionSuccess,
+    Schemas.TransactionSuccess,
     BranchTransactionError,
     BranchTransactionRequestBody,
     {},
@@ -1814,6 +1588,10 @@ export type UpdateTableError = Fetcher.ErrorWrapper<
     }
   | {
       status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
       payload: Responses.SimpleError;
     }
 >;
@@ -3732,13 +3510,6 @@ export const aggregateTable = (variables: AggregateTableVariables, signal?: Abor
   >({ url: '/db/{dbBranchName}/tables/{tableName}/aggregate', method: 'post', ...variables, signal });
 
 export const operationsByTag = {
-  database: {
-    dEPRECATEDgetDatabaseList,
-    dEPRECATEDcreateDatabase,
-    dEPRECATEDdeleteDatabase,
-    dEPRECATEDgetDatabaseMetadata,
-    dEPRECATEDupdateDatabaseMetadata
-  },
   branch: {
     getBranchList,
     getBranchDetails,

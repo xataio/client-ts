@@ -8,7 +8,10 @@ import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import virtual from '@rollup/plugin-virtual';
 import chokidar from 'chokidar';
+import { readFile } from 'fs/promises';
+import fetch from 'node-fetch';
 import { OutputChunk, rollup } from 'rollup';
+import { importCdn } from 'rollup-plugin-import-cdn';
 import ts from 'typescript';
 import { z } from 'zod';
 
@@ -52,14 +55,24 @@ export function buildWatcher<T extends WorkerScript>({
 
   watcher
     .on('add', async (path) => {
-      modules[path] = await compile(path);
+      console.log(`[watcher] add ${path}`);
+      modules[path] = [];
     })
-    .on('change', updateModule)
-    .on('error', () => {
+    .on('change', async (path) => {
+      console.log(`[watcher] change ${path}`);
+      await updateModule(path);
+    })
+    .on('error', (error) => {
+      console.error(`[watcher] error ${error}`);
       throw new Error('Watcher error');
     })
     .on('ready', async () => {
-      console.log('Watcher ready');
+      console.log('[watcher] ready');
+
+      for await (const path of Object.keys(modules)) {
+        modules[path] = await compile(path);
+      }
+
       if (run) {
         stopServer = await run(Object.values(modules).flat());
       }
@@ -126,9 +139,11 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
     return [];
   }
 
+  const versions = await getDependencyVersions();
+
   const compiledWorkers: WorkerScript[] = [];
 
-  for (const [name, worker] of Object.entries(functions)) {
+  for await (const [name, worker] of Object.entries(functions)) {
     try {
       const code = workerCode(worker, external);
       const { outputText: entry } = ts.transpileModule(code, {
@@ -141,7 +156,7 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
       const bundle = await rollup({
         input: 'entry',
         output: { file: `file://bundle.js`, format: 'es' },
-        plugins: [virtual({ entry }), resolve(), commonjs()]
+        plugins: [virtual({ entry }), importCdn({ fetchImpl: fetch, versions }), resolve(), commonjs()]
       });
 
       const { output } = await bundle.generate({});
@@ -151,12 +166,27 @@ export async function compileWorkers(file: string): Promise<WorkerScript[]> {
         main: output[0].fileName,
         modules: output.map((o) => ({ name: o.fileName, content: (o as OutputChunk).code }))
       });
+
+      console.log(`[watcher] compiled worker ${name} in ${file}`);
     } catch (error) {
+      console.error(`[watcher] error compiling worker ${name} in file ${file}`);
       console.error(error);
     }
   }
 
   return compiledWorkers;
+}
+
+async function getDependencyVersions(): Promise<Record<string, string> | undefined> {
+  try {
+    const packageJson = await readFile('./package.json', 'utf8');
+    const { dependencies } = JSON.parse(packageJson);
+
+    return dependencies;
+  } catch (e) {
+    console.error(`[watcher] error reading package.json`);
+    return undefined;
+  }
 }
 
 function isXataWorker(path: NodePath): path is NodePath<FunctionDeclaration> {

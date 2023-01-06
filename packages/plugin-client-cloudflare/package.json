@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/plugin-client-cloudflare",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -10,9 +10,8 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf dist && rollup -c",
-    "prepack": "npm run build"
+    "tsc": "tsc --noEmit"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -21,6 +20,6 @@
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20221111.1",
-    "@xata.io/client": "^0.21.0"
+    "@xata.io/client": "workspace:*"
   }
 }

@@ -1,5 +1,37 @@
 # @xata.io/cli
 
+## 0.11.5
+
+### Patch Changes
+
+- [#800](https://github.com/xataio/client-ts/pull/800) [`c52addf5`](https://github.com/xataio/client-ts/commit/c52addf593b4f92a6084e37e6c4f6f114ed35f3d) Thanks [@gimenete](https://github.com/gimenete)! - Interactive schema editing is atomic now
+
+- [#816](https://github.com/xataio/client-ts/pull/816) [`a0149435`](https://github.com/xataio/client-ts/commit/a01494358ae3a8dd9d7eba3a276fe6f8b7827a33) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix now default value in schema edit
+
+- Updated dependencies [[`a0149435`](https://github.com/xataio/client-ts/commit/a01494358ae3a8dd9d7eba3a276fe6f8b7827a33)]:
+  - @xata.io/client@0.21.4
+
+## 0.11.4
+
+### Patch Changes
+
+- [#808](https://github.com/xataio/client-ts/pull/808) [`463f740d`](https://github.com/xataio/client-ts/commit/463f740d8d272cbfd22330c9be0c31911edde5a2) Thanks [@SferaDev](https://github.com/SferaDev)! - Add schema upload command
+
+## 0.11.3
+
+### Patch Changes
+
+- [#804](https://github.com/xataio/client-ts/pull/804) [`96e49f35`](https://github.com/xataio/client-ts/commit/96e49f354edf0ff6a52047218b46c96056e82336) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix race condition with workers build step
+
+## 0.11.2
+
+### Patch Changes
+
+- [#792](https://github.com/xataio/client-ts/pull/792) [`eafbe479`](https://github.com/xataio/client-ts/commit/eafbe4790911a6852e8cd010d3b0bbe762a195b1) Thanks [@SferaDev](https://github.com/SferaDev)! - Add Xata Workers init command
+
+- Updated dependencies [[`6c96da45`](https://github.com/xataio/client-ts/commit/6c96da4533500ec236547f47310e99461d5457e8)]:
+  - @xata.io/client@0.21.3
+
 ## 0.11.1
 
 ### Patch Changes

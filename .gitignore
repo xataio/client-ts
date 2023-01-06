@@ -4,7 +4,6 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
 xata
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
@@ -108,3 +107,4 @@ dist
 .npmrc
 
 .DS_Store
+.turbo

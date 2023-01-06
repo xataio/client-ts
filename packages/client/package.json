@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/client",
-  "version": "0.21.2",
+  "version": "0.21.6",
   "description": "Xata.io SDK for TypeScript and JavaScript",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -14,8 +14,8 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "prepack": "npm run build",
-    "prebuild": "node ../../scripts/add-version-file.mjs"
+    "tsc": "tsc --noEmit",
+    "add-version": "node ../../scripts/add-version-file.mjs"
   },
   "peerDependencies": {
     "typescript": ">=4.5"

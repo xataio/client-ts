@@ -4,7 +4,6 @@ import {
   getCurrentBranchName,
   getHostUrl,
   parseWorkspacesUrlParts,
-  Responses,
   Schemas,
   XataApiClient
 } from '@xata.io/client';
@@ -83,7 +82,7 @@ export abstract class BaseCommand extends Command {
 
   static databaseURLFlag = {
     db: Flags.string({
-      helpValue: 'https://{workspace}.xata.sh/db/{database}',
+      helpValue: 'https://{workspace}.{region}.xata.sh/db/{database}',
       description: 'URL of the database'
     })
   };
@@ -230,7 +229,7 @@ export abstract class BaseCommand extends Command {
       this.error('Could not instantiate Xata client. No API key found.', {
         suggestions: [
           'Run `xata auth login`',
-          'Configure a project with `xata init --db=https://{workspace}.xata.sh/db/{database}`'
+          'Configure a project with `xata init --db=https://{workspace}.{region}.xata.sh/db/{database}`'
         ]
       });
     }
@@ -481,26 +480,21 @@ export abstract class BaseCommand extends Command {
     const { databaseURL, source } = await this.getDatabaseURL(databaseURLFlag, allowCreate);
 
     const info = this.parseDatabaseURL(databaseURL);
-    return {
-      ...info,
-      source
-    };
+    return { ...info, source };
   }
 
   parseDatabaseURL(databaseURL: string) {
     const [protocol, , host, , database] = databaseURL.split('/');
     const urlParts = parseWorkspacesUrlParts(host);
-    if (!urlParts) throw new Error(`Unable to parse workspace and region: ${databaseURL}`);
+    if (!urlParts) {
+      throw new Error(
+        `Unable to parse workspace and region in ${databaseURL}. Please check your .xatarc file and re-run codegen before continuing. If don't know how to proceed, please contact us at support@xata.io.`
+      );
+    }
+
     const { workspace, region } = urlParts;
 
-    return {
-      databaseURL,
-      protocol,
-      host,
-      database,
-      workspace,
-      region
-    };
+    return { databaseURL, protocol, host, database, workspace, region };
   }
 
   async getParsedDatabaseURLWithBranch(databaseURLFlag?: string, branchFlag?: string, allowCreate?: boolean) {
@@ -592,7 +586,7 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  printMigration(migration: Responses.SchemaCompareResponse) {
+  printMigration(migration: { edits: Schemas.SchemaEditScript }) {
     for (const operation of migration.edits.operations) {
       if ('addTable' in operation) {
         this.log(` ${chalk.bgWhite.blue('CREATE table ')} ${operation.addTable.table}`);
@@ -609,7 +603,9 @@ export abstract class BaseCommand extends Command {
       }
 
       if ('addColumn' in operation) {
-        this.log(` ${chalk.bgWhite.blue('ADD column ')} ${operation.addColumn.table}.${operation.addColumn.column}`);
+        this.log(
+          ` ${chalk.bgWhite.blue('ADD column ')} ${operation.addColumn.table}.${operation.addColumn.column.name}`
+        );
       }
 
       if ('removeColumn' in operation) {
