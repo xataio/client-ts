@@ -31,7 +31,7 @@ export default class UploadSchema extends BaseCommand {
     const xata = await this.getXataClient();
 
     if (flags['create-only']) {
-      const { schema } = await xata.branches.getBranchDetails({ workspace, region, database, branch });
+      const { schema } = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
       if (schema.tables.length > 0) {
         this.info(
           'Schema already exists. `xata schema upload --init` will only initialize the schema if it does not already exist.'
@@ -45,7 +45,7 @@ export default class UploadSchema extends BaseCommand {
       this.error('Schema file does not contain a "tables" property');
     }
 
-    const { edits } = await xata.migrations.compareBranchWithUserSchema({
+    const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
       workspace,
       region,
       database,
@@ -69,6 +69,6 @@ export default class UploadSchema extends BaseCommand {
     });
     if (!confirm) return this.exit(1);
 
-    await xata.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits });
+    await xata.api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits });
   }
 }

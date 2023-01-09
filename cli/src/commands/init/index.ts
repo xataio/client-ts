@@ -302,7 +302,7 @@ export default class Init extends BaseCommand {
     let retries = 0;
     while (retries++ < maxRetries) {
       try {
-        await xata.branches.getBranchList({ workspace, region, database });
+        await xata.api.branches.getBranchList({ workspace, region, database });
         return;
       } catch (err) {
         if (err instanceof Error && err.message.includes('Invalid API key')) {

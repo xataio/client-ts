@@ -1,4 +1,4 @@
-import { ApiExtraProps, Schemas } from './api';
+import { ApiExtraProps, HostProvider, Schemas } from './api';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
@@ -15,6 +15,7 @@ import { generateUUID } from './util/uuid';
 
 export type BaseClientOptions = {
   fetch?: FetchImpl;
+  host?: HostProvider;
   apiKey?: string;
   databaseURL?: string;
   branch?: BranchStrategyOption;
@@ -99,6 +100,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
       const clientName = options?.clientName;
+      const host = options?.host ?? 'production';
+
       const branch = async () =>
         options?.branch !== undefined
           ? await this.#evaluateBranch(options.branch)
@@ -117,7 +120,18 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         throw new Error('Option databaseURL is required');
       }
 
-      return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID(), enableBrowser, clientName };
+      return {
+        fetch,
+        databaseURL,
+        apiKey,
+        branch,
+        cache,
+        trace,
+        host,
+        clientID: generateUUID(),
+        enableBrowser,
+        clientName
+      };
     }
 
     async #getFetchProps({
