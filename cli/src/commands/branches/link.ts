@@ -45,7 +45,13 @@ export default class BranchesCreate extends BaseCommand {
         this.error('Could not resolve the xata branch');
       }
 
-      const result = await xata.branches.addGitBranchesEntry({ workspace, region, database, gitBranch, xataBranch });
+      const result = await xata.api.branches.addGitBranchesEntry({
+        workspace,
+        region,
+        database,
+        gitBranch,
+        xataBranch
+      });
 
       if (this.jsonEnabled()) return result;
 

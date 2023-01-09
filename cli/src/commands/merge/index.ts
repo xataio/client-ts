@@ -18,9 +18,15 @@ export default class Merge extends BaseCommand {
 
     const { workspace, region, database, branch: current } = await this.getParsedDatabaseURLWithBranch();
     const xata = await this.getXataClient();
-    const currentBranchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch: current });
+    const currentBranchDetails = await xata.api.branches.getBranchDetails({
+      workspace,
+      region,
+      database,
+      branch: current
+    });
+
     if (!currentBranchDetails) return this.error('Could not resolve the current branch');
-    const otherBranchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
+    const otherBranchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
     if (!otherBranchDetails) return this.error(`Could not find branch ${branch}`);
 
     // This is a temporary solution. In the future the backend will provide and endpoint to do a smarter merge
