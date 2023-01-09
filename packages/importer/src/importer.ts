@@ -6,9 +6,9 @@ import { schemaToZod } from './zod';
 import { z } from 'zod';
 import { detectNewline, isObject } from './utils/lang';
 
-const DEFAULT_PARSE_SAMPLE_SIZE = 100;
-const DEFAULT_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x1F'];
-const DEFAULT_NULL_VALUES = [undefined, null, 'null', 'NULL', 'Null'];
+export const DEFAULT_PARSE_SAMPLE_SIZE = 100;
+export const DEFAULT_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x1F'];
+export const DEFAULT_NULL_VALUES = [undefined, null, 'null', 'NULL', 'Null'];
 
 export type ImporterOptions =
   | ImportCsvOptions
@@ -22,7 +22,7 @@ export type ImporterStrategy = ImporterOptions['strategy'];
 // TODO: Improve this type
 type File = any;
 
-interface ImportCommonOptions {
+export interface ImportCommonOptions {
   /**
    * The schema to use for importing data.
    * If not provided, the schema will be guessed from the data.
@@ -41,7 +41,7 @@ interface ImportCommonOptions {
   nullValues?: string[];
 }
 
-interface ImportCsvOptions extends ImportCommonOptions {
+export interface ImportCsvOptions extends ImportCommonOptions {
   /**
    * The strategy to use for importing data.
    */
@@ -102,7 +102,7 @@ interface ImportCsvOptions extends ImportCommonOptions {
   commentPrefix?: string;
 }
 
-interface ImportJsonOptions extends ImportCommonOptions {
+export interface ImportJsonOptions extends ImportCommonOptions {
   /**
    * The strategy to use for importing data.
    */
@@ -119,7 +119,7 @@ interface ImportJsonOptions extends ImportCommonOptions {
   data: string | unknown[] | Record<string, unknown>;
 }
 
-interface ImportFileOptions extends ImportCommonOptions {
+export interface ImportFileOptions extends ImportCommonOptions {
   /**
    * The strategy to use for importing data.
    */
@@ -131,7 +131,7 @@ interface ImportFileOptions extends ImportCommonOptions {
   files: File[];
 }
 
-interface ImportUrlOptions extends ImportCommonOptions {
+export interface ImportUrlOptions extends ImportCommonOptions {
   /**
    * The strategy to use for importing data.
    */
@@ -142,7 +142,7 @@ interface ImportUrlOptions extends ImportCommonOptions {
   urls: string[];
 }
 
-interface ImportNdJsonOptions extends ImportCommonOptions {
+export interface ImportNdJsonOptions extends ImportCommonOptions {
   /**
    * The strategy to use for importing data.
    */
@@ -162,7 +162,7 @@ interface ImportNdJsonOptions extends ImportCommonOptions {
   newline?: '\r' | '\n' | '\r\n';
 }
 
-type ParseResults =
+export type ParseResults =
   | {
       success: true;
       schema: Schemas.Schema;
@@ -187,15 +187,15 @@ export class Importer {
     }
   }
 
-  async import(options: ImporterOptions) {
+  async import(_options: ImporterOptions) {
     // noop
   }
 
-  async #readFile(options: ImportFileOptions): Promise<ParseResults> {
+  async #readFile(_options: ImportFileOptions): Promise<ParseResults> {
     return { success: true, schema: { tables: [] }, warnings: [], data: [] };
   }
 
-  async #readUrl(options: ImportUrlOptions): Promise<ParseResults> {
+  async #readUrl(_options: ImportUrlOptions): Promise<ParseResults> {
     return { success: true, schema: { tables: [] }, warnings: [], data: [] };
   }
 
