@@ -131,6 +131,20 @@ export type ListDatabasesResponse = {
 };
 
 /**
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type DBName = string;
+
+/**
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type BranchName = string;
+
+/**
  * @example {"repository":"github.com/my/repository","branch":"feature-login","stage":"testing","labels":["epic-100"]}
  * @x-go-type xata.BranchMetadata
  */
@@ -147,29 +161,15 @@ export type BranchMetadata = {
   labels?: string[];
 };
 
-/**
- * @maxLength 255
- * @minLength 1
- * @pattern [a-zA-Z0-9_\-~]+
- */
-export type BranchName = string;
-
-/**
- * @maxLength 255
- * @minLength 1
- * @pattern [a-zA-Z0-9_\-~]+
- */
-export type DBName = string;
-
 export type MigrationStatus = 'completed' | 'pending' | 'failed';
+
+export type Region = {
+  id: string;
+};
 
 export type ListRegionsResponse = {
   /**
    * A list of regions where databases can be created
    */
   regions: Region[];
-};
-
-export type Region = {
-  id: string;
 };
