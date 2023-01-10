@@ -3,11 +3,6 @@
  *
  * @version 1.0
  */
-export type SimpleError = {
-  id?: string;
-  message: string;
-};
-
 export type BadRequestError = {
   id?: string;
   message: string;
@@ -17,6 +12,11 @@ export type BadRequestError = {
  * @example {"message":"invalid API key"}
  */
 export type AuthError = {
+  id?: string;
+  message: string;
+};
+
+export type SimpleError = {
   id?: string;
   message: string;
 };
