@@ -3,7 +3,7 @@ name: Update dependencies
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 10 * * 1' # once every monday
+    - cron: '0 6 * * 1' # once every monday
 
 jobs:
   update-deps:
@@ -27,14 +27,14 @@ jobs:
           cache: 'pnpm'
 
       - name: Check for updates
-        uses: svr/command-output@v1
+        uses: mathiasvr/command-output@v1
         id: ncu
         with:
           run: npx -y npm-check-updates -u -t latest --deep --filterVersion "/^[^=]/"
 
       - name: Install new versions
         run: |
-          pnpm install
+          pnpm install --no-frozen-lockfile
           git add .
 
       - name: Create Pull Request
