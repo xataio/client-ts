@@ -5,32 +5,37 @@
  */
 import type * as Schemas from './dataPlaneSchemas';
 
-export type SimpleError = {
+export type BadRequestError = {
   id?: string;
   message: string;
 };
 
-export type BulkError = {
-  errors: {
-    message?: string;
-    status?: number;
-  }[];
+/**
+ * @example {"message":"invalid API key"}
+ */
+export type AuthError = {
+  id?: string;
+  message: string;
 };
 
-export type BulkInsertResponse =
-  | {
-      recordIDs: string[];
-    }
-  | {
-      records: Schemas.XataRecord[];
-    };
+export type SimpleError = {
+  id?: string;
+  message: string;
+};
 
 export type BranchMigrationPlan = {
   version: number;
   migration: Schemas.BranchMigration;
 };
 
-export type RecordResponse = Schemas.XataRecord;
+export type SchemaUpdateResponse = {
+  /**
+   * @minLength 1
+   */
+  migrationID: string;
+  parentMigrationID: string;
+  status: Schemas.MigrationStatus;
+};
 
 export type SchemaCompareResponse = {
   source: Schemas.Schema;
@@ -47,18 +52,31 @@ export type RecordUpdateResponse =
       };
     };
 
+export type RecordResponse = Schemas.XataRecord;
+
+export type BulkInsertResponse =
+  | {
+      recordIDs: string[];
+    }
+  | {
+      records: Schemas.XataRecord[];
+    };
+
+export type BulkError = {
+  errors: {
+    message?: string;
+    status?: number;
+  }[];
+};
+
 export type QueryResponse = {
   records: Schemas.XataRecord[];
   meta: Schemas.RecordsMetadata;
 };
 
-export type SchemaUpdateResponse = {
-  /**
-   * @minLength 1
-   */
-  migrationID: string;
-  parentMigrationID: string;
-  status: Schemas.MigrationStatus;
+export type SearchResponse = {
+  records: Schemas.XataRecord[];
+  warning?: string;
 };
 
 export type SummarizeResponse = {
@@ -72,22 +90,4 @@ export type AggResponse = {
   aggs?: {
     [key: string]: Schemas.AggResponse;
   };
-};
-
-export type SearchResponse = {
-  records: Schemas.XataRecord[];
-  warning?: string;
-};
-
-export type BadRequestError = {
-  id?: string;
-  message: string;
-};
-
-/**
- * @example {"message":"invalid API key"}
- */
-export type AuthError = {
-  id?: string;
-  message: string;
 };

@@ -19,13 +19,13 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@babel/core": "^7.20.7",
+    "@babel/core": "^7.20.12",
     "@babel/preset-react": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
     "@faker-js/faker": "^7.6.0",
-    "@oclif/core": "^1.23.1",
+    "@oclif/core": "^1.23.2",
     "@oclif/plugin-help": "^5",
-    "@oclif/plugin-not-found": "^2.3.13",
+    "@oclif/plugin-not-found": "^2.3.14",
     "@oclif/plugin-plugins": "^2.1.12",
     "@rollup/plugin-auto-install": "^3.0.2",
     "@rollup/plugin-commonjs": "^24.0.0",
