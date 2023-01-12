@@ -1542,7 +1542,7 @@ export class RestRepository<Record extends XataRecord>
     const schemaTables = await this.#getSchemaTables();
     const fetchProps = await this.#getFetchProps();
 
-    const allOperations = objects.map(({ id, ...object }) => {
+    const allOperations = objects.map((object) => {
       switch (transaction.operation) {
         case 'insert': {
           const { ifVersion, createOnly, columns } = transaction;
@@ -1552,15 +1552,16 @@ export class RestRepository<Record extends XataRecord>
         }
         case 'update': {
           const { ifVersion, upsert, columns } = transaction;
+          const { id, ...fields } = object;
 
           return {
-            update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(object), columns }
+            update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(fields), columns }
           };
         }
         case 'delete': {
           const { columns } = transaction;
 
-          return { delete: { table: this.#table, id, columns } };
+          return { delete: { table: this.#table, id: object.id, columns } };
         }
       }
     });
