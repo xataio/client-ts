@@ -185,171 +185,6 @@ export type BranchMigration = {
 };
 
 /**
- * Insert operation
- */
-export type TransactionInsertOp = {
-  /**
-   * The table name
-   */
-  table: string;
-  /**
-   * The record to insert. The `id` field is optional; when specified, it will be used as the ID for the record.
-   */
-  record: {
-    [key: string]: any;
-  };
-  /**
-   * The version of the record you expect to be overwriting. Only valid with an
-   * explicit ID is also set in the `record` key.
-   */
-  ifVersion?: number;
-  /**
-   * createOnly is used to change how Xata acts when an explicit ID is set in the `record` key.
-   *
-   * If `createOnly` is set to `true`, Xata will only attempt to insert the record. If there's a conflict, Xata
-   * will cancel the transaction.
-   *
-   * If `createOnly` is set to `false`, Xata will attempt to insert the record. If there's no
-   * conflict, the record is inserted. If there is a conflict, Xata will replace the record.
-   */
-  createOnly?: boolean;
-};
-
-/**
- * @pattern [a-zA-Z0-9_-~:]+
- */
-export type RecordID = string;
-
-/**
- * Update operation
- */
-export type TransactionUpdateOp = {
-  /**
-   * The table name
-   */
-  table: string;
-  id: RecordID;
-  /**
-   * The fields of the record you'd like to update
-   */
-  fields: {
-    [key: string]: any;
-  };
-  /**
-   * The version of the record you expect to be updating
-   */
-  ifVersion?: number;
-  /**
-   * Xata will insert this record if it cannot be found.
-   */
-  upsert?: boolean;
-};
-
-/**
- * A delete operation. The transaction will continue if no record matches the ID.
- */
-export type TransactionDeleteOp = {
-  /**
-   * The table name
-   */
-  table: string;
-  id: RecordID;
-};
-
-/**
- * A transaction operation
- */
-export type TransactionOperation =
-  | {
-      insert: TransactionInsertOp;
-    }
-  | {
-      update: TransactionUpdateOp;
-    }
-  | {
-      ['delete']: TransactionDeleteOp;
-    };
-
-/**
- * A result from an insert operation.
- */
-export type TransactionResultInsert = {
-  /**
-   * The type of operation who's result is being returned.
-   */
-  operation: 'insert';
-  /**
-   * The number of affected rows
-   */
-  rows: number;
-  id: RecordID;
-};
-
-/**
- * A result from an update operation.
- */
-export type TransactionResultUpdate = {
-  /**
-   * The type of operation who's result is being returned.
-   */
-  operation: 'update';
-  /**
-   * The number of updated rows
-   */
-  rows: number;
-  id: RecordID;
-};
-
-/**
- * A result from a delete operation.
- */
-export type TransactionResultDelete = {
-  /**
-   * The type of operation who's result is being returned.
-   */
-  operation: 'delete';
-  /**
-   * The number of deleted rows
-   */
-  rows: number;
-};
-
-/**
- * An ordered array of results from the submitted operations.
- */
-export type TransactionSuccess = {
-  results: (TransactionResultInsert | TransactionResultUpdate | TransactionResultDelete)[];
-};
-
-/**
- * An error message from a failing transaction operation
- */
-export type TransactionError = {
-  /**
-   * The index of the failing operation
-   */
-  index: number;
-  /**
-   * The error message
-   */
-  message: string;
-};
-
-/**
- * An array of errors, with indicides, from the transaction.
- */
-export type TransactionFailure = {
-  /**
-   * The request ID.
-   */
-  id: string;
-  /**
-   * An array of errors from the submitted operations.
-   */
-  errors: TransactionError[];
-};
-
-/**
  * @minProperties 1
  */
 export type FilterExpression = {
@@ -615,6 +450,171 @@ export type Migration = {
  * @pattern [a-zA-Z0-9_\-~\.]+
  */
 export type ColumnName = string;
+
+/**
+ * Insert operation
+ */
+export type TransactionInsertOp = {
+  /**
+   * The table name
+   */
+  table: string;
+  /**
+   * The record to insert. The `id` field is optional; when specified, it will be used as the ID for the record.
+   */
+  record: {
+    [key: string]: any;
+  };
+  /**
+   * The version of the record you expect to be overwriting. Only valid with an
+   * explicit ID is also set in the `record` key.
+   */
+  ifVersion?: number;
+  /**
+   * createOnly is used to change how Xata acts when an explicit ID is set in the `record` key.
+   *
+   * If `createOnly` is set to `true`, Xata will only attempt to insert the record. If there's a conflict, Xata
+   * will cancel the transaction.
+   *
+   * If `createOnly` is set to `false`, Xata will attempt to insert the record. If there's no
+   * conflict, the record is inserted. If there is a conflict, Xata will replace the record.
+   */
+  createOnly?: boolean;
+};
+
+/**
+ * @pattern [a-zA-Z0-9_-~:]+
+ */
+export type RecordID = string;
+
+/**
+ * Update operation
+ */
+export type TransactionUpdateOp = {
+  /**
+   * The table name
+   */
+  table: string;
+  id: RecordID;
+  /**
+   * The fields of the record you'd like to update
+   */
+  fields: {
+    [key: string]: any;
+  };
+  /**
+   * The version of the record you expect to be updating
+   */
+  ifVersion?: number;
+  /**
+   * Xata will insert this record if it cannot be found.
+   */
+  upsert?: boolean;
+};
+
+/**
+ * A delete operation. The transaction will continue if no record matches the ID.
+ */
+export type TransactionDeleteOp = {
+  /**
+   * The table name
+   */
+  table: string;
+  id: RecordID;
+};
+
+/**
+ * A transaction operation
+ */
+export type TransactionOperation =
+  | {
+      insert: TransactionInsertOp;
+    }
+  | {
+      update: TransactionUpdateOp;
+    }
+  | {
+      ['delete']: TransactionDeleteOp;
+    };
+
+/**
+ * A result from an insert operation.
+ */
+export type TransactionResultInsert = {
+  /**
+   * The type of operation who's result is being returned.
+   */
+  operation: 'insert';
+  /**
+   * The number of affected rows
+   */
+  rows: number;
+  id: RecordID;
+};
+
+/**
+ * A result from an update operation.
+ */
+export type TransactionResultUpdate = {
+  /**
+   * The type of operation who's result is being returned.
+   */
+  operation: 'update';
+  /**
+   * The number of updated rows
+   */
+  rows: number;
+  id: RecordID;
+};
+
+/**
+ * A result from a delete operation.
+ */
+export type TransactionResultDelete = {
+  /**
+   * The type of operation who's result is being returned.
+   */
+  operation: 'delete';
+  /**
+   * The number of deleted rows
+   */
+  rows: number;
+};
+
+/**
+ * An ordered array of results from the submitted operations.
+ */
+export type TransactionSuccess = {
+  results: (TransactionResultInsert | TransactionResultUpdate | TransactionResultDelete)[];
+};
+
+/**
+ * An error message from a failing transaction operation
+ */
+export type TransactionError = {
+  /**
+   * The index of the failing operation
+   */
+  index: number;
+  /**
+   * The error message
+   */
+  message: string;
+};
+
+/**
+ * An array of errors, with indicides, from the transaction.
+ */
+export type TransactionFailure = {
+  /**
+   * The request ID.
+   */
+  id: string;
+  /**
+   * An array of errors from the submitted operations.
+   */
+  errors: TransactionError[];
+};
 
 /**
  * Xata Table Record Metadata
