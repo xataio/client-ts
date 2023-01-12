@@ -213,6 +213,10 @@ export type TransactionInsertOp = {
    * conflict, the record is inserted. If there is a conflict, Xata will replace the record.
    */
   createOnly?: boolean;
+  /**
+   * If set, the call will return the requested fields as part of the response.
+   */
+  columns?: string[];
 };
 
 /**
@@ -243,6 +247,10 @@ export type TransactionUpdateOp = {
    * Xata will insert this record if it cannot be found.
    */
   upsert?: boolean;
+  /**
+   * If set, the call will return the requested fields as part of the response.
+   */
+  columns?: string[];
 };
 
 /**
@@ -254,6 +262,10 @@ export type TransactionDeleteOp = {
    */
   table: string;
   id: RecordID;
+  /**
+   * If set, the call will return the requested fields as part of the response.
+   */
+  columns?: string[];
 };
 
 /**
@@ -271,6 +283,18 @@ export type TransactionOperation =
     };
 
 /**
+ * Fields to return in the transaction result.
+ */
+export type TransactionResultFields = {
+  id: RecordID;
+  xata: {
+    version: number;
+  };
+} & {
+  [key: string]: any;
+};
+
+/**
  * A result from an insert operation.
  */
 export type TransactionResultInsert = {
@@ -283,6 +307,7 @@ export type TransactionResultInsert = {
    */
   rows: number;
   id: RecordID;
+  fields?: TransactionResultFields;
 };
 
 /**
@@ -298,6 +323,7 @@ export type TransactionResultUpdate = {
    */
   rows: number;
   id: RecordID;
+  fields?: TransactionResultFields;
 };
 
 /**
@@ -312,6 +338,7 @@ export type TransactionResultDelete = {
    * The number of deleted rows
    */
   rows: number;
+  fields?: TransactionResultFields;
 };
 
 /**
