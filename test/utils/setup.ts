@@ -27,7 +27,7 @@ if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is no
 
 const region = process.env.XATA_REGION || 'eu-west-1';
 
-const host = parseProviderString(process.env.XATA_API_PROVIDER);
+const host = parseProviderString(process.env.XATA_API_PROVIDER) ?? 'production';
 
 export type EnvironmentOptions = {
   cache?: CacheImpl;

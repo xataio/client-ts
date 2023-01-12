@@ -132,7 +132,7 @@ export async function fetch<
 
       // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
       // So, instead, we use localhost without subdomains, but will add a Host header
-      const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\./, 'http://') : fullUrl;
+      const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\.[^.]+\./, 'http://') : fullUrl;
       setAttributes({
         [TraceAttributes.HTTP_URL]: url,
         [TraceAttributes.HTTP_TARGET]: resolveUrl(path, queryParams, pathParams)
