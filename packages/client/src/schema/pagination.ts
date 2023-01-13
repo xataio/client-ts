@@ -134,8 +134,12 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
     return new Array(...this);
   }
 
-  toJSON(): JSONData<Result>[] {
-    return JSON.parse(JSON.stringify(this.toArray()));
+  toObject(): JSONData<Result>[] {
+    return JSON.parse(this.toString());
+  }
+
+  toString(): string {
+    return JSON.stringify(this.toArray());
   }
 
   map<U>(callbackfn: (value: Result, index: number, array: Result[]) => U, thisArg?: any): U[] {
