@@ -719,49 +719,6 @@ export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlan
     ExecuteBranchMigrationPlanPathParams
   >({ url: '/db/{dbBranchName}/migrations/execute', method: 'post', ...variables, signal });
 
-export type BranchTransactionPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-  region: string;
-};
-
-export type BranchTransactionError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Schemas.TransactionFailure;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type BranchTransactionRequestBody = {
-  operations: Schemas.TransactionOperation[];
-};
-
-export type BranchTransactionVariables = {
-  body: BranchTransactionRequestBody;
-  pathParams: BranchTransactionPathParams;
-} & DataPlaneFetcherExtraProps;
-
-export const branchTransaction = (variables: BranchTransactionVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<
-    Schemas.TransactionSuccess,
-    BranchTransactionError,
-    BranchTransactionRequestBody,
-    {},
-    {},
-    BranchTransactionPathParams
-  >({ url: '/db/{dbBranchName}/transaction', method: 'post', ...variables, signal });
-
 export type QueryMigrationRequestsPathParams = {
   /**
    * The Database Name
@@ -1967,6 +1924,49 @@ export const deleteColumn = (variables: DeleteColumnVariables, signal?: AbortSig
     ...variables,
     signal
   });
+
+export type BranchTransactionPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type BranchTransactionError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Schemas.TransactionFailure;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type BranchTransactionRequestBody = {
+  operations: Schemas.TransactionOperation[];
+};
+
+export type BranchTransactionVariables = {
+  body: BranchTransactionRequestBody;
+  pathParams: BranchTransactionPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const branchTransaction = (variables: BranchTransactionVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.TransactionSuccess,
+    BranchTransactionError,
+    BranchTransactionRequestBody,
+    {},
+    {},
+    BranchTransactionPathParams
+  >({ url: '/db/{dbBranchName}/transaction', method: 'post', ...variables, signal });
 
 export type InsertRecordPathParams = {
   /**
@@ -3534,16 +3534,6 @@ export const operationsByTag = {
     previewBranchSchemaEdit,
     applyBranchSchemaEdit
   },
-  records: {
-    branchTransaction,
-    insertRecord,
-    getRecord,
-    insertRecordWithID,
-    updateRecordWithID,
-    upsertRecordWithID,
-    deleteRecord,
-    bulkInsertTableRecords
-  },
   migrationRequests: {
     queryMigrationRequests,
     createMigrationRequest,
@@ -3565,6 +3555,16 @@ export const operationsByTag = {
     getColumn,
     updateColumn,
     deleteColumn
+  },
+  records: {
+    branchTransaction,
+    insertRecord,
+    getRecord,
+    insertRecordWithID,
+    updateRecordWithID,
+    upsertRecordWithID,
+    deleteRecord,
+    bulkInsertTableRecords
   },
   searchAndFilter: { queryTable, searchBranch, searchTable, summarizeTable, aggregateTable }
 };
