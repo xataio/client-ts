@@ -16,7 +16,8 @@ const tests: Test[] = [
   { file: 'sample-1.csv', strategy: 'csv' },
   { file: 'sample-2.csv', strategy: 'csv' },
   { file: 'sample-3.csv', strategy: 'csv' },
-  { file: 'sample-4.tsv', strategy: 'csv' }
+  { file: 'sample-4.tsv', strategy: 'csv' },
+  { file: 'sample-5.csv', strategy: 'csv' }
 ];
 
 for (const { encoding, file, strategy } of tests) {
