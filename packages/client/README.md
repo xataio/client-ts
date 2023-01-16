@@ -1,6 +1,13 @@
 # Xata SDK for TypeScript and JavaScript
 
-This SDK has zero dependencies, so it can be used in many JavaScript runtimes including Node.js, Cloudflare workers, Deno, Electron, etc. It also works in browsers for the same reason. But this is strongly discouraged because you can easily leak your API keys from browsers.
+The Xata SDK supports typescript definitions for your Xata database schema. It also works with JavaScript.
+
+It has zero dependencies and runs in Node.js, V8, Deno and Bun.
+
+## Installation
+
+See our [docs](https://xata.io/docs/sdk/typescript#installation) to get started using the Xata SDK.
+
 
 ## Table of Contents
 
@@ -22,7 +29,7 @@ This SDK has zero dependencies, so it can be used in many JavaScript runtimes in
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Installation
+## Manual Installation
 
 ```bash
 npm install @xata.io/client
