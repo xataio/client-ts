@@ -2,4 +2,4 @@
 '@xata.io/client': patch
 ---
 
-Add helper methods `toSerialized` and `toString`
+Add helper methods `toSerializable` and `toString`

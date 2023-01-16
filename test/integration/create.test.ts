@@ -36,7 +36,7 @@ describe('record creation', () => {
     expect(user.getMetadata).toBeDefined();
     expect(user.birthDate).toBeInstanceOf(Date);
 
-    const json = user.toSerialized();
+    const json = user.toSerializable();
 
     expect(json.id).toBeDefined();
     expect(json.name).toBe('User ships');
@@ -60,7 +60,7 @@ describe('record creation', () => {
     expect(user.team?.read).toBeDefined();
     expect(user.team?.getMetadata).toBeDefined();
 
-    const json = user.toSerialized();
+    const json = user.toSerializable();
 
     expect(json.id).toBeDefined();
     expect(json.name).toBe('User ships');

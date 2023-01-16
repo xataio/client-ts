@@ -134,7 +134,7 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
     return new Array(...this);
   }
 
-  toSerialized(): JSONData<Result>[] {
+  toSerializable(): JSONData<Result>[] {
     return JSON.parse(this.toString());
   }
 
