@@ -1932,7 +1932,7 @@ export const initObject = <T>(
     return xata;
   };
 
-  record.toObject = function () {
+  record.toSerialized = function () {
     return JSON.parse(JSON.stringify(transformObjectLinks(data)));
   };
 
@@ -1940,7 +1940,7 @@ export const initObject = <T>(
     return JSON.stringify(transformObjectLinks(data));
   };
 
-  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toObject', 'toString']) {
+  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerialized', 'toString']) {
     Object.defineProperty(record, prop, { enumerable: false });
   }
 

@@ -27,7 +27,7 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
   /**
    * Get an object representation of this record.
    */
-  toObject(): JSONData<OriginalRecord>;
+  toSerialized(): JSONData<OriginalRecord>;
 
   /**
    * Get a string representation of this record.
