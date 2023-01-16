@@ -37,7 +37,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🚦 Install TypeScript ${{ matrix.target }}
-        run: pnpm add typescript@${{ matrix.target }}
+        run: pnpm add --workspace-root typescript@${{ matrix.target }}
 
       - name: 👷🏻‍♀️ Compile
         run: pnpm build
