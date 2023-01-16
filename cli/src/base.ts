@@ -49,6 +49,9 @@ export const projectConfigSchema = z.object({
       'esnext'
     ]),
     workersBuildId: z.string().optional()
+  }),
+  experimental: z.object({
+    incrementalBuild: z.boolean()
   })
 });
 
