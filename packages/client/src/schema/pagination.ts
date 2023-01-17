@@ -1,6 +1,6 @@
 import { isDefined, isObject } from '../util/lang';
 import { Query } from './query';
-import { XataRecord } from './record';
+import { JSONData, XataRecord } from './record';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
 
@@ -132,6 +132,14 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
 
   toArray(): Result[] {
     return new Array(...this);
+  }
+
+  toSerializable(): JSONData<Result>[] {
+    return JSON.parse(this.toString());
+  }
+
+  toString(): string {
+    return JSON.stringify(this.toArray());
   }
 
   map<U>(callbackfn: (value: Result, index: number, array: Result[]) => U, thisArg?: any): U[] {
