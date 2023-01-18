@@ -17,6 +17,10 @@ export default class Upload extends BaseCommand {
     }),
     ignore: Flags.string({
       description: 'Exclude a glob pattern of files to compile'
+    }),
+    env: Flags.string({
+      description: 'Variables to include as secrets',
+      multiple: true
     })
   };
 
@@ -29,9 +33,12 @@ export default class Upload extends BaseCommand {
 
     const { workspace, region, database, databaseURL } = await this.getParsedDatabaseURL(flags.db);
 
-    // TODO: Ask which local environment variables to include
-    // TODO: Read and parse local environment variables to include as secrets
-    const environment = {};
+    const environment =
+      flags.env?.reduce((acc, env) => {
+        const value = process.env[env];
+        if (value) acc[env] = value;
+        return acc;
+      }, {} as Record<string, string>) ?? {};
 
     const { watcher } = buildWatcher({
       compile: (path) => compileWorkers(path),
