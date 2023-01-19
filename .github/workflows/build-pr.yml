@@ -92,7 +92,6 @@ jobs:
         if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cat << EOF > .changeset/force-canary-build.md
           ---
