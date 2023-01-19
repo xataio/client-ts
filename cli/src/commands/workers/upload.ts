@@ -38,12 +38,15 @@ export default class Upload extends BaseCommand {
 
     const { workspace, region, database, databaseURL } = await this.getParsedDatabaseURL(flags.db);
 
-    const environment =
-      flags['include-env-var']?.reduce((acc, env) => {
+    const { ['include-env-var']: includeEnvVar = [] } = flags;
+    const environment = {
+      ...dotenv.parse(flags.env ? await readFile(flags.env).catch(() => '') : ''),
+      ...includeEnvVar.reduce((acc, env) => {
         const value = process.env[env];
         if (value) acc[env] = value;
         return acc;
-      }, {} as Record<string, string>) ?? dotenv.parse(flags.env ? await readFile(flags.env).catch(() => '') : '');
+      }, {} as Record<string, string>)
+    };
 
     const { watcher } = buildWatcher({
       compile: (path) => compileWorkers(path),

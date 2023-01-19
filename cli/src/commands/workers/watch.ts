@@ -33,12 +33,15 @@ export default class WorkersCompile extends BaseCommand {
     const { databaseURL } = await this.getDatabaseURL(flags.db);
     const { apiKey } = (await this.getProfile()) ?? {};
 
-    const environment =
-      flags['include-env-var']?.reduce((acc, env) => {
+    const { ['include-env-var']: includeEnvVar = [] } = flags;
+    const environment = {
+      ...dotenv.parse(flags.env ? await readFile(flags.env).catch(() => '') : ''),
+      ...includeEnvVar.reduce((acc, env) => {
         const value = process.env[env];
         if (value) acc[env] = value;
         return acc;
-      }, {} as Record<string, string>) ?? dotenv.parse(flags.env ? await readFile(flags.env).catch(() => '') : '');
+      }, {} as Record<string, string>)
+    };
 
     buildWatcher({
       compile: async (path) => {
