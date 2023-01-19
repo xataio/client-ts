@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers, workerScriptSchema } from '../../workers.js';
 import Codegen from '../codegen/index.js';
+import dotenv from 'dotenv';
+import { readFile } from 'fs/promises';
 
 const UPLOAD_ENDPOINT = 'https://app.xata.io/api/workers';
 
@@ -18,9 +20,12 @@ export default class Upload extends BaseCommand {
     ignore: Flags.string({
       description: 'Exclude a glob pattern of files to compile'
     }),
-    env: Flags.string({
+    'include-env-var': Flags.string({
       description: 'Variables to include as secrets',
       multiple: true
+    }),
+    env: Flags.string({
+      description: 'File to include environment variables from'
     })
   };
 
@@ -34,11 +39,11 @@ export default class Upload extends BaseCommand {
     const { workspace, region, database, databaseURL } = await this.getParsedDatabaseURL(flags.db);
 
     const environment =
-      flags.env?.reduce((acc, env) => {
+      flags['include-env-var']?.reduce((acc, env) => {
         const value = process.env[env];
         if (value) acc[env] = value;
         return acc;
-      }, {} as Record<string, string>) ?? {};
+      }, {} as Record<string, string>) ?? dotenv.parse(flags.env ? await readFile(flags.env).catch(() => '') : '');
 
     const { watcher } = buildWatcher({
       compile: (path) => compileWorkers(path),

@@ -2,6 +2,8 @@ import { Flags } from '@oclif/core';
 import { Log, LogLevel, Miniflare } from 'miniflare';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers } from '../../workers.js';
+import dotenv from 'dotenv';
+import { readFile } from 'fs/promises';
 
 export default class WorkersCompile extends BaseCommand {
   static description = 'Extract and compile xata workers';
@@ -13,6 +15,13 @@ export default class WorkersCompile extends BaseCommand {
     }),
     ignore: Flags.string({
       description: 'Exclude a glob pattern of files to compile'
+    }),
+    'include-env-var': Flags.string({
+      description: 'Variables to include as secrets',
+      multiple: true
+    }),
+    env: Flags.string({
+      description: 'File to include environment variables from'
     })
   };
 
@@ -23,6 +32,13 @@ export default class WorkersCompile extends BaseCommand {
 
     const { databaseURL } = await this.getDatabaseURL(flags.db);
     const { apiKey } = (await this.getProfile()) ?? {};
+
+    const environment =
+      flags['include-env-var']?.reduce((acc, env) => {
+        const value = process.env[env];
+        if (value) acc[env] = value;
+        return acc;
+      }, {} as Record<string, string>) ?? dotenv.parse(flags.env ? await readFile(flags.env).catch(() => '') : '');
 
     buildWatcher({
       compile: async (path) => {
@@ -36,7 +52,8 @@ export default class WorkersCompile extends BaseCommand {
             script: modules.find(({ name }) => name === main)?.content ?? modules[0].content,
             bindings: {
               XATA_API_KEY: apiKey,
-              XATA_DATABASE_URL: databaseURL
+              XATA_DATABASE_URL: databaseURL,
+              ...environment
             },
             routes: [`http://localhost:${watchPort}/${name}`]
           }
