@@ -8,7 +8,6 @@ import {
   Schemas,
   XataApiPlugin
 } from '@xata.io/client';
-import { XataImportPlugin } from '@xata.io/importer';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
@@ -33,8 +32,7 @@ import {
 import { reportBugURL } from './utils.js';
 
 class XataClient extends buildClient({
-  api: new XataApiPlugin(),
-  import: new XataImportPlugin()
+  api: new XataApiPlugin()
 }) {}
 
 export const projectConfigSchema = z.object({
