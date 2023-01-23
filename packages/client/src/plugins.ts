@@ -7,7 +7,7 @@ export abstract class XataPlugin {
 }
 
 export type XataPluginOptions = {
-  getFetchProps: () => Promise<ApiExtraProps>;
-  cache: CacheImpl;
+  getFetchProps: () => ApiExtraProps;
+  cache?: CacheImpl;
   trace?: TraceFunction;
 };

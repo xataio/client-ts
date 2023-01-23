@@ -1,13 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import {
-  buildClient,
-  getAPIKey,
-  getCurrentBranchName,
-  getHostUrl,
-  parseWorkspacesUrlParts,
-  Schemas,
-  XataApiPlugin
-} from '@xata.io/client';
+import { buildClient, getAPIKey, getHostUrl, parseWorkspacesUrlParts, Schemas, XataApiPlugin } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
@@ -239,7 +231,10 @@ export abstract class BaseCommand extends Command {
       });
     }
 
-    this.#xataClient = new XataClient({ apiKey, fetch, host, clientName: 'cli' });
+    const databaseURL = 'https://noop-workspace.cli.xata.sh/db/demo';
+    const branch = 'main';
+
+    this.#xataClient = new XataClient({ apiKey, fetch, host, databaseURL, branch, clientName: 'cli' });
     return this.#xataClient;
   }
 
@@ -520,14 +515,9 @@ export abstract class BaseCommand extends Command {
     return { ...info, branch };
   }
 
-  async getCurrentBranchName(databaseURL: string) {
-    const profile = await this.getProfile();
-    return getCurrentBranchName({
-      fetchImpl: fetch,
-      databaseURL,
-      apiKey: profile?.apiKey ?? undefined,
-      clientName: 'cli'
-    });
+  async getCurrentBranchName(_databaseURL: string) {
+    // TODO: FIXME: Get real branch name
+    return 'main';
   }
 
   async updateConfig() {

@@ -1,5 +1,5 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
-import { getAPIKey } from '../util/apiKey';
+import { getAPIKey } from '../util/environment';
 import { FetchImpl, getFetchImplementation } from '../util/fetch';
 import { generateUUID } from '../util/uuid';
 import type * as Components from './components';

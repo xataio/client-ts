@@ -1,5 +1,5 @@
 export type BranchStrategyValue = string | undefined | null;
-export type BranchStrategyBuilder = () => BranchStrategyValue | Promise<BranchStrategyValue>;
+export type BranchStrategyBuilder = () => BranchStrategyValue;
 export type BranchStrategy = BranchStrategyValue | BranchStrategyBuilder;
 export type BranchStrategyOption = NonNullable<BranchStrategy | BranchStrategy[]>;
 

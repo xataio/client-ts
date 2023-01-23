@@ -13,6 +13,5 @@ export * from './client';
 export * from './schema';
 export * from './search';
 export * from './serializer';
-export * from './util/config';
-export * from './util/apiKey';
+export { getAPIKey, getDatabaseURL } from './util/environment';
 export * from './workers';

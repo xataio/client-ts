@@ -112,39 +112,20 @@ function getGlobalFallbackBranch(): string | undefined {
   }
 }
 
-export async function getGitBranch(): Promise<string | undefined> {
-  const cmd = ['git', 'branch', '--show-current'];
-  const fullCmd = cmd.join(' ');
-
-  // Avoid "Detected a Node builtin module import while Node compatibility is disabled" in CloudFlare Workers
-  const nodeModule = ['child', 'process'].join('_');
-
-  const execOptions = { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] };
-
-  // Node.js: child_process.execSync
+export function getDatabaseURL() {
   try {
-    /* REMOVE_ESM_BUNDLE_START */
-    if (typeof require === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      return require(nodeModule).execSync(fullCmd, execOptions).trim();
-    }
-    /* REMOVE_ESM_BUNDLE_END */
-
-    /* REMOVE_CJS_BUNDLE_START */
-    const { execSync } = await import(nodeModule);
-    return execSync(fullCmd, execOptions).toString().trim();
-    /* REMOVE_CJS_BUNDLE_END */
+    const { databaseURL } = getEnvironment();
+    return databaseURL;
   } catch (err) {
-    // Ignore
+    return undefined;
   }
+}
 
-  // Deno: Deno.run
+export function getAPIKey() {
   try {
-    if (isObject(Deno)) {
-      const process = Deno.run({ cmd, stdout: 'piped', stderr: 'null' });
-      return new TextDecoder().decode(await process.output()).trim();
-    }
+    const { apiKey } = getEnvironment();
+    return apiKey;
   } catch (err) {
-    // Ignore: Will fail if not using --allow-run
+    return undefined;
   }
 }
