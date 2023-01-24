@@ -41,5 +41,6 @@ export default class Pull extends BaseCommand {
 
     this.log(`Found ${logs.length} migrations in ${branch}`);
     this.log(`Meta: ${JSON.stringify(meta, null, 2)}`);
+    this.log(`Logs: ${JSON.stringify(logs, null, 2)}`);
   }
 }
