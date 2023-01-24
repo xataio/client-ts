@@ -20,8 +20,8 @@ export function parseTablesFromCodegen(
   // TODO: FIXME
   const tables =
     sourceFile.getVariableDeclaration('tables')?.getInitializer()?.getText()?.replace('as const', '') ?? '[]';
-  console.log(tables);
   const result = xataDatabaseSchema.safeParse(`{ tables: ${tables} }`);
+  console.log(result);
 
   return result.success ? result.data.tables : null;
 }
