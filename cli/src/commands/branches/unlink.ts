@@ -36,7 +36,7 @@ export default class BranchesCreate extends BaseCommand {
         this.error('Could not resolve the current git branch');
       }
 
-      const result = await xata.branches.removeGitBranchesEntry({ workspace, region, database, gitBranch });
+      const result = await xata.api.branches.removeGitBranchesEntry({ workspace, region, database, gitBranch });
 
       if (this.jsonEnabled()) return result;
 

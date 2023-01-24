@@ -25,7 +25,7 @@ export default class DatabasesList extends BaseCommand {
       (await this.getWorkspace());
 
     const xata = await this.getXataClient();
-    const { databases: dbs = [] } = await xata.database.getDatabaseList({ workspace });
+    const { databases: dbs = [] } = await xata.api.database.getDatabaseList({ workspace });
 
     if (this.jsonEnabled()) return dbs;
 

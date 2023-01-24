@@ -14,8 +14,8 @@ export type { Responses, Schemas };
 export { FetcherError } from './errors';
 
 export class XataApiPlugin implements XataPlugin {
-  async build(options: XataPluginOptions) {
-    const { fetchImpl, apiKey } = await options.getFetchProps();
+  build(options: XataPluginOptions) {
+    const { fetchImpl, apiKey } = options.getFetchProps();
     return new XataApiClient({ fetch: fetchImpl, apiKey });
   }
 }

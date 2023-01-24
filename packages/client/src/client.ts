@@ -1,20 +1,19 @@
-import { ApiExtraProps, Schemas } from './api';
+import { ApiExtraProps, HostProvider, Schemas } from './api';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
 import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { TransactionPlugin, TransactionPluginResult } from './transaction';
-import { getAPIKey } from './util/apiKey';
 import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
-import { getCurrentBranchName, getDatabaseURL } from './util/config';
-import { getEnableBrowserVariable } from './util/environment';
+import { getAPIKey, getDatabaseURL, getEnableBrowserVariable } from './util/environment';
 import { FetchImpl, getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
 
 export type BaseClientOptions = {
   fetch?: FetchImpl;
+  host?: HostProvider;
   apiKey?: string;
   databaseURL?: string;
   branch?: BranchStrategyOption;
@@ -25,7 +24,7 @@ export type BaseClientOptions = {
 };
 
 type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch' | 'clientName'>> & {
-  branch: () => Promise<string | undefined>;
+  branch?: string;
   clientID: string;
   clientName?: string;
 };
@@ -61,23 +60,15 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       for (const [key, namespace] of Object.entries(plugins ?? {})) {
         if (namespace === undefined) continue;
-        const result = namespace.build(pluginOptions);
 
-        if (result instanceof Promise) {
-          void result.then((namespace: unknown) => {
-            // @ts-ignore
-            this[key] = namespace;
-          });
-        } else {
-          // @ts-ignore
-          this[key] = result;
-        }
+        // @ts-ignore
+        this[key] = namespace.build(pluginOptions);
       }
     }
 
     public async getConfig() {
       const databaseURL = this.#options.databaseURL;
-      const branch = await this.#options.branch();
+      const branch = this.#options.branch;
 
       return { databaseURL, branch };
     }
@@ -99,15 +90,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
       const clientName = options?.clientName;
-      const branch = async () =>
-        options?.branch !== undefined
-          ? await this.#evaluateBranch(options.branch)
-          : await getCurrentBranchName({
-              apiKey,
-              databaseURL,
-              fetchImpl: options?.fetch,
-              clientName: options?.clientName
-            });
+      const host = options?.host ?? 'production';
+
+      // We default to main if the user didn't pass a branch
+      const branch = options?.branch !== undefined ? this.#evaluateBranch(options.branch) : 'main';
 
       if (!apiKey) {
         throw new Error('Option apiKey is required');
@@ -117,19 +103,22 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         throw new Error('Option databaseURL is required');
       }
 
-      return { fetch, databaseURL, apiKey, branch, cache, trace, clientID: generateUUID(), enableBrowser, clientName };
+      return {
+        fetch,
+        databaseURL,
+        apiKey,
+        branch,
+        cache,
+        trace,
+        host,
+        clientID: generateUUID(),
+        enableBrowser,
+        clientName
+      };
     }
 
-    async #getFetchProps({
-      fetch,
-      apiKey,
-      databaseURL,
-      branch,
-      trace,
-      clientID,
-      clientName
-    }: SafeOptions): Promise<ApiExtraProps> {
-      const branchValue = await this.#evaluateBranch(branch);
+    #getFetchProps({ fetch, apiKey, databaseURL, branch, trace, clientID, clientName }: SafeOptions): ApiExtraProps {
+      const branchValue = this.#evaluateBranch(branch);
       if (!branchValue) throw new Error('Unable to resolve branch value');
 
       return {
@@ -148,18 +137,18 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       };
     }
 
-    async #evaluateBranch(param?: BranchStrategyOption): Promise<string | undefined> {
+    #evaluateBranch(param?: BranchStrategyOption): string | undefined {
       if (this.#branch) return this.#branch;
       if (param === undefined) return undefined;
 
       const strategies = Array.isArray(param) ? [...param] : [param];
 
-      const evaluateBranch = async (strategy: BranchStrategy) => {
-        return isBranchStrategyBuilder(strategy) ? await strategy() : strategy;
+      const evaluateBranch = (strategy: BranchStrategy) => {
+        return isBranchStrategyBuilder(strategy) ? strategy() : strategy;
       };
 
-      for await (const strategy of strategies) {
-        const branch = await evaluateBranch(strategy);
+      for (const strategy of strategies) {
+        const branch = evaluateBranch(strategy);
         if (branch) {
           this.#branch = branch;
           return branch;

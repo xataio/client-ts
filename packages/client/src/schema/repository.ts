@@ -759,7 +759,7 @@ export class RestRepository<Record extends XataRecord>
   #table: string;
   #getFetchProps: () => Promise<ApiExtraProps>;
   #db: SchemaPluginResult<any>;
-  #cache: CacheImpl;
+  #cache?: CacheImpl;
   #schemaTables?: Schemas.Table[];
   #trace: TraceFunction;
 
@@ -1795,17 +1795,18 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #setCacheQuery(query: Query<Record, XataRecord>, meta: RecordsMetadata, records: XataRecord[]): Promise<void> {
-    await this.#cache.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
+    await this.#cache?.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
   }
 
   async #getCacheQuery<T extends XataRecord>(
     query: Query<Record, XataRecord>
   ): Promise<{ meta: RecordsMetadata; records: T[] } | null> {
     const key = `query_${this.#table}:${query.key()}`;
-    const result = await this.#cache.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
+    const result = await this.#cache?.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
     if (!result) return null;
 
-    const { cache: ttl = this.#cache.defaultQueryTTL } = query.getQueryOptions();
+    const defaultTTL = this.#cache?.defaultQueryTTL ?? -1;
+    const { cache: ttl = defaultTTL } = query.getQueryOptions();
     if (ttl < 0) return null;
 
     const hasExpired = result.date.getTime() + ttl < Date.now();

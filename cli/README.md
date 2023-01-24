@@ -13,7 +13,7 @@ Our CLI is distributed as an **[npm](https://www.npmjs.com/package/@xata.io/cli)
 To install the Xata CLI globally, run the following command:
 
 ```sh
-npm i --location=global @xata.io/cli
+npm i -g @xata.io/cli
 ```
 
 This will install the Xata CLI. We recommend installing it globally because it becomes much more convenient to work with: you can invoke a `xata` command from anywhere, instead of the more convoluted variant with a project-scoped installation (`npm run xata`), or an npx-based installation (`npx @xata.io/cli`). These alternative approaches also work according to your preference, but we recommend a global installation.
