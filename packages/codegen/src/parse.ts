@@ -17,7 +17,7 @@ export function parseTablesFromCodegen(
 
   const sourceFile = project.createSourceFile('xata.ts', content);
 
-  const source = sourceFile.getVariableDeclaration('tables')?.getText() ?? '[]';
+  const source = sourceFile.getVariableDeclaration('tables')?.getInitializer()?.getText() ?? '[]';
   console.log(source);
   const tables = JSON.parse(source);
   const result = xataDatabaseSchema.safeParse({ tables });
