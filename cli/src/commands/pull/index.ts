@@ -36,7 +36,7 @@ export default class Pull extends BaseCommand {
       region,
       database,
       branch,
-      page: { before: 'end', size: 200 }
+      page: { size: 200 }
     });
 
     this.log(`Found ${logs.length} migrations in ${branch}`);
