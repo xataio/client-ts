@@ -22,7 +22,6 @@ export function parseTablesFromCodegen(
   const tables =
     sourceFile.getVariableDeclaration('tables')?.getInitializer()?.getText()?.replace('as const', '') ?? '[]';
   const result = xataDatabaseSchema.safeParse(JSON5.parse(`{ tables: ${tables} }`));
-  console.log(result);
 
   return result.success ? result.data.tables : null;
 }

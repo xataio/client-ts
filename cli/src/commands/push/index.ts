@@ -55,12 +55,9 @@ export default class Push extends BaseCommand {
       schema: { tables }
     });
 
-    if (dryRun) {
-      this.log(`Would have pushed ${edits.operations.length} migrations to ${branch}`);
-      this.log(`Edits: ${JSON.stringify(edits, null, 2)}`);
-      this.log(`Source: ${JSON.stringify(source, null, 2)}`);
-      this.log(`Target: ${JSON.stringify(target, null, 2)}`);
-      return;
-    }
+    this.log(`Would have pushed ${edits.operations.length} migrations to ${branch}`);
+    this.log(`Edits: ${JSON.stringify(edits, null, 2)}`);
+    this.log(`Source: ${JSON.stringify(source, null, 2)}`);
+    this.log(`Target: ${JSON.stringify(target, null, 2)}`);
   }
 }
