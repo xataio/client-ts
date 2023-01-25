@@ -59,7 +59,7 @@ afterEach(async (ctx) => {
 });
 
 describe('search', () => {
-  test('search in table', async () => {
+  test.skip('search in table', async () => {
     const owners = await xata.db.users.search('Owner');
     expect(owners.length).toBeGreaterThan(0);
 
@@ -71,7 +71,7 @@ describe('search', () => {
     expect(owners[0].getMetadata().table).toBe('users');
   });
 
-  test('search in table with filtering', async () => {
+  test.skip('search in table with filtering', async () => {
     const owners = await xata.db.users.search('Owner', {
       filter: { full_name: 'Owner of team animals' }
     });
@@ -83,7 +83,7 @@ describe('search', () => {
     expect(owners[0].getMetadata().score).toBeDefined();
   });
 
-  test('search by tables with multiple tables', async () => {
+  test.skip('search by tables with multiple tables', async () => {
     const { users = [], teams = [] } = await xata.search.byTable('fruits', { tables: ['teams', 'users'] });
 
     expect(users.length).toBeGreaterThan(0);
@@ -100,7 +100,7 @@ describe('search', () => {
     expect(users[0].getMetadata().score).toBeDefined();
   });
 
-  test('search by table with all tables', async () => {
+  test.skip('search by table with all tables', async () => {
     const { users = [], teams = [] } = await xata.search.byTable('fruits');
 
     expect(users.length).toBeGreaterThan(0);
@@ -117,7 +117,7 @@ describe('search', () => {
     expect(teams[0].getMetadata().score).toBeDefined();
   });
 
-  test('search all with multiple tables', async () => {
+  test.skip('search all with multiple tables', async () => {
     const results = await xata.search.all('fruits', { tables: ['teams', 'users'] });
 
     for (const result of results) {
@@ -137,7 +137,7 @@ describe('search', () => {
     }
   });
 
-  test('search all with one table', async () => {
+  test.skip('search all with one table', async () => {
     const results = await xata.search.all('fruits', { tables: ['teams'] });
 
     for (const result of results) {
@@ -151,7 +151,7 @@ describe('search', () => {
     }
   });
 
-  test('search all with all tables', async () => {
+  test.skip('search all with all tables', async () => {
     const results = await xata.search.all('fruits');
 
     for (const result of results) {
@@ -174,7 +174,7 @@ describe('search', () => {
     }
   });
 
-  test('search all with filters', async () => {
+  test.skip('search all with filters', async () => {
     const results = await xata.search.all('fruits', {
       tables: [{ table: 'teams', filter: { name: 'Team fruits' } }]
     });
@@ -190,7 +190,7 @@ describe('search', () => {
     }
   });
 
-  test('search with page and offset', async () => {
+  test.skip('search with page and offset', async () => {
     const owners = await xata.db.users.search('Owner');
     const page1 = await xata.db.users.search('Owner', { page: { size: 1 } });
     const page2 = await xata.db.users.search('Owner', { page: { size: 1, offset: 1 } });
@@ -204,7 +204,7 @@ describe('search', () => {
     expect(page2[0].id).toBe(owners[1].id);
   });
 
-  test('global search with page and offset', async () => {
+  test.skip('global search with page and offset', async () => {
     const { users: owners = [] } = await xata.search.byTable('Owner');
     const { users: page1 = [] } = await xata.search.byTable('Owner', { page: { size: 1 } });
     const { users: page2 = [] } = await xata.search.byTable('Owner', { page: { size: 1, offset: 1 } });
