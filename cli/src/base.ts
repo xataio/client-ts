@@ -24,7 +24,7 @@ import {
 import { reportBugURL } from './utils.js';
 import { ProjectConfig, partialProjectConfig } from './config.js';
 
-class XataClient extends buildClient({
+export class XataClient extends buildClient({
   api: new XataApiPlugin()
 }) {}
 

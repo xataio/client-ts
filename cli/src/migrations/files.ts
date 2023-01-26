@@ -2,6 +2,7 @@ import { readFile, readdir, writeFile, mkdir, rm } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { migrationFile, MigrationFile } from './schema.js';
+import { Schemas } from '@xata.io/client';
 
 const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
 const ledgerFile = path.join(migrationsDir, '.ledger');
@@ -103,4 +104,15 @@ export async function computeChecksum(file: MigrationFile): Promise<string> {
   // TODO: Match backend implementation
   const input = [file.id, file.parent, JSON.stringify(file.operations, Object.keys(file.operations).sort())].join('');
   return crypto.createHash('sha256').update(input).digest('hex');
+}
+
+export function commitToMigrationFile(logs: Schemas.Commit[]): MigrationFile[] {
+  // Schema history comes in reverse order, so we need to reverse it
+  return logs.reverse().map((log) => ({
+    id: log.id,
+    parent: log.parentID ?? '',
+    // TODO: Get the actual checksum
+    checksum: '',
+    operations: log.operations
+  }));
 }

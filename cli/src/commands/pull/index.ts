@@ -1,7 +1,11 @@
 import { Flags } from '@oclif/core';
-import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
-import { getLocalMigrationFiles, removeLocalMigrations, writeLocalMigrationFiles } from '../../migrations/files.js';
+import {
+  commitToMigrationFile,
+  getLocalMigrationFiles,
+  removeLocalMigrations,
+  writeLocalMigrationFiles
+} from '../../migrations/files.js';
 import { MigrationFile } from '../../migrations/schema.js';
 
 export default class Pull extends BaseCommand {
@@ -55,7 +59,7 @@ export default class Pull extends BaseCommand {
 
     const localMigrationFiles = await getLocalMigrationFiles();
 
-    const newMigrations = this.getNewMigrations(localMigrationFiles, this.getMigrationFiles(logs));
+    const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
     await writeLocalMigrationFiles(newMigrations);
 
     if (newMigrations.length > 0) {
@@ -65,21 +69,9 @@ export default class Pull extends BaseCommand {
     }
   }
 
-  getMigrationFiles(logs: Schemas.Commit[]): MigrationFile[] {
-    // Schema history comes in reverse order, so we need to reverse it
-    return logs.reverse().map((log) => ({
-      id: log.id,
-      parent: log.parentID ?? '',
-      // TODO: Get the actual checksum
-      checksum: '',
-      operations: log.operations
-    }));
-  }
-
   getNewMigrations(localMigrationFiles: MigrationFile[], remoteMigrationFiles: MigrationFile[]): MigrationFile[] {
     const lastCommonMigrationIndex =
       remoteMigrationFiles.reduce((index, remoteMigration) => {
-        console.log(remoteMigration.id, localMigrationFiles[index + 1]?.id);
         if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
           return index + 1;
         }
@@ -91,9 +83,10 @@ export default class Pull extends BaseCommand {
     const newRemoteMigrations = remoteMigrationFiles.slice(lastCommonMigrationIndex + 1);
 
     if (newLocalMigrations.length > 0 && newRemoteMigrations.length > 0) {
-      this.error(
+      this.log(
         'There are new migrations on both the local and remote branches. Please run `xata rebase` to resolve the conflicts.'
       );
+      this.exit(0);
     }
 
     return newRemoteMigrations;
