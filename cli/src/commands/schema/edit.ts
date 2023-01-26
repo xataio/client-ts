@@ -734,7 +734,10 @@ function validateOptionalBoolean(value?: string) {
   return true;
 }
 
-function parseDefaultValue(type: string, val: string): string | undefined {
+function parseDefaultValue(type: string, val?: string): string | undefined {
+  if (val === undefined) {
+    return undefined;
+  }
   const num = String(val).length > 0 ? +val : undefined;
 
   if (type === 'string') {
@@ -746,9 +749,9 @@ function parseDefaultValue(type: string, val: string): string | undefined {
   } else if (type === 'bool') {
     return String(parseBoolean(val));
   } else if (type === 'email') {
-    return val || undefined;
+    return val;
   } else if (type === 'link') {
-    return val ? String(val) : undefined;
+    return String(val);
   } else if (type === 'datetime') {
     // Date fields have special values
     if (['now'].includes(val)) return val;
