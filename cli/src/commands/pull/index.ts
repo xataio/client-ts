@@ -53,10 +53,16 @@ export default class Pull extends BaseCommand {
       await removeLocalMigrations();
     }
 
-    const { migrations: localMigrationFiles } = await getLocalMigrationFiles();
+    const localMigrationFiles = await getLocalMigrationFiles();
 
     const newMigrations = this.getNewMigrations(localMigrationFiles, this.getMigrationFiles(logs));
     await writeLocalMigrationFiles(newMigrations);
+
+    if (newMigrations.length > 0) {
+      this.log(`Successfully pulled ${newMigrations.length} migrations from ${branch} branch`);
+    } else {
+      this.log(`No new migrations to pull from ${branch} branch`);
+    }
   }
 
   getMigrationFiles(logs: Schemas.Commit[]): MigrationFile[] {
@@ -70,9 +76,26 @@ export default class Pull extends BaseCommand {
     }));
   }
 
-  // TODO: Improve this logic when backend returns sorted ids
   getNewMigrations(localMigrationFiles: MigrationFile[], remoteMigrationFiles: MigrationFile[]): MigrationFile[] {
-    const localMigrationIds = localMigrationFiles.map((file) => file.id);
-    return remoteMigrationFiles.filter((file) => !localMigrationIds.includes(file.id));
+    const lastCommonMigrationIndex =
+      remoteMigrationFiles.reduce((index, remoteMigration) => {
+        console.log(remoteMigration.id, localMigrationFiles[index + 1]?.id);
+        if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
+          return index + 1;
+        }
+
+        return index;
+      }, -1) + 1;
+
+    const newLocalMigrations = localMigrationFiles.slice(lastCommonMigrationIndex + 1);
+    const newRemoteMigrations = remoteMigrationFiles.slice(lastCommonMigrationIndex + 1);
+
+    if (newLocalMigrations.length > 0 && newRemoteMigrations.length > 0) {
+      this.error(
+        'There are new migrations on both the local and remote branches. Please run `xata rebase` to resolve the conflicts.'
+      );
+    }
+
+    return newRemoteMigrations;
   }
 }

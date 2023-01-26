@@ -27,8 +27,7 @@ export async function getLocalMigrationFiles() {
   const files = await readMigrationsDir();
   const ledger = await getLedger();
 
-  const migrations: MigrationFile[] = [];
-
+  // Error out if there are any files that are not in the ledger
   for (const file of files) {
     if (file === '.ledger') continue;
 
@@ -38,8 +37,12 @@ export async function getLocalMigrationFiles() {
         `Migration ${file} is not in the ledger, please run 'xata pull -f' to overwrite local migrations`
       );
     }
+  }
 
-    const filePath = path.join(migrationsDir, file);
+  const migrations: MigrationFile[] = [];
+
+  for (const entry of ledger) {
+    const filePath = path.join(migrationsDir, `${entry}.json`);
     const fileContents = await readFile(filePath, 'utf8');
     const result = migrationFile.safeParse(JSON.parse(fileContents));
     if (!result.success) {
@@ -54,8 +57,7 @@ export async function getLocalMigrationFiles() {
       );
     }
 
-    const fileChecksum = fileName.split('_').slice(-1)[0];
-    console.log({ fileChecksum, checksum });
+    const fileChecksum = entry.split('_').slice(-1)[0];
     if (!checksum.startsWith(fileChecksum)) {
       throw new Error(
         `Checksum for migration ${result.data.id} does not match, please run 'xata pull -f' to overwrite local migrations'`
@@ -65,7 +67,7 @@ export async function getLocalMigrationFiles() {
     migrations.push(result.data);
   }
 
-  return { migrations, ledger };
+  return migrations;
 }
 
 export async function writeLocalMigrationFiles(files: MigrationFile[]) {
