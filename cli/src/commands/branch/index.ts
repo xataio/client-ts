@@ -11,5 +11,9 @@ export default class Branch extends BaseCommand {
 
   static args = [];
 
-  async run() {}
+  static hidden = true;
+
+  async run() {
+    // Nothing to see here, move along
+  }
 }

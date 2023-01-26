@@ -1,7 +1,8 @@
 import { Flags } from '@oclif/core';
-import { parseTablesFromCodegen } from '@xata.io/codegen';
-import { readFile } from 'fs/promises';
+import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
+import { getLocalMigrationFiles, removeLocalMigrations, writeLocalMigrationFiles } from '../../migrations/files.js';
+import { MigrationFile } from '../../migrations/schema.js';
 
 export default class Pull extends BaseCommand {
   static description = 'Push local migrations to a remote Xata branch';
@@ -10,7 +11,12 @@ export default class Pull extends BaseCommand {
 
   static flags = {
     ...this.commonFlags,
-    ...this.databaseURLFlag
+    ...this.databaseURLFlag,
+    force: Flags.boolean({
+      char: 'f',
+      description: 'Overwrite local migrations',
+      default: false
+    })
   };
 
   static args = [
@@ -20,6 +26,8 @@ export default class Pull extends BaseCommand {
       required: false
     }
   ];
+
+  static hidden = true;
 
   async run() {
     const { args, flags } = await this.parse(Pull);
@@ -31,16 +39,40 @@ export default class Pull extends BaseCommand {
       true
     );
 
-    const { logs, meta } = await xata.api.migrations.getBranchSchemaHistory({
+    const { logs } = await xata.api.migrations.getBranchSchemaHistory({
       workspace,
       region,
       database,
       branch,
+      // TODO: Fix pagination in the API to start from last known migration and not from the beginning
+      // Also paginate until we get all migrations
       page: { size: 200 }
     });
 
-    this.log(`Found ${logs.length} migrations in ${branch}`);
-    this.log(`Meta: ${JSON.stringify(meta, null, 2)}`);
-    this.log(`Logs: ${JSON.stringify(logs, null, 2)}`);
+    if (flags.force) {
+      await removeLocalMigrations();
+    }
+
+    const { migrations: localMigrationFiles } = await getLocalMigrationFiles();
+
+    const newMigrations = this.getNewMigrations(localMigrationFiles, this.getMigrationFiles(logs));
+    await writeLocalMigrationFiles(newMigrations);
+  }
+
+  getMigrationFiles(logs: Schemas.Commit[]): MigrationFile[] {
+    // Schema history comes in reverse order, so we need to reverse it
+    return logs.reverse().map((log) => ({
+      id: log.id,
+      parent: log.parentID ?? '',
+      // TODO: Get the actual checksum
+      checksum: '',
+      operations: log.operations
+    }));
+  }
+
+  // TODO: Improve this logic when backend returns sorted ids
+  getNewMigrations(localMigrationFiles: MigrationFile[], remoteMigrationFiles: MigrationFile[]): MigrationFile[] {
+    const localMigrationIds = localMigrationFiles.map((file) => file.id);
+    return remoteMigrationFiles.filter((file) => !localMigrationIds.includes(file.id));
   }
 }
