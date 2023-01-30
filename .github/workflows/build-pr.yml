@@ -82,11 +82,16 @@ jobs:
       - name: Compile
         run: pnpm build
 
+      - name: Configure npm registry token
+        if: ${{ steps.secrets.outputs.exist == 'true' }}
+        run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish build
         if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cat << EOF > .changeset/force-canary-build.md
           ---
