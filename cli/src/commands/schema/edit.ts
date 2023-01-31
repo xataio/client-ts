@@ -83,7 +83,7 @@ export default class EditSchema extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   branchDetails: Schemas.DBBranch | undefined;
   tables: EditableTable[] = [];

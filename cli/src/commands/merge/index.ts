@@ -1,3 +1,4 @@
+import { Args } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import deepmerge from 'deepmerge';
 import { BaseCommand } from '../../base.js';
@@ -10,7 +11,9 @@ export default class Merge extends BaseCommand {
 
   static flags = {};
 
-  static args = [{ name: 'branch', description: 'The branch to merge the current branch with', required: true }];
+  static args = {
+    branch: Args.string({ description: 'The branch to merge the current branch with', required: true })
+  };
 
   async run(): Promise<Schemas.Schema | undefined> {
     const { args } = await this.parse(Merge);

@@ -13,7 +13,7 @@ export default class DatabasesList extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 

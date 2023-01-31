@@ -8,7 +8,7 @@ export default class Status extends BaseCommand {
 
   static flags = {};
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const profile = await this.getProfile(true);

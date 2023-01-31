@@ -1,6 +1,7 @@
 import { BaseCommand } from '../../base.js';
 import get from 'lodash.get';
 import chalk from 'chalk';
+import { Args } from '@oclif/core';
 
 export default class GetConfig extends BaseCommand {
   static description = 'Set a specific key from the project configuration given a key path and a value';
@@ -9,7 +10,9 @@ export default class GetConfig extends BaseCommand {
 
   static flags = {};
 
-  static args = [{ name: 'key', description: 'Key path to get the value from', required: true }];
+  static args = {
+    key: Args.string({ description: 'Key path to get the value from', required: true })
+  };
 
   async run(): Promise<void> {
     const { args } = await this.parse(GetConfig);

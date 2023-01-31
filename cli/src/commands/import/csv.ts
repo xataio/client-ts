@@ -1,4 +1,4 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { CompareSchemaResult, createProcessor, parseCSVFile, parseCSVStream } from '@xata.io/importer';
 import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
@@ -61,7 +61,9 @@ export default class ImportCSV extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'file', description: 'The file to be imported' }];
+  static args = {
+    file: Args.string({ description: 'The file to be imported', required: true })
+  };
 
   async run(): Promise<void> {
     const { flags, args } = await this.parse(ImportCSV);

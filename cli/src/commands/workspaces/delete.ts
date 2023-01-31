@@ -14,7 +14,7 @@ export default class WorkspacesDelete extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 

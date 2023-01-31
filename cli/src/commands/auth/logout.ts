@@ -11,7 +11,7 @@ export default class Logout extends BaseCommand {
     ...BaseCommand.profileFlag
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Logout);

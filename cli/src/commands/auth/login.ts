@@ -16,7 +16,7 @@ export default class Login extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Login);

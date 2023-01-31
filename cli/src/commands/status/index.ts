@@ -11,7 +11,7 @@ export default class Status extends BaseCommand {
     ...this.commonFlags
   };
 
-  static args = [];
+  static args = {};
 
   async run() {
     if (!this.projectConfig) {

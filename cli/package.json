@@ -26,7 +26,7 @@
     "@oclif/core": "^2.0.7",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-not-found": "^2.3.17",
-    "@oclif/plugin-plugins": "^2.2.4",
+    "@oclif/plugin-plugins": "^2.3.0",
     "@rollup/plugin-auto-install": "^3.0.3",
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",
@@ -82,7 +82,7 @@
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.5"
   },
   "oclif": {
     "bin": "xata",

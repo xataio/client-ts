@@ -18,7 +18,7 @@ export default class BranchesCreate extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 

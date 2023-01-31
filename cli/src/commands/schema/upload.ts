@@ -1,4 +1,4 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { readFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
 
@@ -17,7 +17,9 @@ export default class UploadSchema extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'file', description: 'Schema file to upload', required: true }];
+  static args = {
+    file: Args.string({ description: 'Schema file to upload', required: true })
+  };
 
   async run(): Promise<void> {
     const { flags, args } = await this.parse(UploadSchema);

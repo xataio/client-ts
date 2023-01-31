@@ -8,7 +8,7 @@ export default class WorkspacesList extends BaseCommand {
     ...this.commonFlags
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 

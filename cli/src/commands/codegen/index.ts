@@ -50,7 +50,7 @@ export default class Codegen extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Codegen);

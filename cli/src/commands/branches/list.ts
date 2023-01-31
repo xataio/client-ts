@@ -11,7 +11,7 @@ export default class BranchesList extends BaseCommand {
     ...this.databaseURLFlag
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 

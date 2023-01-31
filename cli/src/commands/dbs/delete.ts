@@ -1,4 +1,4 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
 export default class DatabasesDelete extends BaseCommand {
@@ -14,7 +14,9 @@ export default class DatabasesDelete extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'database', description: 'The database name to delete', required: true }];
+  static args = {
+    database: Args.string({ description: 'The database name to delete', required: true })
+  };
 
   static enableJsonFlag = true;
 

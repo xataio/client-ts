@@ -1,4 +1,4 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
 export default class DatabasesCreate extends BaseCommand {
@@ -16,7 +16,9 @@ export default class DatabasesCreate extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'database', description: 'The new database name', required: false }];
+  static args = {
+    database: Args.string({ description: 'The new database name', required: false })
+  };
 
   static enableJsonFlag = true;
 

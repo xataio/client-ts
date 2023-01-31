@@ -1,4 +1,4 @@
-import { CliUx, Flags } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { writeFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
@@ -14,7 +14,7 @@ export default class SchemaDump extends BaseCommand {
     file: Flags.string({ char: 'f', description: 'File to write the schema to' })
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<Schemas.Schema | undefined> {
     const { flags } = await this.parse(SchemaDump);
@@ -25,7 +25,7 @@ export default class SchemaDump extends BaseCommand {
     const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
     if (!branchDetails) return this.error('Could not resolve the current branch');
     if (!flags.file) {
-      CliUx.ux.styledJSON(branchDetails.schema);
+      ux.styledJSON(branchDetails.schema);
       return branchDetails.schema;
     }
 

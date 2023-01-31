@@ -23,7 +23,7 @@ export default class RandomData extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const { flags } = await this.parse(RandomData);

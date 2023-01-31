@@ -1,3 +1,4 @@
+import { Args } from '@oclif/core';
 import chalk from 'chalk';
 import { BaseCommand, projectConfigSchema } from '../../base.js';
 import { setValue } from '../../config.js';
@@ -9,10 +10,10 @@ export default class SetConfig extends BaseCommand {
 
   static flags = {};
 
-  static args = [
-    { name: 'key', description: 'Key path', required: true },
-    { name: 'value', description: 'Value to store', required: true }
-  ];
+  static args = {
+    key: Args.string({ description: 'Key path to get the value from', required: true }),
+    value: Args.string({ description: 'Value to store', required: true })
+  };
 
   async run(): Promise<void> {
     const { args } = await this.parse(SetConfig);

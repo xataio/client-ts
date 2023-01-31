@@ -1,3 +1,4 @@
+import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
 export default class WorkspacesCreate extends BaseCommand {
@@ -9,7 +10,9 @@ export default class WorkspacesCreate extends BaseCommand {
     ...this.commonFlags
   };
 
-  static args = [{ name: 'workspace', description: 'The new workspace name', required: true }];
+  static args = {
+    workspace: Args.string({ description: 'The new workspace name', required: true })
+  };
 
   static enableJsonFlag = true;
 

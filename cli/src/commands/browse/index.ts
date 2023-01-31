@@ -12,7 +12,7 @@ export default class Browse extends BaseCommand {
     branch: this.branchFlag
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Browse);

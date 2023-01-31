@@ -1,6 +1,7 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { createBranch, currentGitBranch, defaultGitBranch, isGitInstalled, isWorkingDirClean } from '../../git.js';
+
 export default class BranchesCreate extends BaseCommand {
   static description = 'Create a branch';
 
@@ -17,7 +18,9 @@ export default class BranchesCreate extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'branch', description: 'The new branch name', required: true }];
+  static args = {
+    branch: Args.string({ description: 'The new branch name', required: true })
+  };
 
   static enableJsonFlag = true;
 
