@@ -1,5 +1,11 @@
 # @xata.io/importer
 
+## 0.3.4
+
+### Patch Changes
+
+- [#877](https://github.com/xataio/client-ts/pull/877) [`f9b966df`](https://github.com/xataio/client-ts/commit/f9b966dfb86aeee5afa711aa7db5cb3e75615d2d) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose random data command programmatically
+
 ## 0.3.3
 
 ### Patch Changes
