@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
+    "@faker-js/faker": "^7.6.0",
     "@xata.io/client": "workspace:*",
     "camelcase": "^7.0.1",
     "csvtojson": "^2.0.10",
