@@ -22,7 +22,6 @@
     "@babel/core": "^7.20.12",
     "@babel/preset-react": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
-    "@faker-js/faker": "^7.6.0",
     "@oclif/core": "^1.25.0",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-not-found": "^2.3.16",
