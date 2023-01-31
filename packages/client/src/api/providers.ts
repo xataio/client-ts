@@ -48,7 +48,7 @@ export function parseWorkspacesUrlParts(url: string): { workspace: string; regio
 
   const regex = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh.*/;
   const regexStaging = /(?:https:\/\/)?([^.]+)\.staging(?:\.([^.]+))\.xatabase\.co.*/;
-  const regexDev = /(?:https:\/\/)?([^.]+)\.([^.]+)\.xata\.tech.*/;
+  const regexDev = /(?:https:\/\/)?([^.]+)\.staging(?:\.([^.]+))\.xata\.tech.*/;
 
   const match = url.match(regex) || url.match(regexStaging) || url.match(regexDev);
   if (!match) return null;
