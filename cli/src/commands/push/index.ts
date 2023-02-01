@@ -74,6 +74,8 @@ export default class Push extends BaseCommand {
         edits: { operations: migration.operations }
       });
     }
+
+    this.log(`Pushed ${newMigrations.length} migrations to ${branch}`);
   }
 
   getNewMigrations(localMigrationFiles: MigrationFile[], remoteMigrationFiles: MigrationFile[]): MigrationFile[] {
