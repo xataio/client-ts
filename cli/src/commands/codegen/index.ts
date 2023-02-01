@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import { generate, isValidJavascriptTarget, javascriptTargets } from '@xata.io/codegen';
 import chalk from 'chalk';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, readFile, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
 import { BaseCommand } from '../../base.js';
 import { ProjectConfig } from '../../config.js';
@@ -45,6 +45,9 @@ export default class Codegen extends BaseCommand {
     }),
     'worker-id': Flags.string({
       description: 'Xata worker deployment id'
+    }),
+    'experimental-incremental-build': Flags.boolean({
+      description: 'Experimental: Keep the source code in the generated file and only update the parts that changed'
     })
   };
 
@@ -89,6 +92,12 @@ export default class Codegen extends BaseCommand {
     const { schema } = branchDetails;
 
     const codegenBranch = flags['inject-branch'] ? branch : undefined;
+
+    // Experimental: Keep the source code in the generated file and only update the parts that changed
+    const incrementalBuild =
+      flags['experimental-incremental-build'] ?? this.projectConfig?.experimental?.incrementalBuild ?? false;
+    const existingCode = incrementalBuild ? await readFile(output, 'utf8').catch(() => undefined) : undefined;
+
     const result = await generate({
       schema,
       databaseURL,
@@ -97,7 +106,8 @@ export default class Codegen extends BaseCommand {
       javascriptTarget,
       branch: codegenBranch,
       workspace,
-      workersBuildId
+      workersBuildId,
+      existingCode
     });
 
     const { typescript, javascript, types } = result;

@@ -1946,7 +1946,8 @@ export const initObject = <T>(
   }
 
   Object.freeze(record);
-  return record as T;
+  // `as unkwnown` to avoid TS error on versions prior to 4.9 (can be removed once we drop support for older versions)
+  return record as unknown as T;
 };
 
 function extractId(value: any): string | undefined {

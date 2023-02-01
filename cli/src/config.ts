@@ -22,6 +22,7 @@ export const projectConfigSchema = z.object({
     workersBuildId: z.string().optional()
   }),
   experimental: z.object({
+    incrementalBuild: z.boolean(),
     workflow: z.boolean()
   })
 });

@@ -158,15 +158,15 @@ declare const tables: readonly [
     ];
   }
 ];
-export declare type SchemaTables = typeof tables;
-export declare type InferredTypes = SchemaInference<SchemaTables>;
-export declare type Teams = InferredTypes['teams'];
-export declare type TeamsRecord = Teams & XataRecord;
-export declare type Users = InferredTypes['users'];
-export declare type UsersRecord = Users & XataRecord;
-export declare type Pets = InferredTypes['pets'];
-export declare type PetsRecord = Pets & XataRecord;
-export declare type DatabaseSchema = {
+export type SchemaTables = typeof tables;
+export type InferredTypes = SchemaInference<SchemaTables>;
+export type Teams = InferredTypes['teams'];
+export type TeamsRecord = Teams & XataRecord;
+export type Users = InferredTypes['users'];
+export type UsersRecord = Users & XataRecord;
+export type Pets = InferredTypes['pets'];
+export type PetsRecord = Pets & XataRecord;
+export type DatabaseSchema = {
   teams: TeamsRecord;
   users: UsersRecord;
   pets: PetsRecord;

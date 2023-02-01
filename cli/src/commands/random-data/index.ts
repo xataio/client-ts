@@ -1,6 +1,5 @@
-import { faker } from '@faker-js/faker';
 import { Flags } from '@oclif/core';
-import { Column } from '@xata.io/codegen';
+import { generateRandomData } from '@xata.io/importer';
 import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
 import { pluralize } from '../../utils.js';
@@ -49,10 +48,8 @@ export default class RandomData extends BaseCommand {
     const tables = tablesFlag.length > 0 ? schemaTables.filter((t) => tablesFlag.includes(t.name)) : schemaTables;
 
     for (const table of tables) {
-      const records: Record<string, unknown>[] = [];
-      for (let index = 0; index < totalRecords; index++) {
-        records.push(this.randomRecord(table.columns));
-      }
+      const records = generateRandomData(table, totalRecords);
+
       await xata.api.records.bulkInsertTableRecords({
         workspace,
         region,
@@ -75,65 +72,4 @@ export default class RandomData extends BaseCommand {
       )} ${pluralize('table', tables.length)}`
     );
   }
-
-  randomRecord(columns: Column[]) {
-    const record: Record<string, unknown> = {};
-    for (const column of columns) {
-      record[column.name] = this.randomData(column);
-    }
-    return record;
-  }
-
-  randomData(column: Column) {
-    switch (column.type) {
-      case 'text':
-        return faker.lorem.paragraphs(rand(2, 3));
-      case 'email':
-        return faker.internet.email(undefined, undefined, 'acme.pets');
-      case 'int':
-        return rand(1, 100);
-      case 'float':
-        return rand(1, 10000) / rand(1, 100);
-      case 'bool':
-        return rand(0, 1) === 1;
-      case 'object':
-        return this.randomRecord(column.columns || []);
-      case 'multiple':
-        return faker.random.words(rand(1, 3)).split(' ');
-      case 'string':
-        return randomString(column.name);
-      case 'datetime':
-        return faker.date.recent(rand(1, 10));
-      default:
-        return undefined;
-    }
-  }
-}
-
-function rand(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min) + min);
-}
-
-const generators: Record<string, () => string> = {
-  city: () => faker.address.city(),
-  country: () => faker.address.country(),
-  county: () => faker.address.county(),
-  state: () => faker.address.state(),
-  street: () => faker.address.street(),
-  timezone: () => faker.address.timeZone(),
-  tz: () => faker.address.timeZone(),
-  zipcode: () => faker.address.zipCode(),
-  zip: () => faker.address.zipCode(),
-  department: () => faker.commerce.department(),
-  product: () => faker.commerce.product(),
-  company: () => faker.company.companyName(),
-  firstName: () => faker.name.firstName(),
-  lastName: () => faker.name.lastName(),
-  phone: () => faker.phone.phoneNumber('501-###-###')
-};
-
-function randomString(columnName: string) {
-  const gen = generators[columnName.toLowerCase()];
-  if (gen) return gen();
-  return faker.random.words(2);
 }
