@@ -8,7 +8,6 @@ It has zero dependencies and runs in Node.js, V8, Deno and Bun.
 
 See our [docs](https://xata.io/docs/sdk/typescript#installation) to get started using the Xata SDK.
 
-
 ## Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -45,7 +44,7 @@ There are three ways to use the SDK:
 
 ### Schema-generated Client
 
-To use the schema-generated client, you need to run the code generator utility that comes with [our CLI](https://docs.xata.io/cli/getting-started).
+To use the schema-generated client, you need to run the code generator utility that comes with [our CLI](https://xata.io/docs/cli/getting-started).
 
 To run it (and assuming you have configured the project with `xata init`):
 
@@ -165,7 +164,7 @@ const page = await xata.db.users.sort('full_name', 'asc').getPaginated();
 
 Query operations (`select()`, `filter()`, `sort()`) return a `Query` object. These objects are immutable. You can add additional constraints, `sort`, etc. by calling their methods, and a new query will be returned. In order to finally make a query to the database you'll invoke `getPaginated()`, `getMany()`, `getAll()`, or `getFirst()`.
 
-To learn the differences between these methods, see the [reference](https://docs.xata.io/sdk/reference#query).
+To learn the differences between these methods, see the [reference](https://xata.io/docs/sdk/reference#query).
 
 ```ts
 // Operators that combine multiple conditions can be deconstructed
@@ -242,7 +241,7 @@ await xata.db.users.delete('rec_1234abcdef');
 
 ### API Client
 
-One of the main features of the SDK is the ability to interact with the whole Xata API and perform administrative operations such as creating/reading/updating/deleting [workspaces](https://docs.xata.io/concepts/workspaces), databases, tables, branches...
+One of the main features of the SDK is the ability to interact with the whole Xata API and perform administrative operations such as creating/reading/updating/deleting [workspaces](https://xata.io/docs/concepts/workspaces), databases, tables, branches...
 
 To communicate with the SDK we provide a constructor called `XataApiClient` that accepts an API token and an optional fetch implementation method.
 
@@ -250,7 +249,7 @@ To communicate with the SDK we provide a constructor called `XataApiClient` that
 const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY });
 ```
 
-Once you have initialized the API client, the operations are organized following the same hiearchy as in the [official documentation](https://docs.xata.io). You have different namespaces for each entity (ie. `workspaces`, `databases`, `tables`, `branches`, `users`, `records`...).
+Once you have initialized the API client, the operations are organized following the same hiearchy as in the [official documentation](https://xata.io/docs). You have different namespaces for each entity (ie. `workspaces`, `databases`, `tables`, `branches`, `users`, `records`...).
 
 ```ts
 const { id: workspace } = await api.workspaces.createWorkspace({ name: 'example' });

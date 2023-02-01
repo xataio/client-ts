@@ -1,6 +1,6 @@
 # Command Line Interface (CLI)
 
-Xata provides a CLI as a convenience for developers. It is intended to provide feature parity with Xata's [Web UI](https://docs.xata.io/getting-started) (User Interface) to enable developers to build applications at **rapid pace** with **as little friction as possible**.
+Xata provides a CLI as a convenience for developers. It is intended to provide feature parity with Xata's [Web UI](https://xata.io/docs/getting-started) (User Interface) to enable developers to build applications at **rapid pace** with **as little friction as possible**.
 
 ## Installation
 
@@ -26,7 +26,7 @@ To use the Xata CLI, you'll have to **authenticate** with it to access your work
 
 To authenticate globally, across your entire system, run `xata auth login`. This will give you two options:
 
-- **Create a new API Key**. This will open your browser and, when you're logged in to Xata, allow you to create a new [API key](https://docs.xata.io/concepts/api-keys) for use with the CLI.
+- **Create a new API Key**. This will open your browser and, when you're logged in to Xata, allow you to create a new [API key](https://xata.io/docs/concepts/api-keys) for use with the CLI.
 - **Use an existing API Key**. This will prompt for an existing key you have, which you can paste into your terminal. We recommend isolating keys per use-case, so creating a new one might be a good idea instead.
 
 Once you supply an API key one way or another, your CLI will be configured globally: we'll store your API key in `~/.config/xata/credentials`.
@@ -37,9 +37,9 @@ Working with workspaces globally does not require any further flags.
 
 ### Project Mode
 
-To authenticate in a specific project, run `xata init --db=[databaseUrl]`. You can get your database URL from the [workspace configuration](https://docs.xata.io/concepts/workspaces#configuring-a-workspace) page in the web UI. This will create some configuration files in your project that the CLI will reference when working with Xata. Here's what happens when you initialize a project:
+To authenticate in a specific project, run `xata init --db=[databaseUrl]`. You can get your database URL from the [workspace configuration](https://xata.io/docs/concepts/workspaces#configuring-a-workspace) page in the web UI. This will create some configuration files in your project that the CLI will reference when working with Xata. Here's what happens when you initialize a project:
 
-- If you don't have a [workspace](https://docs.xata.io/concepts/workspaces), you will be prompted to create one.
+- If you don't have a [workspace](https://xata.io/docs/concepts/workspaces), you will be prompted to create one.
 - If you have workspaces, you'll be asked to choose one, or to create a new one.
 
 A workspace is a logical grouping of databases, usually analogous to an organization or team, so this is the first step. Once you've chosen a workspace, you will be given the option to either create a new database, or use an existing one for your project. After choosing a workspace and a database, you're ready to go: the CLI will walk you through next steps. Specifically, it will:
@@ -64,13 +64,13 @@ This file contains sensitive information and secrets that ought not be committed
 
 We strongly recommend using the CLI to generate your Xata client for you. The Xata client is a class that you can instantiate in your project that will help you query Xata in a familiar way. This will help make your queries to Xata predictable and safe, while also providing autocomplete and safety.
 
-Once you have a generated Xata client, you can import it into your project and use it. The [SDK Playground](https://docs.xata.io/sdk/playground) in the Xata web interface can serve as a companion for you to build and test out your queries. Once you're happy with them, you copy and paste them into your project.
+Once you have a generated Xata client, you can import it into your project and use it. The [SDK Playground](https://xata.io/docs/sdk/playground) in the Xata web interface can serve as a companion for you to build and test out your queries. Once you're happy with them, you copy and paste them into your project.
 
 As your schema changes, running `xata codegen` will consistently refresh your auto-generated Xata client with the latest schema for your database branch.
 
 ## Branches & Git Integration
 
-Xata is a _branchable_ database. Developers can checkout new branches of their database schemas, make changes safely, and merge them into their main branch. This triggers a zero-downtime migration. To learn more about branches, see the [branches](https://docs.xata.io/concepts/branches) section.
+Xata is a _branchable_ database. Developers can checkout new branches of their database schemas, make changes safely, and merge them into their main branch. This triggers a zero-downtime migration. To learn more about branches, see the [branches](https://xata.io/docs/concepts/branches) section.
 
 Some commands are integrated with git. Specifically, those related to branching. Xata uses the following algorithm in development in order to calculate which xata branch needs to be used:
 
@@ -102,4 +102,4 @@ If you edit the schema in the CLI, the code generator will be used if it's confi
 
 ## Next Steps
 
-Now that your project is set up with the Xata CLI, and if you've opted to use code generation (recommended), we suggest exploring the [TypeScript/JavaScript SDK](https://docs.xata.io/sdk/getting-started) section of the documentation to get up to speed using it.
+Now that your project is set up with the Xata CLI, and if you've opted to use code generation (recommended), we suggest exploring the [TypeScript/JavaScript SDK](https://xata.io/docs/sdk/getting-started) section of the documentation to get up to speed using it.
