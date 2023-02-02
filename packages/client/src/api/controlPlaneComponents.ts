@@ -1039,6 +1039,140 @@ export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariable
     UpdateDatabaseMetadataPathParams
   >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'patch', ...variables, signal });
 
+export type GetDatabaseGithubSettingsPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type GetDatabaseGithubSettingsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetDatabaseGithubSettingsVariables = {
+  pathParams: GetDatabaseGithubSettingsPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Retrieve current Github database settings
+ */
+export const getDatabaseGithubSettings = (variables: GetDatabaseGithubSettingsVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.DatabaseGithubSettings,
+    GetDatabaseGithubSettingsError,
+    undefined,
+    {},
+    {},
+    GetDatabaseGithubSettingsPathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/github', method: 'get', ...variables, signal });
+
+export type UpdateDatabaseGithubSettingsPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type UpdateDatabaseGithubSettingsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 423;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateDatabaseGithubSettingsVariables = {
+  body: Schemas.DatabaseGithubSettings;
+  pathParams: UpdateDatabaseGithubSettingsPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Map the database to a Github repository, Xata will create database branch previews for all new branches/PRs in the repo.
+ */
+export const updateDatabaseGithubSettings = (variables: UpdateDatabaseGithubSettingsVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.DatabaseGithubSettings,
+    UpdateDatabaseGithubSettingsError,
+    Schemas.DatabaseGithubSettings,
+    {},
+    {},
+    UpdateDatabaseGithubSettingsPathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/github', method: 'put', ...variables, signal });
+
+export type DeleteDatabaseGithubSettingsPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type DeleteDatabaseGithubSettingsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteDatabaseGithubSettingsVariables = {
+  pathParams: DeleteDatabaseGithubSettingsPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Delete any existing database Github settings
+ */
+export const deleteDatabaseGithubSettings = (variables: DeleteDatabaseGithubSettingsVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    undefined,
+    DeleteDatabaseGithubSettingsError,
+    undefined,
+    {},
+    {},
+    DeleteDatabaseGithubSettingsPathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/github', method: 'delete', ...variables, signal });
+
 export type ListRegionsPathParams = {
   /**
    * Workspace ID
@@ -1098,6 +1232,9 @@ export const operationsByTag = {
     deleteDatabase,
     getDatabaseMetadata,
     updateDatabaseMetadata,
+    getDatabaseGithubSettings,
+    updateDatabaseGithubSettings,
+    deleteDatabaseGithubSettings,
     listRegions
   }
 };
