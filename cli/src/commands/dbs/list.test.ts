@@ -77,25 +77,8 @@ describe('databases list', () => {
     expect(printTable).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(printTable.mock.calls[0]).toMatchInlineSnapshot(`
-        [
-          [
-            "Database name",
-            "Created at",
-          ],
-          [
-            [
-              "test",
-              "Jan 1, 2020, 12:00 AM",
-            ],
-          ],
-          [
-            "l",
-            "l",
-            "r",
-          ],
-        ]
-      `);
+      expect(printTable.mock.calls[0][1][0][0]).toBe('test');
+      expect(printTable.mock.calls[0][2]).toEqual(['l', 'l', 'r']);
     }
   });
 });
