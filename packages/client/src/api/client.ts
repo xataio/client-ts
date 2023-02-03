@@ -1502,6 +1502,48 @@ class DatabaseApi {
     });
   }
 
+  public getDatabaseGithubSettings({
+    workspace,
+    database
+  }: {
+    workspace: Schemas.WorkspaceID;
+    database: Schemas.DBName;
+  }): Promise<Schemas.DatabaseGithubSettings> {
+    return operationsByTag.databases.getDatabaseGithubSettings({
+      pathParams: { workspaceId: workspace, dbName: database },
+      ...this.extraProps
+    });
+  }
+
+  public updateDatabaseGithubSettings({
+    workspace,
+    database,
+    settings
+  }: {
+    workspace: Schemas.WorkspaceID;
+    database: Schemas.DBName;
+    settings: Schemas.DatabaseGithubSettings;
+  }): Promise<Schemas.DatabaseGithubSettings> {
+    return operationsByTag.databases.updateDatabaseGithubSettings({
+      pathParams: { workspaceId: workspace, dbName: database },
+      body: settings,
+      ...this.extraProps
+    });
+  }
+
+  public deleteDatabaseGithubSettings({
+    workspace,
+    database
+  }: {
+    workspace: Schemas.WorkspaceID;
+    database: Schemas.DBName;
+  }): Promise<void> {
+    return operationsByTag.databases.deleteDatabaseGithubSettings({
+      pathParams: { workspaceId: workspace, dbName: database },
+      ...this.extraProps
+    });
+  }
+
   public listRegions({ workspace }: { workspace: Schemas.WorkspaceID }): Promise<Schemas.ListRegionsResponse> {
     return operationsByTag.databases.listRegions({
       pathParams: { workspaceId: workspace },
