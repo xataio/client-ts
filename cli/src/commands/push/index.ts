@@ -64,6 +64,8 @@ export default class Push extends BaseCommand {
       return;
     }
 
+    // TODO: Add `previewBranchSchemaEdits` to the API to check if the migrations are valid before applying them
+
     for (const migration of newMigrations) {
       await xata.api.migrations.applyBranchSchemaEdit({
         workspace,

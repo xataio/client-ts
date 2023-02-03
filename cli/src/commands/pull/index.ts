@@ -79,6 +79,8 @@ export default class Pull extends BaseCommand {
         return index;
       }, -1) + 1;
 
+    // TODO: Validate that the migrations are in the same order (for previous history)
+
     const newLocalMigrations = localMigrationFiles.slice(lastCommonMigrationIndex + 1);
     const newRemoteMigrations = remoteMigrationFiles.slice(lastCommonMigrationIndex + 1);
 
