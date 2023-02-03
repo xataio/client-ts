@@ -1337,17 +1337,21 @@ class MigrationsApi {
     region,
     database,
     branch,
-    schema
+    schema,
+    schemaOperations,
+    branchOperations
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     schema: Schemas.Schema;
+    schemaOperations?: Schemas.MigrationOp[];
+    branchOperations?: Schemas.MigrationOp[];
   }): Promise<Responses.SchemaCompareResponse> {
     return operationsByTag.migrations.compareBranchWithUserSchema({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: { schema },
+      body: { schema, schemaOperations, branchOperations },
       ...this.extraProps
     });
   }
