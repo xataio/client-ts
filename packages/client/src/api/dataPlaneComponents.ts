@@ -1189,6 +1189,10 @@ export type GetBranchSchemaHistoryRequestBody = {
      */
     size?: number;
   };
+  /**
+   * Report only migrations that have been added since the given Migration ID.
+   */
+  since?: string;
 };
 
 export type GetBranchSchemaHistoryVariables = {
