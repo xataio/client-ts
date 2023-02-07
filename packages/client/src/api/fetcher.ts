@@ -144,7 +144,7 @@ export async function fetch<
         ['client', 'TS_SDK'],
         ['version', VERSION],
         isDefined(clientName) ? ['service', clientName] : undefined,
-        ...(isDefined(xataAgentExtra) ? Object.entries(xataAgentExtra) : [])
+        ...Object.entries(xataAgentExtra ?? {})
       ])
         .map(([key, value]) => `${key}=${value}`)
         .join('; ');
