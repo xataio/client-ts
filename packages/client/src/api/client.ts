@@ -18,6 +18,7 @@ export interface XataApiClientOptions {
   host?: HostProvider;
   trace?: TraceFunction;
   clientName?: string;
+  xataAgentExtra?: Record<string, string>;
 }
 
 export class XataApiClient {
@@ -53,6 +54,7 @@ export class XataApiClient {
       apiKey,
       trace,
       clientName: options.clientName,
+      xataAgentExtra: options.xataAgentExtra,
       clientID
     };
   }

@@ -43,6 +43,7 @@ export type FetcherExtraProps = {
   clientID?: string;
   sessionID?: string;
   clientName?: string;
+  xataAgentExtra?: Record<string, string>;
   fetchOptions?: Record<string, unknown>;
 };
 
@@ -120,6 +121,7 @@ export async function fetch<
   clientID,
   sessionID,
   clientName,
+  xataAgentExtra,
   fetchOptions = {}
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   pool.setFetch(fetchImpl);
@@ -141,7 +143,8 @@ export async function fetch<
       const xataAgent = compact([
         ['client', 'TS_SDK'],
         ['version', VERSION],
-        isDefined(clientName) ? ['service', clientName] : undefined
+        isDefined(clientName) ? ['service', clientName] : undefined,
+        ...(isDefined(xataAgentExtra) ? Object.entries(xataAgentExtra) : [])
       ])
         .map(([key, value]) => `${key}=${value}`)
         .join('; ');

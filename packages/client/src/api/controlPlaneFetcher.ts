@@ -13,6 +13,7 @@ export type ControlPlaneFetcherExtraProps = {
   clientID?: string;
   sessionID?: string;
   clientName?: string;
+  xataAgentExtra?: Record<string, string>;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
