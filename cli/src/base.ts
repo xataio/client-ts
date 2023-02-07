@@ -210,7 +210,16 @@ export abstract class BaseCommand extends Command {
     const databaseURL = 'https://noop-workspace.cli.xata.sh/db/demo';
     const branch = 'main';
 
-    this.#xataClient = new XataClient({ apiKey, fetch, host, databaseURL, branch, clientName: 'cli' });
+    this.#xataClient = new XataClient({
+      apiKey,
+      fetch,
+      host,
+      databaseURL,
+      branch,
+      clientName: 'cli',
+      xataAgentExtra: { cliCommandId: this.id ?? 'unknown' }
+    });
+
     return this.#xataClient;
   }
 
