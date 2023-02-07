@@ -11,10 +11,16 @@ interface User {
 }
 
 const buildClient = (options: Partial<BaseClientOptions> = {}) => {
-  const { apiKey = '1234', databaseURL = 'https://mock.xata.sh/db/xata', branch = 'main', clientName } = options;
+  const {
+    apiKey = '1234',
+    databaseURL = 'https://mock.xata.sh/db/xata',
+    branch = 'main',
+    clientName,
+    xataAgentExtra
+  } = options;
 
   const fetch = vi.fn(realFetch);
-  const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName });
+  const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra });
 
   const users = client.db.users;
 
@@ -298,6 +304,28 @@ describe('request', () => {
     expect(xataAgentHeader).toContain(`client=TS_SDK; version=`);
     expect(xataAgentHeader).toContain(`service=myService`);
   });
+});
+
+test('sets X-Xata-Agent header with extras', async () => {
+  const { fetch, users } = buildClient({ clientName: 'myService', xataAgentExtra: { hello: 'world' } });
+
+  fetch.mockImplementationOnce(async () => {
+    return {
+      ok: true,
+      json: async () => ({
+        records: [],
+        meta: { page: { cursor: '', more: false } }
+      })
+    } as Response;
+  });
+
+  await users.getFirst();
+
+  const xataAgentHeader = getHeaders(fetch.mock)?.['X-Xata-Agent'];
+
+  expect(xataAgentHeader).toContain(`client=TS_SDK; version=`);
+  expect(xataAgentHeader).toContain(`service=myService`);
+  expect(xataAgentHeader).toContain(`hello=world`);
 });
 
 type ExpectedRequest = {

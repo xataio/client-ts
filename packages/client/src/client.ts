@@ -21,12 +21,14 @@ export type BaseClientOptions = {
   trace?: TraceFunction;
   enableBrowser?: boolean;
   clientName?: string;
+  xataAgentExtra?: Record<string, string>;
 };
 
-type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch' | 'clientName'>> & {
+type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch' | 'clientName' | 'xataAgentExtra'>> & {
   branch?: string;
   clientID: string;
   clientName?: string;
+  xataAgentExtra?: Record<string, string>;
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -91,6 +93,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const trace = options?.trace ?? defaultTrace;
       const clientName = options?.clientName;
       const host = options?.host ?? 'production';
+      const xataAgentExtra = options?.xataAgentExtra;
 
       // We default to main if the user didn't pass a branch
       const branch = options?.branch !== undefined ? this.#evaluateBranch(options.branch) : 'main';
@@ -113,11 +116,21 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         host,
         clientID: generateUUID(),
         enableBrowser,
-        clientName
+        clientName,
+        xataAgentExtra
       };
     }
 
-    #getFetchProps({ fetch, apiKey, databaseURL, branch, trace, clientID, clientName }: SafeOptions): ApiExtraProps {
+    #getFetchProps({
+      fetch,
+      apiKey,
+      databaseURL,
+      branch,
+      trace,
+      clientID,
+      clientName,
+      xataAgentExtra
+    }: SafeOptions): ApiExtraProps {
       const branchValue = this.#evaluateBranch(branch);
       if (!branchValue) throw new Error('Unable to resolve branch value');
 
@@ -133,7 +146,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         },
         trace,
         clientID,
-        clientName
+        clientName,
+        xataAgentExtra
       };
     }
 
