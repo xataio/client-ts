@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.11.8
+
+### Patch Changes
+
+- [#882](https://github.com/xataio/client-ts/pull/882) [`76582160`](https://github.com/xataio/client-ts/commit/765821606e49945f2ed0b4a3dba1556eaad3ba65) Thanks [@xata-bot](https://github.com/xata-bot)! - Expose new github settings endpoints
+
+- Updated dependencies [[`4cafde72`](https://github.com/xataio/client-ts/commit/4cafde728e4e9e5e83812d475d9980397ae78362), [`639710a5`](https://github.com/xataio/client-ts/commit/639710a52132f260bf3a26560a21ae2193abb71d)]:
+  - @xata.io/client@0.22.1
+  - @xata.io/importer@0.3.5
+
 ## 0.11.7
 
 ### Patch Changes
