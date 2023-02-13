@@ -17,7 +17,7 @@ import { BaseCommand } from '../../base.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default class Shell extends BaseCommand {
+export default class Shell extends BaseCommand<typeof Shell> {
   static description = 'Open a shell to the current database and branch';
 
   static flags = {

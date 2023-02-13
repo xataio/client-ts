@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { BaseCommand, projectConfigSchema } from '../../base.js';
 import { setValue } from '../../config.js';
 
-export default class SetConfig extends BaseCommand {
+export default class SetConfig extends BaseCommand<typeof SetConfig> {
   static description = 'Get a specific key from the project configuration given a key path';
 
   static examples = [];

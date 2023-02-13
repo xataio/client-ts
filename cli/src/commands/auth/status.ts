@@ -1,7 +1,7 @@
 import { BaseCommand } from '../../base.js';
 import { hasProfile } from '../../credentials.js';
 
-export default class Status extends BaseCommand {
+export default class Status extends BaseCommand<typeof Status> {
   static description = 'Check status of the auth settings';
 
   static examples = [];

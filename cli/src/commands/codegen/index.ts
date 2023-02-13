@@ -18,7 +18,7 @@ export const unsupportedExtensionError = (ext: string) => {
   ).join(', ')}`;
 };
 
-export default class Codegen extends BaseCommand {
+export default class Codegen extends BaseCommand<typeof Codegen> {
   static description = 'Generate code from the current database schema';
 
   static examples = [];

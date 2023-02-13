@@ -2,7 +2,7 @@ import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { currentGitBranch, isGitInstalled } from '../../git.js';
 
-export default class BranchesCreate extends BaseCommand {
+export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
   static description = 'Link a git branch with a xata branch';
 
   static examples = [];

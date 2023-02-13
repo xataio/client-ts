@@ -7,7 +7,7 @@ import Codegen from '../codegen/index.js';
 
 const UPLOAD_ENDPOINT = 'https://app.xata.io/api/workers';
 
-export default class Upload extends BaseCommand {
+export default class Upload extends BaseCommand<typeof Upload> {
   static description = 'Compile and upload xata workers';
 
   static flags = {

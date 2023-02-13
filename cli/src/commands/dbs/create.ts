@@ -1,7 +1,7 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class DatabasesCreate extends BaseCommand {
+export default class DatabasesCreate extends BaseCommand<typeof DatabasesCreate> {
   static description = 'Create a database';
 
   static examples = [];

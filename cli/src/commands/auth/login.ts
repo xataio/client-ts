@@ -3,14 +3,13 @@ import { parseProviderString } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
 import { hasProfile, setProfile } from '../../credentials.js';
 
-export default class Login extends BaseCommand {
+export default class Login extends BaseCommand<typeof Login> {
   static description = 'Authenticate with Xata';
 
   static examples = [];
 
   static flags = {
     ...BaseCommand.forceFlag('Overwrite existing credentials if they exist'),
-    ...BaseCommand.profileFlag,
     host: Flags.string({
       description: 'Xata API host provider'
     })

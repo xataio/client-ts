@@ -17,7 +17,7 @@ import dotenv from 'dotenv';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 
-export default class Init extends BaseCommand {
+export default class Init extends BaseCommand<typeof Init> {
   static description = 'Configure your working directory to work with a Xata database';
 
   static examples = [

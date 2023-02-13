@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
 import { pluralize } from '../../utils.js';
 
-export default class RandomData extends BaseCommand {
+export default class RandomData extends BaseCommand<typeof RandomData> {
   static description = 'Insert random data in the database';
 
   static examples = [];

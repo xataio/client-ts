@@ -1,7 +1,7 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class DatabasesDelete extends BaseCommand {
+export default class DatabasesDelete extends BaseCommand<typeof DatabasesDelete> {
   static description = 'Delete a database';
 
   static examples = [];

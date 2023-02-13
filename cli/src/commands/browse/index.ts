@@ -1,7 +1,7 @@
 import open from 'open';
 import { BaseCommand } from '../../base.js';
 
-export default class Browse extends BaseCommand {
+export default class Browse extends BaseCommand<typeof Browse> {
   static description = 'Open the current database in the browser';
 
   static examples = [];

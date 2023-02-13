@@ -1,14 +1,13 @@
 import { BaseCommand } from '../../base.js';
 import { hasProfile, removeProfile } from '../../credentials.js';
 
-export default class Logout extends BaseCommand {
+export default class Logout extends BaseCommand<typeof Logout> {
   static description = 'Logout from Xata';
 
   static examples = [];
 
   static flags = {
-    ...BaseCommand.forceFlag(),
-    ...BaseCommand.profileFlag
+    ...BaseCommand.forceFlag()
   };
 
   static args = {};

@@ -3,7 +3,7 @@ import get from 'lodash.get';
 import chalk from 'chalk';
 import { Args } from '@oclif/core';
 
-export default class GetConfig extends BaseCommand {
+export default class GetConfig extends BaseCommand<typeof GetConfig> {
   static description = 'Set a specific key from the project configuration given a key path and a value';
 
   static examples = [];

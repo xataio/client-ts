@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class WorkspacesDelete extends BaseCommand {
+export default class WorkspacesDelete extends BaseCommand<typeof WorkspacesDelete> {
   static description = 'Delete a workspace';
 
   static examples = [];

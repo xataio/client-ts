@@ -256,6 +256,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       clientName: 'cli',
       xataAgentExtra: { cliCommandId: this.id ?? 'unknown' }
     });
+
     return this.#xataClient;
   }
 

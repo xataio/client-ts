@@ -4,7 +4,7 @@ import deepmerge from 'deepmerge';
 import { BaseCommand } from '../../base.js';
 import Codegen from '../codegen/index.js';
 
-export default class Merge extends BaseCommand {
+export default class Merge extends BaseCommand<typeof Merge> {
   static description = 'Merge the current branch with another branch';
 
   static examples = [];

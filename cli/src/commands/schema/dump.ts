@@ -3,7 +3,7 @@ import { Schemas } from '@xata.io/client';
 import { writeFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
 
-export default class SchemaDump extends BaseCommand {
+export default class SchemaDump extends BaseCommand<typeof SchemaDump> {
   static description = 'Dump the schema as a JSON file';
 
   static examples = [];

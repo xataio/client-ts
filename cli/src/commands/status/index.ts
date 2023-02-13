@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { APIKeyLocation, BaseCommand } from '../../base.js';
 import { credentialsFilePath, Profile } from '../../credentials.js';
 
-export default class Status extends BaseCommand {
+export default class Status extends BaseCommand<typeof Status> {
   static description = 'Print information about the current project configuration';
 
   static examples = [];

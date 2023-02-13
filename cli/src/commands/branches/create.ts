@@ -2,7 +2,7 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { createBranch, currentGitBranch, defaultGitBranch, isGitInstalled, isWorkingDirClean } from '../../git.js';
 
-export default class BranchesCreate extends BaseCommand {
+export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
   static description = 'Create a branch';
 
   static examples = [];

@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
 import { pluralize } from '../../utils.js';
 
-export default class ImportCSV extends BaseCommand {
+export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
 
   static examples = [
@@ -19,7 +19,6 @@ export default class ImportCSV extends BaseCommand {
   ];
 
   static flags = {
-    ...this.noInputFlag,
     ...this.databaseURLFlag,
     ...BaseCommand.forceFlag('Update the database schema if necessary without asking'),
     branch: this.branchFlag,

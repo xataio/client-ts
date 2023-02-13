@@ -3,7 +3,7 @@ import { Log, LogLevel, Miniflare } from 'miniflare';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers } from '../../workers.js';
 
-export default class WorkersCompile extends BaseCommand {
+export default class WorkersCompile extends BaseCommand<typeof WorkersCompile> {
   static description = 'Extract and compile xata workers';
 
   static flags = {

@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class DatabasesList extends BaseCommand {
+export default class DatabasesList extends BaseCommand<typeof DatabasesList> {
   static description = 'List your databases';
 
   static examples = [];

@@ -70,7 +70,7 @@ type SelectChoice = {
   hint?: string;
 };
 
-export default class EditSchema extends BaseCommand {
+export default class EditSchema extends BaseCommand<typeof EditSchema> {
   static description = 'Edit the schema of the current database';
 
   static examples = [];

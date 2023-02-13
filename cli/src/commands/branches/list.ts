@@ -1,7 +1,8 @@
 import compact from 'lodash.compact';
 import { BaseCommand } from '../../base.js';
 import { currentGitBranch, isGitRepo, listBranches } from '../../git.js';
-export default class BranchesList extends BaseCommand {
+
+export default class BranchesList extends BaseCommand<typeof BranchesList> {
   static description = 'List branches';
 
   static examples = [];
