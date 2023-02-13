@@ -1,4 +1,6 @@
 import { BaseCommand } from '../../base.js';
+import { getLocalMigrationFiles } from '../../migrations/files.js';
+import { buildMigrationDiff } from '../../utils/diff.js';
 
 export default class Diff extends BaseCommand {
   static description = 'Compare two local or remote branches';
@@ -24,15 +26,51 @@ export default class Diff extends BaseCommand {
 
   static hidden = true;
 
-  async run() {
-    const { args } = await this.parse(Diff);
+  static enableJsonFlag = true;
 
-    if (args.branch && args.base) {
-      // Compare two remote branches
-    } else if (args.branch) {
-      // Compare the local branch with the remote branch
-    } else {
-      // Compare the local branch with the remote main branch
+  async run() {
+    const { args, flags } = await this.parse(Diff);
+
+    const xata = await this.getXataClient();
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
+      flags.db,
+      args.branch ?? 'main',
+      true
+    );
+
+    const localMigrationFiles = await getLocalMigrationFiles();
+    const schemaOperations = localMigrationFiles.flatMap((migrationFile) => migrationFile.operations);
+
+    const apiRequest =
+      args.branch && args.base
+        ? xata.api.migrations.compareBranchSchemas({
+            workspace,
+            region,
+            database,
+            branch: args.branch,
+            compare: args.base
+          })
+        : xata.api.migrations.compareBranchWithUserSchema({
+            workspace,
+            region,
+            database,
+            branch,
+            schema: { tables: [] },
+            schemaOperations
+          });
+
+    const {
+      edits: { operations }
+    } = await apiRequest;
+
+    const diff = buildMigrationDiff(operations);
+    if (this.jsonEnabled()) return diff;
+
+    if (operations.length === 0) {
+      this.log('No changes found');
+      return;
     }
+
+    this.log(diff);
   }
 }
