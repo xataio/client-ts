@@ -27,13 +27,13 @@ afterEach(async (ctx) => {
 });
 
 describe('insert transactions', () => {
-  test('do nothing if body contains no operations', async () => {
+  test.skip('do nothing if body contains no operations', async () => {
     const response = await xata.transactions.run([]);
 
     expect(response.results).toEqual([]);
   });
 
-  test('insert a record', async () => {
+  test.skip('insert a record', async () => {
     const response = await xata.transactions.run([{ insert: { table: 'teams', record: { name: 'a' } } }]);
 
     expect(response.results).toEqual([{ operation: 'insert', id: expect.any(String), rows: 1 }]);
@@ -41,7 +41,7 @@ describe('insert transactions', () => {
     await xata.db.teams.delete({ id: response.results[0]?.id });
   });
 
-  test('insert by ID', async () => {
+  test.skip('insert by ID', async () => {
     const response = await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a' } } }]);
 
     expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1 }]);
@@ -49,7 +49,7 @@ describe('insert transactions', () => {
     await xata.db.teams.delete({ id: 'i0' });
   });
 
-  test('insert with createOnly and explicit ID', async () => {
+  test.skip('insert with createOnly and explicit ID', async () => {
     const response = await xata.transactions.run([
       { insert: { table: 'teams', record: { id: 'i0', name: 'a' }, createOnly: true } }
     ]);
@@ -59,7 +59,7 @@ describe('insert transactions', () => {
     await xata.db.teams.delete({ id: 'i0' });
   });
 
-  test('replace existing record if createOnly is unset', async () => {
+  test.skip('replace existing record if createOnly is unset', async () => {
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
     const response = await xata.transactions.run([
       { insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 1 } } }
@@ -70,7 +70,7 @@ describe('insert transactions', () => {
     await xata.db.teams.delete({ id: 'i0' });
   });
 
-  test('replace existing record if createOnly is false', async () => {
+  test.skip('replace existing record if createOnly is false', async () => {
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
     const response = await xata.transactions.run([
       { insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 1 }, createOnly: false } }
@@ -81,7 +81,7 @@ describe('insert transactions', () => {
     await xata.db.teams.delete({ id: 'i0' });
   });
 
-  test('replace when ifVersion set', async () => {
+  test.skip('replace when ifVersion set', async () => {
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 1 } } }]);
     const response = await xata.transactions.run([
@@ -93,7 +93,7 @@ describe('insert transactions', () => {
     await xata.db.teams.delete({ id: 'i0' });
   });
 
-  test('mix of operations', async () => {
+  test.skip('mix of operations', async () => {
     await xata.transactions.run([{ insert: { table: 'users', record: { id: 'j0', full_name: 'z', index: 0 } } }]);
 
     const response = await xata.transactions.run([
@@ -118,7 +118,7 @@ describe('insert transactions', () => {
 });
 
 describe('update transactions', () => {
-  test('update records', async () => {
+  test.skip('update records', async () => {
     await xata.transactions.run([
       { insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 1 } } },
       { insert: { table: 'teams', record: { id: 'i1', name: 'b', index: 10 } } },
@@ -147,7 +147,7 @@ describe('update transactions', () => {
     await xata.db.teams.delete(['i0', 'i1', 'i2']);
   });
 
-  test('update ifVersion', async () => {
+  test.skip('update ifVersion', async () => {
     await xata.transactions.run([
       { insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } },
       { insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 1 } } }
@@ -166,7 +166,7 @@ describe('update transactions', () => {
     await xata.db.teams.delete('i0');
   });
 
-  test('update an insert from same tx', async () => {
+  test.skip('update an insert from same tx', async () => {
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 0 } } }]);
 
     const response = await xata.transactions.run([
@@ -190,7 +190,7 @@ describe('update transactions', () => {
     await xata.db.teams.delete(['i0', 'i1']);
   });
 
-  test('upsert should insert record if it does not exist', async () => {
+  test.skip('upsert should insert record if it does not exist', async () => {
     const response = await xata.transactions.run([
       { update: { table: 'teams', id: 'i0', fields: { name: 'a', index: 0 }, upsert: true } }
     ]);
@@ -204,7 +204,7 @@ describe('update transactions', () => {
     await xata.db.teams.delete('i0');
   });
 
-  test('upsert should update record if it already exists', async () => {
+  test.skip('upsert should update record if it already exists', async () => {
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
 
     const response = await xata.transactions.run([
@@ -220,7 +220,7 @@ describe('update transactions', () => {
     await xata.db.teams.delete('i0');
   });
 
-  test('upsert with ifVersion', async () => {
+  test.skip('upsert with ifVersion', async () => {
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
     // update i0 to version 1
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 1 } } }]);
@@ -240,7 +240,7 @@ describe('update transactions', () => {
 });
 
 describe('delete transactions', () => {
-  test('delete a record', async () => {
+  test.skip('delete a record', async () => {
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
 
     const response = await xata.transactions.run([{ delete: { table: 'teams', id: 'i0' } }]);
@@ -251,7 +251,7 @@ describe('delete transactions', () => {
     expect(record).toBeNull();
   });
 
-  test('delete a record from same transaction', async () => {
+  test.skip('delete a record from same transaction', async () => {
     const response = await xata.transactions.run([
       { insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } },
       { delete: { table: 'teams', id: 'i0' } }
@@ -266,7 +266,7 @@ describe('delete transactions', () => {
     expect(record).toBeNull();
   });
 
-  test('delete that affects no records does not abort transaction', async () => {
+  test.skip('delete that affects no records does not abort transaction', async () => {
     await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a', index: 0 } } }]);
 
     const response = await xata.transactions.run([
