@@ -1,5 +1,36 @@
 # @xata.io/cli
 
+## 0.11.8
+
+### Patch Changes
+
+- [#882](https://github.com/xataio/client-ts/pull/882) [`76582160`](https://github.com/xataio/client-ts/commit/765821606e49945f2ed0b4a3dba1556eaad3ba65) Thanks [@xata-bot](https://github.com/xata-bot)! - Expose new github settings endpoints
+
+- Updated dependencies [[`4cafde72`](https://github.com/xataio/client-ts/commit/4cafde728e4e9e5e83812d475d9980397ae78362), [`639710a5`](https://github.com/xataio/client-ts/commit/639710a52132f260bf3a26560a21ae2193abb71d)]:
+  - @xata.io/client@0.22.1
+  - @xata.io/importer@0.3.5
+
+## 0.11.7
+
+### Patch Changes
+
+- [#877](https://github.com/xataio/client-ts/pull/877) [`f9b966df`](https://github.com/xataio/client-ts/commit/f9b966dfb86aeee5afa711aa7db5cb3e75615d2d) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose random data command programmatically
+
+- Updated dependencies [[`f9b966df`](https://github.com/xataio/client-ts/commit/f9b966dfb86aeee5afa711aa7db5cb3e75615d2d)]:
+  - @xata.io/importer@0.3.4
+
+## 0.11.6
+
+### Patch Changes
+
+- [#869](https://github.com/xataio/client-ts/pull/869) [`94edf2ef`](https://github.com/xataio/client-ts/commit/94edf2ef18f7151c1dcc6a88c4d10e885c01607b) Thanks [@richardgill](https://github.com/richardgill)! - default value for strings is not longer set to "undefined" if left empty
+
+- [#860](https://github.com/xataio/client-ts/pull/860) [`19b99f94`](https://github.com/xataio/client-ts/commit/19b99f9427d9337537d9fa982a412fe62015d263) Thanks [@SferaDev](https://github.com/SferaDev)! - Add experimental flag for incremental builds
+
+- Updated dependencies [[`b2a4def4`](https://github.com/xataio/client-ts/commit/b2a4def4baf3eb18cd323895635e0bccb7f876f4), [`379e6144`](https://github.com/xataio/client-ts/commit/379e61446b21e7cbadd7fc59267736c6845ec566)]:
+  - @xata.io/client@0.22.0
+  - @xata.io/importer@0.3.3
+
 ## 0.11.5
 
 ### Patch Changes

@@ -10,6 +10,7 @@ type BranchResolutionOptions = {
   apiKey?: string;
   fetchImpl?: FetchImpl;
   clientName?: string;
+  xataAgentExtra?: Record<string, string>;
 };
 
 export async function getCurrentBranchName(options?: BranchResolutionOptions): Promise<string> {
@@ -55,7 +56,8 @@ async function resolveXataBranch(gitBranch: string | undefined, options?: Branch
     pathParams: { dbName, workspace, region },
     queryParams: { gitBranch, fallbackBranch },
     trace: defaultTrace,
-    clientName: options?.clientName
+    clientName: options?.clientName,
+    xataAgentExtra: options?.xataAgentExtra
   });
 
   return branch;

@@ -1,5 +1,19 @@
 # @xata.io/plugin-client-cloudflare
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [[`4cafde72`](https://github.com/xataio/client-ts/commit/4cafde728e4e9e5e83812d475d9980397ae78362), [`639710a5`](https://github.com/xataio/client-ts/commit/639710a52132f260bf3a26560a21ae2193abb71d)]:
+  - @xata.io/client@0.22.1
+
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [[`b2a4def4`](https://github.com/xataio/client-ts/commit/b2a4def4baf3eb18cd323895635e0bccb7f876f4), [`379e6144`](https://github.com/xataio/client-ts/commit/379e61446b21e7cbadd7fc59267736c6845ec566)]:
+  - @xata.io/client@0.22.0
+
 ## 0.0.5
 
 ### Patch Changes

@@ -59,7 +59,7 @@ export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
   : never;
 
 // Private: To avoid circular dependencies, we limit the recursion depth
-type MAX_RECURSION = 5;
+type MAX_RECURSION = 2;
 
 // Private: Utility type to get a union with the columns below the current level
 // Exclude type in union: never

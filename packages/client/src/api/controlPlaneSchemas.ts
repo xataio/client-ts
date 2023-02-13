@@ -163,6 +163,20 @@ export type BranchMetadata = {
 
 export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
+/**
+ * Github repository settings for this database (optional)
+ */
+export type DatabaseGithubSettings = {
+  /**
+   * Repository owner (user or organization)
+   */
+  owner: string;
+  /**
+   * Repository name
+   */
+  repo: string;
+};
+
 export type Region = {
   id: string;
 };

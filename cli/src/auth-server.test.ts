@@ -107,9 +107,8 @@ describe('handler', () => {
     httpHandler(req, res);
 
     expect(res.writeHead).toHaveBeenCalledWith(500);
-    expect(res.end).toHaveBeenCalledWith(
-      'Something went wrong: error:04099079:rsa routines:RSA_padding_check_PKCS1_OAEP_mgf1:oaep decoding error'
-    );
+    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('Something went wrong:'));
+    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('decoding error'));
     expect(callback).not.toHaveBeenCalled();
   });
 

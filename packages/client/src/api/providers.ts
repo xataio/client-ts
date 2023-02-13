@@ -48,9 +48,16 @@ export function parseWorkspacesUrlParts(url: string): { workspace: string; regio
 
   const regex = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh.*/;
   const regexStaging = /(?:https:\/\/)?([^.]+)\.staging(?:\.([^.]+))\.xatabase\.co.*/;
-  const regexLocal = /(?:http:\/\/)?([^.]+)(?:\.([^.]+))\.localhost.*/;
+  const regexDevCloudflare = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev.*/;
+  const regexStagingCloudflare = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev.*/;
+  const regexProdCloudflare = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.tech.*/;
 
-  const match = url.match(regex) || url.match(regexStaging) || url.match(regexLocal);
+  const match =
+    url.match(regex) ||
+    url.match(regexStaging) ||
+    url.match(regexDevCloudflare) ||
+    url.match(regexStagingCloudflare) ||
+    url.match(regexProdCloudflare);
   if (!match) return null;
 
   return { workspace: match[1], region: match[2] };

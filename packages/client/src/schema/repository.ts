@@ -1863,12 +1863,21 @@ export const initObject = <T>(
     return xata;
   };
 
-  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata']) {
+  record.toSerializable = function () {
+    return JSON.parse(JSON.stringify(transformObjectLinks(data)));
+  };
+
+  record.toString = function () {
+    return JSON.stringify(transformObjectLinks(data));
+  };
+
+  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerializable', 'toString']) {
     Object.defineProperty(record, prop, { enumerable: false });
   }
 
   Object.freeze(record);
-  return record as T;
+  // `as unkwnown` to avoid TS error on versions prior to 4.9 (can be removed once we drop support for older versions)
+  return record as unknown as T;
 };
 
 function extractId(value: any): string | undefined {
