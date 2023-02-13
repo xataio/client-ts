@@ -11,6 +11,7 @@ import {
   queryTable,
   Schemas,
   searchTable,
+  vectorSearchTable,
   summarizeTable,
   updateRecordWithID,
   upsertRecordWithID
@@ -37,7 +38,7 @@ import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
-import { SelectableColumn, SelectedPick } from './selection';
+import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
@@ -735,6 +736,35 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       boosters?: Boosters<Record>[];
       page?: SearchPageConfig;
       target?: TargetColumn<Record>[];
+    }
+  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
+
+  /**
+   * Search for vectors in the table.
+   * @param column The column to search for.
+   * @param query The vector to search for similarities. Must have the same dimension as the vector column used.
+   * @param options The options to search with (like: spaceFunction)
+   */
+  abstract searchVector<F extends SelectableColumn<Record>>(
+    column: F, // TODO: check if column is a vector column
+    query: number[],
+    options?: {
+      /**
+       * The function used to measure the distance between two points. Can be one of:
+       * `cosineSimilarity`, `l1`, `l2`. The default is `cosineSimilarity`.
+       *
+       * @default cosineSimilarity
+       */
+      spaceFunction?: string;
+      /**
+       * Number of results to return.
+       *
+       * @default 10
+       * @maximum 100
+       * @minimum 1
+       */
+      size?: number;
+      filter?: Filter<NonNullable<ValueAtColumn<Record, F>>>;
     }
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
 
@@ -1693,6 +1723,44 @@ export class RestRepository<Record extends XataRecord>
           boosters: options.boosters as Schemas.BoosterExpression[],
           page: options.page,
           target: options.target as Schemas.TargetExpression
+        },
+        ...fetchProps
+      });
+
+      const schemaTables = await this.#getSchemaTables();
+
+      // TODO - Column selection not supported by search endpoint yet
+      return records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any;
+    });
+  }
+
+  async searchVector<F extends SelectableColumn<Record, []>>(
+    column: F,
+    query: number[],
+    options?:
+      | {
+          spaceFunction?: string | undefined;
+          size?: number | undefined;
+          filter?: Filter<NonNullable<ValueAtColumn<Record, F>>> | undefined;
+        }
+      | undefined
+  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]> {
+    return this.#trace('searchVector', async () => {
+      const fetchProps = await this.#getFetchProps();
+
+      const { records } = await vectorSearchTable({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
+        body: {
+          column,
+          queryVector: query,
+          spaceFunction: options?.spaceFunction,
+          size: options?.size,
+          filter: options?.filter as Schemas.FilterExpression
         },
         ...fetchProps
       });
