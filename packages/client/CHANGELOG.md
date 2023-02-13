@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.22.1
+
+### Patch Changes
+
+- [#885](https://github.com/xataio/client-ts/pull/885) [`4cafde72`](https://github.com/xataio/client-ts/commit/4cafde728e4e9e5e83812d475d9980397ae78362) Thanks [@SferaDev](https://github.com/SferaDev)! - Update body of compareBranchSchemas
+
+- [#890](https://github.com/xataio/client-ts/pull/890) [`639710a5`](https://github.com/xataio/client-ts/commit/639710a52132f260bf3a26560a21ae2193abb71d) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose consistency settings in summarize
+
 ## 0.22.0
 
 ### Minor Changes

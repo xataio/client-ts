@@ -23,6 +23,7 @@ export type SummarizeParams<
   columns?: Columns;
   sort?: SummarizeSort<Record, Expression>;
   pagination?: { size: number };
+  consistency?: 'strong' | 'eventual';
 };
 
 export type SummarizeResult<

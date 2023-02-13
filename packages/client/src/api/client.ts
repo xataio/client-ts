@@ -18,6 +18,7 @@ export interface XataApiClientOptions {
   host?: HostProvider;
   trace?: TraceFunction;
   clientName?: string;
+  xataAgentExtra?: Record<string, string>;
 }
 
 export class XataApiClient {
@@ -53,6 +54,7 @@ export class XataApiClient {
       apiKey,
       trace,
       clientName: options.clientName,
+      xataAgentExtra: options.xataAgentExtra,
       clientID
     };
   }
@@ -1337,17 +1339,21 @@ class MigrationsApi {
     region,
     database,
     branch,
-    schema
+    schema,
+    schemaOperations,
+    branchOperations
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     schema: Schemas.Schema;
+    schemaOperations?: Schemas.MigrationOp[];
+    branchOperations?: Schemas.MigrationOp[];
   }): Promise<Responses.SchemaCompareResponse> {
     return operationsByTag.migrations.compareBranchWithUserSchema({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: { schema },
+      body: { schema, schemaOperations, branchOperations },
       ...this.extraProps
     });
   }
@@ -1358,18 +1364,20 @@ class MigrationsApi {
     database,
     branch,
     compare,
-    schema
+    sourceBranchOperations,
+    targetBranchOperations
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     compare: Schemas.BranchName;
-    schema: Schemas.Schema;
+    sourceBranchOperations?: Schemas.MigrationOp[];
+    targetBranchOperations?: Schemas.MigrationOp[];
   }): Promise<Responses.SchemaCompareResponse> {
     return operationsByTag.migrations.compareBranchSchemas({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, branchName: compare },
-      body: { schema },
+      body: { sourceBranchOperations, targetBranchOperations },
       ...this.extraProps
     });
   }
@@ -1498,6 +1506,48 @@ class DatabaseApi {
     return operationsByTag.databases.updateDatabaseMetadata({
       pathParams: { workspaceId: workspace, dbName: database },
       body: metadata,
+      ...this.extraProps
+    });
+  }
+
+  public getDatabaseGithubSettings({
+    workspace,
+    database
+  }: {
+    workspace: Schemas.WorkspaceID;
+    database: Schemas.DBName;
+  }): Promise<Schemas.DatabaseGithubSettings> {
+    return operationsByTag.databases.getDatabaseGithubSettings({
+      pathParams: { workspaceId: workspace, dbName: database },
+      ...this.extraProps
+    });
+  }
+
+  public updateDatabaseGithubSettings({
+    workspace,
+    database,
+    settings
+  }: {
+    workspace: Schemas.WorkspaceID;
+    database: Schemas.DBName;
+    settings: Schemas.DatabaseGithubSettings;
+  }): Promise<Schemas.DatabaseGithubSettings> {
+    return operationsByTag.databases.updateDatabaseGithubSettings({
+      pathParams: { workspaceId: workspace, dbName: database },
+      body: settings,
+      ...this.extraProps
+    });
+  }
+
+  public deleteDatabaseGithubSettings({
+    workspace,
+    database
+  }: {
+    workspace: Schemas.WorkspaceID;
+    database: Schemas.DBName;
+  }): Promise<void> {
+    return operationsByTag.databases.deleteDatabaseGithubSettings({
+      pathParams: { workspaceId: workspace, dbName: database },
       ...this.extraProps
     });
   }
