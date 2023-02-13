@@ -1,4 +1,4 @@
-import { Command, Flags } from '@oclif/core';
+import { Command, Flags, Interfaces } from '@oclif/core';
 import {
   getAPIKey,
   getCurrentBranchName,
@@ -65,7 +65,10 @@ const commonFlagsHelpGroup = 'Common';
 
 export const ENV_FILES = ['.env.local', '.env'];
 
-export abstract class BaseCommand extends Command {
+export type Flags<T extends typeof Command> = Interfaces.InferredFlags<(typeof BaseCommand)['baseFlags'] & T['flags']>;
+export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
+
+export abstract class BaseCommand<T extends typeof Command> extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
   // By default this will use the system locale and timezone.
   locale: string | undefined = undefined;
@@ -147,7 +150,20 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  protected flags!: Flags<T>;
+  protected args!: Args<T>;
+
   async init() {
+    await super.init();
+    const { args, flags } = await this.parse({
+      flags: this.ctor.flags,
+      baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
+      args: this.ctor.args,
+      strict: this.ctor.strict
+    });
+    this.flags = flags as Flags<T>;
+    this.args = args as Args<T>;
+
     if (process.env.XATA_API_KEY) this.apiKeyLocation = 'shell';
     for (const envFile of ENV_FILES) {
       this.loadEnvFile(envFile);
