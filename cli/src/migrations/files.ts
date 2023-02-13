@@ -18,6 +18,12 @@ async function getLedger() {
 
 async function readMigrationsDir() {
   try {
+    await mkdir(migrationsDir, { recursive: true });
+  } catch (e) {
+    // Ignore
+  }
+
+  try {
     return await readdir(migrationsDir);
   } catch (e) {
     return [];
@@ -72,8 +78,6 @@ export async function getLocalMigrationFiles() {
 }
 
 export async function writeLocalMigrationFiles(files: MigrationFile[]) {
-  await mkdir(migrationsDir, { recursive: true });
-
   const ledger = await getLedger();
 
   for (const file of files) {
