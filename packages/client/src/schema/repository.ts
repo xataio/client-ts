@@ -1582,8 +1582,8 @@ export class RestRepository<Record extends XataRecord>
       });
 
       for (const result of results) {
-        if (result.operation === transaction.operation && result.fields !== undefined) {
-          items.push(initObject(this.#db, schemaTables, this.#table, result.fields, transaction.columns));
+        if (result.operation === transaction.operation && result.columns !== undefined) {
+          items.push(initObject(this.#db, schemaTables, this.#table, result.columns, transaction.columns));
         } else {
           items.push(null);
         }

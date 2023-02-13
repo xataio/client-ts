@@ -50,13 +50,13 @@ type TransactionOperationSingleResult<
   Operation extends TransactionOperation<Schema, Table>
 > = Operation extends { insert: { table: Table; record: { id: infer Id } } }
   ? // TODO FIXME DO NOT MERGE: SelectedPick infer Columns :)
-    { operation: 'insert'; id: Id; rows: number; fields: SelectedPick<Schema & XataRecord, ['*']> }
+    { operation: 'insert'; id: Id; rows: number; columns: SelectedPick<Schema & XataRecord, ['*']> }
   : Operation extends { insert: { table: Table } }
-  ? { operation: 'insert'; id: string; rows: number; fields: SelectedPick<Schema & XataRecord, ['*']> }
+  ? { operation: 'insert'; id: string; rows: number; columns: SelectedPick<Schema & XataRecord, ['*']> }
   : Operation extends { update: { table: Table; id: infer Id } }
-  ? { operation: 'update'; id: Id; rows: number; fields: SelectedPick<Schema & XataRecord, ['*']> }
+  ? { operation: 'update'; id: Id; rows: number; columns: SelectedPick<Schema & XataRecord, ['*']> }
   : Operation extends { delete: { table: Table } }
-  ? { operation: 'delete'; rows: number; fields: SelectedPick<Schema & XataRecord, ['*']> }
+  ? { operation: 'delete'; rows: number; columns: SelectedPick<Schema & XataRecord, ['*']> }
   : never;
 
 type TransactionOperationResults<
