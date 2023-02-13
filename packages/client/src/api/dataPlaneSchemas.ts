@@ -76,10 +76,19 @@ export type ColumnLink = {
   table: string;
 };
 
+export type ColumnVector = {
+  /**
+   * @maximum 10000
+   * @minimum 2
+   */
+  dimension: number;
+};
+
 export type Column = {
   name: string;
-  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
+  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime' | 'vector';
   link?: ColumnLink;
+  vector?: ColumnVector;
   notNull?: boolean;
   defaultValue?: string;
   unique?: boolean;
