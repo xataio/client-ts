@@ -13,6 +13,7 @@ export type TransactionPluginResult<Schemas extends Record<string, XataRecord>> 
 export class TransactionPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   build({ getFetchProps }: XataPluginOptions): TransactionPluginResult<Schemas> {
     return {
+      // @ts-ignore FIXME: Narrow is not working
       run: async <Tables extends StringKeys<Schemas>, Operations extends TransactionOperation<Schemas, Tables>[]>(
         operations: Narrow<Operations>
       ) => {

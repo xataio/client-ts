@@ -107,8 +107,8 @@ describe('handler', () => {
     httpHandler(req, res);
 
     expect(res.writeHead).toHaveBeenCalledWith(500);
-    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('Something went wrong:'))
-    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('decoding error'))
+    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('Something went wrong:'));
+    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('decoding error'));
     expect(callback).not.toHaveBeenCalled();
   });
 
