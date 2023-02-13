@@ -1110,7 +1110,26 @@ export class RestRepository<Record extends XataRecord>
         const updates = a.filter((_item, index) => existing[index] !== null);
 
         const columns = isStringArray(b) ? b : (['*'] as K[]);
-        return await this.#branchTransaction({ operation: 'update', ifVersion, upsert: false, columns }, updates);
+        const updated = await this.#branchTransaction(
+          { operation: 'update', ifVersion, upsert: false, columns },
+          updates
+        );
+
+        const { result } = existing.reduce(
+          (acc, item) => {
+            if (item === null) {
+              acc.result.push(null);
+            } else {
+              acc.result.push(updated[acc.index]);
+              acc.index += 1;
+            }
+
+            return acc;
+          },
+          { result: [], index: 0 } as { result: Array<Readonly<SelectedPick<Record, K[]>> | null>; index: number }
+        );
+
+        return result;
       }
 
       try {
@@ -1433,7 +1452,31 @@ export class RestRepository<Record extends XataRecord>
         });
 
         const columns = isStringArray(b) ? b : (['*'] as K[]);
-        return await this.#branchTransaction({ operation: 'delete', columns }, items);
+
+        // TODO: Transaction API fails fast if one of the records is not found
+        const existing = await this.read(a as any[], ['id']);
+        const deletes = existing.filter((_item, index) => existing[index] !== null) as Identifiable[];
+
+        const deleted = await this.#branchTransaction({ operation: 'delete', columns }, deletes);
+
+        const { result } = existing.reduce(
+          (acc, item) => {
+            if (item === null) {
+              acc.result.push(null);
+            } else {
+              acc.result.push(deleted[acc.index]);
+              acc.index += 1;
+            }
+
+            return acc;
+          },
+          { result: [], index: 0 } as {
+            result: Array<Readonly<SelectedPick<Record, K[]>> | null>;
+            index: number;
+          }
+        );
+
+        return result;
       }
 
       // Delete one record with id as param
