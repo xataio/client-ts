@@ -153,7 +153,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   protected flags!: Flags<T>;
   protected args!: Args<T>;
 
-  async init() {
+  public async init() {
     await super.init();
     const { args, flags } = await this.parse({
       flags: this.ctor.flags,
