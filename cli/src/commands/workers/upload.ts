@@ -59,8 +59,18 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
         const json = await response.json();
 
-        const { id } = responseSchema.parse(json);
+        if (response.status !== 200) {
+          const parsedError = errorSchema.safeParse(json);
+          const message = parsedError.success ? parsedError.data.message : 'Unknown error';
+          this.error(`Failed to upload workers: ${message}`);
+        }
 
+        const parsedResponse = responseSchema.safeParse(json);
+        if (!parsedResponse.success) {
+          this.error(`Failed to upload workers, invalid response`);
+        }
+
+        const { id } = parsedResponse.data;
         this.info(`Successfully compiled worker ${id}`);
 
         if (this.projectConfig?.codegen) {
@@ -100,4 +110,8 @@ const responseSchema = z.object({
   id: z.string(),
   createdBy: z.string(),
   createdAt: z.string()
+});
+
+const errorSchema = z.object({
+  message: z.string()
 });
