@@ -18,7 +18,7 @@ export const unsupportedExtensionError = (ext: string) => {
   ).join(', ')}`;
 };
 
-export default class Codegen extends BaseCommand {
+export default class Codegen extends BaseCommand<typeof Codegen> {
   static description = 'Generate code from the current database schema';
 
   static examples = [];
@@ -50,10 +50,10 @@ export default class Codegen extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(Codegen);
+    const { flags } = await this.parseCommand();
     const output = flags.output || this.projectConfig?.codegen?.output;
     const moduleType = this.projectConfig?.codegen?.moduleType;
     const javascriptTarget = flags['javascript-output-target'] || this.projectConfig?.codegen?.javascriptTarget;

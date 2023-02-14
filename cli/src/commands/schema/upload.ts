@@ -1,8 +1,8 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { readFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
 
-export default class UploadSchema extends BaseCommand {
+export default class UploadSchema extends BaseCommand<typeof UploadSchema> {
   static description = 'Edit the schema of the current database';
 
   static examples = [];
@@ -17,10 +17,12 @@ export default class UploadSchema extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'file', description: 'Schema file to upload', required: true }];
+  static args = {
+    file: Args.string({ description: 'Schema file to upload', required: true })
+  };
 
   async run(): Promise<void> {
-    const { flags, args } = await this.parse(UploadSchema);
+    const { args, flags } = await this.parseCommand();
 
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
       flags.db,

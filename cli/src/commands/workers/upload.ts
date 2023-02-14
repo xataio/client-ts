@@ -7,7 +7,7 @@ import Codegen from '../codegen/index.js';
 
 const UPLOAD_ENDPOINT = 'https://app.xata.io/api/workers';
 
-export default class Upload extends BaseCommand {
+export default class Upload extends BaseCommand<typeof Upload> {
   static description = 'Compile and upload xata workers';
 
   static flags = {
@@ -22,7 +22,7 @@ export default class Upload extends BaseCommand {
 
   async run(): Promise<void> {
     // TODO: Load them from .xatarc too
-    const { flags } = await this.parse(Upload);
+    const { flags } = await this.parseCommand();
 
     const profile = await this.getProfile();
     if (!profile) this.error('No profile found');

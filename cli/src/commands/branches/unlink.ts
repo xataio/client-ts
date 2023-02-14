@@ -2,7 +2,7 @@ import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { currentGitBranch, isGitInstalled } from '../../git.js';
 
-export default class BranchesCreate extends BaseCommand {
+export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
   static description = 'Unlink a git branch with a xata branch';
 
   static examples = [];
@@ -15,12 +15,12 @@ export default class BranchesCreate extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { flags } = await this.parse(BranchesCreate);
+    const { flags } = await this.parseCommand();
 
     if (!isGitInstalled()) {
       this.error('Git cannot be found. Please install it to unlink a branch.');

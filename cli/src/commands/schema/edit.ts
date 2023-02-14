@@ -70,7 +70,7 @@ type SelectChoice = {
   hint?: string;
 };
 
-export default class EditSchema extends BaseCommand {
+export default class EditSchema extends BaseCommand<typeof EditSchema> {
   static description = 'Edit the schema of the current database';
 
   static examples = [];
@@ -83,7 +83,7 @@ export default class EditSchema extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   branchDetails: Schemas.DBBranch | undefined;
   tables: EditableTable[] = [];
@@ -95,7 +95,7 @@ export default class EditSchema extends BaseCommand {
   selectItem: EditableColumn | EditableTable | null = null;
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(EditSchema);
+    const { flags } = await this.parseCommand();
 
     if (flags.source) {
       this.warn(

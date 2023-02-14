@@ -1,14 +1,14 @@
 import { BaseCommand } from '../../base.js';
 import { hasProfile } from '../../credentials.js';
 
-export default class Status extends BaseCommand {
+export default class Status extends BaseCommand<typeof Status> {
   static description = 'Check status of the auth settings';
 
   static examples = [];
 
   static flags = {};
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const profile = await this.getProfile(true);

@@ -3,7 +3,7 @@ import { Log, LogLevel, Miniflare } from 'miniflare';
 import { BaseCommand } from '../../base.js';
 import { buildWatcher, compileWorkers } from '../../workers.js';
 
-export default class WorkersCompile extends BaseCommand {
+export default class WorkersCompile extends BaseCommand<typeof WorkersCompile> {
   static description = 'Extract and compile xata workers';
 
   static flags = {
@@ -17,7 +17,7 @@ export default class WorkersCompile extends BaseCommand {
   };
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(WorkersCompile);
+    const { flags } = await this.parseCommand();
     // TODO: Allow customising port
     const watchPort = 64749;
 
