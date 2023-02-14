@@ -1,4 +1,4 @@
-import { Command, Flags, Interfaces } from '@oclif/core';
+import { Command, Config, Flags, Interfaces } from '@oclif/core';
 import {
   getAPIKey,
   getCurrentBranchName,
@@ -150,17 +150,17 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
   }
 
+  constructor(argv: string[], config: Config) {
+    super(argv, config);
+  }
+
   protected flags!: Flags<T>;
   protected args!: Args<T>;
 
-  public async init() {
+  async init() {
     await super.init();
-    const { args, flags } = await this.parse({
-      flags: this.ctor.flags,
-      baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
-      args: this.ctor.args,
-      strict: this.ctor.strict
-    });
+
+    const { args, flags } = await this.#baseParse();
     this.flags = flags as Flags<T>;
     this.args = args as Args<T>;
 
