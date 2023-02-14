@@ -1,6 +1,9 @@
 name: Build PR
 
 on:
+  push:
+    branches:
+      - gh-readonly-queue/main/**
   pull_request:
 
 concurrency:
