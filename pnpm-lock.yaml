@@ -142,6 +142,8 @@ importers:
       node-fetch: ^3.3.0
       oclif: ^3.6.3
       open: ^8.4.1
+      pino: ^8.10.0
+      pino-pretty: ^9.2.0
       prompts: ^2.4.2
       relaxed-json: ^1.0.3
       rollup-plugin-esbuild: ^5.0.0
@@ -191,6 +193,8 @@ importers:
       miniflare: 2.11.0
       node-fetch: 3.3.0
       open: 8.4.1
+      pino: 8.10.0
+      pino-pretty: 9.2.0
       prompts: 2.4.2
       relaxed-json: 1.0.3
       rollup-plugin-esbuild: 5.0.0
@@ -8236,7 +8240,6 @@ packages:
   /colorette/2.0.19:
     resolution:
       { integrity: sha512-3tlv/dIP7FWvj3BsbHrGLJ6l/oKh1O3TcgBqMn+yyCagOxc23fyzDS6HypQbgxWbkpDnf52p1LuR4eWDQ/K9WQ== }
-    dev: true
 
   /colors-option/2.0.1:
     resolution:
@@ -8811,7 +8814,6 @@ packages:
   /dateformat/4.6.3:
     resolution:
       { integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA== }
-    dev: true
 
   /deasync/0.1.28:
     resolution:
@@ -11111,6 +11113,11 @@ packages:
       - supports-color
     dev: false
 
+  /fast-copy/3.0.0:
+    resolution:
+      { integrity: sha512-4HzS+9pQ5Yxtv13Lhs1Z1unMXamBdn5nA4bEi1abYpDNSpSp7ODYQ1KPMF6nTatfEzgH6/zPvXKU1zvHiUjWlA== }
+    dev: false
+
   /fast-decode-uri-component/1.0.1:
     resolution:
       { integrity: sha512-WKgKWg5eUxvRZGwW8FvfbaH7AXSh2cL+3j5fMGzUMCxWBJ3dV3a7Wz8y2f/uQ0e3B6WmodD3oS54jTQ9HVTIIg== }
@@ -12470,6 +12477,14 @@ packages:
     resolution:
       { integrity: sha512-tWCK4biJ6hcLqTviLXVR9DTRfYGQMXEIUj3gwJ2rZ5wO/at3XtkI4g8mCvFdUF9l1KMBNCfmNAdnahm1cgavQA== }
     dev: true
+
+  /help-me/4.2.0:
+    resolution:
+      { integrity: sha512-TAOnTB8Tz5Dw8penUuzHVrKNKlCIbwwbHnXraNJxPwf8LRtE2HlM84RYuezMFcwOJmoYOCWVDyJ8TQGxn9PgxA== }
+    dependencies:
+      glob: 8.0.3
+      readable-stream: 3.6.0
+    dev: false
 
   /highlight.js/10.7.3:
     resolution:
@@ -17458,9 +17473,48 @@ packages:
       split2: 4.1.0
     dev: false
 
+  /pino-pretty/9.2.0:
+    resolution:
+      { integrity: sha512-7CeszmFqrUD08+JvtYcFXowNE7duFlE1XScmR41qTMbwQOhn7gijYYrRb5udH+z8xq4+A8vN8rQNYVPCTfzmGw== }
+    hasBin: true
+    dependencies:
+      colorette: 2.0.19
+      dateformat: 4.6.3
+      fast-copy: 3.0.0
+      fast-safe-stringify: 2.1.1
+      help-me: 4.2.0
+      joycon: 3.1.1
+      minimist: 1.2.7
+      on-exit-leak-free: 2.1.0
+      pino-abstract-transport: 1.0.0
+      pump: 3.0.0
+      readable-stream: 4.3.0
+      secure-json-parse: 2.6.0
+      sonic-boom: 3.2.1
+      strip-json-comments: 3.1.1
+    dev: false
+
   /pino-std-serializers/6.1.0:
     resolution:
       { integrity: sha512-KO0m2f1HkrPe9S0ldjx7za9BJjeHqBku5Ch8JyxETxT8dEFGz1PwgrHaOQupVYitpzbFSYm7nnljxD8dik2c+g== }
+    dev: false
+
+  /pino/8.10.0:
+    resolution:
+      { integrity: sha512-ODfIe+giJtQGsvNAEj5/sHHpL3TFBg161JBH4W62Hc0l0PJjsDFD1R7meLI4PZ2aoHDJznxFNShkJcaG/qJToQ== }
+    hasBin: true
+    dependencies:
+      atomic-sleep: 1.0.0
+      fast-redact: 3.1.2
+      on-exit-leak-free: 2.1.0
+      pino-abstract-transport: 1.0.0
+      pino-std-serializers: 6.1.0
+      process-warning: 2.1.0
+      quick-format-unescaped: 4.0.4
+      real-require: 0.2.0
+      safe-stable-stringify: 2.4.1
+      sonic-boom: 3.2.1
+      thread-stream: 2.2.0
     dev: false
 
   /pino/8.8.0:
@@ -19899,7 +19953,6 @@ packages:
     resolution:
       { integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig== }
     engines: { node: '>=8' }
-    dev: true
 
   /strip-literal/1.0.0:
     resolution:

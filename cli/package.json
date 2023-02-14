@@ -53,6 +53,8 @@
     "miniflare": "^2.11.0",
     "node-fetch": "^3.3.0",
     "open": "^8.4.1",
+    "pino": "^8.10.0",
+    "pino-pretty": "^9.2.0",
     "prompts": "^2.4.2",
     "relaxed-json": "^1.0.3",
     "rollup-plugin-esbuild": "^5.0.0",
