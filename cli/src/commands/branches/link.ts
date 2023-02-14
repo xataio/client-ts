@@ -23,7 +23,7 @@ export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { flags } = await this.parse(BranchesCreate);
+    const { flags } = await this.parseCommand();
 
     if (!isGitInstalled()) {
       this.error('Git cannot be found. Please install it to link branches.');

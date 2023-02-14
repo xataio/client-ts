@@ -17,7 +17,7 @@ export default class SchemaDump extends BaseCommand<typeof SchemaDump> {
   static args = {};
 
   async run(): Promise<Schemas.Schema | undefined> {
-    const { flags } = await this.parse(SchemaDump);
+    const { flags } = await this.parseCommand();
 
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
 

@@ -65,7 +65,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   };
 
   async run(): Promise<void> {
-    const { flags, args } = await this.parse(ImportCSV);
+    const { args, flags } = await this.parseCommand();
     const { file } = args;
     const {
       table,

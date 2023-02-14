@@ -18,7 +18,7 @@ export default class DatabasesList extends BaseCommand<typeof DatabasesList> {
   static enableJsonFlag = true;
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(DatabasesList);
+    const { flags } = await this.parseCommand();
     const workspace =
       flags.workspace ||
       this.parseDatabaseURL(this.projectConfig?.databaseURL ?? '').workspace ||

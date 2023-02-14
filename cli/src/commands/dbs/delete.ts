@@ -21,7 +21,7 @@ export default class DatabasesDelete extends BaseCommand<typeof DatabasesDelete>
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { flags, args } = await this.parse(DatabasesDelete);
+    const { args, flags } = await this.parseCommand();
     const workspace = flags.workspace || (await this.getWorkspace());
     const database = args.database;
 

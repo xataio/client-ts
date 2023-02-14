@@ -17,7 +17,7 @@ export default class WorkersCompile extends BaseCommand<typeof WorkersCompile> {
   };
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(WorkersCompile);
+    const { flags } = await this.parseCommand();
     // TODO: Allow customising port
     const watchPort = 64749;
 

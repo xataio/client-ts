@@ -13,7 +13,7 @@ export default class Logout extends BaseCommand<typeof Logout> {
   static args = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(Logout);
+    const { flags } = await this.parseCommand();
 
     const profile = await this.getProfile(true);
     const loggedIn = await hasProfile(profile.name);

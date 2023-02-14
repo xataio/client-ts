@@ -25,7 +25,7 @@ export default class RandomData extends BaseCommand<typeof RandomData> {
   static args = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(RandomData);
+    const { flags } = await this.parseCommand();
 
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();

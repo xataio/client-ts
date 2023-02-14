@@ -17,7 +17,7 @@ export default class BranchesList extends BaseCommand<typeof BranchesList> {
   static enableJsonFlag = true;
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(BranchesList);
+    const { flags } = await this.parseCommand();
     const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();

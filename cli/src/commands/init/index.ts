@@ -54,7 +54,7 @@ export default class Init extends BaseCommand<typeof Init> {
   static args = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(Init);
+    const { flags } = await this.parseCommand();
 
     this.log('🦋 Initializing project... We will ask you some questions.');
     this.log();
@@ -112,7 +112,7 @@ export default class Init extends BaseCommand<typeof Init> {
   async configureCodegen() {
     this.projectConfig = this.projectConfig || {};
 
-    const { flags } = await this.parse(Init);
+    const { flags } = await this.parseCommand();
 
     let output = flags.codegen;
     let sdk = flags.sdk;

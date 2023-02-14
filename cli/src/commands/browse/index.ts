@@ -15,7 +15,7 @@ export default class Browse extends BaseCommand<typeof Browse> {
   static args = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(Browse);
+    const { flags } = await this.parseCommand();
     const base = (await this.getProfile())?.web || 'https://app.xata.io';
 
     const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);

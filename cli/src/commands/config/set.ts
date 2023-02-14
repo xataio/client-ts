@@ -16,7 +16,7 @@ export default class SetConfig extends BaseCommand<typeof SetConfig> {
   };
 
   async run(): Promise<void> {
-    const { args } = await this.parse(SetConfig);
+    const { args } = await this.parseCommand();
 
     if (!this.projectConfig)
       return this.error(`No project configuration found. Use ${chalk.bold('xata init')} to configure your project.`);

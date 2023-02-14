@@ -19,7 +19,7 @@ export default class BranchesDelete extends BaseCommand<typeof BranchesDelete> {
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { flags, args } = await this.parse(BranchesDelete);
+    const { args, flags } = await this.parseCommand();
     const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
     const branch = args.branch;
 

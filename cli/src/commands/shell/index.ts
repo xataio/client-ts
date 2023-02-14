@@ -31,7 +31,7 @@ export default class Shell extends BaseCommand<typeof Shell> {
   };
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(Shell);
+    const { flags } = await this.parseCommand();
     const profile = await this.getProfile();
     const apiKey = profile?.apiKey;
     if (!apiKey) {

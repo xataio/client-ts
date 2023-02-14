@@ -95,7 +95,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   selectItem: EditableColumn | EditableTable | null = null;
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(EditSchema);
+    const { flags } = await this.parseCommand();
 
     if (flags.source) {
       this.warn(

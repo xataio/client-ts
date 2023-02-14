@@ -22,7 +22,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
   async run(): Promise<void> {
     // TODO: Load them from .xatarc too
-    const { flags } = await this.parse(Upload);
+    const { flags } = await this.parseCommand();
 
     const profile = await this.getProfile();
     if (!profile) this.error('No profile found');

@@ -23,7 +23,7 @@ export default class DatabasesCreate extends BaseCommand<typeof DatabasesCreate>
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { args, flags } = await this.parse(DatabasesCreate);
+    const { args, flags } = await this.parseCommand();
 
     const workspace = flags.workspace || (await this.getWorkspace());
 

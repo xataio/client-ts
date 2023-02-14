@@ -15,7 +15,7 @@ export default class GetConfig extends BaseCommand<typeof GetConfig> {
   };
 
   async run(): Promise<void> {
-    const { args } = await this.parse(GetConfig);
+    const { args } = await this.parseCommand();
 
     if (!this.projectConfig)
       return this.error(`No project configuration found. Use ${chalk.bold('xata init')} to configure your project.`);

@@ -22,7 +22,7 @@ export default class UploadSchema extends BaseCommand<typeof UploadSchema> {
   };
 
   async run(): Promise<void> {
-    const { flags, args } = await this.parse(UploadSchema);
+    const { args, flags } = await this.parseCommand();
 
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
       flags.db,

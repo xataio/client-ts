@@ -19,7 +19,7 @@ export default class WorkspacesDelete extends BaseCommand<typeof WorkspacesDelet
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { flags } = await this.parse(WorkspacesDelete);
+    const { flags } = await this.parseCommand();
     const workspace = flags.workspace || (await this.getWorkspace());
 
     const xata = await this.getXataClient();

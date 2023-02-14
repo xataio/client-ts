@@ -16,7 +16,7 @@ export default class Merge extends BaseCommand<typeof Merge> {
   };
 
   async run(): Promise<Schemas.Schema | undefined> {
-    const { args } = await this.parse(Merge);
+    const { args } = await this.parseCommand();
     const { branch } = args;
 
     const { workspace, region, database, branch: current } = await this.getParsedDatabaseURLWithBranch();

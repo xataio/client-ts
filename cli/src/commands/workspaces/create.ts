@@ -17,7 +17,7 @@ export default class WorkspacesCreate extends BaseCommand<typeof WorkspacesCreat
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { args } = await this.parse(WorkspacesCreate);
+    const { args } = await this.parseCommand();
     const { workspace } = args;
 
     if (!workspace) {

@@ -150,20 +150,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
   }
 
-  constructor(argv: string[], config: Config) {
-    super(argv, config);
-  }
-
-  protected flags!: Flags<T>;
-  protected args!: Args<T>;
-
   async init() {
-    await super.init();
-
-    const { args, flags } = await this.#baseParse();
-    this.flags = flags as Flags<T>;
-    this.args = args as Args<T>;
-
     if (process.env.XATA_API_KEY) this.apiKeyLocation = 'shell';
     for (const envFile of ENV_FILES) {
       this.loadEnvFile(envFile);
@@ -222,7 +209,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   }
 
   async getProfile(ignoreEnv?: boolean): Promise<Profile> {
-    const { flags } = await this.#baseParse();
+    const { flags } = await this.parseCommand();
     const profileName = flags.profile || getEnvProfileName();
 
     const apiKey = getAPIKey();
@@ -659,7 +646,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     // If there's a flag, use the value of the flag
     if (flagValue != null) return { [String(options.name)]: flagValue } as prompts.Answers<name>;
 
-    const { flags } = await this.#baseParse();
+    const { flags } = await this.parseCommand();
     const { 'no-input': noInput, yes } = flags;
 
     if (yes && options.initial != null && typeof options.initial !== 'function') {
@@ -697,12 +684,14 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     });
   }
 
-  async #baseParse() {
-    return await this.parse({
+  async parseCommand(): Promise<{ flags: Flags<T>; args: Args<T> }> {
+    const { flags, args } = await this.parse({
       flags: this.ctor.flags,
       baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
       args: this.ctor.args,
       strict: this.ctor.strict
     });
+
+    return { flags, args } as { flags: Flags<T>; args: Args<T> };
   }
 }

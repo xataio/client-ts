@@ -25,7 +25,7 @@ export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { args, flags } = await this.parse(BranchesCreate);
+    const { args, flags } = await this.parseCommand();
     const { branch } = args;
 
     const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
