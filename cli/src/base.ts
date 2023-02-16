@@ -1,4 +1,4 @@
-import { Command, Config, Flags, Interfaces } from '@oclif/core';
+import { Command, Flags, Interfaces } from '@oclif/core';
 import {
   getAPIKey,
   getCurrentBranchName,
@@ -14,8 +14,10 @@ import { cosmiconfigSync } from 'cosmiconfig';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 import { readFile, writeFile } from 'fs/promises';
+import compact from 'lodash.compact';
 import fetch from 'node-fetch';
 import path from 'path';
+import pino from 'pino';
 import prompts from 'prompts';
 import table from 'text-table';
 import which from 'which';
@@ -29,6 +31,8 @@ import {
   readCredentialsDictionary
 } from './credentials.js';
 import { reportBugURL } from './utils.js';
+
+const logLevels = ['debug', 'info', 'warn', 'error'] as const;
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),
@@ -82,6 +86,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
   #xataClient?: XataApiClient;
 
+  #logger!: pino.Logger;
+
   // The first place is the one used by default when running `xata init`
   // In the future we can support YAML
   searchPlaces = [`.${moduleName}rc`, `.${moduleName}rc.json`, 'package.json'];
@@ -128,6 +134,16 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       helpGroup: commonFlagsHelpGroup,
       helpValue: '<profile-name>',
       description: 'Profile name to use'
+    }),
+    'log-level': Flags.custom<(typeof logLevels)[number]>({
+      summary: 'Specify level for logging.',
+      options: Object.values(logLevels),
+      helpGroup: commonFlagsHelpGroup,
+      description: `Specify level for logging. Possible values: ${Object.values(logLevels).join(', ')}.`
+    })(),
+    'log-file': Flags.string({
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Specify file to persist all logs.'
     })
   };
 
@@ -151,6 +167,19 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   }
 
   async init() {
+    const { flags } = await this.parseCommand();
+    const { ['log-file']: logFile, ['log-level']: logLevel = 'info' } = flags;
+
+    this.#logger = pino({
+      level: logLevel,
+      transport: {
+        targets: compact([
+          { level: logLevel, target: 'pino-pretty', options: { colorize: true } },
+          logFile ? { level: 'trace', target: 'pino/file', options: { destination: logFile } } : undefined
+        ])
+      }
+    });
+
     if (process.env.XATA_API_KEY) this.apiKeyLocation = 'shell';
     for (const envFile of ENV_FILES) {
       this.loadEnvFile(envFile);
@@ -262,13 +291,56 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     });
   }
 
-  info(message: string) {
-    this.log(`${chalk.blueBright('i')} ${message}`);
+  log(message?: string) {
+    this.#logger.info(message);
+    return super.log(message);
   }
 
-  success(message: string) {
-    this.log(`${chalk.greenBright('✔')} ${message}`);
+  info(message?: string) {
+    this.#logger.info(message);
+    return super.log(`${chalk.blueBright('i')} ${message}`);
   }
+
+  success(message?: string) {
+    this.#logger.info(message);
+    return super.log(`${chalk.greenBright('✔')} ${message}`);
+  }
+
+  warn(input: string | Error) {
+    this.#logger.warn(input instanceof Error ? input.message : input);
+    return super.warn(input);
+  }
+
+  error(
+    input: string | Error,
+    options?: {
+      /**
+       * messsage to display related to the error
+       */
+      message?: string;
+      /**
+       * a unique error code for this error class
+       */
+      code?: string;
+      /**
+       * a url to find out more information related to this error
+       * or fixing the error
+       */
+      ref?: string;
+      /**
+       * a suggestion that may be useful or provide additional context
+       */
+      suggestions?: string[];
+    }
+  ) {
+    this.#logger.error(input instanceof Error ? input.message : input);
+    return super.error(input, options);
+  }
+
+  debug = (...args: any[]) => {
+    this.#logger.debug(args);
+    return super.debug(args);
+  };
 
   async verifyAPIKey(profile: Profile) {
     this.info('Checking access to the API...');
