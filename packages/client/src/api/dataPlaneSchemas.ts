@@ -78,7 +78,7 @@ export type ColumnLink = {
 
 export type Column = {
   name: string;
-  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
+  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime' | 'file';
   link?: ColumnLink;
   notNull?: boolean;
   defaultValue?: string;
@@ -487,8 +487,6 @@ export type TransactionInsertOp = {
 };
 
 /**
- * @maxLength 255
- * @minLength 1
  * @pattern [a-zA-Z0-9_-~:]+
  */
 export type RecordID = string;
