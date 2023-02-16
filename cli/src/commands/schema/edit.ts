@@ -35,6 +35,15 @@ type EditableTable = Table & {
 };
 
 type ColumnEditState = {
+  initial: {
+    name: string;
+    type: string;
+    link: string | undefined;
+    notNull: string;
+    defaultValue: string;
+    unique: string;
+    description: string | undefined;
+  };
   values: {
     name?: string;
     type?: string;
@@ -377,33 +386,32 @@ Beware that this can lead to ${chalk.bold(
   async showColumnEdit(column: EditableColumn | null, table: EditableTable) {
     this.clear();
     const isColumnAdded = !column || column?.added;
-    let template = `
-           Name: \${name}`;
-    if (isColumnAdded) {
-      template += `
+    const template = `
+           Name: \${name}
            Type: \${type}
            Link: \${link}
     Description: \${description}
          Unique: \${unique}
        Not null: \${notNull}
   Default value: \${defaultValue}`;
-    }
+
+    const initial: ColumnEditState['initial'] = {
+      name: column?.name || '',
+      type: column?.type || '',
+      link: isColumnAdded ? '' : column?.link?.table,
+      notNull: column?.notNull ? 'true' : 'false',
+      defaultValue: column?.defaultValue || '',
+      unique: column?.unique ? 'true' : 'false',
+      description: isColumnAdded ? '' : column?.description
+    };
     const snippet: any = new Snippet({
       message: column?.name || 'a new column',
-      initial: {
-        name: column?.name || '',
-        type: column?.type || '',
-        link: column?.link?.table || '',
-        notNull: column?.notNull ? 'true' : 'false',
-        defaultValue: column?.defaultValue || '',
-        unique: column?.unique ? 'true' : 'false',
-        description: column?.description || ''
-      },
+      initial,
       fields: [
         {
           name: 'name',
           message: 'The column name',
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
             if (!identifier.test(value || '')) {
               return snippet.styles.danger(`Column name has to match ${identifier}`);
             }
@@ -414,6 +422,9 @@ Beware that this can lead to ${chalk.bold(
           name: 'type',
           message: `The column type (${typesList})`,
           validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (!isColumnAdded && value !== state.initial.type) {
+              return `Cannot change the type of existing columns`;
+            }
             if (!value || !types.includes(value)) {
               return `Type needs to be one of ${typesList}`;
             }
@@ -423,7 +434,15 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'link',
           message: 'Linked table. Only for columns that are links',
-          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+          validate(
+            value: string | undefined,
+            state: ColumnEditState,
+            item: { value: string | undefined },
+            index: number
+          ) {
+            if (!isColumnAdded && value !== state.initial.link) {
+              return `Cannot change the link of existing link columns`;
+            }
             if (state.values.type === 'link') {
               if (!value) {
                 return 'The link field must be filled the columns of type `link`';
@@ -438,6 +457,9 @@ Beware that this can lead to ${chalk.bold(
           name: 'unique',
           message: 'Whether the column is unique (true/false)',
           validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (!isColumnAdded && parseBoolean(value) !== parseBoolean(state.initial.unique)) {
+              return `Cannot change Unique for existing columns`;
+            }
             const validateOptionalBooleanResult = validateOptionalBoolean(value);
             if (validateOptionalBooleanResult !== true) {
               return validateOptionalBooleanResult;
@@ -453,6 +475,9 @@ Beware that this can lead to ${chalk.bold(
           name: 'notNull',
           message: 'Whether the column is not nullable (true/false)',
           validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (!isColumnAdded && parseBoolean(value) !== parseBoolean(state.initial.notNull)) {
+              return `Cannot change Not null for existing columns`;
+            }
             const validateOptionalBooleanResult = validateOptionalBoolean(value);
             if (validateOptionalBooleanResult !== true) {
               return validateOptionalBooleanResult;
@@ -466,12 +491,26 @@ Beware that this can lead to ${chalk.bold(
         },
         {
           name: 'description',
-          message: 'An optional column description'
+          message: 'An optional column description',
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (!isColumnAdded && value !== state.initial.description) {
+              return `Cannot change Description for existing columns`;
+            }
+            return true;
+          }
         },
         {
           name: 'defaultValue',
           message: 'Default value',
           validate(rawDefaultValue: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (
+              !isColumnAdded &&
+              state.values.type &&
+              parseDefaultValue(state.values.type, rawDefaultValue) !==
+                parseDefaultValue(state.values.type, state.initial.defaultValue)
+            ) {
+              return `Cannot change Default Value for existing columns`;
+            }
             if (state.values.type) {
               const isNotNull = parseBoolean(state.values.notNull) === true;
               const defaultValue = parseDefaultValue(state.values.type, rawDefaultValue);
