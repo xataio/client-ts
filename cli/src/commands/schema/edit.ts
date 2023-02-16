@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import enquirer from 'enquirer';
 import { getEditor } from 'env-editor';
 import { readFile, writeFile } from 'fs/promises';
+import compact from 'lodash.compact';
 import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
@@ -375,18 +376,18 @@ Beware that this can lead to ${chalk.bold(
 
   async showColumnEdit(column: EditableColumn | null, table: EditableTable) {
     this.clear();
-
+    const isColumnAdded = !column || column?.added;
     let template = `
-           Name: \${name}
+           Name: \${name}`;
+    if (isColumnAdded) {
+      template += `
            Type: \${type}
            Link: \${link}
     Description: \${description}
-         Unique: \${unique}`;
-
-    template += `
+         Unique: \${unique}
        Not null: \${notNull}
   Default value: \${defaultValue}`;
-
+    }
     const snippet: any = new Snippet({
       message: column?.name || 'a new column',
       initial: {
@@ -501,7 +502,7 @@ Beware that this can lead to ${chalk.bold(
         link: values.link && values.type === 'link' ? { table: values.link } : undefined,
         unique: unique || undefined,
         notNull: notNull || undefined,
-        defaultValue: values.defaultValue !== '' ? parseDefaultValue(values.type, values.defaultValue) : undefined
+        defaultValue: parseDefaultValue(values.type, values.defaultValue)
         // TODO: add description once the backend supports it
         // description: values.description
       };
