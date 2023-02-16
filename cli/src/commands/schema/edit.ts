@@ -769,6 +769,9 @@ function validateUnique(uniqueValue: string | undefined, state: ColumnEditState)
   if (isUnique && parseBoolean(state.values.notNull)) {
     return 'Column cannot be both `Unique: true` and `Not null: true`';
   }
+  if (isUnique && state.values.defaultValue) {
+    return 'Column cannot be both `Unique: true` and have a `Default value`';
+  }
   return true;
 }
 
@@ -776,9 +779,6 @@ function validateNotNull(notNullValue: string | undefined, state: ColumnEditStat
   const isNotNull = parseBoolean(notNullValue);
   if (isNotNull && state.values.type && notNullUnsupportedTypes.includes(state.values.type)) {
     return `Column type \`${state.values.type}\` does not support \`Not null: true\``;
-  }
-  if (isNotNull && parseBoolean(state.values.unique)) {
-    return 'Column cannot have both `Unique: true` and `Not null: true`';
   }
 
   return true;
