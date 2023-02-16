@@ -9,7 +9,7 @@ import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
 import { parseSchemaFile } from '../../schema.js';
-import { reportBugURL } from '../../utils.js';
+import { reportBugURL, isValidEmail } from '../../utils.js';
 import Codegen from '../codegen/index.js';
 
 // The enquirer library has type definitions but they are very poor
@@ -33,9 +33,25 @@ type EditableTable = Table & {
   columns: EditableColumn[];
 };
 
+type ColumnEditState = {
+  values: {
+    name?: string;
+    type?: string;
+    link?: string;
+    notNull?: string;
+    defaultValue?: string;
+    unique?: string;
+    description?: string;
+  };
+};
+
 const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime'];
 const typesList = types.join(', ');
 const identifier = /^[a-zA-Z0-9-_~]+$/;
+
+const uniqueUnsupportedTypes: string[] = ['text', 'multiple'];
+const defaultValueUnsupportedTypes: string[] = ['multiple', 'link'];
+const notNullUnsupportedTypes: string[] = defaultValueUnsupportedTypes;
 
 const waitFlags: Record<string, string> = {
   code: '-w',
@@ -371,18 +387,6 @@ Beware that this can lead to ${chalk.bold(
        Not null: \${notNull}
   Default value: \${defaultValue}`;
 
-    type ColumnEditState = {
-      values: {
-        name?: string;
-        type?: string;
-        link?: string;
-        notNull?: string;
-        defaultValue?: string;
-        unique?: string;
-        description?: string;
-      };
-    };
-
     const snippet: any = new Snippet({
       message: column?.name || 'a new column',
       initial: {
@@ -432,13 +436,31 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'unique',
           message: 'Whether the column is unique (true/false)',
-          validate: validateOptionalBoolean
+          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+            const validateOptionalBooleanResult = validateOptionalBoolean(value);
+            if (validateOptionalBooleanResult !== true) {
+              return validateOptionalBooleanResult;
+            }
+            const validateUniqueResult = validateUnique(value, state);
+            if (validateUniqueResult !== true) {
+              return validateUniqueResult;
+            }
+            return true;
+          }
         },
         {
           name: 'notNull',
           message: 'Whether the column is not nullable (true/false)',
           validate(value: string, state: ColumnEditState, item: unknown, index: number) {
-            return validateOptionalBoolean(value);
+            const validateOptionalBooleanResult = validateOptionalBoolean(value);
+            if (validateOptionalBooleanResult !== true) {
+              return validateOptionalBooleanResult;
+            }
+            const validateNotNullResult = validateNotNull(value, state);
+            if (validateNotNullResult !== true) {
+              return validateNotNullResult;
+            }
+            return true;
           }
         },
         {
@@ -734,13 +756,36 @@ function validateOptionalBoolean(value?: string) {
   return true;
 }
 
+function validateUnique(uniqueValue: string, state: ColumnEditState) {
+  const isUnique = parseBoolean(uniqueValue);
+  if (isUnique && state.values.type && uniqueUnsupportedTypes.includes(state.values.type)) {
+    return `Column type \`${state.values.type}\` does not support \`unique\``;
+  }
+  if (isUnique && parseBoolean(state.values.notNull)) {
+    return 'Column cannot be both `unique` and `notNull`';
+  }
+  return true;
+}
+
+function validateNotNull(notNullValue: string, state: ColumnEditState) {
+  const isNotNull = parseBoolean(notNullValue);
+  if (isNotNull && state.values.type && notNullUnsupportedTypes.includes(state.values.type)) {
+    return `Column type \`${state.values.type}\` does not support \`notNull\``;
+  }
+  if (isNotNull && parseBoolean(state.values.unique)) {
+    return 'Column cannot be both `unique` and `notNull`';
+  }
+
+  return true;
+}
+
 function parseDefaultValue(type: string, val?: string): string | undefined {
-  if (val === undefined) {
+  if (val === undefined || defaultValueUnsupportedTypes.includes(type)) {
     return undefined;
   }
   const num = String(val).length > 0 ? +val : undefined;
 
-  if (type === 'string') {
+  if (['text', 'string'].includes(type)) {
     return String(val);
   } else if (type === 'int') {
     return Number.isSafeInteger(num) && val !== '' ? String(num) : undefined;
@@ -749,9 +794,10 @@ function parseDefaultValue(type: string, val?: string): string | undefined {
   } else if (type === 'bool') {
     return String(parseBoolean(val));
   } else if (type === 'email') {
+    if (!isValidEmail(val)) {
+      return undefined;
+    }
     return val;
-  } else if (type === 'link') {
-    return String(val);
   } else if (type === 'datetime') {
     // Date fields have special values
     if (['now'].includes(val)) return val;

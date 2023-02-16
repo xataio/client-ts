@@ -7,3 +7,10 @@ export function reportBugURL(title: string) {
     title
   )}`;
 }
+
+// https://stackoverflow.com/a/8829363
+const EMAIL_REGEX =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+export function isValidEmail(email: string) {
+  return EMAIL_REGEX.test(email);
+}
