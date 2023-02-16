@@ -11,3 +11,5 @@ Bugfixes to adding / editing columns
 - Setting {unique, notNull, defaultValue} for a type that doesn't support it errors
 - notNull and unique are set to 'false' initially.
 - No longer able to attempt to edit fields which cannot be edited on an existing column
+- Text supports default values
+- Bugs fixed with boolean default values
