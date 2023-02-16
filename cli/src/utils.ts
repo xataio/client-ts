@@ -14,3 +14,5 @@ const EMAIL_REGEX =
 export function isValidEmail(email: string) {
   return EMAIL_REGEX.test(email);
 }
+
+export const isNil = (value: any) => value === null || value === undefined;

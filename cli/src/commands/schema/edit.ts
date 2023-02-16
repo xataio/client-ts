@@ -9,7 +9,7 @@ import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
 import { parseSchemaFile } from '../../schema.js';
-import { reportBugURL, isValidEmail } from '../../utils.js';
+import { reportBugURL, isValidEmail, isNil } from '../../utils.js';
 import Codegen from '../codegen/index.js';
 
 // The enquirer library has type definitions but they are very poor
@@ -393,9 +393,9 @@ Beware that this can lead to ${chalk.bold(
         name: column?.name || '',
         type: column?.type || '',
         link: column?.link?.table || '',
-        notNull: column?.notNull ? 'true' : '',
+        notNull: column?.notNull ? 'true' : 'false',
         defaultValue: column?.defaultValue || '',
-        unique: column?.unique ? 'true' : '',
+        unique: column?.unique ? 'true' : 'false',
         description: column?.description || ''
       },
       fields: [
@@ -412,8 +412,8 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'type',
           message: `The column type (${typesList})`,
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
-            if (!types.includes(value)) {
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (!value || !types.includes(value)) {
               return `Type needs to be one of ${typesList}`;
             }
             return true;
@@ -422,7 +422,7 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'link',
           message: 'Linked table. Only for columns that are links',
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
             if (state.values.type === 'link') {
               if (!value) {
                 return 'The link field must be filled the columns of type `link`';
@@ -436,7 +436,7 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'unique',
           message: 'Whether the column is unique (true/false)',
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
             const validateOptionalBooleanResult = validateOptionalBoolean(value);
             if (validateOptionalBooleanResult !== true) {
               return validateOptionalBooleanResult;
@@ -451,7 +451,7 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'notNull',
           message: 'Whether the column is not nullable (true/false)',
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
             const validateOptionalBooleanResult = validateOptionalBoolean(value);
             if (validateOptionalBooleanResult !== true) {
               return validateOptionalBooleanResult;
@@ -469,11 +469,16 @@ Beware that this can lead to ${chalk.bold(
         },
         {
           name: 'defaultValue',
-          message: 'Default value for if not nullable',
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
-            if (parseBoolean(state.values.notNull) === true && state.values.type) {
-              if (parseDefaultValue(state.values.type, value) === undefined) {
-                return `Invalid default value for column type ${state.values.type}`;
+          message: 'Default value',
+          validate(rawDefaultValue: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (state.values.type) {
+              const isNotNull = parseBoolean(state.values.notNull) === true;
+              const defaultValue = parseDefaultValue(state.values.type, rawDefaultValue);
+              if (isNotNull && (!rawDefaultValue || rawDefaultValue.length === 0)) {
+                return 'Default Value must be set for `Not null: true` columns';
+              }
+              if (rawDefaultValue && rawDefaultValue.length > 0 && defaultValue === undefined) {
+                return `Invalid Default Value for Type: ${state.values.type}`;
               }
             }
             return true;
@@ -756,24 +761,24 @@ function validateOptionalBoolean(value?: string) {
   return true;
 }
 
-function validateUnique(uniqueValue: string, state: ColumnEditState) {
+function validateUnique(uniqueValue: string | undefined, state: ColumnEditState) {
   const isUnique = parseBoolean(uniqueValue);
   if (isUnique && state.values.type && uniqueUnsupportedTypes.includes(state.values.type)) {
-    return `Column type \`${state.values.type}\` does not support \`unique\``;
+    return `Column type \`${state.values.type}\` does not support \`Unique: true\``;
   }
   if (isUnique && parseBoolean(state.values.notNull)) {
-    return 'Column cannot be both `unique` and `notNull`';
+    return 'Column cannot be both `Unique: true` and `Not null: true`';
   }
   return true;
 }
 
-function validateNotNull(notNullValue: string, state: ColumnEditState) {
+function validateNotNull(notNullValue: string | undefined, state: ColumnEditState) {
   const isNotNull = parseBoolean(notNullValue);
   if (isNotNull && state.values.type && notNullUnsupportedTypes.includes(state.values.type)) {
-    return `Column type \`${state.values.type}\` does not support \`notNull\``;
+    return `Column type \`${state.values.type}\` does not support \`Not null: true\``;
   }
   if (isNotNull && parseBoolean(state.values.unique)) {
-    return 'Column cannot be both `unique` and `notNull`';
+    return 'Column cannot have both `Unique: true` and `Not null: true`';
   }
 
   return true;
@@ -792,7 +797,8 @@ function parseDefaultValue(type: string, val?: string): string | undefined {
   } else if (type === 'float') {
     return Number.isFinite(num) && val !== '' ? String(num) : undefined;
   } else if (type === 'bool') {
-    return String(parseBoolean(val));
+    const booleanValue = parseBoolean(val);
+    return !isNil(booleanValue) ? String(booleanValue) : undefined;
   } else if (type === 'email') {
     if (!isValidEmail(val)) {
       return undefined;
