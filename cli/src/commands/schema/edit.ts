@@ -509,16 +509,16 @@ Beware that this can lead to ${chalk.bold(
               parseDefaultValue(state.values.type, rawDefaultValue) !==
                 parseDefaultValue(state.values.type, state.initial.defaultValue)
             ) {
-              return `Cannot change Default Value for existing columns`;
+              return `Cannot change Default value for existing columns`;
             }
             if (state.values.type) {
               const isNotNull = parseBoolean(state.values.notNull) === true;
               const defaultValue = parseDefaultValue(state.values.type, rawDefaultValue);
               if (isNotNull && (!rawDefaultValue || rawDefaultValue.length === 0)) {
-                return 'Default Value must be set for `Not null: true` columns';
+                return 'Default value must be set for `Not null: true` columns';
               }
               if (rawDefaultValue && rawDefaultValue.length > 0 && defaultValue === undefined) {
-                return `Invalid Default Value for Type: ${state.values.type}`;
+                return `Invalid Default value for Type: ${state.values.type}`;
               }
             }
             return true;
