@@ -59,9 +59,9 @@ const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'em
 const typesList = types.join(', ');
 const identifier = /^[a-zA-Z0-9-_~]+$/;
 
-const uniqueUnsupportedTypes: string[] = ['text', 'multiple'];
-const defaultValueUnsupportedTypes: string[] = ['multiple', 'link'];
-const notNullUnsupportedTypes: string[] = defaultValueUnsupportedTypes;
+const uniqueUnsupportedTypes = ['text', 'multiple'];
+const defaultValueUnsupportedTypes = ['multiple', 'link'];
+const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
 
 const waitFlags: Record<string, string> = {
   code: '-w',
