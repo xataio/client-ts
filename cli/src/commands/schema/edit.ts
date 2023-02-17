@@ -5,11 +5,12 @@ import chalk from 'chalk';
 import enquirer from 'enquirer';
 import { getEditor } from 'env-editor';
 import { readFile, writeFile } from 'fs/promises';
+import compact from 'lodash.compact';
 import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
 import { parseSchemaFile } from '../../schema.js';
-import { reportBugURL } from '../../utils.js';
+import { reportBugURL, isValidEmail, isNil } from '../../utils.js';
 import Codegen from '../codegen/index.js';
 
 // The enquirer library has type definitions but they are very poor
@@ -33,9 +34,34 @@ type EditableTable = Table & {
   columns: EditableColumn[];
 };
 
+type ColumnEditState = {
+  initial: {
+    name: string;
+    type: string;
+    link: string | undefined;
+    notNull: string;
+    defaultValue: string;
+    unique: string;
+    description: string | undefined;
+  };
+  values: {
+    name?: string;
+    type?: string;
+    link?: string;
+    notNull?: string;
+    defaultValue?: string;
+    unique?: string;
+    description?: string;
+  };
+};
+
 const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime'];
 const typesList = types.join(', ');
 const identifier = /^[a-zA-Z0-9-_~]+$/;
+
+const uniqueUnsupportedTypes = ['text', 'multiple'];
+const defaultValueUnsupportedTypes = ['multiple', 'link'];
+const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
 
 const waitFlags: Record<string, string> = {
   code: '-w',
@@ -359,46 +385,33 @@ Beware that this can lead to ${chalk.bold(
 
   async showColumnEdit(column: EditableColumn | null, table: EditableTable) {
     this.clear();
+    const isColumnAdded = !column || column?.added;
+    const template = `
+           name: \${name}
+           type: \${type}
+           link: \${link}
+    description: \${description}
+         unique: \${unique}
+        notNull: \${notNull}
+   defaultValue: \${defaultValue}`;
 
-    let template = `
-           Name: \${name}
-           Type: \${type}
-           Link: \${link}
-    Description: \${description}
-         Unique: \${unique}`;
-
-    template += `
-       Not null: \${notNull}
-  Default value: \${defaultValue}`;
-
-    type ColumnEditState = {
-      values: {
-        name?: string;
-        type?: string;
-        link?: string;
-        notNull?: string;
-        defaultValue?: string;
-        unique?: string;
-        description?: string;
-      };
+    const initial: ColumnEditState['initial'] = {
+      name: column?.name || '',
+      type: column?.type || '',
+      link: isColumnAdded ? '' : column?.link?.table,
+      notNull: column?.notNull ? 'true' : 'false',
+      defaultValue: column?.defaultValue || '',
+      unique: column?.unique ? 'true' : 'false',
+      description: isColumnAdded ? '' : column?.description
     };
-
     const snippet: any = new Snippet({
       message: column?.name || 'a new column',
-      initial: {
-        name: column?.name || '',
-        type: column?.type || '',
-        link: column?.link?.table || '',
-        notNull: column?.notNull ? 'true' : '',
-        defaultValue: column?.defaultValue || '',
-        unique: column?.unique ? 'true' : '',
-        description: column?.description || ''
-      },
+      initial,
       fields: [
         {
           name: 'name',
           message: 'The column name',
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
             if (!identifier.test(value || '')) {
               return snippet.styles.danger(`Column name has to match ${identifier}`);
             }
@@ -408,8 +421,11 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'type',
           message: `The column type (${typesList})`,
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
-            if (!types.includes(value)) {
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (!isColumnAdded && value !== state.initial.type) {
+              return `Cannot change the type of existing columns`;
+            }
+            if (!value || !types.includes(value)) {
               return `Type needs to be one of ${typesList}`;
             }
             return true;
@@ -418,7 +434,15 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'link',
           message: 'Linked table. Only for columns that are links',
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
+          validate(
+            value: string | undefined,
+            state: ColumnEditState,
+            item: { value: string | undefined },
+            index: number
+          ) {
+            if (!isColumnAdded && value !== state.initial.link) {
+              return `Cannot change the link of existing link columns`;
+            }
             if (state.values.type === 'link') {
               if (!value) {
                 return 'The link field must be filled the columns of type `link`';
@@ -432,26 +456,69 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'unique',
           message: 'Whether the column is unique (true/false)',
-          validate: validateOptionalBoolean
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (!isColumnAdded && parseBoolean(value) !== parseBoolean(state.initial.unique)) {
+              return `Cannot change unique for existing columns`;
+            }
+            const validateOptionalBooleanResult = validateOptionalBoolean(value);
+            if (validateOptionalBooleanResult !== true) {
+              return validateOptionalBooleanResult;
+            }
+            const validateUniqueResult = validateUnique(value, state);
+            if (validateUniqueResult !== true) {
+              return validateUniqueResult;
+            }
+            return true;
+          }
         },
         {
           name: 'notNull',
           message: 'Whether the column is not nullable (true/false)',
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
-            return validateOptionalBoolean(value);
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (!isColumnAdded && parseBoolean(value) !== parseBoolean(state.initial.notNull)) {
+              return `Cannot change notNull for existing columns`;
+            }
+            const validateOptionalBooleanResult = validateOptionalBoolean(value);
+            if (validateOptionalBooleanResult !== true) {
+              return validateOptionalBooleanResult;
+            }
+            const validateNotNullResult = validateNotNull(value, state);
+            if (validateNotNullResult !== true) {
+              return validateNotNullResult;
+            }
+            return true;
           }
         },
         {
           name: 'description',
-          message: 'An optional column description'
+          message: 'An optional column description',
+          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (!isColumnAdded && value !== state.initial.description) {
+              return `Cannot change description for existing columns`;
+            }
+            return true;
+          }
         },
         {
           name: 'defaultValue',
-          message: 'Default value for if not nullable',
-          validate(value: string, state: ColumnEditState, item: unknown, index: number) {
-            if (parseBoolean(state.values.notNull) === true && state.values.type) {
-              if (parseDefaultValue(state.values.type, value) === undefined) {
-                return `Invalid default value for column type ${state.values.type}`;
+          message: 'Default value',
+          validate(rawDefaultValue: string | undefined, state: ColumnEditState, item: unknown, index: number) {
+            if (
+              !isColumnAdded &&
+              state.values.type &&
+              parseDefaultValue(state.values.type, rawDefaultValue) !==
+                parseDefaultValue(state.values.type, state.initial.defaultValue)
+            ) {
+              return `Cannot change defaultValue for existing columns`;
+            }
+            if (state.values.type) {
+              const isNotNull = parseBoolean(state.values.notNull) === true;
+              const defaultValue = parseDefaultValue(state.values.type, rawDefaultValue);
+              if (isNotNull && (!rawDefaultValue || rawDefaultValue.length === 0)) {
+                return 'defaultValue must be set for `notNull: true` columns';
+              }
+              if (rawDefaultValue && rawDefaultValue.length > 0 && defaultValue === undefined) {
+                return `Invalid defaultValue for Type: ${state.values.type}`;
               }
             }
             return true;
@@ -474,7 +541,7 @@ Beware that this can lead to ${chalk.bold(
         link: values.link && values.type === 'link' ? { table: values.link } : undefined,
         unique: unique || undefined,
         notNull: notNull || undefined,
-        defaultValue: values.defaultValue !== '' ? parseDefaultValue(values.type, values.defaultValue) : undefined
+        defaultValue: parseDefaultValue(values.type, values.defaultValue)
         // TODO: add description once the backend supports it
         // description: values.description
       };
@@ -734,24 +801,49 @@ function validateOptionalBoolean(value?: string) {
   return true;
 }
 
+function validateUnique(uniqueValue: string | undefined, state: ColumnEditState) {
+  const isUnique = parseBoolean(uniqueValue);
+  if (isUnique && state.values.type && uniqueUnsupportedTypes.includes(state.values.type)) {
+    return `Column type \`${state.values.type}\` does not support \`unique: true\``;
+  }
+  if (isUnique && parseBoolean(state.values.notNull)) {
+    return 'Column cannot be both `unique: true` and `notNull: true`';
+  }
+  if (isUnique && state.values.defaultValue) {
+    return 'Column cannot be both `unique: true` and have a `defaultValue` set';
+  }
+  return true;
+}
+
+function validateNotNull(notNullValue: string | undefined, state: ColumnEditState) {
+  const isNotNull = parseBoolean(notNullValue);
+  if (isNotNull && state.values.type && notNullUnsupportedTypes.includes(state.values.type)) {
+    return `Column type \`${state.values.type}\` does not support \`notNull: true\``;
+  }
+
+  return true;
+}
+
 function parseDefaultValue(type: string, val?: string): string | undefined {
-  if (val === undefined) {
+  if (val === undefined || defaultValueUnsupportedTypes.includes(type)) {
     return undefined;
   }
   const num = String(val).length > 0 ? +val : undefined;
 
-  if (type === 'string') {
+  if (['text', 'string'].includes(type)) {
     return String(val);
   } else if (type === 'int') {
     return Number.isSafeInteger(num) && val !== '' ? String(num) : undefined;
   } else if (type === 'float') {
     return Number.isFinite(num) && val !== '' ? String(num) : undefined;
   } else if (type === 'bool') {
-    return String(parseBoolean(val));
+    const booleanValue = parseBoolean(val);
+    return !isNil(booleanValue) ? String(booleanValue) : undefined;
   } else if (type === 'email') {
+    if (!isValidEmail(val)) {
+      return undefined;
+    }
     return val;
-  } else if (type === 'link') {
-    return String(val);
   } else if (type === 'datetime') {
     // Date fields have special values
     if (['now'].includes(val)) return val;
