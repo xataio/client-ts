@@ -387,13 +387,13 @@ Beware that this can lead to ${chalk.bold(
     this.clear();
     const isColumnAdded = !column || column?.added;
     const template = `
-           Name: \${name}
-           Type: \${type}
-           Link: \${link}
-    Description: \${description}
-         Unique: \${unique}
-       Not null: \${notNull}
-  Default value: \${defaultValue}`;
+           name: \${name}
+           type: \${type}
+           link: \${link}
+    description: \${description}
+         unique: \${unique}
+        notNull: \${notNull}
+   defaultValue: \${defaultValue}`;
 
     const initial: ColumnEditState['initial'] = {
       name: column?.name || '',
@@ -458,7 +458,7 @@ Beware that this can lead to ${chalk.bold(
           message: 'Whether the column is unique (true/false)',
           validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
             if (!isColumnAdded && parseBoolean(value) !== parseBoolean(state.initial.unique)) {
-              return `Cannot change Unique for existing columns`;
+              return `Cannot change unique for existing columns`;
             }
             const validateOptionalBooleanResult = validateOptionalBoolean(value);
             if (validateOptionalBooleanResult !== true) {
@@ -476,7 +476,7 @@ Beware that this can lead to ${chalk.bold(
           message: 'Whether the column is not nullable (true/false)',
           validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
             if (!isColumnAdded && parseBoolean(value) !== parseBoolean(state.initial.notNull)) {
-              return `Cannot change Not null for existing columns`;
+              return `Cannot change notNull for existing columns`;
             }
             const validateOptionalBooleanResult = validateOptionalBoolean(value);
             if (validateOptionalBooleanResult !== true) {
@@ -494,7 +494,7 @@ Beware that this can lead to ${chalk.bold(
           message: 'An optional column description',
           validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
             if (!isColumnAdded && value !== state.initial.description) {
-              return `Cannot change Description for existing columns`;
+              return `Cannot change description for existing columns`;
             }
             return true;
           }
@@ -509,16 +509,16 @@ Beware that this can lead to ${chalk.bold(
               parseDefaultValue(state.values.type, rawDefaultValue) !==
                 parseDefaultValue(state.values.type, state.initial.defaultValue)
             ) {
-              return `Cannot change Default value for existing columns`;
+              return `Cannot change defaultValue for existing columns`;
             }
             if (state.values.type) {
               const isNotNull = parseBoolean(state.values.notNull) === true;
               const defaultValue = parseDefaultValue(state.values.type, rawDefaultValue);
               if (isNotNull && (!rawDefaultValue || rawDefaultValue.length === 0)) {
-                return 'Default value must be set for `Not null: true` columns';
+                return 'defaultValue must be set for `notNull: true` columns';
               }
               if (rawDefaultValue && rawDefaultValue.length > 0 && defaultValue === undefined) {
-                return `Invalid Default value for Type: ${state.values.type}`;
+                return `Invalid defaultValue for Type: ${state.values.type}`;
               }
             }
             return true;
@@ -804,13 +804,13 @@ function validateOptionalBoolean(value?: string) {
 function validateUnique(uniqueValue: string | undefined, state: ColumnEditState) {
   const isUnique = parseBoolean(uniqueValue);
   if (isUnique && state.values.type && uniqueUnsupportedTypes.includes(state.values.type)) {
-    return `Column type \`${state.values.type}\` does not support \`Unique: true\``;
+    return `Column type \`${state.values.type}\` does not support \`unique: true\``;
   }
   if (isUnique && parseBoolean(state.values.notNull)) {
-    return 'Column cannot be both `Unique: true` and `Not null: true`';
+    return 'Column cannot be both `unique: true` and `notNull: true`';
   }
   if (isUnique && state.values.defaultValue) {
-    return 'Column cannot be both `Unique: true` and have a `Default value`';
+    return 'Column cannot be both `unique: true` and have a `defaultValue` set';
   }
   return true;
 }
@@ -818,7 +818,7 @@ function validateUnique(uniqueValue: string | undefined, state: ColumnEditState)
 function validateNotNull(notNullValue: string | undefined, state: ColumnEditState) {
   const isNotNull = parseBoolean(notNullValue);
   if (isNotNull && state.values.type && notNullUnsupportedTypes.includes(state.values.type)) {
-    return `Column type \`${state.values.type}\` does not support \`Not null: true\``;
+    return `Column type \`${state.values.type}\` does not support \`notNull: true\``;
   }
 
   return true;
