@@ -745,7 +745,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @param query The vector to search for similarities. Must have the same dimension as the vector column used.
    * @param options The options to search with (like: spaceFunction)
    */
-  abstract searchVector<F extends SelectableColumn<Record>>(
+  abstract vectorSearch<F extends SelectableColumn<Record>>(
     column: F, // TODO: check if column is a vector column
     query: number[],
     options?: {
