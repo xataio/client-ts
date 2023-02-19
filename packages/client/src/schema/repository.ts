@@ -1734,7 +1734,7 @@ export class RestRepository<Record extends XataRecord>
     });
   }
 
-  async searchVector<F extends SelectableColumn<Record, []>>(
+  async vectorSearch<F extends SelectableColumn<Record, []>>(
     column: F,
     query: number[],
     options?:
