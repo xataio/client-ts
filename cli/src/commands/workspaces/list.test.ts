@@ -52,7 +52,7 @@ describe('workspaces list', () => {
     });
 
     const config = await Config.load();
-    const list = new WorkspacesList(['--workspace', 'test-1234'], config as Config);
+    const list = new WorkspacesList([], config as Config);
 
     expect(WorkspacesList.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);

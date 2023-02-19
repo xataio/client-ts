@@ -20,8 +20,8 @@ const providers: Record<HostAliases, ProviderBuilder> = {
     workspaces: 'https://{workspaceId}.{region}.xata.sh'
   },
   staging: {
-    main: 'https://staging.xatabase.co',
-    workspaces: 'https://{workspaceId}.staging.{region}.xatabase.co'
+    main: 'https://api.staging-xata.dev',
+    workspaces: 'https://{workspaceId}.{region}.staging-xata.dev'
   }
 };
 
@@ -47,13 +47,12 @@ export function parseWorkspacesUrlParts(url: string): { workspace: string; regio
   if (!isString(url)) return null;
 
   const regex = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh.*/;
-  const regexStaging = /(?:https:\/\/)?([^.]+)\.staging(?:\.([^.]+))\.xatabase\.co.*/;
-  const regexDevCloudflare = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev.*/;
-  const regexStagingCloudflare = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev.*/;
-  const regexProdCloudflare = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.tech.*/;
+  const regexDev = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev.*/;
+  const regexStaging = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev.*/;
+  const regexProdTesting = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.tech.*/;
 
 
-  const match = url.match(regex) || url.match(regexStaging) || url.match(regexDevCloudflare) || url.match(regexStagingCloudflare) || url.match(regexProdCloudflare);
+  const match = url.match(regex) || url.match(regexDev) || url.match(regexStaging) || url.match(regexProdTesting);
   if (!match) return null;
 
   return { workspace: match[1], region: match[2] };

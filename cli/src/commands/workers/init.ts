@@ -2,7 +2,7 @@ import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import Codegen from '../codegen/index.js';
 
-export default class Init extends BaseCommand {
+export default class Init extends BaseCommand<typeof Init> {
   static description = 'Compile and upload xata workers';
 
   static flags = {

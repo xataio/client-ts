@@ -1,6 +1,7 @@
+import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class BranchesDelete extends BaseCommand {
+export default class BranchesDelete extends BaseCommand<typeof BranchesDelete> {
   static description = 'Delete a branch';
 
   static examples = [];
@@ -11,12 +12,14 @@ export default class BranchesDelete extends BaseCommand {
     ...BaseCommand.forceFlag()
   };
 
-  static args = [{ name: 'branch', description: 'Branch name to delete', required: true }];
+  static args = {
+    branch: Args.string({ description: 'Branch name to delete', required: true })
+  };
 
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { flags, args } = await this.parse(BranchesDelete);
+    const { args, flags } = await this.parseCommand();
     const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
     const branch = args.branch;
 
