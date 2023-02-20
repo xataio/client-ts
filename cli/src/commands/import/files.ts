@@ -1,7 +1,7 @@
 import { BaseCommand } from '../../base.js';
 import { commonImportFlags, csvFlags } from '../../utils/importer.js';
 
-export default class ImportFileCommand extends BaseCommand {
+export default class ImportFileCommand extends BaseCommand<typeof ImportFileCommand> {
   static description = 'Import file data into a database';
 
   static examples = [];
@@ -12,7 +12,7 @@ export default class ImportFileCommand extends BaseCommand {
     ...csvFlags('csv')
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const xata = await this.getXataClient();

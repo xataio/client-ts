@@ -1,19 +1,22 @@
+import { Args } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import deepmerge from 'deepmerge';
 import { BaseCommand } from '../../base.js';
 import Codegen from '../codegen/index.js';
 
-export default class Merge extends BaseCommand {
+export default class Merge extends BaseCommand<typeof Merge> {
   static description = 'Merge the current branch with another branch';
 
   static examples = [];
 
   static flags = {};
 
-  static args = [{ name: 'branch', description: 'The branch to merge the current branch with', required: true }];
+  static args = {
+    branch: Args.string({ description: 'The branch to merge the current branch with', required: true })
+  };
 
   async run(): Promise<Schemas.Schema | undefined> {
-    const { args } = await this.parse(Merge);
+    const { args } = await this.parseCommand();
     const { branch } = args;
 
     const { workspace, region, database, branch: current } = await this.getParsedDatabaseURLWithBranch();

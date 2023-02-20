@@ -1,25 +1,27 @@
-import { Flags } from '@oclif/core';
+import { Args } from '@oclif/core';
 import { readFile } from 'fs/promises';
 import glob from 'glob';
 import { BaseCommand } from '../../base.js';
 import { isFileEncoding } from '../../utils/files.js';
 import { commonImportFlags, csvFlags } from '../../utils/importer.js';
 
-export default class ImportCSVCommand extends BaseCommand {
-  static description = 'Import CSV data into a database';
+export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
+  static description = 'Import a CSV file';
 
   static examples = [];
 
   static flags = {
     ...this.databaseURLFlag,
     ...commonImportFlags(),
-    ...csvFlags()
+    ...csvFlags('')
   };
 
-  static args = [{ name: 'files', description: 'Files to upload', required: true }];
+  static args = {
+    files: Args.string({ description: 'Files to upload', required: true })
+  };
 
   async run(): Promise<void> {
-    const { flags, args } = await this.parse(ImportCSVCommand);
+    const { args, flags } = await this.parseCommand();
     const { encoding, delimiter, header, skipEmptyLines, nullValues, quoteChar, escapeChar, newline, commentPrefix } =
       flags;
 
@@ -35,12 +37,23 @@ export default class ImportCSVCommand extends BaseCommand {
     const payload = await xata.import.file({
       files,
       parserOptions: {
-        csv: { delimiter, header, skipEmptyLines, nullValues, quoteChar, escapeChar, newline, commentPrefix }
+        csv: {
+          delimiter,
+          header,
+          skipEmptyLines,
+          nullValues,
+          quoteChar,
+          escapeChar,
+          newline: newline as any,
+          commentPrefix
+        }
       }
     });
 
-    this.log({ delimiter, header, skipEmptyLines, nullValues, quoteChar, escapeChar, newline, commentPrefix });
+    this.log(
+      JSON.stringify({ delimiter, header, skipEmptyLines, nullValues, quoteChar, escapeChar, newline, commentPrefix })
+    );
 
-    this.log(payload);
+    this.log(JSON.stringify(payload));
   }
 }

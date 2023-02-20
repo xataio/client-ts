@@ -1,7 +1,7 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class DatabasesCreate extends BaseCommand {
+export default class DatabasesCreate extends BaseCommand<typeof DatabasesCreate> {
   static description = 'Create a database';
 
   static examples = [];
@@ -16,12 +16,14 @@ export default class DatabasesCreate extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'database', description: 'The new database name', required: false }];
+  static args = {
+    database: Args.string({ description: 'The new database name', required: false })
+  };
 
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { args, flags } = await this.parse(DatabasesCreate);
+    const { args, flags } = await this.parseCommand();
 
     const workspace = flags.workspace || (await this.getWorkspace());
 

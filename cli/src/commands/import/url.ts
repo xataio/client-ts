@@ -1,6 +1,6 @@
 import { BaseCommand } from '../../base.js';
 
-export default class ImportURLCommand extends BaseCommand {
+export default class ImportURLCommand extends BaseCommand<typeof ImportURLCommand> {
   static description = 'Import file data into a database from a URL';
 
   static examples = [];
@@ -9,7 +9,7 @@ export default class ImportURLCommand extends BaseCommand {
     ...this.databaseURLFlag
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const xata = this.getXataClient();

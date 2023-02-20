@@ -1,8 +1,8 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { createBranch, currentGitBranch, defaultGitBranch, isGitInstalled, isWorkingDirClean } from '../../git.js';
 
-export default class BranchesCreate extends BaseCommand {
+export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
   static description = 'Create a branch';
 
   static examples = [];
@@ -18,12 +18,14 @@ export default class BranchesCreate extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'branch', description: 'The new branch name', required: true }];
+  static args = {
+    branch: Args.string({ description: 'The new branch name', required: true })
+  };
 
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { args, flags } = await this.parse(BranchesCreate);
+    const { args, flags } = await this.parseCommand();
     const { branch } = args;
 
     const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);

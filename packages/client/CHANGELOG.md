@@ -1,5 +1,23 @@
 # @xata.io/client
 
+## 0.22.1
+
+### Patch Changes
+
+- [#885](https://github.com/xataio/client-ts/pull/885) [`4cafde72`](https://github.com/xataio/client-ts/commit/4cafde728e4e9e5e83812d475d9980397ae78362) Thanks [@SferaDev](https://github.com/SferaDev)! - Update body of compareBranchSchemas
+
+- [#890](https://github.com/xataio/client-ts/pull/890) [`639710a5`](https://github.com/xataio/client-ts/commit/639710a52132f260bf3a26560a21ae2193abb71d) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose consistency settings in summarize
+
+## 0.22.0
+
+### Minor Changes
+
+- [#852](https://github.com/xataio/client-ts/pull/852) [`b2a4def4`](https://github.com/xataio/client-ts/commit/b2a4def4baf3eb18cd323895635e0bccb7f876f4) Thanks [@SferaDev](https://github.com/SferaDev)! - [BREAKING CHANGE] Reduce column selection depth
+
+### Patch Changes
+
+- [#835](https://github.com/xataio/client-ts/pull/835) [`379e6144`](https://github.com/xataio/client-ts/commit/379e61446b21e7cbadd7fc59267736c6845ec566) Thanks [@SferaDev](https://github.com/SferaDev)! - Add helper methods `toSerializable` and `toString`
+
 ## 0.21.6
 
 ### Patch Changes

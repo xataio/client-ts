@@ -1,6 +1,9 @@
 name: Build PR
 
 on:
+  push:
+    branches:
+      - gh-readonly-queue/main/**
   pull_request:
 
 concurrency:
@@ -90,6 +93,8 @@ jobs:
 
       - name: Publish build
         if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
         run: |
           cat << EOF > .changeset/force-canary-build.md
           ---

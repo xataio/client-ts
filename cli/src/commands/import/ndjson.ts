@@ -1,6 +1,6 @@
 import { BaseCommand } from '../../base.js';
 
-export default class ImportNDJSONCommand extends BaseCommand {
+export default class ImportNDJSONCommand extends BaseCommand<typeof ImportNDJSONCommand> {
   static description = 'Import NDJSON data into a database';
 
   static examples = [];
@@ -9,7 +9,7 @@ export default class ImportNDJSONCommand extends BaseCommand {
     ...this.databaseURLFlag
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
     const xata = this.getXataClient();

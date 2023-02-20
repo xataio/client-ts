@@ -16,7 +16,8 @@ import Shell from '../shell/index.js';
 import dotenv from 'dotenv';
 
 const moduleTypeOptions = ['cjs', 'esm'];
-export default class Init extends BaseCommand {
+
+export default class Init extends BaseCommand<typeof Init> {
   static description = 'Configure your working directory to work with a Xata database';
 
   static examples = [
@@ -38,7 +39,7 @@ export default class Init extends BaseCommand {
     codegen: Flags.string({
       description: 'Output file to generate a TypeScript/JavaScript client with types for your database schema'
     }),
-    module: Flags.enum({
+    module: Flags.string({
       description: 'When generating JavaScript code, what kind of module to generate',
       options: moduleTypeOptions
     }),
@@ -50,10 +51,10 @@ export default class Init extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(Init);
+    const { flags } = await this.parseCommand();
 
     this.log('🦋 Initializing project... We will ask you some questions.');
     this.log();
@@ -111,7 +112,7 @@ export default class Init extends BaseCommand {
   async configureCodegen() {
     this.projectConfig = this.projectConfig || {};
 
-    const { flags } = await this.parse(Init);
+    const { flags } = await this.parseCommand();
 
     let output = flags.codegen;
     let sdk = flags.sdk;

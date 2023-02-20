@@ -1,6 +1,6 @@
 import { Flags } from '@oclif/core';
 
-export function csvFlags(prefix = '') {
+export function csvFlags<Prefix extends string>(prefix: Prefix) {
   const flags = {
     delimiter: Flags.string({
       description: 'The delimiter to use for parsing CSV data',
@@ -31,8 +31,15 @@ export function csvFlags(prefix = '') {
     })
   };
 
-  return Object.fromEntries(Object.entries(flags).map(([name, flag]) => [`${prefix}${name}`, flag]));
+  return Object.fromEntries(Object.entries(flags).map(([name, flag]) => [`${prefix}${name}`, flag])) as AddPrefix<
+    typeof flags,
+    Prefix
+  >;
 }
+
+type AddPrefix<T, P extends string> = {
+  [K in keyof T as `${P}${K extends string ? K : never}`]: T[K];
+};
 
 export function commonImportFlags() {
   return {

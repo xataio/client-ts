@@ -1,5 +1,25 @@
 # @xata.io/importer
 
+## 0.3.5
+
+### Patch Changes
+
+- Updated dependencies [[`4cafde72`](https://github.com/xataio/client-ts/commit/4cafde728e4e9e5e83812d475d9980397ae78362), [`639710a5`](https://github.com/xataio/client-ts/commit/639710a52132f260bf3a26560a21ae2193abb71d)]:
+  - @xata.io/client@0.22.1
+
+## 0.3.4
+
+### Patch Changes
+
+- [#877](https://github.com/xataio/client-ts/pull/877) [`f9b966df`](https://github.com/xataio/client-ts/commit/f9b966dfb86aeee5afa711aa7db5cb3e75615d2d) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose random data command programmatically
+
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies [[`b2a4def4`](https://github.com/xataio/client-ts/commit/b2a4def4baf3eb18cd323895635e0bccb7f876f4), [`379e6144`](https://github.com/xataio/client-ts/commit/379e61446b21e7cbadd7fc59267736c6845ec566)]:
+  - @xata.io/client@0.22.0
+
 ## 0.3.2
 
 ### Patch Changes

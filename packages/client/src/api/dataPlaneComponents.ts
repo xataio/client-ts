@@ -1189,6 +1189,10 @@ export type GetBranchSchemaHistoryRequestBody = {
      */
     size?: number;
   };
+  /**
+   * Report only migrations that have been added since the given Migration ID.
+   */
+  since?: string;
 };
 
 export type GetBranchSchemaHistoryVariables = {
@@ -1232,6 +1236,8 @@ export type CompareBranchWithUserSchemaError = Fetcher.ErrorWrapper<
 
 export type CompareBranchWithUserSchemaRequestBody = {
   schema: Schemas.Schema;
+  schemaOperations?: Schemas.MigrationOp[];
+  branchOperations?: Schemas.MigrationOp[];
 };
 
 export type CompareBranchWithUserSchemaVariables = {
@@ -1277,8 +1283,13 @@ export type CompareBranchSchemasError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type CompareBranchSchemasRequestBody = {
+  sourceBranchOperations?: Schemas.MigrationOp[];
+  targetBranchOperations?: Schemas.MigrationOp[];
+};
+
 export type CompareBranchSchemasVariables = {
-  body?: Record<string, any>;
+  body: CompareBranchSchemasRequestBody;
   pathParams: CompareBranchSchemasPathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -1286,7 +1297,7 @@ export const compareBranchSchemas = (variables: CompareBranchSchemasVariables, s
   dataPlaneFetch<
     Responses.SchemaCompareResponse,
     CompareBranchSchemasError,
-    Record<string, any>,
+    CompareBranchSchemasRequestBody,
     {},
     {},
     CompareBranchSchemasPathParams

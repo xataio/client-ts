@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/importer",
-  "version": "0.3.2",
+  "version": "0.3.5",
   "description": "Importer for xata.io",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
+    "@faker-js/faker": "^7.6.0",
     "@xata.io/client": "workspace:*",
     "any-date-parser": "^1.5.3",
     "json5": "^2.2.3",

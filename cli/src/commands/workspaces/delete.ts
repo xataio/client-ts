@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class WorkspacesDelete extends BaseCommand {
+export default class WorkspacesDelete extends BaseCommand<typeof WorkspacesDelete> {
   static description = 'Delete a workspace';
 
   static examples = [];
@@ -14,12 +14,12 @@ export default class WorkspacesDelete extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { flags } = await this.parse(WorkspacesDelete);
+    const { flags } = await this.parseCommand();
     const workspace = flags.workspace || (await this.getWorkspace());
 
     const xata = await this.getXataClient();
