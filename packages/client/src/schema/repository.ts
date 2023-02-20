@@ -38,7 +38,7 @@ import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
-import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
+import { ColumnsByValue, SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
@@ -745,8 +745,8 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @param query The vector to search for similarities. Must have the same dimension as the vector column used.
    * @param options The options to search with (like: spaceFunction)
    */
-  abstract vectorSearch<F extends SelectableColumn<Record>>(
-    column: F, // TODO: check if column is a vector column
+  abstract vectorSearch<F extends ColumnsByValue<Record, number[]>>(
+    column: F,
     query: number[],
     options?: {
       /**
@@ -764,7 +764,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
        * @minimum 1
        */
       size?: number;
-      filter?: Filter<NonNullable<ValueAtColumn<Record, F>>>;
+      filter?: Filter<Record>;
     }
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
 
@@ -1734,18 +1734,18 @@ export class RestRepository<Record extends XataRecord>
     });
   }
 
-  async vectorSearch<F extends SelectableColumn<Record, []>>(
+  async vectorSearch<F extends ColumnsByValue<Record, number[]>>(
     column: F,
     query: number[],
     options?:
       | {
           spaceFunction?: string | undefined;
           size?: number | undefined;
-          filter?: Filter<NonNullable<ValueAtColumn<Record, F>>> | undefined;
+          filter?: Filter<Record> | undefined;
         }
       | undefined
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]> {
-    return this.#trace('searchVector', async () => {
+    return this.#trace('vectorSearch', async () => {
       const fetchProps = await this.#getFetchProps();
 
       const { records } = await vectorSearchTable({
