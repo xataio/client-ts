@@ -140,7 +140,7 @@
           "type": "int"
         },
         { 
-          "name: "vector",
+          "name": "vector",
           "type": "vector",
           "vector":
             {
