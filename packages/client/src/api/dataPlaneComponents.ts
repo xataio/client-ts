@@ -3374,7 +3374,7 @@ export type VectorSearchTableRequestBody = {
    *
    * @default cosineSimilarity
    */
-  spaceFunction?: string;
+  similarityFunction?: string;
   /**
    * Number of results to return.
    *

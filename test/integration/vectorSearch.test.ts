@@ -65,7 +65,7 @@ describe('search', () => {
   });
 
   test('euclidean', async () => {
-    const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { spaceFunction: 'l1' });
+    const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { similarityFunction: 'l1' });
 
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r2', 'r1', 'r3']);
   });
@@ -89,7 +89,7 @@ describe('search', () => {
     const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
       filter: { full_name: { $any: ['r3', 'r4'] } },
       size: 1,
-      spaceFunction: 'l1'
+      similarityFunction: 'l1'
     });
 
     expect(results.map((r) => r.full_name)).toEqual(['r4']);

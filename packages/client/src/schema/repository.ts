@@ -755,7 +755,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
        *
        * @default cosineSimilarity
        */
-      spaceFunction?: string;
+      similarityFunction?: string;
       /**
        * Number of results to return.
        *
@@ -1758,7 +1758,7 @@ export class RestRepository<Record extends XataRecord>
         body: {
           column,
           queryVector: query,
-          spaceFunction: options?.spaceFunction,
+          similarityFunction: options?.similarityFunction,
           size: options?.size,
           filter: options?.filter as Schemas.FilterExpression
         },
