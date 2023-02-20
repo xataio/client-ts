@@ -1739,7 +1739,7 @@ export class RestRepository<Record extends XataRecord>
     query: number[],
     options?:
       | {
-          spaceFunction?: string | undefined;
+          similarityFunction?: string | undefined;
           size?: number | undefined;
           filter?: Filter<Record> | undefined;
         }
