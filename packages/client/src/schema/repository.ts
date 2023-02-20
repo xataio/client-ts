@@ -38,7 +38,7 @@ import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
 import { EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
-import { ColumnsByValue, SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
+import { ColumnsByValue, SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
