@@ -66,6 +66,8 @@ type InnerType<Type, ObjectColumns, Tables, LinkedTable> = Type extends 'string'
   ? Date
   : Type extends 'multiple'
   ? string[]
+  : Type extends 'vector'
+  ? number[]
   : Type extends 'object'
   ? ObjectColumns extends readonly unknown[]
     ? ObjectColumns[number] extends { name: string; type: string }

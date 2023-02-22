@@ -1,5 +1,34 @@
 # @xata.io/cli
 
+## 0.11.10
+
+### Patch Changes
+
+- [#898](https://github.com/xataio/client-ts/pull/898) [`72e13bf9`](https://github.com/xataio/client-ts/commit/72e13bf99d0ebefef91c984a995a28b0e8ca2a8f) Thanks [@SferaDev](https://github.com/SferaDev)! - Add methods for vector type
+
+- Updated dependencies [[`72e13bf9`](https://github.com/xataio/client-ts/commit/72e13bf99d0ebefef91c984a995a28b0e8ca2a8f)]:
+  - @xata.io/client@0.22.2
+  - @xata.io/codegen@0.22.2
+  - @xata.io/importer@0.3.6
+
+## 0.11.9
+
+### Patch Changes
+
+- [#909](https://github.com/xataio/client-ts/pull/909) [`c05be3ff`](https://github.com/xataio/client-ts/commit/c05be3ff4d2cd8faf4662bf26896b722041d5597) Thanks [@richardgill](https://github.com/richardgill)! - Bugfixes to adding / editing columns
+
+  - Unique + Not Null errors
+  - Unique + Default Value errors
+  - Emails are now validated
+  - Default values for text type allowed
+  - Setting {unique, notNull, defaultValue} for a type that doesn't support it errors
+  - notNull and unique are set to 'false' initially.
+  - No longer able to attempt to edit fields which cannot be edited on an existing column
+  - Text supports default values
+  - Bugs fixed with boolean default values
+
+- [#876](https://github.com/xataio/client-ts/pull/876) [`43da7869`](https://github.com/xataio/client-ts/commit/43da7869e45666b8c10faa5ec49a448745f21299) Thanks [@xata-bot](https://github.com/xata-bot)! - Update to oclif v2
+
 ## 0.11.8
 
 ### Patch Changes
