@@ -3365,7 +3365,7 @@ export type VectorSearchTableRequestBody = {
    */
   queryVector: number[];
   /**
-   * The vector column in which to search.
+   * The vector column in which to search. It must be of type `vector`.
    */
   column: string;
   /**
