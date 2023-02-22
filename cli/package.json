@@ -19,10 +19,10 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@babel/core": "^7.20.12",
+    "@babel/core": "^7.21.0",
     "@babel/preset-react": "^7.18.6",
-    "@babel/preset-typescript": "^7.18.6",
-    "@oclif/core": "^2.1.7",
+    "@babel/preset-typescript": "^7.21.0",
+    "@oclif/core": "^2.3.0",
     "@oclif/plugin-help": "^5.2.5",
     "@oclif/plugin-not-found": "^2.3.20",
     "@oclif/plugin-plugins": "^2.3.2",
@@ -50,9 +50,9 @@
     "lodash.compact": "^3.0.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "miniflare": "^2.12.0",
+    "miniflare": "^2.12.1",
     "node-fetch": "^3.3.0",
-    "open": "^8.4.1",
+    "open": "^8.4.2",
     "prompts": "^2.4.2",
     "relaxed-json": "^1.0.3",
     "rollup-plugin-esbuild": "^5.0.0",
@@ -65,7 +65,7 @@
     "zod": "^3.20.6"
   },
   "devDependencies": {
-    "@babel/types": "^7.20.7",
+    "@babel/types": "^7.21.0",
     "@types/babel__core": "^7.20.0",
     "@types/lodash.compact": "^3.0.7",
     "@types/lodash.get": "^4.4.7",
