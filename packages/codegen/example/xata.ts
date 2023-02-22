@@ -58,7 +58,8 @@ const tables = [
       },
       { name: 'team', type: 'link', link: { table: 'teams' } },
       { name: 'pet', type: 'link', link: { table: 'pets' } },
-      { name: 'account_value', type: 'int' }
+      { name: 'account_value', type: 'int' },
+      { name: 'vector', type: 'vector', vector: { dimension: 4 } }
     ]
   },
   {
