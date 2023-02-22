@@ -18,7 +18,7 @@ export class LRUCache implements CacheImpl {
   }
 
   async get<T>(key: string): Promise<T | null> {
-    return this.#cache.get<T>(key) ?? null;
+    return this.#cache.get(key) ?? null;
   }
 
   async set<T>(key: string, value: T): Promise<void> {
