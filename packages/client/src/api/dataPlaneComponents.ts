@@ -2015,7 +2015,7 @@ export type InsertRecordError = Fetcher.ErrorWrapper<
 >;
 
 export type InsertRecordVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: InsertRecordPathParams;
   queryParams?: InsertRecordQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2027,7 +2027,7 @@ export const insertRecord = (variables: InsertRecordVariables, signal?: AbortSig
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     InsertRecordError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     InsertRecordQueryParams,
     InsertRecordPathParams
@@ -2134,7 +2134,7 @@ export type InsertRecordWithIDError = Fetcher.ErrorWrapper<
 >;
 
 export type InsertRecordWithIDVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: InsertRecordWithIDPathParams;
   queryParams?: InsertRecordWithIDQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2146,7 +2146,7 @@ export const insertRecordWithID = (variables: InsertRecordWithIDVariables, signa
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     InsertRecordWithIDError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     InsertRecordWithIDQueryParams,
     InsertRecordWithIDPathParams
@@ -2197,7 +2197,7 @@ export type UpdateRecordWithIDError = Fetcher.ErrorWrapper<
 >;
 
 export type UpdateRecordWithIDVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: UpdateRecordWithIDPathParams;
   queryParams?: UpdateRecordWithIDQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2206,7 +2206,7 @@ export const updateRecordWithID = (variables: UpdateRecordWithIDVariables, signa
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     UpdateRecordWithIDError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     UpdateRecordWithIDQueryParams,
     UpdateRecordWithIDPathParams
@@ -2257,7 +2257,7 @@ export type UpsertRecordWithIDError = Fetcher.ErrorWrapper<
 >;
 
 export type UpsertRecordWithIDVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: UpsertRecordWithIDPathParams;
   queryParams?: UpsertRecordWithIDQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2266,7 +2266,7 @@ export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables, signa
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     UpsertRecordWithIDError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     UpsertRecordWithIDQueryParams,
     UpsertRecordWithIDPathParams
@@ -2366,7 +2366,7 @@ export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
 >;
 
 export type BulkInsertTableRecordsRequestBody = {
-  records: Record<string, any>[];
+  records: Schemas.DataInputRecord[];
 };
 
 export type BulkInsertTableRecordsVariables = {
