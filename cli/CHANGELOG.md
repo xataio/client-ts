@@ -1,5 +1,16 @@
 # @xata.io/cli
 
+## 0.11.11
+
+### Patch Changes
+
+- [#917](https://github.com/xataio/client-ts/pull/917) [`4210b8c3`](https://github.com/xataio/client-ts/commit/4210b8c3c4169ba781a56deed7ba09c99788db1f) Thanks [@xata-bot](https://github.com/xata-bot)! - [OpenAPI] Spec updates to add better types to Record input
+
+- Updated dependencies [[`4210b8c3`](https://github.com/xataio/client-ts/commit/4210b8c3c4169ba781a56deed7ba09c99788db1f)]:
+  - @xata.io/client@0.22.3
+  - @xata.io/codegen@0.22.3
+  - @xata.io/importer@0.3.7
+
 ## 0.11.10
 
 ### Patch Changes
