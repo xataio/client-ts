@@ -86,7 +86,19 @@ export type ColumnVector = {
 
 export type Column = {
   name: string;
-  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime' | 'vector';
+  type:
+    | 'bool'
+    | 'int'
+    | 'float'
+    | 'string'
+    | 'text'
+    | 'email'
+    | 'multiple'
+    | 'link'
+    | 'object'
+    | 'datetime'
+    | 'vector'
+    | 'fileArray';
   link?: ColumnLink;
   vector?: ColumnVector;
   notNull?: boolean;
@@ -647,6 +659,75 @@ export type TransactionFailure = {
    * An array of errors from the submitted operations.
    */
   errors: TransactionError[];
+};
+
+/**
+ * Object column value
+ */
+export type ObjectValue = {
+  [key: string]: string | boolean | number | string[] | number[] | DateTime | ObjectValue;
+};
+
+/**
+ * Object representing a file
+ *
+ * @x-go-type file.InputFile
+ */
+export type InputFileEntry = {
+  /**
+   * File name
+   *
+   * @maxLength 1024
+   * @minLength 1
+   * @pattern [0-9a-zA-Z!\-_\.\*'\(\)]+
+   */
+  name: string;
+  /**
+   * Media type
+   *
+   * @maxLength 255
+   * @minLength 3
+   * @pattern ^\w+/[-+.\w]+$
+   */
+  mediaType?: string;
+  /**
+   * Base64 encoded content
+   *
+   * @maxLength 20971520
+   */
+  base64Content?: string;
+  /**
+   * Enable public access to the file
+   */
+  enablePublicUrl?: boolean;
+  /**
+   * Time to live for signed URLs
+   */
+  signedUrlTimeout?: number;
+};
+
+/**
+ * Array of file entries
+ *
+ * @maxItems 50
+ */
+export type InputFileArray = InputFileEntry[];
+
+/**
+ * Xata input record
+ */
+export type DataInputRecord = {
+  [key: string]:
+    | RecordID
+    | string
+    | boolean
+    | number
+    | string[]
+    | number[]
+    | DateTime
+    | ObjectValue
+    | InputFileArray
+    | InputFileEntry;
 };
 
 /**
