@@ -1,5 +1,6 @@
 import { BaseCommand } from '../../base.js';
-export default class WorkspacesList extends BaseCommand {
+
+export default class WorkspacesList extends BaseCommand<typeof WorkspacesList> {
   static description = 'List your workspaces';
 
   static examples = [];
@@ -8,7 +9,7 @@ export default class WorkspacesList extends BaseCommand {
     ...this.commonFlags
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 

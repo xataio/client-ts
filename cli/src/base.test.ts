@@ -6,7 +6,7 @@ import { clearEnvVariables } from './commands/utils.test.js';
 
 vi.mock('dotenv');
 
-class FakeCommand extends BaseCommand {
+class FakeCommand extends BaseCommand<typeof FakeCommand> {
   async run() {
     // do nothing
   }

@@ -1,7 +1,8 @@
 import compact from 'lodash.compact';
 import { BaseCommand } from '../../base.js';
 import { currentGitBranch, isGitRepo, listBranches } from '../../git.js';
-export default class BranchesList extends BaseCommand {
+
+export default class BranchesList extends BaseCommand<typeof BranchesList> {
   static description = 'List branches';
 
   static examples = [];
@@ -11,12 +12,12 @@ export default class BranchesList extends BaseCommand {
     ...this.databaseURLFlag
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(BranchesList);
+    const { flags } = await this.parseCommand();
     const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();

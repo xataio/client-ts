@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
 import { pluralize } from '../../utils.js';
 
-export default class RandomData extends BaseCommand {
+export default class RandomData extends BaseCommand<typeof RandomData> {
   static description = 'Insert random data in the database';
 
   static examples = [];
@@ -22,10 +22,10 @@ export default class RandomData extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(RandomData);
+    const { flags } = await this.parseCommand();
 
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();

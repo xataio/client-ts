@@ -1,4 +1,4 @@
-import { Command, Flags } from '@oclif/core';
+import { Command, Config, Flags, Interfaces } from '@oclif/core';
 import { buildClient, getAPIKey, getHostUrl, parseWorkspacesUrlParts, Schemas, XataApiPlugin } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
@@ -35,7 +35,10 @@ const commonFlagsHelpGroup = 'Common';
 
 export const ENV_FILES = ['.env.local', '.env'];
 
-export abstract class BaseCommand extends Command {
+export type Flags<T extends typeof Command> = Interfaces.InferredFlags<(typeof BaseCommand)['baseFlags'] & T['flags']>;
+export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
+
+export abstract class BaseCommand<T extends typeof Command> extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
   // By default this will use the system locale and timezone.
   locale: string | undefined = undefined;
@@ -66,21 +69,6 @@ export abstract class BaseCommand extends Command {
     description: 'Branch name to use'
   });
 
-  static noInputFlag = {
-    'no-input': Flags.boolean({
-      helpGroup: commonFlagsHelpGroup,
-      description: 'Will not prompt interactively for missing values'
-    })
-  };
-
-  static profileFlag = {
-    profile: Flags.string({
-      helpGroup: commonFlagsHelpGroup,
-      helpValue: '<profile-name>',
-      description: 'Profile name to use'
-    })
-  };
-
   static yesFlag = {
     yes: Flags.boolean({
       char: 'y',
@@ -96,10 +84,21 @@ export abstract class BaseCommand extends Command {
     })
   };
 
+  // TODO: Move JSON flag to base class flags
   static commonFlags = {
-    ...this.jsonFlag,
-    ...this.noInputFlag,
-    ...this.profileFlag
+    ...this.jsonFlag
+  };
+
+  static baseFlags = {
+    'no-input': Flags.boolean({
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Will not prompt interactively for missing values'
+    }),
+    profile: Flags.string({
+      helpGroup: commonFlagsHelpGroup,
+      helpValue: '<profile-name>',
+      description: 'Profile name to use'
+    })
   };
 
   static forceFlag(description?: string) {
@@ -180,7 +179,7 @@ export abstract class BaseCommand extends Command {
   }
 
   async getProfile(ignoreEnv?: boolean): Promise<Profile> {
-    const { flags } = await this.parse({ strict: false, flags: { ...BaseCommand.profileFlag } }, this.argv);
+    const { flags } = await this.parseCommand();
     const profileName = flags.profile || getEnvProfileName();
 
     const apiKey = getAPIKey();
@@ -623,10 +622,7 @@ export abstract class BaseCommand extends Command {
     // If there's a flag, use the value of the flag
     if (flagValue != null) return { [String(options.name)]: flagValue } as prompts.Answers<name>;
 
-    const { flags } = await this.parse(
-      { strict: false, flags: { ...BaseCommand.noInputFlag, ...BaseCommand.yesFlag } },
-      this.argv
-    );
+    const { flags } = await this.parseCommand();
     const { 'no-input': noInput, yes } = flags;
 
     if (yes && options.initial != null && typeof options.initial !== 'function') {
@@ -662,5 +658,16 @@ export abstract class BaseCommand extends Command {
         resolve(undefined);
       });
     });
+  }
+
+  async parseCommand(): Promise<{ flags: Flags<T>; args: Args<T> }> {
+    const { flags, args } = await this.parse({
+      flags: this.ctor.flags,
+      baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
+      args: this.ctor.args,
+      strict: this.ctor.strict
+    });
+
+    return { flags, args } as { flags: Flags<T>; args: Args<T> };
   }
 }

@@ -1,20 +1,19 @@
 import { BaseCommand } from '../../base.js';
 import { hasProfile, removeProfile } from '../../credentials.js';
 
-export default class Logout extends BaseCommand {
+export default class Logout extends BaseCommand<typeof Logout> {
   static description = 'Logout from Xata';
 
   static examples = [];
 
   static flags = {
-    ...BaseCommand.forceFlag(),
-    ...BaseCommand.profileFlag
+    ...BaseCommand.forceFlag()
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(Logout);
+    const { flags } = await this.parseCommand();
 
     const profile = await this.getProfile(true);
     const loggedIn = await hasProfile(profile.name);
