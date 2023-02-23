@@ -1,12 +1,12 @@
-import { Command, Config, Flags, Interfaces } from '@oclif/core';
+import { Command, Flags, Interfaces } from '@oclif/core';
 import {
+  Schemas,
+  XataApiPlugin,
   buildClient,
   getAPIKey,
   getCurrentBranchName,
   getHostUrl,
-  parseWorkspacesUrlParts,
-  Schemas,
-  XataApiPlugin
+  parseWorkspacesUrlParts
 } from '@xata.io/client';
 import { XataImportPlugin } from '@xata.io/importer';
 import ansiRegex from 'ansi-regex';
@@ -21,13 +21,13 @@ import path from 'path';
 import prompts from 'prompts';
 import table from 'text-table';
 import which from 'which';
-import { z, ZodError } from 'zod';
+import { ZodError, z } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
 import {
+  Profile,
   buildProfile,
   credentialsFilePath,
   getEnvProfileName,
-  Profile,
   readCredentialsDictionary
 } from './credentials.js';
 import { reportBugURL } from './utils.js';
