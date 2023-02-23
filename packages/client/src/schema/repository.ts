@@ -1444,7 +1444,7 @@ export class RestRepository<Record extends XataRecord>
         recordId
       },
       queryParams: { columns, ifVersion },
-      body: object,
+      body: object as Schemas.DataInputRecord,
       ...fetchProps
     });
 
@@ -1894,14 +1894,14 @@ export class RestRepository<Record extends XataRecord>
   }
 }
 
-const transformObjectLinks = (object: any) => {
+const transformObjectLinks = (object: any): Schemas.DataInputRecord => {
   return Object.entries(object).reduce((acc, [key, value]) => {
     // Ignore internal properties
     if (key === 'xata') return acc;
 
     // Transform links to identifier
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
-  }, {} as Record<string, unknown>);
+  }, {});
 };
 
 export const initObject = <T>(

@@ -3,7 +3,19 @@ import { z } from 'zod';
 // We need to do this because of problems with Zod and recursive types https://www.npmjs.com/package/zod#recursive-types
 export type Column = {
   name: string;
-  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime' | 'vector';
+  type:
+    | 'bool'
+    | 'int'
+    | 'float'
+    | 'string'
+    | 'text'
+    | 'email'
+    | 'multiple'
+    | 'link'
+    | 'object'
+    | 'datetime'
+    | 'vector'
+    | 'fileArray';
   unique?: boolean;
   description?: string;
   link?: {
