@@ -38,25 +38,25 @@ afterEach(async (ctx) => {
 });
 
 describe('search', () => {
-  test.skip('search 1 2 3 4', async () => {
+  test('search 1 2 3 4', async () => {
     const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4]);
 
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r1', 'r2', 'r3']);
   });
 
-  test.skip('search 0.4 0.3 0.2 0.1', async () => {
+  test('search 0.4 0.3 0.2 0.1', async () => {
     const results = await xata.db.users.vectorSearch('vector', [0.4, 0.3, 0.2, 0.1]);
 
     expect(results.map((r) => r.full_name)).toEqual(['r2', 'r3', 'r4', 'r1']);
   });
 
-  test.skip('with size', async () => {
+  test('with size', async () => {
     const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { size: 2 });
 
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r1']);
   });
 
-  test.skip('with filter', async () => {
+  test('with filter', async () => {
     const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
       filter: { full_name: { $any: ['r3', 'r4'] } }
     });
@@ -64,19 +64,19 @@ describe('search', () => {
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r3']);
   });
 
-  test.skip('euclidean', async () => {
+  test('euclidean', async () => {
     const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { similarityFunction: 'l1' });
 
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r2', 'r1', 'r3']);
   });
 
-  test.skip('larger size', async () => {
+  test('larger size', async () => {
     const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { size: 100 });
 
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r1', 'r2', 'r3']);
   });
 
-  test.skip('with filter and size', async () => {
+  test('with filter and size', async () => {
     const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
       filter: { full_name: { $any: ['r3', 'r4'] } },
       size: 1
@@ -85,7 +85,7 @@ describe('search', () => {
     expect(results.map((r) => r.full_name)).toEqual(['r4']);
   });
 
-  test.skip('with filter and size and spaceFunction', async () => {
+  test('with filter and size and spaceFunction', async () => {
     const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
       filter: { full_name: { $any: ['r3', 'r4'] } },
       size: 1,
