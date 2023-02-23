@@ -142,7 +142,7 @@ Beware that this can lead to ${chalk.bold(
     this.branch = branch;
 
     const xata = await this.getXataClient();
-    const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
+    const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
     if (!branchDetails) this.error('Could not get the schema from the current branch');
 
     if (flags.source) {
@@ -773,7 +773,7 @@ Beware that this can lead to ${chalk.bold(
       }
     }
 
-    await xata.migrations.applyBranchSchemaEdit({
+    await xata.api.migrations.applyBranchSchemaEdit({
       workspace,
       region,
       database,

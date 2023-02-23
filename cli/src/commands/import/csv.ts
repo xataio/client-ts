@@ -86,7 +86,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const xata = await this.getXataClient();
 
     const options = createProcessor(
-      xata,
+      xata.api,
       { workspace, region, database, branch, table },
       {
         types: splitCommas(types),

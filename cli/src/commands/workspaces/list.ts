@@ -15,7 +15,7 @@ export default class WorkspacesList extends BaseCommand<typeof WorkspacesList> {
 
   async run(): Promise<any> {
     const xata = await this.getXataClient();
-    const workspacesList = await xata.workspaces.getWorkspacesList();
+    const workspacesList = await xata.api.workspaces.getWorkspacesList();
 
     if (this.jsonEnabled()) return workspacesList.workspaces;
 

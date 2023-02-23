@@ -1,4 +1,4 @@
-import { ApiExtraProps, Schemas } from './api';
+import { ApiExtraProps, HostProvider, Schemas } from './api';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
@@ -15,6 +15,7 @@ import { generateUUID } from './util/uuid';
 
 export type BaseClientOptions = {
   fetch?: FetchImpl;
+  host?: HostProvider;
   apiKey?: string;
   databaseURL?: string;
   branch?: BranchStrategyOption;
@@ -101,6 +102,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
       const clientName = options?.clientName;
+      const host = options?.host ?? 'production';
+
       const xataAgentExtra = options?.xataAgentExtra;
       const branch = async () =>
         options?.branch !== undefined
@@ -128,6 +131,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         branch,
         cache,
         trace,
+        host,
         clientID: generateUUID(),
         enableBrowser,
         clientName,
