@@ -2015,7 +2015,7 @@ export type InsertRecordError = Fetcher.ErrorWrapper<
 >;
 
 export type InsertRecordVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: InsertRecordPathParams;
   queryParams?: InsertRecordQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2027,7 +2027,7 @@ export const insertRecord = (variables: InsertRecordVariables, signal?: AbortSig
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     InsertRecordError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     InsertRecordQueryParams,
     InsertRecordPathParams
@@ -2134,7 +2134,7 @@ export type InsertRecordWithIDError = Fetcher.ErrorWrapper<
 >;
 
 export type InsertRecordWithIDVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: InsertRecordWithIDPathParams;
   queryParams?: InsertRecordWithIDQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2146,7 +2146,7 @@ export const insertRecordWithID = (variables: InsertRecordWithIDVariables, signa
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     InsertRecordWithIDError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     InsertRecordWithIDQueryParams,
     InsertRecordWithIDPathParams
@@ -2197,7 +2197,7 @@ export type UpdateRecordWithIDError = Fetcher.ErrorWrapper<
 >;
 
 export type UpdateRecordWithIDVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: UpdateRecordWithIDPathParams;
   queryParams?: UpdateRecordWithIDQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2206,7 +2206,7 @@ export const updateRecordWithID = (variables: UpdateRecordWithIDVariables, signa
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     UpdateRecordWithIDError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     UpdateRecordWithIDQueryParams,
     UpdateRecordWithIDPathParams
@@ -2257,7 +2257,7 @@ export type UpsertRecordWithIDError = Fetcher.ErrorWrapper<
 >;
 
 export type UpsertRecordWithIDVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: UpsertRecordWithIDPathParams;
   queryParams?: UpsertRecordWithIDQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2266,7 +2266,7 @@ export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables, signa
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     UpsertRecordWithIDError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     UpsertRecordWithIDQueryParams,
     UpsertRecordWithIDPathParams
@@ -2366,7 +2366,7 @@ export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
 >;
 
 export type BulkInsertTableRecordsRequestBody = {
-  records: Record<string, any>[];
+  records: Schemas.DataInputRecord[];
 };
 
 export type BulkInsertTableRecordsVariables = {
@@ -3330,6 +3330,83 @@ export const searchTable = (variables: SearchTableVariables, signal?: AbortSigna
     signal
   });
 
+export type VectorSearchTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+  region: string;
+};
+
+export type VectorSearchTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type VectorSearchTableRequestBody = {
+  /**
+   * The vector to search for similarities. Must have the same dimension as
+   * the vector column used.
+   */
+  queryVector: number[];
+  /**
+   * The vector column in which to search. It must be of type `vector`.
+   */
+  column: string;
+  /**
+   * The function used to measure the distance between two points. Can be one of:
+   * `cosineSimilarity`, `l1`, `l2`. The default is `cosineSimilarity`.
+   *
+   * @default cosineSimilarity
+   */
+  similarityFunction?: string;
+  /**
+   * Number of results to return.
+   *
+   * @default 10
+   * @maximum 100
+   * @minimum 1
+   */
+  size?: number;
+  filter?: Schemas.FilterExpression;
+};
+
+export type VectorSearchTableVariables = {
+  body: VectorSearchTableRequestBody;
+  pathParams: VectorSearchTablePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * This endpoint can be used to perform vector-based similarity searches in a table.
+ * It can be used for implementing semantic search and product recommendation. To use this
+ * endpoint, you need a column of type vector. The input vector must have the same
+ * dimension as the vector column.
+ */
+export const vectorSearchTable = (variables: VectorSearchTableVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Responses.SearchResponse,
+    VectorSearchTableError,
+    VectorSearchTableRequestBody,
+    {},
+    {},
+    VectorSearchTablePathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/vectorSearch', method: 'post', ...variables, signal });
+
 export type SummarizeTablePathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -3577,5 +3654,5 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  searchAndFilter: { queryTable, searchBranch, searchTable, summarizeTable, aggregateTable }
+  searchAndFilter: { queryTable, searchBranch, searchTable, vectorSearchTable, summarizeTable, aggregateTable }
 };

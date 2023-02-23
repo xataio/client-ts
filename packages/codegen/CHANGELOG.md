@@ -1,5 +1,17 @@
 # @xata.io/codegen
 
+## 0.22.3
+
+### Patch Changes
+
+- [#917](https://github.com/xataio/client-ts/pull/917) [`4210b8c3`](https://github.com/xataio/client-ts/commit/4210b8c3c4169ba781a56deed7ba09c99788db1f) Thanks [@xata-bot](https://github.com/xata-bot)! - [OpenAPI] Spec updates to add better types to Record input
+
+## 0.22.2
+
+### Patch Changes
+
+- [#898](https://github.com/xataio/client-ts/pull/898) [`72e13bf9`](https://github.com/xataio/client-ts/commit/72e13bf99d0ebefef91c984a995a28b0e8ca2a8f) Thanks [@SferaDev](https://github.com/SferaDev)! - Add methods for vector type
+
 ## 0.21.0
 
 ### Minor Changes
