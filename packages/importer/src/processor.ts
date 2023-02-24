@@ -30,7 +30,7 @@ type ProcessorOptions = Omit<ParseOptions, 'callback'> & {
   onBatchProcessed?: (rows: number) => void;
 };
 
-export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, options: ProcessorOptions): ParseOptions {
+export function createProcessor(api: XataApiClient, tableInfo: TableInfo, options: ProcessorOptions): ParseOptions {
   let { types } = options;
   const { columns, onBatchProcessed } = options;
   let first = true;
@@ -56,13 +56,13 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
       first = false;
 
       const columnTypes = types || guessTypes(lines, columnNames, options.nullValue);
-      const table = await findTable(xata, tableInfo);
+      const table = await findTable(api, tableInfo);
       const compare = compareSchema(columnNames, columnTypes, table);
       const cont = await options.shouldContinue(compare);
 
       if (cont === false) return true; // Stops the parsing
 
-      await updateSchema(xata, tableInfo, compare);
+      await updateSchema(api, tableInfo, compare);
 
       types = compare.columnTypes.map((type) => type.schemaType);
     }
@@ -70,16 +70,16 @@ export function createProcessor(xata: XataApiClient, tableInfo: TableInfo, optio
     // TODO: values that do not match the type are transformed to null values. We should allow users to have control on that
     const parsed = lines.map((row) => parseRow(row, types || [], options.nullValue));
 
-    await batchUpsert(xata, tableInfo, columnNames, parsed);
+    await batchUpsert(api, tableInfo, columnNames, parsed);
 
     if (onBatchProcessed) onBatchProcessed(count);
   };
   return { ...options, callback };
 }
 
-export async function findTable(xata: XataApiClient, tableInfo: TableInfo): Promise<Schemas.Table | undefined> {
+export async function findTable(api: XataApiClient, tableInfo: TableInfo): Promise<Schemas.Table | undefined> {
   const { workspace, region, database, branch, table } = tableInfo;
-  const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
+  const branchDetails = await api.branches.getBranchDetails({ workspace, region, database, branch });
   const { schema } = branchDetails;
   const { tables } = schema;
 
@@ -134,16 +134,16 @@ export function compareSchema(
   return result;
 }
 
-export async function updateSchema(xata: XataApiClient, tableInfo: TableInfo, changes: CompareSchemaResult) {
+export async function updateSchema(api: XataApiClient, tableInfo: TableInfo, changes: CompareSchemaResult) {
   const { workspace, region, database, branch, table } = tableInfo;
 
   if (changes.missingTable) {
-    await xata.tables.createTable({ workspace, region, database, branch, table });
+    await api.tables.createTable({ workspace, region, database, branch, table });
   }
 
   for (const column of changes.missingColumns) {
     if (column.column === 'id') continue;
-    await xata.tables.addTableColumn({
+    await api.tables.addTableColumn({
       workspace,
       region,
       database,
@@ -158,7 +158,7 @@ export async function updateSchema(xata: XataApiClient, tableInfo: TableInfo, ch
 }
 
 export async function batchUpsert(
-  xata: XataApiClient,
+  api: XataApiClient,
   tableInfo: TableInfo,
   columns: string[],
   values: Array<ReturnType<typeof parseRow>>
@@ -174,7 +174,7 @@ export async function batchUpsert(
   });
 
   try {
-    await xata.records.bulkInsertTableRecords({ workspace, region, database, branch, table, records });
+    await api.records.bulkInsertTableRecords({ workspace, region, database, branch, table, records });
   } catch (e) {
     console.error(e);
   }
