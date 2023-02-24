@@ -6,7 +6,7 @@ let xata: XataClient;
 let hooks: TestEnvironmentResult['hooks'];
 
 const users = [
-  { full_name: 'r1', vector: [0.1, 0.2, 0.3, 0.5] },
+  { full_name: 'r1', vector: [0.1, 0.2, 0.3, 0.6] },
   { full_name: 'r2', vector: [4, 3, 2, 1] },
   { full_name: 'r3', vector: [0.5, 0.2, 0.3, 0.1] },
   { full_name: 'r4', vector: [1, 2, 3, 4] }
