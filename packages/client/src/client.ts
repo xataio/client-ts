@@ -93,7 +93,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
-      const branch = options?.branch || getBranch();
+      const branch = options?.branch || getBranch() || 'main';
       const apiKey = options?.apiKey || getAPIKey();
       const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
@@ -108,10 +108,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       if (!databaseURL) {
         throw new Error('Option databaseURL is required');
-      }
-
-      if (!branch) {
-        throw new Error('Option branch is required');
       }
 
       return {
