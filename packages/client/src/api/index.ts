@@ -4,18 +4,17 @@ import { operationsByTag } from './components';
 import type * as Responses from './responses';
 import type * as Schemas from './schemas';
 
+export type { FetchImpl } from '../util/fetch';
 export * from './client';
 export * from './components';
-export * from './providers';
+export { FetcherError } from './errors';
 export type { FetcherExtraProps } from './fetcher';
-export type { FetchImpl } from '../util/fetch';
+export * from './providers';
 export { operationsByTag as Operations };
 export type { Responses, Schemas };
-export { FetcherError } from './errors';
 
 export class XataApiPlugin implements XataPlugin {
-  async build(options: XataPluginOptions) {
-    const { fetchImpl, apiKey } = await options.getFetchProps();
-    return new XataApiClient({ fetch: fetchImpl, apiKey });
+  build(options: XataPluginOptions) {
+    return new XataApiClient(options);
   }
 }

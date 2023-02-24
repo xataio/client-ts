@@ -50,7 +50,7 @@ export class XataApiClient {
     this.#extraProps = {
       apiUrl: getHostUrl(provider, 'main'),
       workspacesApiUrl: getHostUrl(provider, 'workspaces'),
-      fetchImpl: getFetchImplementation(options.fetch),
+      fetch: getFetchImplementation(options.fetch),
       apiKey,
       trace,
       clientName: options.clientName,

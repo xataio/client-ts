@@ -4,7 +4,7 @@ import {
   XataApiPlugin,
   buildClient,
   getAPIKey,
-  getCurrentBranchName,
+  getBranch,
   getHostUrl,
   parseWorkspacesUrlParts
 } from '@xata.io/client';
@@ -241,7 +241,13 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       });
     }
 
+    const { flags } = await this.parseCommand();
+    const databaseURL = flags.db ?? 'https://{workspace}.{region}.xata.sh/db/{database}';
+    const branch = flags.branch ?? this.getCurrentBranchName();
+
     this.#xataClient = new XataClient({
+      databaseURL,
+      branch,
       apiKey,
       fetch,
       host,
@@ -519,7 +525,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     if (branchFlag) {
       branch = branchFlag;
     } else if (info.source === 'config') {
-      branch = await this.getCurrentBranchName(info.databaseURL);
+      branch = this.getCurrentBranchName();
     } else if (process.env.XATA_BRANCH !== undefined) {
       branch = process.env.XATA_BRANCH;
     } else {
@@ -529,14 +535,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     return { ...info, branch };
   }
 
-  async getCurrentBranchName(databaseURL: string) {
-    const profile = await this.getProfile();
-    return getCurrentBranchName({
-      fetchImpl: fetch,
-      databaseURL,
-      apiKey: profile?.apiKey ?? undefined,
-      clientName: 'cli'
-    });
+  getCurrentBranchName() {
+    return getBranch() ?? 'main';
   }
 
   async updateConfig() {

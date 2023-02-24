@@ -8,11 +8,11 @@ export class XataError extends Error {
 }
 
 export * from './api';
-export * from './plugins';
 export * from './client';
+export * from './plugins';
 export * from './schema';
 export * from './search';
 export * from './serializer';
-export * from './util/config';
 export * from './util/apiKey';
+export { getBranch, getDatabaseURL } from './util/environment';
 export * from './workers';

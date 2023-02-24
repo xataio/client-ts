@@ -64,11 +64,11 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
     this.#schemaTables = schemaTables;
   }
 
-  build({ getFetchProps }: XataPluginOptions): SearchPluginResult<Schemas> {
+  build(pluginOptions: XataPluginOptions): SearchPluginResult<Schemas> {
     return {
       all: async <Tables extends StringKeys<Schemas>>(query: string, options: SearchOptions<Schemas, Tables> = {}) => {
-        const records = await this.#search(query, options, getFetchProps);
-        const schemaTables = await this.#getSchemaTables(getFetchProps);
+        const records = await this.#search(query, options, pluginOptions);
+        const schemaTables = await this.#getSchemaTables(pluginOptions);
 
         return records.map((record) => {
           const { table = 'orphan' } = record.xata;
@@ -81,8 +81,8 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
         query: string,
         options: SearchOptions<Schemas, Tables> = {}
       ) => {
-        const records = await this.#search(query, options, getFetchProps);
-        const schemaTables = await this.#getSchemaTables(getFetchProps);
+        const records = await this.#search(query, options, pluginOptions);
+        const schemaTables = await this.#getSchemaTables(pluginOptions);
 
         return records.reduce((acc, record) => {
           const { table = 'orphan' } = record.xata;
@@ -100,28 +100,26 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
   async #search<Tables extends StringKeys<Schemas>>(
     query: string,
     options: SearchOptions<Schemas, Tables>,
-    getFetchProps: XataPluginOptions['getFetchProps']
+    pluginOptions: XataPluginOptions
   ) {
-    const fetchProps = await getFetchProps();
     const { tables, fuzziness, highlight, prefix, page } = options ?? {};
 
     const { records } = await searchBranch({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
       // @ts-ignore https://github.com/xataio/client-ts/issues/313
       body: { tables, query, fuzziness, prefix, highlight, page },
-      ...fetchProps
+      ...pluginOptions
     });
 
     return records;
   }
 
-  async #getSchemaTables(getFetchProps: XataPluginOptions['getFetchProps']): Promise<Table[]> {
+  async #getSchemaTables(pluginOptions: XataPluginOptions): Promise<Table[]> {
     if (this.#schemaTables) return this.#schemaTables;
-    const fetchProps = await getFetchProps();
 
     const { schema } = await getBranchDetails({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-      ...fetchProps
+      ...pluginOptions
     });
 
     this.#schemaTables = schema.tables;

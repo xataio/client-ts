@@ -2,13 +2,11 @@ import { ApiExtraProps, HostProvider, Schemas } from './api';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
-import { defaultTrace, TraceFunction } from './schema/tracing';
+import { TraceFunction, defaultTrace } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { TransactionPlugin, TransactionPluginResult } from './transaction';
 import { getAPIKey } from './util/apiKey';
-import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
-import { getCurrentBranchName, getDatabaseURL } from './util/config';
-import { getEnableBrowserVariable } from './util/environment';
+import { getBranch, getDatabaseURL, getEnableBrowserVariable } from './util/environment';
 import { FetchImpl, getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
@@ -18,7 +16,7 @@ export type BaseClientOptions = {
   host?: HostProvider;
   apiKey?: string;
   databaseURL?: string;
-  branch?: BranchStrategyOption;
+  branch?: string;
   cache?: CacheImpl;
   trace?: TraceFunction;
   enableBrowser?: boolean;
@@ -26,8 +24,7 @@ export type BaseClientOptions = {
   xataAgentExtra?: Record<string, string>;
 };
 
-type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch' | 'clientName' | 'xataAgentExtra'>> & {
-  branch: () => Promise<string | undefined>;
+type SafeOptions = AllRequired<Omit<BaseClientOptions, 'clientName' | 'xataAgentExtra'>> & {
   clientID: string;
   clientName?: string;
   xataAgentExtra?: Record<string, string>;
@@ -36,7 +33,6 @@ type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch' | 'clientName' |
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
   class {
-    #branch: BranchStrategyValue;
     #options: SafeOptions;
 
     db: SchemaPluginResult<any>;
@@ -48,9 +44,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       this.#options = safeOptions;
 
       const pluginOptions: XataPluginOptions = {
-        getFetchProps: () => this.#getFetchProps(safeOptions),
-        cache: safeOptions.cache,
-        trace: safeOptions.trace
+        ...this.#getFetchProps(safeOptions),
+        cache: safeOptions.cache
       };
 
       const db = new SchemaPlugin(schemaTables).build(pluginOptions);
@@ -80,7 +75,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
     public async getConfig() {
       const databaseURL = this.#options.databaseURL;
-      const branch = await this.#options.branch();
+      const branch = this.#options.branch;
 
       return { databaseURL, branch };
     }
@@ -98,6 +93,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
+      const branch = options?.branch || getBranch();
       const apiKey = options?.apiKey || getAPIKey();
       const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
@@ -105,16 +101,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const host = options?.host ?? 'production';
 
       const xataAgentExtra = options?.xataAgentExtra;
-      const branch = async () =>
-        options?.branch !== undefined
-          ? await this.#evaluateBranch(options.branch)
-          : await getCurrentBranchName({
-              apiKey,
-              databaseURL,
-              fetchImpl: options?.fetch,
-              clientName,
-              xataAgentExtra
-            });
 
       if (!apiKey) {
         throw new Error('Option apiKey is required');
@@ -122,6 +108,10 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       if (!databaseURL) {
         throw new Error('Option databaseURL is required');
+      }
+
+      if (!branch) {
+        throw new Error('Option branch is required');
       }
 
       return {
@@ -139,7 +129,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       };
     }
 
-    async #getFetchProps({
+    #getFetchProps({
       fetch,
       apiKey,
       databaseURL,
@@ -148,18 +138,15 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       clientID,
       clientName,
       xataAgentExtra
-    }: SafeOptions): Promise<ApiExtraProps> {
-      const branchValue = await this.#evaluateBranch(branch);
-      if (!branchValue) throw new Error('Unable to resolve branch value');
-
+    }: SafeOptions): ApiExtraProps {
       return {
-        fetchImpl: fetch,
+        fetch,
         apiKey,
         apiUrl: '',
         // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
         workspacesApiUrl: (path, params) => {
           const hasBranch = params.dbBranchName ?? params.branch;
-          const newPath = path.replace(/^\/db\/[^/]+/, hasBranch !== undefined ? `:${branchValue}` : '');
+          const newPath = path.replace(/^\/db\/[^/]+/, hasBranch !== undefined ? `:${branch}` : '');
           return databaseURL + newPath;
         },
         trace,
@@ -167,25 +154,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         clientName,
         xataAgentExtra
       };
-    }
-
-    async #evaluateBranch(param?: BranchStrategyOption): Promise<string | undefined> {
-      if (this.#branch) return this.#branch;
-      if (param === undefined) return undefined;
-
-      const strategies = Array.isArray(param) ? [...param] : [param];
-
-      const evaluateBranch = async (strategy: BranchStrategy) => {
-        return isBranchStrategyBuilder(strategy) ? await strategy() : strategy;
-      };
-
-      for await (const strategy of strategies) {
-        const branch = await evaluateBranch(strategy);
-        if (branch) {
-          this.#branch = branch;
-          return branch;
-        }
-      }
     }
   } as unknown as ClientConstructor<Plugins>;
 
