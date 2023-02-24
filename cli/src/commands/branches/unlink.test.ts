@@ -29,7 +29,7 @@ describe('branches unlink', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesUnlink([], config as Config);
+    const command = new BranchesUnlink([], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
@@ -49,7 +49,7 @@ describe('branches unlink', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesUnlink(['--git', 'foo'], config as Config);
+    const command = new BranchesUnlink(['--git', 'foo'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     expect(BranchesUnlink.enableJsonFlag).toBe(true);
