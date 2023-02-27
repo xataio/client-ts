@@ -22,7 +22,7 @@ const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 describe('branches create', () => {
   test('fails if the branch name is not provided', async () => {
     const config = await Config.load();
-    const command = new BranchesCreate([], config as Config);
+    const command = new BranchesCreate([], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(`
@@ -41,7 +41,7 @@ describe('branches create', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesCreate(['featureA', '--no-git'], config as Config);
+    const command = new BranchesCreate(['featureA', '--no-git'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
@@ -58,7 +58,7 @@ describe('branches create', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesCreate(['featureA', '--no-git'], config as Config);
+    const command = new BranchesCreate(['featureA', '--no-git'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     expect(BranchesCreate.enableJsonFlag).toBe(true);
@@ -89,7 +89,7 @@ describe('branches create', () => {
     vi.spyOn(git, 'isGitInstalled').mockReturnValue(false);
 
     const config = await Config.load();
-    const command = new BranchesCreate(['featureA'], config as Config);
+    const command = new BranchesCreate(['featureA'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow(
@@ -102,7 +102,7 @@ describe('branches create', () => {
     vi.spyOn(git, 'isWorkingDirClean').mockReturnValue(false);
 
     const config = await Config.load();
-    const command = new BranchesCreate(['featureA'], config as Config);
+    const command = new BranchesCreate(['featureA'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow(
@@ -117,7 +117,7 @@ describe('branches create', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesCreate(['featureA'], config as Config);
+    const command = new BranchesCreate(['featureA'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow(
@@ -134,7 +134,7 @@ describe('branches create', () => {
       const createBranch = vi.spyOn(git, 'createBranch').mockReturnValue(undefined);
 
       const config = await Config.load();
-      const command = new BranchesCreate(['featureA'], config as Config);
+      const command = new BranchesCreate(['featureA'], config);
       command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
       expect(BranchesCreate.enableJsonFlag).toBe(true);
@@ -178,7 +178,7 @@ describe('branches create', () => {
       fetchMock.mockReturnValue({ ok: true, json: async () => ({ branch: 'base' }) });
 
       const config = await Config.load();
-      const command = new BranchesCreate(['featureA', '--from', 'base'], config as Config);
+      const command = new BranchesCreate(['featureA', '--from', 'base'], config);
       command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
       expect(BranchesCreate.enableJsonFlag).toBe(true);

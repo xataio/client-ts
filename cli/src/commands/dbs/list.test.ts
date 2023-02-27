@@ -28,7 +28,7 @@ describe('databases list', () => {
     });
 
     const config = await Config.load();
-    const list = new DatabasesList(['--workspace', 'test-1234'], config as Config);
+    const list = new DatabasesList(['--workspace', 'test-1234'], config);
 
     await expect(list.run()).rejects.toThrow('Something went wrong');
 
@@ -46,7 +46,7 @@ describe('databases list', () => {
     });
 
     const config = await Config.load();
-    const list = new DatabasesList(['--workspace', 'test-1234'], config as Config);
+    const list = new DatabasesList(['--workspace', 'test-1234'], config);
     list.locale = 'en-US';
     list.timeZone = 'UTC';
 

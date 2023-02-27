@@ -6,7 +6,7 @@ import { fetch, WorkspaceApiUrlBuilder } from './fetcher';
 export type ControlPlaneFetcherExtraProps = {
   apiUrl: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
-  fetchImpl: FetchImpl;
+  fetch: FetchImpl;
   apiKey: string;
   trace: TraceFunction;
   signal?: AbortSignal;

@@ -36,7 +36,7 @@ export type FetcherExtraProps = {
   endpoint: 'controlPlane' | 'dataPlane';
   apiUrl: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
-  fetchImpl: FetchImpl;
+  fetch: FetchImpl;
   apiKey: string;
   trace: TraceFunction;
   signal?: AbortSignal;
@@ -111,7 +111,7 @@ export async function fetch<
   headers: customHeaders,
   pathParams,
   queryParams,
-  fetchImpl,
+  fetch,
   apiKey,
   endpoint,
   apiUrl,
@@ -124,7 +124,7 @@ export async function fetch<
   xataAgentExtra,
   fetchOptions = {}
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
-  pool.setFetch(fetchImpl);
+  pool.setFetch(fetch);
 
   return await trace(
     `${method.toUpperCase()} ${path}`,

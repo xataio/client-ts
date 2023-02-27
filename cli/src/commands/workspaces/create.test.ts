@@ -21,7 +21,7 @@ const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 describe('workspaces create', () => {
   test('fails if the workspace name is not provided', async () => {
     const config = await Config.load();
-    const list = new WorkspacesCreate([], config as Config);
+    const list = new WorkspacesCreate([], config);
 
     await expect(list.run()).rejects.toMatchInlineSnapshot(`
       [Error: Missing 1 required arg:
@@ -39,7 +39,7 @@ describe('workspaces create', () => {
     });
 
     const config = await Config.load();
-    const list = new WorkspacesCreate(['hello world'], config as Config);
+    const list = new WorkspacesCreate(['hello world'], config);
 
     await expect(list.run()).rejects.toThrow('Something went wrong');
 
@@ -57,7 +57,7 @@ describe('workspaces create', () => {
     });
 
     const config = await Config.load();
-    const list = new WorkspacesCreate(['hello world'], config as Config);
+    const list = new WorkspacesCreate(['hello world'], config);
 
     expect(WorkspacesCreate.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);

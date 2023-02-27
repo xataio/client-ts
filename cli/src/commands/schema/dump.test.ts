@@ -39,7 +39,7 @@ const mockSchema = {
 describe('schema dump', () => {
   test('returns the schema if no file was specified', async () => {
     const config = await Config.load();
-    const command = new SchemaDump([], config as Config);
+    const command = new SchemaDump([], config);
 
     const writeFile = vi.spyOn(fs, 'writeFile');
 
@@ -60,7 +60,7 @@ describe('schema dump', () => {
 
   test('writes to a file when specified', async () => {
     const config = await Config.load();
-    const command = new SchemaDump(['-f', 'schema.json'], config as Config);
+    const command = new SchemaDump(['-f', 'schema.json'], config);
 
     const writeFile = vi.spyOn(fs, 'writeFile');
 
