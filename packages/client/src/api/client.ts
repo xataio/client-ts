@@ -1036,6 +1036,70 @@ class SearchAndFilterApi {
     });
   }
 
+  public vectorSearchTable({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    queryVector,
+    column,
+    similarityFunction,
+    size,
+    filter
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    queryVector: number[];
+    column: string;
+    similarityFunction?: string;
+    size?: number;
+    filter?: Schemas.FilterExpression;
+  }): Promise<Responses.SearchResponse> {
+    return operationsByTag.searchAndFilter.vectorSearchTable({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
+      body: { queryVector, column, similarityFunction, size, filter },
+      ...this.extraProps
+    });
+  }
+
+  public askTable({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    question,
+    fuzziness,
+    target,
+    prefix,
+    filter,
+    boosters,
+    rules
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    question: string;
+    fuzziness?: Schemas.FuzzinessExpression;
+    target?: Schemas.TargetExpression;
+    prefix?: Schemas.PrefixExpression;
+    filter?: Schemas.FilterExpression;
+    boosters?: Schemas.BoosterExpression[];
+    rules?: string[];
+  }): Promise<Components.AskTableResponse> {
+    return operationsByTag.searchAndFilter.askTable({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
+      body: { question, fuzziness, target, prefix, filter, boosters, rules },
+      ...this.extraProps
+    });
+  }
+
   public summarizeTable({
     workspace,
     region,
