@@ -1,5 +1,7 @@
 /* eslint-disable */
 
+import { FetchImpl, RequestInit, Response } from './fetch';
+
 /**
  * Represents a message sent in an event stream
  * https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format
@@ -228,11 +230,11 @@ export interface FetchEventSourceInit extends RequestInit {
   onerror?: (err: any) => number | null | undefined | void;
 
   /** The Fetch function to use. */
-  fetch?: typeof fetch;
+  fetch?: FetchImpl;
 }
 
 export function fetchEventSource(
-  input: RequestInfo,
+  input: string,
   {
     signal: inputSignal,
     headers: inputHeaders,
@@ -268,7 +270,7 @@ export function fetchEventSource(
     async function create() {
       curRequestController = new AbortController();
       try {
-        const response = await fetchImpl(input, {
+        const response: any = await fetchImpl(input, {
           ...rest,
           headers,
           signal: curRequestController.signal
@@ -306,7 +308,7 @@ export function fetchEventSource(
 }
 
 function defaultOnOpen(response: Response) {
-  const contentType = response.headers.get('content-type');
+  const contentType = response.headers?.get('content-type');
   if (!contentType?.startsWith(EventStreamContentType)) {
     throw new Error(`Expected content-type to be ${EventStreamContentType}, Actual: ${contentType}`);
   }

@@ -248,8 +248,7 @@ export function fetchSSERequest<
   void fetchEventSource(url, {
     method,
     body: JSON.stringify(body),
-    openWhenHidden: true,
-    fetch: fetch as any,
+    fetch,
     signal,
     headers: {
       'X-Xata-Client-ID': clientID ?? defaultClientID,
