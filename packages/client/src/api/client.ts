@@ -1305,7 +1305,7 @@ class MigrationRequestsApi {
     region: string;
     database: Schemas.DBName;
     migrationRequest: Schemas.MigrationRequestNumber;
-  }): Promise<Schemas.Commit> {
+  }): Promise<Schemas.BranchOp> {
     return operationsByTag.migrationRequests.mergeMigrationRequest({
       pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
       ...this.extraProps

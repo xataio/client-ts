@@ -1127,7 +1127,7 @@ export type MergeMigrationRequestVariables = {
 } & DataPlaneFetcherExtraProps;
 
 export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.Commit, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
+  dataPlaneFetch<Schemas.BranchOp, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
     url: '/dbs/{dbName}/migrations/{mrNumber}/merge',
     method: 'post',
     ...variables,
