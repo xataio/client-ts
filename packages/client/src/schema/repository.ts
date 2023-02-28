@@ -35,6 +35,7 @@ import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
+import { AskOptions, AskResult } from './ask';
 import { CacheImpl } from './cache';
 import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
@@ -784,35 +785,12 @@ export abstract class Repository<Record extends XataRecord> extends Query<
   /**
    * Experimental: Ask the database to perform a natural language question.
    */
-  abstract ask(
-    question: string,
-    options?: {
-      rules?: string[];
-      fuzziness?: FuzzinessExpression;
-      prefix?: PrefixExpression;
-      target?: TargetColumn<Record>[];
-      filter?: Filter<Record>;
-      boosters?: Boosters<Record>[];
-    }
-  ): Promise<{
-    answer?: string;
-  }>;
+  abstract ask(question: string, options?: AskOptions<Record>): Promise<AskResult>;
 
   /**
    * Experimental: Ask the database to perform a natural language question.
    */
-  abstract ask(
-    question: string,
-    options: {
-      onMessage: (message: string) => void;
-      rules?: string[];
-      fuzziness?: FuzzinessExpression;
-      prefix?: PrefixExpression;
-      target?: TargetColumn<Record>[];
-      filter?: Filter<Record>;
-      boosters?: Boosters<Record>[];
-    }
-  ): void;
+  abstract ask(question: string, options: AskOptions<Record> & { onMessage: (message: AskResult) => void }): void;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -1868,18 +1846,10 @@ export class RestRepository<Record extends XataRecord>
     });
   }
 
-  ask(
-    question: string,
-    options?: {
-      onMessage?: (message: string) => void;
-      rules?: string[];
-      fuzziness?: FuzzinessExpression;
-      prefix?: PrefixExpression;
-      target?: TargetColumn<Record>[];
-      filter?: Filter<Record>;
-      boosters?: Boosters<Record>[];
-    }
-  ): any {
+  ask(question: string, options?: AskOptions<Record> & { onMessage?: (message: AskResult) => void }): any {
+    // TODO: Wait for backend to allow vector questions
+    if (options?.searchType === 'vector') throw new Error('Vector search not supported yet');
+
     const params = {
       pathParams: {
         workspace: '{workspaceId}',
@@ -1890,22 +1860,22 @@ export class RestRepository<Record extends XataRecord>
       body: {
         question,
         rules: options?.rules,
-        fuzziness: options?.fuzziness,
-        prefix: options?.prefix,
-        target: options?.target,
-        filter: options?.filter,
-        boosters: options?.boosters
+        fuzziness: options?.search.fuzziness,
+        prefix: options?.search.prefix,
+        target: options?.search.target,
+        filter: options?.search.filter,
+        boosters: options?.search.boosters
       },
       ...this.#getFetchProps()
     };
 
     if (options?.onMessage) {
-      return fetchSSERequest({
+      fetchSSERequest({
         endpoint: 'dataPlane',
         url: '/db/{dbBranchName}/tables/{tableName}/ask',
         method: 'POST',
-        ...params,
-        onMessage: options.onMessage
+        onMessage: options.onMessage,
+        ...params
       });
     } else {
       return askTable(params);
