@@ -1,6 +1,7 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
 import { compact, isDefined, isString } from '../util/lang';
+import { fetchEventSource } from '../util/sse';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
@@ -202,6 +203,82 @@ export async function fetch<
     },
     { [TraceAttributes.HTTP_METHOD]: method.toUpperCase(), [TraceAttributes.HTTP_ROUTE]: path }
   );
+}
+
+export function fetchSSERequest<
+  TData,
+  TError extends ErrorWrapper<{ status: unknown; payload: PossibleErrors }>,
+  TBody extends Record<string, unknown> | undefined | null,
+  THeaders extends Record<string, unknown>,
+  TQueryParams extends Record<string, unknown>,
+  TPathParams extends Partial<Record<string, string | number>>
+>({
+  url: path,
+  method,
+  body,
+  headers: customHeaders,
+  pathParams,
+  queryParams,
+  fetch,
+  apiKey,
+  endpoint,
+  apiUrl,
+  workspacesApiUrl,
+  onMessage,
+  onError,
+  onClose,
+  signal,
+  clientID,
+  sessionID,
+  clientName,
+  xataAgentExtra
+}: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> &
+  FetcherExtraProps & {
+    onMessage?: (message: TData) => void;
+    onError?: (error: TError) => void;
+    onClose?: () => void;
+  }): void {
+  const baseUrl = buildBaseUrl({ endpoint, path, workspacesApiUrl, pathParams, apiUrl });
+  const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
+
+  // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
+  // So, instead, we use localhost without subdomains, but will add a Host header
+  const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\./, 'http://') : fullUrl;
+
+  void fetchEventSource(url, {
+    method,
+    body: JSON.stringify(body),
+    openWhenHidden: true,
+    fetch: fetch as any,
+    signal,
+    headers: {
+      'X-Xata-Client-ID': clientID ?? defaultClientID,
+      'X-Xata-Session-ID': sessionID ?? generateUUID(),
+      'X-Xata-Agent': compact([
+        ['client', 'TS_SDK'],
+        ['version', VERSION],
+        isDefined(clientName) ? ['service', clientName] : undefined,
+        ...Object.entries(xataAgentExtra ?? {})
+      ])
+        .map(([key, value]) => `${key}=${value}`)
+        .join('; '),
+      ...customHeaders,
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'X-Xata-Ask-Enabled': 'true'
+    },
+    onmessage(ev) {
+      const { text = '' } = JSON.parse(ev.data);
+      onMessage?.(text);
+    },
+    onerror(ev) {
+      const { text = '' } = JSON.parse(ev.data);
+      onError?.(text);
+    },
+    onclose() {
+      onClose?.();
+    }
+  });
 }
 
 function parseUrl(url: string): { host?: string; protocol?: string } {
