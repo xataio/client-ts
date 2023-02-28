@@ -1904,7 +1904,8 @@ export class RestRepository<Record extends XataRecord>
         endpoint: 'dataPlane',
         url: '/db/{dbBranchName}/tables/{tableName}/ask',
         method: 'POST',
-        ...params
+        ...params,
+        onMessage: options.onMessage
       });
     } else {
       return askTable(params);
