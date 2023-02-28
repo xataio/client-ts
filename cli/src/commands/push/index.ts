@@ -64,18 +64,20 @@ export default class Push extends BaseCommand {
       return;
     }
 
-    // TODO: Add `previewBranchSchemaEdits` to the API to check if the migrations are valid before applying them
-
-    for (const migration of newMigrations) {
-      await xata.api.migrations.applyBranchSchemaEdit({
-        workspace,
-        region,
-        database,
-        branch,
-        // TODO: Review the API once we have a better idea of how we want to handle migrations
-        edits: { operations: migration.operations }
-      });
-    }
+    // we use pushBranchMigrations to push all new migrations at once. The API will verify the migrations
+    // and will fail if a migration in the list can not be applied.
+    await xata.api.migrations.pushBranchMigrations({
+      workspace,
+      region,
+      database,
+      branch,
+      migrations: newMigrations.map((migration) => ({
+        id: migration.id,
+        parent: migration.parent,
+        checksum: migration.checksum,
+        operations: migration.operations
+      }))
+    });
 
     this.log(`Pushed ${newMigrations.length} migrations to ${branch}`);
   }

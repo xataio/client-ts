@@ -1127,7 +1127,7 @@ export type MergeMigrationRequestVariables = {
 } & DataPlaneFetcherExtraProps;
 
 export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.Commit, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
+  dataPlaneFetch<Schemas.BranchOp, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
     url: '/dbs/{dbName}/migrations/{mrNumber}/merge',
     method: 'post',
     ...variables,
@@ -1432,6 +1432,49 @@ export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables,
     {},
     ApplyBranchSchemaEditPathParams
   >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables, signal });
+
+export type PushBranchMigrationsPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type PushBranchMigrationsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PushBranchMigrationsRequestBody = {
+  migrations: Schemas.MigrationObject[];
+};
+
+export type PushBranchMigrationsVariables = {
+  body: PushBranchMigrationsRequestBody;
+  pathParams: PushBranchMigrationsPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const pushBranchMigrations = (variables: PushBranchMigrationsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Responses.SchemaUpdateResponse,
+    PushBranchMigrationsError,
+    PushBranchMigrationsRequestBody,
+    {},
+    {},
+    PushBranchMigrationsPathParams
+  >({ url: '/db/{dbBranchName}/schema/push', method: 'post', ...variables, signal });
 
 export type CreateTablePathParams = {
   /**
@@ -3407,6 +3450,72 @@ export const vectorSearchTable = (variables: VectorSearchTableVariables, signal?
     VectorSearchTablePathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/vectorSearch', method: 'post', ...variables, signal });
 
+export type AskTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+  region: string;
+};
+
+export type AskTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type AskTableResponse = {
+  /**
+   * The answer to the input question
+   */
+  answer?: string;
+};
+
+export type AskTableRequestBody = {
+  /**
+   * The question you'd like to ask.
+   *
+   * @minLength 3
+   */
+  question: string;
+  fuzziness?: Schemas.FuzzinessExpression;
+  target?: Schemas.TargetExpression;
+  prefix?: Schemas.PrefixExpression;
+  filter?: Schemas.FilterExpression;
+  boosters?: Schemas.BoosterExpression[];
+  rules?: string[];
+};
+
+export type AskTableVariables = {
+  body: AskTableRequestBody;
+  pathParams: AskTablePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Ask your table a question. If the `Accept` header is set to `text/event-stream`, Xata will stream the results back as SSE's.
+ */
+export const askTable = (variables: AskTableVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<AskTableResponse, AskTableError, AskTableRequestBody, {}, {}, AskTablePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/ask',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type SummarizeTablePathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -3620,7 +3729,8 @@ export const operationsByTag = {
     compareBranchSchemas,
     updateBranchSchema,
     previewBranchSchemaEdit,
-    applyBranchSchemaEdit
+    applyBranchSchemaEdit,
+    pushBranchMigrations
   },
   migrationRequests: {
     queryMigrationRequests,
@@ -3654,5 +3764,13 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  searchAndFilter: { queryTable, searchBranch, searchTable, vectorSearchTable, summarizeTable, aggregateTable }
+  searchAndFilter: {
+    queryTable,
+    searchBranch,
+    searchTable,
+    vectorSearchTable,
+    askTable,
+    summarizeTable,
+    aggregateTable
+  }
 };
