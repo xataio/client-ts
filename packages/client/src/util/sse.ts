@@ -227,14 +227,7 @@ export interface FetchEventSourceInit extends RequestInit {
    */
   onerror?: (err: any) => number | null | undefined | void;
 
-  /**
-   * If true, will keep the request open even if the document is hidden.
-   * By default, fetchEventSource will close the request and reopen it
-   * automatically when the document becomes visible again.
-   */
-  openWhenHidden?: boolean;
-
-  /** The Fetch function to use. Defaults to window.fetch */
+  /** The Fetch function to use. */
   fetch?: typeof fetch;
 }
 
@@ -247,7 +240,6 @@ export function fetchEventSource(
     onmessage,
     onclose,
     onerror,
-    openWhenHidden,
     fetch: inputFetch,
     ...rest
   }: FetchEventSourceInit
@@ -260,22 +252,8 @@ export function fetchEventSource(
     }
 
     let curRequestController: AbortController;
-    function onVisibilityChange() {
-      curRequestController.abort(); // close existing request on every visibility change
-      if (!document?.hidden) {
-        create(); // page is now visible again, recreate request.
-      }
-    }
 
-    if (!openWhenHidden) {
-      document?.addEventListener('visibilitychange', onVisibilityChange);
-    }
-
-    let retryInterval = DefaultRetryInterval;
-    let retryTimer = 0;
     function dispose() {
-      document?.removeEventListener('visibilitychange', onVisibilityChange);
-      window?.clearTimeout(retryTimer);
       curRequestController.abort();
     }
 
@@ -285,12 +263,12 @@ export function fetchEventSource(
       resolve(); // don't waste time constructing/logging errors
     });
 
-    const fetch = inputFetch ?? window?.fetch;
+    const fetchImpl = inputFetch ?? fetch;
     const onopen = inputOnOpen ?? defaultOnOpen;
     async function create() {
       curRequestController = new AbortController();
       try {
-        const response = await fetch(input, {
+        const response = await fetchImpl(input, {
           ...rest,
           headers,
           signal: curRequestController.signal
@@ -311,9 +289,7 @@ export function fetchEventSource(
                   delete headers[LastEventId];
                 }
               },
-              (retry) => {
-                retryInterval = retry;
-              },
+              (_retry) => {},
               onmessage
             )
           )
@@ -322,21 +298,7 @@ export function fetchEventSource(
         onclose?.();
         dispose();
         resolve();
-      } catch (err) {
-        if (!curRequestController.signal.aborted) {
-          // if we haven't aborted the request ourselves:
-          try {
-            // check if we need to retry:
-            const interval: any = onerror?.(err) ?? retryInterval;
-            window?.clearTimeout(retryTimer);
-            retryTimer = window?.setTimeout(create, interval);
-          } catch (innerErr) {
-            // we should not retry anymore:
-            dispose();
-            reject(innerErr);
-          }
-        }
-      }
+      } catch (err) {}
     }
 
     create();
