@@ -264,15 +264,14 @@ export function fetchSSERequest<
       ...customHeaders,
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
+      // TODO: Remove me when the API is fixed
       'X-Xata-Ask-Enabled': 'true'
     },
     onmessage(ev) {
-      const { text = '' } = JSON.parse(ev.data);
-      onMessage?.(text);
+      onMessage?.(JSON.parse(ev.data));
     },
     onerror(ev) {
-      const { text = '' } = JSON.parse(ev.data);
-      onError?.(text);
+      onError?.(JSON.parse(ev.data));
     },
     onclose() {
       onClose?.();

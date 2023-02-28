@@ -1860,11 +1860,11 @@ export class RestRepository<Record extends XataRecord>
       body: {
         question,
         rules: options?.rules,
-        fuzziness: options?.search.fuzziness,
-        prefix: options?.search.prefix,
-        target: options?.search.target,
-        filter: options?.search.filter,
-        boosters: options?.search.boosters
+        fuzziness: options?.search?.fuzziness,
+        prefix: options?.search?.prefix,
+        target: options?.search?.target,
+        filter: options?.search?.filter,
+        boosters: options?.search?.boosters
       },
       ...this.#getFetchProps()
     };
@@ -1874,7 +1874,9 @@ export class RestRepository<Record extends XataRecord>
         endpoint: 'dataPlane',
         url: '/db/{dbBranchName}/tables/{tableName}/ask',
         method: 'POST',
-        onMessage: options.onMessage,
+        onMessage: (message: { text: string }) => {
+          options.onMessage?.({ answer: message.text });
+        },
         ...params
       });
     } else {
