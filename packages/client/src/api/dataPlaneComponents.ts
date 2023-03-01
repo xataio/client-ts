@@ -3433,6 +3433,10 @@ export type AskTableError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 429;
+      payload: Responses.RateLimitError;
+    }
 >;
 
 export type AskTableResponse = {
