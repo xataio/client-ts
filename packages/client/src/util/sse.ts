@@ -1,5 +1,7 @@
 /* eslint-disable */
 
+// Code extracted from @microsoft/fetch-event-source (MIT License)
+// Removed browser-specific parts to make it cross-platform
 import { FetchImpl, RequestInit, Response } from './fetch';
 
 /**
