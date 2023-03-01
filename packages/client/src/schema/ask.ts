@@ -6,7 +6,7 @@ import { XataRecord } from './record';
 
 export type KeywordAskOptions<Record extends XataRecord> = {
   searchType: 'keyword';
-  search: {
+  search?: {
     fuzziness?: FuzzinessExpression;
     target?: TargetColumn<Record>[];
     prefix?: PrefixExpression;
@@ -17,7 +17,7 @@ export type KeywordAskOptions<Record extends XataRecord> = {
 
 export type VectorAskOptions<Record extends XataRecord> = {
   searchType: 'vector';
-  vectorSearch: {
+  vectorSearch?: {
     /**
      * The column to use for vector search. It must be of type `vector`.
      */
