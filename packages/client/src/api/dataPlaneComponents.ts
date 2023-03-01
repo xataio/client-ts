@@ -198,6 +198,51 @@ export const deleteBranch = (variables: DeleteBranchVariables, signal?: AbortSig
     signal
   });
 
+export type CopyBranchPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type CopyBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CopyBranchRequestBody = {
+  destinationBranch: string;
+  limit?: number;
+};
+
+export type CopyBranchVariables = {
+  body: CopyBranchRequestBody;
+  pathParams: CopyBranchPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Create a copy of the branch
+ */
+export const copyBranch = (variables: CopyBranchVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.BranchWithCopyID, CopyBranchError, CopyBranchRequestBody, {}, {}, CopyBranchPathParams>({
+    url: '/db/{dbBranchName}/copy',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type UpdateBranchMetadataPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -3453,11 +3498,42 @@ export type AskTableRequestBody = {
    * @minLength 3
    */
   question: string;
-  fuzziness?: Schemas.FuzzinessExpression;
-  target?: Schemas.TargetExpression;
-  prefix?: Schemas.PrefixExpression;
-  filter?: Schemas.FilterExpression;
-  boosters?: Schemas.BoosterExpression[];
+  /**
+   * The type of search to use. If set to `keyword` (the default), the search can be configured by passing
+   * a `search` object with the following fields. For more details about each, see the Search endpoint documentation.
+   * All fields are optional.
+   *   * fuzziness  - typo tolerance
+   *   * target - columns to search into, and weights.
+   *   * prefix - prefix search type.
+   *   * filter - pre-filter before searching.
+   *   * boosters - control relevancy.
+   * If set to `vector`, a `vectorSearch` object must be passed, with the following parameters. For more details, see the Vector
+   * Search endpoint documentation. The `column` and `contentColumn` parameters are required.
+   *   * column - the vector column containing the embeddings.
+   *   * contentColumn - the column that contains the text from which the embeddings where computed.
+   *   * filter - pre-filter before searching.
+   *
+   * @default keyword
+   */
+  searchType?: 'keyword' | 'vector';
+  search?: {
+    fuzziness?: Schemas.FuzzinessExpression;
+    target?: Schemas.TargetExpression;
+    prefix?: Schemas.PrefixExpression;
+    filter?: Schemas.FilterExpression;
+    boosters?: Schemas.BoosterExpression[];
+  };
+  vectorSearch?: {
+    /**
+     * The column to use for vector search. It must be of type `vector`.
+     */
+    column: string;
+    /**
+     * The column containing the text for vector search. Must be of type `text`.
+     */
+    contentColumn: string;
+    filter?: Schemas.FilterExpression;
+  };
   rules?: string[];
 };
 
@@ -3673,6 +3749,7 @@ export const operationsByTag = {
     getBranchDetails,
     createBranch,
     deleteBranch,
+    copyBranch,
     updateBranchMetadata,
     getBranchMetadata,
     getBranchStats,
