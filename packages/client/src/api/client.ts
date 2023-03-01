@@ -387,19 +387,19 @@ class BranchApi {
     region,
     database,
     branch,
-    destination,
+    destinationBranch,
     limit
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
-    destination: Schemas.BranchName;
+    destinationBranch: Schemas.BranchName;
     limit?: number;
-  }): Promise<Types.CopyBranchResponse> {
+  }): Promise<Schemas.BranchWithCopyID> {
     return operationsByTag.branch.copyBranch({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: { destination, limit },
+      body: { destinationBranch, limit },
       ...this.extraProps
     });
   }
@@ -1094,30 +1094,18 @@ class SearchAndFilterApi {
     database,
     branch,
     table,
-    question,
-    fuzziness,
-    target,
-    prefix,
-    filter,
-    boosters,
-    rules
+    options
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
-    question: string;
-    fuzziness?: Schemas.FuzzinessExpression;
-    target?: Schemas.TargetExpression;
-    prefix?: Schemas.PrefixExpression;
-    filter?: Schemas.FilterExpression;
-    boosters?: Schemas.BoosterExpression[];
-    rules?: string[];
+    options: Components.AskTableRequestBody;
   }): Promise<Components.AskTableResponse> {
     return operationsByTag.searchAndFilter.askTable({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
-      body: { question, fuzziness, target, prefix, filter, boosters, rules },
+      body: { ...options },
       ...this.extraProps
     });
   }
