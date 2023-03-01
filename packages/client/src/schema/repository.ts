@@ -1847,9 +1847,6 @@ export class RestRepository<Record extends XataRecord>
   }
 
   ask(question: string, options?: AskOptions<Record> & { onMessage?: (message: AskResult) => void }): any {
-    // TODO: Wait for backend to allow vector questions
-    if (options?.searchType === 'vector') throw new Error('Vector search not supported yet');
-
     const params = {
       pathParams: {
         workspace: '{workspaceId}',
@@ -1859,12 +1856,7 @@ export class RestRepository<Record extends XataRecord>
       },
       body: {
         question,
-        rules: options?.rules,
-        fuzziness: options?.search?.fuzziness,
-        prefix: options?.search?.prefix,
-        target: options?.search?.target,
-        filter: options?.search?.filter,
-        boosters: options?.search?.boosters
+        ...options
       },
       ...this.#getFetchProps()
     };

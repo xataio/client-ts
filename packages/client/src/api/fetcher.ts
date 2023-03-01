@@ -263,9 +263,7 @@ export function fetchSSERequest<
         .join('; '),
       ...customHeaders,
       Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      // TODO: Remove me when the API is fixed
-      'X-Xata-Ask-Enabled': 'true'
+      'Content-Type': 'application/json'
     },
     onmessage(ev) {
       onMessage?.(JSON.parse(ev.data));
