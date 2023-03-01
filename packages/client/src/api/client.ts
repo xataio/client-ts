@@ -382,6 +382,28 @@ class BranchApi {
     });
   }
 
+  public copyBranch({
+    workspace,
+    region,
+    database,
+    branch,
+    destination,
+    limit
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    destination: Schemas.BranchName;
+    limit?: number;
+  }): Promise<Types.CopyBranchResponse> {
+    return operationsByTag.branch.copyBranch({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { destination, limit },
+      ...this.extraProps
+    });
+  }
+
   public updateBranchMetadata({
     workspace,
     region,
