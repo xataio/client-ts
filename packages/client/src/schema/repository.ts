@@ -2,6 +2,7 @@ import { SchemaPluginResult } from '.';
 import {
   aggregateTable,
   ApiExtraProps,
+  askTable,
   branchTransaction,
   deleteRecord,
   getBranchDetails,
@@ -11,11 +12,12 @@ import {
   queryTable,
   Schemas,
   searchTable,
-  vectorSearchTable,
   summarizeTable,
   updateRecordWithID,
-  upsertRecordWithID
+  upsertRecordWithID,
+  vectorSearchTable
 } from '../api';
+import { fetchSSERequest } from '../api/fetcher';
 import {
   FuzzinessExpression,
   HighlightExpression,
@@ -33,6 +35,7 @@ import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
+import { AskOptions, AskResult } from './ask';
 import { CacheImpl } from './cache';
 import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
@@ -778,6 +781,16 @@ export abstract class Repository<Record extends XataRecord> extends Query<
     expression?: Expression,
     filter?: Filter<Record>
   ): Promise<AggregationResult<Record, Expression>>;
+
+  /**
+   * Experimental: Ask the database to perform a natural language question.
+   */
+  abstract ask(question: string, options?: AskOptions<Record>): Promise<AskResult>;
+
+  /**
+   * Experimental: Ask the database to perform a natural language question.
+   */
+  abstract ask(question: string, options: AskOptions<Record> & { onMessage: (message: AskResult) => void }): void;
 
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
@@ -1831,6 +1844,36 @@ export class RestRepository<Record extends XataRecord>
 
       return result;
     });
+  }
+
+  ask(question: string, options?: AskOptions<Record> & { onMessage?: (message: AskResult) => void }): any {
+    const params = {
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table
+      },
+      body: {
+        question,
+        ...options
+      },
+      ...this.#getFetchProps()
+    };
+
+    if (options?.onMessage) {
+      fetchSSERequest({
+        endpoint: 'dataPlane',
+        url: '/db/{dbBranchName}/tables/{tableName}/ask',
+        method: 'POST',
+        onMessage: (message: { text: string }) => {
+          options.onMessage?.({ answer: message.text });
+        },
+        ...params
+      });
+    } else {
+      return askTable(params);
+    }
   }
 
   async #setCacheQuery(query: Query<Record, XataRecord>, meta: RecordsMetadata, records: XataRecord[]): Promise<void> {
