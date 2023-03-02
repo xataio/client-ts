@@ -198,6 +198,51 @@ export const deleteBranch = (variables: DeleteBranchVariables, signal?: AbortSig
     signal
   });
 
+export type CopyBranchPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type CopyBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CopyBranchRequestBody = {
+  destinationBranch: string;
+  limit?: number;
+};
+
+export type CopyBranchVariables = {
+  body: CopyBranchRequestBody;
+  pathParams: CopyBranchPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Create a copy of the branch
+ */
+export const copyBranch = (variables: CopyBranchVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.BranchWithCopyID, CopyBranchError, CopyBranchRequestBody, {}, {}, CopyBranchPathParams>({
+    url: '/db/{dbBranchName}/copy',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type UpdateBranchMetadataPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -3704,6 +3749,7 @@ export const operationsByTag = {
     getBranchDetails,
     createBranch,
     deleteBranch,
+    copyBranch,
     updateBranchMetadata,
     getBranchMetadata,
     getBranchStats,
