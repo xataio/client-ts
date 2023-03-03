@@ -1,6 +1,8 @@
 import { Flags } from '@oclif/core';
+import { buildProviderString } from '@xata.io/client';
 import { ModuleType } from '@xata.io/codegen';
 import chalk from 'chalk';
+import dotenv from 'dotenv';
 import { access, readFile, writeFile } from 'fs/promises';
 import path, { extname } from 'path';
 import which from 'which';
@@ -13,7 +15,6 @@ import Codegen, { languages, unsupportedExtensionError } from '../codegen/index.
 import RandomData from '../random-data/index.js';
 import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
-import dotenv from 'dotenv';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 
@@ -250,8 +251,9 @@ export default class Init extends BaseCommand<typeof Init> {
 
     this.info(`We are going to ${message} to store an API key.`);
 
+    const profile = await this.getProfile();
     // TODO: generate a database-scoped API key
-    let apiKey = (await this.getProfile())?.apiKey;
+    let apiKey = profile.apiKey;
 
     if (!apiKey) {
       apiKey = await createAPIKeyThroughWebUI();
@@ -279,6 +281,7 @@ export default class Init extends BaseCommand<typeof Init> {
     content += '# API key used by the CLI and the SDK\n';
     content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
     content += `XATA_API_KEY=${apiKey}\n`;
+    if (profile.host !== 'production') content += `XATA_API_PROVIDER=${buildProviderString(profile.host)}\n`;
     await writeFile(envFile, content);
 
     await this.ignoreEnvFile(envFile);

@@ -43,6 +43,11 @@ export function parseProviderString(provider = 'production'): HostProvider | nul
   return { main, workspaces };
 }
 
+export function buildProviderString(provider: HostProvider): string {
+  if (isHostProviderAlias(provider)) return provider;
+  return `${provider.main},${provider.workspaces}`;
+}
+
 export function parseWorkspacesUrlParts(url: string): { workspace: string; region: string } | null {
   if (!isString(url)) return null;
 
@@ -50,7 +55,6 @@ export function parseWorkspacesUrlParts(url: string): { workspace: string; regio
   const regexDev = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev.*/;
   const regexStaging = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev.*/;
   const regexProdTesting = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.tech.*/;
-
 
   const match = url.match(regex) || url.match(regexDev) || url.match(regexStaging) || url.match(regexProdTesting);
   if (!match) return null;
