@@ -248,7 +248,7 @@ export default class Init extends BaseCommand<typeof Init> {
     }
     const message = envFile ? `update your ${envFile} file` : 'create an .env file in your project';
 
-    this.info(`We are going to ${message} to store an API key and optionally your fallback branch.`);
+    this.info(`We are going to ${message} to store an API key.`);
 
     // TODO: generate a database-scoped API key
     let apiKey = (await this.getProfile())?.apiKey;
@@ -261,15 +261,6 @@ export default class Init extends BaseCommand<typeof Init> {
 
       await this.waitUntilAPIKeyIsValid(workspace, region, database);
     }
-    this.info(
-      'The fallback branch will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitly)'
-    );
-
-    const fallbackBranch = await this.getBranch(workspace, region, database, {
-      allowEmpty: true,
-      allowCreate: true,
-      title: 'Choose a default development branch (fallback branch).'
-    });
 
     let content = '';
     try {
@@ -283,14 +274,11 @@ export default class Init extends BaseCommand<typeof Init> {
     } catch (err) {
       // ignore
     }
+
     if (content) content += '\n\n';
     content += '# API key used by the CLI and the SDK\n';
     content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
     content += `XATA_API_KEY=${apiKey}\n`;
-    if (fallbackBranch) {
-      content += "# Xata branch that will be used if there's not a xata branch with the same name as your git branch\n";
-      content += `XATA_FALLBACK_BRANCH=${fallbackBranch}\n`;
-    }
     await writeFile(envFile, content);
 
     await this.ignoreEnvFile(envFile);
