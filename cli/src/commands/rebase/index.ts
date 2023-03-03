@@ -1,3 +1,4 @@
+import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import {
   commitToMigrationFile,
@@ -6,7 +7,7 @@ import {
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
 
-export default class Rebase extends BaseCommand {
+export default class Rebase extends BaseCommand<typeof Rebase> {
   static description = 'Reapply local migrations on top of a remote branch';
 
   static examples = [];
@@ -16,13 +17,9 @@ export default class Rebase extends BaseCommand {
     ...this.databaseURLFlag
   };
 
-  static args = [
-    {
-      name: 'branch',
-      description: 'The branch to take migrations from',
-      required: false
-    }
-  ];
+  static args = {
+    branch: Args.string({ description: 'The branch to take migrations from', required: false })
+  };
 
   static hidden = true;
 

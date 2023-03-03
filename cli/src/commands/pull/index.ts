@@ -1,4 +1,4 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import {
   commitToMigrationFile,
@@ -8,7 +8,7 @@ import {
 } from '../../migrations/files.js';
 import { MigrationFile } from '../../migrations/schema.js';
 
-export default class Pull extends BaseCommand {
+export default class Pull extends BaseCommand<typeof Pull> {
   static description = 'Push local migrations to a remote Xata branch';
 
   static examples = [];
@@ -23,18 +23,14 @@ export default class Pull extends BaseCommand {
     })
   };
 
-  static args = [
-    {
-      name: 'branch',
-      description: 'The remote branch to push to',
-      required: false
-    }
-  ];
+  static args = {
+    branch: Args.string({ description: 'The remote branch to push to', required: false })
+  };
 
   static hidden = true;
 
   async run() {
-    const { args, flags } = await this.parse(Pull);
+    const { args, flags } = await this.parseCommand();
 
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(

@@ -1,31 +1,25 @@
+import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class Branch extends BaseCommand {
+export default class Branch extends BaseCommand<typeof Branch> {
   static description = 'List, create, or delete branches';
 
   static examples = [];
 
   static flags = {
-    ...this.commonFlags
+    ...this.commonFlags,
+    ...this.databaseURLFlag
   };
 
-  static args = [
-    {
-      name: 'branch',
-      description: 'The branch to create',
-      required: false
-    },
-    {
-      name: 'base',
-      description: 'The branch to base the new branch on',
-      required: false
-    }
-  ];
+  static args = {
+    branch: Args.string({ description: 'The branch to create', required: false }),
+    base: Args.string({ description: 'The branch to base the new branch on', required: false })
+  };
 
   static hidden = true;
 
   async run() {
-    const { args, flags } = await this.parse(Branch);
+    const { args, flags } = await this.parseCommand();
 
     const xata = await this.getXataClient();
     const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);

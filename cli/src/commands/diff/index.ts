@@ -1,35 +1,29 @@
+import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { getLocalMigrationFiles } from '../../migrations/files.js';
 import { buildMigrationDiff } from '../../utils/diff.js';
 
-export default class Diff extends BaseCommand {
+export default class Diff extends BaseCommand<typeof Diff> {
   static description = 'Compare two local or remote branches';
 
   static examples = [];
 
   static flags = {
-    ...this.commonFlags
+    ...this.commonFlags,
+    ...this.databaseURLFlag
   };
 
-  static args = [
-    {
-      name: 'branch',
-      description: 'The branch to compare',
-      required: false
-    },
-    {
-      name: 'base',
-      description: 'The base branch to compare against',
-      required: false
-    }
-  ];
+  static args = {
+    branch: Args.string({ description: 'The branch to compare', required: false }),
+    base: Args.string({ description: 'The base branch to compare against', required: false })
+  };
 
   static hidden = true;
 
   static enableJsonFlag = true;
 
   async run() {
-    const { args, flags } = await this.parse(Diff);
+    const { args, flags } = await this.parseCommand();
 
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(

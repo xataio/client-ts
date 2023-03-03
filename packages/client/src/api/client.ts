@@ -1515,7 +1515,28 @@ class MigrationsApi {
       ...this.extraProps
     });
   }
+
+  public pushBranchMigrations({
+    workspace,
+    region,
+    database,
+    branch,
+    migrations
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    migrations: Schemas.MigrationObject[];
+  }): Promise<Responses.SchemaUpdateResponse> {
+    return operationsByTag.migrations.pushBranchMigrations({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { migrations },
+      ...this.extraProps
+    });
+  }
 }
+
 class DatabaseApi {
   constructor(private extraProps: ApiExtraProps) {}
 
