@@ -60,8 +60,7 @@ export default class Push extends BaseCommand<typeof Push> {
       return;
     }
 
-    // we use pushBranchMigrations to push all new migrations at once. The API will verify the migrations
-    // and will fail if a migration in the list can not be applied.
+    // TODO: Check for errors and print them
     await xata.api.migrations.pushBranchMigrations({
       workspace,
       region,
