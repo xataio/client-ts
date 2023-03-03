@@ -11,7 +11,7 @@ export default class Status extends BaseCommand<typeof Status> {
   static args = {};
 
   async run(): Promise<void> {
-    const profile = await this.getProfile(true);
+    const profile = await this.getProfile({ ignoreEnv: true });
     const loggedIn = await hasProfile(profile.name);
     if (!loggedIn) {
       return this.log('You are not logged in, run `xata auth login` first');

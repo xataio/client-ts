@@ -186,12 +186,12 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
   }
 
-  async getProfile(ignoreEnv?: boolean): Promise<Profile> {
+  async getProfile({ ignoreEnv = false }: { ignoreEnv?: boolean } = {}): Promise<Profile> {
     const { flags } = await this.parseCommand();
     const profileName = flags.profile || getEnvProfileName();
 
     const apiKey = getAPIKey();
-    const useEnv = !process.env.XATA_PROFILE && !flags.profile && !ignoreEnv;
+    const useEnv = !ignoreEnv || profileName === 'default';
     if (useEnv && apiKey) return buildProfile({ name: 'default', apiKey });
 
     const credentials = await readCredentialsDictionary();
@@ -200,10 +200,10 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     return buildProfile({ ...credential, name: profileName });
   }
 
-  async getXataClient(overrideProfile?: Profile) {
+  async getXataClient({ profile }: { profile?: Profile } = {}) {
     if (this.#xataClient) return this.#xataClient;
 
-    const { apiKey, host } = overrideProfile ?? (await this.getProfile());
+    const { apiKey, host } = profile ?? (await this.getProfile());
 
     if (!apiKey) {
       this.error('Could not instantiate Xata client. No API key found.', {
@@ -256,7 +256,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
   async verifyAPIKey(profile: Profile) {
     this.info('Checking access to the API...');
-    const xata = await this.getXataClient(profile);
+    const xata = await this.getXataClient({ profile });
     try {
       await xata.api.workspaces.getWorkspacesList();
     } catch (err) {

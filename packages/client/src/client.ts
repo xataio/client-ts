@@ -24,6 +24,7 @@ export type BaseClientOptions = {
 };
 
 type SafeOptions = AllRequired<Omit<BaseClientOptions, 'clientName' | 'xataAgentExtra'>> & {
+  host: HostProvider;
   clientID: string;
   clientName?: string;
   xataAgentExtra?: Record<string, string>;
@@ -44,7 +45,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const pluginOptions: XataPluginOptions = {
         ...this.#getFetchProps(safeOptions),
-        cache: safeOptions.cache
+        cache: safeOptions.cache,
+        host: safeOptions.host
       };
 
       const db = new SchemaPlugin(schemaTables).build(pluginOptions);
