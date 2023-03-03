@@ -66,14 +66,13 @@ export default class Pull extends BaseCommand<typeof Pull> {
   }
 
   getNewMigrations(localMigrationFiles: MigrationFile[], remoteMigrationFiles: MigrationFile[]): MigrationFile[] {
-    const lastCommonMigrationIndex =
-      remoteMigrationFiles.reduce((index, remoteMigration) => {
-        if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
-          return index + 1;
-        }
+    const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
+      if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
+        return index + 1;
+      }
 
-        return index;
-      }, -1) + 1;
+      return index;
+    }, -1);
 
     // TODO: Validate that the migrations are in the same order (for previous history)
 

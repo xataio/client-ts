@@ -68,8 +68,9 @@ export default class Push extends BaseCommand<typeof Push> {
       branch,
       migrations: newMigrations.map((migration) => ({
         id: migration.id,
-        parent: migration.parent,
-        checksum: migration.checksum,
+        parentID: migration.parent,
+        // TODO: Add checksum to the migration file
+        //checksum: migration.checksum,
         operations: migration.operations
       }))
     });
@@ -83,14 +84,13 @@ export default class Push extends BaseCommand<typeof Push> {
       this.exit(0);
     }
 
-    const lastCommonMigrationIndex =
-      remoteMigrationFiles.reduce((index, remoteMigration) => {
-        if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
-          return index + 1;
-        }
+    const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
+      if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
+        return index + 1;
+      }
 
-        return index;
-      }, -1) + 1;
+      return index;
+    }, -1);
 
     const newLocalMigrations = localMigrationFiles.slice(lastCommonMigrationIndex + 1);
     const newRemoteMigrations = remoteMigrationFiles.slice(lastCommonMigrationIndex + 1);
