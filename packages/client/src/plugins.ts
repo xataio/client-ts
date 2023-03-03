@@ -1,13 +1,10 @@
 import { ApiExtraProps } from './api';
 import { CacheImpl } from './schema/cache';
-import { TraceFunction } from './schema/tracing';
 
 export abstract class XataPlugin {
-  abstract build(options: XataPluginOptions): unknown | Promise<unknown>;
+  abstract build(options: XataPluginOptions): unknown;
 }
 
-export type XataPluginOptions = {
-  getFetchProps: () => ApiExtraProps;
-  cache?: CacheImpl;
-  trace?: TraceFunction;
+export type XataPluginOptions = ApiExtraProps & {
+  cache: CacheImpl;
 };

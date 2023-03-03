@@ -29,7 +29,7 @@ const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 describe('auth login', () => {
   test('checks if the profile exists and exits if the user does not want to overwrite', async () => {
     const config = await Config.load();
-    const command = new Login([], config as Config);
+    const command = new Login([], config);
 
     const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue(ini.stringify({ default: { apiKey: '1234abcdef' } }));
 
@@ -52,7 +52,7 @@ describe('auth login', () => {
 
   test('exits if the user does not provide an API key', async () => {
     const config = await Config.load();
-    const command = new Login([], config as Config);
+    const command = new Login([], config);
     vi.spyOn(command, 'log').mockReturnValue(undefined); // silence output
 
     const readFile = vi.spyOn(fs, 'readFile').mockImplementation(() => {
@@ -88,7 +88,7 @@ describe('auth login', () => {
 
   test('validates the API key and writes it to the credentials file', async () => {
     const config = await Config.load();
-    const command = new Login([], config as Config);
+    const command = new Login([], config);
     vi.spyOn(command, 'log').mockReturnValue(undefined); // silence output
 
     const readFile = vi.spyOn(fs, 'readFile').mockImplementation(() => {

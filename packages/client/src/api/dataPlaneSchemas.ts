@@ -141,6 +141,12 @@ export type DBBranch = {
 
 export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
+export type BranchWithCopyID = {
+  branchName: BranchName;
+  dbBranchID: string;
+  copyID: string;
+};
+
 export type MetricsDatapoint = {
   timestamp: string;
   value: number;

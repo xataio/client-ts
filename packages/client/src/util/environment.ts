@@ -129,3 +129,12 @@ export function getAPIKey() {
     return undefined;
   }
 }
+
+export function getBranch() {
+  try {
+    const { branch, envBranch } = getEnvironment();
+    return branch ?? envBranch;
+  } catch (err) {
+    return undefined;
+  }
+}

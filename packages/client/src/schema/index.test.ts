@@ -49,12 +49,6 @@ describe('client options', () => {
     process.env.XATA_DATABASE_URL = XATA_DATABASE_URL;
   });
 
-  test('throws if branch cannot be resolved', async () => {
-    const { users } = buildClient({ branch: () => null });
-
-    await expect(users.getFirst()).rejects.toThrow('Unable to resolve branch value');
-  });
-
   test('provide branch as a string', async () => {
     const { fetch, users } = buildClient({ branch: 'branch' });
 
@@ -83,89 +77,6 @@ describe('client options', () => {
         "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
       }
     `);
-  });
-
-  test('provide branch as an array', async () => {
-    const { fetch, users } = buildClient({
-      branch: [process.env.NOT_DEFINED_VARIABLE, () => null, 'branch', 'main']
-    });
-
-    fetch.mockImplementationOnce(async () => {
-      return {
-        ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
-      } as Response;
-    });
-
-    await users.getFirst();
-
-    const result = {
-      url: fetch.mock.calls[0][0],
-      method: fetch.mock.calls[0][1]?.method,
-      body: fetch.mock.calls[0][1]?.body
-    };
-
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-        "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
-      }
-    `);
-  });
-
-  test('provide branch as a function', async () => {
-    const { fetch, users } = buildClient({ branch: () => 'branch' });
-
-    fetch.mockImplementationOnce(async () => {
-      return {
-        ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
-      } as Response;
-    });
-
-    await users.getFirst();
-
-    const result = {
-      url: fetch.mock.calls[0][0],
-      method: fetch.mock.calls[0][1]?.method,
-      body: fetch.mock.calls[0][1]?.body
-    };
-
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
-        "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
-      }
-    `);
-  });
-
-  test('ensure branch resolution is memoized', async () => {
-    const branchGetter = vi.fn(() => 'branch');
-
-    const { fetch, users } = buildClient({ branch: branchGetter });
-
-    fetch.mockImplementationOnce(async () => {
-      return {
-        ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
-      } as Response;
-    });
-
-    await users.getFirst();
-    await users.getMany();
-
-    expect(branchGetter).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -50,7 +50,7 @@ export class XataApiClient {
     this.#extraProps = {
       apiUrl: getHostUrl(provider, 'main'),
       workspacesApiUrl: getHostUrl(provider, 'workspaces'),
-      fetchImpl: getFetchImplementation(options.fetch),
+      fetch: getFetchImplementation(options.fetch),
       apiKey,
       trace,
       clientName: options.clientName,
@@ -378,6 +378,28 @@ class BranchApi {
   }): Promise<Components.DeleteBranchResponse> {
     return operationsByTag.branch.deleteBranch({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      ...this.extraProps
+    });
+  }
+
+  public copyBranch({
+    workspace,
+    region,
+    database,
+    branch,
+    destinationBranch,
+    limit
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    destinationBranch: Schemas.BranchName;
+    limit?: number;
+  }): Promise<Schemas.BranchWithCopyID> {
+    return operationsByTag.branch.copyBranch({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { destinationBranch, limit },
       ...this.extraProps
     });
   }
@@ -1032,6 +1054,58 @@ class SearchAndFilterApi {
     return operationsByTag.searchAndFilter.searchBranch({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: { tables, query, fuzziness, prefix, highlight },
+      ...this.extraProps
+    });
+  }
+
+  public vectorSearchTable({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    queryVector,
+    column,
+    similarityFunction,
+    size,
+    filter
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    queryVector: number[];
+    column: string;
+    similarityFunction?: string;
+    size?: number;
+    filter?: Schemas.FilterExpression;
+  }): Promise<Responses.SearchResponse> {
+    return operationsByTag.searchAndFilter.vectorSearchTable({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
+      body: { queryVector, column, similarityFunction, size, filter },
+      ...this.extraProps
+    });
+  }
+
+  public askTable({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    options
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    options: Components.AskTableRequestBody;
+  }): Promise<Components.AskTableResponse> {
+    return operationsByTag.searchAndFilter.askTable({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
+      body: { ...options },
       ...this.extraProps
     });
   }

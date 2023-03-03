@@ -79,6 +79,11 @@ export type SearchResponse = {
   warning?: string;
 };
 
+export type RateLimitError = {
+  id?: string;
+  message: string;
+};
+
 export type SummarizeResponse = {
   summaries: Record<string, any>[];
 };

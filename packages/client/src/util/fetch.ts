@@ -1,7 +1,7 @@
 import { parseNumber, timeout } from './lang';
 
-type RequestInit = { body?: string; headers?: Record<string, string>; method?: string; signal?: any };
-type Response = {
+export type RequestInit = { body?: string; headers?: Record<string, string>; method?: string; signal?: any };
+export type Response = {
   ok: boolean;
   status: number;
   url: string;

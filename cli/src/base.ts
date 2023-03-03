@@ -1,5 +1,13 @@
-import { Command, Config, Flags, Interfaces } from '@oclif/core';
-import { buildClient, getAPIKey, getHostUrl, parseWorkspacesUrlParts, Schemas, XataApiPlugin } from '@xata.io/client';
+import { Command, Flags, Interfaces } from '@oclif/core';
+import {
+  buildClient,
+  getAPIKey,
+  getBranch,
+  getHostUrl,
+  parseWorkspacesUrlParts,
+  Schemas,
+  XataApiPlugin
+} from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
@@ -12,8 +20,9 @@ import path from 'path';
 import prompts from 'prompts';
 import table from 'text-table';
 import which from 'which';
-import { z, ZodError } from 'zod';
+import { ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
+import { partialProjectConfig, ProjectConfig } from './config.js';
 import {
   buildProfile,
   credentialsFilePath,
@@ -22,7 +31,6 @@ import {
   readCredentialsDictionary
 } from './credentials.js';
 import { reportBugURL } from './utils.js';
-import { ProjectConfig, partialProjectConfig } from './config.js';
 
 export class XataClient extends buildClient({
   api: new XataApiPlugin()
@@ -206,10 +214,13 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       });
     }
 
-    const databaseURL = 'https://noop-workspace.cli.xata.sh/db/demo';
-    const branch = 'main';
+    const { flags } = await this.parseCommand();
+    const databaseURL = flags.db ?? 'https://{workspace}.{region}.xata.sh/db/{database}';
+    const branch = flags.branch ?? this.getCurrentBranchName();
 
     this.#xataClient = new XataClient({
+      databaseURL,
+      branch,
       apiKey,
       fetch,
       host,
@@ -489,7 +500,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     if (branchFlag) {
       branch = branchFlag;
     } else if (info.source === 'config') {
-      branch = await this.getCurrentBranchName(info.databaseURL);
+      branch = this.getCurrentBranchName();
     } else if (process.env.XATA_BRANCH !== undefined) {
       branch = process.env.XATA_BRANCH;
     } else {
@@ -499,9 +510,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     return { ...info, branch };
   }
 
-  async getCurrentBranchName(_databaseURL: string) {
-    // TODO: FIXME: Get real branch name
-    return 'main';
+  getCurrentBranchName() {
+    return getBranch() ?? 'main';
   }
 
   async updateConfig() {

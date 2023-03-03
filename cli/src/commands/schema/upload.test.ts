@@ -28,7 +28,7 @@ const mockSchema = { tables: [{ name: 'users', columns: [{ name: 'name', type: '
 describe('schema upload', () => {
   test('uploads a schema, but no operations are done', async () => {
     const config = await Config.load();
-    const command = new UploadSchema(['file.json', '--yes'], config as Config);
+    const command = new UploadSchema(['file.json', '--yes'], config);
 
     fetchMock.mockReturnValueOnce({
       ok: true,
@@ -55,7 +55,7 @@ describe('schema upload', () => {
 
   test('uploads a schema, and operations are done', async () => {
     const config = await Config.load();
-    const command = new UploadSchema(['file.json', '--yes'], config as Config);
+    const command = new UploadSchema(['file.json', '--yes'], config);
 
     fetchMock.mockReturnValueOnce({
       ok: true,
@@ -90,7 +90,7 @@ describe('schema upload', () => {
 
   test('uploads a schema, with create-only, and operations are done', async () => {
     const config = await Config.load();
-    const command = new UploadSchema(['file.json', '--yes', '--create-only'], config as Config);
+    const command = new UploadSchema(['file.json', '--yes', '--create-only'], config);
 
     fetchMock.mockReturnValueOnce({
       ok: true,
@@ -135,7 +135,7 @@ describe('schema upload', () => {
 
   test('uploads a schema, with create-only, and operations are ignored', async () => {
     const config = await Config.load();
-    const command = new UploadSchema(['file.json', '--yes', '--create-only'], config as Config);
+    const command = new UploadSchema(['file.json', '--yes', '--create-only'], config);
 
     fetchMock.mockReturnValueOnce({
       ok: true,
