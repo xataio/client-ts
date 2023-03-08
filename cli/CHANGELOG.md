@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.11.13
+
+### Patch Changes
+
+- [#867](https://github.com/xataio/client-ts/pull/867) [`5838113f`](https://github.com/xataio/client-ts/commit/5838113fca042163b44d7cc7cc1686d5ef89b302) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Remove fallback branch
+
+- Updated dependencies [[`5838113f`](https://github.com/xataio/client-ts/commit/5838113fca042163b44d7cc7cc1686d5ef89b302)]:
+  - @xata.io/client@0.23.0
+  - @xata.io/importer@0.3.9
+
 ## 0.11.12
 
 ### Patch Changes
