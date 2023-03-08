@@ -2,11 +2,10 @@ import { ApiExtraProps, HostProvider, Schemas } from './api';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
-import { TraceFunction, defaultTrace } from './schema/tracing';
+import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { TransactionPlugin, TransactionPluginResult } from './transaction';
-import { getAPIKey } from './util/apiKey';
-import { getBranch, getDatabaseURL, getEnableBrowserVariable } from './util/environment';
+import { getAPIKey, getBranch, getDatabaseURL, getEnableBrowserVariable } from './util/environment';
 import { FetchImpl, getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
@@ -25,6 +24,7 @@ export type BaseClientOptions = {
 };
 
 type SafeOptions = AllRequired<Omit<BaseClientOptions, 'clientName' | 'xataAgentExtra'>> & {
+  host: HostProvider;
   clientID: string;
   clientName?: string;
   xataAgentExtra?: Record<string, string>;
@@ -45,7 +45,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const pluginOptions: XataPluginOptions = {
         ...this.#getFetchProps(safeOptions),
-        cache: safeOptions.cache
+        cache: safeOptions.cache,
+        host: safeOptions.host
       };
 
       const db = new SchemaPlugin(schemaTables).build(pluginOptions);
@@ -59,17 +60,9 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       for (const [key, namespace] of Object.entries(plugins ?? {})) {
         if (namespace === undefined) continue;
-        const result = namespace.build(pluginOptions);
 
-        if (result instanceof Promise) {
-          void result.then((namespace: unknown) => {
-            // @ts-ignore
-            this[key] = namespace;
-          });
-        } else {
-          // @ts-ignore
-          this[key] = result;
-        }
+        // @ts-ignore
+        this[key] = namespace.build(pluginOptions);
       }
     }
 
@@ -99,7 +92,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const trace = options?.trace ?? defaultTrace;
       const clientName = options?.clientName;
       const host = options?.host ?? 'production';
-
       const xataAgentExtra = options?.xataAgentExtra;
 
       if (!apiKey) {

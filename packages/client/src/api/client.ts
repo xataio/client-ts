@@ -1,5 +1,5 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
-import { getAPIKey } from '../util/apiKey';
+import { getAPIKey } from '../util/environment';
 import { FetchImpl, getFetchImplementation } from '../util/fetch';
 import { generateUUID } from '../util/uuid';
 import type * as Components from './components';
@@ -1315,7 +1315,7 @@ class MigrationRequestsApi {
     region: string;
     database: Schemas.DBName;
     migrationRequest: Schemas.MigrationRequestNumber;
-  }): Promise<Schemas.Commit> {
+  }): Promise<Schemas.BranchOp> {
     return operationsByTag.migrationRequests.mergeMigrationRequest({
       pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
       ...this.extraProps
@@ -1515,7 +1515,28 @@ class MigrationsApi {
       ...this.extraProps
     });
   }
+
+  public pushBranchMigrations({
+    workspace,
+    region,
+    database,
+    branch,
+    migrations
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    migrations: Schemas.MigrationObject[];
+  }): Promise<Responses.SchemaUpdateResponse> {
+    return operationsByTag.migrations.pushBranchMigrations({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { migrations },
+      ...this.extraProps
+    });
+  }
 }
+
 class DatabaseApi {
   constructor(private extraProps: ApiExtraProps) {}
 

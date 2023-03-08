@@ -1,4 +1,4 @@
-import { ApiExtraProps } from './api';
+import { ApiExtraProps, HostProvider } from './api';
 import { CacheImpl } from './schema/cache';
 
 export abstract class XataPlugin {
@@ -7,4 +7,5 @@ export abstract class XataPlugin {
 
 export type XataPluginOptions = ApiExtraProps & {
   cache: CacheImpl;
+  host: HostProvider;
 };
