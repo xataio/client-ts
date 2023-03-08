@@ -20,7 +20,7 @@ export default class Login extends BaseCommand<typeof Login> {
   async run(): Promise<void> {
     const { flags } = await this.parseCommand();
 
-    const profile = await this.getProfile(true);
+    const profile = await this.getProfile({ ignoreEnv: true });
     const loggedIn = await hasProfile(profile.name);
     if (loggedIn) {
       const { overwrite } = await this.prompt(

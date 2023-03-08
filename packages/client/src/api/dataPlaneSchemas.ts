@@ -452,10 +452,9 @@ export type Commit = {
   message?: string;
   id: string;
   parentID?: string;
+  checksum?: string;
   mergeParentID?: string;
-  status: MigrationStatus;
   createdAt: DateTime;
-  modifiedAt?: DateTime;
   operations: MigrationOp[];
 };
 
@@ -465,11 +464,31 @@ export type SchemaEditScript = {
   operations: MigrationOp[];
 };
 
+export type BranchOp = {
+  id: string;
+  parentID?: string;
+  title?: string;
+  message?: string;
+  status: MigrationStatus;
+  createdAt: DateTime;
+  modifiedAt?: DateTime;
+  migration?: Commit;
+};
+
 /**
  * Branch schema migration.
  */
 export type Migration = {
   parentID?: string;
+  operations: MigrationOp[];
+};
+
+export type MigrationObject = {
+  title?: string;
+  message?: string;
+  id: string;
+  parentID?: string;
+  checksum?: string;
   operations: MigrationOp[];
 };
 

@@ -1,6 +1,36 @@
 import z from 'zod';
 import set from 'lodash.set';
 
+export const projectConfigSchema = z.object({
+  databaseURL: z.string(),
+  codegen: z.object({
+    output: z.string(),
+    moduleType: z.enum(['cjs', 'esm', 'deno']),
+    declarations: z.boolean(),
+    javascriptTarget: z.enum([
+      'es5',
+      'es6',
+      'es2015',
+      'es2016',
+      'es2017',
+      'es2018',
+      'es2019',
+      'es2020',
+      'es2021',
+      'esnext'
+    ]),
+    workersBuildId: z.string().optional()
+  }),
+  experimental: z.object({
+    incrementalBuild: z.boolean(),
+    workflow: z.boolean()
+  })
+});
+
+export const partialProjectConfig = projectConfigSchema.deepPartial();
+
+export type ProjectConfig = z.infer<typeof partialProjectConfig>;
+
 export function setValue(path: string, schema: z.ZodObject<any>, object: object, value: string) {
   const type = getType(path, schema);
   if (!type) throw new Error(`Unknown path "${path}"`);

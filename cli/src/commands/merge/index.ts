@@ -27,6 +27,7 @@ export default class Merge extends BaseCommand<typeof Merge> {
       database,
       branch: current
     });
+
     if (!currentBranchDetails) return this.error('Could not resolve the current branch');
     const otherBranchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
     if (!otherBranchDetails) return this.error(`Could not find branch ${branch}`);

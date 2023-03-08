@@ -1172,7 +1172,7 @@ export type MergeMigrationRequestVariables = {
 } & DataPlaneFetcherExtraProps;
 
 export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.Commit, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
+  dataPlaneFetch<Schemas.BranchOp, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
     url: '/dbs/{dbName}/migrations/{mrNumber}/merge',
     method: 'post',
     ...variables,
@@ -1477,6 +1477,49 @@ export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables,
     {},
     ApplyBranchSchemaEditPathParams
   >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables, signal });
+
+export type PushBranchMigrationsPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type PushBranchMigrationsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PushBranchMigrationsRequestBody = {
+  migrations: Schemas.MigrationObject[];
+};
+
+export type PushBranchMigrationsVariables = {
+  body: PushBranchMigrationsRequestBody;
+  pathParams: PushBranchMigrationsPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const pushBranchMigrations = (variables: PushBranchMigrationsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Responses.SchemaUpdateResponse,
+    PushBranchMigrationsError,
+    PushBranchMigrationsRequestBody,
+    {},
+    {},
+    PushBranchMigrationsPathParams
+  >({ url: '/db/{dbBranchName}/schema/push', method: 'post', ...variables, signal });
 
 export type CreateTablePathParams = {
   /**
@@ -3767,7 +3810,8 @@ export const operationsByTag = {
     compareBranchSchemas,
     updateBranchSchema,
     previewBranchSchemaEdit,
-    applyBranchSchemaEdit
+    applyBranchSchemaEdit,
+    pushBranchMigrations
   },
   migrationRequests: {
     queryMigrationRequests,
