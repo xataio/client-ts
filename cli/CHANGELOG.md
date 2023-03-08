@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.11.12
+
+### Patch Changes
+
+- [#921](https://github.com/xataio/client-ts/pull/921) [`07fc879d`](https://github.com/xataio/client-ts/commit/07fc879d3f778536e39588e66d7a18b5a9d52ebe) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove git branch resolution
+
+- Updated dependencies [[`22e7dd29`](https://github.com/xataio/client-ts/commit/22e7dd29f7a51dccc087d5fd7fff32084c7733af), [`07fc879d`](https://github.com/xataio/client-ts/commit/07fc879d3f778536e39588e66d7a18b5a9d52ebe), [`58a1c24e`](https://github.com/xataio/client-ts/commit/58a1c24e5d30025dce243eecce44f09d4f65ed66), [`c2c6e244`](https://github.com/xataio/client-ts/commit/c2c6e24459b1acc07f0414066258071fbcf7dde9)]:
+  - @xata.io/client@0.22.4
+  - @xata.io/importer@0.3.8
+
 ## 0.11.11
 
 ### Patch Changes

@@ -3,7 +3,8 @@ import { generate, isValidJavascriptTarget, javascriptTargets } from '@xata.io/c
 import chalk from 'chalk';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
-import { BaseCommand, ProjectConfig } from '../../base.js';
+import { BaseCommand } from '../../base.js';
+import { ProjectConfig } from '../../config.js';
 
 export const languages: Record<string, 'javascript' | 'typescript'> = {
   '.js': 'javascript',

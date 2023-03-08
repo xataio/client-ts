@@ -1,5 +1,5 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
-import { getAPIKey } from '../util/apiKey';
+import { getAPIKey } from '../util/environment';
 import { FetchImpl, getFetchImplementation } from '../util/fetch';
 import { generateUUID } from '../util/uuid';
 import type * as Components from './components';
@@ -378,6 +378,28 @@ class BranchApi {
   }): Promise<Components.DeleteBranchResponse> {
     return operationsByTag.branch.deleteBranch({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      ...this.extraProps
+    });
+  }
+
+  public copyBranch({
+    workspace,
+    region,
+    database,
+    branch,
+    destinationBranch,
+    limit
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    destinationBranch: Schemas.BranchName;
+    limit?: number;
+  }): Promise<Schemas.BranchWithCopyID> {
+    return operationsByTag.branch.copyBranch({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { destinationBranch, limit },
       ...this.extraProps
     });
   }
@@ -1072,30 +1094,18 @@ class SearchAndFilterApi {
     database,
     branch,
     table,
-    question,
-    fuzziness,
-    target,
-    prefix,
-    filter,
-    boosters,
-    rules
+    options
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     table: Schemas.TableName;
-    question: string;
-    fuzziness?: Schemas.FuzzinessExpression;
-    target?: Schemas.TargetExpression;
-    prefix?: Schemas.PrefixExpression;
-    filter?: Schemas.FilterExpression;
-    boosters?: Schemas.BoosterExpression[];
-    rules?: string[];
+    options: Components.AskTableRequestBody;
   }): Promise<Components.AskTableResponse> {
     return operationsByTag.searchAndFilter.askTable({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
-      body: { question, fuzziness, target, prefix, filter, boosters, rules },
+      body: { ...options },
       ...this.extraProps
     });
   }
@@ -1505,7 +1515,28 @@ class MigrationsApi {
       ...this.extraProps
     });
   }
+
+  public pushBranchMigrations({
+    workspace,
+    region,
+    database,
+    branch,
+    migrations
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    migrations: Schemas.MigrationObject[];
+  }): Promise<Responses.SchemaUpdateResponse> {
+    return operationsByTag.migrations.pushBranchMigrations({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { migrations },
+      ...this.extraProps
+    });
+  }
 }
+
 class DatabaseApi {
   constructor(private extraProps: ApiExtraProps) {}
 

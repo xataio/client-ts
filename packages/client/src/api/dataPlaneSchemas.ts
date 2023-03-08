@@ -141,6 +141,12 @@ export type DBBranch = {
 
 export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
+export type BranchWithCopyID = {
+  branchName: BranchName;
+  dbBranchID: string;
+  copyID: string;
+};
+
 export type MetricsDatapoint = {
   timestamp: string;
   value: number;
@@ -446,6 +452,7 @@ export type Commit = {
   message?: string;
   id: string;
   parentID?: string;
+  checksum?: string;
   mergeParentID?: string;
   createdAt: DateTime;
   operations: MigrationOp[];
@@ -473,6 +480,15 @@ export type BranchOp = {
  */
 export type Migration = {
   parentID?: string;
+  operations: MigrationOp[];
+};
+
+export type MigrationObject = {
+  title?: string;
+  message?: string;
+  id: string;
+  parentID?: string;
+  checksum?: string;
   operations: MigrationOp[];
 };
 
