@@ -14,6 +14,8 @@ interface Environment {
   deployPreview: string | undefined;
   vercelGitCommitRef: string | undefined;
   vercelGitRepoOwner: string | undefined;
+  netlifyBranch: string | undefined;
+  netlifyRepositoryUrl: string | undefined;
 }
 
 export function getEnvironment(): Environment {
@@ -27,7 +29,9 @@ export function getEnvironment(): Environment {
         branch: process.env.XATA_BRANCH ?? getGlobalBranch(),
         deployPreview: process.env.XATA_PREVIEW,
         vercelGitCommitRef: process.env.VERCEL_GIT_COMMIT_REF,
-        vercelGitRepoOwner: process.env.VERCEL_GIT_REPO_OWNER
+        vercelGitRepoOwner: process.env.VERCEL_GIT_REPO_OWNER,
+        netlifyBranch: process.env.BRANCH,
+        netlifyRepositoryUrl: process.env.REPOSITORY_URL
       };
     }
   } catch (err) {
@@ -43,7 +47,9 @@ export function getEnvironment(): Environment {
         branch: Deno.env.get('XATA_BRANCH') ?? getGlobalBranch(),
         deployPreview: Deno.env.get('XATA_PREVIEW'),
         vercelGitCommitRef: Deno.env.get('VERCEL_GIT_COMMIT_REF'),
-        vercelGitRepoOwner: Deno.env.get('VERCEL_GIT_REPO_OWNER')
+        vercelGitRepoOwner: Deno.env.get('VERCEL_GIT_REPO_OWNER'),
+        netlifyBranch: Deno.env.get('BRANCH'),
+        netlifyRepositoryUrl: Deno.env.get('REPOSITORY_URL')
       };
     }
   } catch (err) {
@@ -56,7 +62,9 @@ export function getEnvironment(): Environment {
     branch: getGlobalBranch(),
     deployPreview: undefined,
     vercelGitCommitRef: undefined,
-    vercelGitRepoOwner: undefined
+    vercelGitRepoOwner: undefined,
+    netlifyBranch: undefined,
+    netlifyRepositoryUrl: undefined
   };
 }
 
@@ -141,16 +149,29 @@ export function buildPreviewBranchName({ org, branch }: { org: string; branch: s
 
 export function getPreviewBranch() {
   try {
-    const { deployPreview, vercelGitCommitRef, vercelGitRepoOwner } = getEnvironment();
+    const { deployPreview, vercelGitCommitRef, vercelGitRepoOwner, netlifyBranch, netlifyRepositoryUrl } =
+      getEnvironment();
 
     switch (deployPreview) {
-      case 'vercel':
+      case 'vercel': {
         if (!vercelGitCommitRef || !vercelGitRepoOwner) {
-          console.warn('XATA_PREVIEW=vercel but VERCEL_GIT_COMMIT_REF or VERCEL_GIT_REPO_OWNER is not defined');
+          console.warn('XATA_PREVIEW=vercel but VERCEL_GIT_COMMIT_REF or VERCEL_GIT_REPO_OWNER is not valid');
           return undefined;
         }
 
         return buildPreviewBranchName({ org: vercelGitRepoOwner, branch: vercelGitCommitRef });
+      }
+      case 'netlify': {
+        const githubRegex = /^https?:\/\/(?:www\.)?github\.com\/(?<owner>[^/]+)\//;
+        const owner = netlifyRepositoryUrl?.match(githubRegex)?.groups?.owner;
+
+        if (!netlifyBranch || !owner) {
+          console.warn('XATA_PREVIEW=netlify but BRANCH or REPOSITORY_URL is not valid');
+          return undefined;
+        }
+
+        return buildPreviewBranchName({ org: owner, branch: netlifyBranch });
+      }
     }
 
     return undefined;
