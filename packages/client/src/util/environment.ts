@@ -11,7 +11,7 @@ interface Environment {
   apiKey: string | undefined;
   databaseURL: string | undefined;
   branch: string | undefined;
-  envBranch: string | undefined;
+  gitBranch: string | undefined;
 }
 
 export function getEnvironment(): Environment {
@@ -23,7 +23,7 @@ export function getEnvironment(): Environment {
         apiKey: process.env.XATA_API_KEY ?? getGlobalApiKey(),
         databaseURL: process.env.XATA_DATABASE_URL ?? getGlobalDatabaseURL(),
         branch: process.env.XATA_BRANCH ?? getGlobalBranch(),
-        envBranch: process.env.VERCEL_GIT_COMMIT_REF ?? process.env.CF_PAGES_BRANCH ?? process.env.BRANCH
+        gitBranch: process.env.VERCEL_GIT_COMMIT_REF ?? process.env.CF_PAGES_BRANCH ?? process.env.BRANCH
       };
     }
   } catch (err) {
@@ -37,7 +37,7 @@ export function getEnvironment(): Environment {
         apiKey: Deno.env.get('XATA_API_KEY') ?? getGlobalApiKey(),
         databaseURL: Deno.env.get('XATA_DATABASE_URL') ?? getGlobalDatabaseURL(),
         branch: Deno.env.get('XATA_BRANCH') ?? getGlobalBranch(),
-        envBranch: Deno.env.get('VERCEL_GIT_COMMIT_REF') ?? Deno.env.get('CF_PAGES_BRANCH') ?? Deno.env.get('BRANCH')
+        gitBranch: Deno.env.get('VERCEL_GIT_COMMIT_REF') ?? Deno.env.get('CF_PAGES_BRANCH') ?? Deno.env.get('BRANCH')
       };
     }
   } catch (err) {
@@ -48,7 +48,7 @@ export function getEnvironment(): Environment {
     apiKey: getGlobalApiKey(),
     databaseURL: getGlobalDatabaseURL(),
     branch: getGlobalBranch(),
-    envBranch: undefined
+    gitBranch: undefined
   };
 }
 
@@ -120,8 +120,8 @@ export function getAPIKey() {
 
 export function getBranch() {
   try {
-    const { branch, envBranch } = getEnvironment();
-    return branch ?? envBranch;
+    const { branch } = getEnvironment();
+    return branch ?? 'main';
   } catch (err) {
     return undefined;
   }

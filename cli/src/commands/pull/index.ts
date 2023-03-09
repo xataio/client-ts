@@ -7,6 +7,7 @@ import {
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
 import { MigrationFile } from '../../migrations/schema.js';
+import Codegen from '../codegen/index.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
   static description = 'Push local migrations to a remote Xata branch';
@@ -58,10 +59,16 @@ export default class Pull extends BaseCommand<typeof Pull> {
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
     await writeLocalMigrationFiles(newMigrations);
 
-    if (newMigrations.length > 0) {
-      this.log(`Successfully pulled ${newMigrations.length} migrations from ${branch} branch`);
-    } else {
+    if (newMigrations.length === 0) {
       this.log(`No new migrations to pull from ${branch} branch`);
+      return;
+    }
+
+    this.log(`Successfully pulled ${newMigrations.length} migrations from ${branch} branch`);
+
+    if (this.projectConfig?.codegen) {
+      this.log(`Running codegen...`);
+      await Codegen.run([]);
     }
   }
 
