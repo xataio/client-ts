@@ -135,13 +135,22 @@ export function getBranch() {
   }
 }
 
+export function buildPreviewBranchName(org: string, branch: string) {
+  return `preview-${org}-${branch}`;
+}
+
 export function getPreviewBranch() {
   try {
     const { deployPreview, vercelGitCommitRef, vercelGitRepoOwner } = getEnvironment();
 
     switch (deployPreview) {
       case 'vercel':
-        return `preview-${vercelGitRepoOwner}-${vercelGitCommitRef}`;
+        if (!vercelGitCommitRef || !vercelGitRepoOwner) {
+          console.warn('XATA_PREVIEW=vercel but VERCEL_GIT_COMMIT_REF or VERCEL_GIT_REPO_OWNER is not defined');
+          return undefined;
+        }
+
+        return buildPreviewBranchName(vercelGitRepoOwner, vercelGitCommitRef);
     }
 
     return undefined;
