@@ -135,7 +135,7 @@ export function getBranch() {
   }
 }
 
-export function buildPreviewBranchName(org: string, branch: string) {
+export function buildPreviewBranchName({ org, branch }: { org: string; branch: string }) {
   return `preview-${org}-${branch}`;
 }
 
@@ -150,7 +150,7 @@ export function getPreviewBranch() {
           return undefined;
         }
 
-        return buildPreviewBranchName(vercelGitRepoOwner, vercelGitCommitRef);
+        return buildPreviewBranchName({ org: vercelGitRepoOwner, branch: vercelGitCommitRef });
     }
 
     return undefined;
