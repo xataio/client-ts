@@ -68,7 +68,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
 
     if (this.projectConfig?.codegen) {
       this.log(`Running codegen...`);
-      await Codegen.run([]);
+      await Codegen.run(['--branch', branch]);
     }
   }
 
