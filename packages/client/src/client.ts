@@ -5,7 +5,7 @@ import { CacheImpl, SimpleCache } from './schema/cache';
 import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { TransactionPlugin, TransactionPluginResult } from './transaction';
-import { getAPIKey, getBranch, getDatabaseURL, getEnableBrowserVariable } from './util/environment';
+import { getAPIKey, getBranch, getDatabaseURL, getEnableBrowserVariable, getPreviewBranch } from './util/environment';
 import { FetchImpl, getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
@@ -86,7 +86,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
-      const branch = options?.branch || getBranch() || 'main';
       const apiKey = options?.apiKey || getAPIKey();
       const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
@@ -100,6 +99,27 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       if (!databaseURL) {
         throw new Error('Option databaseURL is required');
+      }
+
+      const envBranch = getBranch();
+      const previewBranch = getPreviewBranch();
+      const branch = options?.branch || previewBranch || envBranch || 'main';
+      if (!!previewBranch && branch !== previewBranch) {
+        console.warn(
+          `Ignoring preview branch ${previewBranch} because branch option was passed to the client constructor with value ${branch}`
+        );
+      } else if (!!envBranch && branch !== envBranch) {
+        console.warn(
+          `Ignoring branch ${envBranch} because branch option was passed to the client constructor with value ${branch}`
+        );
+      } else if (!!previewBranch && !!envBranch && previewBranch !== envBranch) {
+        console.warn(
+          `Ignoring preview branch ${previewBranch} and branch ${envBranch} because branch option was passed to the client constructor with value ${branch}`
+        );
+      } else if (!previewBranch && !envBranch && options?.branch === undefined) {
+        console.warn(
+          `No branch was passed to the client constructor. Using default branch ${branch}. You can set the branch with the environment variable XATA_BRANCH or by passing the branch option to the client constructor.`
+        );
       }
 
       return {
