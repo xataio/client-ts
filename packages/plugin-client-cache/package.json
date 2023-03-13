@@ -22,7 +22,7 @@
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
-    "lru-cache": "^7.18.3"
+    "lru-cache": "^8.0.0"
   },
   "peerDependencies": {
     "lru-cache": "^7"
