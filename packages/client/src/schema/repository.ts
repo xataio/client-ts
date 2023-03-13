@@ -1866,8 +1866,8 @@ export class RestRepository<Record extends XataRecord>
         endpoint: 'dataPlane',
         url: '/db/{dbBranchName}/tables/{tableName}/ask',
         method: 'POST',
-        onMessage: (message: { text: string }) => {
-          options.onMessage?.({ answer: message.text });
+        onMessage: (message: { text: string; records: string[] }) => {
+          options.onMessage?.({ answer: message.text, records: message.records });
         },
         ...params
       });
