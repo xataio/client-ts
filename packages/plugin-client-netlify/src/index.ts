@@ -1,7 +1,7 @@
 import type { OnPreBuild } from '@netlify/build';
 import { buildPreviewBranchName } from '@xata.io/client';
 
-export const onPreBuild: OnPreBuild = async function ({ netlifyConfig, utils }) {
+export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
   const { CONTEXT: context, BRANCH: branch, XATA_PREVIEW: preview } = netlifyConfig.build.environment;
 
   if (context !== 'deploy-preview') {
