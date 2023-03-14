@@ -14,8 +14,6 @@ export const onPreBuild: OnPreBuild = async function ({ netlifyConfig, utils }) 
     return;
   }
 
-  console.log(JSON.stringify(netlifyConfig, null, 2));
-
   if (!branch) {
     console.log('No git HEAD found, skipping Xata plugin');
     return;
