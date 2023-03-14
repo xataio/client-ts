@@ -1,75 +1,37 @@
-import babel from '@babel/core';
 import type { OnPreBuild } from '@netlify/build';
-import fs from 'fs/promises';
-import path from 'path';
+import { buildPreviewBranchName } from '@xata.io/client';
 
-export const onPreBuild: OnPreBuild = async function ({ utils }) {
-  const gitHead = process.env.HEAD;
-  if (!gitHead) {
-    utils.status.show({
-      title: 'Xata',
-      summary: '[Error] No git HEAD found!'
-    });
-    console.log('No git HEAD found!');
+export const onPreBuild: OnPreBuild = async function ({ netlifyConfig, packageJson }) {
+  if (netlifyConfig.build.environment.CONTEXT !== 'deploy-preview') {
+    console.log('Not a deploy preview, skipping Xata plugin');
     return;
   }
 
-  const xataBuildDir = [process.cwd(), 'node_modules', '@xata.io/client', 'dist'];
-
-  const xataClientFiles = [path.join(...xataBuildDir, 'index.mjs'), path.join(...xataBuildDir, 'index.cjs')];
-
-  let success = true;
-  for (const xataClientFile of xataClientFiles) {
-    if (!success) continue;
-    try {
-      const result = await babel.transformFileAsync(xataClientFile, {
-        plugins: [computeGetGitBranch(gitHead)]
-      });
-
-      if (!result?.code) {
-        success = false;
-        utils.status.show({
-          title: 'Xata',
-          summary: `[Error] ${xataClientFile} was not transformed!`
-        });
-        console.log(`${xataClientFile} was not transformed!`);
-        return;
-      }
-
-      await fs.writeFile(xataClientFile, result.code);
-    } catch {
-      success = false;
-      utils.status.show({
-        title: 'Xata',
-        summary: `[Error] @xata.io/client package was not found!`
-      });
-      console.log(`@xata.io/client package was not found!`);
-    }
+  const hasClient = Object.keys(packageJson.dependencies ?? {}).includes('@xata.io/client');
+  if (!hasClient) {
+    console.log('@xata.io/client not installed, skipping Xata plugin');
+    return;
   }
 
-  if (success) {
-    utils.status.show({
-      title: 'Xata',
-      summary: `Inject "${gitHead}" as getGitBranch() output in @xata.io/client`
-    });
-    console.log(`Inject "${gitHead}" as getGitBranch() output in @xata.io/client`);
+  if (netlifyConfig.build.environment.XATA_PREVIEW !== 'netlify') {
+    console.log('XATA_PREVIEW is not set to netlify, skipping Xata plugin');
+    return;
   }
+
+  const gitHead = netlifyConfig.build.environment.HEAD;
+  if (!gitHead) {
+    console.log('No git HEAD found, skipping Xata plugin');
+    return;
+  }
+
+  const githubRegex = /^https?:\/\/(?:www\.)?github\.com\/(?<owner>[^/]+)\//;
+  const owner = netlifyConfig.build.environment.REPOSITORY_URL?.match(githubRegex)?.groups?.owner;
+  if (!owner) {
+    console.log('No GitHub owner found, skipping Xata plugin');
+    return;
+  }
+
+  const previewBranch = buildPreviewBranchName({ org: owner, branch: gitHead });
+  netlifyConfig.build.environment.XATA_PREVIEW_BRANCH = previewBranch;
+  console.log(`Xata preview branch set to ${previewBranch}`);
 };
-
-/**
- * Babel transformer to replace `getGitBranch`'s block statement with any hardcoded value.
- */
-function computeGetGitBranch(gitBranch: string) {
-  const { types: t } = babel;
-
-  return (): babel.PluginItem => ({
-    name: 'computeGetGitBranch',
-    visitor: {
-      FunctionDeclaration({ node }: any) {
-        if (node.id?.name === 'getGitBranch') {
-          node.body = t.blockStatement([t.returnStatement(t.stringLiteral(gitBranch))]);
-        }
-      }
-    }
-  });
-}
