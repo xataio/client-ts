@@ -1,7 +1,7 @@
 import type { OnPreBuild } from '@netlify/build';
 import { buildPreviewBranchName } from '@xata.io/client';
 
-export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
+export const onPreBuild: OnPreBuild = async function ({ netlifyConfig, utils }) {
   if (netlifyConfig.build.environment.CONTEXT !== 'deploy-preview') {
     console.log('Not a deploy preview, skipping Xata plugin');
     return;
@@ -14,8 +14,8 @@ export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
 
   console.log(JSON.stringify(netlifyConfig, null, 2));
 
-  const gitHead = netlifyConfig.build.environment.HEAD;
-  if (!gitHead) {
+  const { stdout: gitHead, stderr } = await utils.run('git', ['rev-parse', 'HEAD']);
+  if (!gitHead || stderr) {
     console.log('No git HEAD found, skipping Xata plugin');
     return;
   }
