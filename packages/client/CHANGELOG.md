@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.23.1
+
+### Patch Changes
+
+- [#941](https://github.com/xataio/client-ts/pull/941) [`3026d708`](https://github.com/xataio/client-ts/commit/3026d70847830fd0f2024413d823380ff323806c) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose records in ask SSE
+
 ## 0.23.0
 
 ### Minor Changes
