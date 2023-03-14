@@ -1,0 +1,31 @@
+{
+  "name": "@xata.io/netlify",
+  "version": "0.0.0",
+  "description": "",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.cjs"
+  },
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "tsc": "tsc --noEmit"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/xataio/client-ts/issues"
+  },
+  "dependencies": {
+    "@xata.io/client": "workspace:*",
+    "@babel/core": "^7.21.0",
+    "@netlify/build": "^29.6.9"
+  },
+  "devDependencies": {
+    "@types/babel__core": "^7.20.0",
+    "@types/node": "^18.15.3",
+    "typescript": "^4.9.5"
+  }
+}
