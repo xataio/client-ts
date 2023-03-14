@@ -1,15 +1,9 @@
 import type { OnPreBuild } from '@netlify/build';
 import { buildPreviewBranchName } from '@xata.io/client';
 
-export const onPreBuild: OnPreBuild = async function ({ netlifyConfig, packageJson }) {
+export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
   if (netlifyConfig.build.environment.CONTEXT !== 'deploy-preview') {
     console.log('Not a deploy preview, skipping Xata plugin');
-    return;
-  }
-
-  const hasClient = Object.keys(packageJson.dependencies ?? {}).includes('@xata.io/client');
-  if (!hasClient) {
-    console.log('@xata.io/client not installed, skipping Xata plugin');
     return;
   }
 
@@ -17,6 +11,8 @@ export const onPreBuild: OnPreBuild = async function ({ netlifyConfig, packageJs
     console.log('XATA_PREVIEW is not set to netlify, skipping Xata plugin');
     return;
   }
+
+  console.log(JSON.stringify(netlifyConfig, null, 2));
 
   const gitHead = netlifyConfig.build.environment.HEAD;
   if (!gitHead) {
