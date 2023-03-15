@@ -13,5 +13,5 @@ export * from './plugins';
 export * from './schema';
 export * from './search';
 export * from './serializer';
-export { getAPIKey, getBranch, getDatabaseURL } from './util/environment';
+export { getAPIKey, getBranch, getDatabaseURL, getPreviewBranch, buildPreviewBranchName } from './util/environment';
 export * from './workers';

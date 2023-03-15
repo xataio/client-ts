@@ -92,12 +92,12 @@ export async function writeLocalMigrationFiles(files: MigrationFile[]) {
 
     const name = [file.id, checksum.slice(0, 8)].filter((item) => !!item).join('_');
     const filePath = path.join(migrationsDir, `${name}.json`);
-    await writeFile(filePath, JSON.stringify(file, null, 2), 'utf8');
+    await writeFile(filePath, JSON.stringify(file, null, 2) + '\n', 'utf8');
 
     ledger.push(name);
   }
 
-  await writeFile(ledgerFile, ledger.join('\n'), 'utf8');
+  await writeFile(ledgerFile, ledger.join('\n') + '\n', 'utf8');
 }
 
 export async function removeLocalMigrations() {
