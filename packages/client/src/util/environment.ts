@@ -11,7 +11,10 @@ interface Environment {
   apiKey: string | undefined;
   databaseURL: string | undefined;
   branch: string | undefined;
-  envBranch: string | undefined;
+  deployPreview: string | undefined;
+  deployPreviewBranch: string | undefined;
+  vercelGitCommitRef: string | undefined;
+  vercelGitRepoOwner: string | undefined;
 }
 
 export function getEnvironment(): Environment {
@@ -23,21 +26,27 @@ export function getEnvironment(): Environment {
         apiKey: process.env.XATA_API_KEY ?? getGlobalApiKey(),
         databaseURL: process.env.XATA_DATABASE_URL ?? getGlobalDatabaseURL(),
         branch: process.env.XATA_BRANCH ?? getGlobalBranch(),
-        envBranch: process.env.VERCEL_GIT_COMMIT_REF ?? process.env.CF_PAGES_BRANCH ?? process.env.BRANCH
+        deployPreview: process.env.XATA_PREVIEW,
+        deployPreviewBranch: process.env.XATA_PREVIEW_BRANCH,
+        vercelGitCommitRef: process.env.VERCEL_GIT_COMMIT_REF,
+        vercelGitRepoOwner: process.env.VERCEL_GIT_REPO_OWNER
       };
     }
   } catch (err) {
     // Ignore: Should never happen
   }
 
+  // Deno: Deno.env.get
   try {
-    // Deno: Deno.env.get
     if (isObject(Deno) && isObject(Deno.env)) {
       return {
         apiKey: Deno.env.get('XATA_API_KEY') ?? getGlobalApiKey(),
         databaseURL: Deno.env.get('XATA_DATABASE_URL') ?? getGlobalDatabaseURL(),
         branch: Deno.env.get('XATA_BRANCH') ?? getGlobalBranch(),
-        envBranch: Deno.env.get('VERCEL_GIT_COMMIT_REF') ?? Deno.env.get('CF_PAGES_BRANCH') ?? Deno.env.get('BRANCH')
+        deployPreview: Deno.env.get('XATA_PREVIEW'),
+        deployPreviewBranch: Deno.env.get('XATA_PREVIEW_BRANCH'),
+        vercelGitCommitRef: Deno.env.get('VERCEL_GIT_COMMIT_REF'),
+        vercelGitRepoOwner: Deno.env.get('VERCEL_GIT_REPO_OWNER')
       };
     }
   } catch (err) {
@@ -48,7 +57,10 @@ export function getEnvironment(): Environment {
     apiKey: getGlobalApiKey(),
     databaseURL: getGlobalDatabaseURL(),
     branch: getGlobalBranch(),
-    envBranch: undefined
+    deployPreview: undefined,
+    deployPreviewBranch: undefined,
+    vercelGitCommitRef: undefined,
+    vercelGitRepoOwner: undefined
   };
 }
 
@@ -120,8 +132,34 @@ export function getAPIKey() {
 
 export function getBranch() {
   try {
-    const { branch, envBranch } = getEnvironment();
-    return branch ?? envBranch;
+    const { branch } = getEnvironment();
+    return branch ?? 'main';
+  } catch (err) {
+    return undefined;
+  }
+}
+
+export function buildPreviewBranchName({ org, branch }: { org: string; branch: string }) {
+  return `preview-${org}-${branch}`;
+}
+
+export function getPreviewBranch() {
+  try {
+    const { deployPreview, deployPreviewBranch, vercelGitCommitRef, vercelGitRepoOwner } = getEnvironment();
+    if (deployPreviewBranch) return deployPreviewBranch;
+
+    switch (deployPreview) {
+      case 'vercel': {
+        if (!vercelGitCommitRef || !vercelGitRepoOwner) {
+          console.warn('XATA_PREVIEW=vercel but VERCEL_GIT_COMMIT_REF or VERCEL_GIT_REPO_OWNER is not valid');
+          return undefined;
+        }
+
+        return buildPreviewBranchName({ org: vercelGitRepoOwner, branch: vercelGitCommitRef });
+      }
+    }
+
+    return undefined;
   } catch (err) {
     return undefined;
   }
