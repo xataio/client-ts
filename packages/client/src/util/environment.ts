@@ -36,23 +36,6 @@ export function getEnvironment(): Environment {
     // Ignore: Should never happen
   }
 
-  // ESM: import.meta.env
-  try {
-    if (isObject(import.meta) && isObject(import.meta.env)) {
-      return {
-        apiKey: import.meta.env.XATA_API_KEY ?? getGlobalApiKey(),
-        databaseURL: import.meta.env.XATA_DATABASE_URL ?? getGlobalDatabaseURL(),
-        branch: import.meta.env.XATA_BRANCH ?? getGlobalBranch(),
-        deployPreview: import.meta.env.XATA_PREVIEW,
-        deployPreviewBranch: import.meta.env.XATA_PREVIEW_BRANCH,
-        vercelGitCommitRef: import.meta.env.VERCEL_GIT_COMMIT_REF,
-        vercelGitRepoOwner: import.meta.env.VERCEL_GIT_REPO_OWNER
-      };
-    }
-  } catch (err) {
-    // Ignore: Should never happen
-  }
-
   // Deno: Deno.env.get
   try {
     if (isObject(Deno) && isObject(Deno.env)) {
