@@ -10,7 +10,7 @@ const ledgerFile = path.join(migrationsDir, '.ledger');
 async function getLedger() {
   try {
     const ledger = await readFile(ledgerFile, 'utf8');
-    return ledger.split('\n').filter((item) => !!item);
+    return ledger.split('\n');
   } catch (e) {
     return [];
   }
@@ -49,6 +49,7 @@ export async function getLocalMigrationFiles() {
   const migrations: MigrationFile[] = [];
 
   for (const entry of ledger) {
+    if (entry === '') continue;
     const filePath = path.join(migrationsDir, `${entry}.json`);
     const fileContents = await readFile(filePath, 'utf8');
     const result = migrationFile.safeParse(JSON.parse(fileContents));
