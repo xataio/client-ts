@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.23.2
+
+### Patch Changes
+
+- [#939](https://github.com/xataio/client-ts/pull/939) [`c477c177`](https://github.com/xataio/client-ts/commit/c477c17795c01cbf945be413217944a5a38655a5) Thanks [@SferaDev](https://github.com/SferaDev)! - Add deploy preview branch env variable loading
+
+- [#945](https://github.com/xataio/client-ts/pull/945) [`ecdc6553`](https://github.com/xataio/client-ts/commit/ecdc6553d4628289e88953ab6296b80f60e8f757) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new types
+
 ## 0.23.1
 
 ### Patch Changes
