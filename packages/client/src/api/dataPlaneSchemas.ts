@@ -98,7 +98,10 @@ export type Column = {
     | 'object'
     | 'datetime'
     | 'vector'
-    | 'fileArray';
+    | 'file[]'
+    | 'file'
+    | 'image[]'
+    | 'image';
   link?: ColumnLink;
   vector?: ColumnVector;
   notNull?: boolean;
@@ -752,7 +755,8 @@ export type DataInputRecord = {
     | DateTime
     | ObjectValue
     | InputFileArray
-    | InputFileEntry;
+    | InputFileEntry
+    | null;
 };
 
 /**
