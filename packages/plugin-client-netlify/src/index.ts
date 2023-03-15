@@ -1,5 +1,8 @@
 import type { OnPreBuild } from '@netlify/build';
 import { buildPreviewBranchName } from '@xata.io/client';
+import babel from '@babel/core';
+import path from 'path';
+import fs from 'fs/promises';
 
 export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
   const { CONTEXT: context, BRANCH: branch, XATA_PREVIEW: preview } = netlifyConfig.build.environment;
@@ -27,6 +30,47 @@ export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
   }
 
   const previewBranch = buildPreviewBranchName({ org, branch });
-  netlifyConfig.build.environment.XATA_PREVIEW_BRANCH = previewBranch;
-  console.log(`Xata preview branch set to ${previewBranch}`);
+
+  const xataBuildDir = [process.cwd(), 'node_modules', '@xata.io/client', 'dist'];
+  const xataClientFiles = [path.join(...xataBuildDir, 'index.mjs'), path.join(...xataBuildDir, 'index.cjs')];
+
+  let success = false;
+  for (const xataClientFile of xataClientFiles) {
+    try {
+      const result = await babel.transformFileAsync(xataClientFile, {
+        plugins: [transformGetPreviewBranch(previewBranch)]
+      });
+
+      if (result?.code) {
+        success = true;
+        await fs.writeFile(xataClientFile, result.code);
+      }
+    } catch {
+      // Do nothing
+    }
+  }
+
+  if (success) {
+    console.log(`Using "${previewBranch}" as deploy preview branch`);
+  } else {
+    console.log(`Failed to inject "${previewBranch}" as deploy preview branch`);
+  }
 };
+
+/**
+ * Babel transformer to replace `getPreviewBranch`'s block statement with a hardcoded value.
+ */
+function transformGetPreviewBranch(gitBranch: string) {
+  const { types: t } = babel;
+
+  return (): babel.PluginItem => ({
+    name: 'transformGetPreviewBranch',
+    visitor: {
+      FunctionDeclaration({ node }) {
+        if (node.id?.name === 'getPreviewBranch') {
+          node.body = t.blockStatement([t.returnStatement(t.stringLiteral(gitBranch))]);
+        }
+      }
+    }
+  });
+}

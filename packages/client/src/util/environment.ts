@@ -18,13 +18,6 @@ interface Environment {
 }
 
 export function getEnvironment(): Environment {
-  try {
-    console.log('process.env', process.env);
-    console.log('import.meta.env', import.meta.env);
-  } catch (err) {
-    // Ignore: Should never happen
-  }
-
   // Node.js: process.env
   try {
     // Not using typeof process.env === 'object' because it's not working in some environments like Bun
@@ -43,6 +36,7 @@ export function getEnvironment(): Environment {
     // Ignore: Should never happen
   }
 
+  // ESM: import.meta.env
   try {
     if (isObject(import.meta) && isObject(import.meta.env)) {
       return {
@@ -59,8 +53,8 @@ export function getEnvironment(): Environment {
     // Ignore: Should never happen
   }
 
+  // Deno: Deno.env.get
   try {
-    // Deno: Deno.env.get
     if (isObject(Deno) && isObject(Deno.env)) {
       return {
         apiKey: Deno.env.get('XATA_API_KEY') ?? getGlobalApiKey(),
