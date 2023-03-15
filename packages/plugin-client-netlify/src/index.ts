@@ -66,7 +66,7 @@ function transformGetPreviewBranch(gitBranch: string) {
   return (): babel.PluginItem => ({
     name: 'transformGetPreviewBranch',
     visitor: {
-      FunctionDeclaration({ node }) {
+      FunctionDeclaration({ node }: { node: babel.types.FunctionDeclaration }) {
         if (node.id?.name === 'getPreviewBranch') {
           node.body = t.blockStatement([t.returnStatement(t.stringLiteral(gitBranch))]);
         }
