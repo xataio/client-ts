@@ -3,3 +3,7 @@ declare namespace process {
 }
 
 declare function require(module: string): any;
+
+interface ImportMeta {
+  env: Record<string, string>;
+}
