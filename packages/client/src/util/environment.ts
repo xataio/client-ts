@@ -12,6 +12,7 @@ interface Environment {
   databaseURL: string | undefined;
   branch: string | undefined;
   deployPreview: string | undefined;
+  deployPreviewBranch: string | undefined;
   vercelGitCommitRef: string | undefined;
   vercelGitRepoOwner: string | undefined;
 }
@@ -26,6 +27,7 @@ export function getEnvironment(): Environment {
         databaseURL: process.env.XATA_DATABASE_URL ?? getGlobalDatabaseURL(),
         branch: process.env.XATA_BRANCH ?? getGlobalBranch(),
         deployPreview: process.env.XATA_PREVIEW,
+        deployPreviewBranch: process.env.XATA_PREVIEW_BRANCH,
         vercelGitCommitRef: process.env.VERCEL_GIT_COMMIT_REF,
         vercelGitRepoOwner: process.env.VERCEL_GIT_REPO_OWNER
       };
@@ -34,14 +36,15 @@ export function getEnvironment(): Environment {
     // Ignore: Should never happen
   }
 
+  // Deno: Deno.env.get
   try {
-    // Deno: Deno.env.get
     if (isObject(Deno) && isObject(Deno.env)) {
       return {
         apiKey: Deno.env.get('XATA_API_KEY') ?? getGlobalApiKey(),
         databaseURL: Deno.env.get('XATA_DATABASE_URL') ?? getGlobalDatabaseURL(),
         branch: Deno.env.get('XATA_BRANCH') ?? getGlobalBranch(),
         deployPreview: Deno.env.get('XATA_PREVIEW'),
+        deployPreviewBranch: Deno.env.get('XATA_PREVIEW_BRANCH'),
         vercelGitCommitRef: Deno.env.get('VERCEL_GIT_COMMIT_REF'),
         vercelGitRepoOwner: Deno.env.get('VERCEL_GIT_REPO_OWNER')
       };
@@ -55,6 +58,7 @@ export function getEnvironment(): Environment {
     databaseURL: getGlobalDatabaseURL(),
     branch: getGlobalBranch(),
     deployPreview: undefined,
+    deployPreviewBranch: undefined,
     vercelGitCommitRef: undefined,
     vercelGitRepoOwner: undefined
   };
@@ -141,7 +145,8 @@ export function buildPreviewBranchName({ org, branch }: { org: string; branch: s
 
 export function getPreviewBranch() {
   try {
-    const { deployPreview, vercelGitCommitRef, vercelGitRepoOwner } = getEnvironment();
+    const { deployPreview, deployPreviewBranch, vercelGitCommitRef, vercelGitRepoOwner } = getEnvironment();
+    if (deployPreviewBranch) return deployPreviewBranch;
 
     switch (deployPreview) {
       case 'vercel': {
