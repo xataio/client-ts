@@ -10,7 +10,7 @@ const ledgerFile = path.join(migrationsDir, '.ledger');
 async function getLedger() {
   try {
     const ledger = await readFile(ledgerFile, 'utf8');
-    return ledger.split('\n');
+    return ledger.split('\n').filter((item) => !!item);
   } catch (e) {
     return [];
   }
