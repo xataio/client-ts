@@ -146,7 +146,6 @@ export function buildPreviewBranchName({ org, branch }: { org: string; branch: s
 export function getPreviewBranch() {
   try {
     const { deployPreview, deployPreviewBranch, vercelGitCommitRef, vercelGitRepoOwner } = getEnvironment();
-    console.log('deployPreview', { deployPreview, deployPreviewBranch, vercelGitCommitRef, vercelGitRepoOwner });
     if (deployPreviewBranch) return deployPreviewBranch;
 
     switch (deployPreview) {
