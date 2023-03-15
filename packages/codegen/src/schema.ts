@@ -15,7 +15,10 @@ export type Column = {
     | 'object'
     | 'datetime'
     | 'vector'
-    | 'fileArray';
+    | 'file[]'
+    | 'file'
+    | 'image[]'
+    | 'image';
   unique?: boolean;
   description?: string;
   link?: {
