@@ -20,6 +20,7 @@ interface Environment {
 export function getEnvironment(): Environment {
   // Node.js: process.env
   try {
+    console.log('process.env', process.env);
     // Not using typeof process.env === 'object' because it's not working in some environments like Bun
     if (isDefined(process) && isDefined(process.env)) {
       return {
@@ -37,6 +38,7 @@ export function getEnvironment(): Environment {
   }
 
   try {
+    console.log('import.meta.env', import.meta.env);
     if (isObject(import.meta) && isObject(import.meta.env)) {
       return {
         apiKey: import.meta.env.XATA_API_KEY ?? getGlobalApiKey(),
