@@ -1,5 +1,5 @@
 import { Schemas } from '../api';
-import { ExclusiveOr, UnionToIntersection, Values } from '../util/types';
+import { UnionToIntersection, Values } from '../util/types';
 import { Identifiable, XataRecord } from './record';
 
 export type BaseSchema = {
