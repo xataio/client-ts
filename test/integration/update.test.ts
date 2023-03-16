@@ -149,4 +149,20 @@ describe('record update', () => {
     expect(copy?.id).toBe(team.id);
     expect(copy?.name).toBe('Team boats');
   });
+
+  test('update with numeric operations', async () => {
+    const pet = await xata.db.pets.create({ name: 'Pet', num_legs: 1 });
+
+    const update1 = await xata.db.pets.update(pet.id, { num_legs: { $increment: 3 } });
+    expect(update1?.num_legs).toBe(2);
+
+    const update2 = await xata.db.pets.update({ id: pet.id, num_legs: { $divide: 2 } });
+    expect(update2?.num_legs).toBe(2);
+
+    const update3 = await xata.db.pets.update([{ id: pet.id, num_legs: { $multiply: 2 } }]);
+    expect(update3[0]?.num_legs).toBe(4);
+
+    const update4 = await xata.db.pets.update(pet.id, { num_legs: { $decrement: 4 } });
+    expect(update4?.num_legs).toBe(0);
+  });
 });

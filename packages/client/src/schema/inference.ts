@@ -1,5 +1,5 @@
 import { Schemas } from '../api';
-import { UnionToIntersection, Values } from '../util/types';
+import { ExclusiveOr, UnionToIntersection, Values } from '../util/types';
 import { Identifiable, XataRecord } from './record';
 
 export type BaseSchema = {
@@ -56,10 +56,15 @@ type PropertyType<Tables, Properties, PropertyName extends PropertyKey> = Proper
     : never
   : never;
 
+type NumericOperator = ExclusiveOr<
+  { $increment?: number },
+  ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
+>;
+
 type InnerType<Type, ObjectColumns, Tables, LinkedTable> = Type extends 'string' | 'text' | 'email'
   ? string
   : Type extends 'int' | 'float'
-  ? number
+  ? number | NumericOperator
   : Type extends 'bool'
   ? boolean
   : Type extends 'datetime'
