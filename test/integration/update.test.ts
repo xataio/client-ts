@@ -154,7 +154,7 @@ describe('record update', () => {
     const pet = await xata.db.pets.create({ name: 'Pet', num_legs: 1 });
 
     const update1 = await xata.db.pets.update(pet.id, { num_legs: { $increment: 3 } });
-    expect(update1?.num_legs).toBe(2);
+    expect(update1?.num_legs).toBe(4);
 
     const update2 = await xata.db.pets.update({ id: pet.id, num_legs: { $divide: 2 } });
     expect(update2?.num_legs).toBe(2);
