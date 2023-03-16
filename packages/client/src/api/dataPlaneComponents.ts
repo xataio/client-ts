@@ -3418,6 +3418,61 @@ export const searchTable = (variables: SearchTableVariables, signal?: AbortSigna
     signal
   });
 
+export type SqlQueryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type SqlQueryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type SqlQueryRequestBody = {
+  /**
+   * The query string.
+   *
+   * @minLength 1
+   */
+  query: string;
+  /**
+   * The consistency level for this request.
+   *
+   * @default strong
+   */
+  consistency?: 'strong' | 'eventual';
+};
+
+export type SqlQueryVariables = {
+  body: SqlQueryRequestBody;
+  pathParams: SqlQueryPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Run an SQL query across the database branch.
+ */
+export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.QueryResponse, SqlQueryError, SqlQueryRequestBody, {}, {}, SqlQueryPathParams>({
+    url: '/db/{dbBranchName}/sql',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type VectorSearchTablePathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -3849,6 +3904,7 @@ export const operationsByTag = {
     queryTable,
     searchBranch,
     searchTable,
+    sqlQuery,
     vectorSearchTable,
     askTable,
     summarizeTable,
