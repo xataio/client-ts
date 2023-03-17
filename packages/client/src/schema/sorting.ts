@@ -3,25 +3,29 @@ import { SingleOrArray, Values } from '../util/types';
 import { XataRecord } from './record';
 import { ColumnsByValue } from './selection';
 
-export type SortDirection = 'asc' | 'desc' | 'random';
+export type SortDirection = 'asc' | 'desc';
 export type SortFilterExtended<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> = {
   column: Columns;
   direction?: SortDirection;
 };
 
+type RandomFilter = { '*': 'random' };
+
 export type SortFilter<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> =
   | Columns
   | SortFilterExtended<T, Columns>
-  | SortFilterBase<T, Columns>;
+  | SortFilterBase<T, Columns>
+  | RandomFilter;
 
 type SortFilterBase<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> = Values<{
   [Key in Columns]: { [K in Key]: SortDirection };
 }>;
 
 export type ApiSortFilter<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> = SingleOrArray<
-  Values<{
-    [Key in Columns]: { [K in Key]: SortDirection };
-  }>
+  | RandomFilter
+  | Values<{
+      [Key in Columns]: { [K in Key]: SortDirection };
+    }>
 >;
 
 export function isSortFilterString<T extends XataRecord>(value: any): value is ColumnsByValue<T, any> {

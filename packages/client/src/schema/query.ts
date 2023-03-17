@@ -215,7 +215,10 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param direction The direction. Either ascending or descending.
    * @returns A new Query object.
    */
-  sort<F extends ColumnsByValue<Record, any>>(column: F, direction: SortDirection = 'asc'): Query<Record, Result> {
+  sort<F extends ColumnsByValue<Record, any>>(column: F, direction: SortDirection): Query<Record, Result>;
+  sort(column: '*', direction: 'random'): Query<Record, Result>;
+  sort<F extends ColumnsByValue<Record, any>>(column: F): Query<Record, Result>;
+  sort(column: string, direction = 'asc'): Query<Record, Result> {
     const originalSort = [this.#data.sort ?? []].flat() as SortFilter<Record, any>[];
     const sort = [...originalSort, { column, direction }];
     return new Query<Record, Result>(this.#repository, this.#table, { sort }, this.#data);
@@ -258,7 +261,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    */
   getPaginated<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
-  ): Promise<Page<Record, SelectedPick<Record, typeof options['columns']>>>;
+  ): Promise<Page<Record, SelectedPick<Record, (typeof options)['columns']>>>;
 
   getPaginated<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<Page<Record, Result>> {
     const query = new Query<Record, Result>(this.#repository, this.#table, options, this.#data);
@@ -302,7 +305,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    */
   getIterator<
     Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'> & { batchSize?: number }
-  >(options: Options): AsyncGenerator<SelectedPick<Record, typeof options['columns']>[]>;
+  >(options: Options): AsyncGenerator<SelectedPick<Record, (typeof options)['columns']>[]>;
 
   async *getIterator<Result extends XataRecord>(
     options: QueryOptions<Record> & { batchSize?: number } = {}
@@ -335,7 +338,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    */
   getMany<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
-  ): Promise<RecordArray<SelectedPick<Record, typeof options['columns']>>>;
+  ): Promise<RecordArray<SelectedPick<Record, (typeof options)['columns']>>>;
 
   /**
    * Performs the query in the database and returns a set of results.
@@ -382,7 +385,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    */
   getAll<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'> & { batchSize?: number }>(
     options: Options
-  ): Promise<SelectedPick<Record, typeof options['columns']>[]>;
+  ): Promise<SelectedPick<Record, (typeof options)['columns']>[]>;
 
   /**
    * Performs the query in the database and returns all the results.
@@ -419,7 +422,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    */
   getFirst<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'>>(
     options: Options
-  ): Promise<SelectedPick<Record, typeof options['columns']> | null>;
+  ): Promise<SelectedPick<Record, (typeof options)['columns']> | null>;
 
   /**
    * Performs the query in the database and returns the first result.
@@ -450,7 +453,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    */
   getFirstOrThrow<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'>>(
     options: Options
-  ): Promise<SelectedPick<Record, typeof options['columns']>>;
+  ): Promise<SelectedPick<Record, (typeof options)['columns']>>;
 
   /**
    * Performs the query in the database and returns the first result.
