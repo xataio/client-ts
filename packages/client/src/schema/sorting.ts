@@ -3,7 +3,7 @@ import { SingleOrArray, Values } from '../util/types';
 import { XataRecord } from './record';
 import { ColumnsByValue } from './selection';
 
-export type SortDirection = 'asc' | 'desc';
+export type SortDirection = 'asc' | 'desc' | 'random';
 export type SortFilterExtended<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> = {
   column: Columns;
   direction?: SortDirection;
