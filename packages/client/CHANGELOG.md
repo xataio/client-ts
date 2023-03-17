@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.23.3
+
+### Patch Changes
+
+- [#947](https://github.com/xataio/client-ts/pull/947) [`344b0d68`](https://github.com/xataio/client-ts/commit/344b0d687962d569872d1e90d59818d28df7579c) Thanks [@SferaDev](https://github.com/SferaDev)! - Add numeric operators
+
 ## 0.23.2
 
 ### Patch Changes

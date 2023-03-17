@@ -1,5 +1,12 @@
 # @xata.io/importer
 
+## 0.3.12
+
+### Patch Changes
+
+- Updated dependencies [[`344b0d68`](https://github.com/xataio/client-ts/commit/344b0d687962d569872d1e90d59818d28df7579c)]:
+  - @xata.io/client@0.23.3
+
 ## 0.3.11
 
 ### Patch Changes
