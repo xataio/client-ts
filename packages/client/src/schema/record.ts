@@ -1,4 +1,5 @@
 import { isObject, isString } from '../util/lang';
+import { ExclusiveOr } from '../util/types';
 import { SelectableColumn, SelectedPick } from './selection';
 
 /**
@@ -138,6 +139,11 @@ export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> 
   return isIdentifiable(x) && isObject(metadata) && typeof metadata.version === 'number';
 }
 
+type NumericOperator = ExclusiveOr<
+  { $increment?: number },
+  ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
+>;
+
 type EditableDataFields<T> = T extends XataRecord
   ? { id: string } | string
   : NonNullable<T> extends XataRecord
@@ -146,6 +152,8 @@ type EditableDataFields<T> = T extends XataRecord
   ? string | Date
   : NonNullable<T> extends Date
   ? string | Date | null | undefined
+  : T extends number
+  ? number | NumericOperator
   : T;
 
 export type EditableData<O extends XataRecord> = Identifiable &
