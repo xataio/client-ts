@@ -4,12 +4,16 @@ import { XataRecord } from './record';
 import { ColumnsByValue } from './selection';
 
 export type SortDirection = 'asc' | 'desc';
-export type SortFilterExtended<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> = {
-  column: Columns;
-  direction?: SortDirection;
-};
 
 type RandomFilter = { '*': 'random' };
+type RandomFilterExtended = { column: '*'; direction: 'random' };
+
+export type SortFilterExtended<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> =
+  | RandomFilterExtended
+  | {
+      column: Columns;
+      direction?: SortDirection;
+    };
 
 export type SortFilter<T extends XataRecord, Columns extends string = ColumnsByValue<T, any>> =
   | Columns
