@@ -11,6 +11,7 @@ export default class Push extends BaseCommand<typeof Push> {
   static flags = {
     ...this.commonFlags,
     ...this.databaseURLFlag,
+    ...this.yesFlag,
     'dry-run': Flags.boolean({
       description: "Show what would be pushed, but don't actually push",
       default: false
@@ -18,7 +19,7 @@ export default class Push extends BaseCommand<typeof Push> {
   };
 
   static args = {
-    branch: Args.string({ description: 'The remote branch to push to', required: false })
+    branch: Args.string({ description: 'The remote branch to push to', required: true })
   };
 
   static hidden = true;
@@ -29,7 +30,7 @@ export default class Push extends BaseCommand<typeof Push> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
       flags.db,
-      args.branch ?? 'main',
+      args.branch,
       true
     );
 
@@ -52,13 +53,23 @@ export default class Push extends BaseCommand<typeof Push> {
       return;
     }
 
+    newMigrations.forEach((migration) => {
+      this.log(`  ${migration.id}`);
+    });
+
     if (flags['dry-run']) {
-      this.log('The following migrations would be pushed:');
-      newMigrations.forEach((migration) => {
-        this.log(`  ${migration.id}`);
-      });
+      this.log(`A total of ${newMigrations.length} migrations would be pushed to ${branch}.`);
       return;
     }
+
+    const { confirm } = await this.prompt({
+      type: 'confirm',
+      name: 'confirm',
+      message: `Do you want to push ${newMigrations.length} migrations to ${branch}?`,
+      initial: true
+    });
+
+    if (!confirm) return this.exit(1);
 
     // TODO: Check for errors and print them
     await xata.api.migrations.pushBranchMigrations({ workspace, region, database, branch, migrations: newMigrations });
