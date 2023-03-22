@@ -41,9 +41,9 @@ const migrationOperation = z.union([migrationTableOp, migrationColumnOp]) satisf
 
 export const migrationFile = z.object({
   id: z.string(),
-  parent: z.string(),
-  checksum: z.string(),
+  title: z.string().optional(),
+  message: z.string().optional(),
+  parentID: z.string().optional(),
+  checksum: z.string().optional(),
   operations: z.array(migrationOperation)
-});
-
-export type MigrationFile = z.infer<typeof migrationFile>;
+}) satisfies z.ZodType<Schemas.MigrationObject>;
