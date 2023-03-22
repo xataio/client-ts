@@ -69,8 +69,7 @@ export default class Push extends BaseCommand<typeof Push> {
       migrations: newMigrations.map((migration) => ({
         id: migration.id,
         parentID: migration.parent,
-        // TODO: Add checksum to the migration file
-        //checksum: migration.checksum,
+        checksum: migration.checksum,
         operations: migration.operations
       }))
     });
