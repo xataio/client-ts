@@ -58,7 +58,7 @@ export default class Push extends BaseCommand<typeof Push> {
     });
 
     if (flags['dry-run']) {
-      this.log('The following migrations would be pushed:');
+      this.log(`A total of ${newMigrations.length} migrations would be pushed to ${branch}.`);
       return;
     }
 
