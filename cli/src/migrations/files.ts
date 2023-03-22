@@ -65,6 +65,7 @@ export async function getLocalMigrationFiles() {
       console.warn(
         `Checksum for migration ${result.data.id} does not match, please run 'xata pull -f' to overwrite local migrations'`
       );
+      console.warn(`Expected ${result.data.checksum}, got ${checksum}`);
     }
 
     const fileChecksum = entry.split('_').slice(-1)[0];
@@ -91,6 +92,8 @@ export async function writeLocalMigrationFiles(files: MigrationFile[]) {
       console.warn(
         `Checksum for migration ${file.id} does not match, please run 'xata pull -f' to overwrite local migrations'`
       );
+
+      console.warn(`Expected ${file.checksum}, got ${checksum}`);
     }
 
     const name = [file.id, checksum.slice(0, 8)].filter((item) => !!item).join('_');
