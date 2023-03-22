@@ -68,7 +68,7 @@ export async function writeLocalMigrationFiles(files: MigrationFile[]) {
 
   for (const file of files) {
     // Checksums start with a version `1:` prefix, so we need to remove that
-    const checksum = file.checksum?.replace(/^1:/, '') ?? '';
+    const checksum = file.checksum?.replace(/^1:/, '').slice(0, 8) ?? '';
     const name = [file.id, checksum].filter((item) => !!item).join('_');
     const filePath = path.join(migrationsDir, `${name}.json`);
     await writeFile(filePath, JSON.stringify(file, null, 2) + '\n', 'utf8');
