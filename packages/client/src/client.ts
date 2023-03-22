@@ -120,8 +120,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         console.warn(
           `No branch was passed to the client constructor. Using default branch ${branch}. You can set the branch with the environment variable XATA_BRANCH or by passing the branch option to the client constructor.`
         );
-      } else {
-        console.log(`Using branch ${branch}`);
       }
 
       return {

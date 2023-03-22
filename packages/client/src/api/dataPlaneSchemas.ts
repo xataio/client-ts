@@ -98,7 +98,10 @@ export type Column = {
     | 'object'
     | 'datetime'
     | 'vector'
-    | 'fileArray';
+    | 'file[]'
+    | 'file'
+    | 'image[]'
+    | 'image';
   link?: ColumnLink;
   vector?: ColumnVector;
   notNull?: boolean;
@@ -278,7 +281,7 @@ export type FilterColumnIncludes = {
 
 export type FilterColumn = FilterColumnIncludes | FilterPredicate | FilterList;
 
-export type SortOrder = 'asc' | 'desc';
+export type SortOrder = 'asc' | 'desc' | 'random';
 
 export type SortExpression =
   | string[]
@@ -752,7 +755,8 @@ export type DataInputRecord = {
     | DateTime
     | ObjectValue
     | InputFileArray
-    | InputFileEntry;
+    | InputFileEntry
+    | null;
 };
 
 /**

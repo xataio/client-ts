@@ -1,4 +1,5 @@
 import { Args, Flags } from '@oclif/core';
+import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
 import {
   commitToMigrationFile,
@@ -6,7 +7,6 @@ import {
   removeLocalMigrations,
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
-import { MigrationFile } from '../../migrations/schema.js';
 import Codegen from '../codegen/index.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
@@ -25,7 +25,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
   };
 
   static args = {
-    branch: Args.string({ description: 'The remote branch to push to', required: false })
+    branch: Args.string({ description: 'The remote branch to push to', required: true })
   };
 
   static hidden = true;
@@ -36,7 +36,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
       flags.db,
-      args.branch ?? 'main',
+      args.branch,
       true
     );
 
@@ -72,7 +72,10 @@ export default class Pull extends BaseCommand<typeof Pull> {
     }
   }
 
-  getNewMigrations(localMigrationFiles: MigrationFile[], remoteMigrationFiles: MigrationFile[]): MigrationFile[] {
+  getNewMigrations(
+    localMigrationFiles: Schemas.MigrationObject[],
+    remoteMigrationFiles: Schemas.MigrationObject[]
+  ): Schemas.MigrationObject[] {
     const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
       if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
         return index + 1;

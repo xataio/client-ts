@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/cli",
-  "version": "0.11.14",
+  "version": "0.11.18",
   "description": "Xata.io CLI",
   "author": "Xata Inc.",
   "bin": {
@@ -19,13 +19,13 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@babel/core": "^7.21.0",
+    "@babel/core": "^7.21.3",
     "@babel/preset-react": "^7.18.6",
     "@babel/preset-typescript": "^7.21.0",
-    "@oclif/core": "^2.6.2",
+    "@oclif/core": "^2.6.4",
     "@oclif/plugin-help": "^5.2.8",
     "@oclif/plugin-not-found": "^2.3.22",
-    "@oclif/plugin-plugins": "^2.4.1",
+    "@oclif/plugin-plugins": "^2.4.3",
     "@rollup/plugin-auto-install": "^3.0.3",
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",
@@ -39,8 +39,8 @@
     "babel-plugin-module-extension-resolver": "^1.0.0",
     "chalk": "^5.2.0",
     "chokidar": "^3.5.3",
-    "cosmiconfig": "^8.1.0",
-    "deepmerge": "^4.3.0",
+    "cosmiconfig": "^8.1.3",
+    "deepmerge": "^4.3.1",
     "dotenv": "^16.0.3",
     "dotenv-expand": "^10.0.0",
     "edge-runtime": "^2.1.2",
@@ -65,7 +65,7 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@babel/types": "^7.21.2",
+    "@babel/types": "^7.21.3",
     "@types/babel__core": "^7.20.0",
     "@types/lodash.compact": "^3.0.7",
     "@types/lodash.get": "^4.4.7",
@@ -81,7 +81,7 @@
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.0.2"
   },
   "oclif": {
     "bin": "xata",

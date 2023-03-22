@@ -3174,6 +3174,37 @@ export type QueryTableVariables = {
  * }
  * ```
  *
+ * It is also possible to sort results randomly:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "sort": {
+ *     "*": "random"
+ *   }
+ * }
+ * ```
+ *
+ * Note that a random sort does not apply to a specific column, hence the special column name `"*"`.
+ *
+ * A random sort can be combined with an ascending or descending sort on a specific column:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "sort": [
+ *     {
+ *       "name": "desc"
+ *     },
+ *     {
+ *       "*": "random"
+ *     }
+ *   ]
+ * }
+ * ```
+ *
+ * This will sort on the `name` column, breaking ties randomly.
+ *
  * ### Pagination
  *
  * We offer cursor pagination and offset pagination. For queries that are expected to return more than 1000 records,
@@ -3413,6 +3444,61 @@ export type SearchTableVariables = {
 export const searchTable = (variables: SearchTableVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SearchResponse, SearchTableError, SearchTableRequestBody, {}, {}, SearchTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/search',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type SqlQueryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type SqlQueryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type SqlQueryRequestBody = {
+  /**
+   * The query string.
+   *
+   * @minLength 1
+   */
+  query: string;
+  /**
+   * The consistency level for this request.
+   *
+   * @default strong
+   */
+  consistency?: 'strong' | 'eventual';
+};
+
+export type SqlQueryVariables = {
+  body: SqlQueryRequestBody;
+  pathParams: SqlQueryPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Run an SQL query across the database branch.
+ */
+export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.QueryResponse, SqlQueryError, SqlQueryRequestBody, {}, {}, SqlQueryPathParams>({
+    url: '/db/{dbBranchName}/sql',
     method: 'post',
     ...variables,
     signal
@@ -3849,6 +3935,7 @@ export const operationsByTag = {
     queryTable,
     searchBranch,
     searchTable,
+    sqlQuery,
     vectorSearchTable,
     askTable,
     summarizeTable,
