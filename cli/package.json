@@ -37,7 +37,6 @@
     "@xata.io/importer": "workspace:*",
     "ansi-regex": "^6.0.1",
     "babel-plugin-module-extension-resolver": "^1.0.0",
-    "canonicalize": "^1.0.8",
     "chalk": "^5.2.0",
     "chokidar": "^3.5.3",
     "cosmiconfig": "^8.1.3",
