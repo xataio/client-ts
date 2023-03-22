@@ -67,7 +67,9 @@ export async function writeLocalMigrationFiles(files: MigrationFile[]) {
   const ledger = await getLedger();
 
   for (const file of files) {
-    const name = [file.id, file.checksum.slice(0, 8)].filter((item) => !!item).join('_');
+    // Checksums start with a version `1:` prefix, so we need to remove that
+    const checksum = file.checksum?.replace(/^1:/, '') ?? '';
+    const name = [file.id, checksum].filter((item) => !!item).join('_');
     const filePath = path.join(migrationsDir, `${name}.json`);
     await writeFile(filePath, JSON.stringify(file, null, 2) + '\n', 'utf8');
 
