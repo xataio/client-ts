@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.11.17
+
+### Patch Changes
+
+- [#954](https://github.com/xataio/client-ts/pull/954) [`2b8fac39`](https://github.com/xataio/client-ts/commit/2b8fac39882d8932aaef7c2e99d2f059a500e943) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Store checksums for migrations
+
 ## 0.11.16
 
 ### Patch Changes
