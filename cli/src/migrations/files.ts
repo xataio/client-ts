@@ -3,6 +3,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { migrationFile, MigrationFile } from './schema.js';
 import { Schemas } from '@xata.io/client';
+import canonicalize from 'canonicalize';
 
 const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
 const ledgerFile = path.join(migrationsDir, '.ledger');
@@ -57,16 +58,16 @@ export async function getLocalMigrationFiles() {
     }
 
     const checksum = await computeChecksum(result.data);
-    // TODO: Remove the existance check once backend supports checksums
+    // TODO: Remove the existance check once backend backfills checksums
     if (result.data.checksum && result.data.checksum !== checksum) {
-      throw new Error(
+      console.warn(
         `Checksum for migration ${result.data.id} does not match, please run 'xata pull -f' to overwrite local migrations'`
       );
     }
 
     const fileChecksum = entry.split('_').slice(-1)[0];
     if (!checksum.startsWith(fileChecksum)) {
-      throw new Error(
+      console.warn(
         `Checksum for migration ${result.data.id} does not match, please run 'xata pull -f' to overwrite local migrations'`
       );
     }
@@ -83,9 +84,9 @@ export async function writeLocalMigrationFiles(files: MigrationFile[]) {
   for (const file of files) {
     const checksum = await computeChecksum(file);
 
-    // TODO: Remove the existance check once backend supports checksums
+    // TODO: Remove the existance check once backend backfills checksums
     if (file.checksum && file.checksum !== checksum) {
-      throw new Error(
+      console.warn(
         `Checksum for migration ${file.id} does not match, please run 'xata pull -f' to overwrite local migrations'`
       );
     }
@@ -105,8 +106,15 @@ export async function removeLocalMigrations() {
 }
 
 export async function computeChecksum(file: MigrationFile): Promise<string> {
-  // TODO: Match backend implementation
-  const input = [file.id, file.parent, JSON.stringify(file.operations, Object.keys(file.operations).sort())].join('');
+  const input = canonicalize({
+    id: file.id,
+    parentID: file.parent,
+    parentChecksum: file.checksum,
+    operations: file.operations
+  });
+
+  if (!input) throw new Error('Failed to canonicalize input to compute checksum');
+
   return crypto.createHash('sha256').update(input).digest('hex');
 }
 
@@ -115,8 +123,7 @@ export function commitToMigrationFile(logs: Schemas.Commit[]): MigrationFile[] {
   return logs.reverse().map((log) => ({
     id: log.id,
     parent: log.parentID ?? '',
-    // TODO: Get the actual checksum
-    checksum: '',
+    checksum: log.checksum ?? '',
     operations: log.operations
   }));
 }
