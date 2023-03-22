@@ -40,6 +40,7 @@ export function isSortFilterBase<T extends XataRecord>(filter: SortFilter<T, any
   return (
     isObject(filter) &&
     Object.entries(filter).every(([key, value]) => {
+      // Check for the random sorting operator
       if (key === '*') return value === 'random';
 
       return value === 'asc' || value === 'desc';
