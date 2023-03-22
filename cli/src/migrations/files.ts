@@ -11,7 +11,9 @@ const ledgerFile = path.join(migrationsDir, '.ledger');
 async function getLedger() {
   try {
     const ledger = await readFile(ledgerFile, 'utf8');
-    return ledger.split('\n');
+
+    // Split by newlines and filter out empty lines
+    return ledger.split('\n').filter((item) => item.trim() !== '');
   } catch (e) {
     return [];
   }
