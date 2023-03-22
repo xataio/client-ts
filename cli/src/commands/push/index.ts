@@ -18,7 +18,7 @@ export default class Push extends BaseCommand<typeof Push> {
   };
 
   static args = {
-    branch: Args.string({ description: 'The remote branch to push to', required: false })
+    branch: Args.string({ description: 'The remote branch to push to', required: true })
   };
 
   static hidden = true;
@@ -29,7 +29,7 @@ export default class Push extends BaseCommand<typeof Push> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
       flags.db,
-      args.branch ?? 'main',
+      args.branch,
       true
     );
 
