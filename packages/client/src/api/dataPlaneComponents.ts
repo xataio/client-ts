@@ -3174,6 +3174,37 @@ export type QueryTableVariables = {
  * }
  * ```
  *
+ * It is also possible to sort results randomly:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "sort": {
+ *     "*": "random"
+ *   }
+ * }
+ * ```
+ *
+ * Note that a random sort does not apply to a specific column, hence the special column name `"*"`.
+ *
+ * A random sort can be combined with an ascending or descending sort on a specific column:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "sort": [
+ *     {
+ *       "name": "desc"
+ *     },
+ *     {
+ *       "*": "random"
+ *     }
+ *   ]
+ * }
+ * ```
+ *
+ * This will sort on the `name` column, breaking ties randomly.
+ *
  * ### Pagination
  *
  * We offer cursor pagination and offset pagination. For queries that are expected to return more than 1000 records,
