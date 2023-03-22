@@ -281,7 +281,7 @@ export type FilterColumnIncludes = {
 
 export type FilterColumn = FilterColumnIncludes | FilterPredicate | FilterList;
 
-export type SortOrder = 'asc' | 'desc';
+export type SortOrder = 'asc' | 'desc' | 'random';
 
 export type SortExpression =
   | string[]
