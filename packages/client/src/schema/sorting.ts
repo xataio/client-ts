@@ -37,7 +37,14 @@ export function isSortFilterString<T extends XataRecord>(value: any): value is C
 }
 
 export function isSortFilterBase<T extends XataRecord>(filter: SortFilter<T, any>): filter is SortFilterBase<T> {
-  return isObject(filter) && Object.values(filter).every((value) => value === 'asc' || value === 'desc');
+  return (
+    isObject(filter) &&
+    Object.entries(filter).every(([key, value]) => {
+      if (key === '*') return value === 'random';
+
+      return value === 'asc' || value === 'desc';
+    })
+  );
 }
 
 export function isSortFilterObject<T extends XataRecord>(filter: SortFilter<T, any>): filter is SortFilterExtended<T> {
