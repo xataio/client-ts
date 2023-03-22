@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.11.18
+
+### Patch Changes
+
+- [#957](https://github.com/xataio/client-ts/pull/957) [`096dd2bf`](https://github.com/xataio/client-ts/commit/096dd2bff32744ac4cd1e4750355bc28ee0fafea) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Make branches verbose
+
 ## 0.11.17
 
 ### Patch Changes
