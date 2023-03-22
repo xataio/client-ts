@@ -22,6 +22,8 @@ export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
     return;
   }
 
+  console.log(process.env);
+
   // TODO: get org from netlify config
   const org = 'SferaDev';
   if (!org) {
