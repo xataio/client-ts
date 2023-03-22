@@ -1,7 +1,7 @@
 import { Args, Flags } from '@oclif/core';
+import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
 import { commitToMigrationFile, getLocalMigrationFiles } from '../../migrations/files.js';
-import { MigrationFile } from '../../migrations/schema.js';
 
 export default class Push extends BaseCommand<typeof Push> {
   static description = 'Push local migrations to a remote Xata branch';
@@ -61,23 +61,15 @@ export default class Push extends BaseCommand<typeof Push> {
     }
 
     // TODO: Check for errors and print them
-    await xata.api.migrations.pushBranchMigrations({
-      workspace,
-      region,
-      database,
-      branch,
-      migrations: newMigrations.map((migration) => ({
-        id: migration.id,
-        parentID: migration.parent,
-        checksum: migration.checksum,
-        operations: migration.operations
-      }))
-    });
+    await xata.api.migrations.pushBranchMigrations({ workspace, region, database, branch, migrations: newMigrations });
 
     this.log(`Pushed ${newMigrations.length} migrations to ${branch}`);
   }
 
-  getNewMigrations(localMigrationFiles: MigrationFile[], remoteMigrationFiles: MigrationFile[]): MigrationFile[] {
+  getNewMigrations(
+    localMigrationFiles: Schemas.MigrationObject[],
+    remoteMigrationFiles: Schemas.MigrationObject[]
+  ): Schemas.MigrationObject[] {
     if (localMigrationFiles.length === 0 && remoteMigrationFiles.length > 0) {
       this.log('There are new migrations on the remote branch. Please run `xata pull` to get the latest migrations.');
       this.exit(0);

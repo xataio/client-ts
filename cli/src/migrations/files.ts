@@ -1,7 +1,7 @@
 import { Schemas } from '@xata.io/client';
 import { mkdir, readdir, readFile, rm, writeFile } from 'fs/promises';
 import path from 'path';
-import { migrationFile, MigrationFile } from './schema.js';
+import { migrationFile } from './schema.js';
 
 const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
 const ledgerFile = path.join(migrationsDir, '.ledger');
@@ -31,7 +31,7 @@ async function readMigrationsDir() {
   }
 }
 
-export async function getLocalMigrationFiles() {
+export async function getLocalMigrationFiles(): Promise<Schemas.MigrationObject[]> {
   const files = await readMigrationsDir();
   const ledger = await getLedger();
 
@@ -47,7 +47,7 @@ export async function getLocalMigrationFiles() {
     }
   }
 
-  const migrations: MigrationFile[] = [];
+  const migrations: Schemas.MigrationObject[] = [];
 
   for (const entry of ledger) {
     const filePath = path.join(migrationsDir, `${entry}.json`);
@@ -63,7 +63,7 @@ export async function getLocalMigrationFiles() {
   return migrations;
 }
 
-export async function writeLocalMigrationFiles(files: MigrationFile[]) {
+export async function writeLocalMigrationFiles(files: Schemas.MigrationObject[]) {
   const ledger = await getLedger();
 
   for (const file of files) {
@@ -83,12 +83,12 @@ export async function removeLocalMigrations() {
   await rm(migrationsDir, { recursive: true });
 }
 
-export function commitToMigrationFile(logs: Schemas.Commit[]): MigrationFile[] {
+export function commitToMigrationFile(logs: Schemas.Commit[]): Schemas.MigrationObject[] {
   // Schema history comes in reverse order, so we need to reverse it
   return logs.reverse().map((log) => ({
     id: log.id,
-    parent: log.parentID ?? '',
-    checksum: log.checksum ?? '',
+    parentID: log.parentID,
+    checksum: log.checksum,
     operations: log.operations
   }));
 }
