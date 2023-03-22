@@ -18,7 +18,7 @@ export default class Rebase extends BaseCommand<typeof Rebase> {
   };
 
   static args = {
-    branch: Args.string({ description: 'The branch to take migrations from', required: false })
+    branch: Args.string({ description: 'The branch to take migrations from', required: true })
   };
 
   static hidden = true;
@@ -29,7 +29,7 @@ export default class Rebase extends BaseCommand<typeof Rebase> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
       flags.db,
-      args.branch ?? 'main',
+      args.branch,
       true
     );
 
