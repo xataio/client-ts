@@ -39,6 +39,7 @@ type ColumnEditState = {
     name: string;
     type: string;
     link: string | undefined;
+    vectorDimension: string | undefined;
     notNull: string;
     defaultValue: string;
     unique: string;
@@ -48,6 +49,7 @@ type ColumnEditState = {
     name?: string;
     type?: string;
     link?: string;
+    vectorDimension?: string;
     notNull?: string;
     defaultValue?: string;
     unique?: string;
@@ -55,12 +57,12 @@ type ColumnEditState = {
   };
 };
 
-const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime'];
+const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime', 'vector'];
 const typesList = types.join(', ');
 const identifier = /^[a-zA-Z0-9-_~]+$/;
 
-const uniqueUnsupportedTypes = ['text', 'multiple'];
-const defaultValueUnsupportedTypes = ['multiple', 'link'];
+const uniqueUnsupportedTypes = ['text', 'multiple', 'vector'];
+const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
 const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
 
 const waitFlags: Record<string, string> = {
@@ -390,6 +392,7 @@ Beware that this can lead to ${chalk.bold(
            name: \${name}
            type: \${type}
            link: \${link}
+vectorDimension: \${vectorDimension}
     description: \${description}
          unique: \${unique}
         notNull: \${notNull}
@@ -399,6 +402,7 @@ Beware that this can lead to ${chalk.bold(
       name: column?.name || '',
       type: column?.type || '',
       link: isColumnAdded ? '' : column?.link?.table,
+      vectorDimension: column?.vector?.dimension ? `${column?.vector?.dimension}` : '',
       notNull: column?.notNull ? 'true' : 'false',
       defaultValue: column?.defaultValue || '',
       unique: column?.unique ? 'true' : 'false',
@@ -449,6 +453,28 @@ Beware that this can lead to ${chalk.bold(
               }
             } else if (value) {
               return 'The link field must not be filled unless the type of the column is `link`';
+            }
+            return true;
+          }
+        },
+        {
+          name: 'vectorDimension',
+          message: 'Vector Dimension. Only for columns that are vectors',
+          validate(
+            value: string | undefined,
+            state: ColumnEditState,
+            item: { value: string | undefined },
+            index: number
+          ) {
+            if (!isColumnAdded && value !== state.initial.vectorDimension) {
+              return `Cannot change the vector dimension of existing vector columns`;
+            }
+            if (state.values.type === 'vector') {
+              if (!value) {
+                return 'The vectorDimension field must be filled the columns of type `vector`';
+              }
+            } else if (value) {
+              return 'The vectorDimension field must not be filled unless the type of the column is `vector`';
             }
             return true;
           }
@@ -539,6 +565,7 @@ Beware that this can lead to ${chalk.bold(
         name: values.name,
         type: values.type,
         link: values.link && values.type === 'link' ? { table: values.link } : undefined,
+        vector: values.vectorDimension ? { dimension: parseInt(values.vectorDimension, 10) } : undefined,
         unique: unique || undefined,
         notNull: notNull || undefined,
         defaultValue: parseDefaultValue(values.type, values.defaultValue)
@@ -763,6 +790,7 @@ Beware that this can lead to ${chalk.bold(
                 name: column.name,
                 type: column.type,
                 link: column.link,
+                vector: column.vector,
                 unique: column.unique,
                 notNull: column.notNull,
                 defaultValue: column.defaultValue
