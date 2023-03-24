@@ -471,7 +471,7 @@ vectorDimension: \${vectorDimension}
             }
             if (state.values.type === 'vector') {
               if (!value) {
-                return 'The vectorDimension field must be filled the columns of type `vector`';
+                return 'The vectorDimension field must be filled for the columns of type `vector`';
               }
             } else if (value) {
               return 'The vectorDimension field must not be filled unless the type of the column is `vector`';
