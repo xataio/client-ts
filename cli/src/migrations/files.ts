@@ -50,6 +50,7 @@ export async function getLocalMigrationFiles(): Promise<Schemas.MigrationObject[
   const migrations: Schemas.MigrationObject[] = [];
 
   for (const entry of ledger) {
+    // Ignore empty lines in ledger file
     if (entry === '') continue;
     const filePath = path.join(migrationsDir, `${entry}.json`);
     const fileContents = await readFile(filePath, 'utf8');
