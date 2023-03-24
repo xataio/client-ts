@@ -4,8 +4,15 @@ import babel from '@babel/core';
 import path from 'path';
 import fs from 'fs/promises';
 
+const githubRegex = /^https?:\/\/(?:www\.)?github\.com\/(?<org>[^/]+)\//;
+
 export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
-  const { CONTEXT: context, BRANCH: branch, XATA_PREVIEW: preview } = netlifyConfig.build.environment;
+  const {
+    CONTEXT: context,
+    BRANCH: branch,
+    XATA_PREVIEW: preview,
+    REPOSITORY_URL: repoUrl
+  } = netlifyConfig.build.environment;
 
   if (context !== 'deploy-preview') {
     console.log('Not a deploy preview, skipping Xata plugin');
@@ -22,10 +29,7 @@ export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
     return;
   }
 
-  console.log(process.env);
-
-  // TODO: get org from netlify config
-  const org = 'SferaDev';
+  const org = repoUrl?.match(githubRegex)?.groups?.org;
   if (!org) {
     console.log('No GitHub owner found, skipping Xata plugin');
     return;
