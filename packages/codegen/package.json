@@ -29,7 +29,7 @@
   "homepage": "https://github.com/xataio/client-ts/blob/main/codegen/README.md",
   "dependencies": {
     "case": "^1.6.3",
-    "prettier": "^2.8.4",
+    "prettier": "^2.8.7",
     "ts-morph": "^17.0.1",
     "typescript": "^5.0.2",
     "zod": "^3.21.4"
