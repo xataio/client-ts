@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.11.19
+
+### Patch Changes
+
+- [#962](https://github.com/xataio/client-ts/pull/962) [`0406420f`](https://github.com/xataio/client-ts/commit/0406420f0e071a36c0b63cfc80a7be46e794f26d) Thanks [@richardgill](https://github.com/richardgill)! - Added Vector column to `xata schema edit`
+
+- Updated dependencies [[`470cc71f`](https://github.com/xataio/client-ts/commit/470cc71f7c5c8b9fd50f789e157d2b2eecd0b3e8)]:
+  - @xata.io/client@0.23.4
+  - @xata.io/importer@0.3.13
+
 ## 0.11.18
 
 ### Patch Changes
