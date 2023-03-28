@@ -587,6 +587,21 @@ export type TransactionDeleteOp = {
 };
 
 /**
+ * Get by id operation.
+ */
+export type TransactionGetOp = {
+  /**
+   * The table name
+   */
+  table: string;
+  id: RecordID;
+  /**
+   * If set, the call will return the requested fields as part of the response.
+   */
+  columns?: string[];
+};
+
+/**
  * A transaction operation
  */
 export type TransactionOperation =
@@ -598,6 +613,9 @@ export type TransactionOperation =
     }
   | {
       ['delete']: TransactionDeleteOp;
+    }
+  | {
+      get: TransactionGetOp;
     };
 
 /**
@@ -655,10 +673,21 @@ export type TransactionResultDelete = {
 };
 
 /**
+ * A result from a get operation.
+ */
+export type TransactionResultGet = {
+  /**
+   * The type of operation who's result is being returned.
+   */
+  operation: 'get';
+  columns?: TransactionResultColumns;
+};
+
+/**
  * An ordered array of results from the submitted operations.
  */
 export type TransactionSuccess = {
-  results: (TransactionResultInsert | TransactionResultUpdate | TransactionResultDelete)[];
+  results: (TransactionResultInsert | TransactionResultUpdate | TransactionResultDelete | TransactionResultGet)[];
 };
 
 /**
@@ -697,27 +726,31 @@ export type ObjectValue = {
 };
 
 /**
+ * File name
+ *
+ * @maxLength 1024
+ * @minLength 1
+ * @pattern [0-9a-zA-Z!\-_\.\*'\(\)]+
+ */
+export type FileName = string;
+
+/**
+ * Media type
+ *
+ * @maxLength 255
+ * @minLength 3
+ * @pattern ^\w+/[-+.\w]+$
+ */
+export type MediaType = string;
+
+/**
  * Object representing a file
  *
  * @x-go-type file.InputFile
  */
 export type InputFileEntry = {
-  /**
-   * File name
-   *
-   * @maxLength 1024
-   * @minLength 1
-   * @pattern [0-9a-zA-Z!\-_\.\*'\(\)]+
-   */
-  name: string;
-  /**
-   * Media type
-   *
-   * @maxLength 255
-   * @minLength 3
-   * @pattern ^\w+/[-+.\w]+$
-   */
-  mediaType?: string;
+  name: FileName;
+  mediaType?: MediaType;
   /**
    * Base64 encoded content
    *
