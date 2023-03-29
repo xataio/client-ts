@@ -2121,6 +2121,226 @@ export const insertRecord = (variables: InsertRecordVariables, signal?: AbortSig
     InsertRecordPathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/data', method: 'post', ...variables, signal });
 
+export type GetFileItemPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  /**
+   * The File name
+   */
+  fileName: Schemas.FileName;
+  workspace: string;
+  region: string;
+};
+
+export type GetFileItemError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetFileItemVariables = {
+  pathParams: GetFileItemPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve file content by file name
+ */
+export const getFileItem = (variables: GetFileItemVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<undefined, GetFileItemError, undefined, {}, {}, GetFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileName}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type PutFileItemPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  /**
+   * The File name
+   */
+  fileName: Schemas.FileName;
+  workspace: string;
+  region: string;
+};
+
+export type PutFileItemError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PutFileItemVariables = {
+  pathParams: PutFileItemPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Uploads the file content to the given file name
+ */
+export const putFileItem = (variables: PutFileItemVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, PutFileItemError, undefined, {}, {}, PutFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileName}',
+    method: 'put',
+    ...variables,
+    signal
+  });
+
+export type GetFilePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+  region: string;
+};
+
+export type GetFileError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetFileVariables = {
+  pathParams: GetFilePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve file content from a file column
+ */
+export const getFile = (variables: GetFileVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<undefined, GetFileError, undefined, {}, {}, GetFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type PutFilePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+  region: string;
+};
+
+export type PutFileError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PutFileVariables = {
+  pathParams: PutFilePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Uploads the file content to the given file column
+ */
+export const putFile = (variables: PutFileVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, PutFileError, undefined, {}, {}, PutFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}',
+    method: 'put',
+    ...variables,
+    signal
+  });
+
 export type GetRecordPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -3931,6 +4151,7 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
+  xbcellOther: { getFileItem, putFileItem, getFile, putFile },
   searchAndFilter: {
     queryTable,
     searchBranch,

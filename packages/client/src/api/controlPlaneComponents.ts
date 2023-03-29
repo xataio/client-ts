@@ -1039,6 +1039,61 @@ export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariable
     UpdateDatabaseMetadataPathParams
   >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'patch', ...variables, signal });
 
+export type RenameDatabasePathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+};
+
+export type RenameDatabaseError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 423;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type RenameDatabaseRequestBody = {
+  /**
+   * @minLength 1
+   */
+  newName: string;
+};
+
+export type RenameDatabaseVariables = {
+  body: RenameDatabaseRequestBody;
+  pathParams: RenameDatabasePathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Change the name of an existing database
+ */
+export const renameDatabase = (variables: RenameDatabaseVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.DatabaseMetadata,
+    RenameDatabaseError,
+    RenameDatabaseRequestBody,
+    {},
+    {},
+    RenameDatabasePathParams
+  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/rename', method: 'post', ...variables, signal });
+
 export type GetDatabaseGithubSettingsPathParams = {
   /**
    * Workspace ID
@@ -1232,6 +1287,7 @@ export const operationsByTag = {
     deleteDatabase,
     getDatabaseMetadata,
     updateDatabaseMetadata,
+    renameDatabase,
     getDatabaseGithubSettings,
     updateDatabaseGithubSettings,
     deleteDatabaseGithubSettings,

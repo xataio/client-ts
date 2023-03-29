@@ -34,6 +34,7 @@ export class XataApiClient {
     migrationRequests: MigrationRequestsApi;
     tables: TableApi;
     records: RecordsApi;
+    files: FilesApi;
     searchAndFilter: SearchAndFilterApi;
   }> = {};
 
@@ -108,6 +109,11 @@ export class XataApiClient {
   public get records() {
     if (!this.#namespaces.records) this.#namespaces.records = new RecordsApi(this.#extraProps);
     return this.#namespaces.records;
+  }
+
+  public get files() {
+    if (!this.#namespaces.files) this.#namespaces.files = new FilesApi(this.#extraProps);
+    return this.#namespaces.files;
   }
 
   public get searchAndFilter() {
@@ -955,6 +961,144 @@ class RecordsApi {
   }
 }
 
+class FilesApi {
+  constructor(private extraProps: ApiExtraProps) {}
+
+  public getFileItem({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column,
+    fileName
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+    fileName: string;
+  }): Promise<any> {
+    return operationsByTag.xbcellOther.getFileItem({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column,
+        fileName
+      },
+      ...this.extraProps
+    });
+  }
+
+  public putFileItem({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column,
+    fileName,
+    file
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+    fileName: string;
+    file: any;
+  }): Promise<Responses.PutFileResponse> {
+    return operationsByTag.xbcellOther.putFileItem({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column,
+        fileName
+      },
+      // @ts-ignore
+      body: file,
+      ...this.extraProps
+    });
+  }
+
+  public getFile({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+  }): Promise<any> {
+    return operationsByTag.xbcellOther.getFile({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column
+      },
+      ...this.extraProps
+    });
+  }
+
+  public putFile({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column,
+    file
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+    file: any;
+  }): Promise<Responses.PutFileResponse> {
+    return operationsByTag.xbcellOther.putFile({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column
+      },
+      // @ts-ignore
+      body: file,
+      ...this.extraProps
+    });
+  }
+}
+
 class SearchAndFilterApi {
   constructor(private extraProps: ApiExtraProps) {}
 
@@ -1601,6 +1745,22 @@ class DatabaseApi {
     return operationsByTag.databases.updateDatabaseMetadata({
       pathParams: { workspaceId: workspace, dbName: database },
       body: metadata,
+      ...this.extraProps
+    });
+  }
+
+  public renameDatabase({
+    workspace,
+    database,
+    newName
+  }: {
+    workspace: Schemas.WorkspaceID;
+    database: Schemas.DBName;
+    newName: Schemas.DBName;
+  }): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.databases.renameDatabase({
+      pathParams: { workspaceId: workspace, dbName: database },
+      body: { newName },
       ...this.extraProps
     });
   }
