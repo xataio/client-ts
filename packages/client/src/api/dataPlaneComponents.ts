@@ -3717,7 +3717,7 @@ export type SqlQueryVariables = {
  * Run an SQL query across the database branch.
  */
 export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Responses.QueryResponse, SqlQueryError, SqlQueryRequestBody, {}, {}, SqlQueryPathParams>({
+  dataPlaneFetch<Responses.SQLResponse, SqlQueryError, SqlQueryRequestBody, {}, {}, SqlQueryPathParams>({
     url: '/db/{dbBranchName}/sql',
     method: 'post',
     ...variables,
