@@ -93,6 +93,11 @@ export type SearchResponse = {
   warning?: string;
 };
 
+export type SQLResponse = {
+  records: Schemas.SQLRecord[];
+  warning?: string;
+};
+
 export type RateLimitError = {
   id?: string;
   message: string;
