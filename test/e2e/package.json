@@ -5,17 +5,17 @@
   "scripts": {},
   "dependencies": {
     "@remix-run/dev": "latest",
-    "@types/node": "^18.15.10",
+    "@types/node": "^18.15.11",
     "create-next-app": "latest",
     "cross-fetch": "^3.1.5",
     "edge-runtime": "latest",
-    "netlify-cli": "^13.2.1",
+    "netlify-cli": "^13.2.2",
     "next": "latest",
     "remix": "latest",
     "rollup-plugin-esbuild": "^5.0.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
-    "typescript": "^5.0.2",
+    "typescript": "^5.0.3",
     "vercel": "latest",
     "wrangler": "latest"
   }

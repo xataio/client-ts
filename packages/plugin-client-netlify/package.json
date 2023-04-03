@@ -19,13 +19,13 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@babel/core": "^7.21.3",
-    "@netlify/build": "^29.7.1",
+    "@babel/core": "^7.21.4",
+    "@netlify/build": "^29.9.0",
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
     "@types/babel__core": "^7.20.0",
-    "@types/node": "^18.15.10",
-    "typescript": "^5.0.2"
+    "@types/node": "^18.15.11",
+    "typescript": "^5.0.3"
   }
 }
