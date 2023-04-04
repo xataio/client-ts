@@ -1,12 +1,12 @@
 import { Command, Flags, Interfaces } from '@oclif/core';
 import {
-  Schemas,
-  XataApiPlugin,
   buildClient,
   getAPIKey,
-  getCurrentBranchName,
+  getBranch,
   getHostUrl,
-  parseWorkspacesUrlParts
+  parseWorkspacesUrlParts,
+  Schemas,
+  XataApiPlugin
 } from '@xata.io/client';
 import { XataImportPlugin } from '@xata.io/importer';
 import ansiRegex from 'ansi-regex';
@@ -21,50 +21,23 @@ import path from 'path';
 import prompts from 'prompts';
 import table from 'text-table';
 import which from 'which';
-import { ZodError, z } from 'zod';
+import { ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
+import { partialProjectConfig, ProjectConfig } from './config.js';
 import {
-  Profile,
   buildProfile,
   credentialsFilePath,
   getEnvProfileName,
+  Profile,
   readCredentialsDictionary
 } from './credentials.js';
 import { reportBugURL } from './utils.js';
 
-class XataClient extends buildClient({
+export class XataClient extends buildClient({
   api: new XataApiPlugin(),
   import: new XataImportPlugin()
 }) {}
 
-export const projectConfigSchema = z.object({
-  databaseURL: z.string(),
-  codegen: z.object({
-    output: z.string(),
-    moduleType: z.enum(['cjs', 'esm', 'deno']),
-    declarations: z.boolean(),
-    javascriptTarget: z.enum([
-      'es5',
-      'es6',
-      'es2015',
-      'es2016',
-      'es2017',
-      'es2018',
-      'es2019',
-      'es2020',
-      'es2021',
-      'esnext'
-    ]),
-    workersBuildId: z.string().optional()
-  }),
-  experimental: z.object({
-    incrementalBuild: z.boolean()
-  })
-});
-
-const partialProjectConfig = projectConfigSchema.deepPartial();
-
-export type ProjectConfig = z.infer<typeof partialProjectConfig>;
 export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
 
 const moduleName = 'xata';
@@ -215,12 +188,12 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
   }
 
-  async getProfile(ignoreEnv?: boolean): Promise<Profile> {
+  async getProfile({ ignoreEnv = false }: { ignoreEnv?: boolean } = {}): Promise<Profile> {
     const { flags } = await this.parseCommand();
     const profileName = flags.profile || getEnvProfileName();
 
     const apiKey = getAPIKey();
-    const useEnv = !process.env.XATA_PROFILE && !flags.profile && !ignoreEnv;
+    const useEnv = !ignoreEnv || profileName === 'default';
     if (useEnv && apiKey) return buildProfile({ name: 'default', apiKey });
 
     const credentials = await readCredentialsDictionary();
@@ -229,10 +202,10 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     return buildProfile({ ...credential, name: profileName });
   }
 
-  async getXataClient(overrideProfile?: Profile) {
+  async getXataClient({ profile }: { profile?: Profile } = {}) {
     if (this.#xataClient) return this.#xataClient;
 
-    const { apiKey, host } = overrideProfile ?? (await this.getProfile());
+    const { apiKey, host } = profile ?? (await this.getProfile());
 
     if (!apiKey) {
       this.error('Could not instantiate Xata client. No API key found.', {
@@ -279,7 +252,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
   async verifyAPIKey(profile: Profile) {
     this.info('Checking access to the API...');
-    const xata = await this.getXataClient(profile);
+    const xata = await this.getXataClient({ profile });
     try {
       await xata.api.workspaces.getWorkspacesList();
     } catch (err) {
@@ -521,7 +494,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     if (branchFlag) {
       branch = branchFlag;
     } else if (info.source === 'config') {
-      branch = await this.getCurrentBranchName(info.databaseURL);
+      branch = this.getCurrentBranchName();
     } else if (process.env.XATA_BRANCH !== undefined) {
       branch = process.env.XATA_BRANCH;
     } else {
@@ -531,14 +504,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     return { ...info, branch };
   }
 
-  async getCurrentBranchName(databaseURL: string) {
-    const profile = await this.getProfile();
-    return getCurrentBranchName({
-      fetchImpl: fetch,
-      databaseURL,
-      apiKey: profile?.apiKey ?? undefined,
-      clientName: 'cli'
-    });
+  getCurrentBranchName() {
+    return getBranch() ?? 'main';
   }
 
   async updateConfig() {

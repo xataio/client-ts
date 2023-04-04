@@ -28,7 +28,7 @@ describe('branches link', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesLink([], config as Config);
+    const command = new BranchesLink([], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
@@ -43,7 +43,7 @@ describe('branches link', () => {
     fetchMock.mockReturnValue({ ok: true, json: async () => ({}) });
 
     const config = await Config.load();
-    const command = new BranchesLink(['--git', 'foo', '--xata', 'bar'], config as Config);
+    const command = new BranchesLink(['--git', 'foo', '--xata', 'bar'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     expect(BranchesLink.enableJsonFlag).toBe(true);

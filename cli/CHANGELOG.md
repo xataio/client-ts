@@ -1,5 +1,74 @@
 # @xata.io/cli
 
+## 0.11.19
+
+### Patch Changes
+
+- [#962](https://github.com/xataio/client-ts/pull/962) [`0406420f`](https://github.com/xataio/client-ts/commit/0406420f0e071a36c0b63cfc80a7be46e794f26d) Thanks [@richardgill](https://github.com/richardgill)! - Added Vector column to `xata schema edit`
+
+- Updated dependencies [[`470cc71f`](https://github.com/xataio/client-ts/commit/470cc71f7c5c8b9fd50f789e157d2b2eecd0b3e8)]:
+  - @xata.io/client@0.23.4
+  - @xata.io/importer@0.3.13
+
+## 0.11.18
+
+### Patch Changes
+
+- [#957](https://github.com/xataio/client-ts/pull/957) [`096dd2bf`](https://github.com/xataio/client-ts/commit/096dd2bff32744ac4cd1e4750355bc28ee0fafea) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Make branches verbose
+
+## 0.11.17
+
+### Patch Changes
+
+- [#954](https://github.com/xataio/client-ts/pull/954) [`2b8fac39`](https://github.com/xataio/client-ts/commit/2b8fac39882d8932aaef7c2e99d2f059a500e943) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Store checksums for migrations
+
+## 0.11.16
+
+### Patch Changes
+
+- Updated dependencies [[`344b0d68`](https://github.com/xataio/client-ts/commit/344b0d687962d569872d1e90d59818d28df7579c)]:
+  - @xata.io/client@0.23.3
+  - @xata.io/importer@0.3.12
+
+## 0.11.15
+
+### Patch Changes
+
+- [#945](https://github.com/xataio/client-ts/pull/945) [`ecdc6553`](https://github.com/xataio/client-ts/commit/ecdc6553d4628289e88953ab6296b80f60e8f757) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new types
+
+- Updated dependencies [[`c477c177`](https://github.com/xataio/client-ts/commit/c477c17795c01cbf945be413217944a5a38655a5), [`ecdc6553`](https://github.com/xataio/client-ts/commit/ecdc6553d4628289e88953ab6296b80f60e8f757)]:
+  - @xata.io/client@0.23.2
+  - @xata.io/codegen@0.23.2
+  - @xata.io/importer@0.3.11
+
+## 0.11.14
+
+### Patch Changes
+
+- Updated dependencies [[`3026d708`](https://github.com/xataio/client-ts/commit/3026d70847830fd0f2024413d823380ff323806c)]:
+  - @xata.io/client@0.23.1
+  - @xata.io/importer@0.3.10
+
+## 0.11.13
+
+### Patch Changes
+
+- [#867](https://github.com/xataio/client-ts/pull/867) [`5838113f`](https://github.com/xataio/client-ts/commit/5838113fca042163b44d7cc7cc1686d5ef89b302) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Remove fallback branch
+
+- Updated dependencies [[`5838113f`](https://github.com/xataio/client-ts/commit/5838113fca042163b44d7cc7cc1686d5ef89b302)]:
+  - @xata.io/client@0.23.0
+  - @xata.io/importer@0.3.9
+
+## 0.11.12
+
+### Patch Changes
+
+- [#921](https://github.com/xataio/client-ts/pull/921) [`07fc879d`](https://github.com/xataio/client-ts/commit/07fc879d3f778536e39588e66d7a18b5a9d52ebe) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove git branch resolution
+
+- Updated dependencies [[`22e7dd29`](https://github.com/xataio/client-ts/commit/22e7dd29f7a51dccc087d5fd7fff32084c7733af), [`07fc879d`](https://github.com/xataio/client-ts/commit/07fc879d3f778536e39588e66d7a18b5a9d52ebe), [`58a1c24e`](https://github.com/xataio/client-ts/commit/58a1c24e5d30025dce243eecce44f09d4f65ed66), [`c2c6e244`](https://github.com/xataio/client-ts/commit/c2c6e24459b1acc07f0414066258071fbcf7dde9)]:
+  - @xata.io/client@0.22.4
+  - @xata.io/importer@0.3.8
+
 ## 0.11.11
 
 ### Patch Changes

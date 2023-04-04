@@ -210,6 +210,16 @@ describe('integration tests', () => {
     expect(teams[2].name).toBe('Mixed team fruits & animals');
   });
 
+  test('sort random', async () => {
+    const teams = await xata.db.teams.sort('*', 'random').getAll();
+    const teams2 = await xata.db.teams.getAll({ sort: { column: '*', direction: 'random' } });
+    const teams3 = await xata.db.teams.getAll({ sort: { '*': 'random' } });
+
+    expect(teams).toHaveLength(3);
+    expect(teams2).toHaveLength(3);
+    expect(teams3).toHaveLength(3);
+  });
+
   test('negative filter', async () => {
     const repository = xata.db.teams;
     const teams = await repository.not(repository.filter('name', 'Team fruits')).sort('name', 'asc').getAll();

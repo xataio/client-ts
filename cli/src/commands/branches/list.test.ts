@@ -28,7 +28,7 @@ describe('branches list', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesList([], config as Config);
+    const command = new BranchesList([], config);
     command.projectConfig = {
       databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test'
     };
@@ -55,7 +55,7 @@ describe('branches list', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesList([], config as Config);
+    const command = new BranchesList([], config);
     command.projectConfig = {
       databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test'
     };

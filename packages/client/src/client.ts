@@ -5,10 +5,7 @@ import { CacheImpl, SimpleCache } from './schema/cache';
 import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { TransactionPlugin, TransactionPluginResult } from './transaction';
-import { getAPIKey } from './util/apiKey';
-import { BranchStrategy, BranchStrategyOption, BranchStrategyValue, isBranchStrategyBuilder } from './util/branches';
-import { getCurrentBranchName, getDatabaseURL } from './util/config';
-import { getEnableBrowserVariable } from './util/environment';
+import { getAPIKey, getBranch, getDatabaseURL, getEnableBrowserVariable, getPreviewBranch } from './util/environment';
 import { FetchImpl, getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
@@ -18,7 +15,7 @@ export type BaseClientOptions = {
   host?: HostProvider;
   apiKey?: string;
   databaseURL?: string;
-  branch?: BranchStrategyOption;
+  branch?: string;
   cache?: CacheImpl;
   trace?: TraceFunction;
   enableBrowser?: boolean;
@@ -26,8 +23,8 @@ export type BaseClientOptions = {
   xataAgentExtra?: Record<string, string>;
 };
 
-type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch' | 'clientName' | 'xataAgentExtra'>> & {
-  branch: () => Promise<string | undefined>;
+type SafeOptions = AllRequired<Omit<BaseClientOptions, 'clientName' | 'xataAgentExtra'>> & {
+  host: HostProvider;
   clientID: string;
   clientName?: string;
   xataAgentExtra?: Record<string, string>;
@@ -36,7 +33,6 @@ type SafeOptions = AllRequired<Omit<BaseClientOptions, 'branch' | 'clientName' |
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
   class {
-    #branch: BranchStrategyValue;
     #options: SafeOptions;
 
     db: SchemaPluginResult<any>;
@@ -48,9 +44,9 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       this.#options = safeOptions;
 
       const pluginOptions: XataPluginOptions = {
-        getFetchProps: () => this.#getFetchProps(safeOptions),
+        ...this.#getFetchProps(safeOptions),
         cache: safeOptions.cache,
-        trace: safeOptions.trace
+        host: safeOptions.host
       };
 
       const db = new SchemaPlugin(schemaTables).build(pluginOptions);
@@ -64,23 +60,15 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       for (const [key, namespace] of Object.entries(plugins ?? {})) {
         if (namespace === undefined) continue;
-        const result = namespace.build(pluginOptions);
 
-        if (result instanceof Promise) {
-          void result.then((namespace: unknown) => {
-            // @ts-ignore
-            this[key] = namespace;
-          });
-        } else {
-          // @ts-ignore
-          this[key] = result;
-        }
+        // @ts-ignore
+        this[key] = namespace.build(pluginOptions);
       }
     }
 
     public async getConfig() {
       const databaseURL = this.#options.databaseURL;
-      const branch = await this.#options.branch();
+      const branch = this.#options.branch;
 
       return { databaseURL, branch };
     }
@@ -103,18 +91,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const trace = options?.trace ?? defaultTrace;
       const clientName = options?.clientName;
       const host = options?.host ?? 'production';
-
       const xataAgentExtra = options?.xataAgentExtra;
-      const branch = async () =>
-        options?.branch !== undefined
-          ? await this.#evaluateBranch(options.branch)
-          : await getCurrentBranchName({
-              apiKey,
-              databaseURL,
-              fetchImpl: options?.fetch,
-              clientName,
-              xataAgentExtra
-            });
 
       if (!apiKey) {
         throw new Error('Option apiKey is required');
@@ -122,6 +99,27 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       if (!databaseURL) {
         throw new Error('Option databaseURL is required');
+      }
+
+      const envBranch = getBranch();
+      const previewBranch = getPreviewBranch();
+      const branch = options?.branch || previewBranch || envBranch || 'main';
+      if (!!previewBranch && branch !== previewBranch) {
+        console.warn(
+          `Ignoring preview branch ${previewBranch} because branch option was passed to the client constructor with value ${branch}`
+        );
+      } else if (!!envBranch && branch !== envBranch) {
+        console.warn(
+          `Ignoring branch ${envBranch} because branch option was passed to the client constructor with value ${branch}`
+        );
+      } else if (!!previewBranch && !!envBranch && previewBranch !== envBranch) {
+        console.warn(
+          `Ignoring preview branch ${previewBranch} and branch ${envBranch} because branch option was passed to the client constructor with value ${branch}`
+        );
+      } else if (!previewBranch && !envBranch && options?.branch === undefined) {
+        console.warn(
+          `No branch was passed to the client constructor. Using default branch ${branch}. You can set the branch with the environment variable XATA_BRANCH or by passing the branch option to the client constructor.`
+        );
       }
 
       return {
@@ -139,7 +137,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       };
     }
 
-    async #getFetchProps({
+    #getFetchProps({
       fetch,
       apiKey,
       databaseURL,
@@ -148,18 +146,15 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       clientID,
       clientName,
       xataAgentExtra
-    }: SafeOptions): Promise<ApiExtraProps> {
-      const branchValue = await this.#evaluateBranch(branch);
-      if (!branchValue) throw new Error('Unable to resolve branch value');
-
+    }: SafeOptions): ApiExtraProps {
       return {
-        fetchImpl: fetch,
+        fetch,
         apiKey,
         apiUrl: '',
         // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
         workspacesApiUrl: (path, params) => {
           const hasBranch = params.dbBranchName ?? params.branch;
-          const newPath = path.replace(/^\/db\/[^/]+/, hasBranch !== undefined ? `:${branchValue}` : '');
+          const newPath = path.replace(/^\/db\/[^/]+/, hasBranch !== undefined ? `:${branch}` : '');
           return databaseURL + newPath;
         },
         trace,
@@ -167,25 +162,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         clientName,
         xataAgentExtra
       };
-    }
-
-    async #evaluateBranch(param?: BranchStrategyOption): Promise<string | undefined> {
-      if (this.#branch) return this.#branch;
-      if (param === undefined) return undefined;
-
-      const strategies = Array.isArray(param) ? [...param] : [param];
-
-      const evaluateBranch = async (strategy: BranchStrategy) => {
-        return isBranchStrategyBuilder(strategy) ? await strategy() : strategy;
-      };
-
-      for await (const strategy of strategies) {
-        const branch = await evaluateBranch(strategy);
-        if (branch) {
-          this.#branch = branch;
-          return branch;
-        }
-      }
     }
   } as unknown as ClientConstructor<Plugins>;
 

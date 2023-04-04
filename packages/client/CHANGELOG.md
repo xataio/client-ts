@@ -1,5 +1,49 @@
 # @xata.io/client
 
+## 0.23.4
+
+### Patch Changes
+
+- [#951](https://github.com/xataio/client-ts/pull/951) [`470cc71f`](https://github.com/xataio/client-ts/commit/470cc71f7c5c8b9fd50f789e157d2b2eecd0b3e8) Thanks [@SferaDev](https://github.com/SferaDev)! - Add random sorting
+
+## 0.23.3
+
+### Patch Changes
+
+- [#947](https://github.com/xataio/client-ts/pull/947) [`344b0d68`](https://github.com/xataio/client-ts/commit/344b0d687962d569872d1e90d59818d28df7579c) Thanks [@SferaDev](https://github.com/SferaDev)! - Add numeric operators
+
+## 0.23.2
+
+### Patch Changes
+
+- [#939](https://github.com/xataio/client-ts/pull/939) [`c477c177`](https://github.com/xataio/client-ts/commit/c477c17795c01cbf945be413217944a5a38655a5) Thanks [@SferaDev](https://github.com/SferaDev)! - Add deploy preview branch env variable loading
+
+- [#945](https://github.com/xataio/client-ts/pull/945) [`ecdc6553`](https://github.com/xataio/client-ts/commit/ecdc6553d4628289e88953ab6296b80f60e8f757) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new types
+
+## 0.23.1
+
+### Patch Changes
+
+- [#941](https://github.com/xataio/client-ts/pull/941) [`3026d708`](https://github.com/xataio/client-ts/commit/3026d70847830fd0f2024413d823380ff323806c) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose records in ask SSE
+
+## 0.23.0
+
+### Minor Changes
+
+- [#867](https://github.com/xataio/client-ts/pull/867) [`5838113f`](https://github.com/xataio/client-ts/commit/5838113fca042163b44d7cc7cc1686d5ef89b302) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Remove fallback branch
+
+## 0.22.4
+
+### Patch Changes
+
+- [#927](https://github.com/xataio/client-ts/pull/927) [`22e7dd29`](https://github.com/xataio/client-ts/commit/22e7dd29f7a51dccc087d5fd7fff32084c7733af) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose `ask` endpoint in the SDK
+
+- [#921](https://github.com/xataio/client-ts/pull/921) [`07fc879d`](https://github.com/xataio/client-ts/commit/07fc879d3f778536e39588e66d7a18b5a9d52ebe) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove git branch resolution
+
+- [#925](https://github.com/xataio/client-ts/pull/925) [`58a1c24e`](https://github.com/xataio/client-ts/commit/58a1c24e5d30025dce243eecce44f09d4f65ed66) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new methods to API client
+
+- [#932](https://github.com/xataio/client-ts/pull/932) [`c2c6e244`](https://github.com/xataio/client-ts/commit/c2c6e24459b1acc07f0414066258071fbcf7dde9) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new experimental copy branch endpoint
+
 ## 0.22.3
 
 ### Patch Changes

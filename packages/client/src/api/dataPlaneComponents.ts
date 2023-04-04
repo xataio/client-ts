@@ -198,6 +198,51 @@ export const deleteBranch = (variables: DeleteBranchVariables, signal?: AbortSig
     signal
   });
 
+export type CopyBranchPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type CopyBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CopyBranchRequestBody = {
+  destinationBranch: string;
+  limit?: number;
+};
+
+export type CopyBranchVariables = {
+  body: CopyBranchRequestBody;
+  pathParams: CopyBranchPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Create a copy of the branch
+ */
+export const copyBranch = (variables: CopyBranchVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.BranchWithCopyID, CopyBranchError, CopyBranchRequestBody, {}, {}, CopyBranchPathParams>({
+    url: '/db/{dbBranchName}/copy',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type UpdateBranchMetadataPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -1127,7 +1172,7 @@ export type MergeMigrationRequestVariables = {
 } & DataPlaneFetcherExtraProps;
 
 export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.Commit, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
+  dataPlaneFetch<Schemas.BranchOp, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
     url: '/dbs/{dbName}/migrations/{mrNumber}/merge',
     method: 'post',
     ...variables,
@@ -1432,6 +1477,49 @@ export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables,
     {},
     ApplyBranchSchemaEditPathParams
   >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables, signal });
+
+export type PushBranchMigrationsPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type PushBranchMigrationsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PushBranchMigrationsRequestBody = {
+  migrations: Schemas.MigrationObject[];
+};
+
+export type PushBranchMigrationsVariables = {
+  body: PushBranchMigrationsRequestBody;
+  pathParams: PushBranchMigrationsPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const pushBranchMigrations = (variables: PushBranchMigrationsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Responses.SchemaUpdateResponse,
+    PushBranchMigrationsError,
+    PushBranchMigrationsRequestBody,
+    {},
+    {},
+    PushBranchMigrationsPathParams
+  >({ url: '/db/{dbBranchName}/schema/push', method: 'post', ...variables, signal });
 
 export type CreateTablePathParams = {
   /**
@@ -2032,6 +2120,226 @@ export const insertRecord = (variables: InsertRecordVariables, signal?: AbortSig
     InsertRecordQueryParams,
     InsertRecordPathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/data', method: 'post', ...variables, signal });
+
+export type GetFileItemPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  /**
+   * The File name
+   */
+  fileName: Schemas.FileName;
+  workspace: string;
+  region: string;
+};
+
+export type GetFileItemError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetFileItemVariables = {
+  pathParams: GetFileItemPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve file content by file name
+ */
+export const getFileItem = (variables: GetFileItemVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<undefined, GetFileItemError, undefined, {}, {}, GetFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileName}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type PutFileItemPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  /**
+   * The File name
+   */
+  fileName: Schemas.FileName;
+  workspace: string;
+  region: string;
+};
+
+export type PutFileItemError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PutFileItemVariables = {
+  pathParams: PutFileItemPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Uploads the file content to the given file name
+ */
+export const putFileItem = (variables: PutFileItemVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, PutFileItemError, undefined, {}, {}, PutFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileName}',
+    method: 'put',
+    ...variables,
+    signal
+  });
+
+export type GetFilePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+  region: string;
+};
+
+export type GetFileError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetFileVariables = {
+  pathParams: GetFilePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve file content from a file column
+ */
+export const getFile = (variables: GetFileVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<undefined, GetFileError, undefined, {}, {}, GetFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type PutFilePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+  region: string;
+};
+
+export type PutFileError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PutFileVariables = {
+  pathParams: PutFilePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Uploads the file content to the given file column
+ */
+export const putFile = (variables: PutFileVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, PutFileError, undefined, {}, {}, PutFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}',
+    method: 'put',
+    ...variables,
+    signal
+  });
 
 export type GetRecordPathParams = {
   /**
@@ -3086,6 +3394,37 @@ export type QueryTableVariables = {
  * }
  * ```
  *
+ * It is also possible to sort results randomly:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "sort": {
+ *     "*": "random"
+ *   }
+ * }
+ * ```
+ *
+ * Note that a random sort does not apply to a specific column, hence the special column name `"*"`.
+ *
+ * A random sort can be combined with an ascending or descending sort on a specific column:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "sort": [
+ *     {
+ *       "name": "desc"
+ *     },
+ *     {
+ *       "*": "random"
+ *     }
+ *   ]
+ * }
+ * ```
+ *
+ * This will sort on the `name` column, breaking ties randomly.
+ *
  * ### Pagination
  *
  * We offer cursor pagination and offset pagination. For queries that are expected to return more than 1000 records,
@@ -3330,6 +3669,61 @@ export const searchTable = (variables: SearchTableVariables, signal?: AbortSigna
     signal
   });
 
+export type SqlQueryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type SqlQueryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type SqlQueryRequestBody = {
+  /**
+   * The query string.
+   *
+   * @minLength 1
+   */
+  query: string;
+  /**
+   * The consistency level for this request.
+   *
+   * @default strong
+   */
+  consistency?: 'strong' | 'eventual';
+};
+
+export type SqlQueryVariables = {
+  body: SqlQueryRequestBody;
+  pathParams: SqlQueryPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Run an SQL query across the database branch.
+ */
+export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.SQLResponse, SqlQueryError, SqlQueryRequestBody, {}, {}, SqlQueryPathParams>({
+    url: '/db/{dbBranchName}/sql',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type VectorSearchTablePathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -3406,6 +3800,107 @@ export const vectorSearchTable = (variables: VectorSearchTableVariables, signal?
     {},
     VectorSearchTablePathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/vectorSearch', method: 'post', ...variables, signal });
+
+export type AskTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+  region: string;
+};
+
+export type AskTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 429;
+      payload: Responses.RateLimitError;
+    }
+>;
+
+export type AskTableResponse = {
+  /**
+   * The answer to the input question
+   */
+  answer?: string;
+};
+
+export type AskTableRequestBody = {
+  /**
+   * The question you'd like to ask.
+   *
+   * @minLength 3
+   */
+  question: string;
+  /**
+   * The type of search to use. If set to `keyword` (the default), the search can be configured by passing
+   * a `search` object with the following fields. For more details about each, see the Search endpoint documentation.
+   * All fields are optional.
+   *   * fuzziness  - typo tolerance
+   *   * target - columns to search into, and weights.
+   *   * prefix - prefix search type.
+   *   * filter - pre-filter before searching.
+   *   * boosters - control relevancy.
+   * If set to `vector`, a `vectorSearch` object must be passed, with the following parameters. For more details, see the Vector
+   * Search endpoint documentation. The `column` and `contentColumn` parameters are required.
+   *   * column - the vector column containing the embeddings.
+   *   * contentColumn - the column that contains the text from which the embeddings where computed.
+   *   * filter - pre-filter before searching.
+   *
+   * @default keyword
+   */
+  searchType?: 'keyword' | 'vector';
+  search?: {
+    fuzziness?: Schemas.FuzzinessExpression;
+    target?: Schemas.TargetExpression;
+    prefix?: Schemas.PrefixExpression;
+    filter?: Schemas.FilterExpression;
+    boosters?: Schemas.BoosterExpression[];
+  };
+  vectorSearch?: {
+    /**
+     * The column to use for vector search. It must be of type `vector`.
+     */
+    column: string;
+    /**
+     * The column containing the text for vector search. Must be of type `text`.
+     */
+    contentColumn: string;
+    filter?: Schemas.FilterExpression;
+  };
+  rules?: string[];
+};
+
+export type AskTableVariables = {
+  body: AskTableRequestBody;
+  pathParams: AskTablePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Ask your table a question. If the `Accept` header is set to `text/event-stream`, Xata will stream the results back as SSE's.
+ */
+export const askTable = (variables: AskTableVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<AskTableResponse, AskTableError, AskTableRequestBody, {}, {}, AskTablePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/ask',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type SummarizeTablePathParams = {
   /**
@@ -3578,7 +4073,7 @@ export type AggregateTableVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * This endpoint allows you to run aggragations (analytics) on the data from one table.
+ * This endpoint allows you to run aggregations (analytics) on the data from one table.
  * While the summary endpoint is served from a transactional store and the results are strongly
  * consistent, the aggregate endpoint is served from our columnar store and the results are
  * only eventually consistent. On the other hand, the aggregate endpoint uses a
@@ -3603,6 +4098,7 @@ export const operationsByTag = {
     getBranchDetails,
     createBranch,
     deleteBranch,
+    copyBranch,
     updateBranchMetadata,
     getBranchMetadata,
     getBranchStats,
@@ -3620,7 +4116,8 @@ export const operationsByTag = {
     compareBranchSchemas,
     updateBranchSchema,
     previewBranchSchemaEdit,
-    applyBranchSchemaEdit
+    applyBranchSchemaEdit,
+    pushBranchMigrations
   },
   migrationRequests: {
     queryMigrationRequests,
@@ -3654,5 +4151,15 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  searchAndFilter: { queryTable, searchBranch, searchTable, vectorSearchTable, summarizeTable, aggregateTable }
+  xbcellOther: { getFileItem, putFileItem, getFile, putFile },
+  searchAndFilter: {
+    queryTable,
+    searchBranch,
+    searchTable,
+    sqlQuery,
+    vectorSearchTable,
+    askTable,
+    summarizeTable,
+    aggregateTable
+  }
 };

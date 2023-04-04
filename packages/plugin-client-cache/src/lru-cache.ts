@@ -1,7 +1,7 @@
 import LRU from 'lru-cache';
 import { CacheImpl } from '@xata.io/client';
 
-export type LRUCacheOptions = Partial<LRU.Options<any, any>> & { ttl?: number };
+export type LRUCacheOptions = Partial<LRU.Options<any, any, any>>;
 
 export class LRUCache implements CacheImpl {
   #cache: LRU<string, any>;
@@ -9,7 +9,7 @@ export class LRUCache implements CacheImpl {
 
   constructor(options: LRUCacheOptions = {}) {
     this.#cache = new LRU({ max: 500, ...options });
-    this.defaultQueryTTL = options.ttl ?? options.maxAge ?? 60 * 1000;
+    this.defaultQueryTTL = options.ttl ?? 60 * 1000;
   }
 
   async getAll(): Promise<Record<string, unknown>> {

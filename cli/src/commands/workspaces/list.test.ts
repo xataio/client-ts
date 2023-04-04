@@ -28,7 +28,7 @@ describe('workspaces list', () => {
     });
 
     const config = await Config.load();
-    const list = new WorkspacesList([], config as Config);
+    const list = new WorkspacesList([], config);
 
     await expect(list.run()).rejects.toThrow('Something went wrong');
 
@@ -52,7 +52,7 @@ describe('workspaces list', () => {
     });
 
     const config = await Config.load();
-    const list = new WorkspacesList([], config as Config);
+    const list = new WorkspacesList([], config);
 
     expect(WorkspacesList.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);

@@ -24,7 +24,7 @@ const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 describe('databases delete', () => {
   test('fails if the database name is not provided', async () => {
     const config = await Config.load();
-    const command = new DatabasesDelete(['--workspace', 'test-1234'], config as Config);
+    const command = new DatabasesDelete(['--workspace', 'test-1234'], config);
 
     promptsMock.mockReturnValue({ confirm: 'foo' });
 
@@ -37,7 +37,7 @@ describe('databases delete', () => {
 
   test('exists if the user does not confirm', async () => {
     const config = await Config.load();
-    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
+    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config);
 
     promptsMock.mockReturnValue({});
 
@@ -46,7 +46,7 @@ describe('databases delete', () => {
 
   test('exists if the user did not enter the branch name correctly', async () => {
     const config = await Config.load();
-    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
+    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config);
 
     promptsMock.mockReturnValue({ confirm: 'nope' });
 
@@ -63,7 +63,7 @@ describe('databases delete', () => {
     promptsMock.mockReturnValue({ confirm: 'foo' });
 
     const config = await Config.load();
-    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
+    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config);
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
@@ -80,7 +80,7 @@ describe('databases delete', () => {
     promptsMock.mockReturnValue({ confirm: 'foo' });
 
     const config = await Config.load();
-    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config as Config);
+    const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config);
 
     expect(DatabasesDelete.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);

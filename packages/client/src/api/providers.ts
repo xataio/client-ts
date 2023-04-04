@@ -1,6 +1,6 @@
 import { isObject, isString } from '../util/lang';
 
-type HostAliases = 'production' | 'staging';
+type HostAliases = 'production' | 'staging' | 'dev';
 type ProviderBuilder = { main: string; workspaces: string };
 export type HostProvider = HostAliases | ProviderBuilder;
 
@@ -22,6 +22,10 @@ const providers: Record<HostAliases, ProviderBuilder> = {
   staging: {
     main: 'https://api.staging-xata.dev',
     workspaces: 'https://{workspaceId}.{region}.staging-xata.dev'
+  },
+  dev: {
+    main: 'https://api.dev-xata.dev',
+    workspaces: 'https://{workspaceId}.{region}.dev-xata.dev'
   }
 };
 
@@ -41,6 +45,11 @@ export function parseProviderString(provider = 'production'): HostProvider | nul
   const [main, workspaces] = provider.split(',');
   if (!main || !workspaces) return null;
   return { main, workspaces };
+}
+
+export function buildProviderString(provider: HostProvider): string {
+  if (isHostProviderAlias(provider)) return provider;
+  return `${provider.main},${provider.workspaces}`;
 }
 
 export function parseWorkspacesUrlParts(url: string): { workspace: string; region: string } | null {

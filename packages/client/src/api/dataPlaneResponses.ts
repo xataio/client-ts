@@ -52,6 +52,20 @@ export type RecordUpdateResponse =
       };
     };
 
+export type PutFileResponse = {
+  name: Schemas.FileName;
+  mediaType: Schemas.MediaType;
+  /**
+   * @format int64
+   */
+  size: number;
+  /**
+   * @format int64
+   */
+  version: number;
+  attributes?: Record<string, any>;
+};
+
 export type RecordResponse = Schemas.XataRecord;
 
 export type BulkInsertResponse =
@@ -77,6 +91,16 @@ export type QueryResponse = {
 export type SearchResponse = {
   records: Schemas.XataRecord[];
   warning?: string;
+};
+
+export type SQLResponse = {
+  records: Schemas.SQLRecord[];
+  warning?: string;
+};
+
+export type RateLimitError = {
+  id?: string;
+  message: string;
 };
 
 export type SummarizeResponse = {

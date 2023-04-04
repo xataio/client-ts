@@ -1,6 +1,8 @@
 import { Flags } from '@oclif/core';
+import { buildProviderString } from '@xata.io/client';
 import { ModuleType } from '@xata.io/codegen';
 import chalk from 'chalk';
+import dotenv from 'dotenv';
 import { access, readFile, writeFile } from 'fs/promises';
 import path, { extname } from 'path';
 import which from 'which';
@@ -13,7 +15,6 @@ import Codegen, { languages, unsupportedExtensionError } from '../codegen/index.
 import RandomData from '../random-data/index.js';
 import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
-import dotenv from 'dotenv';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 
@@ -82,7 +83,7 @@ export default class Init extends BaseCommand<typeof Init> {
     await this.writeEnvFile(workspace, region, database);
 
     if (flags.schema) {
-      const branch = await this.getCurrentBranchName(databaseURL);
+      const branch = this.getCurrentBranchName();
       await this.readAndDeploySchema(workspace, region, database, branch, flags.schema);
     }
 
@@ -248,10 +249,11 @@ export default class Init extends BaseCommand<typeof Init> {
     }
     const message = envFile ? `update your ${envFile} file` : 'create an .env file in your project';
 
-    this.info(`We are going to ${message} to store an API key and optionally your fallback branch.`);
+    this.info(`We are going to ${message} to store an API key.`);
 
+    const profile = await this.getProfile();
     // TODO: generate a database-scoped API key
-    let apiKey = (await this.getProfile())?.apiKey;
+    let apiKey = profile.apiKey;
 
     if (!apiKey) {
       apiKey = await createAPIKeyThroughWebUI();
@@ -261,15 +263,6 @@ export default class Init extends BaseCommand<typeof Init> {
 
       await this.waitUntilAPIKeyIsValid(workspace, region, database);
     }
-    this.info(
-      'The fallback branch will be used when you are in a git branch that does not have a corresponding Xata branch (a branch with the same name, or linked explicitly)'
-    );
-
-    const fallbackBranch = await this.getBranch(workspace, region, database, {
-      allowEmpty: true,
-      allowCreate: true,
-      title: 'Choose a default development branch (fallback branch).'
-    });
 
     let content = '';
     try {
@@ -283,14 +276,12 @@ export default class Init extends BaseCommand<typeof Init> {
     } catch (err) {
       // ignore
     }
+
     if (content) content += '\n\n';
     content += '# API key used by the CLI and the SDK\n';
     content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
     content += `XATA_API_KEY=${apiKey}\n`;
-    if (fallbackBranch) {
-      content += "# Xata branch that will be used if there's not a xata branch with the same name as your git branch\n";
-      content += `XATA_FALLBACK_BRANCH=${fallbackBranch}\n`;
-    }
+    if (profile.host !== 'production') content += `XATA_API_PROVIDER=${buildProviderString(profile.host)}\n`;
     await writeFile(envFile, content);
 
     await this.ignoreEnvFile(envFile);

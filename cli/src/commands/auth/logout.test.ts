@@ -26,7 +26,7 @@ const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 describe('branches delete', () => {
   test('exists if there are no profile configured', async () => {
     const config = await Config.load();
-    const command = new Logout([], config as Config);
+    const command = new Logout([], config);
 
     const readFile = vi.spyOn(fs, 'readFile').mockImplementation(() => {
       throw new Error('ENOENT');
@@ -39,7 +39,7 @@ describe('branches delete', () => {
 
   test('exists if the user does not confirm', async () => {
     const config = await Config.load();
-    const command = new Logout([], config as Config);
+    const command = new Logout([], config);
 
     const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue(ini.stringify({ default: { apiKey: 'abcdef1234' } }));
 
@@ -63,7 +63,7 @@ describe('branches delete', () => {
 
   test('updates the credentials file if the user confirms', async () => {
     const config = await Config.load();
-    const command = new Logout([], config as Config);
+    const command = new Logout([], config);
 
     const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue(ini.stringify({ default: { apiKey: 'abcdef1234' } }));
     const writeFile = vi.spyOn(fs, 'writeFile').mockResolvedValue(undefined);

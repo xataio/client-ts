@@ -2,6 +2,7 @@ import { SchemaPluginResult } from '.';
 import {
   aggregateTable,
   ApiExtraProps,
+  askTable,
   branchTransaction,
   deleteRecord,
   getBranchDetails,
@@ -11,11 +12,12 @@ import {
   queryTable,
   Schemas,
   searchTable,
-  vectorSearchTable,
   summarizeTable,
   updateRecordWithID,
-  upsertRecordWithID
+  upsertRecordWithID,
+  vectorSearchTable
 } from '../api';
+import { fetchSSERequest } from '../api/fetcher';
 import {
   FuzzinessExpression,
   HighlightExpression,
@@ -33,6 +35,7 @@ import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
+import { AskOptions, AskResult } from './ask';
 import { CacheImpl } from './cache';
 import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
@@ -779,6 +782,16 @@ export abstract class Repository<Record extends XataRecord> extends Query<
     filter?: Filter<Record>
   ): Promise<AggregationResult<Record, Expression>>;
 
+  /**
+   * Experimental: Ask the database to perform a natural language question.
+   */
+  abstract ask(question: string, options?: AskOptions<Record>): Promise<AskResult>;
+
+  /**
+   * Experimental: Ask the database to perform a natural language question.
+   */
+  abstract ask(question: string, options: AskOptions<Record> & { onMessage: (message: AskResult) => void }): void;
+
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
 
@@ -787,9 +800,9 @@ export class RestRepository<Record extends XataRecord>
   implements Repository<Record>
 {
   #table: string;
-  #getFetchProps: () => Promise<ApiExtraProps>;
+  #getFetchProps: () => ApiExtraProps;
   #db: SchemaPluginResult<any>;
-  #cache: CacheImpl;
+  #cache?: CacheImpl;
   #schemaTables?: Schemas.Table[];
   #trace: TraceFunction;
 
@@ -809,10 +822,7 @@ export class RestRepository<Record extends XataRecord>
     this.#db = options.db;
     this.#cache = options.pluginOptions.cache;
     this.#schemaTables = options.schemaTables;
-    this.#getFetchProps = async () => {
-      const props = await options.pluginOptions.getFetchProps();
-      return { ...props, sessionID: generateUUID() };
-    };
+    this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
 
     const trace = options.pluginOptions.trace ?? defaultTrace;
     this.#trace = async <T>(
@@ -910,8 +920,6 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
-    const fetchProps = await this.#getFetchProps();
-
     const record = transformObjectLinks(object);
 
     const response = await insertRecord({
@@ -923,7 +931,7 @@ export class RestRepository<Record extends XataRecord>
       },
       queryParams: { columns },
       body: record,
-      ...fetchProps
+      ...this.#getFetchProps()
     });
 
     const schemaTables = await this.#getSchemaTables();
@@ -936,8 +944,6 @@ export class RestRepository<Record extends XataRecord>
     columns: SelectableColumn<Record>[] = ['*'],
     { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
   ) {
-    const fetchProps = await this.#getFetchProps();
-
     const record = transformObjectLinks(object);
 
     const response = await insertRecordWithID({
@@ -950,7 +956,7 @@ export class RestRepository<Record extends XataRecord>
       },
       body: record,
       queryParams: { createOnly, columns, ifVersion },
-      ...fetchProps
+      ...this.#getFetchProps()
     });
 
     const schemaTables = await this.#getSchemaTables();
@@ -961,8 +967,6 @@ export class RestRepository<Record extends XataRecord>
     objects: EditableData<Record>[],
     { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
   ) {
-    const fetchProps = await this.#getFetchProps();
-
     const chunkedOperations: TransactionOperation[][] = chunk(
       objects.map((object) => ({
         insert: { table: this.#table, record: transformObjectLinks(object), createOnly, ifVersion }
@@ -980,7 +984,7 @@ export class RestRepository<Record extends XataRecord>
           region: '{region}'
         },
         body: { operations },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       for (const result of results) {
@@ -1048,8 +1052,6 @@ export class RestRepository<Record extends XataRecord>
       // Read one record
       const id = extractId(a);
       if (id) {
-        const fetchProps = await this.#getFetchProps();
-
         try {
           const response = await getRecord({
             pathParams: {
@@ -1060,7 +1062,7 @@ export class RestRepository<Record extends XataRecord>
               recordId: id
             },
             queryParams: { columns },
-            ...fetchProps
+            ...this.#getFetchProps()
           });
 
           const schemaTables = await this.#getSchemaTables();
@@ -1286,8 +1288,6 @@ export class RestRepository<Record extends XataRecord>
     columns: SelectableColumn<Record>[] = ['*'],
     { ifVersion }: { ifVersion?: number }
   ) {
-    const fetchProps = await this.#getFetchProps();
-
     // Ensure id is not present in the update payload
     const { id: _id, ...record } = transformObjectLinks(object);
 
@@ -1302,7 +1302,7 @@ export class RestRepository<Record extends XataRecord>
         },
         queryParams: { columns, ifVersion },
         body: record,
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       const schemaTables = await this.#getSchemaTables();
@@ -1320,8 +1320,6 @@ export class RestRepository<Record extends XataRecord>
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
     { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
   ) {
-    const fetchProps = await this.#getFetchProps();
-
     const chunkedOperations: TransactionOperation[][] = chunk(
       objects.map(({ id, ...object }) => ({
         update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(object) }
@@ -1339,7 +1337,7 @@ export class RestRepository<Record extends XataRecord>
           region: '{region}'
         },
         body: { operations },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       for (const result of results) {
@@ -1433,8 +1431,6 @@ export class RestRepository<Record extends XataRecord>
     columns: SelectableColumn<Record>[] = ['*'],
     { ifVersion }: { ifVersion?: number }
   ) {
-    const fetchProps = await this.#getFetchProps();
-
     const response = await upsertRecordWithID({
       pathParams: {
         workspace: '{workspaceId}',
@@ -1445,7 +1441,7 @@ export class RestRepository<Record extends XataRecord>
       },
       queryParams: { columns, ifVersion },
       body: object as Schemas.DataInputRecord,
-      ...fetchProps
+      ...this.#getFetchProps()
     });
 
     const schemaTables = await this.#getSchemaTables();
@@ -1645,8 +1641,6 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #deleteRecord(recordId: string, columns: SelectableColumn<Record>[] = ['*']) {
-    const fetchProps = await this.#getFetchProps();
-
     try {
       const response = await deleteRecord({
         pathParams: {
@@ -1657,7 +1651,7 @@ export class RestRepository<Record extends XataRecord>
           recordId
         },
         queryParams: { columns },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       const schemaTables = await this.#getSchemaTables();
@@ -1672,8 +1666,6 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #deleteRecords(recordIds: string[]) {
-    const fetchProps = await this.#getFetchProps();
-
     const chunkedOperations: TransactionOperation[][] = chunk(
       recordIds.map((id) => ({ delete: { table: this.#table, id } })),
       BULK_OPERATION_MAX_SIZE
@@ -1687,7 +1679,7 @@ export class RestRepository<Record extends XataRecord>
           region: '{region}'
         },
         body: { operations },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
     }
   }
@@ -1705,8 +1697,6 @@ export class RestRepository<Record extends XataRecord>
     } = {}
   ) {
     return this.#trace('search', async () => {
-      const fetchProps = await this.#getFetchProps();
-
       const { records } = await searchTable({
         pathParams: {
           workspace: '{workspaceId}',
@@ -1724,7 +1714,7 @@ export class RestRepository<Record extends XataRecord>
           page: options.page,
           target: options.target as Schemas.TargetExpression
         },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       const schemaTables = await this.#getSchemaTables();
@@ -1746,8 +1736,6 @@ export class RestRepository<Record extends XataRecord>
       | undefined
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]> {
     return this.#trace('vectorSearch', async () => {
-      const fetchProps = await this.#getFetchProps();
-
       const { records } = await vectorSearchTable({
         pathParams: {
           workspace: '{workspaceId}',
@@ -1762,7 +1750,7 @@ export class RestRepository<Record extends XataRecord>
           size: options?.size,
           filter: options?.filter as Schemas.FilterExpression
         },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       const schemaTables = await this.#getSchemaTables();
@@ -1777,8 +1765,6 @@ export class RestRepository<Record extends XataRecord>
     filter?: Filter<Record>
   ) {
     return this.#trace('aggregate', async () => {
-      const fetchProps = await this.#getFetchProps();
-
       const result = await aggregateTable({
         pathParams: {
           workspace: '{workspaceId}',
@@ -1787,7 +1773,7 @@ export class RestRepository<Record extends XataRecord>
           tableName: this.#table
         },
         body: { aggs, filter: filter as Schemas.FilterExpression },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       return result as any;
@@ -1801,7 +1787,6 @@ export class RestRepository<Record extends XataRecord>
 
       const data = query.getQueryOptions();
 
-      const fetchProps = await this.#getFetchProps();
       const { meta, records: objects } = await queryTable({
         pathParams: {
           workspace: '{workspaceId}',
@@ -1817,7 +1802,7 @@ export class RestRepository<Record extends XataRecord>
           consistency: data.consistency
         },
         fetchOptions: data.fetchOptions,
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       const schemaTables = await this.#getSchemaTables();
@@ -1838,7 +1823,6 @@ export class RestRepository<Record extends XataRecord>
     return this.#trace('summarize', async () => {
       const data = query.getQueryOptions();
 
-      const fetchProps = await this.#getFetchProps();
       const result = await summarizeTable({
         pathParams: {
           workspace: '{workspaceId}',
@@ -1855,25 +1839,56 @@ export class RestRepository<Record extends XataRecord>
           summaries,
           summariesFilter
         },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       return result;
     });
   }
 
+  ask(question: string, options?: AskOptions<Record> & { onMessage?: (message: AskResult) => void }): any {
+    const params = {
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table
+      },
+      body: {
+        question,
+        ...options
+      },
+      ...this.#getFetchProps()
+    };
+
+    if (options?.onMessage) {
+      fetchSSERequest({
+        endpoint: 'dataPlane',
+        url: '/db/{dbBranchName}/tables/{tableName}/ask',
+        method: 'POST',
+        onMessage: (message: { text: string; records: string[] }) => {
+          options.onMessage?.({ answer: message.text, records: message.records });
+        },
+        ...params
+      });
+    } else {
+      return askTable(params);
+    }
+  }
+
   async #setCacheQuery(query: Query<Record, XataRecord>, meta: RecordsMetadata, records: XataRecord[]): Promise<void> {
-    await this.#cache.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
+    await this.#cache?.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
   }
 
   async #getCacheQuery<T extends XataRecord>(
     query: Query<Record, XataRecord>
   ): Promise<{ meta: RecordsMetadata; records: T[] } | null> {
     const key = `query_${this.#table}:${query.key()}`;
-    const result = await this.#cache.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
+    const result = await this.#cache?.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
     if (!result) return null;
 
-    const { cache: ttl = this.#cache.defaultQueryTTL } = query.getQueryOptions();
+    const defaultTTL = this.#cache?.defaultQueryTTL ?? -1;
+    const { cache: ttl = defaultTTL } = query.getQueryOptions();
     if (ttl < 0) return null;
 
     const hasExpired = result.date.getTime() + ttl < Date.now();
@@ -1882,11 +1897,10 @@ export class RestRepository<Record extends XataRecord>
 
   async #getSchemaTables(): Promise<Schemas.Table[]> {
     if (this.#schemaTables) return this.#schemaTables;
-    const fetchProps = await this.#getFetchProps();
 
     const { schema } = await getBranchDetails({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-      ...fetchProps
+      ...this.#getFetchProps()
     });
 
     this.#schemaTables = schema.tables;
