@@ -99,9 +99,7 @@ export type Column = {
     | 'datetime'
     | 'vector'
     | 'file[]'
-    | 'file'
-    | 'image[]'
-    | 'image';
+    | 'file';
   link?: ColumnLink;
   vector?: ColumnVector;
   notNull?: boolean;
@@ -726,11 +724,20 @@ export type ObjectValue = {
 };
 
 /**
+ * Unique file identifier
+ *
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_-~:]+
+ */
+export type FileID = string;
+
+/**
  * File name
  *
  * @maxLength 1024
- * @minLength 1
- * @pattern [0-9a-zA-Z!\-_\.\*'\(\)]+
+ * @minLength 0
+ * @pattern [0-9a-zA-Z!\-_\.\*'\(\)]*
  */
 export type FileName = string;
 
@@ -744,12 +751,11 @@ export type FileName = string;
 export type MediaType = string;
 
 /**
- * Object representing a file
- *
- * @x-go-type file.InputFile
+ * Object representing a file in an array
  */
 export type InputFileEntry = {
-  name: FileName;
+  id?: FileID;
+  name?: FileName;
   mediaType?: MediaType;
   /**
    * Base64 encoded content
@@ -775,6 +781,30 @@ export type InputFileEntry = {
 export type InputFileArray = InputFileEntry[];
 
 /**
+ * Object representing a file
+ *
+ * @x-go-type file.InputFile
+ */
+export type InputFile = {
+  name: FileName;
+  mediaType?: MediaType;
+  /**
+   * Base64 encoded content
+   *
+   * @maxLength 20971520
+   */
+  base64Content?: string;
+  /**
+   * Enable public access to the file
+   */
+  enablePublicUrl?: boolean;
+  /**
+   * Time to live for signed URLs
+   */
+  signedUrlTimeout?: number;
+};
+
+/**
  * Xata input record
  */
 export type DataInputRecord = {
@@ -788,7 +818,7 @@ export type DataInputRecord = {
     | DateTime
     | ObjectValue
     | InputFileArray
-    | InputFileEntry
+    | InputFile
     | null;
 };
 
@@ -825,6 +855,24 @@ export type RecordMeta = {
      */
     warnings?: string[];
   };
+};
+
+/**
+ * File metadata
+ */
+export type FileResponse = {
+  id?: FileID;
+  name: FileName;
+  mediaType: MediaType;
+  /**
+   * @format int64
+   */
+  size: number;
+  /**
+   * @format int64
+   */
+  version: number;
+  attributes?: Record<string, any>;
 };
 
 /**
