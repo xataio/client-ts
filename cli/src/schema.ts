@@ -16,9 +16,7 @@ export type Column = {
     | 'datetime'
     | 'vector'
     | 'file[]'
-    | 'file'
-    | 'image[]'
-    | 'image';
+    | 'file';
   unique?: boolean;
   notNull?: boolean;
   defaultValue?: string;
