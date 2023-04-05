@@ -972,7 +972,7 @@ class FilesApi {
     table,
     record,
     column,
-    fileName
+    fileId
   }: {
     workspace: Schemas.WorkspaceID;
     region: string;
@@ -981,9 +981,9 @@ class FilesApi {
     table: Schemas.TableName;
     record: Schemas.RecordID;
     column: Schemas.ColumnName;
-    fileName: string;
+    fileId: string;
   }): Promise<any> {
-    return operationsByTag.xbcellOther.getFileItem({
+    return operationsByTag.files.getFileItem({
       pathParams: {
         workspace,
         region,
@@ -991,7 +991,7 @@ class FilesApi {
         tableName: table,
         recordId: record,
         columnName: column,
-        fileName
+        fileId
       },
       ...this.extraProps
     });
@@ -1005,7 +1005,7 @@ class FilesApi {
     table,
     record,
     column,
-    fileName,
+    fileId,
     file
   }: {
     workspace: Schemas.WorkspaceID;
@@ -1015,10 +1015,10 @@ class FilesApi {
     table: Schemas.TableName;
     record: Schemas.RecordID;
     column: Schemas.ColumnName;
-    fileName: string;
+    fileId: string;
     file: any;
   }): Promise<Responses.PutFileResponse> {
-    return operationsByTag.xbcellOther.putFileItem({
+    return operationsByTag.files.putFileItem({
       pathParams: {
         workspace,
         region,
@@ -1026,7 +1026,7 @@ class FilesApi {
         tableName: table,
         recordId: record,
         columnName: column,
-        fileName
+        fileId
       },
       // @ts-ignore
       body: file,
@@ -1051,7 +1051,7 @@ class FilesApi {
     record: Schemas.RecordID;
     column: Schemas.ColumnName;
   }): Promise<any> {
-    return operationsByTag.xbcellOther.getFile({
+    return operationsByTag.files.getFile({
       pathParams: {
         workspace,
         region,
@@ -1081,9 +1081,9 @@ class FilesApi {
     table: Schemas.TableName;
     record: Schemas.RecordID;
     column: Schemas.ColumnName;
-    file: any;
+    file: Blob;
   }): Promise<Responses.PutFileResponse> {
-    return operationsByTag.xbcellOther.putFile({
+    return operationsByTag.files.putFile({
       pathParams: {
         workspace,
         region,
@@ -1092,7 +1092,6 @@ class FilesApi {
         recordId: record,
         columnName: column
       },
-      // @ts-ignore
       body: file,
       ...this.extraProps
     });

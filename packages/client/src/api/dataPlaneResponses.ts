@@ -52,19 +52,7 @@ export type RecordUpdateResponse =
       };
     };
 
-export type PutFileResponse = {
-  name: Schemas.FileName;
-  mediaType: Schemas.MediaType;
-  /**
-   * @format int64
-   */
-  size: number;
-  /**
-   * @format int64
-   */
-  version: number;
-  attributes?: Record<string, any>;
-};
+export type PutFileResponse = Schemas.FileResponse;
 
 export type RecordResponse = Schemas.XataRecord;
 

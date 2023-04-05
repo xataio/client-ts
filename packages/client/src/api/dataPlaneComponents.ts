@@ -2139,9 +2139,9 @@ export type GetFileItemPathParams = {
    */
   columnName: Schemas.ColumnName;
   /**
-   * The File name
+   * The File Identifier
    */
-  fileName: Schemas.FileName;
+  fileId: Schemas.FileID;
   workspace: string;
   region: string;
 };
@@ -2166,11 +2166,11 @@ export type GetFileItemVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Retrieve file content by file name
+ * Retrieves file content from an array by file ID
  */
 export const getFileItem = (variables: GetFileItemVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, GetFileItemError, undefined, {}, {}, GetFileItemPathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileName}',
+  dataPlaneFetch<Blob, GetFileItemError, undefined, {}, {}, GetFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileId}',
     method: 'get',
     ...variables,
     signal
@@ -2194,9 +2194,9 @@ export type PutFileItemPathParams = {
    */
   columnName: Schemas.ColumnName;
   /**
-   * The File name
+   * The File Identifier
    */
-  fileName: Schemas.FileName;
+  fileId: Schemas.FileID;
   workspace: string;
   region: string;
 };
@@ -2221,15 +2221,16 @@ export type PutFileItemError = Fetcher.ErrorWrapper<
 >;
 
 export type PutFileItemVariables = {
+  body?: Blob;
   pathParams: PutFileItemPathParams;
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Uploads the file content to the given file name
+ * Uploads the file content to an array given the file ID
  */
 export const putFileItem = (variables: PutFileItemVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Responses.PutFileResponse, PutFileItemError, undefined, {}, {}, PutFileItemPathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileName}',
+  dataPlaneFetch<Responses.PutFileResponse, PutFileItemError, Blob, {}, {}, PutFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileId}',
     method: 'put',
     ...variables,
     signal
@@ -2276,11 +2277,11 @@ export type GetFileVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Retrieve file content from a file column
+ * Retrieves the file content from a file column
  */
 export const getFile = (variables: GetFileVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, GetFileError, undefined, {}, {}, GetFilePathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}',
+  dataPlaneFetch<Blob, GetFileError, undefined, {}, {}, GetFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file',
     method: 'get',
     ...variables,
     signal
@@ -2327,6 +2328,7 @@ export type PutFileError = Fetcher.ErrorWrapper<
 >;
 
 export type PutFileVariables = {
+  body?: Blob;
   pathParams: PutFilePathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -2334,8 +2336,8 @@ export type PutFileVariables = {
  * Uploads the file content to the given file column
  */
 export const putFile = (variables: PutFileVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Responses.PutFileResponse, PutFileError, undefined, {}, {}, PutFilePathParams>({
-    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}',
+  dataPlaneFetch<Responses.PutFileResponse, PutFileError, Blob, {}, {}, PutFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file',
     method: 'put',
     ...variables,
     signal
@@ -4151,7 +4153,7 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  xbcellOther: { getFileItem, putFileItem, getFile, putFile },
+  files: { getFileItem, putFileItem, getFile, putFile },
   searchAndFilter: {
     queryTable,
     searchBranch,
