@@ -26,6 +26,6 @@
   "devDependencies": {
     "@types/babel__core": "^7.20.0",
     "@types/node": "^18.15.11",
-    "typescript": "^5.0.3"
+    "typescript": "^5.0.4"
   }
 }

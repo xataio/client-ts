@@ -15,7 +15,7 @@
     "rollup-plugin-esbuild": "^5.0.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
-    "typescript": "^5.0.3",
+    "typescript": "^5.0.4",
     "vercel": "latest",
     "wrangler": "latest"
   }
