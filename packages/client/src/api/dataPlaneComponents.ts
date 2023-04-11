@@ -2236,6 +2236,61 @@ export const putFileItem = (variables: PutFileItemVariables, signal?: AbortSigna
     signal
   });
 
+export type DeleteFileItemPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  /**
+   * The File Identifier
+   */
+  fileId: Schemas.FileID;
+  workspace: string;
+  region: string;
+};
+
+export type DeleteFileItemError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteFileItemVariables = {
+  pathParams: DeleteFileItemPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Deletes an item from an file array column given the file ID
+ */
+export const deleteFileItem = (variables: DeleteFileItemVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, DeleteFileItemError, undefined, {}, {}, DeleteFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileId}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
 export type GetFilePathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -4153,7 +4208,7 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  files: { getFileItem, putFileItem, getFile, putFile },
+  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile },
   searchAndFilter: {
     queryTable,
     searchBranch,
