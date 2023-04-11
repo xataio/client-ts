@@ -1,4 +1,4 @@
-import LRU from 'lru-cache';
+import { LRUCache as LRU } from 'lru-cache';
 import { CacheImpl } from '@xata.io/client';
 
 export type LRUCacheOptions = Partial<LRU.Options<any, any, any>>;
