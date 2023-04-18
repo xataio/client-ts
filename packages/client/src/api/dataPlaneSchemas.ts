@@ -453,7 +453,7 @@ export type Commit = {
   message?: string;
   id: string;
   parentID?: string;
-  checksum?: string;
+  checksum: string;
   mergeParentID?: string;
   createdAt: DateTime;
   operations: MigrationOp[];
@@ -489,7 +489,7 @@ export type MigrationObject = {
   message?: string;
   id: string;
   parentID?: string;
-  checksum?: string;
+  checksum: string;
   operations: MigrationOp[];
 };
 
