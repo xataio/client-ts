@@ -91,7 +91,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
 
     if (newLocalMigrations.length > 0 && newRemoteMigrations.length > 0) {
       this.log(
-        'There are new migrations on both the local and remote branches. Please run `xata rebase` to resolve the conflicts.'
+        'There are new migrations both locally and in the remote branch. Please run `xata pull -f` to overwrite local migrations.'
       );
       this.exit(0);
     }
