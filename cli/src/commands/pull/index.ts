@@ -28,8 +28,6 @@ export default class Pull extends BaseCommand<typeof Pull> {
     branch: Args.string({ description: 'The remote branch to push to', required: true })
   };
 
-  static hidden = true;
-
   async run() {
     const { args, flags } = await this.parseCommand();
 

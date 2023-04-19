@@ -32,6 +32,8 @@ export default class Diff extends BaseCommand<typeof Diff> {
       true
     );
 
+    this.info(`Diff command is experimental, use with caution`);
+
     const localMigrationFiles = await getLocalMigrationFiles();
     const schemaOperations = localMigrationFiles.flatMap((migrationFile) => migrationFile.operations);
 
