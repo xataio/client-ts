@@ -1,5 +1,6 @@
 import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
+import WorkspaceCreate from '../workspace/create.js';
 
 export default class WorkspaceCreate extends BaseCommand<typeof WorkspaceCreate> {
   static description = 'Create a workspace';
@@ -16,20 +17,12 @@ export default class WorkspaceCreate extends BaseCommand<typeof WorkspaceCreate>
 
   static enableJsonFlag = true;
 
+  static hidden = true;
+
   async run(): Promise<void | unknown> {
-    const { args } = await this.parseCommand();
-    const { workspace } = args;
+    this.warn('This command is deprecated. Please use `xata workspace create` instead.');
 
-    if (!workspace) {
-      return this.error('Please, specify a workspace name');
-    }
-
-    const xata = await this.getXataClient();
-
-    const result = await xata.api.workspaces.createWorkspace({ data: { name: workspace } });
-
-    if (this.jsonEnabled()) return result;
-
-    this.success(`Workspace ${result.id} successfully created`);
+    const { argv } = await this.parseCommand();
+    return await WorkspaceCreate.run([...argv]);
   }
 }
