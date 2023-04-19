@@ -1,4 +1,5 @@
 import { BaseCommand } from '../../base.js';
+import BranchList from '../branch/list.js';
 
 export default class BranchList extends BaseCommand<typeof BranchList> {
   static description = 'List branches';
@@ -14,18 +15,12 @@ export default class BranchList extends BaseCommand<typeof BranchList> {
 
   static enableJsonFlag = true;
 
+  static hidden = true;
+
   async run(): Promise<any> {
-    const { flags } = await this.parseCommand();
-    const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
+    this.warn('This command is deprecated. Please use `xata branch list` instead.');
 
-    const xata = await this.getXataClient();
-    const { branches } = await xata.api.branches.getBranchList({ workspace, region, database });
-
-    if (this.jsonEnabled()) return branches;
-
-    this.printTable(
-      ['Name', 'Created at'],
-      branches.map((b) => [b.name, this.formatDate(b.createdAt)])
-    );
+    const { argv } = await this.parseCommand();
+    return BranchList.run([...argv]);
   }
 }
