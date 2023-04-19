@@ -1,5 +1,6 @@
 import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
+import BranchDelete from '../branch/delete.js';
 
 export default class BranchesDelete extends BaseCommand<typeof BranchesDelete> {
   static description = 'Delete a branch';
@@ -18,29 +19,12 @@ export default class BranchesDelete extends BaseCommand<typeof BranchesDelete> {
 
   static enableJsonFlag = true;
 
+  static hidden = true;
+
   async run(): Promise<void | unknown> {
-    const { args, flags } = await this.parseCommand();
-    const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
-    const branch = args.branch;
+    this.warn('This command is deprecated. Please use `xata branch delete` instead.');
 
-    const xata = await this.getXataClient();
-
-    const { confirm } = await this.prompt(
-      {
-        type: 'text',
-        name: 'confirm',
-        message: `Are you sure you want to delete the branch ${database}:${branch} in the ${workspace} workspace? Please type ${branch} to confirm`,
-        initial: false
-      },
-      flags.force ? branch : undefined
-    );
-    if (!confirm) return this.exit(1);
-    if (confirm !== branch) return this.error('The branch name did not match');
-
-    await xata.api.branches.deleteBranch({ workspace, region, database, branch });
-
-    if (this.jsonEnabled()) return {};
-
-    this.success(`Branch ${database}:${branch} in the ${workspace} workspace successfully deleted`);
+    const { argv } = await this.parseCommand();
+    return await BranchDelete.run([...argv]);
   }
 }

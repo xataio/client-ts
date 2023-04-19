@@ -21,6 +21,6 @@ export default class BranchesList extends BaseCommand<typeof BranchesList> {
     this.warn('This command is deprecated. Please use `xata branch list` instead.');
 
     const { argv } = await this.parseCommand();
-    return BranchList.run([...argv]);
+    return await BranchList.run([...argv]);
   }
 }
