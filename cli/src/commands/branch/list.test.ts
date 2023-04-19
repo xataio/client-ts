@@ -2,7 +2,7 @@ import { Config } from '@oclif/core';
 import fetch from 'node-fetch';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
-import BranchesList from './list.js';
+import BranchList from './list.js';
 
 vi.mock('node-fetch');
 
@@ -28,7 +28,7 @@ describe('branches list', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesList([], config);
+    const command = new BranchList([], config);
     command.projectConfig = {
       databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test'
     };
@@ -55,14 +55,14 @@ describe('branches list', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesList([], config);
+    const command = new BranchList([], config);
     command.projectConfig = {
       databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test'
     };
     command.locale = 'en-US';
     command.timeZone = 'UTC';
 
-    expect(BranchesList.enableJsonFlag).toBe(true);
+    expect(BranchList.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
 
     const printTable = vi.spyOn(command, 'printTable');
