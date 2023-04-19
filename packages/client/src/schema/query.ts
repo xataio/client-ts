@@ -5,14 +5,13 @@ import { Dictionary, OmitBy, RequiredBy, SingleOrArray } from '../util/types';
 import { Filter } from './filters';
 import {
   CursorNavigationOptions,
-  isCursorPaginationOptions,
   OffsetNavigationOptions,
-  Page,
-  Paginable,
-  PaginationQueryMeta,
   PAGINATION_DEFAULT_SIZE,
   PAGINATION_MAX_SIZE,
-  RecordArray
+  Page,
+  Paginable,
+  RecordArray,
+  isCursorPaginationOptions
 } from './pagination';
 import { XataRecord } from './record';
 import { RestRepository } from './repository';
