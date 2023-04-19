@@ -16,8 +16,6 @@ export default class Branch extends BaseCommand<typeof Branch> {
     base: Args.string({ description: 'The branch to base the new branch on', required: false })
   };
 
-  static hidden = true;
-
   async run() {
     const { args, flags } = await this.parseCommand();
 

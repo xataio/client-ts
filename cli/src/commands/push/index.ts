@@ -22,8 +22,6 @@ export default class Push extends BaseCommand<typeof Push> {
     branch: Args.string({ description: 'The remote branch to push to', required: true })
   };
 
-  static hidden = true;
-
   async run() {
     const { args, flags } = await this.parseCommand();
 
