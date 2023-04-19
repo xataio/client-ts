@@ -386,9 +386,13 @@ export type RecordsMetadata = {
      */
     cursor: string;
     /**
-     * true if more records can be fetch
+     * true if more records can be fetched
      */
     more: boolean;
+    /**
+     * the number of records returned per page
+     */
+    size: number;
   };
 };
 
