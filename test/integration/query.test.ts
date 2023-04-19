@@ -335,6 +335,10 @@ describe('integration tests', () => {
     expect(page2.meta.page.more).toBe(false);
     expect(page3.meta.page.more).toBe(false);
 
+    expect(page1.meta.page.size).toBe(size);
+    expect(page2.meta.page.size).toBe(size);
+    expect(page3.meta.page.size).toBe(size);
+
     expect(startPage.records.length).toEqual(page1.records.length);
 
     // In cursor based pagination, the last page is the last N records
