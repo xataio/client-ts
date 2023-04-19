@@ -8,11 +8,18 @@ const githubRegex = /^https?:\/\/(?:www\.)?github\.com\/(?<org>[^/]+)\//;
 
 export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
   const {
+    DEBUG: debug,
     CONTEXT: context,
     BRANCH: branch,
     XATA_PREVIEW: preview,
-    REPOSITORY_URL: repoUrl
+    REPOSITORY_URL: repoUrl,
+    XATA_REPOSITORY_URL: xataRepoUrl
   } = netlifyConfig.build.environment;
+
+  if (debug === 'true') {
+    console.log('Xata plugin debug mode enabled');
+    console.log(netlifyConfig.build.environment);
+  }
 
   if (context !== 'deploy-preview') {
     console.log('Not a deploy preview, skipping Xata plugin');
@@ -29,7 +36,7 @@ export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
     return;
   }
 
-  const org = repoUrl?.match(githubRegex)?.groups?.org;
+  const org = xataRepoUrl?.match(githubRegex)?.groups?.org ?? repoUrl?.match(githubRegex)?.groups?.org;
   if (!org) {
     console.log('No GitHub owner found, skipping Xata plugin');
     return;
