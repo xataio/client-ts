@@ -8,7 +8,7 @@ const githubRegex = /^https?:\/\/(?:www\.)?github\.com\/(?<org>[^/]+)\//;
 
 export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
   const {
-    DEBUG: debug,
+    DEBUG: debug = 'true',
     CONTEXT: context,
     BRANCH: branch,
     XATA_PREVIEW: preview,
