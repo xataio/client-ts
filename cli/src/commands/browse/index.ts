@@ -18,8 +18,8 @@ export default class Browse extends BaseCommand<typeof Browse> {
     const { flags } = await this.parseCommand();
     const base = (await this.getProfile())?.web || 'https://app.xata.io';
 
-    const { workspace, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
 
-    await open(`${base}/workspaces/${workspace}/dbs/${database}/branches/${branch}`);
+    await open(`${base}/workspaces/${workspace}/dbs/${database}:${region}/branches/${branch}`);
   }
 }
