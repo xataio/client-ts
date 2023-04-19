@@ -25,7 +25,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
   };
 
   static args = {
-    branch: Args.string({ description: 'The remote branch to push to', required: true })
+    branch: Args.string({ description: 'The remote branch to pull from', required: true })
   };
 
   async run() {
