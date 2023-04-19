@@ -75,7 +75,7 @@ describe('branches list', () => {
       expect(result).toBeUndefined();
     }
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toEqual('https://test-1234.eu-west-1.xata.sh/dbs/test');
     expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
 
