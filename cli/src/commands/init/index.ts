@@ -278,8 +278,9 @@ export default class Init extends BaseCommand<typeof Init> {
     }
 
     if (content) content += '\n\n';
-    content += '# API key used by the CLI and the SDK\n';
+    content += '# [Xata] Configuration used by the CLI and the SDK\n';
     content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
+    content += `XATA_BRANCH=main\n`;
     content += `XATA_API_KEY=${apiKey}\n`;
     if (profile.host !== 'production') content += `XATA_API_PROVIDER=${buildProviderString(profile.host)}\n`;
     await writeFile(envFile, content);
