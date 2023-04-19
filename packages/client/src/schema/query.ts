@@ -53,7 +53,6 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   #data: QueryOptions<Record> = { filter: {} };
 
   // Implements pagination
-  readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true } };
   readonly records: RecordArray<Result> = new RecordArray<Result>(this, []);
 
   constructor(
@@ -535,7 +534,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns Boolean indicating if there is a next page
    */
   hasNextPage(): boolean {
-    return this.meta.page.more;
+    return true;
   }
 }
 
