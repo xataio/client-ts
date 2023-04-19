@@ -1,4 +1,4 @@
-import { Args } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
 export default class Branch extends BaseCommand<typeof Branch> {
@@ -8,7 +8,11 @@ export default class Branch extends BaseCommand<typeof Branch> {
 
   static flags = {
     ...this.commonFlags,
-    ...this.databaseURLFlag
+    ...this.databaseURLFlag,
+    delete: Flags.string({
+      description: 'Delete a remote branch',
+      char: 'D'
+    })
   };
 
   static args = {
@@ -29,6 +33,25 @@ export default class Branch extends BaseCommand<typeof Branch> {
       region,
       database
     });
+
+    if (flags.delete && !args.branch && !args.base) {
+      const { confirm } = await this.prompt({
+        type: 'confirm',
+        name: 'confirm',
+        message: `Do you want to delete ${flags.delete} branch?`,
+        initial: false
+      });
+      if (!confirm) return;
+
+      await xata.api.branches.deleteBranch({
+        workspace,
+        region,
+        database,
+        branch: flags.delete
+      });
+    } else if (flags.delete) {
+      this.error(`Unable to delete branch ${flags.delete}, more than 1 parameter parsed`);
+    }
 
     if (args.branch) {
       const branch = branches.find((branch) => branch.name === args.branch);
