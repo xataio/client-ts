@@ -1,20 +1,18 @@
 import { Schemas } from '@xata.io/client';
-import { mkdir, readdir, readFile, rm, writeFile } from 'fs/promises';
+import { mkdir, readdir, rm, writeFile } from 'fs/promises';
 import path from 'path';
 import { migrationFile } from './schema.js';
+import { safeJSONParse, safeReadFile } from '../utils/files.js';
 
 const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
 const ledgerFile = path.join(migrationsDir, '.ledger');
 
 async function getLedger() {
-  try {
-    const ledger = await readFile(ledgerFile, 'utf8');
+  const ledger = await safeReadFile(ledgerFile, 'utf8');
+  if (!ledger) return [];
 
-    // Split by newlines and filter out empty lines
-    return ledger.split('\n').filter((item) => item.trim() !== '');
-  } catch (e) {
-    return [];
-  }
+  // Split by newlines and filter out empty lines
+  return ledger.split('\n').filter((item) => item.trim() !== '');
 }
 
 async function readMigrationsDir() {
@@ -53,8 +51,8 @@ export async function getLocalMigrationFiles(): Promise<Schemas.MigrationObject[
     // Ignore empty lines in ledger file
     if (entry === '') continue;
     const filePath = path.join(migrationsDir, `${entry}.json`);
-    const fileContents = await readFile(filePath, 'utf8');
-    const result = migrationFile.safeParse(JSON.parse(fileContents));
+    const fileContents = await safeReadFile(filePath);
+    const result = migrationFile.safeParse(safeJSONParse(fileContents));
     if (!result.success) {
       throw new Error(`Failed to parse migration file ${filePath}: ${result.error}`);
     }
