@@ -1,5 +1,5 @@
 ---
-"@xata.io/cli": minor
+'@xata.io/cli': minor
 ---
 
-Deprecate branches and workspaces commands in plural
+Remove branches and workspaces commands in plural
