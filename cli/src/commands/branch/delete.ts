@@ -1,7 +1,7 @@
 import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class BranchesDelete extends BaseCommand<typeof BranchesDelete> {
+export default class BranchDelete extends BaseCommand<typeof BranchDelete> {
   static description = 'Delete a branch';
 
   static examples = [];

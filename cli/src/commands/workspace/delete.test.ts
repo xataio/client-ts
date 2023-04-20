@@ -2,7 +2,7 @@ import { Config } from '@oclif/core';
 import fetch from 'node-fetch';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
-import WorkspacesDelete from './delete.js';
+import WorkspaceDelete from './delete.js';
 import prompts from 'prompts';
 
 vi.mock('node-fetch');
@@ -24,7 +24,7 @@ const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 describe('workspaces delete', () => {
   test('exists if the user does not confirm', async () => {
     const config = await Config.load();
-    const list = new WorkspacesDelete(['--workspace', 'test-1234'], config);
+    const list = new WorkspaceDelete(['--workspace', 'test-1234'], config);
 
     promptsMock.mockReturnValue({});
 
@@ -33,7 +33,7 @@ describe('workspaces delete', () => {
 
   test('exists if the user does not enter the workspace id correctly', async () => {
     const config = await Config.load();
-    const list = new WorkspacesDelete(['--workspace', 'test-1234'], config);
+    const list = new WorkspaceDelete(['--workspace', 'test-1234'], config);
 
     promptsMock.mockReturnValue({ confirm: 'nope' });
 
@@ -50,7 +50,7 @@ describe('workspaces delete', () => {
     promptsMock.mockReturnValue({ confirm: 'test-1234' });
 
     const config = await Config.load();
-    const list = new WorkspacesDelete(['--workspace', 'test-1234'], config);
+    const list = new WorkspaceDelete(['--workspace', 'test-1234'], config);
 
     await expect(list.run()).rejects.toThrow('Something went wrong');
 
@@ -67,9 +67,9 @@ describe('workspaces delete', () => {
     promptsMock.mockReturnValue({ confirm: 'test-1234' });
 
     const config = await Config.load();
-    const list = new WorkspacesDelete(['--workspace', 'test-1234'], config);
+    const list = new WorkspaceDelete(['--workspace', 'test-1234'], config);
 
-    expect(WorkspacesDelete.enableJsonFlag).toBe(true);
+    expect(WorkspaceDelete.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);
 
     const log = vi.spyOn(list, 'log');
