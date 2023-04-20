@@ -27,6 +27,6 @@ export default class BranchesCreate extends BaseCommand<typeof BranchCreate> {
     this.warn('This command is deprecated. Please use `xata branch create` instead.');
 
     const { argv } = await this.parseCommand();
-    return BranchCreate.run([...argv]);
+    return await BranchCreate.run([...argv]);
   }
 }
