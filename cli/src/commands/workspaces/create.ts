@@ -2,7 +2,7 @@ import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import WorkspaceCreate from '../workspace/create.js';
 
-export default class WorkspacesCreate extends BaseCommand<typeof WorkspacesCreate> {
+export default class WorkspacesCreate extends BaseCommand<typeof WorkspaceCreate> {
   static description = 'Create a workspace';
 
   static examples = [];

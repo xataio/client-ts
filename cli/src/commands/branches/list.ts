@@ -1,7 +1,7 @@
 import { BaseCommand } from '../../base.js';
 import BranchList from '../branch/list.js';
 
-export default class BranchesList extends BaseCommand<typeof BranchesList> {
+export default class BranchesList extends BaseCommand<typeof BranchList> {
   static description = 'List branches';
 
   static examples = [];

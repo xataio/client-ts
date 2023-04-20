@@ -2,7 +2,7 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import BranchCreate from '../branch/create.js';
 
-export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
+export default class BranchesCreate extends BaseCommand<typeof BranchCreate> {
   static description = 'Create a branch';
 
   static examples = [];
