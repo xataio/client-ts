@@ -33,6 +33,8 @@ export default class Rebase extends BaseCommand<typeof Rebase> {
       true
     );
 
+    this.info(`Rebase command is experimental, use with caution`);
+
     const { logs } = await xata.api.migrations.getBranchSchemaHistory({
       workspace,
       region,

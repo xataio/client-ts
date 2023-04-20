@@ -5,13 +5,13 @@ import chalk from 'chalk';
 import enquirer from 'enquirer';
 import { getEditor } from 'env-editor';
 import { readFile, writeFile } from 'fs/promises';
-import compact from 'lodash.compact';
 import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
 import { parseSchemaFile } from '../../schema.js';
-import { reportBugURL, isValidEmail, isNil } from '../../utils.js';
+import { isNil, isValidEmail, reportBugURL } from '../../utils.js';
 import Codegen from '../codegen/index.js';
+import Pull from '../pull/index.js';
 
 // The enquirer library has type definitions but they are very poor
 const { Select, Snippet, Confirm } = enquirer as any;
@@ -194,6 +194,9 @@ Beware that this can lead to ${chalk.bold(
     }
 
     await this.deploySchema(this.workspace, this.region, this.database, this.branch, result.data);
+
+    // Run pull to retrieve remote migrations
+    await Pull.run([this.branch]);
   }
 
   async showInteractiveEditing(branchDetails: Schemas.DBBranch) {
