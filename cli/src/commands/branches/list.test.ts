@@ -86,7 +86,6 @@ describe('branches list', () => {
         [
           "Name",
           "Created at",
-          "Git branch",
         ]
       `);
     }
