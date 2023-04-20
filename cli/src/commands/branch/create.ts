@@ -1,6 +1,5 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
-import BranchCreate from '../branch/create.js';
 
 export default class BranchCreate extends BaseCommand<typeof BranchCreate> {
   static description = 'Create a branch';
@@ -21,12 +20,22 @@ export default class BranchCreate extends BaseCommand<typeof BranchCreate> {
 
   static enableJsonFlag = true;
 
-  static hidden = true;
-
   async run(): Promise<void | unknown> {
-    this.warn('This command is deprecated. Please use `xata branch create` instead.');
+    const { args, flags } = await this.parseCommand();
+    const { branch } = args;
 
-    const { argv } = await this.parseCommand();
-    return BranchCreate.run([...argv]);
+    const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
+
+    const xata = await this.getXataClient();
+
+    const { from } = flags;
+
+    const result = await xata.api.branches.createBranch({ workspace, region, database, branch, from });
+
+    if (this.jsonEnabled()) return result;
+
+    const message = `Branch ${branch} successfully created`;
+
+    this.success(message);
   }
 }
