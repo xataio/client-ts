@@ -1511,6 +1511,18 @@ export type PushBranchMigrationsVariables = {
   pathParams: PushBranchMigrationsPathParams;
 } & DataPlaneFetcherExtraProps;
 
+/**
+ * The `schema/push` API accepts a list of migrations to be applied to the
+ * current branch. A list of applicable migrations can be fetched using
+ * the `schema/history` API from another branch or database.
+ *
+ * The most recent migration must be part of the list or referenced (via
+ * `parentID`) by the first migration in the list of migrations to be pushed.
+ *
+ * Each migration in the list has an `id`, `parentID`, and `checksum`. The
+ * checksum for migrations are generated and verified by xata. The
+ * operation fails if any migration in the list has an invalid checksum.
+ */
 export const pushBranchMigrations = (variables: PushBranchMigrationsVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
     Responses.SchemaUpdateResponse,
@@ -3484,23 +3496,7 @@ export type QueryTableVariables = {
  *
  * ### Pagination
  *
- * We offer cursor pagination and offset pagination. For queries that are expected to return more than 1000 records,
- * cursor pagination is needed in order to retrieve all of their results. The offset pagination method is limited to 1000 records.
- *
- * Example of size + offset pagination:
- *
- * ```json
- * POST /db/demo:main/tables/table/query
- * {
- *   "page": {
- *     "size": 100,
- *     "offset": 200
- *   }
- * }
- * ```
- *
- * The `page.size` parameter represents the maximum number of records returned by this query. It has a default value of 20 and a maximum value of 200.
- * The `page.offset` parameter represents the number of matching records to skip. It has a default value of 0 and a maximum value of 800.
+ * We offer cursor pagination and offset pagination. The cursor pagination method can be used for sequential scrolling with unrestricted depth. The offset pagination can be used to skip pages and is limited to 1000 records.
  *
  * Example of cursor pagination:
  *
@@ -3553,6 +3549,34 @@ export type QueryTableVariables = {
  * encoded with the cursor. The pagination request will be invalid if
  * `filter` or `sort` is set. The columns returned and page size can be changed
  * anytime by passing the `columns` or `page.size` settings to the next query.
+ *
+ * In the following example of size + offset pagination we retrieve the third page of up to 100 results:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "page": {
+ *     "size": 100,
+ *     "offset": 200
+ *   }
+ * }
+ * ```
+ *
+ * The `page.size` parameter represents the maximum number of records returned by this query. It has a default value of 20 and a maximum value of 200.
+ * The `page.offset` parameter represents the number of matching records to skip. It has a default value of 0 and a maximum value of 800.
+ *
+ * Cursor pagination also works in combination with offset pagination. For example, starting from a specific cursor position, using a page size of 200 and an offset of 800, you can skip up to 5 pages of 200 records forwards or backwards from the cursor's position:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "page": {
+ *     "size": 200,
+ *     "offset": 800,
+ *     "after": "fMoxCsIwFIDh3WP8c4amDai5hO5SJCRNfaVSeC9b6d1FD"
+ *   }
+ * }
+ * ```
  *
  * **Special cursors:**
  *

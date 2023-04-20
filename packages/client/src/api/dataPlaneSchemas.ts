@@ -386,9 +386,13 @@ export type RecordsMetadata = {
      */
     cursor: string;
     /**
-     * true if more records can be fetch
+     * true if more records can be fetched
      */
     more: boolean;
+    /**
+     * the number of records returned per page
+     */
+    size: number;
   };
 };
 
@@ -453,7 +457,7 @@ export type Commit = {
   message?: string;
   id: string;
   parentID?: string;
-  checksum?: string;
+  checksum: string;
   mergeParentID?: string;
   createdAt: DateTime;
   operations: MigrationOp[];
@@ -489,7 +493,7 @@ export type MigrationObject = {
   message?: string;
   id: string;
   parentID?: string;
-  checksum?: string;
+  checksum: string;
   operations: MigrationOp[];
 };
 

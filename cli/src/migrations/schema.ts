@@ -44,6 +44,6 @@ export const migrationFile = z.object({
   title: z.string().optional(),
   message: z.string().optional(),
   parentID: z.string().optional(),
-  checksum: z.string().optional(),
+  checksum: z.string(),
   operations: z.array(migrationOperation)
 }) satisfies z.ZodType<Schemas.MigrationObject>;
