@@ -2,7 +2,7 @@ import { Config } from '@oclif/core';
 import fetch from 'node-fetch';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
-import WorkspacesList from './list.js';
+import WorkspaceList from './list.js';
 
 vi.mock('node-fetch');
 
@@ -28,7 +28,7 @@ describe('workspaces list', () => {
     });
 
     const config = await Config.load();
-    const list = new WorkspacesList([], config);
+    const list = new WorkspaceList([], config);
 
     await expect(list.run()).rejects.toThrow('Something went wrong');
 
@@ -52,9 +52,9 @@ describe('workspaces list', () => {
     });
 
     const config = await Config.load();
-    const list = new WorkspacesList([], config);
+    const list = new WorkspaceList([], config);
 
-    expect(WorkspacesList.enableJsonFlag).toBe(true);
+    expect(WorkspaceList.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);
 
     const printTable = vi.spyOn(list, 'printTable');

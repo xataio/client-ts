@@ -2,7 +2,7 @@ import { Config } from '@oclif/core';
 import fetch from 'node-fetch';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
-import BranchesDelete from './delete.js';
+import BranchDelete from './delete.js';
 import prompts from 'prompts';
 
 vi.mock('node-fetch');
@@ -24,7 +24,7 @@ const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 describe('branches delete', () => {
   test('exists if the user does not confirm', async () => {
     const config = await Config.load();
-    const command = new BranchesDelete(['featureA'], config);
+    const command = new BranchDelete(['featureA'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     promptsMock.mockReturnValue({});
@@ -34,7 +34,7 @@ describe('branches delete', () => {
 
   test('exists if the user did not enter the branch name correctly', async () => {
     const config = await Config.load();
-    const command = new BranchesDelete(['featureA'], config);
+    const command = new BranchDelete(['featureA'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     promptsMock.mockReturnValue({ confirm: 'nope' });
@@ -52,7 +52,7 @@ describe('branches delete', () => {
     promptsMock.mockReturnValue({ confirm: 'featureA' });
 
     const config = await Config.load();
-    const command = new BranchesDelete(['featureA'], config);
+    const command = new BranchDelete(['featureA'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
@@ -70,10 +70,10 @@ describe('branches delete', () => {
     promptsMock.mockReturnValue({ confirm: 'featureA' });
 
     const config = await Config.load();
-    const command = new BranchesDelete(['featureA'], config);
+    const command = new BranchDelete(['featureA'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
-    expect(BranchesDelete.enableJsonFlag).toBe(true);
+    expect(BranchDelete.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
 
     const log = vi.spyOn(command, 'log');

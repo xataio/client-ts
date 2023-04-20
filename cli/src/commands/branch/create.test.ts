@@ -2,7 +2,7 @@ import { Config } from '@oclif/core';
 import fetch from 'node-fetch';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
-import BranchesCreate from './create.js';
+import BranchCreate from './create.js';
 
 vi.mock('node-fetch');
 
@@ -21,7 +21,7 @@ const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 describe('branches create', () => {
   test('fails if the branch name is not provided', async () => {
     const config = await Config.load();
-    const command = new BranchesCreate([], config);
+    const command = new BranchCreate([], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(`
@@ -40,7 +40,7 @@ describe('branches create', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesCreate(['featureA'], config);
+    const command = new BranchCreate(['featureA'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
@@ -57,10 +57,10 @@ describe('branches create', () => {
     });
 
     const config = await Config.load();
-    const command = new BranchesCreate(['featureA'], config);
+    const command = new BranchCreate(['featureA'], config);
     command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
 
-    expect(BranchesCreate.enableJsonFlag).toBe(true);
+    expect(BranchCreate.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
 
     const log = vi.spyOn(command, 'log');
