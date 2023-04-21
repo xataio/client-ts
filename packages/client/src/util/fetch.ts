@@ -81,7 +81,11 @@ export class ApiRequestPool {
         }
 
         return response;
-      } catch (error) {
+      } catch (error: any) {
+        if (error.code === 'ECONNRESET') {
+          console.error('Connection was reset by server');
+        }
+
         console.error(`A request to Xata failed with error: ${error}`);
         throw error;
       }
@@ -93,6 +97,12 @@ export class ApiRequestPool {
       }
 
       return await runRequest();
+    }).catch((error: any) => {
+      if (isInternalDebug) {
+        console.log(`[XATA] [${new Date().toISOString()}] Request with error: ${error}`);
+      }
+
+      throw error;
     });
   }
 
