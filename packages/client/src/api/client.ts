@@ -4,7 +4,7 @@ import { FetchImpl, getFetchImplementation } from '../util/fetch';
 import { generateUUID } from '../util/uuid';
 import type * as Components from './components';
 import type * as Types from './components';
-import { deleteFileItem, operationsByTag } from './components';
+import { operationsByTag } from './components';
 import type { FetcherExtraProps } from './fetcher';
 import { getHostUrl, HostProvider } from './providers';
 import type * as Responses from './responses';
