@@ -59,7 +59,7 @@ export class ApiRequestPool {
     return this.#fetch;
   }
 
-  request(url: string, options?: RequestInit): Promise<Response> {
+  async request(url: string, options?: RequestInit): Promise<Response> {
     const id = this.total++;
     const start = new Date();
     const fetch = this.getFetch();
@@ -91,18 +91,12 @@ export class ApiRequestPool {
       }
     };
 
-    return this.#enqueue(async () => {
+    return await this.#enqueue(async () => {
       if (isInternalDebug) {
         console.log(`[XATA] [${new Date().toISOString()}] Request ${id} to ${url}`);
       }
 
       return await runRequest();
-    }).catch((error: any) => {
-      if (isInternalDebug) {
-        console.log(`[XATA] [${new Date().toISOString()}] Request with error: ${error}`);
-      }
-
-      throw error;
     });
   }
 
