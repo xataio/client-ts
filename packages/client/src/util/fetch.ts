@@ -1,5 +1,7 @@
 import { parseNumber, timeout } from './lang';
 
+const isInternalDebug = process.env.XATA_INTERNAL_DEBUG === 'true';
+
 export type RequestInit = { body?: string; headers?: Record<string, string>; method?: string; signal?: any };
 export type Response = {
   ok: boolean;
@@ -60,24 +62,33 @@ export class ApiRequestPool {
     const fetch = this.getFetch();
 
     const runRequest = async (stalled = false): Promise<Response> => {
-      const response = await fetch(url, options);
+      try {
+        const response = await fetch(url, options);
 
-      if (response.status === 429) {
-        const rateLimitReset = parseNumber(response.headers?.get('x-ratelimit-reset')) ?? 1;
+        if (response.status === 429) {
+          const rateLimitReset = parseNumber(response.headers?.get('x-ratelimit-reset')) ?? 1;
 
-        await timeout(rateLimitReset * 1000);
-        return await runRequest(true);
+          await timeout(rateLimitReset * 1000);
+          return await runRequest(true);
+        }
+
+        if (stalled) {
+          const stalledTime = new Date().getTime() - start.getTime();
+          console.warn(`A request to Xata hit your workspace limits, was retried and stalled for ${stalledTime}ms`);
+        }
+
+        return response;
+      } catch (error) {
+        console.error(`A request to Xata failed with error: ${error}`);
+        throw error;
       }
-
-      if (stalled) {
-        const stalledTime = new Date().getTime() - start.getTime();
-        console.warn(`A request to Xata hit your workspace limits, was retried and stalled for ${stalledTime}ms`);
-      }
-
-      return response;
     };
 
     return this.#enqueue(async () => {
+      if (isInternalDebug) {
+        console.log(`[XATA] Request to ${url}`);
+      }
+
       return await runRequest();
     });
   }
