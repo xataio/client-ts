@@ -36,6 +36,7 @@ export class ApiRequestPool {
 
   running: number;
   started: number;
+  total: number;
 
   constructor(concurrency = 10) {
     this.#queue = [];
@@ -43,6 +44,7 @@ export class ApiRequestPool {
 
     this.running = 0;
     this.started = 0;
+    this.total = 0;
   }
 
   setFetch(fetch: FetchImpl) {
@@ -58,6 +60,7 @@ export class ApiRequestPool {
   }
 
   request(url: string, options?: RequestInit): Promise<Response> {
+    const id = this.total++;
     const start = new Date();
     const fetch = this.getFetch();
 
@@ -86,7 +89,7 @@ export class ApiRequestPool {
 
     return this.#enqueue(async () => {
       if (isInternalDebug) {
-        console.log(`[XATA] Request to ${url}`);
+        console.log(`[XATA] [${new Date().toISOString()}] Request ${id} to ${url}`);
       }
 
       return await runRequest();
