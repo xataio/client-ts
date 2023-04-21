@@ -1,7 +1,8 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
+import WorkspaceDelete from '../workspace/delete.js';
 
-export default class WorkspacesDelete extends BaseCommand<typeof WorkspacesDelete> {
+export default class WorkspacesDelete extends BaseCommand<typeof WorkspaceDelete> {
   static description = 'Delete a workspace';
 
   static examples = [];
@@ -18,27 +19,12 @@ export default class WorkspacesDelete extends BaseCommand<typeof WorkspacesDelet
 
   static enableJsonFlag = true;
 
+  static hidden = true;
+
   async run(): Promise<void | unknown> {
-    const { flags } = await this.parseCommand();
-    const workspace = flags.workspace || (await this.getWorkspace());
+    this.warn('This command is deprecated. Please use `xata workspace delete` instead.');
 
-    const xata = await this.getXataClient();
-
-    const { confirm } = await this.prompt(
-      {
-        type: 'text',
-        name: 'confirm',
-        message: `Are you sure you want to delete the ${workspace} workspace? Please type ${workspace} to confirm`
-      },
-      flags.force ? workspace : undefined
-    );
-    if (!confirm) return this.exit(1);
-    if (confirm !== workspace) return this.error('The workspace name did not match');
-
-    await xata.api.workspaces.deleteWorkspace({ workspace });
-
-    if (this.jsonEnabled()) return {};
-
-    this.success(`Workspace ${workspace} successfully deleted`);
+    const { argv } = await this.parseCommand();
+    return await WorkspaceDelete.run([...argv]);
   }
 }

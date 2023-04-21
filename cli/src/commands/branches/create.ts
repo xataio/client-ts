@@ -1,8 +1,8 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
-import { createBranch, currentGitBranch, defaultGitBranch, isGitInstalled, isWorkingDirClean } from '../../git.js';
+import BranchCreate from '../branch/create.js';
 
-export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
+export default class BranchesCreate extends BaseCommand<typeof BranchCreate> {
   static description = 'Create a branch';
 
   static examples = [];
@@ -12,9 +12,6 @@ export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
     ...this.databaseURLFlag,
     from: Flags.string({
       description: 'Branch name to branch off from'
-    }),
-    'no-git': Flags.boolean({
-      description: 'Disable git integration'
     })
   };
 
@@ -24,58 +21,12 @@ export default class BranchesCreate extends BaseCommand<typeof BranchesCreate> {
 
   static enableJsonFlag = true;
 
+  static hidden = true;
+
   async run(): Promise<void | unknown> {
-    const { args, flags } = await this.parseCommand();
-    const { branch } = args;
+    this.warn('This command is deprecated. Please use `xata branch create` instead.');
 
-    const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
-
-    const xata = await this.getXataClient();
-
-    const { 'no-git': noGit, from } = flags;
-    const useGit = !noGit;
-
-    if (useGit) {
-      if (!isGitInstalled()) {
-        this.error(
-          'Git cannot be found. Please install it or use the --no-git flag to disable integrating xata branches with git branches.'
-        );
-      }
-      try {
-        if (!isWorkingDirClean()) {
-          this.error(
-            'The working directory has uncommited changes. Please commit or stash them before creating a branch. Or use the --no-git flag to disable integrating xata branches with git branches.'
-          );
-        }
-
-        const currentBranch = currentGitBranch();
-        if (currentBranch !== branch) {
-          const { branch: gitBase } = from
-            ? await xata.api.branches.resolveBranch({ workspace, region, database, gitBranch: from })
-            : { branch: defaultGitBranch() };
-
-          createBranch(branch, gitBase);
-        }
-      } catch (err) {
-        if (err instanceof Error && err.message.includes('not a git repository')) {
-          this.error(
-            'The working directory is not under git version control. Please initialize or clone a git repository or use the --no-git flag to disable integrating xata branches with git branches.'
-          );
-        } else {
-          throw err;
-        }
-      }
-    }
-
-    const result = await xata.api.branches.createBranch({ workspace, region, database, branch, from });
-
-    if (this.jsonEnabled()) return result;
-
-    let message = `Branch ${branch} successfully created`;
-    if (useGit) {
-      message = `${message}. A new git branch with the same name has been created and is your current branch.`;
-    }
-
-    this.success(message);
+    const { argv } = await this.parseCommand();
+    return await BranchCreate.run([...argv]);
   }
 }

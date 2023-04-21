@@ -22,8 +22,6 @@ export default class Push extends BaseCommand<typeof Push> {
     branch: Args.string({ description: 'The remote branch to push to', required: true })
   };
 
-  static hidden = true;
-
   async run() {
     const { args, flags } = await this.parseCommand();
 
@@ -104,7 +102,7 @@ export default class Push extends BaseCommand<typeof Push> {
 
     if (newLocalMigrations.length > 0 && newRemoteMigrations.length > 0) {
       this.log(
-        'There are new migrations on both the local and remote branches. Please run `xata rebase` to resolve the conflicts.'
+        'There are new migrations both locally and in the remote branch. Please run `xata pull -f` to overwrite local migrations.'
       );
       this.exit(0);
     }
