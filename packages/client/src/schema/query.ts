@@ -10,6 +10,7 @@ import {
   PAGINATION_MAX_SIZE,
   Page,
   Paginable,
+  PaginationQueryMeta,
   RecordArray,
   isCursorPaginationOptions
 } from './pagination';
@@ -52,6 +53,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   #data: QueryOptions<Record> = { filter: {} };
 
   // Implements pagination
+  readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true, size: PAGINATION_DEFAULT_SIZE } };
   readonly records: RecordArray<Result> = new RecordArray<Result>(this, []);
 
   constructor(
@@ -533,7 +535,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @returns Boolean indicating if there is a next page
    */
   hasNextPage(): boolean {
-    return true;
+    return this.meta.page.more;
   }
 }
 

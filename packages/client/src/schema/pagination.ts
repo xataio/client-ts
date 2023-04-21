@@ -5,6 +5,7 @@ import { JSONData, XataRecord } from './record';
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean; size: number } };
 
 export interface Paginable<Record extends XataRecord, Result extends XataRecord = Record> {
+  meta: PaginationQueryMeta;
   records: RecordArray<Result>;
 
   nextPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
@@ -103,7 +104,7 @@ export function isCursorPaginationOptions(
 }
 
 export class RecordArray<Result extends XataRecord> extends Array<Result> {
-  #page: Page<Result, Result>;
+  #page: Paginable<Result, Result>;
 
   constructor(page: Paginable<any, Result>, overrideRecords?: Result[]);
   constructor(...args: any[]) {
