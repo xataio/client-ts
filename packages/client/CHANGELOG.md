@@ -1,5 +1,19 @@
 # @xata.io/client
 
+## 0.23.5
+
+### Patch Changes
+
+- [#970](https://github.com/xataio/client-ts/pull/970) [`20cc8c43`](https://github.com/xataio/client-ts/commit/20cc8c43e1659bf112ae2642948c84bfcf46a6ba) Thanks [@xata-bot](https://github.com/xata-bot)! - Add delete file endpoint
+
+- [#976](https://github.com/xataio/client-ts/pull/976) [`5099cbbd`](https://github.com/xataio/client-ts/commit/5099cbbd3065a60dcee2f1699afa1ee8ed5edb1c) Thanks [@SferaDev](https://github.com/SferaDev)! - Re-export JSONData helper type
+
+- [#972](https://github.com/xataio/client-ts/pull/972) [`89375e76`](https://github.com/xataio/client-ts/commit/89375e76b790fed7e6a26bf3ac4ea9eaed1aecae) Thanks [@SferaDev](https://github.com/SferaDev)! - Add types to exports
+
+- [#979](https://github.com/xataio/client-ts/pull/979) [`5eaee932`](https://github.com/xataio/client-ts/commit/5eaee932b828907ae352d7c0d0584e860845434b) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `size` to pagination meta
+
+- [#974](https://github.com/xataio/client-ts/pull/974) [`109b8790`](https://github.com/xataio/client-ts/commit/109b8790849532d9c442e7c03c67792aeafebd88) Thanks [@xata-bot](https://github.com/xata-bot)! - Make checksum mandatory
+
 ## 0.23.4
 
 ### Patch Changes
