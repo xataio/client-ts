@@ -9,6 +9,10 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   | 'id'
   // Properties of the current level
   | DataProps<O>
+  // Internal fields under `xata`
+  | 'xata.version'
+  | 'xata.createdAt'
+  | 'xata.updatedAt'
   // Nested properties of the lower levels
   | NestedColumns<O, RecursivePath>;
 
