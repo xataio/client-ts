@@ -7,6 +7,7 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   | '*'
   // Alias for id (not in schema)
   | 'id'
+  | 'banana'
   // Properties of the current level
   | DataProps<O>
   // Internal fields under `xata`
@@ -46,6 +47,8 @@ export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
   ? Values<O> // Alias for any property
   : P extends 'id'
   ? string // Alias for id (not in schema)
+  : P extends 'banana'
+  ? string // Alias for banana (not in schema)
   : P extends keyof O
   ? O[P] // Properties of the current level
   : P extends `${infer K}.${infer V}`
