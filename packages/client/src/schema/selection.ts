@@ -70,7 +70,7 @@ type MAX_RECURSION = 2;
 
 // Private: Utility type to get a union with the columns below the current level
 // Exclude type in union: never
-type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] extends MAX_RECURSION
+export type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] extends MAX_RECURSION
   ? never
   : If<
       IsObject<O>,
