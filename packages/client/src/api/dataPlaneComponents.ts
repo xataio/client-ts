@@ -2153,7 +2153,7 @@ export type GetFileItemPathParams = {
   /**
    * The File Identifier
    */
-  fileId: Schemas.FileID;
+  fileId: Schemas.FileItemID;
   workspace: string;
   region: string;
 };
@@ -2208,7 +2208,7 @@ export type PutFileItemPathParams = {
   /**
    * The File Identifier
    */
-  fileId: Schemas.FileID;
+  fileId: Schemas.FileItemID;
   workspace: string;
   region: string;
 };
@@ -2268,7 +2268,7 @@ export type DeleteFileItemPathParams = {
   /**
    * The File Identifier
    */
-  fileId: Schemas.FileID;
+  fileId: Schemas.FileItemID;
   workspace: string;
   region: string;
 };
@@ -4173,6 +4173,53 @@ export const aggregateTable = (variables: AggregateTableVariables, signal?: Abor
     AggregateTablePathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/aggregate', method: 'post', ...variables, signal });
 
+export type FileAccessPathParams = {
+  /**
+   * The File Access Identifier
+   */
+  fileId: Schemas.FileAccessID;
+  workspace: string;
+  region: string;
+};
+
+export type FileAccessQueryParams = {
+  /**
+   * File access signature
+   */
+  verify?: Schemas.FileSignature;
+};
+
+export type FileAccessError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type FileAccessVariables = {
+  pathParams: FileAccessPathParams;
+  queryParams?: FileAccessQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve file content by access id
+ */
+export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<undefined, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
+    url: '/file/{fileId}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export const operationsByTag = {
   branch: {
     getBranchList,
@@ -4232,7 +4279,7 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile },
+  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, fileAccess },
   searchAndFilter: {
     queryTable,
     searchBranch,
