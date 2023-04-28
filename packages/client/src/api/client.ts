@@ -1129,6 +1129,28 @@ class FilesApi {
       ...this.extraProps
     });
   }
+
+  public fileAccess({
+    workspace,
+    region,
+    fileId,
+    verify
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    fileId: string;
+    verify?: Schemas.FileSignature;
+  }): Promise<any> {
+    return operationsByTag.files.fileAccess({
+      pathParams: {
+        workspace,
+        region,
+        fileId
+      },
+      queryParams: { verify },
+      ...this.extraProps
+    });
+  }
 }
 
 class SearchAndFilterApi {

@@ -734,7 +734,7 @@ export type ObjectValue = {
  * @minLength 1
  * @pattern [a-zA-Z0-9_-~:]+
  */
-export type FileID = string;
+export type FileItemID = string;
 
 /**
  * File name
@@ -758,7 +758,7 @@ export type MediaType = string;
  * Object representing a file in an array
  */
 export type InputFileEntry = {
-  id?: FileID;
+  id?: FileItemID;
   name?: FileName;
   mediaType?: MediaType;
   /**
@@ -865,7 +865,7 @@ export type RecordMeta = {
  * File metadata
  */
 export type FileResponse = {
-  id?: FileID;
+  id?: FileItemID;
   name: FileName;
   mediaType: MediaType;
   /**
@@ -1309,6 +1309,20 @@ export type AggResponse =
         [key: string]: AggResponse;
       })[];
     };
+
+/**
+ * File identifier in access URLs
+ *
+ * @maxLength 296
+ * @minLength 88
+ * @pattern [a-v0-9=]+
+ */
+export type FileAccessID = string;
+
+/**
+ * File signature
+ */
+export type FileSignature = string;
 
 /**
  * Xata Table Record Metadata
