@@ -2410,6 +2410,57 @@ export const putFile = (variables: PutFileVariables, signal?: AbortSignal) =>
     signal
   });
 
+export type DeleteFilePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+  region: string;
+};
+
+export type DeleteFileError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteFileVariables = {
+  pathParams: DeleteFilePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Deletes a file referred in a file column
+ */
+export const deleteFile = (variables: DeleteFileVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, DeleteFileError, undefined, {}, {}, DeleteFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
 export type GetRecordPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -4279,7 +4330,7 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, fileAccess },
+  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, deleteFile, fileAccess },
   searchAndFilter: {
     queryTable,
     searchBranch,
