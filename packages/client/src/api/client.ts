@@ -1130,6 +1130,36 @@ class FilesApi {
     });
   }
 
+  public deleteFile({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+  }): Promise<Responses.PutFileResponse> {
+    return operationsByTag.files.deleteFile({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column
+      },
+      ...this.extraProps
+    });
+  }
+
   public fileAccess({
     workspace,
     region,
