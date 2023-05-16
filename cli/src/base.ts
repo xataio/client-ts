@@ -6,7 +6,8 @@ import {
   getHostUrl,
   parseWorkspacesUrlParts,
   Schemas,
-  XataApiPlugin
+  XataApiPlugin,
+  XataRecord
 } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
@@ -32,9 +33,8 @@ import {
 } from './credentials.js';
 import { reportBugURL } from './utils.js';
 
-export class XataClient extends buildClient({
-  api: new XataApiPlugin()
-}) {}
+const BaseClient = buildClient({ api: new XataApiPlugin() });
+export class XataClient extends BaseClient<Record<string, XataRecord>> {}
 
 export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
 
@@ -57,8 +57,6 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
   apiKeyLocation?: APIKeyLocation;
   apiKeyDotenvLocation = '';
-
-  #xataClient?: XataClient;
 
   // The first place is the one used by default when running `xata init`
   // In the future we can support YAML
@@ -200,10 +198,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     return buildProfile({ ...credential, name: profileName });
   }
 
-  async getXataClient({ profile }: { profile?: Profile } = {}) {
-    if (this.#xataClient) return this.#xataClient;
-
-    const { apiKey, host } = profile ?? (await this.getProfile());
+  async getXataClient(options: { profile?: Profile; databaseURL?: string; branch?: string } = {}) {
+    const { apiKey, host } = options.profile ?? (await this.getProfile());
 
     if (!apiKey) {
       this.error('Could not instantiate Xata client. No API key found.', {
@@ -215,10 +211,10 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
 
     const { flags } = await this.parseCommand();
-    const databaseURL = flags.db ?? 'https://{workspace}.{region}.xata.sh/db/{database}';
-    const branch = flags.branch ?? this.getCurrentBranchName();
+    const databaseURL = options.databaseURL ?? flags.db ?? 'https://{workspaceId}.{region}.xata.sh/db/{database}';
+    const branch = options.branch ?? flags.branch ?? this.getCurrentBranchName();
 
-    this.#xataClient = new XataClient({
+    return new XataClient({
       databaseURL,
       branch,
       apiKey,
@@ -227,8 +223,6 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       clientName: 'cli',
       xataAgentExtra: { cliCommandId: this.id ?? 'unknown' }
     });
-
-    return this.#xataClient;
   }
 
   printTable(headers: string[], rows: string[][], align?: table.Options['align']) {

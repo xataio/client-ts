@@ -114,6 +114,7 @@ importers:
       '@types/lodash.compact': ^3.0.7
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
+      '@types/papaparse': ^5.3.7
       '@types/prompts': ^2.4.4
       '@types/relaxed-json': ^1.0.1
       '@types/text-table': ^0.2.2
@@ -144,6 +145,7 @@ importers:
       node-fetch: ^3.3.1
       oclif: ^3.9.0
       open: ^9.1.0
+      papaparse: ^5.4.1
       prompts: ^2.4.2
       relaxed-json: ^1.0.3
       rollup-plugin-esbuild: ^5.0.0
@@ -193,6 +195,7 @@ importers:
       miniflare: 2.14.0
       node-fetch: 3.3.1
       open: 9.1.0
+      papaparse: 5.4.1
       prompts: 2.4.2
       relaxed-json: 1.0.3
       rollup-plugin-esbuild: 5.0.0
@@ -209,6 +212,7 @@ importers:
       '@types/lodash.compact': 3.0.7
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
+      '@types/papaparse': 5.3.7
       '@types/relaxed-json': 1.0.1
       '@types/text-table': 0.2.2
       '@types/tmp': 0.2.3
@@ -5966,6 +5970,13 @@ packages:
   /@types/normalize-package-data/2.4.1:
     resolution:
       { integrity: sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw== }
+
+  /@types/papaparse/5.3.7:
+    resolution:
+      { integrity: sha512-f2HKmlnPdCvS0WI33WtCs5GD7X1cxzzS/aduaxSu3I7TbhWlENjSPs6z5TaB9K0J+BH1jbmqTaM+ja5puis4wg== }
+    dependencies:
+      '@types/node': 20.1.0
+    dev: true
 
   /@types/pluralize/0.0.29:
     resolution:
@@ -17683,6 +17694,11 @@ packages:
   /pako/0.2.9:
     resolution:
       { integrity: sha512-NUcwaKxUxWrZLpDG+z/xZaCgQITkA/Dv4V/T6bw7VON6l1Xz/VnrBqrYjZQ12TamKHzITTfOEIYUj48y2KXImA== }
+    dev: false
+
+  /papaparse/5.4.1:
+    resolution:
+      { integrity: sha512-HipMsgJkZu8br23pW15uvo6sib6wne/4woLZPlFf3rpDyMe9ywEXUsuD7+6K9PRkJlVT51j/sCOYDKGGS3ZJrw== }
     dev: false
 
   /parallel-transform/1.2.0:
