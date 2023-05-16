@@ -483,6 +483,21 @@ describe('integration tests', () => {
     expect(user?.address).not.toBeDefined();
   });
 
+  test('includes columns from links', async () => {
+    const user = await xata.db.users.getFirst({
+      columns: ['*', 'team.*']
+    });
+
+    expect(user).toBeDefined();
+    expect(user?.id).toBeDefined();
+    expect(user?.full_name).toBeDefined();
+    expect(user?.email).toBeDefined();
+    expect(user?.address).toBeDefined();
+    expect(user?.team).toBeDefined();
+    expect(user?.team?.id).toBeDefined();
+    expect(user?.team?.name).toBeDefined();
+  });
+
   test('Partial update of a user', async () => {
     const user = await xata.db.users.create({
       full_name: 'John Doe',
