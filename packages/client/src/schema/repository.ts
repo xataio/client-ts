@@ -2011,8 +2011,8 @@ export const initObject = <T>(
   };
 
   record.getMetadata = function () {
-    const { version, createdAt, updatedAt } = xata as Record<string, any>;
-    return { version, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) };
+    const { createdAt, updatedAt, ...rest } = xata as Record<string, any>;
+    return { ...rest, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) };
   };
 
   record.toSerializable = function () {
