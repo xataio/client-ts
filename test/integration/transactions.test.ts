@@ -287,7 +287,7 @@ describe('delete transactions', () => {
   });
 
   test('delete with failIfMissing', async () => {
-    const records = await xata.transactions.run([{ delete: { table: 'teams', id: 'ab' } }]);
+    const records = await xata.transactions.run([{ delete: { table: 'teams', id: 'ab', failIfMissing: false } }]);
 
     expect(records).toEqual({ results: [{ operation: 'delete', rows: 0 }] });
 
