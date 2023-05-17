@@ -122,6 +122,14 @@ export type XataRecordMetadata = {
    * Number that is increased every time the record is updated.
    */
   version: number;
+  /**
+   * Timestamp when the record was created.
+   */
+  createdAt: Date;
+  /**
+   * Timestamp when the record was last updated.
+   */
+  updatedAt: Date;
   /*
    * Encoding/Decoding errors
    */
