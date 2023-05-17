@@ -184,7 +184,27 @@ type JSONDataFields<T> = T extends XataRecord
   ? string | null | undefined
   : T;
 
-export type JSONData<O> = Identifiable &
+type JSONDataBase = Identifiable & {
+  /**
+   * Metadata about the record.
+   */
+  xata: {
+    /**
+     * Timestamp when the record was created.
+     */
+    createdAt: string;
+    /**
+     * Timestamp when the record was last updated.
+     */
+    updatedAt: string;
+    /**
+     * Number that is increased every time the record is updated.
+     */
+    version: number;
+  };
+};
+
+export type JSONData<O> = JSONDataBase &
   Partial<
     Omit<
       {

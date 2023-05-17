@@ -43,6 +43,10 @@ describe('record creation', () => {
 
     const json = user.toSerializable();
 
+    expect(json.xata.createdAt).toBeDefined();
+    expect(json.xata.updatedAt).toBeDefined();
+    expect(json.xata.version).toBe(0);
+
     expect(json.id).toBeDefined();
     expect(json.name).toBe('User ships');
     // @ts-expect-error
