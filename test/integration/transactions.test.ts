@@ -285,4 +285,19 @@ describe('delete transactions', () => {
 
     await xata.db.teams.delete('i1');
   });
+
+  test('delete with failIfMissing', async () => {
+    const records = await xata.transactions.run([{ delete: { table: 'teams', id: 'ab' } }]);
+
+    expect(records).toEqual({ results: [{ operation: 'delete', rows: 0 }] });
+
+    try {
+      await xata.transactions.run([{ delete: { table: 'teams', id: 'ab', failIfMissing: true } }]);
+    } catch (error: any) {
+      expect(error.errors).toEqual([{ index: 0, message: 'table [teams]: no rows deleted' }]);
+      return;
+    }
+
+    throw new Error('should not reach here');
+  });
 });
