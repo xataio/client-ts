@@ -36,7 +36,16 @@ describe('record creation', () => {
     expect(user.getMetadata).toBeDefined();
     expect(user.birthDate).toBeInstanceOf(Date);
 
+    const metadata = user.getMetadata();
+    expect(metadata.createdAt).toBeInstanceOf(Date);
+    expect(metadata.updatedAt).toBeInstanceOf(Date);
+    expect(metadata.version).toBe(0);
+
     const json = user.toSerializable();
+
+    expect(json.xata.createdAt).toBeDefined();
+    expect(json.xata.updatedAt).toBeDefined();
+    expect(json.xata.version).toBe(0);
 
     expect(json.id).toBeDefined();
     expect(json.name).toBe('User ships');

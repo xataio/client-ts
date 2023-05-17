@@ -1987,6 +1987,7 @@ export const initObject = <T>(
   }
 
   const record = { ...data };
+  const serializable = { xata, ...transformObjectLinks(data) };
 
   record.read = function (columns?: any) {
     return db[table].read(record['id'] as string, columns);
@@ -2011,15 +2012,16 @@ export const initObject = <T>(
   };
 
   record.getMetadata = function () {
-    return xata;
+    const { createdAt, updatedAt, ...rest } = xata as Record<string, any>;
+    return { ...rest, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) };
   };
 
   record.toSerializable = function () {
-    return JSON.parse(JSON.stringify(transformObjectLinks(data)));
+    return JSON.parse(JSON.stringify(serializable));
   };
 
   record.toString = function () {
-    return JSON.stringify(transformObjectLinks(data));
+    return JSON.stringify(transformObjectLinks(serializable));
   };
 
   for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerializable', 'toString']) {
