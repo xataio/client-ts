@@ -37,6 +37,7 @@ export type UpdateTransactionOperation<O extends XataRecord> = {
 
 export type DeleteTransactionOperation = {
   id: string;
+  failIfMissing?: boolean;
 };
 
 type TransactionOperationSingleResult<
