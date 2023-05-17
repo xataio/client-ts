@@ -574,7 +574,7 @@ export type TransactionUpdateOp = {
 };
 
 /**
- * A delete operation. The transaction will continue if no record matches the ID.
+ * A delete operation. The transaction will continue if no record matches the ID by default. To override this behaviour, set failIfMissing to true.
  */
 export type TransactionDeleteOp = {
   /**
@@ -582,6 +582,10 @@ export type TransactionDeleteOp = {
    */
   table: string;
   id: RecordID;
+  /**
+   * If true, the transaction will fail when the record doesn't exist.
+   */
+  failIfMissing?: boolean;
   /**
    * If set, the call will return the requested fields as part of the response.
    */

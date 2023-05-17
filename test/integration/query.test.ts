@@ -483,6 +483,26 @@ describe('integration tests', () => {
     expect(user?.address).not.toBeDefined();
   });
 
+  test('returns null to links that do not exist', async () => {
+    const user = await xata.db.users.create({
+      full_name: 'John Doe',
+      email: 'john@doe.com',
+      address: {
+        street: '123 Main St'
+      }
+    });
+
+    const records = await xata.db.users.filter('id', user.id).select(['*', 'team.*']).getAll();
+
+    expect(records).toHaveLength(1);
+    expect(records[0].id).toBe(user.id);
+    expect(records[0].full_name).toBe('John Doe');
+    expect(records[0].address?.street).toBe('123 Main St');
+    expect(records[0].team).toBeNull();
+
+    await user.delete();
+  });
+
   test('Partial update of a user', async () => {
     const user = await xata.db.users.create({
       full_name: 'John Doe',
