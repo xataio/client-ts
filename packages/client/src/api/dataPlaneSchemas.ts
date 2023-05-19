@@ -917,7 +917,7 @@ export type ValueBooster = {
    */
   value: string | number | boolean;
   /**
-   * The factor with which to multiply the score of the record.
+   * The factor with which to multiply the added boost.
    */
   factor: number;
   /**
@@ -961,7 +961,9 @@ export type NumericBooster = {
 /**
  * Boost records based on the value of a datetime column. It is configured via "origin", "scale", and "decay". The further away from the "origin",
  * the more the score is decayed. The decay function uses an exponential function. For example if origin is "now", and scale is 10 days and decay is 0.5, it
- * should be interpreted as: a record with a date 10 days before/after origin will score 2 times less than a record with the date at origin.
+ * should be interpreted as: a record with a date 10 days before/after origin will be boosted 2 times less than a record with the date at origin.
+ * The result of the exponential function is a boost between 0 and 1. The "factor" allows you to control how impactful this boost is, by multiplying it with
+ * a given value.
  */
 export type DateBooster = {
   /**
@@ -983,6 +985,12 @@ export type DateBooster = {
    * The decay factor to expect at "scale" distance from the "origin".
    */
   decay: number;
+  /**
+   * The factor with which to multiply the added boost.
+   *
+   * @minimum 0
+   */
+  factor?: number;
   /**
    * Only apply this booster to the records for which the provided filter matches.
    */
