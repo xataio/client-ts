@@ -41,6 +41,10 @@ describe('record creation', () => {
     expect(metadata.updatedAt).toBeInstanceOf(Date);
     expect(metadata.version).toBe(0);
 
+    expect(user.xata.createdAt).toBeInstanceOf(Date);
+    expect(user.xata.updatedAt).toBeInstanceOf(Date);
+    expect(user.xata.version).toBe(0);
+
     const json = user.toSerializable();
 
     expect(json.xata.createdAt).toBeDefined();
@@ -68,6 +72,15 @@ describe('record creation', () => {
     expect(user.team?.id).toBe(team.id);
     expect(user.team?.read).toBeDefined();
     expect(user.team?.getMetadata).toBeDefined();
+
+    const userMetadata = user.getMetadata();
+    expect(userMetadata.createdAt).toBeInstanceOf(Date);
+    expect(userMetadata.updatedAt).toBeInstanceOf(Date);
+    expect(userMetadata.version).toBe(0);
+
+    expect(user.xata.createdAt).toBeInstanceOf(Date);
+    expect(user.xata.updatedAt).toBeInstanceOf(Date);
+    expect(user.xata.version).toBe(0);
 
     const json = user.toSerializable();
 

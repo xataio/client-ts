@@ -21,7 +21,13 @@ export interface BaseData {
  */
 export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<any>> extends Identifiable {
   /**
+   * Metadata of this record.
+   */
+  xata: XataRecordMetadata;
+
+  /**
    * Get metadata of this record.
+   * @deprecated Use `xata` property instead.
    */
   getMetadata(): XataRecordMetadata;
 
@@ -130,10 +136,6 @@ export type XataRecordMetadata = {
    * Timestamp when the record was last updated.
    */
   updatedAt: Date;
-  /*
-   * Encoding/Decoding errors
-   */
-  warnings?: string[];
 };
 
 export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
