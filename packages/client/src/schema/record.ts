@@ -1,4 +1,4 @@
-import { PartialBy, isObject, isString } from '../util/lang';
+import { isObject, isString } from '../util/lang';
 import { ExclusiveOr } from '../util/types';
 import { SelectableColumn, SelectedPick } from './selection';
 
