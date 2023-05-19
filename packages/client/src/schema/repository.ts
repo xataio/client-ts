@@ -1872,7 +1872,7 @@ export class RestRepository<Record extends XataRecord>
         ...params
       });
     } else {
-      return askTable(params);
+      return askTable(params as any);
     }
   }
 
@@ -1922,7 +1922,7 @@ export const initObject = <T>(
   db: Record<string, Repository<any>>,
   schemaTables: Schemas.Table[],
   table: string,
-  object: Record<string, unknown>,
+  object: Record<string, any>,
   selectedColumns: string[]
 ) => {
   const data: Dictionary<unknown> = {};
@@ -1988,6 +1988,10 @@ export const initObject = <T>(
 
   const record = { ...data };
   const serializable = { xata, ...transformObjectLinks(data) };
+  const metadata =
+    xata !== undefined
+      ? { ...xata, createdAt: new Date(xata.createdAt), updatedAt: new Date(xata.updatedAt) }
+      : undefined;
 
   record.read = function (columns?: any) {
     return db[table].read(record['id'] as string, columns);
@@ -2011,9 +2015,9 @@ export const initObject = <T>(
     return db[table].delete(record['id'] as string);
   };
 
+  record.xata = metadata;
   record.getMetadata = function () {
-    const { createdAt, updatedAt, ...rest } = xata as Record<string, any>;
-    return { ...rest, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) };
+    return metadata;
   };
 
   record.toSerializable = function () {
@@ -2024,7 +2028,7 @@ export const initObject = <T>(
     return JSON.stringify(transformObjectLinks(serializable));
   };
 
-  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerializable', 'toString']) {
+  for (const prop of ['read', 'update', 'replace', 'delete', 'xata', 'getMetadata', 'toSerializable', 'toString']) {
     Object.defineProperty(record, prop, { enumerable: false });
   }
 
