@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.12.1
+
+### Patch Changes
+
+- [#1003](https://github.com/xataio/client-ts/pull/1003) [`e848701d`](https://github.com/xataio/client-ts/commit/e848701dbb1af73acdc9c7a57458d906970598af) Thanks [@richardgill](https://github.com/richardgill)! - Corrected the `xata --help` description for pull
+
+- Updated dependencies [[`45aa2207`](https://github.com/xataio/client-ts/commit/45aa220728e98dd716a55a9a307474732a9b2bc1), [`f28080f0`](https://github.com/xataio/client-ts/commit/f28080f034f02704fe00d64b8f42e1127bde30c7), [`ac9c0604`](https://github.com/xataio/client-ts/commit/ac9c06042bb85105d9a38624676ce6ea5a27d488), [`c163b365`](https://github.com/xataio/client-ts/commit/c163b3658f23fb2eaad6243ebebc92624754099a)]:
+  - @xata.io/client@0.24.0
+  - @xata.io/importer@0.3.15
+
 ## 0.12.0
 
 ### Minor Changes

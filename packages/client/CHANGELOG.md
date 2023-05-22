@@ -1,5 +1,19 @@
 # @xata.io/client
 
+## 0.24.0
+
+### Minor Changes
+
+- [#1009](https://github.com/xataio/client-ts/pull/1009) [`45aa2207`](https://github.com/xataio/client-ts/commit/45aa220728e98dd716a55a9a307474732a9b2bc1) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `createdAt` and `updatedAt` properties
+
+### Patch Changes
+
+- [#1008](https://github.com/xataio/client-ts/pull/1008) [`f28080f0`](https://github.com/xataio/client-ts/commit/f28080f034f02704fe00d64b8f42e1127bde30c7) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `failIfMissing` to delete transactions
+
+- [#994](https://github.com/xataio/client-ts/pull/994) [`ac9c0604`](https://github.com/xataio/client-ts/commit/ac9c06042bb85105d9a38624676ce6ea5a27d488) Thanks [@xata-bot](https://github.com/xata-bot)! - Update internal endpoints
+
+- [#1015](https://github.com/xataio/client-ts/pull/1015) [`c163b365`](https://github.com/xataio/client-ts/commit/c163b3658f23fb2eaad6243ebebc92624754099a) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `factor` to date boosters
+
 ## 0.23.5
 
 ### Patch Changes
