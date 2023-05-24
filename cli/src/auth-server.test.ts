@@ -45,7 +45,7 @@ describe('handler', () => {
     const httpHandler = handler(publicKey, privateKey, passphrase, callback);
 
     const writeHead = vi.fn();
-    const req = { method: 'GET', url: '/new' } as unknown as IncomingMessage;
+    const req = { method: 'GET', url: '/new', socket: { localPort: 9999 } } as unknown as IncomingMessage;
     const res = {
       writeHead,
       end: vi.fn()
@@ -107,8 +107,8 @@ describe('handler', () => {
     httpHandler(req, res);
 
     expect(res.writeHead).toHaveBeenCalledWith(500);
-    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('Something went wrong:'))
-    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('decoding error'))
+    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('Something went wrong:'));
+    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('decoding error'));
     expect(callback).not.toHaveBeenCalled();
   });
 
