@@ -19,23 +19,44 @@ afterEach(() => {
 });
 
 const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+
 const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 
 describe('databases delete', () => {
-  test('fails if the database name is not provided', async () => {
+  test('succeeds if user specifies workspace and database via prompt', async () => {
     const config = await Config.load();
-    const command = new DatabasesDelete(['--workspace', 'test-1234'], config);
+    const command = new DatabasesDelete([], config);
+    fetchMock.mockImplementation((url, request) => {
+      if (url === 'https://api.xata.io/workspaces' && request.method === 'GET') {
+        return {
+          ok: true,
+          json: async () => ({
+            workspaces: [{ id: 'test-1234', name: 'test-1234' }]
+          })
+        };
+      } else if (url === 'https://api.xata.io/workspaces/test-1234/dbs' && request.method === 'GET') {
+        return {
+          ok: true,
+          json: async () => ({
+            databases: [{ name: 'db1' }]
+          })
+        };
+      } else if (url === 'https://api.xata.io/workspaces/test-1234/dbs/db1' && request.method === 'DELETE') {
+        return {
+          ok: true,
+          json: async () => ({})
+        };
+      }
+    });
 
-    promptsMock.mockReturnValue({ confirm: 'foo' });
+    promptsMock.mockReturnValue({ workspace: 'test-1234', database: 'db1', confirm: 'db1' });
+    await command.run();
 
-    await expect(command.run()).rejects.toMatchInlineSnapshot(`
-      [Error: Missing 1 required arg:
-      database  The database name to delete
-      See more help with --help]
-    `);
+    expect(fetchMock.mock.calls[2][0]).toEqual('https://api.xata.io/workspaces/test-1234/dbs/db1');
+    expect(fetchMock.mock.calls[2][1].method).toEqual('DELETE');
   });
 
-  test('exists if the user does not confirm', async () => {
+  test('exits if the user does not confirm', async () => {
     const config = await Config.load();
     const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config);
 
@@ -44,7 +65,7 @@ describe('databases delete', () => {
     await expect(command.run()).rejects.toMatchInlineSnapshot('[Error: EEXIT: 1]');
   });
 
-  test('exists if the user did not enter the branch name correctly', async () => {
+  test('exits if the user did not confirm the database name correctly', async () => {
     const config = await Config.load();
     const command = new DatabasesDelete(['--workspace', 'test-1234', 'foo'], config);
 
