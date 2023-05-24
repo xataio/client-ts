@@ -56,6 +56,7 @@ describe('handler', () => {
     const [status, headers] = writeHead.mock.calls[0];
     expect(status).toEqual(302);
     expect(String(headers.location).startsWith('https://app.xata.io/new-api-key?pub=')).toBeTruthy();
+    expect(String(headers.location).includes('9999')).toBeTruthy();
     expect(res.end).toHaveBeenCalledWith();
     expect(callback).not.toHaveBeenCalled();
   });
