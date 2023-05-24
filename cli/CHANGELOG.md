@@ -1,5 +1,12 @@
 # @xata.io/cli
 
+## 0.12.2
+
+### Patch Changes
+
+- [#1016](https://github.com/xataio/client-ts/pull/1016) [`1530e1bf`](https://github.com/xataio/client-ts/commit/1530e1bf19482c6dbe224e95988a857fa663179b) Thanks [@richardgill](https://github.com/richardgill)! - - Added `xata dbs rename` command
+  - `xata dbs delete` can now be done interactively
+
 ## 0.12.1
 
 ### Patch Changes
