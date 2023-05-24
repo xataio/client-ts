@@ -4,6 +4,7 @@ import { ModuleType } from '@xata.io/codegen';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { access, readFile, writeFile } from 'fs/promises';
+import compact from 'lodash.compact';
 import path, { extname } from 'path';
 import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
@@ -93,16 +94,15 @@ export default class Init extends BaseCommand<typeof Init> {
     this.success('Project configured successfully.');
     this.info(`Next steps? Here's a list of useful commands below. Use ${chalk.bold('xata --help')} to list them all.`);
     const bullet = chalk.magenta('»');
-    const suggestions = [
-      [bullet + ' xata shell', chalk.dim(Shell.description)],
+    const suggestions = compact([
+      this.projectConfig.codegen
+        ? [bullet + ' xata pull', chalk.dim('Regenerate code and types from your Xata database')]
+        : null,
       [bullet + ' xata browse', chalk.dim(Browse.description)],
       [bullet + ' xata schema edit', chalk.dim(EditSchema.description)],
-      [bullet + ' xata random-data', chalk.dim(RandomData.description)]
-    ];
-
-    if (this.projectConfig.codegen) {
-      suggestions.push([bullet + ' xata codegen', chalk.dim(Codegen.description)]);
-    }
+      [bullet + ' xata random-data', chalk.dim(RandomData.description)],
+      [bullet + ' xata shell', chalk.dim(Shell.description)]
+    ]);
 
     this.printTable([], suggestions);
 
@@ -124,17 +124,17 @@ export default class Init extends BaseCommand<typeof Init> {
         {
           type: 'select',
           name: 'codegen',
-          message: 'Do you want to use code generation in your project?',
+          message: 'Generate code and types from your Xata database',
           choices: [
-            { title: 'Do not use code generation', value: 'no' },
-            { title: 'Generate TypeScript code', value: 'ts' },
-            { title: 'Generate JavaScript code with ES modules', value: 'esm' },
+            { title: 'TypeScript', value: 'ts' },
+            { title: 'TypeScript with Deno', value: 'deno' },
+            { title: 'JavaScript import syntax', value: 'esm' },
             {
-              title: 'Generate JavaScript code with CJS (require)',
+              title: 'JavaScript require syntax',
               value: 'cjs'
             },
-            { title: 'Generate TypeScript code with Deno imports', value: 'deno' },
-            { title: 'Install the JavaScript SDK only, with no code generation', value: 'js' }
+            { title: 'SDK only (no code generation)', value: 'js' },
+            { title: 'None', value: 'no' }
           ]
         },
         flags.module
@@ -144,7 +144,7 @@ export default class Init extends BaseCommand<typeof Init> {
         const { file } = await this.prompt({
           type: 'text',
           name: 'file',
-          message: 'Choose the output file for the code generator',
+          message: 'Choose the output path for the generated code',
           initial: `src/xata.${codegen === 'ts' || codegen === 'deno' ? 'ts' : 'js'}`
         });
         if (!file) return this.error('You must provide an output file');
@@ -190,11 +190,17 @@ export default class Init extends BaseCommand<typeof Init> {
     const packageManager = await this.guessPackageManager();
 
     if (!packageManager) {
-      this.warn('Could not detect a package manager. Please install the @xata.io/client package manually.');
+      this.warn(
+        `Could not detect a package manager. Please run ${chalk.bold(
+          'npm install --save @xata.io/client'
+        )} to install the package manually.`
+      );
       return null;
     } else if (!which.sync(packageManager.name, { nothrow: true })) {
       this.warn(
-        `Looks like ${packageManager} is not installed or is not in the PATH. Please install the @xata.io/client package manually.`
+        `Looks like ${packageManager.name} is not installed or is not in the PATH. Please run ${chalk.bold(
+          `${packageManager.name} ${packageManager.args.join(' ')} @xata.io/client`
+        )} manually.`
       );
       return null;
     } else {
@@ -209,9 +215,10 @@ export default class Init extends BaseCommand<typeof Init> {
       return { name: 'yarn', args: ['add'] };
     } else if (await this.access('pnpm-lock.yaml')) {
       return { name: 'pnpm', args: ['add'] };
-    } else {
-      return null;
+    } else if (await this.access('package.json')) {
+      return { name: 'npm', args: ['install', '--save'] };
     }
+    return null;
   }
 
   async access(path: string) {
