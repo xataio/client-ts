@@ -215,8 +215,6 @@ export default class Init extends BaseCommand<typeof Init> {
       return { name: 'yarn', args: ['add'] };
     } else if (await this.access('pnpm-lock.yaml')) {
       return { name: 'pnpm', args: ['add'] };
-    } else if (await this.access('package.json')) {
-      return { name: 'npm', args: ['install', '--save'] };
     }
     return null;
   }
