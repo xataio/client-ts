@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { buildProviderString } from '@xata.io/client';
+import { buildProviderString, Schemas } from '@xata.io/client';
 import { ModuleType } from '@xata.io/codegen';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
@@ -45,6 +45,20 @@ const isPackageManagerInstalled = (packageManager: PackageManager) =>
 const installXataClientCommand = (packageManager: PackageManager) => {
   const { command, args } = packageManager;
   return `${command} ${args} @xata.io/client`;
+};
+
+const readEnvFile = async (envFile: string) => {
+  let content = '';
+  try {
+    content = await readFile(envFile, 'utf-8');
+    const env = dotenv.parse(content);
+    if (env.XATA_API_KEY) {
+      return { content, containsXataApiKey: Boolean(env.XATA_API_KEY) };
+    }
+  } catch (err) {
+    // ignore
+  }
+  return { content, containsXataApiKey: false };
 };
 
 export default class Init extends BaseCommand<typeof Init> {
@@ -105,43 +119,87 @@ export default class Init extends BaseCommand<typeof Init> {
       }
     }
 
+    let schema: Schemas.Schema | undefined = undefined;
+    if (flags.schema) {
+      schema = await this.readSchema(flags.schema);
+    }
+
     const { workspace, region, database, databaseURL } = await this.getParsedDatabaseURL(flags.db, true);
 
     this.projectConfig = { databaseURL };
+    const ignoreEnvFile = await this.promptIgnoreEnvFile();
 
-    await this.configureCodegen();
+    const { shouldInstallPackage } = await this.configureCodegen();
 
+    const packageManager = shouldInstallPackage ? await this.getPackageManager() : null;
+
+    this.log('\nSetting up Xata...\n');
+    await delay(1000);
     await this.writeConfig();
     this.log();
+
     await this.writeEnvFile(workspace, region, database);
+
+    if (ignoreEnvFile) {
+      await this.ignoreEnvFile();
+    }
+
     this.log();
-    if (flags.schema) {
-      const branch = this.getCurrentBranchName();
-      await this.readAndDeploySchema(workspace, region, database, branch, flags.schema);
+    if (packageManager) {
+      await this.installPackage(packageManager, '@xata.io/client');
     }
 
     await Codegen.runIfConfigured(this.projectConfig);
     await delay(1000);
 
     this.log();
-    this.success('Project configured successfully');
+    this.success('Project setup with Xata 🦋');
     await delay(2000);
     this.log();
 
-    this.info(`Here's a list of useful commands:`);
-    const bullet = chalk.magenta('»');
-    const suggestions = compact([
-      this.projectConfig.codegen
-        ? [bullet + ' xata pull', chalk.dim('Regenerate code and types from your Xata database')]
-        : null,
-      [bullet + ' xata browse', chalk.dim(Browse.description)],
-      [bullet + ' xata schema edit', chalk.dim(EditSchema.description)],
-      [bullet + ' xata random-data', chalk.dim(RandomData.description)],
-      [bullet + ' xata shell', chalk.dim(Shell.description)]
-    ]);
-    this.printTable([], suggestions);
+    const branch = this.getCurrentBranchName();
+    if (schema) {
+      await this.deploySchema(workspace, region, database, branch, schema);
+    }
 
-    this.info(`Use ${chalk.bold('xata --help')} to list all commands`);
+    if (this.projectConfig?.codegen?.output) {
+      const { schema: currentSchema } = await (
+        await this.getXataClient()
+      ).api.branches.getBranchDetails({ workspace, database, region, branch });
+      const hasTables = currentSchema?.tables && currentSchema?.tables.length > 0;
+      const hasColumns = currentSchema?.tables.some((t) => t.columns.length > 0);
+      const isSchemaSetup = hasTables && hasColumns;
+      if (!isSchemaSetup) {
+        this.info(
+          `Setup ${
+            hasTables ? '' : 'tables and '
+          }columns at https://app.xata.io/workspaces/${workspace}/dbs/${database}:${region}`
+        );
+        this.log();
+        this.info(`Use ${chalk.bold(`xata pull`)} to regenerate code and types from your Xata database`);
+      } else {
+        this.log(`To make your first query:`);
+        this.log(``);
+        this.log(`import { getXataClient } from '${this.projectConfig?.codegen?.output}'`);
+        this.log(``);
+        this.log(`// server side query`);
+        this.log(`await getXataClient().${currentSchema?.tables[0].name}.getPaginated()`);
+      }
+    } else {
+      this.info(`Here's a list of useful commands:`);
+      const bullet = chalk.magenta('»');
+      const suggestions = compact([
+        this.projectConfig.codegen
+          ? [bullet + ' xata pull', chalk.dim('Regenerate code and types from your Xata database')]
+          : null,
+        [bullet + ' xata browse', chalk.dim(Browse.description)],
+        [bullet + ' xata schema edit', chalk.dim(EditSchema.description)],
+        [bullet + ' xata random-data', chalk.dim(RandomData.description)],
+        [bullet + ' xata shell', chalk.dim(Shell.description)]
+      ]);
+      this.printTable([], suggestions);
+      this.info(`Use ${chalk.bold('xata --help')} to list all commands`);
+    }
   }
 
   async configureCodegen() {
@@ -215,9 +273,7 @@ export default class Init extends BaseCommand<typeof Init> {
       }
     }
 
-    if (output || sdk) {
-      await this.installPackage('@xata.io/client');
-    }
+    return { shouldInstallPackage: output || sdk };
   }
 
   async getPackageManager() {
@@ -267,10 +323,7 @@ export default class Init extends BaseCommand<typeof Init> {
     }
   }
 
-  async installPackage(pkg: string) {
-    const packageManager = await this.getPackageManager();
-    if (!packageManager) return;
-
+  async installPackage(packageManager: PackageManager, pkg: string) {
     const { command, args } = packageManager;
     await this.runCommand(command, [...args.split(' '), pkg]);
     this.log();
@@ -282,9 +335,11 @@ export default class Init extends BaseCommand<typeof Init> {
       this.projectConfigLocation = path.join(process.cwd(), this.searchPlaces[0]);
     }
     await this.updateConfig();
+    this.log(`Created Xata config: ${path.basename(this.projectConfigLocation)}`);
+    await delay(1000);
   }
 
-  async writeEnvFile(workspace: string, region: string, database: string) {
+  async findEnvFile() {
     let envFile = ENV_FILES[ENV_FILES.length - 1];
     for (const file of ENV_FILES) {
       if (await this.access(file)) {
@@ -292,9 +347,12 @@ export default class Init extends BaseCommand<typeof Init> {
         break;
       }
     }
-    const message = envFile ? `update your ${envFile} file` : 'create an .env file in your project';
+    return envFile;
+  }
 
-    this.info(`We are going to ${message} to store an API key.`);
+  async writeEnvFile(workspace: string, region: string, database: string) {
+    const envFile = await this.findEnvFile();
+    const doesEnvFileExist = await this.access(envFile);
 
     const profile = await this.getProfile();
     // TODO: generate a database-scoped API key
@@ -309,28 +367,29 @@ export default class Init extends BaseCommand<typeof Init> {
       await this.waitUntilAPIKeyIsValid(workspace, region, database);
     }
 
-    let content = '';
-    try {
-      content = await readFile(envFile, 'utf-8');
-      const env = dotenv.parse(content);
-      if (env.XATA_API_KEY) {
-        this.warn(
-          `Your ${envFile} file already contains an API key. The old API key will be ignored after updating the file.`
-        );
-      }
-    } catch (err) {
-      // ignore
+    // eslint-disable-next-line prefer-const
+    let { content, containsXataApiKey } = await readEnvFile(envFile);
+
+    if (containsXataApiKey) {
+      this.warn(`Your ${envFile} file already contains XATA_API_KEY key. skipping...`);
+    } else {
+      const setBranch = `XATA_BRANCH=main`;
+      const setApiKey = `XATA_API_KEY=${apiKey}`;
+      if (content) content += '\n\n';
+      content += '# [Xata] Configuration used by the CLI and the SDK\n';
+      content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
+      content += `${setBranch}\n`;
+      content += `${setApiKey}\n`;
+      if (profile.host !== 'production') content += `XATA_API_PROVIDER=${buildProviderString(profile.host)}\n`;
+
+      this.log(`${doesEnvFileExist ? 'Updating' : 'Creating'} ${envFile} file`);
+      await writeFile(envFile, content);
+      await delay(500);
+      this.log(`  set ${setApiKey}`);
+      await delay(500);
+      this.log(`  set ${setBranch}\n`);
+      await delay(500);
     }
-
-    if (content) content += '\n\n';
-    content += '# [Xata] Configuration used by the CLI and the SDK\n';
-    content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
-    content += `XATA_BRANCH=main\n`;
-    content += `XATA_API_KEY=${apiKey}\n`;
-    if (profile.host !== 'production') content += `XATA_API_PROVIDER=${buildProviderString(profile.host)}\n`;
-    await writeFile(envFile, content);
-
-    await this.ignoreEnvFile(envFile);
   }
 
   // New API keys need to be replicated until can be used in a particular region/database
@@ -356,26 +415,8 @@ export default class Init extends BaseCommand<typeof Init> {
     this.error(`The new API key could not be used after ${maxRetries} seconds. Please try again.`);
   }
 
-  async ignoreEnvFile(envFile: string) {
-    const ignored = await isIgnored(envFile);
-    if (ignored) return;
-
-    const exists = await this.access('.gitignore');
-
-    const { confirm } = await this.prompt({
-      type: 'confirm',
-      name: 'confirm',
-      message: exists
-        ? `Do you want to add ${envFile} to your .gitignore?`
-        : `Do you want to create a .gitignore file and ignore the ${envFile} file?`,
-      initial: true
-    });
-    if (confirm === undefined) return this.exit(1);
-    if (!confirm) {
-      this.warn(`You can add ${envFile} to your .gitignore later`);
-      return;
-    }
-
+  async ignoreEnvFile() {
+    const envFile = await this.findEnvFile();
     let content = '';
     try {
       content = await readFile('.gitignore', 'utf-8');
@@ -386,13 +427,31 @@ export default class Init extends BaseCommand<typeof Init> {
     content += `${envFile}\n`;
     await writeFile('.gitignore', content);
 
-    this.info(`Added ${envFile} to .gitignore`);
+    this.log(`Added ${envFile} file to .gitignore`);
   }
 
-  async readAndDeploySchema(workspace: string, region: string, database: string, branch: string, file: string) {
+  async promptIgnoreEnvFile() {
+    const envFile = await this.findEnvFile();
+    const ignored = await isIgnored(envFile);
+    if (ignored) return;
+
+    const exists = await this.access('.gitignore');
+
+    const { confirm } = await this.prompt({
+      type: 'confirm',
+      name: 'confirm',
+      message: exists ? `Add ${envFile} to .gitignore?` : `Create .gitignore and ignore ${envFile}?`,
+      initial: true
+    });
+    if (!confirm) {
+      this.warn(`You can add ${envFile} to your .gitignore later`);
+    }
+    return Boolean(confirm);
+  }
+
+  async readSchema(file: string) {
     this.info('Reading schema file...');
-    const schema = await this.parseSchema(file);
-    await this.deploySchema(workspace, region, database, branch, schema);
+    return await this.parseSchema(file);
   }
 
   async parseSchema(file: string) {
