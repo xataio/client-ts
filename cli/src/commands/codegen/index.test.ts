@@ -97,6 +97,6 @@ describe('codegen', () => {
     }
 
     expect(log).toHaveBeenCalledTimes(1);
-    expect(log.mock.calls[0][0]).toEqual(`✔ Your XataClient is generated at ./src/xata.${ext}`);
+    expect(log.mock.calls[0][0]).toEqual(`✔ Generated Xata code to ./src/xata.${ext}`);
   });
 });

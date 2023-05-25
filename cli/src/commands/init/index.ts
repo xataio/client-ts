@@ -11,6 +11,7 @@ import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand, ENV_FILES } from '../../base.js';
 import { isIgnored } from '../../git.js';
 import { xataDatabaseSchema } from '../../schema.js';
+import { delay } from '../../utils/delay.js';
 import Browse from '../browse/index.js';
 import Codegen, { languages, unsupportedExtensionError } from '../codegen/index.js';
 import RandomData from '../random-data/index.js';
@@ -19,16 +20,41 @@ import Shell from '../shell/index.js';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 
+type PackageManager = { command: string; args: string };
+
+const packageManagers = {
+  pnpm: {
+    command: 'pnpm',
+    args: 'add'
+  },
+  npm: {
+    command: 'npm',
+    args: 'install --save'
+  },
+  yarn: {
+    command: 'yarn',
+    args: 'add'
+  }
+};
+
+const isPackageManagerInstalled = (packageManager: PackageManager) =>
+  which.sync(packageManager.command, { nothrow: true });
+
+const installXataClientCommand = (packageManager: PackageManager) => {
+  const { command, args } = packageManager;
+  return `${command} ${args} @xata.io/client`;
+};
+
 export default class Init extends BaseCommand<typeof Init> {
   static description = 'Configure your working directory to work with a Xata database';
 
   static examples = [
     'Initialize a new project',
+    'xata init',
+    'Initialize a new project for a specific database',
     'xata init --db https://workspace-1234.us-east-1.xata.sh/db/database-name',
     'Initialize a new project using a schema dump',
-    'xata init --db https://workspace-1234.us-east-1.xata.sh/db/database-name --schema schema.json',
-    'Initialize a new project without flags. The workspace and database will be asked interactively',
-    'xata init'
+    'xata init --db https://workspace-1234.us-east-1.xata.sh/db/database-name --schema schema.json'
   ];
 
   static flags = {
@@ -50,6 +76,10 @@ export default class Init extends BaseCommand<typeof Init> {
     }),
     schema: Flags.string({
       description: 'Initializes a new database or updates an existing one with the given schema'
+    }),
+    packageManager: Flags.string({
+      description: 'The package manager to use to install the @xata.io/client package',
+      options: Object.keys(packageManagers)
     })
   };
 
@@ -80,19 +110,23 @@ export default class Init extends BaseCommand<typeof Init> {
     await this.configureCodegen();
 
     await this.writeConfig();
-
+    this.log();
     await this.writeEnvFile(workspace, region, database);
-
+    this.log();
     if (flags.schema) {
       const branch = this.getCurrentBranchName();
       await this.readAndDeploySchema(workspace, region, database, branch, flags.schema);
     }
 
     await Codegen.runIfConfigured(this.projectConfig);
+    await delay(1000);
 
     this.log();
-    this.success('Project configured successfully.');
-    this.info(`Next steps? Here's a list of useful commands below. Use ${chalk.bold('xata --help')} to list them all.`);
+    this.success('Project configured successfully');
+    await delay(2000);
+    this.log();
+
+    this.info(`Here's a list of useful commands:`);
     const bullet = chalk.magenta('»');
     const suggestions = compact([
       this.projectConfig.codegen
@@ -103,11 +137,9 @@ export default class Init extends BaseCommand<typeof Init> {
       [bullet + ' xata random-data', chalk.dim(RandomData.description)],
       [bullet + ' xata shell', chalk.dim(Shell.description)]
     ]);
-
     this.printTable([], suggestions);
 
-    this.log();
-    this.success('You are all set!');
+    this.info(`Use ${chalk.bold('xata --help')} to list all commands`);
   }
 
   async configureCodegen() {
@@ -188,33 +220,41 @@ export default class Init extends BaseCommand<typeof Init> {
 
   async getPackageManager() {
     const packageManager = await this.guessPackageManager();
-
     if (!packageManager) {
-      this.warn(
-        `Could not detect a package manager. Please run ${chalk.bold(
-          'npm install --save @xata.io/client'
-        )} to install the package manually.`
+      const { flags } = await this.parseCommand();
+      const { packageManagerName } = await this.prompt(
+        {
+          type: 'select',
+          name: 'packageManagerName',
+          message: 'How should we install the @xata.io/client package?',
+          choices: compact(
+            Object.values(packageManagers).map((pm) =>
+              isPackageManagerInstalled(pm) ? { title: pm.command, value: pm.command } : null
+            )
+          )
+        },
+        flags.packageManager
       );
-      return null;
-    } else if (!which.sync(packageManager.name, { nothrow: true })) {
-      this.warn(
-        `Looks like ${packageManager.name} is not installed or is not in the PATH. Please run ${chalk.bold(
-          `${packageManager.name} ${packageManager.args.join(' ')} @xata.io/client`
-        )} manually.`
-      );
-      return null;
-    } else {
-      return packageManager;
+      return packageManagers[packageManagerName as keyof typeof packageManagers];
     }
+    if (packageManager && !isPackageManagerInstalled(packageManager)) {
+      this.warn(
+        `Looks like ${packageManager.command} is not installed or is not in the PATH. Please run ${chalk.bold(
+          installXataClientCommand(packageManager)
+        )}`
+      );
+      return null;
+    }
+    return packageManager;
   }
 
   async guessPackageManager() {
     if (await this.access('package-lock.json')) {
-      return { name: 'npm', args: ['install', '--save'] };
+      return packageManagers.npm;
     } else if (await this.access('yarn.lock')) {
-      return { name: 'yarn', args: ['add'] };
+      return packageManagers.yarn;
     } else if (await this.access('pnpm-lock.yaml')) {
-      return { name: 'pnpm', args: ['add'] };
+      return packageManagers.pnpm;
     }
     return null;
   }
@@ -232,8 +272,9 @@ export default class Init extends BaseCommand<typeof Init> {
     const packageManager = await this.getPackageManager();
     if (!packageManager) return;
 
-    const { name, args } = packageManager;
-    await this.runCommand(name, [...args, pkg]);
+    const { command, args } = packageManager;
+    await this.runCommand(command, [...args.split(' '), pkg]);
+    this.log();
   }
 
   async writeConfig() {
@@ -307,7 +348,7 @@ export default class Init extends BaseCommand<typeof Init> {
           if (retries % 2 === 0) {
             this.info('Waiting until the new API key is ready to be used...');
           }
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await delay(1000);
         } else {
           throw err;
         }
