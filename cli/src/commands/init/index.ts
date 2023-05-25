@@ -22,6 +22,8 @@ const moduleTypeOptions = ['cjs', 'esm'];
 
 type PackageManager = { command: string; args: string };
 
+type PackageManageKey = keyof typeof packageManagers;
+
 const packageManagers = {
   pnpm: {
     command: 'pnpm',
@@ -219,23 +221,20 @@ export default class Init extends BaseCommand<typeof Init> {
   }
 
   async getPackageManager() {
-    const packageManager = await this.guessPackageManager();
+    const packageManagerFlag = (await this.parseCommand()).flags.packageManager as PackageManageKey | undefined;
+    const packageManager = packageManagerFlag ? packageManagers[packageManagerFlag] : await this.guessPackageManager();
     if (!packageManager) {
-      const { flags } = await this.parseCommand();
-      const { packageManagerName } = await this.prompt(
-        {
-          type: 'select',
-          name: 'packageManagerName',
-          message: 'How should we install the @xata.io/client package?',
-          choices: compact(
-            Object.values(packageManagers).map((pm) =>
-              isPackageManagerInstalled(pm) ? { title: pm.command, value: pm.command } : null
-            )
+      const { packageManagerName } = await this.prompt({
+        type: 'select',
+        name: 'packageManagerName',
+        message: 'How should we install the @xata.io/client package?',
+        choices: compact(
+          Object.values(packageManagers).map((pm) =>
+            isPackageManagerInstalled(pm) ? { title: pm.command, value: pm.command } : null
           )
-        },
-        flags.packageManager
-      );
-      return packageManagers[packageManagerName as keyof typeof packageManagers];
+        )
+      });
+      return packageManagers[packageManagerName as PackageManageKey];
     }
     if (packageManager && !isPackageManagerInstalled(packageManager)) {
       this.warn(
