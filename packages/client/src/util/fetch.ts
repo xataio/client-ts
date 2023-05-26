@@ -1,4 +1,7 @@
+import { getPreviewBranch } from './environment';
 import { parseNumber, timeout } from './lang';
+
+const XATA_PREVIEW_MAX_RETRIES = 20;
 
 export type RequestInit = { body?: string; headers?: Record<string, string>; method?: string; signal?: any };
 export type Response = {
@@ -58,15 +61,23 @@ export class ApiRequestPool {
   request(url: string, options?: RequestInit): Promise<Response> {
     const start = new Date();
     const fetch = this.getFetch();
+    const isPreview = getPreviewBranch() !== undefined;
 
-    const runRequest = async (stalled = false): Promise<Response> => {
+    const runRequest = async (stalled = false, retries = 0): Promise<Response> => {
       const response = await fetch(url, options);
 
       if (response.status === 429) {
         const rateLimitReset = parseNumber(response.headers?.get('x-ratelimit-reset')) ?? 1;
 
         await timeout(rateLimitReset * 1000);
-        return await runRequest(true);
+        return await runRequest(true, retries + 1);
+      }
+
+      // This is a temporal measure until we can build checks on the external integrations
+      if (isPreview && response.status === 404 && retries < XATA_PREVIEW_MAX_RETRIES) {
+        console.log(`Xata preview branch not ready yet, retry ${retries + 1}/${XATA_PREVIEW_MAX_RETRIES}`);
+        await timeout(1000);
+        return await runRequest(false, retries + 1);
       }
 
       if (stalled) {
