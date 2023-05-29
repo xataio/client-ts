@@ -1,5 +1,13 @@
 # @xata.io/cli
 
+## 0.12.3
+
+### Patch Changes
+
+- [#1018](https://github.com/xataio/client-ts/pull/1018) [`431e869b`](https://github.com/xataio/client-ts/commit/431e869bdece9de7fe48f07299e0265feeef4e96) Thanks [@richardgill](https://github.com/richardgill)! - bugfix: CLI http://localhost:<port>/new redirects correctly
+
+- [#1019](https://github.com/xataio/client-ts/pull/1019) [`7f4b91a4`](https://github.com/xataio/client-ts/commit/7f4b91a40708d23303b179e7775659cad8b2f002) Thanks [@richardgill](https://github.com/richardgill)! - `xata init` quality of life improvements to wording and option ordering
+
 ## 0.12.2
 
 ### Patch Changes
