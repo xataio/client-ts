@@ -282,8 +282,7 @@ export default class Init extends BaseCommand<typeof Init> {
         }
       }
     }
-
-    return { shouldInstallPackage: output || sdk };
+    return { shouldInstallPackage: moduleType !== 'deno' && (output || sdk) };
   }
 
   async getPackageManager() {

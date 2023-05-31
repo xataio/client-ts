@@ -32,7 +32,12 @@ const findDirectories = (baseDir: string, pattern: RegExp): string[] => {
 const NODE_MODULES_PATH = '../../../node_modules/.pnpm';
 const ABSOLUTE_MODULE_PATH = path.resolve(__dirname, NODE_MODULES_PATH);
 const COSMICONFIG_PATH = findDirectories(ABSOLUTE_MODULE_PATH, /cosmiconfig@.*/)[0];
-const OCLIF_PATH = findDirectories(ABSOLUTE_MODULE_PATH, /@oclif\+core@.+_@types\+node@.+_typescript@.+/)[0];
+const OCLIF_CORE_TYPES_NODE_PATH = findDirectories(
+  ABSOLUTE_MODULE_PATH,
+  /@oclif\+core@.+_@types\+node@.+_typescript@.+/
+)[0];
+
+const OCLIF_CORE_TYPESCRIPT_PATH = findDirectories(ABSOLUTE_MODULE_PATH, /@oclif\+core@\d+\.\d+\.\d+_typescript@.+/)[0];
 
 export const mockFileSystem = (files: Record<string, string>) => {
   mockFs({
@@ -40,6 +45,9 @@ export const mockFileSystem = (files: Record<string, string>) => {
     // Mock parts of the node_modules folder which are read as tests are run.
     // Mocking all of node_modules was really slow.
     [path.join('node_modules/.pnpm', path.basename(COSMICONFIG_PATH))]: mockFs.load(COSMICONFIG_PATH),
-    [path.join('node_modules/.pnpm', path.basename(OCLIF_PATH))]: mockFs.load(OCLIF_PATH)
+    [path.join('node_modules/.pnpm', path.basename(OCLIF_CORE_TYPES_NODE_PATH))]:
+      mockFs.load(OCLIF_CORE_TYPES_NODE_PATH),
+    [path.join('node_modules/.pnpm', path.basename(OCLIF_CORE_TYPESCRIPT_PATH))]:
+      mockFs.load(OCLIF_CORE_TYPESCRIPT_PATH)
   });
 };
