@@ -93,9 +93,12 @@ export default class Init extends BaseCommand<typeof Init> {
     schema: Flags.string({
       description: 'Initializes a new database or updates an existing one with the given schema'
     }),
-    packageManager: Flags.string({
+    'package-manager': Flags.string({
       description: 'The package manager to use to install the @xata.io/client package',
       options: Object.keys(packageManagers)
+    }),
+    'no-delay': Flags.boolean({
+      hidden: true
     })
   };
 
@@ -103,7 +106,6 @@ export default class Init extends BaseCommand<typeof Init> {
 
   async run(): Promise<void> {
     const { flags } = await this.parseCommand();
-
     this.log('🦋 Initializing project... We will ask you some questions.');
     this.log();
 
@@ -134,7 +136,7 @@ export default class Init extends BaseCommand<typeof Init> {
     const packageManager = shouldInstallPackage ? await this.getPackageManager() : null;
 
     this.log('\nSetting up Xata...\n');
-    await delay(1000);
+    await this.delay(1000);
     await this.writeConfig();
     this.log();
 
@@ -150,11 +152,11 @@ export default class Init extends BaseCommand<typeof Init> {
     }
 
     await Codegen.runIfConfigured(this.projectConfig);
-    await delay(1000);
+    await this.delay(1000);
 
     this.log();
     this.success('Project setup with Xata 🦋');
-    await delay(2000);
+    await this.delay(2000);
     this.log();
 
     const branch = this.getCurrentBranchName();
@@ -176,7 +178,7 @@ export default class Init extends BaseCommand<typeof Init> {
           }columns at https://app.xata.io/workspaces/${workspace}/dbs/${database}:${region}`
         );
         this.log();
-        this.info(`Use ${chalk.bold(`xata pull`)} to regenerate code and types from your Xata database`);
+        this.info(`Use ${chalk.bold(`xata pull main`)} to regenerate code and types from your Xata database`);
       } else {
         this.log(`To make your first query:`);
         this.log(``);
@@ -201,6 +203,13 @@ export default class Init extends BaseCommand<typeof Init> {
       this.info(`Use ${chalk.bold('xata --help')} to list all commands`);
     }
   }
+  async delay(milliseconds: number) {
+    const { flags } = await this.parseCommand();
+    if (flags['no-delay']) {
+      return;
+    }
+    return await delay(milliseconds);
+  }
 
   async configureCodegen() {
     this.projectConfig = this.projectConfig || {};
@@ -210,7 +219,6 @@ export default class Init extends BaseCommand<typeof Init> {
     let output = flags.codegen;
     let sdk = flags.sdk;
     let moduleType: ModuleType | undefined = flags.module as ModuleType;
-
     if (!output && !sdk) {
       const { codegen } = await this.prompt(
         {
@@ -277,7 +285,7 @@ export default class Init extends BaseCommand<typeof Init> {
   }
 
   async getPackageManager() {
-    const packageManagerFlag = (await this.parseCommand()).flags.packageManager as PackageManageKey | undefined;
+    const packageManagerFlag = (await this.parseCommand()).flags['package-manager'] as PackageManageKey | undefined;
     const packageManager = packageManagerFlag ? packageManagers[packageManagerFlag] : await this.guessPackageManager();
     if (!packageManager) {
       const { packageManagerName } = await this.prompt({
@@ -336,7 +344,7 @@ export default class Init extends BaseCommand<typeof Init> {
     }
     await this.updateConfig();
     this.log(`Created Xata config: ${path.basename(this.projectConfigLocation)}`);
-    await delay(1000);
+    await this.delay(1000);
   }
 
   async findEnvFile() {
@@ -384,11 +392,11 @@ export default class Init extends BaseCommand<typeof Init> {
 
       this.log(`${doesEnvFileExist ? 'Updating' : 'Creating'} ${envFile} file`);
       await writeFile(envFile, content);
-      await delay(500);
+      await this.delay(500);
       this.log(`  set ${setApiKey}`);
-      await delay(500);
+      await this.delay(500);
       this.log(`  set ${setBranch}\n`);
-      await delay(500);
+      await this.delay(500);
     }
   }
 
@@ -406,7 +414,7 @@ export default class Init extends BaseCommand<typeof Init> {
           if (retries % 2 === 0) {
             this.info('Waiting until the new API key is ready to be used...');
           }
-          await delay(1000);
+          await this.delay(1000);
         } else {
           throw err;
         }
@@ -437,16 +445,16 @@ export default class Init extends BaseCommand<typeof Init> {
 
     const exists = await this.access('.gitignore');
 
-    const { confirm } = await this.prompt({
+    const { gitIgnore } = await this.prompt({
       type: 'confirm',
-      name: 'confirm',
+      name: 'gitIgnore',
       message: exists ? `Add ${envFile} to .gitignore?` : `Create .gitignore and ignore ${envFile}?`,
       initial: true
     });
-    if (!confirm) {
+    if (!gitIgnore) {
       this.warn(`You can add ${envFile} to your .gitignore later`);
     }
-    return Boolean(confirm);
+    return Boolean(gitIgnore);
   }
 
   async readSchema(file: string) {
