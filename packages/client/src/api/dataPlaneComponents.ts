@@ -2842,6 +2842,10 @@ export type QueryTableError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
 >;
 
 export type QueryTableRequestBody = {
@@ -3691,6 +3695,10 @@ export type SearchBranchError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
 >;
 
 export type SearchBranchRequestBody = {
@@ -3822,6 +3830,10 @@ export type SqlQueryError = Fetcher.ErrorWrapper<
   | {
       status: 404;
       payload: Responses.SimpleError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
     }
 >;
 
@@ -3962,6 +3974,10 @@ export type AskTableError = Fetcher.ErrorWrapper<
   | {
       status: 429;
       payload: Responses.RateLimitError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
     }
 >;
 
