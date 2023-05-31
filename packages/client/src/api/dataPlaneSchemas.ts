@@ -711,7 +711,7 @@ export type TransactionError = {
 };
 
 /**
- * An array of errors, with indicides, from the transaction.
+ * An array of errors, with indices, from the transaction.
  */
 export type TransactionFailure = {
   /**
@@ -975,7 +975,7 @@ export type DateBooster = {
    */
   origin?: string;
   /**
-   * The duration at which distance from origin the score is decayed with factor, using an exponential function. It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
+   * The duration at which distance from origin the score is decayed with factor, using an exponential function. It is formatted as number + units, for example: `5d`, `20m`, `10s`.
    *
    * @pattern ^(\d+)(d|h|m|s|ms)$
    */
@@ -1015,7 +1015,7 @@ export type BoosterExpression =
 /**
  * Maximum [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) for the search terms. The Levenshtein
  * distance is the number of one character changes needed to make two strings equal. The default is 1, meaning that single
- * character typos per word are tollerated by search. You can set it to 0 to remove the typo tollerance or set it to 2
+ * character typos per word are tolerated by search. You can set it to 0 to remove the typo tolerance or set it to 2
  * to allow two typos in a word.
  *
  * @default 1
@@ -1182,7 +1182,7 @@ export type UniqueCountAgg = {
   column: string;
   /**
    * The threshold under which the unique count is exact. If the number of unique
-   * values in the column is higher than this threshold, the results are approximative.
+   * values in the column is higher than this threshold, the results are approximate.
    * Maximum value is 40,000, default value is 3000.
    */
   precisionThreshold?: number;
@@ -1207,7 +1207,7 @@ export type DateHistogramAgg = {
   column: string;
   /**
    * The fixed interval to use when bucketing.
-   * It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
+   * It is formatted as number + units, for example: `5d`, `20m`, `10s`.
    *
    * @pattern ^(\d+)(d|h|m|s|ms)$
    */
@@ -1264,7 +1264,7 @@ export type NumericHistogramAgg = {
   interval: number;
   /**
    * By default the bucket keys start with 0 and then continue in `interval` steps. The bucket
-   * boundaries can be shiftend by using the offset option. For example, if the `interval` is 100,
+   * boundaries can be shifted by using the offset option. For example, if the `interval` is 100,
    * but you prefer the bucket boundaries to be `[50, 150), [150, 250), etc.`, you can set `offset`
    * to 50.
    *
