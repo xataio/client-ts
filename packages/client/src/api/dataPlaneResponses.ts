@@ -76,6 +76,11 @@ export type QueryResponse = {
   meta: Schemas.RecordsMetadata;
 };
 
+export type ServiceUnavailableError = {
+  id?: string;
+  message: string;
+};
+
 export type SearchResponse = {
   records: Schemas.XataRecord[];
   warning?: string;
