@@ -37,6 +37,8 @@ const OCLIF_PATH = findDirectories(ABSOLUTE_MODULE_PATH, /@oclif\+core@.+_@types
 export const mockFileSystem = (files: Record<string, string>) => {
   mockFs({
     ...files,
+    // Mock parts of the node_modules folder which are read as tests are run.
+    // Mocking all of node_modules was really slow.
     [path.join('node_modules/.pnpm', path.basename(COSMICONFIG_PATH))]: mockFs.load(COSMICONFIG_PATH),
     [path.join('node_modules/.pnpm', path.basename(OCLIF_PATH))]: mockFs.load(OCLIF_PATH)
   });

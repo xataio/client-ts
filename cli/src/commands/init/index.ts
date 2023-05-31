@@ -12,6 +12,7 @@ import { BaseCommand, ENV_FILES } from '../../base.js';
 import { isIgnored } from '../../git.js';
 import { xataDatabaseSchema } from '../../schema.js';
 import { delay } from '../../utils/delay.js';
+import { enumFlag } from '../../utils/oclif.js';
 import Browse from '../browse/index.js';
 import Codegen, { languages, unsupportedExtensionError } from '../codegen/index.js';
 import RandomData from '../random-data/index.js';
@@ -93,7 +94,7 @@ export default class Init extends BaseCommand<typeof Init> {
     schema: Flags.string({
       description: 'Initializes a new database or updates an existing one with the given schema'
     }),
-    'package-manager': Flags.string({
+    'package-manager': enumFlag<PackageManageKey>({
       description: 'The package manager to use to install the @xata.io/client package',
       options: Object.keys(packageManagers)
     }),
@@ -285,7 +286,7 @@ export default class Init extends BaseCommand<typeof Init> {
   }
 
   async getPackageManager() {
-    const packageManagerFlag = (await this.parseCommand()).flags['package-manager'] as PackageManageKey | undefined;
+    const packageManagerFlag = (await this.parseCommand()).flags['package-manager'];
     const packageManager = packageManagerFlag ? packageManagers[packageManagerFlag] : await this.guessPackageManager();
     if (!packageManager) {
       const { packageManagerName } = await this.prompt({
