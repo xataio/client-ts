@@ -11,6 +11,7 @@ import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand, ENV_FILES } from '../../base.js';
 import { isIgnored } from '../../git.js';
 import { xataDatabaseSchema } from '../../schema.js';
+import { getDbTableExpression } from '../../utils/codeSnippet.js';
 import { delay } from '../../utils/delay.js';
 import { enumFlag } from '../../utils/oclif.js';
 import Browse from '../browse/index.js';
@@ -186,7 +187,7 @@ export default class Init extends BaseCommand<typeof Init> {
         this.log(`import { getXataClient } from '${this.projectConfig?.codegen?.output}'`);
         this.log(``);
         this.log(`// server side query`);
-        this.log(`await getXataClient().${currentSchema?.tables[0].name}.getPaginated()`);
+        this.log(`await getXataClient().db${getDbTableExpression(currentSchema?.tables[0].name)}.getPaginated()`);
       }
     } else {
       this.info(`Here's a list of useful commands:`);
