@@ -134,8 +134,8 @@ export default class Init extends BaseCommand<typeof Init> {
     const ignoreEnvFile = await this.promptIgnoreEnvFile();
 
     const { shouldInstallPackage } = await this.configureCodegen();
-
-    const packageManager = shouldInstallPackage ? await this.getPackageManager() : null;
+    const canInstallPackage = await this.access('package.json');
+    const packageManager = shouldInstallPackage && canInstallPackage ? await this.getPackageManager() : null;
 
     this.log('\nSetting up Xata...\n');
     await this.delay(1000);
@@ -173,7 +173,16 @@ export default class Init extends BaseCommand<typeof Init> {
       const hasTables = currentSchema?.tables && currentSchema?.tables.length > 0;
       const hasColumns = currentSchema?.tables.some((t) => t.columns.length > 0);
       const isSchemaSetup = hasTables && hasColumns;
-      if (!isSchemaSetup) {
+      if (shouldInstallPackage && !canInstallPackage) {
+        this.warn(
+          `No package.json found. Please run one of: pnpm init, yarn init, npm init. Then rerun ${chalk.bold(
+            'xata init --force'
+          )}`
+        );
+        this.warn('pnpm init');
+        this.warn('yarn init && yarn add @xata.io/client');
+        this.warn('npm init && npm --save @xata.io/client');
+      } else if (!isSchemaSetup) {
         this.info(
           `Setup ${
             hasTables ? '' : 'tables and '
