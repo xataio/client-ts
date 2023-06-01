@@ -1,5 +1,5 @@
 import { Config } from '@oclif/core';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { BaseCommand } from './base.js';
 import dotenv from 'dotenv';
 import { clearEnvVariables } from './commands/utils.test.js';
@@ -12,9 +12,7 @@ class FakeCommand extends BaseCommand<typeof FakeCommand> {
   }
 }
 
-beforeEach(() => {
-  clearEnvVariables();
-});
+clearEnvVariables();
 
 describe('init', () => {
   test('loads env files in the desired order', async () => {
