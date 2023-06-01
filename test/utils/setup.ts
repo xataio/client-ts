@@ -18,12 +18,15 @@ import { schema } from '../mock_data';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
-
+console.log('loading env', join(process.cwd(), '.env'));
+console.log('process.env', JSON.stringify(process.env, null, 2));
 const apiKey = process.env.XATA_API_KEY ?? '';
-if (apiKey === '') throw new Error('XATA_API_KEY environment variable is not set');
+if (apiKey === '')
+  throw new Error(`XATA_API_KEY environment variable is not set ${JSON.stringify(process.env, null, 2)}`);
 
 const workspace = process.env.XATA_WORKSPACE ?? '';
-if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
+if (workspace === '')
+  throw new Error(`XATA_WORKSPACE environment variable is not set ${JSON.stringify(process.env, null, 2)}`);
 
 const region = process.env.XATA_REGION || 'eu-west-1';
 
