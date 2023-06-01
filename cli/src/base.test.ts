@@ -12,9 +12,7 @@ class FakeCommand extends BaseCommand<typeof FakeCommand> {
   }
 }
 
-beforeEach(() => {
-  clearEnvVariables();
-});
+clearEnvVariables();
 
 describe('init', () => {
   test('loads env files in the desired order', async () => {
