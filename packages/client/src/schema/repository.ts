@@ -2015,9 +2015,9 @@ export const initObject = <T>(
     return db[table].delete(record['id'] as string);
   };
 
-  record.xata = metadata;
+  record.xata = Object.freeze(metadata);
   record.getMetadata = function () {
-    return metadata;
+    return record.xata;
   };
 
   record.toSerializable = function () {
@@ -2028,7 +2028,7 @@ export const initObject = <T>(
     return JSON.stringify(transformObjectLinks(serializable));
   };
 
-  for (const prop of ['read', 'update', 'replace', 'delete', 'xata', 'getMetadata', 'toSerializable', 'toString']) {
+  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerializable', 'toString']) {
     Object.defineProperty(record, prop, { enumerable: false });
   }
 
