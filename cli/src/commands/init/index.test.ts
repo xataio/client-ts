@@ -1,18 +1,14 @@
 import { Config } from '@oclif/core';
-import fetch from 'node-fetch';
-import * as fs from 'fs';
-import which from 'which';
 import { spawn } from 'child_process';
+import fetch from 'node-fetch';
+import process from 'process';
+import prompts from 'prompts';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import which from 'which';
+import { isIgnored } from '../../git';
+import { runInTempDir } from '../../utils/testFsUtils';
 import { clearEnvVariables } from '../utils.test.js';
 import Init from './index.js';
-import { isIgnored } from '../../git';
-import prompts from 'prompts';
-import process from 'process';
-import path from 'path';
-import os from 'os';
-import { randomUUID } from 'crypto';
-import { getDirectoryAsObject } from '../../utils/mockFs.js';
 
 vi.mock('prompts');
 vi.mock('node-fetch');
@@ -76,30 +72,20 @@ const runInitTest = async (
   promptsMock.mockReturnValue(prompts);
 
   const config = await Config.load();
-  const oldCwd = process.cwd();
-  const tempDir = path.join(os.tmpdir(), randomUUID());
-  fs.mkdirSync(tempDir, { recursive: true });
-  try {
-    for (const [filename, content] of Object.entries(files)) {
-      fs.writeFileSync(path.join(tempDir, filename), content);
-    }
 
-    process.chdir(tempDir);
+  const { outputFiles, log, warn } = await runInTempDir(files, async () => {
     const command = new Init(['--no-delay', ...args], config);
     const log = vi.spyOn(command, 'log');
     const warn = vi.spyOn(command, 'warn');
+
     setupCommand(command);
 
     await command.init();
     await command.run();
+    return { log, warn };
+  });
 
-    const outputFiles = getDirectoryAsObject(tempDir);
-
-    return { log, warn, promptsMock, outputFiles };
-  } finally {
-    process.chdir(oldCwd);
-    fs.rmdirSync(tempDir, { recursive: true });
-  }
+  return { log, warn, promptsMock, outputFiles };
 };
 
 describe('xata init', () => {
