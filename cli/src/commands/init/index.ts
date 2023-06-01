@@ -392,18 +392,17 @@ export default class Init extends BaseCommand<typeof Init> {
       this.warn(`Your ${envFile} file already contains XATA_API_KEY key. skipping...`);
     } else {
       const setBranch = `XATA_BRANCH=main`;
-      const setApiKey = `XATA_API_KEY=${apiKey}`;
       if (content) content += '\n\n';
       content += '# [Xata] Configuration used by the CLI and the SDK\n';
       content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
       content += `${setBranch}\n`;
-      content += `${setApiKey}\n`;
+      content += `XATA_API_KEY=${apiKey}\n`;
       if (profile.host !== 'production') content += `XATA_API_PROVIDER=${buildProviderString(profile.host)}\n`;
 
       this.log(`${doesEnvFileExist ? 'Updating' : 'Creating'} ${envFile} file`);
       await writeFile(envFile, content);
       await this.delay(500);
-      this.log(`  set ${setApiKey}`);
+      this.log(`  set XATA_API_KEY=xau_*********************************`);
       await this.delay(500);
       this.log(`  set ${setBranch}\n`);
       await this.delay(500);
