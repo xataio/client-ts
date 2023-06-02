@@ -119,7 +119,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
       await writeFile(path.join(dir, 'types.d.ts'), types);
     }
 
-    this.success(`Your XataClient is generated at ./${relative(process.cwd(), output)}`);
+    this.log(`Generated Xata code to ./${relative(process.cwd(), output)}`);
   }
 
   static async runIfConfigured(projectConfig?: ProjectConfig) {
