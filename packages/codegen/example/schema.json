@@ -1,5 +1,4 @@
 {
-  "formatVersion": "1.0",
   "tables": [
     {
       "name": "teams",
@@ -72,6 +71,14 @@
           "type": "string"
         },
         {
+          "name": "photo",
+          "type": "file"
+        },
+        {
+          "name": "attachments",
+          "type": "file[]"
+        },
+        {
           "name": "settings",
           "type": "object",
           "columns": [
@@ -139,13 +146,12 @@
           "name": "account_value",
           "type": "int"
         },
-        { 
+        {
           "name": "vector",
           "type": "vector",
-          "vector":
-            {
-              "dimension": 4
-            }
+          "vector": {
+            "dimension": 4
+          }
         }
       ]
     },
