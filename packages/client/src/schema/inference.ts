@@ -1,6 +1,6 @@
 import { Schemas } from '../api';
 import { UnionToIntersection, Values } from '../util/types';
-import { Identifiable, XataRecord } from './record';
+import { Identifiable, XataArrayFile, XataFile, XataRecord } from './record';
 
 export type BaseSchema = {
   name: string;
@@ -68,6 +68,10 @@ type InnerType<Type, ObjectColumns, Tables, LinkedTable> = Type extends 'string'
   ? string[]
   : Type extends 'vector'
   ? number[]
+  : Type extends 'file'
+  ? XataFile
+  : Type extends 'file[]'
+  ? XataArrayFile[]
   : Type extends 'object'
   ? ObjectColumns extends readonly unknown[]
     ? ObjectColumns[number] extends { name: string; type: string }

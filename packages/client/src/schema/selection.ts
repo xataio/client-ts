@@ -77,7 +77,7 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
         [K in DataProps<O>]: NonNullable<O[K]> extends infer Item
           ? If<
               IsArray<Item>,
-              K, // If the property is an array, we stop recursion. We don't support object arrays yet
+              Item extends (infer Type)[] ? K | `${K}.${StringKeys<Type> | '*'}` : never,
               If<
                 IsObject<Item>,
                 Item extends XataRecord
@@ -111,6 +111,10 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
             ? NonNullable<O[K]> extends XataRecord
               ? ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M> & XataRecord>
               : ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M>>
+            : NonNullable<O[K]> extends (infer ArrayType)[]
+            ? M extends SelectableColumn<NonNullable<ArrayType>>
+              ? ForwardNullable<ArrayType, NestedValueAtColumn<NonNullable<ArrayType>, M>[]>
+              : unknown //`Property ${M} is not selectable on type ${ArrayType}`
             : unknown; //`Property ${M} is not selectable on type ${K}`
         }
       : unknown //`Property ${N} is not a property of type ${O}`
