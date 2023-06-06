@@ -7,6 +7,8 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   | '*'
   // Alias for id (not in schema)
   | 'id'
+  // Internal properties
+  | `xata.${'version' | 'createdAt' | 'updatedAt'}`
   // Properties of the current level
   | DataProps<O>
   // Nested properties of the lower levels

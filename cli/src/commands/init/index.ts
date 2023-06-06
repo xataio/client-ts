@@ -179,9 +179,6 @@ export default class Init extends BaseCommand<typeof Init> {
             'xata init --force'
           )}`
         );
-        this.warn('pnpm init');
-        this.warn('yarn init && yarn add @xata.io/client');
-        this.warn('npm init && npm --save @xata.io/client');
       } else if (!isSchemaSetup) {
         this.info(
           `Setup ${
