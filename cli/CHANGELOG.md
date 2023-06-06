@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.12.5
+
+### Patch Changes
+
+- [#1037](https://github.com/xataio/client-ts/pull/1037) [`5c060be7`](https://github.com/xataio/client-ts/commit/5c060be7a8a9823d3167edd3cf7d49f3cb32e141) Thanks [@richardgill](https://github.com/richardgill)! - Bugfix: xata init warnings messages fixed
+
+- Updated dependencies [[`51561b52`](https://github.com/xataio/client-ts/commit/51561b52b56ad5ed9101d8faf12929891419cb2c)]:
+  - @xata.io/client@0.24.2
+  - @xata.io/importer@0.3.17
+
 ## 0.12.4
 
 ### Patch Changes
