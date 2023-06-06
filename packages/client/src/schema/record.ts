@@ -1,3 +1,4 @@
+import { File } from '../util/files';
 import { isObject, isString } from '../util/lang';
 import { ExclusiveOr } from '../util/types';
 import { SelectableColumn, SelectedPick } from './selection';
