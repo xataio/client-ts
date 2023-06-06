@@ -49,6 +49,8 @@ export type RecordUpdateResponse =
       id: string;
       xata: {
         version: number;
+        createdAt: string;
+        updatedAt: string;
       };
     };
 

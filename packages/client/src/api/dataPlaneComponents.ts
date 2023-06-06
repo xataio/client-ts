@@ -2852,7 +2852,7 @@ export type QueryTableRequestBody = {
   filter?: Schemas.FilterExpression;
   sort?: Schemas.SortExpression;
   page?: Schemas.PageConfig;
-  columns?: Schemas.ColumnsProjection;
+  columns?: Schemas.QueryColumnsProjection;
   /**
    * The consistency level for this request.
    *

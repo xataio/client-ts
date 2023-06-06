@@ -841,6 +841,14 @@ export type RecordMeta = {
      */
     version: number;
     /**
+     * The time when the record was created.
+     */
+    createdAt?: string;
+    /**
+     * The time when the record was last updated.
+     */
+    updatedAt?: string;
+    /**
      * The record's table name. APIs that return records from multiple tables will set this field accordingly.
      */
     table?: string;
@@ -882,6 +890,12 @@ export type FileResponse = {
   version: number;
   attributes?: Record<string, any>;
 };
+
+export type ProjectionConfig = {
+  name?: string;
+};
+
+export type QueryColumnsProjection = (string | ProjectionConfig)[];
 
 /**
  * The target expression is used to filter the search results by the target columns.
