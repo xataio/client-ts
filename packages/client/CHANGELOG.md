@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.24.2
+
+### Patch Changes
+
+- [#1038](https://github.com/xataio/client-ts/pull/1038) [`51561b52`](https://github.com/xataio/client-ts/commit/51561b52b56ad5ed9101d8faf12929891419cb2c) Thanks [@SferaDev](https://github.com/SferaDev)! - Show internal columns in filters
+
 ## 0.24.1
 
 ### Patch Changes
