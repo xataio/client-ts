@@ -1915,7 +1915,7 @@ export class RestRepository<Record extends XataRecord>
 
     const result: Dictionary<any> = {};
 
-    for await (const [key, value] of Object.entries(object)) {
+    for (const [key, value] of Object.entries(object)) {
       // Ignore internal properties
       if (key === 'xata') continue;
 
