@@ -1,10 +1,12 @@
 import { XataFile } from '../schema/record';
 import { PartialBy, isDefined, isObject, isString } from './lang';
 
+const defaultMediaType = 'application/octet-stream';
+
 function parseBuffer(file: Buffer) {
   try {
     if (file instanceof Buffer) {
-      return { base64Content: file.toString('base64') };
+      return { base64Content: file.toString('base64'), mediaType: defaultMediaType };
     }
   } catch (e) {
     // ignore
@@ -16,6 +18,7 @@ async function parseBrowserBlobFile(file: Blob | File) {
     if (file instanceof Blob) {
       // @ts-ignore - File might not be in the type definitions
       const name = file instanceof File ? file.name : undefined;
+      const mediaType = file.type || defaultMediaType;
       const base64Content = await new Promise<string>((resolve, reject) => {
         // @ts-ignore - FileReader might not be in the type definitions
         const reader = new FileReader();
@@ -26,7 +29,7 @@ async function parseBrowserBlobFile(file: Blob | File) {
         reader.readAsDataURL(file);
       });
 
-      return { base64Content, name };
+      return { base64Content, name, mediaType };
     }
   } catch (e) {
     // ignore
@@ -38,19 +41,28 @@ async function parseUint8Array(file: Uint8Array) {
     if (file instanceof Uint8Array) {
       const decoder = new TextDecoder('utf-8');
       const base64Content = btoa(decoder.decode(file));
-      return { base64Content };
+      return { base64Content, mediaType: defaultMediaType };
     }
   } catch (e) {
     // ignore
   }
 }
 
+function isPartialXataFile(file: unknown): file is PartialBy<XataFile, 'name'> {
+  if (!isObject(file)) return false;
+  if (!isString(file.base64Content)) return false;
+  if (!isString(file.mediaType)) return false;
+  if (isDefined(file.name) && !isString(file.name)) return false;
+
+  return true;
+}
+
 // We support: Buffer, Blob, File, XataFile, XataArrayFile
-export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFile, 'name' | 'mediaType'> | undefined> {
+export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFile, 'name'> | undefined> {
   if (!isDefined(file)) return undefined;
 
-  if (isObject(file) && isString(file.base64Content)) {
-    return file as { base64Content: string; name?: string };
+  if (isPartialXataFile(file)) {
+    return { ...file, mediaType: file.mediaType || defaultMediaType };
   }
 
   const bufferFile = parseBuffer(file as Buffer);
