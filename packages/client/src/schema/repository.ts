@@ -1936,7 +1936,7 @@ export class RestRepository<Record extends XataRecord>
           break;
         case 'file[]':
           result[key] = await promiseMap(value as unknown[], async (file) => {
-            await parseExternalFile(file);
+            return await parseExternalFile(file);
           });
           console.log(1941, value, result[key]);
           break;
