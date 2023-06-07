@@ -1938,7 +1938,7 @@ export class RestRepository<Record extends XataRecord>
           result[key] = await promiseMap(value as unknown[], async (file) => {
             await parseExternalFile(file);
           });
-          console.log(1941, result[key]);
+          console.log(1941, value, result[key]);
           break;
         default:
           result[key] = value;
