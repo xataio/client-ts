@@ -15,11 +15,10 @@ function parseBuffer(file: Buffer) {
   }
 }
 
-async function parseBrowserBlobFile(file: Blob | File) {
+async function parseBrowserBlob(file: Blob) {
   try {
     if (file instanceof Blob) {
-      // @ts-ignore - File might not be in the type definitions
-      const name = file instanceof File ? file.name : undefined;
+      const name = file.name;
       const mediaType = file.type || defaultMediaType;
       const base64Content = await new Promise<string>((resolve, reject) => {
         // @ts-ignore - FileReader might not be in the type definitions
@@ -85,7 +84,7 @@ export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFi
   const bufferFile = parseBuffer(file as Buffer);
   if (bufferFile) return bufferFile;
 
-  const browserBlobFile = await parseBrowserBlobFile(file as Blob | File);
+  const browserBlobFile = await parseBrowserBlob(file as Blob | File);
   if (browserBlobFile) return browserBlobFile;
 
   const uint8ArrayFile = await parseUint8Array(file as Uint8Array);
