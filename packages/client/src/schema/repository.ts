@@ -1934,7 +1934,9 @@ export class RestRepository<Record extends XataRecord>
           result[key] = await parseExternalFile(value);
           break;
         case 'file[]':
-          result[key] = await promiseMap(value as unknown[], (file) => parseExternalFile(file));
+          result[key] = await promiseMap(value as unknown[], async (file) => {
+            await parseExternalFile(file);
+          });
           break;
         default:
           result[key] = value;
