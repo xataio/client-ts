@@ -1,6 +1,7 @@
 import { XataFile } from '../schema/record';
 import { PartialBy, isDefined, isObject, isString } from './lang';
 
+// To be removed
 const defaultMediaType = 'application/octet-stream';
 
 function parseBuffer(file: Buffer) {
@@ -23,7 +24,13 @@ async function parseBrowserBlobFile(file: Blob | File) {
         // @ts-ignore - FileReader might not be in the type definitions
         const reader = new FileReader();
         reader.onload = () => {
-          resolve(reader.result as string);
+          const result = reader.result;
+          if (isString(result)) {
+            const base64Content = result.split(',')[1];
+            resolve(base64Content);
+          } else {
+            reject(new Error('Failed to read file'));
+          }
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
@@ -48,22 +55,19 @@ async function parseUint8Array(file: Uint8Array) {
   }
 }
 
-function isPartialXataFile(file: unknown): file is PartialBy<XataFile, 'name'> {
+function isPartialXataFile(file: unknown): file is PartialBy<XataFile, 'name' | 'mediaType'> {
   if (!isObject(file)) return false;
   if (!isString(file.base64Content)) return false;
-  if (!isString(file.mediaType)) return false;
+  if (isDefined(file.name) && !isString(file.mediaType)) return false;
   if (isDefined(file.name) && !isString(file.name)) return false;
 
   return true;
 }
 
 // We support: Buffer, Blob, File, XataFile, XataArrayFile
-export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFile, 'name'> | undefined> {
+export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFile, 'name' | 'mediaType'> | undefined> {
   if (!isDefined(file)) return undefined;
-
-  if (isPartialXataFile(file)) {
-    return { ...file, mediaType: file.mediaType || defaultMediaType };
-  }
+  if (isPartialXataFile(file)) return file;
 
   const bufferFile = parseBuffer(file as Buffer);
   if (bufferFile) return bufferFile;
@@ -90,3 +94,5 @@ export interface File extends Blob {
   /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/webkitRelativePath) */
   readonly webkitRelativePath: string;
 }
+
+type Buffer = Uint8Array;

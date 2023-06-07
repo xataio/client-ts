@@ -1,6 +1,6 @@
-import { File } from '../util/files';
+import { File, Buffer } from '../util/files';
 import { isObject, isString } from '../util/lang';
-import { ExclusiveOr } from '../util/types';
+import { ExclusiveOr, RequiredBy } from '../util/types';
 import { SelectableColumn, SelectedPick } from './selection';
 
 /**
@@ -209,9 +209,15 @@ type EditableDataFields<T> = T extends XataRecord
   : NonNullable<T> extends Date
   ? string | Date | null | undefined
   : T extends XataFile
-  ? XataFile | File | Blob | ArrayBuffer | Buffer | Uint8Array
+  ? RequiredBy<XataFile, 'base64Content'> | File | Blob | Buffer | Uint8Array
   : T extends XataFile[]
-  ? XataFile[] | XataArrayFile[] | File[] | Blob[] | ArrayBuffer[] | Buffer[] | Uint8Array[]
+  ?
+      | RequiredBy<XataFile, 'base64Content'>[]
+      | RequiredBy<XataArrayFile, 'base64Content'>[]
+      | File[]
+      | Blob[]
+      | Buffer[]
+      | Uint8Array[]
   : T extends number
   ? number | NumericOperator
   : T;
