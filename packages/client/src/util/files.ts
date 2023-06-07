@@ -94,5 +94,3 @@ export interface File extends Blob {
   /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/webkitRelativePath) */
   readonly webkitRelativePath: string;
 }
-
-type Buffer = Uint8Array;
