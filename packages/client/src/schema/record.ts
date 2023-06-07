@@ -1,3 +1,4 @@
+import { File } from '../util/files';
 import { isObject, isString } from '../util/lang';
 import { ExclusiveOr, RequiredBy } from '../util/types';
 import { SelectableColumn, SelectedPick } from './selection';
@@ -199,7 +200,7 @@ type NumericOperator = ExclusiveOr<
   ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
 >;
 
-type InputXataFile = RequiredBy<XataFile | XataArrayFile, 'base64Content'> | Blob | Uint8Array;
+type InputXataFile = RequiredBy<XataFile | XataArrayFile, 'base64Content'> | File | Blob | Uint8Array | ArrayBuffer;
 
 type EditableDataFields<T> = T extends XataRecord
   ? { id: string } | string

@@ -45,11 +45,18 @@ async function parseBrowserBlobFile(file: Blob | File) {
   }
 }
 
-async function parseUint8Array(file: Uint8Array) {
+async function parseUint8Array(file: Uint8Array | ArrayBuffer) {
   try {
-    if (file instanceof Uint8Array) {
-      const decoder = new TextDecoder('utf-8');
-      const base64Content = btoa(decoder.decode(file));
+    const uint8Array = file instanceof ArrayBuffer ? new Uint8Array(file) : file;
+
+    if (uint8Array instanceof Uint8Array) {
+      let binary = '';
+
+      for (let i = 0; i < uint8Array.byteLength; i++) {
+        binary += String.fromCharCode(uint8Array[i]);
+      }
+
+      const base64Content = btoa(binary);
       return { base64Content, mediaType: defaultMediaType };
     }
   } catch (e) {
@@ -84,4 +91,18 @@ export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFi
   console.log('parseExternalFile error', file);
 
   return undefined;
+}
+
+/**
+ * Provides information about files and allows JavaScript in a web page to access their content.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/File)
+ */
+export interface File extends Blob {
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/lastModified) */
+  readonly lastModified: number;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/name) */
+  readonly name: string;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/webkitRelativePath) */
+  readonly webkitRelativePath: string;
 }
