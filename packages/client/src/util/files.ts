@@ -33,6 +33,18 @@ async function parseBrowserBlobFile(file: Blob | File) {
   }
 }
 
+async function parseUint8Array(file: Uint8Array) {
+  try {
+    if (file instanceof Uint8Array) {
+      const decoder = new TextDecoder('utf-8');
+      const base64Content = btoa(decoder.decode(file));
+      return { base64Content };
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
 // We support: Buffer, Blob, File, XataFile, XataArrayFile
 export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFile, 'name' | 'mediaType'> | undefined> {
   if (!isDefined(file)) return undefined;
@@ -46,6 +58,9 @@ export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFi
 
   const browserBlobFile = await parseBrowserBlobFile(file as Blob | File);
   if (browserBlobFile) return browserBlobFile;
+
+  const uint8ArrayFile = await parseUint8Array(file as Uint8Array);
+  if (uint8ArrayFile) return uint8ArrayFile;
 
   return undefined;
 }

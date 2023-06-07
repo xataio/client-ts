@@ -209,9 +209,9 @@ type EditableDataFields<T> = T extends XataRecord
   : NonNullable<T> extends Date
   ? string | Date | null | undefined
   : T extends XataFile
-  ? XataFile | File | Blob | ArrayBuffer | Buffer
+  ? XataFile | File | Blob | ArrayBuffer | Buffer | Uint8Array
   : T extends XataFile[]
-  ? XataFile[] | XataArrayFile[] | File[] | Blob[] | ArrayBuffer[] | Buffer[]
+  ? XataFile[] | XataArrayFile[] | File[] | Blob[] | ArrayBuffer[] | Buffer[] | Uint8Array[]
   : T extends number
   ? number | NumericOperator
   : T;
