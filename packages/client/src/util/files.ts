@@ -79,6 +79,9 @@ export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFi
   if (!isDefined(file)) return undefined;
   if (isPartialXataFile(file)) return file;
 
+  const stringFile = isString(file) ? { base64Content: file, mediaType: 'text/plain' } : undefined;
+  if (stringFile) return stringFile;
+
   const bufferFile = parseBuffer(file as Buffer);
   if (bufferFile) return bufferFile;
 
@@ -88,9 +91,7 @@ export async function parseExternalFile(file: unknown): Promise<PartialBy<XataFi
   const uint8ArrayFile = await parseUint8Array(file as Uint8Array);
   if (uint8ArrayFile) return uint8ArrayFile;
 
-  console.log('parseExternalFile error', file);
-
-  return undefined;
+  throw new Error('Unable to parse file');
 }
 
 /**
