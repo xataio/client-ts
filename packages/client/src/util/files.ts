@@ -10,6 +10,7 @@ function parseBuffer(file: Buffer) {
       return { base64Content: file.toString('base64'), mediaType: defaultMediaType };
     }
   } catch (e) {
+    console.log('parseBuffer error', e);
     // ignore
   }
 }
@@ -39,6 +40,7 @@ async function parseBrowserBlobFile(file: Blob | File) {
       return { base64Content, name, mediaType };
     }
   } catch (e) {
+    console.log('parseBrowserBlobFile error', e);
     // ignore
   }
 }
@@ -51,6 +53,7 @@ async function parseUint8Array(file: Uint8Array) {
       return { base64Content, mediaType: defaultMediaType };
     }
   } catch (e) {
+    console.log('parseUint8Array error', e);
     // ignore
   }
 }
