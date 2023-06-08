@@ -90,6 +90,26 @@ export class XataFile {
     const uint8Array = new Uint8Array(arrayBuffer);
     return await this.fromUint8Array(uint8Array, { name, mediaType });
   }
+
+  static async fromString(
+    string: string,
+    { name, mediaType }: { name?: string; mediaType?: string } = {}
+  ): Promise<XataFile> {
+    const base64Content = btoa(string);
+    return new XataFile({ base64Content, name, mediaType });
+  }
+
+  static async fromBase64(
+    base64Content: string,
+    { name, mediaType }: { name?: string; mediaType?: string } = {}
+  ): Promise<XataFile> {
+    return new XataFile({ base64Content, name, mediaType });
+  }
+
+  static async fromJSON(json: string | Record<string, unknown>, { name }: { name?: string } = {}): Promise<XataFile> {
+    const file = typeof json === 'string' ? json : JSON.stringify(json);
+    return this.fromString(file, { name, mediaType: 'application/json' });
+  }
 }
 
 export type XataArrayFile = Identifiable & XataFile;
