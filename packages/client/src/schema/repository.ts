@@ -1930,14 +1930,6 @@ export class RestRepository<Record extends XataRecord>
           result[key] = value instanceof Date ? value.toISOString() : value;
           break;
         }
-        case 'file':
-          console.log(1934, value);
-          result[key] = value;
-          break;
-        case 'file[]':
-          console.log(1938, value);
-          result[key] = value;
-          break;
         default:
           result[key] = value;
       }
