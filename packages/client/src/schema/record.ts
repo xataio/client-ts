@@ -1,5 +1,6 @@
 import { isObject, isString } from '../util/lang';
 import { ExclusiveOr, RequiredBy } from '../util/types';
+import { XataArrayFile, XataFile } from './files';
 import { SelectableColumn, SelectedPick } from './selection';
 
 /**
@@ -138,51 +139,6 @@ export type XataRecordMetadata = {
   updatedAt: Date;
 };
 
-export interface XataFile {
-  /**
-   * Name of this file.
-   */
-  name: string;
-  /**
-   * Media type of this file.
-   */
-  mediaType: string;
-  /**
-   * Base64 encoded content of this file.
-   */
-  base64Content?: string;
-  /**
-   * Whether to enable public url for this file.
-   */
-  enablePublicUrl?: boolean;
-  /**
-   * Timeout for the signed url.
-   */
-  signedUrlTimeout?: number;
-  /**
-   * Size of this file.
-   */
-  size?: number;
-  /**
-   * Version of this file.
-   */
-  version?: number;
-  /**
-   * Url of this file.
-   */
-  url?: string;
-  /**
-   * Signed url of this file.
-   */
-  signedUrl?: string;
-  /**
-   * Attributes of this file.
-   */
-  attributes?: Record<string, unknown>;
-}
-
-export type XataArrayFile = Identifiable & XataFile;
-
 export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
   return isObject(x) && isString((x as Partial<Identifiable>)?.id);
 }
@@ -199,7 +155,7 @@ type NumericOperator = ExclusiveOr<
   ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
 >;
 
-type InputXataFile = RequiredBy<XataFile | XataArrayFile, 'base64Content'> | Blob | Uint8Array | ArrayBuffer | string;
+type InputXataFile = XataFile | XataArrayFile;
 
 type EditableDataFields<T> = T extends XataRecord
   ? { id: string } | string
