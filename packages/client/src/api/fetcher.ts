@@ -161,6 +161,8 @@ export async function fetch<
         Authorization: `Bearer ${apiKey}`
       };
 
+      console.log('body', body);
+
       const response = await pool.request(url, {
         ...fetchOptions,
         method: method.toUpperCase(),
