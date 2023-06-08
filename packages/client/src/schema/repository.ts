@@ -30,7 +30,7 @@ import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
-import { chunk, compact, isNumber, isObject, isString, isStringArray } from '../util/lang';
+import { chunk, compact, isNumber, isObject, isString, isStringArray, promiseMap } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -921,7 +921,7 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
-    const record = transformObjectLinks(object);
+    const record = await this.#transformObjectToApi(object);
 
     const response = await insertRecord({
       pathParams: {
@@ -945,7 +945,7 @@ export class RestRepository<Record extends XataRecord>
     columns: SelectableColumn<Record>[] = ['*'],
     { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
   ) {
-    const record = transformObjectLinks(object);
+    const record = await this.#transformObjectToApi(object);
 
     const response = await insertRecordWithID({
       pathParams: {
@@ -968,12 +968,12 @@ export class RestRepository<Record extends XataRecord>
     objects: EditableData<Record>[],
     { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
   ) {
-    const chunkedOperations: TransactionOperation[][] = chunk(
-      objects.map((object) => ({
-        insert: { table: this.#table, record: transformObjectLinks(object), createOnly, ifVersion }
-      })),
-      BULK_OPERATION_MAX_SIZE
-    );
+    const operations = await promiseMap(objects, async (object) => {
+      const record = await this.#transformObjectToApi(object);
+      return { insert: { table: this.#table, record, createOnly, ifVersion } };
+    });
+
+    const chunkedOperations: TransactionOperation[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
 
     const ids = [];
 
@@ -1290,7 +1290,7 @@ export class RestRepository<Record extends XataRecord>
     { ifVersion }: { ifVersion?: number }
   ) {
     // Ensure id is not present in the update payload
-    const { id: _id, ...record } = transformObjectLinks(object);
+    const { id: _id, ...record } = await this.#transformObjectToApi(object);
 
     try {
       const response = await updateRecordWithID({
@@ -1321,12 +1321,12 @@ export class RestRepository<Record extends XataRecord>
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
     { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
   ) {
-    const chunkedOperations: TransactionOperation[][] = chunk(
-      objects.map(({ id, ...object }) => ({
-        update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(object) }
-      })),
-      BULK_OPERATION_MAX_SIZE
-    );
+    const operations = await promiseMap(objects, async ({ id, ...object }) => {
+      const fields = await this.#transformObjectToApi(object);
+      return { update: { table: this.#table, id, ifVersion, upsert, fields } };
+    });
+
+    const chunkedOperations: TransactionOperation[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
 
     const ids = [];
 
@@ -1907,9 +1907,47 @@ export class RestRepository<Record extends XataRecord>
     this.#schemaTables = schema.tables;
     return schema.tables;
   }
+
+  async #transformObjectToApi(object: any): Promise<Schemas.DataInputRecord> {
+    const schemaTables = await this.#getSchemaTables();
+    const schema = schemaTables.find((table) => table.name === this.#table);
+    if (!schema) throw new Error(`Table ${this.#table} not found in schema`);
+
+    const result: Dictionary<any> = {};
+
+    for (const [key, value] of Object.entries(object)) {
+      // Ignore internal properties
+      if (key === 'xata') continue;
+
+      const type = schema.columns.find((column) => column.name === key)?.type;
+
+      switch (type) {
+        case 'link': {
+          result[key] = isIdentifiable(value) ? value.id : value;
+          break;
+        }
+        case 'datetime': {
+          result[key] = value instanceof Date ? value.toISOString() : value;
+          break;
+        }
+        case 'file':
+          console.log(1934, value);
+          result[key] = value;
+          break;
+        case 'file[]':
+          console.log(1938, value);
+          result[key] = value;
+          break;
+        default:
+          result[key] = value;
+      }
+    }
+
+    return result;
+  }
 }
 
-const transformObjectLinks = (object: any): Schemas.DataInputRecord => {
+const removeLinksFromObject = (object: any): Schemas.DataInputRecord => {
   return Object.entries(object).reduce((acc, [key, value]) => {
     // Ignore internal properties
     if (key === 'xata') return acc;
@@ -1995,7 +2033,7 @@ export const initObject = <T>(
   }
 
   const record = { ...data };
-  const serializable = { xata, ...transformObjectLinks(data) };
+  const serializable = { xata, ...removeLinksFromObject(data) };
   const metadata =
     xata !== undefined
       ? { ...xata, createdAt: new Date(xata.createdAt), updatedAt: new Date(xata.updatedAt) }
