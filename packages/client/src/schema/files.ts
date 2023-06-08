@@ -68,23 +68,9 @@ export class XataFile {
     // @ts-ignore - Blob doesn't have a name property, File which extends Blob does
     const name = options.name ?? file.name;
     const mediaType = file.type;
-    const base64Content = await new Promise<string>((resolve, reject) => {
-      // @ts-ignore - FileReader might not be in the type definitions
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        if (isString(result)) {
-          const base64Content = result.split(',')[1];
-          resolve(base64Content);
-        } else {
-          reject(new Error('Failed to read file'));
-        }
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    const arrayBuffer = await file.arrayBuffer();
 
-    return new XataFile({ base64Content, name, mediaType });
+    return await this.fromArrayBuffer(arrayBuffer, { name, mediaType });
   }
 
   static async fromUint8Array(uint8Array: Uint8Array, { name, mediaType }: { name?: string; mediaType?: string } = {}) {
