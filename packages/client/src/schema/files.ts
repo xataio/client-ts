@@ -80,7 +80,7 @@ export class XataFile {
     return await this.fromArrayBuffer(arrayBuffer, { name, mediaType });
   }
 
-  public toBlob(): Blob {
+  /**public toBlob(): Blob {
     if (!this.base64Content) {
       throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
     }
@@ -89,7 +89,7 @@ export class XataFile {
     const arrayBuffer = new ArrayBuffer(binary.length);
 
     return new Blob([arrayBuffer], { type: this.mediaType });
-  }
+  }**/
 
   static async fromUint8Array(uint8Array: Uint8Array, { name, mediaType }: { name?: string; mediaType?: string } = {}) {
     let binary = '';
