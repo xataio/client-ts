@@ -1,6 +1,7 @@
 import { Schemas } from '../api';
 import { UnionToIntersection, Values } from '../util/types';
-import { Identifiable, XataArrayFile, XataFile, XataRecord } from './record';
+import { XataArrayFile, XataFile } from './files';
+import { Identifiable, XataRecord } from './record';
 
 export type BaseSchema = {
   name: string;
