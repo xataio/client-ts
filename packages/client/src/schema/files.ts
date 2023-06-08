@@ -1,4 +1,3 @@
-import { isString } from '../util/lang';
 import { Identifiable } from './record';
 
 export class XataFile {
