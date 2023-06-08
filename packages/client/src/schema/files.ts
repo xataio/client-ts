@@ -65,6 +65,7 @@ export class XataFile {
   }
 
   static async fromBlob(file: Blob, options: { name?: string; mediaType?: string } = {}): Promise<XataFile> {
+    // @ts-ignore - Blob doesn't have a name property, File which extends Blob does
     const name = options.name ?? file.name;
     const mediaType = file.type;
     const base64Content = await new Promise<string>((resolve, reject) => {
