@@ -63,6 +63,14 @@ export class XataFile {
     return new XataFile({ base64Content, name, mediaType });
   }
 
+  public toBuffer(): Buffer {
+    if (!this.base64Content) {
+      throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
+    }
+
+    return Buffer.from(this.base64Content, 'base64');
+  }
+
   static async fromBlob(file: Blob, options: { name?: string; mediaType?: string } = {}): Promise<XataFile> {
     // @ts-ignore - Blob doesn't have a name property, File which extends Blob does
     const name = options.name ?? file.name;
@@ -70,6 +78,17 @@ export class XataFile {
     const arrayBuffer = await file.arrayBuffer();
 
     return await this.fromArrayBuffer(arrayBuffer, { name, mediaType });
+  }
+
+  public toBlob(): Blob {
+    if (!this.base64Content) {
+      throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
+    }
+
+    const binary = atob(this.base64Content);
+    const arrayBuffer = new ArrayBuffer(binary.length);
+
+    return new Blob([arrayBuffer], { type: this.mediaType });
   }
 
   static async fromUint8Array(uint8Array: Uint8Array, { name, mediaType }: { name?: string; mediaType?: string } = {}) {
@@ -83,12 +102,36 @@ export class XataFile {
     return new XataFile({ base64Content, name, mediaType });
   }
 
+  public toUint8Array(): Uint8Array {
+    if (!this.base64Content) {
+      throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
+    }
+
+    const binary = atob(this.base64Content);
+    const uint8Array = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+      uint8Array[i] = binary.charCodeAt(i);
+    }
+
+    return uint8Array;
+  }
+
   static async fromArrayBuffer(
     arrayBuffer: ArrayBuffer,
     { name, mediaType }: { name?: string; mediaType?: string } = {}
   ) {
     const uint8Array = new Uint8Array(arrayBuffer);
     return await this.fromUint8Array(uint8Array, { name, mediaType });
+  }
+
+  public toArrayBuffer(): ArrayBuffer {
+    if (!this.base64Content) {
+      throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
+    }
+
+    const binary = atob(this.base64Content);
+    return new ArrayBuffer(binary.length);
   }
 
   static async fromString(
@@ -99,6 +142,14 @@ export class XataFile {
     return new XataFile({ base64Content, name, mediaType });
   }
 
+  public toString(): string {
+    if (!this.base64Content) {
+      throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
+    }
+
+    return atob(this.base64Content);
+  }
+
   static async fromBase64(
     base64Content: string,
     { name, mediaType }: { name?: string; mediaType?: string } = {}
@@ -106,9 +157,25 @@ export class XataFile {
     return new XataFile({ base64Content, name, mediaType });
   }
 
+  public toBase64(): string {
+    if (!this.base64Content) {
+      throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
+    }
+
+    return this.base64Content;
+  }
+
   static async fromJSON(json: string | Record<string, unknown>, { name }: { name?: string } = {}): Promise<XataFile> {
     const file = typeof json === 'string' ? json : JSON.stringify(json);
     return this.fromString(file, { name, mediaType: 'application/json' });
+  }
+
+  public toJSON<T extends Record<string, unknown>>(): T {
+    if (!this.base64Content) {
+      throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
+    }
+
+    return JSON.parse(this.toString());
   }
 }
 
