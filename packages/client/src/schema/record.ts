@@ -2,6 +2,8 @@ import { isObject, isString } from '../util/lang';
 import { ExclusiveOr } from '../util/types';
 import { SelectableColumn, SelectedPick } from './selection';
 
+export type Identifier = string;
+
 /**
  * Represents an identifiable record from the database.
  */
@@ -9,7 +11,7 @@ export interface Identifiable {
   /**
    * Unique id of this record.
    */
-  id: string;
+  id: Identifier;
 }
 
 export interface BaseData {
@@ -155,9 +157,9 @@ type NumericOperator = ExclusiveOr<
 >;
 
 type EditableDataFields<T> = T extends XataRecord
-  ? { id: string } | string
+  ? { id: Identifier } | Identifier
   : NonNullable<T> extends XataRecord
-  ? { id: string } | string | null | undefined
+  ? { id: Identifier } | Identifier | null | undefined
   : T extends Date
   ? string | Date
   : NonNullable<T> extends Date
