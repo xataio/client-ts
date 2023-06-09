@@ -41,6 +41,19 @@ describe('record create or update', () => {
     expect(apiTeam?.name).toBe('Team boats');
   });
 
+  test('create or update with optional id', async () => {
+    const id: string | undefined = undefined;
+
+    const team = await xata.db.teams.createOrUpdate(id, { name: 'Team ships' });
+    expect(team.id).toBeDefined();
+  });
+
+  test('create or update fails with empty id', async () => {
+    const id: string | undefined = '';
+
+    await expect(xata.db.teams.createOrUpdate(id, { name: 'Team ships' })).rejects.toThrowError();
+  });
+
   test('create or update team with inline id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
