@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/netlify",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -22,13 +22,13 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@babel/core": "^7.21.4",
-    "@netlify/build": "^29.9.2",
+    "@babel/core": "^7.22.1",
+    "@netlify/build": "^29.11.6",
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
-    "@types/babel__core": "^7.20.0",
-    "@types/node": "^18.15.11",
+    "@types/babel__core": "^7.20.1",
+    "@types/node": "^20.2.5",
     "typescript": "^5.0.4"
   }
 }

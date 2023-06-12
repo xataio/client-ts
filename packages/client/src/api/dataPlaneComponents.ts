@@ -2153,7 +2153,7 @@ export type GetFileItemPathParams = {
   /**
    * The File Identifier
    */
-  fileId: Schemas.FileID;
+  fileId: Schemas.FileItemID;
   workspace: string;
   region: string;
 };
@@ -2208,7 +2208,7 @@ export type PutFileItemPathParams = {
   /**
    * The File Identifier
    */
-  fileId: Schemas.FileID;
+  fileId: Schemas.FileItemID;
   workspace: string;
   region: string;
 };
@@ -2268,7 +2268,7 @@ export type DeleteFileItemPathParams = {
   /**
    * The File Identifier
    */
-  fileId: Schemas.FileID;
+  fileId: Schemas.FileItemID;
   workspace: string;
   region: string;
 };
@@ -2406,6 +2406,57 @@ export const putFile = (variables: PutFileVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.PutFileResponse, PutFileError, Blob, {}, {}, PutFilePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file',
     method: 'put',
+    ...variables,
+    signal
+  });
+
+export type DeleteFilePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+  region: string;
+};
+
+export type DeleteFileError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteFileVariables = {
+  pathParams: DeleteFilePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Deletes a file referred in a file column
+ */
+export const deleteFile = (variables: DeleteFileVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, DeleteFileError, undefined, {}, {}, DeleteFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file',
+    method: 'delete',
     ...variables,
     signal
   });
@@ -2791,13 +2842,17 @@ export type QueryTableError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
 >;
 
 export type QueryTableRequestBody = {
   filter?: Schemas.FilterExpression;
   sort?: Schemas.SortExpression;
   page?: Schemas.PageConfig;
-  columns?: Schemas.ColumnsProjection;
+  columns?: Schemas.QueryColumnsProjection;
   /**
    * The consistency level for this request.
    *
@@ -3640,6 +3695,10 @@ export type SearchBranchError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
 >;
 
 export type SearchBranchRequestBody = {
@@ -3771,6 +3830,10 @@ export type SqlQueryError = Fetcher.ErrorWrapper<
   | {
       status: 404;
       payload: Responses.SimpleError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
     }
 >;
 
@@ -3911,6 +3974,10 @@ export type AskTableError = Fetcher.ErrorWrapper<
   | {
       status: 429;
       payload: Responses.RateLimitError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
     }
 >;
 
@@ -4173,6 +4240,53 @@ export const aggregateTable = (variables: AggregateTableVariables, signal?: Abor
     AggregateTablePathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/aggregate', method: 'post', ...variables, signal });
 
+export type FileAccessPathParams = {
+  /**
+   * The File Access Identifier
+   */
+  fileId: Schemas.FileAccessID;
+  workspace: string;
+  region: string;
+};
+
+export type FileAccessQueryParams = {
+  /**
+   * File access signature
+   */
+  verify?: Schemas.FileSignature;
+};
+
+export type FileAccessError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type FileAccessVariables = {
+  pathParams: FileAccessPathParams;
+  queryParams?: FileAccessQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve file content by access id
+ */
+export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<undefined, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
+    url: '/file/{fileId}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export const operationsByTag = {
   branch: {
     getBranchList,
@@ -4232,7 +4346,7 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile },
+  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, deleteFile, fileAccess },
   searchAndFilter: {
     queryTable,
     searchBranch,

@@ -10,7 +10,7 @@ import {
 import Codegen from '../codegen/index.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
-  static description = 'Push local migrations to a remote Xata branch';
+  static description = 'Pull changes from remote Xata branch and regenerate code';
 
   static examples = [];
 

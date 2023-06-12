@@ -92,39 +92,15 @@ export async function setUpTestEnvironment(
     clientName: 'sdk-tests'
   };
 
-  await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'teams' });
-  await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'pets' });
-  await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'users' });
+  const { edits } = await api.migrations.compareBranchWithUserSchema({
+    workspace,
+    region,
+    database,
+    branch: 'main',
+    schema
+  });
 
-  const teamColumns = schema.tables.find(({ name }) => name === 'teams')?.columns;
-  const petColumns = schema.tables.find(({ name }) => name === 'pets')?.columns;
-  const userColumns = schema.tables.find(({ name }) => name === 'users')?.columns;
-  if (!teamColumns || !userColumns || !petColumns) throw new Error('Unable to find tables');
-
-  await api.tables.setTableSchema({
-    workspace,
-    region,
-    database,
-    branch: 'main',
-    table: 'teams',
-    schema: { columns: teamColumns }
-  });
-  await api.tables.setTableSchema({
-    workspace,
-    region,
-    database,
-    branch: 'main',
-    table: 'pets',
-    schema: { columns: petColumns }
-  });
-  await api.tables.setTableSchema({
-    workspace,
-    region,
-    database,
-    branch: 'main',
-    table: 'users',
-    schema: { columns: userColumns }
-  });
+  await api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch: 'main', edits });
 
   let span: Span | undefined;
 

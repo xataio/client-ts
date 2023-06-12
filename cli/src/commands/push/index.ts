@@ -4,7 +4,7 @@ import { BaseCommand } from '../../base.js';
 import { commitToMigrationFile, getLocalMigrationFiles } from '../../migrations/files.js';
 
 export default class Push extends BaseCommand<typeof Push> {
-  static description = 'Push local migrations to a remote Xata branch';
+  static description = 'Push local changes to a remote Xata branch';
 
   static examples = [];
 

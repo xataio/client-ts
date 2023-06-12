@@ -33,7 +33,7 @@ export type Column = {
 export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
   z.object({
     name: z.string(),
-    type: z.enum(['bool', 'int', 'float', 'string', 'text', 'email', 'multiple', 'link', 'object', 'datetime']),
+    type: z.enum(['bool', 'int', 'float', 'string', 'text', 'email', 'multiple', 'link', 'object', 'datetime', 'vector']),
     unique: z.boolean().optional(),
     notNull: z.boolean().optional(),
     defaultValue: z.string().optional(),

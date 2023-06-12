@@ -49,6 +49,8 @@ export type RecordUpdateResponse =
       id: string;
       xata: {
         version: number;
+        createdAt: string;
+        updatedAt: string;
       };
     };
 
@@ -74,6 +76,11 @@ export type BulkError = {
 export type QueryResponse = {
   records: Schemas.XataRecord[];
   meta: Schemas.RecordsMetadata;
+};
+
+export type ServiceUnavailableError = {
+  id?: string;
+  message: string;
 };
 
 export type SearchResponse = {

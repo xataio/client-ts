@@ -1,5 +1,11 @@
 # @xata.io/codegen
 
+## 0.23.5
+
+### Patch Changes
+
+- [#972](https://github.com/xataio/client-ts/pull/972) [`89375e76`](https://github.com/xataio/client-ts/commit/89375e76b790fed7e6a26bf3ac4ea9eaed1aecae) Thanks [@SferaDev](https://github.com/SferaDev)! - Add types to exports
+
 ## 0.23.2
 
 ### Patch Changes

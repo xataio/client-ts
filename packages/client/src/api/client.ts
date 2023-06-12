@@ -4,7 +4,7 @@ import { FetchImpl, getFetchImplementation } from '../util/fetch';
 import { generateUUID } from '../util/uuid';
 import type * as Components from './components';
 import type * as Types from './components';
-import { deleteFileItem, operationsByTag } from './components';
+import { operationsByTag } from './components';
 import type { FetcherExtraProps } from './fetcher';
 import { getHostUrl, HostProvider } from './providers';
 import type * as Responses from './responses';
@@ -1126,6 +1126,58 @@ class FilesApi {
         columnName: column
       },
       body: file,
+      ...this.extraProps
+    });
+  }
+
+  public deleteFile({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+  }): Promise<Responses.PutFileResponse> {
+    return operationsByTag.files.deleteFile({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column
+      },
+      ...this.extraProps
+    });
+  }
+
+  public fileAccess({
+    workspace,
+    region,
+    fileId,
+    verify
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    fileId: string;
+    verify?: Schemas.FileSignature;
+  }): Promise<any> {
+    return operationsByTag.files.fileAccess({
+      pathParams: {
+        workspace,
+        region,
+        fileId
+      },
+      queryParams: { verify },
       ...this.extraProps
     });
   }

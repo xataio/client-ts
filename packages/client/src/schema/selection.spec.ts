@@ -68,6 +68,16 @@ const invalidReadTeamColumn: SelectableColumn<Team> = 'owner.read.*';
 // @ts-expect-error
 const invalidInternalDateColumns: SelectableColumn<Team> = 'owner.date.getFullYear';
 
+// Internal columns
+const internalVersionColumns: SelectableColumn<Team> = 'xata.version';
+const internalCreatedAtColumns: SelectableColumn<Team> = 'xata.createdAt';
+const internalUpdatedAtColumns: SelectableColumn<Team> = 'xata.updatedAt';
+const linkVersionColumns: SelectableColumn<Team> = 'owner.xata.version';
+const linkCreatedAtColumns: SelectableColumn<Team> = 'owner.xata.createdAt';
+const linkUpdatedAtColumns: SelectableColumn<Team> = 'owner.xata.updatedAt';
+// @ts-expect-error
+const invalidInternalVersionColumnInObject: SelectableColumn<Team> = 'owner.settings.xata.version';
+
 //                              ValueAtColumn<O, P>                            //
 // --------------------------------------------------------------------------- //
 
@@ -84,12 +94,27 @@ function test1(user: SelectedPick<UserRecord, ['*']>) {
   user.full_name;
   user.address?.street;
 
+  user.xata.version;
+  user.xata.createdAt;
+  user.xata.updatedAt;
+
   // @ts-expect-error
   user.team.id;
   user.team?.id;
   user.team?.read();
   // @ts-expect-error
   user.team?.name;
+
+  // TODO(link.xata) @ts-expect-error
+  user.team?.xata.version;
+  // TODO(link.xata) @ts-expect-error
+  user.team?.xata.createdAt;
+  // TODO(link.xata) @ts-expect-error
+  user.team?.xata.updatedAt;
+
+  user.team?.xata?.version;
+  user.team?.xata?.createdAt;
+  user.team?.xata?.updatedAt;
 
   user.partner.id;
   user.partner.read();

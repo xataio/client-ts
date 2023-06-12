@@ -574,7 +574,7 @@ export type TransactionUpdateOp = {
 };
 
 /**
- * A delete operation. The transaction will continue if no record matches the ID.
+ * A delete operation. The transaction will continue if no record matches the ID by default. To override this behaviour, set failIfMissing to true.
  */
 export type TransactionDeleteOp = {
   /**
@@ -582,6 +582,10 @@ export type TransactionDeleteOp = {
    */
   table: string;
   id: RecordID;
+  /**
+   * If true, the transaction will fail when the record doesn't exist.
+   */
+  failIfMissing?: boolean;
   /**
    * If set, the call will return the requested fields as part of the response.
    */
@@ -707,7 +711,7 @@ export type TransactionError = {
 };
 
 /**
- * An array of errors, with indicides, from the transaction.
+ * An array of errors, with indices, from the transaction.
  */
 export type TransactionFailure = {
   /**
@@ -734,7 +738,7 @@ export type ObjectValue = {
  * @minLength 1
  * @pattern [a-zA-Z0-9_-~:]+
  */
-export type FileID = string;
+export type FileItemID = string;
 
 /**
  * File name
@@ -758,7 +762,7 @@ export type MediaType = string;
  * Object representing a file in an array
  */
 export type InputFileEntry = {
-  id?: FileID;
+  id?: FileItemID;
   name?: FileName;
   mediaType?: MediaType;
   /**
@@ -837,6 +841,14 @@ export type RecordMeta = {
      */
     version: number;
     /**
+     * The time when the record was created.
+     */
+    createdAt?: string;
+    /**
+     * The time when the record was last updated.
+     */
+    updatedAt?: string;
+    /**
      * The record's table name. APIs that return records from multiple tables will set this field accordingly.
      */
     table?: string;
@@ -865,7 +877,7 @@ export type RecordMeta = {
  * File metadata
  */
 export type FileResponse = {
-  id?: FileID;
+  id?: FileItemID;
   name: FileName;
   mediaType: MediaType;
   /**
@@ -878,6 +890,12 @@ export type FileResponse = {
   version: number;
   attributes?: Record<string, any>;
 };
+
+export type ProjectionConfig = {
+  name?: string;
+};
+
+export type QueryColumnsProjection = (string | ProjectionConfig)[];
 
 /**
  * The target expression is used to filter the search results by the target columns.
@@ -913,7 +931,7 @@ export type ValueBooster = {
    */
   value: string | number | boolean;
   /**
-   * The factor with which to multiply the score of the record.
+   * The factor with which to multiply the added boost.
    */
   factor: number;
   /**
@@ -957,7 +975,8 @@ export type NumericBooster = {
 /**
  * Boost records based on the value of a datetime column. It is configured via "origin", "scale", and "decay". The further away from the "origin",
  * the more the score is decayed. The decay function uses an exponential function. For example if origin is "now", and scale is 10 days and decay is 0.5, it
- * should be interpreted as: a record with a date 10 days before/after origin will score 2 times less than a record with the date at origin.
+ * should be interpreted as: a record with a date 10 days before/after origin will be boosted 2 times less than a record with the date at origin.
+ * The result of the exponential function is a boost between 0 and 1. The "factor" allows you to control how impactful this boost is, by multiplying it with a given value.
  */
 export type DateBooster = {
   /**
@@ -970,7 +989,7 @@ export type DateBooster = {
    */
   origin?: string;
   /**
-   * The duration at which distance from origin the score is decayed with factor, using an exponential function. It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
+   * The duration at which distance from origin the score is decayed with factor, using an exponential function. It is formatted as number + units, for example: `5d`, `20m`, `10s`.
    *
    * @pattern ^(\d+)(d|h|m|s|ms)$
    */
@@ -979,6 +998,12 @@ export type DateBooster = {
    * The decay factor to expect at "scale" distance from the "origin".
    */
   decay: number;
+  /**
+   * The factor with which to multiply the added boost.
+   *
+   * @minimum 0
+   */
+  factor?: number;
   /**
    * Only apply this booster to the records for which the provided filter matches.
    */
@@ -1004,7 +1029,7 @@ export type BoosterExpression =
 /**
  * Maximum [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) for the search terms. The Levenshtein
  * distance is the number of one character changes needed to make two strings equal. The default is 1, meaning that single
- * character typos per word are tollerated by search. You can set it to 0 to remove the typo tollerance or set it to 2
+ * character typos per word are tolerated by search. You can set it to 0 to remove the typo tolerance or set it to 2
  * to allow two typos in a word.
  *
  * @default 1
@@ -1171,7 +1196,7 @@ export type UniqueCountAgg = {
   column: string;
   /**
    * The threshold under which the unique count is exact. If the number of unique
-   * values in the column is higher than this threshold, the results are approximative.
+   * values in the column is higher than this threshold, the results are approximate.
    * Maximum value is 40,000, default value is 3000.
    */
   precisionThreshold?: number;
@@ -1196,7 +1221,7 @@ export type DateHistogramAgg = {
   column: string;
   /**
    * The fixed interval to use when bucketing.
-   * It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
+   * It is formatted as number + units, for example: `5d`, `20m`, `10s`.
    *
    * @pattern ^(\d+)(d|h|m|s|ms)$
    */
@@ -1253,7 +1278,7 @@ export type NumericHistogramAgg = {
   interval: number;
   /**
    * By default the bucket keys start with 0 and then continue in `interval` steps. The bucket
-   * boundaries can be shiftend by using the offset option. For example, if the `interval` is 100,
+   * boundaries can be shifted by using the offset option. For example, if the `interval` is 100,
    * but you prefer the bucket boundaries to be `[50, 150), [150, 250), etc.`, you can set `offset`
    * to 50.
    *
@@ -1309,6 +1334,20 @@ export type AggResponse =
         [key: string]: AggResponse;
       })[];
     };
+
+/**
+ * File identifier in access URLs
+ *
+ * @maxLength 296
+ * @minLength 88
+ * @pattern [a-v0-9=]+
+ */
+export type FileAccessID = string;
+
+/**
+ * File signature
+ */
+export type FileSignature = string;
 
 /**
  * Xata Table Record Metadata
