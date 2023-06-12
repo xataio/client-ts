@@ -68,7 +68,7 @@ describe('branches create', () => {
     const result = await command.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot('{}');
+      expect(result).toEqual({});
     } else {
       expect(result).toBeUndefined();
     }
