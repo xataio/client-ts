@@ -72,12 +72,10 @@ describe('databases create', () => {
     const result = await command.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot(`
-        {
-          "name": "hello-world",
-          "region": "eu-west-1",
-        }
-      `);
+      expect(result).toEqual({
+        name: 'hello-world',
+        region: 'eu-west-1'
+      });
     } else {
       expect(result).toBeUndefined();
     }

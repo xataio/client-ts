@@ -1,4 +1,4 @@
-name: TypeScript E2E Test
+name: TypeScript TSC Test
 
 on:
   pull_request:
