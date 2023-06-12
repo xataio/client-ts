@@ -58,14 +58,12 @@ describe('databases list', () => {
     const result = await list.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "createdAt": "2020-01-01T00:00:00.000Z",
-            "name": "test",
-          },
-        ]
-      `);
+      expect(result).toEqual([
+        {
+          createdAt: '2020-01-01T00:00:00.000Z',
+          name: 'test'
+        }
+      ]);
     } else {
       expect(result).toBeUndefined();
     }

@@ -62,15 +62,13 @@ describe('workspaces list', () => {
     const result = await list.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "id": "test-1234",
-            "name": "test",
-            "role": "Maintainer",
-          },
-        ]
-      `);
+      expect(result).toEqual([
+        {
+          id: 'test-1234',
+          name: 'test',
+          role: 'Maintainer'
+        }
+      ]);
     } else {
       expect(result).toBeUndefined();
     }

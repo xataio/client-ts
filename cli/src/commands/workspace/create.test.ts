@@ -67,11 +67,9 @@ describe('workspaces create', () => {
     const result = await list.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot(`
-        {
-          "id": "hello-world-1234",
-        }
-      `);
+      expect(result).toEqual({
+        id: 'hello-world-1234'
+      });
     } else {
       expect(result).toBeUndefined();
     }
