@@ -1876,9 +1876,7 @@ export type AddTableColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Adds a new column to the table. The body of the request should contain the column definition. In the column definition, the 'name' field should
- * contain the full path separated by dots. If the parent objects do not exists, they will be automatically created. For example,
- * passing `"name": "address.city"` will auto-create the `address` object if it doesn't exist.
+ * Adds a new column to the table. The body of the request should contain the column definition.
  */
 export const addTableColumn = (variables: AddTableColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SchemaUpdateResponse, AddTableColumnError, Schemas.Column, {}, {}, AddTableColumnPathParams>(
@@ -1922,7 +1920,7 @@ export type GetColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Get the definition of a single column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ * Get the definition of a single column.
  */
 export const getColumn = (variables: GetColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Schemas.Column, GetColumnError, undefined, {}, {}, GetColumnPathParams>({
@@ -1977,7 +1975,7 @@ export type UpdateColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Update column with partial data. Can be used for renaming the column by providing a new "name" field. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ * Update column with partial data. Can be used for renaming the column by providing a new "name" field.
  */
 export const updateColumn = (variables: UpdateColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
@@ -2026,7 +2024,7 @@ export type DeleteColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Deletes the specified column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ * Deletes the specified column.
  */
 export const deleteColumn = (variables: DeleteColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SchemaUpdateResponse, DeleteColumnError, undefined, {}, {}, DeleteColumnPathParams>({
