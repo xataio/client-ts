@@ -80,22 +80,7 @@ describe('workspaces list', () => {
     expect(printTable).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(printTable.mock.calls[0]).toMatchInlineSnapshot(`
-        [
-          [
-            "Name",
-            "Id",
-            "Role",
-          ],
-          [
-            [
-              "test",
-              "test-1234",
-              "Maintainer",
-            ],
-          ],
-        ]
-      `);
+      expect(printTable.mock.calls[0]).toEqual([['Name', 'Id', 'Role'], [['test', 'test-1234', 'Maintainer']]]);
     }
   });
 });
