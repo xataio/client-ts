@@ -1,3 +1,5 @@
+import { InputFileEntry } from '../api/schemas';
+import { compactObject } from '../util/lang';
 import { Identifiable } from './record';
 
 export class XataFile {
@@ -165,3 +167,8 @@ export class XataFile {
 }
 
 export type XataArrayFile = Identifiable & XataFile;
+
+export const parseInputFileEntry = (entry: XataFile & Partial<Identifiable>): InputFileEntry => {
+  const { id, name, mediaType, base64Content, enablePublicUrl, signedUrlTimeout } = entry;
+  return compactObject({ id, name, mediaType, base64Content, enablePublicUrl, signedUrlTimeout });
+};

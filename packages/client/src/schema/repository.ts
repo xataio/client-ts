@@ -37,7 +37,7 @@ import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
 import { AskOptions, AskResult } from './ask';
 import { CacheImpl } from './cache';
-import { XataFile } from './files';
+import { parseInputFileEntry, XataFile } from './files';
 import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
@@ -1975,6 +1975,12 @@ export class RestRepository<Record extends XataRecord>
           result[key] = value instanceof Date ? value.toISOString() : value;
           break;
         }
+        case `file`:
+          result[key] = parseInputFileEntry(value as XataFile);
+          break;
+        case 'file[]':
+          result[key] = (value as XataFile[]).map((item) => parseInputFileEntry(item));
+          break;
         default:
           result[key] = value;
       }
