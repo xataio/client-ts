@@ -8,7 +8,6 @@ import {
   ImportFileOptions,
   ImportJsonOptions,
   ImportNdJsonOptions,
-  ImportUrlOptions,
   ParseResults
 } from './types';
 import { detectNewline, isObject } from './utils/lang';
@@ -23,8 +22,6 @@ export class Importer {
     switch (options.strategy) {
       case 'file':
         return await this.#readFile(options);
-      case 'url':
-        return await this.#readUrl(options);
       case 'json':
         return await this.#readJson(options);
       case 'ndjson':
@@ -34,11 +31,20 @@ export class Importer {
     }
   }
 
-  async #readFile(_options: ImportFileOptions): Promise<ParseResults> {
-    return { success: true, schema: { tables: [] }, warnings: [], data: [] };
-  }
-
-  async #readUrl(_options: ImportUrlOptions): Promise<ParseResults> {
+  async #readFile({ files, parserOptions, ...options }: ImportFileOptions): Promise<ParseResults> {
+    if (files.length > 1) {
+      throw new Error(`Importer only supports one file at a time.`);
+    }
+    const file = files[0];
+    if (parserOptions?.csv) {
+      return await this.#readCsv({
+        ...options,
+        strategy: 'csv',
+        tableName: file.fileName,
+        data: file.content,
+        ...parserOptions.csv
+      });
+    }
     return { success: true, schema: { tables: [] }, warnings: [], data: [] };
   }
 

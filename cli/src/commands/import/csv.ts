@@ -31,9 +31,10 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
 
     const xata = await this.getXataClient();
 
-    const filenames = glob.sync(args.files);
-    const files = await Promise.all(filenames.map((filename) => readFile(filename, { encoding })));
-
+    const fileNames = glob.sync(args.files);
+    const files = await Promise.all(
+      fileNames.map(async (fileName) => ({ fileName, content: await readFile(fileName, { encoding }) }))
+    );
     const payload = await xata.import.file({
       files,
       parserOptions: {

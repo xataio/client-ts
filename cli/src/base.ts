@@ -216,7 +216,13 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       });
     }
 
+    const { flags } = await this.parseCommand();
+    const databaseURL = flags.db ?? 'https://{workspace}.{region}.xata.sh/db/{database}';
+    const branch = flags.branch ?? this.getCurrentBranchName();
+
     this.#xataClient = new XataClient({
+      databaseURL,
+      branch,
       apiKey,
       fetch,
       host,

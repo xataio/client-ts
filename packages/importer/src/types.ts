@@ -1,16 +1,10 @@
 import { Schemas } from '@xata.io/client';
 
-export type ImporterOptions =
-  | ImportCsvOptions
-  | ImportJsonOptions
-  | ImportFileOptions
-  | ImportUrlOptions
-  | ImportNdJsonOptions;
+export type ImporterOptions = ImportCsvOptions | ImportJsonOptions | ImportFileOptions | ImportNdJsonOptions;
 
 export type ImporterStrategy = ImporterOptions['strategy'];
 
-// TODO: Improve this type
-type File = any;
+type File = { fileName: string; content: string };
 
 export interface ImportCommonOptions {
   /**
@@ -132,17 +126,6 @@ export interface ImportFileOptions extends ImportCommonOptions {
      */
     json?: Omit<ImportJsonOptions, 'strategy' | 'data' | 'tableName'>;
   };
-}
-
-export interface ImportUrlOptions extends ImportCommonOptions {
-  /**
-   * The strategy to use for importing data.
-   */
-  strategy: 'url';
-  /**
-   * The URLs to import.
-   */
-  urls: string[];
 }
 
 export interface ImportNdJsonOptions extends ImportCommonOptions {

@@ -1,6 +1,6 @@
 import { XataPlugin, XataPluginOptions } from '@xata.io/client';
 import { Importer } from './importer';
-import { ImportCsvOptions, ImportFileOptions, ImportJsonOptions, ImportNdJsonOptions, ImportUrlOptions } from './types';
+import { ImportCsvOptions, ImportFileOptions, ImportJsonOptions, ImportNdJsonOptions } from './types';
 
 export class XataImportPlugin extends XataPlugin {
   build(_options: XataPluginOptions) {
@@ -8,7 +8,6 @@ export class XataImportPlugin extends XataPlugin {
 
     return {
       file: (options: Omit<ImportFileOptions, 'strategy'>) => importer.read({ strategy: 'file', ...options }),
-      url: (options: Omit<ImportUrlOptions, 'strategy'>) => importer.read({ strategy: 'url', ...options }),
       json: (options: Omit<ImportJsonOptions, 'strategy'>) => importer.read({ strategy: 'json', ...options }),
       ndjson: (options: Omit<ImportNdJsonOptions, 'strategy'>) => importer.read({ strategy: 'ndjson', ...options }),
       csv: (options: Omit<ImportCsvOptions, 'strategy'>) => importer.read({ strategy: 'csv', ...options })
