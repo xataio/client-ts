@@ -1,15 +1,15 @@
 import JSON from 'json5';
 import CSV from 'papaparse';
 import { coerceColumns, guessColumns } from './columns';
-import { ImportCsvOptions, ImporterOptions, ImportJsonOptions, ImportNdJsonOptions, ParseResults } from './types';
+import { ParseCsvOptions, ParseOptions, ParseJsonOptions, ParseNdJsonOptions, ParseResults } from './types';
 import { detectNewline, isDefined, isObject } from './utils/lang';
 
 export const DEFAULT_PARSE_SAMPLE_SIZE = 100;
 export const DEFAULT_CSV_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x1F'];
 export const DEFAULT_NULL_VALUES = [undefined, null, 'null', 'NULL', 'Null'];
 
-export class Importer {
-  read(options: ImporterOptions): ParseResults {
+export class Parser {
+  read(options: ParseOptions): ParseResults {
     switch (options.strategy) {
       case 'json':
         return this.#readJson(options);
@@ -20,7 +20,7 @@ export class Importer {
     }
   }
 
-  #readCsv(options: ImportCsvOptions): ParseResults {
+  #readCsv(options: ParseCsvOptions): ParseResults {
     const {
       data,
       limit,
@@ -63,7 +63,7 @@ export class Importer {
       : jsonResults;
   }
 
-  #readNdJson(options: ImportNdJsonOptions): ParseResults {
+  #readNdJson(options: ParseNdJsonOptions): ParseResults {
     const { data, newline = detectNewline(data), ...rest } = options;
 
     const array = data.split(newline).map((line) => JSON.parse(line));
@@ -71,7 +71,7 @@ export class Importer {
     return this.#readJson({ ...rest, strategy: 'json', data: array });
   }
 
-  #readJson(options: ImportJsonOptions): ParseResults {
+  #readJson(options: ParseJsonOptions): ParseResults {
     const {
       data: input,
       tableName,

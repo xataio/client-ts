@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import { join } from 'path';
 import { expect, test, describe } from 'vitest';
 import { XataImportPlugin } from '../src/plugin';
-import { ImportCsvOptions, ImportJsonOptions, ParseResults } from '../src/types';
+import { ParseCsvOptions, ParseJsonOptions, ParseResults } from '../src/types';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -26,7 +26,7 @@ describe('@xata.io/importer plugin', () => {
   });
 
   describe('parseJson', () => {
-    const testCases: { name: string; input: Omit<ImportJsonOptions, 'strategy'>; expected: ParseResults }[] = [
+    const testCases: { name: string; input: Omit<ParseJsonOptions, 'strategy'>; expected: ParseResults }[] = [
       {
         name: 'empty',
         input: { tableName: 'table1', data: [] },
@@ -104,7 +104,7 @@ describe('@xata.io/importer plugin', () => {
   });
 
   describe('parseCsv', () => {
-    const testCases: { name: string; input: Omit<ImportCsvOptions, 'strategy'>; expected: ParseResults }[] = [
+    const testCases: { name: string; input: Omit<ParseCsvOptions, 'strategy'>; expected: ParseResults }[] = [
       {
         name: 'empty',
         input: { tableName: 'table1', data: '' },

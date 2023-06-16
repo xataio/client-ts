@@ -2,11 +2,11 @@ import { Schemas } from '@xata.io/client';
 
 type Column = Schemas.Column;
 
-export type ImporterOptions = ImportCsvOptions | ImportJsonOptions | ImportNdJsonOptions;
+export type ParseOptions = ParseCsvOptions | ParseJsonOptions | ParseNdJsonOptions;
 
-export type ImporterStrategy = ImporterOptions['strategy'];
+export type ParseStrategy = ParseOptions['strategy'];
 
-export interface ImportCommonOptions {
+export interface ParseCommonOptions {
   /**
    * The schema of the columns to use for importing data.
    * If not provided, the columns will be guessed from the data.
@@ -30,7 +30,7 @@ export interface ImportCommonOptions {
   nullValues?: string[];
 }
 
-export interface ImportCsvOptions extends ImportCommonOptions {
+export interface ParseCsvOptions extends ParseCommonOptions {
   /**
    * The strategy to use for importing data.
    */
@@ -91,7 +91,7 @@ export interface ImportCsvOptions extends ImportCommonOptions {
   commentPrefix?: string;
 }
 
-export interface ImportJsonOptions extends ImportCommonOptions {
+export interface ParseJsonOptions extends ParseCommonOptions {
   /**
    * The strategy to use for importing data.
    */
@@ -108,7 +108,7 @@ export interface ImportJsonOptions extends ImportCommonOptions {
   data: string | unknown[] | Record<string, unknown>;
 }
 
-export interface ImportFileStreamOptions extends ImportCommonOptions {
+export interface ParseFileStreamOptions extends ParseCommonOptions {
   /**
    * The strategy to use for importing data.
    */
@@ -125,15 +125,15 @@ export interface ImportFileStreamOptions extends ImportCommonOptions {
     /**
      * CSV parser options.
      */
-    csv?: Omit<ImportCsvOptions, 'strategy' | 'data'>;
+    csv?: Omit<ParseCsvOptions, 'strategy' | 'data'>;
     /**
      * JSON parser options.
      */
-    ndjson?: Omit<ImportNdJsonOptions, 'strategy' | 'data'>;
+    ndjson?: Omit<ParseNdJsonOptions, 'strategy' | 'data'>;
   };
 }
 
-export interface ImportNdJsonOptions extends ImportCommonOptions {
+export interface ParseNdJsonOptions extends ParseCommonOptions {
   /**
    * The strategy to use for importing data.
    */
@@ -167,7 +167,7 @@ export type ParseStreamResponse = {
   table: Schemas.Table;
 };
 
-export type ImportStreamOptions = ParseStreamResponse & {
+export type ParseStreamOptions = ParseStreamResponse & {
   batchSize: number;
   // todo factor out error type
   onBatchProcessed: (params: {
