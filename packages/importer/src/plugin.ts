@@ -23,9 +23,9 @@ export class XataImportPlugin extends XataPlugin {
           table: { name: 'something', columns: [] }
         };
       },
-      parseJson: (options: ParseJsonOptions): ParseResults => parseJson(options),
-      parseNdJson: (options: ParseNdJsonOptions): ParseResults => parseNdJson(options),
-      parseCsv: (options: ParseCsvOptions): ParseResults => parseCsv(options),
+      parseJson,
+      parseNdJson,
+      parseCsv,
       // uses transactions API to insert 1000 rows. Either succeeds or...
       // N rows have errors, calls onBatchError with the errors,
       // then continues by calling getNextRows(N) to get the batch back up to 1000
