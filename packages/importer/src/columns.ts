@@ -4,7 +4,7 @@ import { isDefined } from './utils/lang';
 // @ts-ignore TS doesn't know about the "any-date-parser" module
 import DateParser from 'any-date-parser';
 
-export function guessSchemaTypes<T>(rows: T[]): Schemas.Column['type'] {
+export function guessColumnTypes<T>(rows: T[]): Schemas.Column['type'] {
   // Integer needs to be checked before Float
   if (
     rows.every(
@@ -142,32 +142,28 @@ export function coerceValue(value: unknown, type: Schemas.Column['type']): strin
   }
 }
 
-export function coerceSchema<T>(schema: Schemas.Schema, rows: T[], nullValues: any[] = []): T[] {
+// todo: honor nullValues
+export function coerceColumns<T>(columns: Schemas.Column[], rows: T[], nullValues: any[] = []): T[] {
   return rows.map((row) => {
     const newRow = { ...row };
-
-    for (const column of schema.tables[0].columns) {
+    for (const column of columns) {
       // @ts-ignore TODO: Remove this
       newRow[column.name] = coerceValue(row[column.name], column.type);
     }
-
     return newRow;
   });
 }
 
-export function guessSchema<T extends Record<string, unknown>>(
-  name: string,
-  rows: T[],
-  nullValues: any[] = []
-): Schemas.Schema {
+// todo: honor nullValues?
+export function guessColumns<T extends Record<string, unknown>>(rows: T[], nullValues: any[] = []): Schemas.Column[] {
   const columnNames = new Set<string>(...rows.map((row) => Object.keys(row)));
 
   const columns = [...columnNames].map((columnName) => {
     const values = rows.map((row) => row[columnName]);
-    const type = guessSchemaTypes(values);
+    const type = guessColumnTypes(values);
 
     return { name: columnName, type };
   });
 
-  return { tables: [{ name, columns }] };
+  return columns;
 }

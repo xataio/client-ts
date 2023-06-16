@@ -1,24 +1,29 @@
 import { Schemas } from '@xata.io/client';
 
-export type ImporterOptions = ImportCsvOptions | ImportJsonOptions | ImportFileOptions | ImportNdJsonOptions;
+type Column = Schemas.Column;
+
+export type ImporterOptions = ImportCsvOptions | ImportJsonOptions | ImportNdJsonOptions;
 
 export type ImporterStrategy = ImporterOptions['strategy'];
 
-type File = { fileName: string; content: string };
-
 export interface ImportCommonOptions {
   /**
-   * The schema to use for importing data.
-   * If not provided, the schema will be guessed from the data.
-   * If provided, the data will be coerced to the schema.
+   * The schema of the columns to use for importing data.
+   * If not provided, the columns will be guessed from the data.
+   * If provided, the data will be coerced to the column types.
    */
-  schema?: Schemas.Schema;
+  columns?: Column[];
   /**
    * Limit the number of rows to import.
    * @default // no limit
    * @min 1
    */
   limit?: number;
+
+  /**
+   * Number of rows to use to guess the schema
+   */
+  previewLimit?: number;
   /**
    * The values to interpret as null.
    */
@@ -103,16 +108,16 @@ export interface ImportJsonOptions extends ImportCommonOptions {
   data: string | unknown[] | Record<string, unknown>;
 }
 
-export interface ImportFileOptions extends ImportCommonOptions {
+export interface ImportFileStreamOptions extends ImportCommonOptions {
   /**
    * The strategy to use for importing data.
    */
   strategy: 'file';
   /**
-   * The files to import.
-   * The file name will be used as the table name.
+   * The file to import.
    */
-  files: File[];
+  // todo: should/could this be a stream? alexis: node stream or v8 stream.
+  filePath: string;
   /**
    * Additional options to pass to the parser.
    */
@@ -120,11 +125,11 @@ export interface ImportFileOptions extends ImportCommonOptions {
     /**
      * CSV parser options.
      */
-    csv?: Omit<ImportCsvOptions, 'strategy' | 'data' | 'tableName'>;
+    csv?: Omit<ImportCsvOptions, 'strategy' | 'data'>;
     /**
      * JSON parser options.
      */
-    json?: Omit<ImportJsonOptions, 'strategy' | 'data' | 'tableName'>;
+    ndjson?: Omit<ImportNdJsonOptions, 'strategy' | 'data'>;
   };
 }
 
@@ -151,8 +156,23 @@ export interface ImportNdJsonOptions extends ImportCommonOptions {
 export type ParseResults =
   | {
       success: true;
-      schema: Schemas.Schema;
+      table: Schemas.Table;
       warnings: string[];
       data: unknown[];
     }
   | { success: false; errors: string[] };
+
+export type ParseStreamResponse = {
+  getNextRows: (numberOfRows: number) => ParseResults;
+  table: Schemas.Table;
+};
+
+export type ImportStreamOptions = ParseStreamResponse & {
+  batchSize: number;
+  // todo factor out error type
+  onBatchProcessed: (params: {
+    batch: ParseResults;
+    errors: { index: number; error: string }[];
+    stop: () => void;
+  }) => void;
+};
