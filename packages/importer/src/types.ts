@@ -4,8 +4,6 @@ type Column = Schemas.Column;
 
 export type ParseOptions = ParseCsvOptions | ParseJsonOptions | ParseNdJsonOptions;
 
-export type ParseStrategy = ParseOptions['strategy'];
-
 export interface ParseCommonOptions {
   /**
    * The schema of the columns to use for importing data.
@@ -31,14 +29,6 @@ export interface ParseCommonOptions {
 }
 
 export interface ParseCsvOptions extends ParseCommonOptions {
-  /**
-   * The strategy to use for importing data.
-   */
-  strategy: 'csv';
-  /**
-   * The name of the table to import the data into.
-   */
-  tableName: string;
   /**
    * The CSV string data to parse.
    */
@@ -93,14 +83,6 @@ export interface ParseCsvOptions extends ParseCommonOptions {
 
 export interface ParseJsonOptions extends ParseCommonOptions {
   /**
-   * The strategy to use for importing data.
-   */
-  strategy: 'json';
-  /**
-   * The name of the table to import the data into.
-   */
-  tableName: string;
-  /**
    * The JSON string data to parse.
    * If the data is an array, it will be interpreted as an array of objects.
    * If the data is an object, it will be interpreted as a single object.
@@ -109,10 +91,6 @@ export interface ParseJsonOptions extends ParseCommonOptions {
 }
 
 export interface ParseFileStreamOptions extends ParseCommonOptions {
-  /**
-   * The strategy to use for importing data.
-   */
-  strategy: 'file';
   /**
    * The file to import.
    */
@@ -135,14 +113,6 @@ export interface ParseFileStreamOptions extends ParseCommonOptions {
 
 export interface ParseNdJsonOptions extends ParseCommonOptions {
   /**
-   * The strategy to use for importing data.
-   */
-  strategy: 'ndjson';
-  /**
-   * The name of the table to import the data into.
-   */
-  tableName: string;
-  /**
    * The NDJSON string data to parse.
    */
   data: string;
@@ -156,7 +126,7 @@ export interface ParseNdJsonOptions extends ParseCommonOptions {
 export type ParseResults =
   | {
       success: true;
-      table: Schemas.Table;
+      columns: Column[];
       warnings: string[];
       data: unknown[];
     }
@@ -167,7 +137,7 @@ export type ParseStreamResponse = {
   table: Schemas.Table;
 };
 
-export type ParseStreamOptions = ParseStreamResponse & {
+export type ImportStreamOptions = ParseStreamResponse & {
   batchSize: number;
   // todo factor out error type
   onBatchProcessed: (params: {
