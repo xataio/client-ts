@@ -1,4 +1,5 @@
 import { Schemas } from '@xata.io/client';
+import stream from 'stream';
 
 type Column = Schemas.Column;
 
@@ -32,6 +33,7 @@ export interface ParseCsvOptions extends ParseCommonOptions {
   /**
    * The CSV string data to parse.
    */
+  // todo - move this?
   data: string;
   /**
    * The delimiting character.
@@ -90,25 +92,29 @@ export interface ParseJsonOptions extends ParseCommonOptions {
   data: string | unknown[] | Record<string, unknown>;
 }
 
-export interface ParseFileStreamOptions extends ParseCommonOptions {
+export type CsvStreamParserOptions = Omit<ParseCsvOptions, 'data'>;
+export type NdJsonStreamParserOptions = Omit<ParseNdJsonOptions, 'data'>;
+
+export type ParseCsvStreamOptions = ParseStreamOptions<CsvStreamParserOptions>;
+export type ParseNdStreamOptions = ParseStreamOptions<NdJsonStreamParserOptions>;
+
+export interface ParseStreamOptions<ParserOptions> {
   /**
    * The file to import.
    */
   // todo: should/could this be a stream? alexis: node stream or v8 stream.
-  filePath: string;
+  // localfile from papa, without referencing papa!
+  fileStream: stream.Readable;
+  /**
+   * comment
+   */
+  chunkRowCount?: number;
+
+  onChunk?: (parseResults: ParseResults) => void;
   /**
    * Additional options to pass to the parser.
    */
-  parserOptions?: {
-    /**
-     * CSV parser options.
-     */
-    csv?: Omit<ParseCsvOptions, 'strategy' | 'data'>;
-    /**
-     * JSON parser options.
-     */
-    ndjson?: Omit<ParseNdJsonOptions, 'strategy' | 'data'>;
-  };
+  parserOptions: ParserOptions;
 }
 
 export interface ParseNdJsonOptions extends ParseCommonOptions {
@@ -133,16 +139,11 @@ export type ParseResults =
   | { success: false; errors: string[] };
 
 export type ParseStreamResponse = {
-  getNextRows: (numberOfRows: number) => ParseResults;
-  table: Schemas.Table;
+  columns: Column[];
 };
 
-export type ImportStreamOptions = ParseStreamResponse & {
-  batchSize: number;
-  // todo factor out error type
-  onBatchProcessed: (params: {
-    batch: ParseResults;
-    errors: { index: number; error: string }[];
-    stop: () => void;
-  }) => void;
+export type ImportBatchOptions = {
+  columns: Column[];
+  table: string;
+  batch: ParseResults;
 };

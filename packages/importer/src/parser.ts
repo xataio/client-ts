@@ -8,9 +8,8 @@ export const DEFAULT_PARSE_SAMPLE_SIZE = 100;
 export const DEFAULT_CSV_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x1F'];
 export const DEFAULT_NULL_VALUES = [undefined, null, 'null', 'NULL', 'Null'];
 
-export const parseCsv = (options: ParseCsvOptions): ParseResults => {
+export const parseCsvOptionsToPapaOptions = (options: Omit<ParseCsvOptions, 'data'>) => {
   const {
-    data,
     limit,
     delimiter,
     header = true,
@@ -19,11 +18,9 @@ export const parseCsv = (options: ParseCsvOptions): ParseResults => {
     newline,
     quoteChar = '"',
     escapeChar = '"',
-    commentPrefix,
-    ...rest
+    commentPrefix
   } = options;
-
-  const { data: array, errors: parseErrors } = CSV.parse(data, {
+  return {
     header,
     skipEmptyLines,
     preview: limit,
@@ -33,13 +30,22 @@ export const parseCsv = (options: ParseCsvOptions): ParseResults => {
     quoteChar,
     escapeChar,
     comments: commentPrefix
-  });
+  };
+};
 
-  const parseWarnings = parseErrors.map((error) => error.message);
+export const papaResultToJson = (
+  { data, errors }: CSV.ParseResult<unknown>,
+  options: Omit<ParseCsvOptions, 'data'>
+): ParseResults => {
+  const { previewLimit, columns, limit, nullValues } = options;
+  const parseWarnings = errors.map((error) => error.message);
 
   const jsonResults = parseJson({
-    ...rest,
-    data: array
+    previewLimit,
+    columns,
+    limit,
+    nullValues,
+    data
   });
 
   return jsonResults.success
@@ -48,6 +54,11 @@ export const parseCsv = (options: ParseCsvOptions): ParseResults => {
         warnings: [...parseWarnings, ...jsonResults.warnings]
       }
     : jsonResults;
+};
+
+export const parseCsv = (options: ParseCsvOptions): ParseResults => {
+  const parseResult = CSV.parse(options.data, parseCsvOptionsToPapaOptions(options));
+  return papaResultToJson(parseResult, options);
 };
 
 export const parseNdJson = (options: ParseNdJsonOptions): ParseResults => {
