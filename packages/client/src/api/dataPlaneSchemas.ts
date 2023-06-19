@@ -84,6 +84,10 @@ export type ColumnVector = {
   dimension: number;
 };
 
+export type ColumnFile = {
+  defaultPublicAccess?: boolean;
+};
+
 export type Column = {
   name: string;
   type:
@@ -102,6 +106,8 @@ export type Column = {
     | 'file';
   link?: ColumnLink;
   vector?: ColumnVector;
+  file?: ColumnFile;
+  ['file[]']?: ColumnFile;
   notNull?: boolean;
   defaultValue?: string;
   unique?: boolean;
