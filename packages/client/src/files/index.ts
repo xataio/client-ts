@@ -1,5 +1,5 @@
-import { deleteFile, deleteFileItem, fileAccess, getFile, getFileItem, putFile, putFileItem } from '../api';
-import { FileResponse, FileSignature } from '../api/dataPlaneSchemas';
+import { deleteFileItem, getFileItem, putFileItem } from '../api';
+import { FileResponse } from '../api/dataPlaneSchemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { ColumnsByValue, XataArrayFile, XataFile } from '../schema';
 import { BaseData, XataRecord } from '../schema/record';
@@ -8,90 +8,73 @@ import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 export type BinaryFile = string | Blob | ArrayBuffer;
 
 export type FilesPluginResult<Schemas extends Record<string, BaseData>> = {
-  download: <Tables extends StringKeys<Schemas>>(
-    meta: UploadDestination<Schemas, Tables, XataFile> | UploadDestination<Schemas, Tables, XataArrayFile[]>
-  ) => Promise<Blob>;
+  download: <Tables extends StringKeys<Schemas>>(location: UploadDestination<Schemas, Tables>) => Promise<Blob>;
   upload: <Tables extends StringKeys<Schemas>>(
-    meta: UploadDestination<Schemas, Tables, XataFile> | UploadDestination<Schemas, Tables, XataArrayFile[]>,
+    location: UploadDestination<Schemas, Tables>,
     file: BinaryFile
   ) => Promise<FileResponse>;
-  delete: <Tables extends StringKeys<Schemas>>(
-    meta: UploadDestination<Schemas, Tables, XataFile> | UploadDestination<Schemas, Tables, XataArrayFile[]>
-  ) => Promise<FileResponse>;
-  read: (id: string, options?: { verify?: FileSignature }) => Promise<Blob>;
+  delete: <Tables extends StringKeys<Schemas>>(location: UploadDestination<Schemas, Tables>) => Promise<FileResponse>;
 };
 
-export type UploadDestination<
-  Schemas extends Record<string, BaseData>,
-  Tables extends StringKeys<Schemas>,
-  Type extends XataFile | XataFile[]
-> = Values<{
+export type UploadDestination<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> = Values<{
   [Model in GetArrayInnerType<NonNullable<Tables[]>>]: {
     table: Model;
-    column: ColumnsByValue<Schemas[Model], Type>;
+    column: ColumnsByValue<Schemas[Model], XataFile | XataArrayFile[]>;
     record: string;
-  } & (Type extends XataFile[] ? { fileId: string } : {});
+    fileId?: string;
+  };
 }>;
 
 export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   build(pluginOptions: XataPluginOptions): FilesPluginResult<Schemas> {
     return {
-      download: async (meta: Record<string, string>) => {
-        const { table, record, column, fileId } = meta ?? {};
-        const common = {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}',
-          tableName: table,
-          recordId: record,
-          columnName: column
-        };
+      download: async <Tables extends StringKeys<Schemas>>(location: UploadDestination<Schemas, Tables>) => {
+        const { table, record, column, fileId = '' } = location ?? {};
 
-        if (fileId) {
-          return await getFileItem({ pathParams: { ...common, fileId }, ...pluginOptions, rawResponse: true });
-        } else {
-          return await getFile({ pathParams: common, ...pluginOptions, rawResponse: true });
-        }
+        return await getFileItem({
+          pathParams: {
+            workspace: '{workspaceId}',
+            dbBranchName: '{dbBranch}',
+            region: '{region}',
+            tableName: table,
+            recordId: record,
+            columnName: column,
+            fileId
+          },
+          ...pluginOptions,
+          rawResponse: true
+        });
       },
-      upload: async (meta: Record<string, string>, file: BinaryFile) => {
-        const { table, record, column, fileId } = meta ?? {};
-        const common = {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}',
-          tableName: table,
-          recordId: record,
-          columnName: column
-        };
+      upload: async (location: Record<string, string>, file: BinaryFile) => {
+        const { table, record, column, fileId = '' } = location ?? {};
 
-        if (fileId) {
-          return await putFileItem({ pathParams: { ...common, fileId }, body: file as Blob, ...pluginOptions });
-        } else {
-          return await putFile({ pathParams: common, body: file as Blob, ...pluginOptions });
-        }
+        return await putFileItem({
+          pathParams: {
+            workspace: '{workspaceId}',
+            dbBranchName: '{dbBranch}',
+            region: '{region}',
+            tableName: table,
+            recordId: record,
+            columnName: column,
+            fileId
+          },
+          body: file as Blob,
+          ...pluginOptions
+        });
       },
-      delete: async (meta: Record<string, string>) => {
-        const { table, record, column, fileId } = meta ?? {};
-        const common = {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}',
-          tableName: table,
-          recordId: record,
-          columnName: column
-        };
+      delete: async (location: Record<string, string>) => {
+        const { table, record, column, fileId = '' } = location ?? {};
 
-        if (fileId) {
-          return await deleteFileItem({ pathParams: { ...common, fileId }, ...pluginOptions });
-        } else {
-          return await deleteFile({ pathParams: common, ...pluginOptions });
-        }
-      },
-      read: async (id: string, options?: { verify?: FileSignature }) => {
-        return await fileAccess({
-          pathParams: { workspace: '{workspaceId}', region: '{region}', fileId: id },
-          queryParams: { verify: options?.verify },
-          rawResponse: true,
+        return await deleteFileItem({
+          pathParams: {
+            workspace: '{workspaceId}',
+            dbBranchName: '{dbBranch}',
+            region: '{region}',
+            tableName: table,
+            recordId: record,
+            columnName: column,
+            fileId
+          },
           ...pluginOptions
         });
       }
