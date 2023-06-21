@@ -55,6 +55,7 @@
     "lint-staged": "^13.2.2",
     "msw": "^1.2.2",
     "node-fetch": "=2.6.7",
+    "node-fetch-har": "^1.0.1",
     "prettier": "^2.8.8",
     "rimraf": "^5.0.1",
     "rollup": "^3.25.1",
