@@ -8,30 +8,17 @@ import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 export type BinaryFile = string | Blob | ArrayBuffer;
 
 export type FilesPluginResult<Schemas extends Record<string, BaseData>> = {
-  getFileItem: <Tables extends StringKeys<Schemas>>(
-    meta: UploadDestination<Schemas, Tables, XataArrayFile[]>
+  download: <Tables extends StringKeys<Schemas>>(
+    meta: UploadDestination<Schemas, Tables, XataFile> | UploadDestination<Schemas, Tables, XataArrayFile[]>
   ) => Promise<Blob>;
-  getFile: <Tables extends StringKeys<Schemas>>(meta: UploadDestination<Schemas, Tables, XataFile>) => Promise<Blob>;
-  putFileItem: <Tables extends StringKeys<Schemas>>(
-    meta: UploadDestination<Schemas, Tables, XataArrayFile[]>,
+  upload: <Tables extends StringKeys<Schemas>>(
+    meta: UploadDestination<Schemas, Tables, XataFile> | UploadDestination<Schemas, Tables, XataArrayFile[]>,
     file: BinaryFile
   ) => Promise<FileResponse>;
-  putFile: <Tables extends StringKeys<Schemas>>(
-    meta: UploadDestination<Schemas, Tables, XataFile>,
-    file: BinaryFile
+  delete: <Tables extends StringKeys<Schemas>>(
+    meta: UploadDestination<Schemas, Tables, XataFile> | UploadDestination<Schemas, Tables, XataArrayFile[]>
   ) => Promise<FileResponse>;
-  deleteFileItem: <Tables extends StringKeys<Schemas>>(
-    meta: UploadDestination<Schemas, Tables, XataArrayFile[]>
-  ) => Promise<FileResponse>;
-  deleteFile: <Tables extends StringKeys<Schemas>>(
-    meta: UploadDestination<Schemas, Tables, XataFile>
-  ) => Promise<FileResponse>;
-  fileAccess: (
-    id: string,
-    options?: {
-      verify?: FileSignature;
-    }
-  ) => Promise<Blob>;
+  read: (id: string, options?: { verify?: FileSignature }) => Promise<Blob>;
 };
 
 export type UploadDestination<
@@ -49,118 +36,61 @@ export type UploadDestination<
 export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   build(pluginOptions: XataPluginOptions): FilesPluginResult<Schemas> {
     return {
-      getFileItem: async <Tables extends StringKeys<Schemas>>(
-        meta: UploadDestination<Schemas, Tables, XataArrayFile[]>
-      ) => {
-        return await getFileItem({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            region: '{region}',
-            tableName: meta.table,
-            recordId: meta.record,
-            columnName: meta.column,
-            fileId: meta.fileId
-          },
-          ...pluginOptions,
-          rawResponse: true
-        });
-      },
-      getFile: async <Tables extends StringKeys<Schemas>>(meta: UploadDestination<Schemas, Tables, XataFile>) => {
-        return await getFile({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            region: '{region}',
-            tableName: meta.table,
-            recordId: meta.record,
-            columnName: meta.column
-          },
-          ...pluginOptions,
-          rawResponse: true
-        });
-      },
-      putFileItem: async <Tables extends StringKeys<Schemas>>(
-        meta: UploadDestination<Schemas, Tables, XataArrayFile[]>,
-        file: BinaryFile
-      ) => {
-        return await putFileItem({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            region: '{region}',
-            tableName: meta.table,
-            recordId: meta.record,
-            columnName: meta.column,
-            fileId: meta.fileId
-          },
-          body: file as Blob,
-          headers: { 'Content-Type': undefined },
-          ...pluginOptions
-        });
-      },
-      putFile: async <Tables extends StringKeys<Schemas>>(
-        meta: UploadDestination<Schemas, Tables, XataFile>,
-        file: BinaryFile
-      ) => {
-        return await putFile({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            region: '{region}',
-            tableName: meta.table,
-            recordId: meta.record,
-            columnName: meta.column
-          },
-          body: file as Blob,
-          headers: { 'Content-Type': undefined },
-          ...pluginOptions
-        });
-      },
-      deleteFileItem: async <Tables extends StringKeys<Schemas>>(
-        meta: UploadDestination<Schemas, Tables, XataArrayFile[]>
-      ) => {
-        return await deleteFileItem({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            region: '{region}',
-            tableName: meta.table,
-            recordId: meta.record,
-            columnName: meta.column,
-            fileId: meta.fileId
-          },
-          ...pluginOptions
-        });
-      },
-      deleteFile: async <Tables extends StringKeys<Schemas>>(meta: UploadDestination<Schemas, Tables, XataFile>) => {
-        return await deleteFile({
-          pathParams: {
-            workspace: '{workspaceId}',
-            dbBranchName: '{dbBranch}',
-            region: '{region}',
-            tableName: meta.table,
-            recordId: meta.record,
-            columnName: meta.column
-          },
-          ...pluginOptions
-        });
-      },
-      fileAccess: async (
-        id: string,
-        options?: {
-          verify?: FileSignature;
+      download: async (meta: Record<string, string>) => {
+        const { table, record, column, fileId } = meta ?? {};
+        const common = {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: table,
+          recordId: record,
+          columnName: column
+        };
+
+        if (fileId) {
+          return await getFileItem({ pathParams: { ...common, fileId }, ...pluginOptions, rawResponse: true });
+        } else {
+          return await getFile({ pathParams: common, ...pluginOptions, rawResponse: true });
         }
-      ) => {
+      },
+      upload: async (meta: Record<string, string>, file: BinaryFile) => {
+        const { table, record, column, fileId } = meta ?? {};
+        const common = {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: table,
+          recordId: record,
+          columnName: column
+        };
+
+        if (fileId) {
+          return await putFileItem({ pathParams: { ...common, fileId }, body: file as Blob, ...pluginOptions });
+        } else {
+          return await putFile({ pathParams: common, body: file as Blob, ...pluginOptions });
+        }
+      },
+      delete: async (meta: Record<string, string>) => {
+        const { table, record, column, fileId } = meta ?? {};
+        const common = {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: table,
+          recordId: record,
+          columnName: column
+        };
+
+        if (fileId) {
+          return await deleteFileItem({ pathParams: { ...common, fileId }, ...pluginOptions });
+        } else {
+          return await deleteFile({ pathParams: common, ...pluginOptions });
+        }
+      },
+      read: async (id: string, options?: { verify?: FileSignature }) => {
         return await fileAccess({
-          pathParams: {
-            workspace: '{workspaceId}',
-            region: '{region}',
-            fileId: id
-          },
-          queryParams: {
-            verify: options?.verify
-          },
+          pathParams: { workspace: '{workspaceId}', region: '{region}', fileId: id },
+          queryParams: { verify: options?.verify },
           rawResponse: true,
           ...pluginOptions
         });
