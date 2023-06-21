@@ -5,7 +5,7 @@ import { ColumnsByValue, XataArrayFile, XataFile } from '../schema';
 import { BaseData, XataRecord } from '../schema/record';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
-export type BinaryFile = string | Blob | ArrayBuffer | FormData | ReadableStream;
+export type BinaryFile = string | Blob | ArrayBuffer;
 
 export type FilesPluginResult<Schemas extends Record<string, BaseData>> = {
   getFileItem: <Tables extends StringKeys<Schemas>>(
