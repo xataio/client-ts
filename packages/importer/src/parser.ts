@@ -37,11 +37,10 @@ export const papaResultToJson = (
   { data, errors }: CSV.ParseResult<unknown>,
   options: Omit<ParseCsvOptions, 'data'>
 ): ParseResults => {
-  const { previewLimit, columns, limit, nullValues } = options;
+  const { columns, limit, nullValues } = options;
   const parseWarnings = errors.map((error) => error.message);
 
   const jsonResults = parseJson({
-    previewLimit,
     columns,
     limit,
     nullValues,
@@ -73,16 +72,14 @@ export const parseJson = (options: ParseJsonOptions): ParseResults => {
   const {
     data: input,
     columns: externalColumns,
-    previewLimit = DEFAULT_PARSE_SAMPLE_SIZE,
     limit,
     nullValues = DEFAULT_NULL_VALUES //todo: do we need this?
   } = options;
 
   const array = Array.isArray(input) ? input : isObject(input) ? [input] : JSON.parse(input);
 
-  const previewData = array.slice(0, previewLimit);
-  const columns = externalColumns ?? guessColumns(previewData, nullValues);
   const arrayUpToLimit = isDefined(limit) ? array.slice(0, limit) : array;
+  const columns = externalColumns ?? guessColumns(arrayUpToLimit, nullValues);
   const data = coerceColumns(columns, arrayUpToLimit, nullValues);
 
   return { success: true, columns, warnings: [], data };

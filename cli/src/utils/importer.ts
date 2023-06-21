@@ -1,4 +1,5 @@
 import { Flags } from '@oclif/core';
+import { BaseCommand } from '../base.js';
 
 export function csvFlags<Prefix extends string>(prefix: Prefix) {
   const flags = {
@@ -28,7 +29,12 @@ export function csvFlags<Prefix extends string>(prefix: Prefix) {
     }),
     commentPrefix: Flags.string({
       description: 'The prefix to use for comments'
-    })
+    }),
+    table: Flags.string({
+      description: 'The table where the CSV file will be imported to',
+      required: true
+    }),
+    branch: BaseCommand.branchFlag
   };
 
   return Object.fromEntries(Object.entries(flags).map(([name, flag]) => [`${prefix}${name}`, flag])) as AddPrefix<

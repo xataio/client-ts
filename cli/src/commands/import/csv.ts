@@ -22,24 +22,34 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
 
   async run(): Promise<void> {
     const { args, flags } = await this.parseCommand();
-    const { encoding, delimiter, header, skipEmptyLines, nullValues, quoteChar, escapeChar, newline, commentPrefix } =
-      flags;
+    const {
+      table,
+      encoding,
+      delimiter,
+      header,
+      skipEmptyLines,
+      nullValues,
+      quoteChar,
+      escapeChar,
+      newline,
+      commentPrefix
+    } = flags;
 
     if (!isFileEncoding(encoding)) {
       this.error(`Invalid encoding: ${encoding}`);
     }
-
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
 
     const fileNames = glob.sync(args.files);
-
     const file = fileNames[0];
-    const fileDescriptor = await open(file, 'r');
-    const fileStream = fileDescriptor.createReadStream({ encoding });
-    // let rows: unknown[] = [];
-    let rowCount = 0;
-    const { columns } = await xata.import.parseCsvFileStream({
-      fileStream,
+
+    const existingTable = await xata.import.findTable({ workspace, region, database, branch, table });
+    if (existingTable) {
+      throw new Error(`Table ${table} already exists. Only imports to new tables are supported`);
+    }
+    const parseResults = await xata.import.parseCsvFileStreamSync({
+      fileStream: (await open(file, 'r')).createReadStream({ encoding }),
       parserOptions: {
         delimiter,
         header,
@@ -49,18 +59,51 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         escapeChar,
         newline: newline as any,
         commentPrefix
+      }
+    });
+    if (!parseResults.success) {
+      throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
+    }
+    await xata.api.tables.createTable({ workspace, region, database, branch, table });
+    const { columns } = parseResults;
+    for (const column of columns) {
+      await xata.api.tables.addTableColumn({
+        workspace,
+        region,
+        database,
+        branch,
+        table,
+        column
+      });
+    }
+
+    let rowCount = 0;
+    await xata.import.parseCsvFileStream({
+      fileStream: (await open(file, 'r')).createReadStream({ encoding }),
+      parserOptions: {
+        delimiter,
+        header,
+        skipEmptyLines,
+        nullValues,
+        quoteChar,
+        escapeChar,
+        newline: newline as any,
+        commentPrefix,
+        columns
       },
       chunkRowCount: 1000,
       onChunk: async (parseResults) => {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
         }
+
+        const dbBranchName = `${database}:${branch}`;
         await xata.import.importBatch(
-          { dbBranchName: this.getCurrentBranchName(), region: 'eu-west-1', workspace: await this.getWorkspace() },
+          // @ts-ignore
+          { dbBranchName: dbBranchName, region, workspace: workspace, database },
           // columns repeated here:
-          { columns: parseResults.columns, table: 'table-1', batch: parseResults }
+          { columns: parseResults.columns, table, batch: parseResults }
         );
-        console.log('before rowCount', rowCount);
         // console.log('parseResults', parseResults);
         if (parseResults.success) {
           rowCount += parseResults.data.length;
@@ -69,15 +112,15 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         }
       }
     });
-    console.log('columns', columns);
-    console.log('row count', rowCount);
-    // console.log('rows', rows);
+    // console.log('columns', columns);
+    // console.log('row count', rowCount);
+    // // console.log('rows', rows);
 
-    // await xata.import.importStream({ batchSize: 1000, onBatchProcessed: () => null, getNextRows, columns });
-    // this.log(
-    //   JSON.stringify({ delimiter, header, skipEmptyLines, nullValues, quoteChar, escapeChar, newline, commentPrefix })
-    // );
+    // // await xata.import.importStream({ batchSize: 1000, onBatchProcessed: () => null, getNextRows, columns });
+    // // this.log(
+    // //   JSON.stringify({ delimiter, header, skipEmptyLines, nullValues, quoteChar, escapeChar, newline, commentPrefix })
+    // // );
 
-    this.log(JSON.stringify(flags));
+    // this.log(JSON.stringify(flags));
   }
 }

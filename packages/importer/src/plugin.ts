@@ -1,12 +1,14 @@
-import { BranchTransactionPathParams, XataPlugin, XataPluginOptions } from '@xata.io/client';
+import { BranchTransactionPathParams, Schemas, XataPlugin, XataPluginOptions } from '@xata.io/client';
 import { parseCsv, parseNdJson, parseJson } from './parser';
-import { parseCsvFileStream } from './streamParser';
+import { parseCsvFileStreamSync, parseCsvFileStream } from './streamParser';
 import { importBatch } from './importer';
 import { ImportBatchOptions } from './types';
+import { findTable, TableInfo } from './processor';
 
 export class XataImportPlugin extends XataPlugin {
   build(pluginOptions: XataPluginOptions) {
     return {
+      parseCsvFileStreamSync,
       parseCsvFileStream,
       parseJson,
       parseNdJson,
@@ -15,7 +17,8 @@ export class XataImportPlugin extends XataPlugin {
       // N rows have errors, calls onBatchError with the errors,
       // then continues by calling getNextRows(N) to get the batch back up to 1000
       importBatch: (branchTransactionPathParams: BranchTransactionPathParams, options: ImportBatchOptions) =>
-        importBatch(branchTransactionPathParams, options, pluginOptions)
+        importBatch(branchTransactionPathParams, options, pluginOptions),
+      findTable: (tableInfo: TableInfo): Promise<Schemas.Table | undefined> => findTable(tableInfo, pluginOptions)
     };
   }
 }

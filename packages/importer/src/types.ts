@@ -20,10 +20,6 @@ export interface ParseCommonOptions {
   limit?: number;
 
   /**
-   * Number of rows to use to guess the schema
-   */
-  previewLimit?: number;
-  /**
    * The values to interpret as null.
    */
   nullValues?: string[];
@@ -137,10 +133,6 @@ export type ParseResults =
       data: unknown[];
     }
   | { success: false; errors: string[] };
-
-export type ParseStreamResponse = {
-  columns: Column[];
-};
 
 export type ImportBatchOptions = {
   columns: Column[];

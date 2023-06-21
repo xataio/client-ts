@@ -1,24 +1,28 @@
-import { CsvStreamParserOptions, ParseCsvStreamOptions, ParseResults, ParseStreamResponse } from './types';
 import Papa, { LocalFile, Parser, ParseResult } from 'papaparse';
 import { papaResultToJson, parseCsvOptionsToPapaOptions } from './parser';
-import { ReReadable } from 'rereadable-stream';
+import { CsvStreamParserOptions, ParseCsvStreamOptions, ParseResults } from './types';
 
-const parsePreview = async (
-  fileStream: LocalFile,
-  parserOptions: CsvStreamParserOptions,
-  lines: number
-): Promise<ParseResults> => {
+export const parseCsvFileStreamSync = async ({
+  fileStream,
+  parserOptions
+}: ParseCsvStreamOptions): Promise<ParseResults> => {
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
       ...parseCsvOptionsToPapaOptions(parserOptions),
-      preview: lines,
+      preview: parserOptions.limit,
       complete: (results) => resolve(papaResultToJson(results, parserOptions)),
       error: (error) => reject(error)
     });
   });
 };
 
-const parseRows = async ({ fileStream, parserOptions, chunkRowCount, onChunk }: Required<ParseCsvStreamOptions>) => {
+// todo: parserOptions.columns required
+export const parseCsvFileStream = async ({
+  fileStream,
+  parserOptions,
+  chunkRowCount = 1000,
+  onChunk = () => null
+}: ParseCsvStreamOptions): Promise<void> => {
   let chunk: Papa.ParseResult<unknown> | null = null;
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
@@ -40,29 +44,11 @@ const parseRows = async ({ fileStream, parserOptions, chunkRowCount, onChunk }: 
         if (chunk) {
           processChunk(chunk, null, parserOptions, chunkRowCount, onChunk, true);
         }
-        resolve(null);
+        resolve();
       },
       error: (error) => reject(error)
     });
   });
-};
-
-export const parseCsvFileStream = async ({
-  fileStream,
-  parserOptions,
-  chunkRowCount = 1000,
-  onChunk = () => null
-}: ParseCsvStreamOptions): Promise<ParseStreamResponse> => {
-  const clonedFileStream = fileStream.pipe(new ReReadable({ length: 10000000 }));
-
-  const parsePreviewResult = await parsePreview(fileStream, parserOptions, parserOptions.previewLimit ?? 3);
-  if (!parsePreviewResult.success) {
-    throw new Error(`Failed to parse previewLimit rows. Errors:\n\n${parsePreviewResult.errors.join(', ')}`);
-  }
-  const { columns } = parsePreviewResult;
-  console.log('columns', columns);
-  await parseRows({ fileStream: clonedFileStream.rewind(), parserOptions, chunkRowCount, onChunk });
-  return { columns };
 };
 
 const processChunk = (
