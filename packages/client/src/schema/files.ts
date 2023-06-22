@@ -128,6 +128,7 @@ export class XataFile {
     }
 
     const arrayBuffer = this.toArrayBuffer();
+    // @ts-ignore - Blob and ArrayBuffer might not be type compatible
     return new Blob([arrayBuffer], { type: this.mediaType });
   }
 
