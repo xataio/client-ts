@@ -83,7 +83,8 @@ export async function setUpTestEnvironment(
   const { databaseName: database } = await api.database.createDatabase({
     workspace,
     database: `sdk-integration-test-${prefix}-${id}`,
-    data: { region }
+    data: { region },
+    headers: { 'X-Xata-Files': 'true' }
   });
 
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace).replace('{region}', region);
