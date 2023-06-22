@@ -47,7 +47,7 @@ export type FetcherExtraProps = {
   xataAgentExtra?: Record<string, string>;
   fetchOptions?: Record<string, unknown>;
   rawResponse?: boolean;
-  headers?: Record<string, string>;
+  headers?: Record<string, unknown>;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
