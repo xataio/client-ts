@@ -1,4 +1,5 @@
 import { InputFileEntry } from '../api/schemas';
+import { ImageTransformations, transformImage } from '../files/transformations';
 import { compactObject, isDefined } from '../util/lang';
 import { Identifiable } from './record';
 
@@ -163,6 +164,13 @@ export class XataFile {
     }
 
     return this.base64Content;
+  }
+
+  public transform(...options: ImageTransformations[]) {
+    return {
+      url: transformImage(this.url, options),
+      signedUrl: transformImage(this.signedUrl, options)
+    };
   }
 }
 
