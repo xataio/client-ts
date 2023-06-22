@@ -102,11 +102,15 @@ export interface ParseStreamOptions<ParserOptions> {
   // localfile from papa, without referencing papa!
   fileStream: stream.Readable;
   /**
-   * comment
+   * todo: comment
    */
   chunkRowCount?: number;
+  /**
+   * todo: comment
+   */
+  onChunkConcurrentMax?: number;
 
-  onChunk?: (parseResults: ParseResults) => void;
+  onChunk?: (parseResults: ParseResults) => Promise<void>;
   /**
    * Additional options to pass to the parser.
    */

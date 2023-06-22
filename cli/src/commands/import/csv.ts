@@ -35,9 +35,21 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       commentPrefix
     } = flags;
 
+    const csvOptions = {
+      delimiter,
+      header,
+      skipEmptyLines,
+      nullValues,
+      quoteChar,
+      escapeChar,
+      newline: newline as any,
+      commentPrefix
+    };
+
     if (!isFileEncoding(encoding)) {
       this.error(`Invalid encoding: ${encoding}`);
     }
+    const getFileStream = async () => (await open(file, 'r')).createReadStream({ encoding });
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
 
@@ -49,17 +61,8 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       throw new Error(`Table ${table} already exists. Only imports to new tables are supported`);
     }
     const parseResults = await xata.import.parseCsvFileStreamSync({
-      fileStream: (await open(file, 'r')).createReadStream({ encoding }),
-      parserOptions: {
-        delimiter,
-        header,
-        skipEmptyLines,
-        nullValues,
-        quoteChar,
-        escapeChar,
-        newline: newline as any,
-        commentPrefix
-      }
+      fileStream: await getFileStream(),
+      parserOptions: { ...csvOptions, limit: 1000 }
     });
     if (!parseResults.success) {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
@@ -79,32 +82,19 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
 
     let rowCount = 0;
     await xata.import.parseCsvFileStream({
-      fileStream: (await open(file, 'r')).createReadStream({ encoding }),
-      parserOptions: {
-        delimiter,
-        header,
-        skipEmptyLines,
-        nullValues,
-        quoteChar,
-        escapeChar,
-        newline: newline as any,
-        commentPrefix,
-        columns
-      },
+      fileStream: await getFileStream(),
+      parserOptions: { ...csvOptions, columns },
       chunkRowCount: 1000,
       onChunk: async (parseResults) => {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
         }
-
         const dbBranchName = `${database}:${branch}`;
         await xata.import.importBatch(
           // @ts-ignore
           { dbBranchName: dbBranchName, region, workspace: workspace, database },
-          // columns repeated here:
           { columns: parseResults.columns, table, batch: parseResults }
         );
-        // console.log('parseResults', parseResults);
         if (parseResults.success) {
           rowCount += parseResults.data.length;
           console.log('rowCount', rowCount);
