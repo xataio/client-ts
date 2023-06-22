@@ -3,6 +3,8 @@ import { ImageTransformations, transformImage } from '../files/transformations';
 import { compactObject, isDefined } from '../util/lang';
 import { Identifiable } from './record';
 
+type XataFileEditableFields = Partial<Pick<XataArrayFile, keyof InputFileEntry>>;
+
 export class XataFile {
   /**
    * Name of this file.
@@ -58,12 +60,9 @@ export class XataFile {
     this.attributes = file.attributes;
   }
 
-  static async fromBuffer(
-    buffer: Buffer,
-    { name, mediaType }: { name?: string; mediaType?: string } = {}
-  ): Promise<XataFile> {
+  static async fromBuffer(buffer: Buffer, options: XataFileEditableFields = {}): Promise<XataFile> {
     const base64Content = buffer.toString('base64');
-    return new XataFile({ base64Content, name, mediaType });
+    return new XataFile({ ...options, base64Content });
   }
 
   public toBuffer(): Buffer {
@@ -74,12 +73,9 @@ export class XataFile {
     return Buffer.from(this.base64Content, 'base64');
   }
 
-  static async fromArrayBuffer(
-    arrayBuffer: ArrayBuffer,
-    { name, mediaType }: { name?: string; mediaType?: string } = {}
-  ) {
+  static async fromArrayBuffer(arrayBuffer: ArrayBuffer, options: XataFileEditableFields = {}) {
     const uint8Array = new Uint8Array(arrayBuffer);
-    return await this.fromUint8Array(uint8Array, { name, mediaType });
+    return await this.fromUint8Array(uint8Array, options);
   }
 
   public toArrayBuffer(): ArrayBuffer {
@@ -91,7 +87,7 @@ export class XataFile {
     return new ArrayBuffer(binary.length);
   }
 
-  static async fromUint8Array(uint8Array: Uint8Array, { name, mediaType }: { name?: string; mediaType?: string } = {}) {
+  static async fromUint8Array(uint8Array: Uint8Array, options: XataFileEditableFields = {}) {
     let binary = '';
 
     for (let i = 0; i < uint8Array.byteLength; i++) {
@@ -99,7 +95,7 @@ export class XataFile {
     }
 
     const base64Content = btoa(binary);
-    return new XataFile({ base64Content, name, mediaType });
+    return new XataFile({ ...options, base64Content });
   }
 
   public toUint8Array(): Uint8Array {
@@ -117,30 +113,27 @@ export class XataFile {
     return uint8Array;
   }
 
-  static async fromBlob(file: Blob, options: { name?: string; mediaType?: string } = {}): Promise<XataFile> {
+  static async fromBlob(file: Blob, options: XataFileEditableFields = {}) {
     // @ts-ignore - Blob doesn't have a name property, File which extends Blob does
     const name = options.name ?? file.name;
     const mediaType = file.type;
     const arrayBuffer = await file.arrayBuffer();
 
-    return await this.fromArrayBuffer(arrayBuffer, { name, mediaType });
+    return await this.fromArrayBuffer(arrayBuffer, { ...options, name, mediaType });
   }
 
-  /**public toBlob(): Blob {
+  public toBlob(): Blob {
     if (!this.base64Content) {
       throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
     }
 
     const arrayBuffer = this.toArrayBuffer();
     return new Blob([arrayBuffer], { type: this.mediaType });
-  }**/
+  }
 
-  static async fromString(
-    string: string,
-    { name, mediaType }: { name?: string; mediaType?: string } = {}
-  ): Promise<XataFile> {
+  static async fromString(string: string, options: XataFileEditableFields = {}): Promise<XataFile> {
     const base64Content = btoa(string);
-    return new XataFile({ base64Content, name, mediaType });
+    return new XataFile({ ...options, base64Content });
   }
 
   public toString(): string {
@@ -151,11 +144,8 @@ export class XataFile {
     return atob(this.base64Content);
   }
 
-  static async fromBase64(
-    base64Content: string,
-    { name, mediaType }: { name?: string; mediaType?: string } = {}
-  ): Promise<XataFile> {
-    return new XataFile({ base64Content, name, mediaType });
+  static async fromBase64(base64Content: string, options: XataFileEditableFields = {}): Promise<XataFile> {
+    return new XataFile({ ...options, base64Content });
   }
 
   public toBase64(): string {
