@@ -8,11 +8,20 @@ const githubRegex = /^https?:\/\/(?:www\.)?github\.com\/(?<org>[^/]+)\//;
 
 export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
   const {
+    DEBUG: debug,
     CONTEXT: context,
     BRANCH: branch,
     XATA_PREVIEW: preview,
-    REPOSITORY_URL: repoUrl
+    REPOSITORY_URL: repoUrl,
+    XATA_REPOSITORY_URL: xataRepoUrl
   } = netlifyConfig.build.environment;
+
+  const isDebug = debug === 'true';
+
+  if (isDebug) {
+    console.log('Xata plugin debug mode enabled');
+    console.log(netlifyConfig.build.environment);
+  }
 
   if (context !== 'deploy-preview') {
     console.log('Not a deploy preview, skipping Xata plugin');
@@ -29,13 +38,16 @@ export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
     return;
   }
 
-  const org = repoUrl?.match(githubRegex)?.groups?.org;
+  // Netlify sometimes doesn't add the environment variable, we inject it from our API
+  // This is a temporal workaround, we will figure out a better way
+  const org = xataRepoUrl?.match(githubRegex)?.groups?.org ?? repoUrl?.match(githubRegex)?.groups?.org;
   if (!org) {
     console.log('No GitHub owner found, skipping Xata plugin');
     return;
   }
 
   const previewBranch = buildPreviewBranchName({ org, branch });
+  if (isDebug) console.log(`Built ${previewBranch} from org ${org} and branch ${branch}`);
 
   const xataBuildDir = [process.cwd(), 'node_modules', '@xata.io/client', 'dist'];
   const xataClientFiles = [path.join(...xataBuildDir, 'index.mjs'), path.join(...xataBuildDir, 'index.cjs')];
@@ -46,6 +58,8 @@ export const onPreBuild: OnPreBuild = async function ({ netlifyConfig }) {
       const result = await babel.transformFileAsync(xataClientFile, {
         plugins: [transformGetPreviewBranch(previewBranch)]
       });
+
+      if (isDebug) console.log(`Applied babel transform to ${xataClientFile} with result ${result?.code}`);
 
       if (result?.code) {
         success = true;

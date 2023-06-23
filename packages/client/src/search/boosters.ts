@@ -18,6 +18,12 @@ type DateBooster = {
    * The decay factor to expect at "scale" distance from the "origin".
    */
   decay: number;
+  /**
+   * The factor with which to multiply the added boost.
+   *
+   * @minimum 0
+   */
+  factor?: number;
 };
 
 type NumericBooster = {
@@ -47,7 +53,7 @@ type ValueBooster<T extends string | number | boolean> = {
    */
   value: T;
   /*
-   * The factor with which to multiply the score of the record.
+   * The factor with which to multiply the added boost.
    */
   factor: number;
   /**

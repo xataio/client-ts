@@ -20,7 +20,7 @@ export function handler(publicKey: string, privateKey: string, passphrase: strin
 
       const parsedURL = url.parse(req.url ?? '', true);
       if (parsedURL.pathname === '/new') {
-        const port = +(parsedURL.port || 80);
+        const port = req.socket.localPort ?? 80;
         res.writeHead(302, {
           location: generateURL(port, publicKey)
         });

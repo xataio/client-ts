@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker';
+import { fakerEN as faker } from '@faker-js/faker';
 import { Schemas } from '@xata.io/client';
 
 export function generateRandomData(table: Schemas.Table, size: number) {
@@ -24,7 +24,7 @@ function randomData(column: Schemas.Column) {
     case 'text':
       return faker.lorem.paragraphs(rand(2, 3));
     case 'email':
-      return faker.internet.email(undefined, undefined, 'acme.pets');
+      return faker.internet.email({ provider: 'acme.pets' });
     case 'int':
       return rand(1, 100);
     case 'float':
@@ -34,11 +34,11 @@ function randomData(column: Schemas.Column) {
     case 'object':
       return randomRecord(column.columns || []);
     case 'multiple':
-      return faker.random.words(rand(1, 3)).split(' ');
+      return faker.word.words(rand(1, 3)).split(' ');
     case 'string':
       return randomString(column.name);
     case 'datetime':
-      return faker.date.recent(rand(1, 10));
+      return faker.date.recent({ days: rand(1, 10) });
     default:
       return undefined;
   }
@@ -49,25 +49,25 @@ function rand(min: number, max: number) {
 }
 
 const generators: Record<string, () => string> = {
-  city: () => faker.address.city(),
-  country: () => faker.address.country(),
-  county: () => faker.address.county(),
-  state: () => faker.address.state(),
-  street: () => faker.address.street(),
-  timezone: () => faker.address.timeZone(),
-  tz: () => faker.address.timeZone(),
-  zipcode: () => faker.address.zipCode(),
-  zip: () => faker.address.zipCode(),
+  city: () => faker.location.city(),
+  country: () => faker.location.country(),
+  county: () => faker.location.county(),
+  state: () => faker.location.state(),
+  street: () => faker.location.street(),
+  timezone: () => faker.location.timeZone(),
+  tz: () => faker.location.timeZone(),
+  zipcode: () => faker.location.zipCode(),
+  zip: () => faker.location.zipCode(),
   department: () => faker.commerce.department(),
   product: () => faker.commerce.product(),
-  company: () => faker.company.companyName(),
-  firstName: () => faker.name.firstName(),
-  lastName: () => faker.name.lastName(),
-  phone: () => faker.phone.phoneNumber('501-###-###')
+  company: () => faker.company.name(),
+  firstName: () => faker.person.firstName(),
+  lastName: () => faker.person.lastName(),
+  phone: () => faker.phone.number('501-###-###')
 };
 
 function randomString(columnName: string) {
   const gen = generators[columnName.toLowerCase()];
   if (gen) return gen();
-  return faker.random.words(2);
+  return faker.word.words(2);
 }

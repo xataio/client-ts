@@ -1,6 +1,9 @@
 import { FilterExpression } from '../api/schemas';
 import { SingleOrArray } from '../util/types';
+import { XataRecordMetadata } from './record';
 import { ColumnsByValue, ValueAtColumn } from './selection';
+
+export type FilterColumns<T> = ColumnsByValue<T, any> | `xata.${keyof XataRecordMetadata}`;
 
 /**
  * PropertyMatchFilter
@@ -21,7 +24,7 @@ import { ColumnsByValue, ValueAtColumn } from './selection';
 }
 */
 type PropertyAccessFilter<Record> = {
-  [key in ColumnsByValue<Record, any>]?:
+  [key in FilterColumns<Record>]?:
     | NestedApiFilter<ValueAtColumn<Record, key>>
     | PropertyFilter<ValueAtColumn<Record, key>>;
 };
@@ -89,7 +92,7 @@ type AggregatorFilter<T> = {
  * Example: { filter: { $exists: "settings" } }
  */
 export type ExistanceFilter<Record> = {
-  [key in '$exists' | '$notExists']?: ColumnsByValue<Record, any>;
+  [key in '$exists' | '$notExists']?: FilterColumns<Record>;
 };
 
 type BaseApiFilter<Record> = PropertyAccessFilter<Record> | AggregatorFilter<Record> | ExistanceFilter<Record>;

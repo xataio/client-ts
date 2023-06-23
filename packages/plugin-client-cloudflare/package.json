@@ -1,13 +1,16 @@
 {
   "name": "@xata.io/plugin-client-cloudflare",
-  "version": "0.0.15",
+  "version": "0.0.20",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
-    "import": "./dist/index.mjs",
-    "require": "./dist/index.cjs"
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -19,7 +22,7 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "^4.20230321.0",
+    "@cloudflare/workers-types": "^4.20230518.0",
     "@xata.io/client": "workspace:*"
   }
 }

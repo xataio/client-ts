@@ -1,13 +1,16 @@
 {
   "name": "@xata.io/client",
-  "version": "0.23.4",
+  "version": "0.24.3",
   "description": "Xata.io SDK for TypeScript and JavaScript",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
-    "import": "./dist/index.mjs",
-    "require": "./dist/index.cjs"
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
   },
   "browser": {
     "child_process": false

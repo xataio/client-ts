@@ -261,6 +261,9 @@ const filterWithWildcardIsNotAllowed: Filter<Record> = { '*': { $is: 'foo' } };
 // @ts-expect-error
 const filterWithLinkWildcardIsNotAllowed: Filter<Record> = { 'settings.*': { $is: 'foo' } };
 
+// Filter on internal column is allowed
+const filterOnInternalColumnIsAllowed: Filter<Record> = { 'xata.version': { $is: 4 } };
+
 test('fake test', () => {
   // This is a fake test to make sure that the type definitions in this file are working
 });

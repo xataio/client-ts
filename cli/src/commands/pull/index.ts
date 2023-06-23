@@ -10,7 +10,7 @@ import {
 import Codegen from '../codegen/index.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
-  static description = 'Push local migrations to a remote Xata branch';
+  static description = 'Pull changes from remote Xata branch and regenerate code';
 
   static examples = [];
 
@@ -25,10 +25,8 @@ export default class Pull extends BaseCommand<typeof Pull> {
   };
 
   static args = {
-    branch: Args.string({ description: 'The remote branch to push to', required: true })
+    branch: Args.string({ description: 'The remote branch to pull from', required: true })
   };
-
-  static hidden = true;
 
   async run() {
     const { args, flags } = await this.parseCommand();
@@ -91,7 +89,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
 
     if (newLocalMigrations.length > 0 && newRemoteMigrations.length > 0) {
       this.log(
-        'There are new migrations on both the local and remote branches. Please run `xata rebase` to resolve the conflicts.'
+        'There are new migrations both locally and in the remote branch. Please run `xata pull -f` to overwrite local migrations.'
       );
       this.exit(0);
     }

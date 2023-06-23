@@ -101,7 +101,7 @@ const defaultClientID = generateUUID();
 export async function fetch<
   TData,
   TError extends ErrorWrapper<{ status: unknown; payload: PossibleErrors }>,
-  TBody extends Record<string, unknown> | undefined | null,
+  TBody extends Record<string, unknown> | Blob | undefined | null,
   THeaders extends Record<string, unknown>,
   TQueryParams extends Record<string, unknown>,
   TPathParams extends Partial<Record<string, string | number>>

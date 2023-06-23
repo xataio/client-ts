@@ -35,6 +35,16 @@ const sortWithRandomWildcard: ApiSortFilter<Record> = { '*': 'random' };
 //@ts-expect-error
 const sortWithRandomWildcardOnColumn: ApiSortFilter<Record> = { name: 'random' };
 
+// Sort by updatedAt is allowed
+const sortWithUpdatedAt: ApiSortFilter<Record> = { 'xata.updatedAt': 'asc' };
+
+// Sort by createdAt is allowed
+const sortWithCreatedAt: ApiSortFilter<Record> = { 'xata.createdAt': 'asc' };
+
+// Sort by unknown metadata is not allowed
+//@ts-expect-error
+const sortWithUnknownMetadata: ApiSortFilter<Record> = { 'xata.unknown': 'asc' };
+
 test('fake test', () => {
   // This is a fake test to make sure that the type definitions in this file are working
 });

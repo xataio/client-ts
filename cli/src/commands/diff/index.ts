@@ -28,9 +28,10 @@ export default class Diff extends BaseCommand<typeof Diff> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
       flags.db,
-      args.branch ?? 'main',
-      true
+      args.branch ?? 'main'
     );
+
+    this.info(`Diff command is experimental, use with caution`);
 
     const localMigrationFiles = await getLocalMigrationFiles();
     const schemaOperations = localMigrationFiles.flatMap((migrationFile) => migrationFile.operations);

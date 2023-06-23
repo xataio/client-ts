@@ -2,7 +2,7 @@ import { Config } from '@oclif/core';
 import fetch from 'node-fetch';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
-import WorkspacesList from './list.js';
+import WorkspaceCreate from './create.js';
 
 vi.mock('node-fetch');
 
@@ -18,7 +18,18 @@ afterEach(() => {
 
 const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
 
-describe('workspaces list', () => {
+describe('workspaces create', () => {
+  test('fails if the workspace name is not provided', async () => {
+    const config = await Config.load();
+    const list = new WorkspaceCreate([], config);
+
+    await expect(list.run()).rejects.toMatchInlineSnapshot(`
+      [Error: Missing 1 required arg:
+      workspace  The new workspace name
+      See more help with --help]
+    `);
+  });
+
   test('fails if the HTTP response is not ok', async () => {
     fetchMock.mockReturnValue({
       ok: false,
@@ -28,76 +39,49 @@ describe('workspaces list', () => {
     });
 
     const config = await Config.load();
-    const list = new WorkspacesList([], config);
+    const list = new WorkspaceCreate(['hello world'], config);
 
     await expect(list.run()).rejects.toThrow('Something went wrong');
 
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces');
-    expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
+    expect(fetchMock.mock.calls[0][1].method).toEqual('POST');
   });
 
-  test.each([[false], [true]])('returns the data with enabled = %o', async (json) => {
+  test.each([[false], [true]])('performs the creation with JSON enabled = %o', async (json) => {
     fetchMock.mockReturnValue({
       ok: true,
       json: async () => ({
-        workspaces: [
-          {
-            name: 'test',
-            id: 'test-1234',
-            role: 'Maintainer'
-          }
-        ]
+        id: 'hello-world-1234'
       })
     });
 
     const config = await Config.load();
-    const list = new WorkspacesList([], config);
+    const list = new WorkspaceCreate(['hello world'], config);
 
-    expect(WorkspacesList.enableJsonFlag).toBe(true);
+    expect(WorkspaceCreate.enableJsonFlag).toBe(true);
     vi.spyOn(list, 'jsonEnabled').mockReturnValue(json);
 
-    const printTable = vi.spyOn(list, 'printTable');
+    const log = vi.spyOn(list, 'log');
 
     const result = await list.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "id": "test-1234",
-            "name": "test",
-            "role": "Maintainer",
-          },
-        ]
-      `);
+      expect(result).toEqual({
+        id: 'hello-world-1234'
+      });
     } else {
       expect(result).toBeUndefined();
     }
 
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces');
-    expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
+    expect(fetchMock.mock.calls[0][1].method).toEqual('POST');
 
-    expect(printTable).toHaveBeenCalledTimes(json ? 0 : 1);
+    expect(log).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(printTable.mock.calls[0]).toMatchInlineSnapshot(`
-        [
-          [
-            "Name",
-            "Id",
-            "Role",
-          ],
-          [
-            [
-              "test",
-              "test-1234",
-              "Maintainer",
-            ],
-          ],
-        ]
-      `);
+      expect(log.mock.calls[0][0]).toEqual('✔ Workspace hello-world-1234 successfully created');
     }
   });
 });

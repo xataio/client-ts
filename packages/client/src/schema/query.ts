@@ -5,14 +5,14 @@ import { Dictionary, OmitBy, RequiredBy, SingleOrArray } from '../util/types';
 import { Filter } from './filters';
 import {
   CursorNavigationOptions,
-  isCursorPaginationOptions,
   OffsetNavigationOptions,
+  PAGINATION_DEFAULT_SIZE,
+  PAGINATION_MAX_SIZE,
   Page,
   Paginable,
   PaginationQueryMeta,
-  PAGINATION_DEFAULT_SIZE,
-  PAGINATION_MAX_SIZE,
-  RecordArray
+  RecordArray,
+  isCursorPaginationOptions
 } from './pagination';
 import { XataRecord } from './record';
 import { RestRepository } from './repository';
@@ -53,7 +53,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   #data: QueryOptions<Record> = { filter: {} };
 
   // Implements pagination
-  readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true } };
+  readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true, size: PAGINATION_DEFAULT_SIZE } };
   readonly records: RecordArray<Result> = new RecordArray<Result>(this, []);
 
   constructor(

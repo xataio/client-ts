@@ -670,14 +670,14 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     });
   }
 
-  async parseCommand(): Promise<{ flags: Flags<T>; args: Args<T> }> {
-    const { flags, args } = await this.parse({
+  async parseCommand() {
+    const { flags, args, argv } = await this.parse({
       flags: this.ctor.flags,
       baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
       args: this.ctor.args,
       strict: this.ctor.strict
     });
 
-    return { flags, args } as { flags: Flags<T>; args: Args<T> };
+    return { flags, args, argv } as { flags: Flags<T>; args: Args<T>; argv: string[] };
   }
 }

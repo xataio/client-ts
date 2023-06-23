@@ -7,6 +7,8 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   | '*'
   // Alias for id (not in schema)
   | 'id'
+  // Internal properties
+  | `xata.${'version' | 'createdAt' | 'updatedAt'}`
   // Properties of the current level
   | DataProps<O>
   // Nested properties of the lower levels
@@ -38,21 +40,27 @@ export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]
   >;
 
 // Public: Utility type to get the value of a column at a given path
-export type ValueAtColumn<O, P extends SelectableColumn<O>> = P extends '*'
-  ? Values<O> // Alias for any property
-  : P extends 'id'
+export type ValueAtColumn<Object, Key> = Key extends '*'
+  ? Values<Object> // Alias for any property
+  : Key extends 'id'
   ? string // Alias for id (not in schema)
-  : P extends keyof O
-  ? O[P] // Properties of the current level
-  : P extends `${infer K}.${infer V}`
-  ? K extends keyof O
+  : Key extends 'xata.version'
+  ? number
+  : Key extends 'xata.createdAt'
+  ? Date
+  : Key extends 'xata.updatedAt'
+  ? Date
+  : Key extends keyof Object
+  ? Object[Key] // Properties of the current level
+  : Key extends `${infer K}.${infer V}`
+  ? K extends keyof Object
     ? Values<
-        NonNullable<O[K]> extends infer Item
+        NonNullable<Object[K]> extends infer Item
           ? Item extends Record<string, any>
             ? V extends SelectableColumn<Item>
               ? { V: ValueAtColumn<Item, V> }
               : never
-            : O[K]
+            : Object[K]
           : never
       >
     : never

@@ -46,7 +46,9 @@ describe('browse', () => {
     await command.run();
 
     expect(open).toHaveBeenCalledOnce();
-    expect(openMock.mock.calls[0][0]).toEqual('https://app.xata.io/workspaces/test-r5vcv5/dbs/test/branches/main');
+    expect(openMock.mock.calls[0][0]).toEqual(
+      'https://app.xata.io/workspaces/test-r5vcv5/dbs/test:eu-west-1/branches/main'
+    );
   });
 
   test('works with a branch specified with a flag', async () => {
@@ -59,6 +61,8 @@ describe('browse', () => {
     await command.run();
 
     expect(open).toHaveBeenCalledOnce();
-    expect(openMock.mock.calls[0][0]).toEqual('https://app.xata.io/workspaces/test-r5vcv5/dbs/test/branches/foo');
+    expect(openMock.mock.calls[0][0]).toEqual(
+      'https://app.xata.io/workspaces/test-r5vcv5/dbs/test:eu-west-1/branches/foo'
+    );
   });
 });

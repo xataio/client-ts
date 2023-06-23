@@ -21,4 +21,8 @@ export type ColumnsProjectionParam = Schemas.ColumnsProjection;
 
 export type RecordIDParam = Schemas.RecordID;
 
-export type FileNameParam = Schemas.FileName;
+export type FileItemIDParam = Schemas.FileItemID;
+
+export type FileAccessIDParam = Schemas.FileAccessID;
+
+export type FileSignatureParam = Schemas.FileSignature;
