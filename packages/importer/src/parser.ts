@@ -1,5 +1,6 @@
 import JSON from 'json5';
 import CSV from 'papaparse';
+import pick from 'lodash.pick';
 import { coerceColumns, guessColumns } from './columns';
 import { ParseCsvOptions, ParseJsonOptions, ParseNdJsonOptions, ParseResults } from './types';
 import { detectNewline, isDefined, isObject } from './utils/lang';
@@ -9,6 +10,7 @@ export const DEFAULT_CSV_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x
 export const DEFAULT_NULL_VALUES = [undefined, null, 'null', 'NULL', 'Null'];
 
 export const parseCsvOptionsToPapaOptions = (options: Omit<ParseCsvOptions, 'data'>) => {
+  console.log('columns', options.columns);
   const {
     limit,
     delimiter,
@@ -33,6 +35,18 @@ export const parseCsvOptionsToPapaOptions = (options: Omit<ParseCsvOptions, 'dat
   };
 };
 
+const dataForColumns = (data: unknown[], columns: ParseCsvOptions['columns']) => {
+  if (!columns) {
+    return data;
+  }
+  return data.map((d) =>
+    pick(
+      d,
+      columns.map((col) => col.name)
+    )
+  );
+};
+
 export const papaResultToJson = (
   { data, errors }: CSV.ParseResult<unknown>,
   options: Omit<ParseCsvOptions, 'data'>
@@ -44,7 +58,7 @@ export const papaResultToJson = (
     columns,
     limit,
     nullValues,
-    data
+    data: dataForColumns(data, columns)
   });
 
   return jsonResults.success

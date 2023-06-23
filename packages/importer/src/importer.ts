@@ -1,11 +1,14 @@
 import { branchTransaction, BranchTransactionPathParams, XataPluginOptions } from '@xata.io/client';
 import { ImportBatchOptions } from './types';
 
+type ImportError = { row: unknown; error: string };
+
 export const importBatch = async (
   pathParams: BranchTransactionPathParams,
   options: ImportBatchOptions,
-  pluginOptions: XataPluginOptions
-) => {
+  pluginOptions: XataPluginOptions,
+  errors?: ImportError[]
+): Promise<{ successful: Awaited<ReturnType<typeof branchTransaction>>; errors?: ImportError[] }> => {
   if (!options.batch.success) {
     throw new Error('Batch must be successful to import');
   }
@@ -19,11 +22,19 @@ export const importBatch = async (
     };
   });
   try {
-    return await branchTransaction({ ...pluginOptions, pathParams, body: { operations } });
-  } catch (error) {
-    console.log('error!', error);
-    // if (e.errors) {
-    //   return await branchTransaction({ ...pluginOptions, pathParams, body: { operations } });
-    // }
+    const result = await branchTransaction({ ...pluginOptions, pathParams, body: { operations } });
+    return { successful: result, errors };
+  } catch (error: any) {
+    console.log('error', error);
+    if (error.errors) {
+      const rowErrors = error.errors.filter((e: any) => e.index !== undefined);
+      const errorRowIndexes = rowErrors.map((e: any) => e.index);
+      const rowsToRetry = rows.filter((_row, index) => !errorRowIndexes.includes(index));
+      options.batch.data = rowsToRetry;
+      // what if errors twice?
+      const errors = rowErrors.map((e: any) => ({ row: rows[e.index], error: e.error }));
+      return importBatch(pathParams, options, pluginOptions, errors);
+    }
+    throw error;
   }
 };

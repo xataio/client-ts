@@ -1,4 +1,5 @@
 import { Args } from '@oclif/core';
+import { Schemas } from '@xata.io/client';
 import { open } from 'fs/promises';
 import glob from 'glob';
 import { BaseCommand } from '../../base.js';
@@ -34,7 +35,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       newline,
       commentPrefix
     } = flags;
-
+    let columns = flagsToColumns(flags);
     const csvOptions = {
       delimiter,
       header,
@@ -43,7 +44,8 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       quoteChar,
       escapeChar,
       newline: newline as any,
-      commentPrefix
+      commentPrefix,
+      columns
     };
 
     if (!isFileEncoding(encoding)) {
@@ -67,8 +69,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (!parseResults.success) {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }
+    if (!columns) {
+      columns = parseResults.columns;
+    }
+
     await xata.api.tables.createTable({ workspace, region, database, branch, table });
-    const { columns } = parseResults;
+
     for (const column of columns) {
       await xata.api.tables.addTableColumn({
         workspace,
@@ -80,7 +86,10 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       });
     }
 
-    let rowCount = 0;
+    let parsedRowCount = 0;
+    let importSuccessCount = 0;
+    let importErrorCount = 0;
+
     await xata.import.parseCsvFileStream({
       fileStream: await getFileStream(),
       parserOptions: { ...csvOptions, columns },
@@ -90,27 +99,58 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
           throw new Error('Failed to parse CSV file');
         }
         const dbBranchName = `${database}:${branch}`;
-        await xata.import.importBatch(
+        const importResult = await xata.import.importBatch(
           // @ts-ignore
           { dbBranchName: dbBranchName, region, workspace: workspace, database },
           { columns: parseResults.columns, table, batch: parseResults }
         );
+        importSuccessCount += importResult.successful.results.length;
+        if (importResult.errors) {
+          importErrorCount += importResult.errors.length;
+          console.log('importResult.errors', importResult.errors);
+        }
         if (parseResults.success) {
-          rowCount += parseResults.data.length;
-          console.log('rowCount', rowCount);
+          parsedRowCount += parseResults.data.length;
+          console.log('parsedRowCount', parsedRowCount);
           // rows = rows.concat(parseResults.data);
         }
+        console.log('importSuccessCount', importSuccessCount);
+        console.log('importErrorCount', importErrorCount);
       }
     });
-    // console.log('columns', columns);
-    // console.log('row count', rowCount);
-    // // console.log('rows', rows);
-
-    // // await xata.import.importStream({ batchSize: 1000, onBatchProcessed: () => null, getNextRows, columns });
-    // // this.log(
-    // //   JSON.stringify({ delimiter, header, skipEmptyLines, nullValues, quoteChar, escapeChar, newline, commentPrefix })
-    // // );
-
-    // this.log(JSON.stringify(flags));
+    console.log('finished');
+    console.log('importSuccessCount', importSuccessCount);
+    console.log('importErrorCount', importErrorCount);
+    process.exit(0);
   }
+}
+
+const flagsToColumns = (flags: {
+  types: string | undefined;
+  columns: string | undefined;
+}): Schemas.Column[] | undefined => {
+  if (!flags.columns && !flags.types) return undefined;
+  if (flags.columns && !flags.types) {
+    throw new Error('Must specify types when specifying columns');
+  }
+  if (!flags.columns && flags.types) {
+    throw new Error('Must specify columns when specifying types');
+  }
+  const columns = splitCommas(flags.columns);
+  const types = splitCommas(flags.types);
+  if (columns?.length !== types?.length) {
+    throw new Error('Must specify same number of columns and types');
+  }
+  return columns.map((name, i) => {
+    // probably should assert the type here :\
+    const type = types[i] as Schemas.Column['type'];
+    return { name, type };
+  });
+};
+
+function splitCommas(value: string | undefined): string[] {
+  if (!value) return [];
+  return String(value)
+    .split(',')
+    .map((s) => s.trim());
 }

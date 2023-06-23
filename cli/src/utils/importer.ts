@@ -30,11 +30,12 @@ export function csvFlags<Prefix extends string>(prefix: Prefix) {
     commentPrefix: Flags.string({
       description: 'The prefix to use for comments'
     }),
-    table: Flags.string({
-      description: 'The table where the CSV file will be imported to',
-      required: true
+    types: Flags.string({
+      description: 'Column types separated by commas'
     }),
-    branch: BaseCommand.branchFlag
+    columns: Flags.string({
+      description: 'Column names separated by commas'
+    })
   };
 
   return Object.fromEntries(Object.entries(flags).map(([name, flag]) => [`${prefix}${name}`, flag])) as AddPrefix<
@@ -52,6 +53,11 @@ export function commonImportFlags() {
     encoding: Flags.string({
       description: 'Encoding of the CSV file',
       default: 'utf8' as const
-    })
+    }),
+    table: Flags.string({
+      description: 'The table where the CSV file will be imported to',
+      required: true
+    }),
+    branch: BaseCommand.branchFlag
   };
 }
