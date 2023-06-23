@@ -35,7 +35,9 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       newline,
       commentPrefix
     } = flags;
+
     let columns = flagsToColumns(flags);
+
     const csvOptions = {
       delimiter,
       header,
@@ -92,9 +94,10 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
 
     await xata.import.parseCsvFileStream({
       fileStream: await getFileStream(),
+      fileSizeBytes: (await (await open(file, 'r')).stat()).size,
       parserOptions: { ...csvOptions, columns },
       chunkRowCount: 1000,
-      onChunk: async (parseResults) => {
+      onChunk: async (parseResults, meta) => {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
         }
@@ -116,6 +119,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         }
         console.log('importSuccessCount', importSuccessCount);
         console.log('importErrorCount', importErrorCount);
+        console.log('meta', meta);
       }
     });
     console.log('finished');

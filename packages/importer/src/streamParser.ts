@@ -1,11 +1,17 @@
 import Papa, { Parser, ParseResult } from 'papaparse';
 import { papaResultToJson, parseCsvOptionsToPapaOptions } from './parser';
-import { CsvStreamParserOptions, ParseCsvStreamOptions, ParseResults } from './types';
+import {
+  CsvStreamParserOptions,
+  ParseCsvStreamOptions,
+  ParseCsvStreamOptionsSync,
+  ParseMeta,
+  ParseResults
+} from './types';
 
 export const parseCsvFileStreamSync = async ({
   fileStream,
   parserOptions
-}: ParseCsvStreamOptions): Promise<ParseResults> => {
+}: ParseCsvStreamOptionsSync): Promise<ParseResults> => {
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
       ...parseCsvOptionsToPapaOptions(parserOptions),
@@ -19,12 +25,13 @@ export const parseCsvFileStreamSync = async ({
 // todo: parserOptions.columns required
 export const parseCsvFileStream = async ({
   fileStream,
+  fileSizeBytes,
   parserOptions,
   chunkRowCount = 1000,
   onChunkConcurrentMax = 2,
   onChunk = () => new Promise((resolve) => resolve())
 }: ParseCsvStreamOptions): Promise<void> => {
-  let onChunkCount = 0;
+  let onChunkConcurrentCount = 0;
   let chunk: Papa.ParseResult<unknown> | null = null;
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
@@ -37,17 +44,17 @@ export const parseCsvFileStream = async ({
           chunk.meta = result.meta; // overwrite meta, probably ok?
           chunk.errors = chunk.errors.concat(result.errors); // concat inefficient?
         }
-        if (onChunkCount >= onChunkConcurrentMax) {
+        if (onChunkConcurrentCount >= onChunkConcurrentMax) {
           parser.pause();
         }
-        onChunkCount++;
-        chunk = await processChunk(chunk, parser, parserOptions, chunkRowCount, onChunk);
-        onChunkCount--;
+        onChunkConcurrentCount++;
+        chunk = await processChunk(chunk, parser, parserOptions, chunkRowCount, fileSizeBytes, onChunk);
+        onChunkConcurrentCount--;
         parser.resume();
       },
       complete: async () => {
         if (chunk) {
-          await processChunk(chunk, null, parserOptions, chunkRowCount, onChunk, true);
+          await processChunk(chunk, null, parserOptions, chunkRowCount, fileSizeBytes, onChunk, true);
         }
         resolve();
       },
@@ -61,7 +68,8 @@ const processChunk = async (
   parser: Papa.Parser | null,
   parserOptions: CsvStreamParserOptions,
   chunkRowCount: number,
-  onChunk: (parseResults: ParseResults) => Promise<void>,
+  fileSizeBytes: number,
+  onChunk: (parseResults: ParseResults, meta: ParseMeta) => Promise<void>,
   forceFinish = false
 ): Promise<Papa.ParseResult<unknown>> => {
   if (chunk.data.length === 0 || (!forceFinish && chunk.data.length < chunkRowCount)) {
@@ -70,13 +78,15 @@ const processChunk = async (
   const data = chunk.data.splice(0, chunkRowCount);
   const errors = chunk.errors.splice(0, chunkRowCount);
   const results = papaResultToJson({ data, errors, meta: chunk.meta }, parserOptions);
+  const estimatedProgress = chunk.meta.cursor / fileSizeBytes;
+
   try {
-    await onChunk(results);
+    await onChunk(results, { estimatedProgress });
   } catch (error) {
     // the user can throw an error to abort processing the file
     parser?.abort();
     throw error;
   }
 
-  return processChunk(chunk, parser, parserOptions, chunkRowCount, onChunk);
+  return processChunk(chunk, parser, parserOptions, chunkRowCount, fileSizeBytes, onChunk);
 };

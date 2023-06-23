@@ -25,14 +25,13 @@ export const importBatch = async (
     const result = await branchTransaction({ ...pluginOptions, pathParams, body: { operations } });
     return { successful: result, errors };
   } catch (error: any) {
-    console.log('error', error);
     if (error.errors) {
       const rowErrors = error.errors.filter((e: any) => e.index !== undefined);
       const errorRowIndexes = rowErrors.map((e: any) => e.index);
       const rowsToRetry = rows.filter((_row, index) => !errorRowIndexes.includes(index));
       options.batch.data = rowsToRetry;
       // what if errors twice?
-      const errors = rowErrors.map((e: any) => ({ row: rows[e.index], error: e.error }));
+      const errors = rowErrors.map((e: any) => ({ row: rows[e.index], error: e.message }));
       return importBatch(pathParams, options, pluginOptions, errors);
     }
     throw error;

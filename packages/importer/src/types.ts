@@ -91,16 +91,11 @@ export interface ParseJsonOptions extends ParseCommonOptions {
 export type CsvStreamParserOptions = Omit<ParseCsvOptions, 'data'>;
 export type NdJsonStreamParserOptions = Omit<ParseNdJsonOptions, 'data'>;
 
+export type ParseCsvStreamOptionsSync = ParseStreamOptionsSync<CsvStreamParserOptions>;
 export type ParseCsvStreamOptions = ParseStreamOptions<CsvStreamParserOptions>;
 export type ParseNdStreamOptions = ParseStreamOptions<NdJsonStreamParserOptions>;
 
-export interface ParseStreamOptions<ParserOptions> {
-  /**
-   * The file to import.
-   */
-  // todo: should/could this be a stream? alexis: node stream or v8 stream.
-  // localfile from papa, without referencing papa!
-  fileStream: stream.Readable;
+export type ParseStreamOptions<ParserOptions> = ParseStreamOptionsSync<ParserOptions> & {
   /**
    * todo: comment
    */
@@ -110,7 +105,18 @@ export interface ParseStreamOptions<ParserOptions> {
    */
   onChunkConcurrentMax?: number;
 
-  onChunk?: (parseResults: ParseResults) => Promise<void>;
+  onChunk?: (parseResults: ParseResults, meta: ParseMeta) => Promise<void>;
+  fileSizeBytes: number;
+};
+
+export interface ParseStreamOptionsSync<ParserOptions> {
+  /**
+   * The file to import.
+   */
+  // todo: should/could this be a stream? alexis: node stream or v8 stream.
+  // localfile from papa, without referencing papa!
+  fileStream: stream.Readable;
+
   /**
    * Additional options to pass to the parser.
    */
@@ -128,6 +134,10 @@ export interface ParseNdJsonOptions extends ParseCommonOptions {
    */
   newline?: '\r' | '\n' | '\r\n';
 }
+
+export type ParseMeta = {
+  estimatedProgress: number;
+};
 
 export type ParseResults =
   | {
