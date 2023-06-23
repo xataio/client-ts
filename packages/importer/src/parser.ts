@@ -10,7 +10,6 @@ export const DEFAULT_CSV_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x
 export const DEFAULT_NULL_VALUES = [undefined, null, 'null', 'NULL', 'Null'];
 
 export const parseCsvOptionsToPapaOptions = (options: Omit<ParseCsvOptions, 'data'>) => {
-  console.log('columns', options.columns);
   const {
     limit,
     delimiter,
@@ -72,14 +71,6 @@ export const papaResultToJson = (
 export const parseCsv = (options: ParseCsvOptions): ParseResults => {
   const parseResult = CSV.parse(options.data, parseCsvOptionsToPapaOptions(options));
   return papaResultToJson(parseResult, options);
-};
-
-export const parseNdJson = (options: ParseNdJsonOptions): ParseResults => {
-  const { data, newline = detectNewline(data), ...rest } = options;
-
-  const array = data.split(newline).map((line) => JSON.parse(line));
-
-  return parseJson({ ...rest, data: array });
 };
 
 export const parseJson = (options: ParseJsonOptions): ParseResults => {

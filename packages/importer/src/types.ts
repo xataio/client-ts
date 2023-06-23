@@ -3,7 +3,7 @@ import stream from 'stream';
 
 type Column = Schemas.Column;
 
-export type ParseOptions = ParseCsvOptions | ParseJsonOptions | ParseNdJsonOptions;
+export type ParseOptions = ParseCsvOptions | ParseJsonOptions;
 
 export interface ParseCommonOptions {
   /**
@@ -89,11 +89,9 @@ export interface ParseJsonOptions extends ParseCommonOptions {
 }
 
 export type CsvStreamParserOptions = Omit<ParseCsvOptions, 'data'>;
-export type NdJsonStreamParserOptions = Omit<ParseNdJsonOptions, 'data'>;
 
 export type ParseCsvStreamOptionsSync = ParseStreamOptionsSync<CsvStreamParserOptions>;
 export type ParseCsvStreamOptions = ParseStreamOptions<CsvStreamParserOptions>;
-export type ParseNdStreamOptions = ParseStreamOptions<NdJsonStreamParserOptions>;
 
 export type ParseStreamOptions<ParserOptions> = ParseStreamOptionsSync<ParserOptions> & {
   /**
@@ -121,18 +119,6 @@ export interface ParseStreamOptionsSync<ParserOptions> {
    * Additional options to pass to the parser.
    */
   parserOptions: ParserOptions;
-}
-
-export interface ParseNdJsonOptions extends ParseCommonOptions {
-  /**
-   * The NDJSON string data to parse.
-   */
-  data: string;
-  /**
-   * The newline sequence. Leave blank to auto-detect. Must be one of `\r`, `\n`, or `\r\n`.
-   * @default // auto-detect
-   */
-  newline?: '\r' | '\n' | '\r\n';
 }
 
 export type ParseMeta = {
