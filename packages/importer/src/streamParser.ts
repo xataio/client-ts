@@ -8,6 +8,10 @@ import {
   ParseResults
 } from './types';
 
+const CHUNK_SIZE = 1024 * 1024 * 10; // 10MB
+
+// todo this function needs to return delimiters and other CSV settings
+// https://github.com/mholt/PapaParse/issues/708 passing preview param to papaparse loads entire file in the browser
 export const parseCsvFileStreamSync = async ({
   fileStream,
   parserOptions
@@ -36,7 +40,9 @@ export const parseCsvFileStream = async ({
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
       ...parseCsvOptionsToPapaOptions(parserOptions),
+      chunkSize: CHUNK_SIZE,
       chunk: async (result: ParseResult<unknown>, parser: Parser) => {
+        // todo: make this single threaded, but keep batch import multi-threaded?
         if (!chunk) {
           chunk = result;
         } else {
@@ -81,6 +87,7 @@ const processChunk = async (
   const estimatedProgress = chunk.meta.cursor / fileSizeBytes;
 
   try {
+    // todo: estimatedProgress isn't working well
     await onChunk(results, { estimatedProgress });
   } catch (error) {
     // the user can throw an error to abort processing the file

@@ -113,7 +113,7 @@ export interface ParseStreamOptionsSync<ParserOptions> {
    */
   // todo: should/could this be a stream? alexis: node stream or v8 stream.
   // localfile from papa, without referencing papa!
-  fileStream: stream.Readable;
+  fileStream: stream.Readable | File;
 
   /**
    * Additional options to pass to the parser.
