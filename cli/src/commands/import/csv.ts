@@ -18,7 +18,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   };
 
   static args = {
-    files: Args.string({ description: 'Files to upload', required: true })
+    file: Args.string({ description: 'File to import', required: true })
   };
 
   async run(): Promise<void> {
@@ -57,8 +57,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
 
-    const fileNames = glob.sync(args.files);
-    const file = fileNames[0];
+    const { file } = args;
 
     const existingTable = await xata.import.findTable({ workspace, region, database, branch, table });
     if (existingTable) {
@@ -145,7 +144,7 @@ const flagsToColumns = (flags: {
   });
 };
 
-function splitCommas(value: string | undefined): string[] {
+export function splitCommas(value: unknown): string[] {
   if (!value) return [];
   return String(value)
     .split(',')
