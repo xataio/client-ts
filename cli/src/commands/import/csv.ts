@@ -88,7 +88,6 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       });
     }
 
-    let parsedRowCount = 0;
     let importSuccessCount = 0;
     let importErrorCount = 0;
 
@@ -110,21 +109,15 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         importSuccessCount += importResult.successful.results.length;
         if (importResult.errors) {
           importErrorCount += importResult.errors.length;
-          console.log('importResult.errors', importResult.errors);
         }
-        if (parseResults.success) {
-          parsedRowCount += parseResults.data.length;
-          console.log('parsedRowCount', parsedRowCount);
-          // rows = rows.concat(parseResults.data);
-        }
-        console.log('importSuccessCount', importSuccessCount);
-        console.log('importErrorCount', importErrorCount);
-        console.log('meta', meta);
+        this.info(
+          `${importSuccessCount} rows successfully imported ${importErrorCount} errors. ${Math.floor(
+            meta.estimatedProgress * 100
+          )}% complete`
+        );
       }
     });
-    console.log('finished');
-    console.log('importSuccessCount', importSuccessCount);
-    console.log('importErrorCount', importErrorCount);
+    this.success('Completed');
     process.exit(0);
   }
 }
