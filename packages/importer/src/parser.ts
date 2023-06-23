@@ -1,9 +1,9 @@
 import JSON from 'json5';
-import CSV from 'papaparse';
 import pick from 'lodash.pick';
+import CSV from 'papaparse';
 import { coerceColumns, guessColumns } from './columns';
-import { ParseCsvOptions, ParseJsonOptions, ParseNdJsonOptions, ParseResults } from './types';
-import { detectNewline, isDefined, isObject } from './utils/lang';
+import { ParseCsvOptions, ParseJsonOptions, ParseResults } from './types';
+import { isDefined, isObject } from './utils/lang';
 
 export const DEFAULT_PARSE_SAMPLE_SIZE = 100;
 export const DEFAULT_CSV_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x1F'];
