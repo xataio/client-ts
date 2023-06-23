@@ -1,7 +1,6 @@
 import { Args } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { open } from 'fs/promises';
-import glob from 'glob';
 import { BaseCommand } from '../../base.js';
 import { isFileEncoding } from '../../utils/files.js';
 import { commonImportFlags, csvFlags } from '../../utils/importer.js';
