@@ -143,7 +143,7 @@ export type ParseResults =
     }
   | { success: false; errors: string[] };
 
-export type SyncResults = {
+export type SyncCsvResults = {
   results: ParseResults;
   meta: ParseMeta;
 };

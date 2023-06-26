@@ -8,7 +8,7 @@ import {
   ParseCsvStreamOptions,
   ParseCsvStreamOptionsSync,
   ParseMeta,
-  SyncResults
+  SyncCsvResults
 } from './types';
 
 const CHUNK_SIZE = 1024 * 1024 * 10; // 10MB
@@ -24,7 +24,7 @@ const metaToParseMeta = (meta: Papa.ParseMeta): Omit<ParseMeta, 'estimatedProgre
 export const parseCsvFileStreamSync = async ({
   fileStream,
   parserOptions
-}: ParseCsvStreamOptionsSync): Promise<SyncResults> => {
+}: ParseCsvStreamOptionsSync): Promise<SyncCsvResults> => {
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
       ...parseCsvOptionsToPapaOptions(parserOptions),
@@ -65,19 +65,21 @@ export const parseCsvFileStream = async ({
         }
         rowCount += result.data.length;
         averageCursorPerRow = result.meta.cursor / rowCount;
-        parser.pause();
-        chunk = await processPapaChunk(
-          chunk,
-          parser,
-          parserOptions,
-          chunkRowCount,
-          averageCursorPerRow,
-          fileSizeBytes,
-          onChunkBatchSizeMin,
-          onChunkConcurrentMax,
-          onChunk
-        );
-        parser.resume();
+        if (chunk.data.length >= chunkRowCount * onChunkBatchSizeMin) {
+          parser.pause();
+          chunk = await processPapaChunk(
+            chunk,
+            parser,
+            parserOptions,
+            chunkRowCount,
+            averageCursorPerRow,
+            fileSizeBytes,
+            onChunkBatchSizeMin,
+            onChunkConcurrentMax,
+            onChunk
+          );
+          parser.resume();
+        }
       },
       complete: async () => {
         if (chunk) {

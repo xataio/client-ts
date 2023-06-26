@@ -62,12 +62,14 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (existingTable) {
       throw new Error(`Table ${table} already exists. Only imports to new tables are supported`);
     }
+    const parseStream = await getFileStream();
     const parseResults = (
       await xata.import.parseCsvFileStreamSync({
-        fileStream: await getFileStream(),
+        fileStream: parseStream,
         parserOptions: { ...csvOptions, limit: 1000 }
       })
     ).results;
+    parseStream.close();
     if (!parseResults.success) {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }
@@ -90,9 +92,9 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
 
     let importSuccessCount = 0;
     let importErrorCount = 0;
-
+    const fileStream = await getFileStream();
     await xata.import.parseCsvFileStream({
-      fileStream: await getFileStream(),
+      fileStream: fileStream,
       fileSizeBytes: (await (await open(file, 'r')).stat()).size,
       parserOptions: { ...csvOptions, columns },
       chunkRowCount: 1000,
@@ -117,6 +119,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         );
       }
     });
+    fileStream.close();
     this.success('Completed');
     process.exit(0);
   }
