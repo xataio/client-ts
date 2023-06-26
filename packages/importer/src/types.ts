@@ -93,6 +93,8 @@ export type CsvStreamParserOptions = Omit<ParseCsvOptions, 'data'>;
 export type ParseCsvStreamOptionsSync = ParseStreamOptionsSync<CsvStreamParserOptions>;
 export type ParseCsvStreamOptions = ParseStreamOptions<CsvStreamParserOptions>;
 
+export type OnChunkCallback = (parseResults: ParseResults, meta: ParseMeta) => Promise<void>;
+
 export type ParseStreamOptions<ParserOptions> = ParseStreamOptionsSync<ParserOptions> & {
   /**
    * todo: comment
@@ -101,9 +103,13 @@ export type ParseStreamOptions<ParserOptions> = ParseStreamOptionsSync<ParserOpt
   /**
    * todo: comment
    */
+  onChunkBatchSizeMin?: number;
+  /**
+   * todo: comment
+   */
   onChunkConcurrentMax?: number;
 
-  onChunk?: (parseResults: ParseResults, meta: ParseMeta) => Promise<void>;
+  onChunk?: OnChunkCallback;
   fileSizeBytes: number;
 };
 

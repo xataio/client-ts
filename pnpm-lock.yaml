@@ -249,12 +249,15 @@ importers:
   packages/importer:
     specifiers:
       '@faker-js/faker': ^8.0.2
+      '@types/lodash.chunk': ^4.2.7
       '@types/lodash.pick': ^4.4.7
       '@types/papaparse': ^5.3.7
-      '@xata.io/client': workspace:*
+      '@xata.io/client': ^0.24.3
       any-date-parser: ^1.5.3
       json5: ^2.2.3
+      lodash.chunk: ^4.2.0
       lodash.pick: ^4.4.0
+      p-queue: ^7.3.4
       papaparse: ^5.4.1
       zod: ^3.20.2
     dependencies:
@@ -262,10 +265,13 @@ importers:
       '@xata.io/client': link:../client
       any-date-parser: 1.5.3
       json5: 2.2.3
+      lodash.chunk: 4.2.0
       lodash.pick: 4.4.0
+      p-queue: 7.3.4
       papaparse: 5.4.1
       zod: 3.20.2
     devDependencies:
+      '@types/lodash.chunk': 4.2.7
       '@types/lodash.pick': 4.4.7
       '@types/papaparse': 5.3.7
 
@@ -4664,6 +4670,13 @@ packages:
       '@types/node': 20.3.1
     dev: true
 
+  /@types/lodash.chunk/4.2.7:
+    resolution:
+      { integrity: sha512-//tmaWHiANgToom/YYYKKqiCtlNz11fwYtMUUbaemNSbWTI+2zHtYW5nt1PHNCRWHPAJHHhn4UVFD9LKUFvatA== }
+    dependencies:
+      '@types/lodash': 4.14.191
+    dev: true
+
   /@types/lodash.compact/3.0.7:
     resolution:
       { integrity: sha512-yHP+S4QY9C/OLWc+Ei7A1rdwGcBgwFOaW20eZU8qA42dNRwUWnGltDAmKg5ICVGrgJKTokv0gsz1dsQl1gKA2w== }
@@ -8131,7 +8144,6 @@ packages:
   /eventemitter3/4.0.7:
     resolution:
       { integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw== }
-    dev: true
 
   /events/1.1.1:
     resolution:
@@ -10266,6 +10278,11 @@ packages:
       { integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA== }
     dev: true
 
+  /lodash.chunk/4.2.0:
+    resolution:
+      { integrity: sha512-ZzydJKfUHJwHa+hF5X66zLFCBrWn5GeF28OHEr4WVWtNDXlQ/IjWKPBiikqKo2ne0+v6JgCgJ0GzJp8k8bHC7w== }
+    dev: false
+
   /lodash.compact/3.0.1:
     resolution:
       { integrity: sha512-2ozeiPi+5eBXW1CLtzjk8XQFhQOEMwwfxblqeq6EGyTxZJ1bPATqilY0e6g2SLQpP4KuMeuioBhEnWz5Pr7ICQ== }
@@ -12311,6 +12328,15 @@ packages:
       eventemitter3: 4.0.7
       p-timeout: 3.2.0
     dev: true
+
+  /p-queue/7.3.4:
+    resolution:
+      { integrity: sha512-esox8CWt0j9EZECFvkFl2WNPat8LN4t7WWeXq73D9ha0V96qPRufApZi4ZhPwXAln1uVVal429HVVKPa2X0yQg== }
+    engines: { node: '>=12' }
+    dependencies:
+      eventemitter3: 4.0.7
+      p-timeout: 5.1.0
+    dev: false
 
   /p-reduce/3.0.0:
     resolution:
