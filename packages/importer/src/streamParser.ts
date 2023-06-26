@@ -5,22 +5,32 @@ import {
   ParseCsvStreamOptions,
   ParseCsvStreamOptionsSync,
   ParseMeta,
-  ParseResults
+  ParseResults,
+  SyncResults
 } from './types';
 
 const CHUNK_SIZE = 1024 * 1024 * 10; // 10MB
+
+const metaToParseMeta = (meta: Papa.ParseMeta): Omit<ParseMeta, 'estimatedProgress'> => ({
+  delimiter: meta.delimiter,
+  linebreak: meta.linebreak,
+  fields: meta.fields
+});
 
 // todo this function needs to return delimiters and other CSV settings
 // https://github.com/mholt/PapaParse/issues/708 passing preview param to papaparse loads entire file in the browser
 export const parseCsvFileStreamSync = async ({
   fileStream,
   parserOptions
-}: ParseCsvStreamOptionsSync): Promise<ParseResults> => {
+}: ParseCsvStreamOptionsSync): Promise<SyncResults> => {
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
       ...parseCsvOptionsToPapaOptions(parserOptions),
       preview: parserOptions.limit,
-      complete: (results) => resolve(papaResultToJson(results, parserOptions)),
+      complete: (papaResults) => {
+        const results = papaResultToJson(papaResults, parserOptions);
+        resolve({ results, meta: { estimatedProgress: 1, ...metaToParseMeta(papaResults.meta) } });
+      },
       error: (error) => reject(error)
     });
   });
@@ -88,7 +98,7 @@ const processChunk = async (
 
   try {
     // todo: estimatedProgress isn't working well
-    await onChunk(results, { estimatedProgress });
+    await onChunk(results, { estimatedProgress, ...metaToParseMeta(chunk.meta) });
   } catch (error) {
     // the user can throw an error to abort processing the file
     parser?.abort();

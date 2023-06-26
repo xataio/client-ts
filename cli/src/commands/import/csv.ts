@@ -62,10 +62,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (existingTable) {
       throw new Error(`Table ${table} already exists. Only imports to new tables are supported`);
     }
-    const parseResults = await xata.import.parseCsvFileStreamSync({
-      fileStream: await getFileStream(),
-      parserOptions: { ...csvOptions, limit: 1000 }
-    });
+    const parseResults = (
+      await xata.import.parseCsvFileStreamSync({
+        fileStream: await getFileStream(),
+        parserOptions: { ...csvOptions, limit: 1000 }
+      })
+    ).results;
     if (!parseResults.success) {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }

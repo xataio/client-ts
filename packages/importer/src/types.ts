@@ -123,6 +123,9 @@ export interface ParseStreamOptionsSync<ParserOptions> {
 
 export type ParseMeta = {
   estimatedProgress: number;
+  delimiter: string;
+  linebreak: string;
+  fields: string[] | undefined;
 };
 
 export type ParseResults =
@@ -133,6 +136,11 @@ export type ParseResults =
       data: unknown[];
     }
   | { success: false; errors: string[] };
+
+export type SyncResults = {
+  results: ParseResults;
+  meta: ParseMeta;
+};
 
 export type ImportBatchOptions = {
   columns: Column[];
