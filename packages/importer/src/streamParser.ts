@@ -19,7 +19,6 @@ const metaToParseMeta = (meta: Papa.ParseMeta): Omit<ParseMeta, 'estimatedProgre
   fields: meta.fields
 });
 
-// todo this function needs to return delimiters and other CSV settings
 // https://github.com/mholt/PapaParse/issues/708 passing preview param to papaparse loads entire file in the browser
 export const parseCsvFileStreamSync = async ({
   fileStream,
@@ -38,7 +37,6 @@ export const parseCsvFileStreamSync = async ({
   });
 };
 
-// todo: parserOptions.columns required
 export const parseCsvFileStream = async ({
   fileStream,
   fileSizeBytes,
@@ -116,7 +114,6 @@ const processChunk = async (
   const estimatedProgress = meta.cursor / fileSizeBytes;
 
   try {
-    // todo: estimatedProgress isn't working well
     await onChunk(results, { estimatedProgress, ...metaToParseMeta(meta) });
   } catch (error) {
     // the user can throw an error to abort processing the file
@@ -141,9 +138,8 @@ const calcAmountToProcess = (
   return chunks * chunkRowCount;
 };
 
-// todo: chunk overloaded
 const processPapaChunk = async (
-  chunk: Papa.ParseResult<unknown>,
+  papaChunk: Papa.ParseResult<unknown>,
   parser: Papa.Parser | null,
   parserOptions: CsvStreamParserOptions,
   chunkRowCount: number,
@@ -154,21 +150,21 @@ const processPapaChunk = async (
   onChunk: OnChunkCallback,
   forceFinish = false
 ): Promise<Papa.ParseResult<unknown>> => {
-  const amountToProcess = calcAmountToProcess(chunk, chunkRowCount, forceFinish, onChunkBatchSizeMin);
+  const amountToProcess = calcAmountToProcess(papaChunk, chunkRowCount, forceFinish, onChunkBatchSizeMin);
 
   if (amountToProcess <= 0) {
-    return chunk;
+    return papaChunk;
   }
-  const data = chunk.data.splice(0, amountToProcess);
-  const errors = chunk.errors.splice(0, amountToProcess);
+  const data = papaChunk.data.splice(0, amountToProcess);
+  const errors = papaChunk.errors.splice(0, amountToProcess);
   const chunks = chunkArray(data, chunkRowCount);
   const promises = chunks.map((chunkData, index) => {
-    const estimatedCursor = Math.floor(chunk.meta.cursor + averageCursorPerRow * chunkData.length * index);
+    const estimatedCursor = Math.floor(papaChunk.meta.cursor + averageCursorPerRow * chunkData.length * index);
     return () =>
       processChunk(
         chunkData,
         errors,
-        { ...chunk.meta, cursor: estimatedCursor },
+        { ...papaChunk.meta, cursor: estimatedCursor },
         parserOptions,
         parser,
         onChunk,
@@ -177,5 +173,5 @@ const processPapaChunk = async (
   });
   const queue = new PQueue({ concurrency: onChunkConcurrentMax, carryoverConcurrencyCount: true });
   await queue.addAll(promises);
-  return chunk;
+  return papaChunk;
 };

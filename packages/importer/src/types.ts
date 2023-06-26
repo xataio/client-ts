@@ -5,7 +5,7 @@ type Column = Schemas.Column;
 
 export type ParseOptions = ParseCsvOptions | ParseJsonOptions;
 
-export interface ParseCommonOptions {
+export type ParseCommonOptions = {
   /**
    * The schema of the columns to use for importing data.
    * If not provided, the columns will be guessed from the data.
@@ -23,9 +23,9 @@ export interface ParseCommonOptions {
    * The values to interpret as null.
    */
   nullValues?: string[];
-}
+};
 
-export interface ParseCsvOptions extends ParseCommonOptions {
+export type ParseCsvOptions = ParseCommonOptions & {
   /**
    * The CSV string data to parse.
    */
@@ -77,21 +77,23 @@ export interface ParseCsvOptions extends ParseCommonOptions {
    * @default // none
    */
   commentPrefix?: string;
-}
+};
 
-export interface ParseJsonOptions extends ParseCommonOptions {
+type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+
+export type ParseJsonOptions = ParseCommonOptions & {
   /**
    * The JSON string data to parse.
    * If the data is an array, it will be interpreted as an array of objects.
    * If the data is an object, it will be interpreted as a single object.
    */
   data: string | unknown[] | Record<string, unknown>;
-}
+};
 
 export type CsvStreamParserOptions = Omit<ParseCsvOptions, 'data'>;
 
 export type ParseCsvStreamOptionsSync = ParseStreamOptionsSync<CsvStreamParserOptions>;
-export type ParseCsvStreamOptions = ParseStreamOptions<CsvStreamParserOptions>;
+export type ParseCsvStreamOptions = ParseStreamOptions<WithRequired<CsvStreamParserOptions, 'columns'>>;
 
 export type OnChunkCallback = (parseResults: ParseResults, meta: ParseMeta) => Promise<void>;
 
