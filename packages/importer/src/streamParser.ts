@@ -59,9 +59,9 @@ export const parseCsvFileStream = async ({
         if (!chunk) {
           chunk = result;
         } else {
-          chunk.data = chunk.data.concat(result.data); // concat inefficient?
+          chunk.data.push(...result.data);
           chunk.meta = result.meta; // overwrite meta, probably ok?
-          chunk.errors = chunk.errors.concat(result.errors); // concat inefficient?
+          chunk.errors.push(...result.errors);
         }
         rowCount += result.data.length;
         averageCursorPerRow = result.meta.cursor / rowCount;
