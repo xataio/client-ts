@@ -5,7 +5,7 @@ export function csvFlags<Prefix extends string>(prefix: Prefix) {
   const flags = {
     delimiter: Flags.string({
       description: 'The delimiter to use for parsing CSV data',
-      options: ['auto', ',', ';', '|', '\t']
+      options: [',', ';', '|', '\t']
     }),
     header: Flags.boolean({
       description: 'Whether the CSV data has a header row'
