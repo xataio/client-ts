@@ -109,3 +109,7 @@ export type UsersRecord = Users & XataRecord;
 
 export type Pets = InferredTypes['pets'];
 export type PetsRecord = Pets & XataRecord;
+
+const xata = getXataClient();
+const foo = await xata.sql`SELECT * FROM teams`;
+//     ^?
