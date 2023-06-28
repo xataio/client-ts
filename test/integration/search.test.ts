@@ -190,7 +190,7 @@ describe('search', () => {
     }
   });
 
-  test.skip('search with page and offset', async () => {
+  test('search with page and offset', async () => {
     const owners = await xata.db.users.search('Owner');
     const page1 = await xata.db.users.search('Owner', { page: { size: 1 } });
     const page2 = await xata.db.users.search('Owner', { page: { size: 1, offset: 1 } });
@@ -204,7 +204,7 @@ describe('search', () => {
     expect(page2[0].id).toBe(owners[1].id);
   });
 
-  test.skip('global search with page and offset', async () => {
+  test('global search with page and offset', async () => {
     const { users: owners = [] } = await xata.search.byTable('Owner');
     const { users: page1 = [] } = await xata.search.byTable('Owner', { page: { size: 1 } });
     const { users: page2 = [] } = await xata.search.byTable('Owner', { page: { size: 1, offset: 1 } });

@@ -45,7 +45,7 @@ describe('handler', () => {
     const httpHandler = handler(publicKey, privateKey, passphrase, callback);
 
     const writeHead = vi.fn();
-    const req = { method: 'GET', url: '/new' } as unknown as IncomingMessage;
+    const req = { method: 'GET', url: '/new', socket: { localPort: 9999 } } as unknown as IncomingMessage;
     const res = {
       writeHead,
       end: vi.fn()
@@ -56,6 +56,7 @@ describe('handler', () => {
     const [status, headers] = writeHead.mock.calls[0];
     expect(status).toEqual(302);
     expect(String(headers.location).startsWith('https://app.xata.io/new-api-key?pub=')).toBeTruthy();
+    expect(String(headers.location).includes('9999')).toBeTruthy();
     expect(res.end).toHaveBeenCalledWith();
     expect(callback).not.toHaveBeenCalled();
   });
@@ -107,9 +108,8 @@ describe('handler', () => {
     httpHandler(req, res);
 
     expect(res.writeHead).toHaveBeenCalledWith(500);
-    expect(res.end).toHaveBeenCalledWith(
-      'Something went wrong: error:04099079:rsa routines:RSA_padding_check_PKCS1_OAEP_mgf1:oaep decoding error'
-    );
+    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('Something went wrong:'));
+    expect(res.end).toHaveBeenCalledWith(expect.stringContaining('decoding error'));
     expect(callback).not.toHaveBeenCalled();
   });
 

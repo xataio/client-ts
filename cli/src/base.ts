@@ -1,11 +1,12 @@
-import { Command, Flags } from '@oclif/core';
+import { Command, Flags, Interfaces } from '@oclif/core';
 import {
+  buildClient,
   getAPIKey,
-  getCurrentBranchName,
+  getBranch,
   getHostUrl,
   parseWorkspacesUrlParts,
   Schemas,
-  XataApiClient
+  XataApiPlugin
 } from '@xata.io/client';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
@@ -19,8 +20,9 @@ import path from 'path';
 import prompts from 'prompts';
 import table from 'text-table';
 import which from 'which';
-import { z, ZodError } from 'zod';
+import { ZodError } from 'zod';
 import { createAPIKeyThroughWebUI } from './auth-server.js';
+import { partialProjectConfig, ProjectConfig } from './config.js';
 import {
   buildProfile,
   credentialsFilePath,
@@ -30,34 +32,10 @@ import {
 } from './credentials.js';
 import { reportBugURL } from './utils.js';
 
-export const projectConfigSchema = z.object({
-  databaseURL: z.string(),
-  codegen: z.object({
-    output: z.string(),
-    moduleType: z.enum(['cjs', 'esm', 'deno']),
-    declarations: z.boolean(),
-    javascriptTarget: z.enum([
-      'es5',
-      'es6',
-      'es2015',
-      'es2016',
-      'es2017',
-      'es2018',
-      'es2019',
-      'es2020',
-      'es2021',
-      'esnext'
-    ]),
-    workersBuildId: z.string().optional()
-  }),
-  experimental: z.object({
-    incrementalBuild: z.boolean()
-  })
-});
+export class XataClient extends buildClient({
+  api: new XataApiPlugin()
+}) {}
 
-const partialProjectConfig = projectConfigSchema.deepPartial();
-
-export type ProjectConfig = z.infer<typeof partialProjectConfig>;
 export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
 
 const moduleName = 'xata';
@@ -65,7 +43,10 @@ const commonFlagsHelpGroup = 'Common';
 
 export const ENV_FILES = ['.env.local', '.env'];
 
-export abstract class BaseCommand extends Command {
+export type Flags<T extends typeof Command> = Interfaces.InferredFlags<(typeof BaseCommand)['baseFlags'] & T['flags']>;
+export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
+
+export abstract class BaseCommand<T extends typeof Command> extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
   // By default this will use the system locale and timezone.
   locale: string | undefined = undefined;
@@ -77,7 +58,7 @@ export abstract class BaseCommand extends Command {
   apiKeyLocation?: APIKeyLocation;
   apiKeyDotenvLocation = '';
 
-  #xataClient?: XataApiClient;
+  #xataClient?: XataClient;
 
   // The first place is the one used by default when running `xata init`
   // In the future we can support YAML
@@ -96,21 +77,6 @@ export abstract class BaseCommand extends Command {
     description: 'Branch name to use'
   });
 
-  static noInputFlag = {
-    'no-input': Flags.boolean({
-      helpGroup: commonFlagsHelpGroup,
-      description: 'Will not prompt interactively for missing values'
-    })
-  };
-
-  static profileFlag = {
-    profile: Flags.string({
-      helpGroup: commonFlagsHelpGroup,
-      helpValue: '<profile-name>',
-      description: 'Profile name to use'
-    })
-  };
-
   static yesFlag = {
     yes: Flags.boolean({
       char: 'y',
@@ -126,10 +92,21 @@ export abstract class BaseCommand extends Command {
     })
   };
 
+  // TODO: Move JSON flag to base class flags
   static commonFlags = {
-    ...this.jsonFlag,
-    ...this.noInputFlag,
-    ...this.profileFlag
+    ...this.jsonFlag
+  };
+
+  static baseFlags = {
+    'no-input': Flags.boolean({
+      helpGroup: commonFlagsHelpGroup,
+      description: 'Will not prompt interactively for missing values'
+    }),
+    profile: Flags.string({
+      helpGroup: commonFlagsHelpGroup,
+      helpValue: '<profile-name>',
+      description: 'Profile name to use'
+    })
   };
 
   static forceFlag(description?: string) {
@@ -209,12 +186,12 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  async getProfile(ignoreEnv?: boolean): Promise<Profile> {
-    const { flags } = await this.parse({ strict: false, flags: { ...BaseCommand.profileFlag } }, this.argv);
+  async getProfile({ ignoreEnv = false }: { ignoreEnv?: boolean } = {}): Promise<Profile> {
+    const { flags } = await this.parseCommand();
     const profileName = flags.profile || getEnvProfileName();
 
     const apiKey = getAPIKey();
-    const useEnv = !process.env.XATA_PROFILE && !flags.profile && !ignoreEnv;
+    const useEnv = !ignoreEnv || profileName === 'default';
     if (useEnv && apiKey) return buildProfile({ name: 'default', apiKey });
 
     const credentials = await readCredentialsDictionary();
@@ -223,10 +200,10 @@ export abstract class BaseCommand extends Command {
     return buildProfile({ ...credential, name: profileName });
   }
 
-  async getXataClient(overrideProfile?: Profile) {
+  async getXataClient({ profile }: { profile?: Profile } = {}) {
     if (this.#xataClient) return this.#xataClient;
 
-    const { apiKey, host } = overrideProfile ?? (await this.getProfile());
+    const { apiKey, host } = profile ?? (await this.getProfile());
 
     if (!apiKey) {
       this.error('Could not instantiate Xata client. No API key found.', {
@@ -237,13 +214,20 @@ export abstract class BaseCommand extends Command {
       });
     }
 
-    this.#xataClient = new XataApiClient({
+    const { flags } = await this.parseCommand();
+    const databaseURL = flags.db ?? 'https://{workspace}.{region}.xata.sh/db/{database}';
+    const branch = flags.branch ?? this.getCurrentBranchName();
+
+    this.#xataClient = new XataClient({
+      databaseURL,
+      branch,
       apiKey,
       fetch,
       host,
       clientName: 'cli',
       xataAgentExtra: { cliCommandId: this.id ?? 'unknown' }
     });
+
     return this.#xataClient;
   }
 
@@ -272,9 +256,9 @@ export abstract class BaseCommand extends Command {
 
   async verifyAPIKey(profile: Profile) {
     this.info('Checking access to the API...');
-    const xata = await this.getXataClient(profile);
+    const xata = await this.getXataClient({ profile });
     try {
-      await xata.workspaces.getWorkspacesList();
+      await xata.api.workspaces.getWorkspacesList();
     } catch (err) {
       return this.error(`Error accessing the API: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -282,7 +266,7 @@ export abstract class BaseCommand extends Command {
 
   async getWorkspace(options: { allowCreate?: boolean } = {}) {
     const xata = await this.getXataClient();
-    const workspaces = await xata.workspaces.getWorkspacesList();
+    const workspaces = await xata.api.workspaces.getWorkspacesList();
 
     if (workspaces.workspaces.length === 0) {
       if (!options.allowCreate) {
@@ -295,7 +279,7 @@ export abstract class BaseCommand extends Command {
         message: 'New workspace name'
       });
       if (!name) return this.error('No workspace name provided');
-      const workspace = await xata.workspaces.createWorkspace({ data: { name } });
+      const workspace = await xata.api.workspaces.createWorkspace({ data: { name } });
       return workspace.id;
     } else if (workspaces.workspaces.length === 1) {
       const workspace = workspaces.workspaces[0].id;
@@ -323,7 +307,7 @@ export abstract class BaseCommand extends Command {
     options: { allowCreate?: boolean } = {}
   ): Promise<{ name: string; region: string }> {
     const xata = await this.getXataClient();
-    const { databases: dbs = [] } = await xata.database.getDatabaseList({ workspace });
+    const { databases: dbs = [] } = await xata.api.database.getDatabaseList({ workspace });
 
     if (dbs.length > 0) {
       const choices = dbs.map((db) => ({
@@ -363,7 +347,7 @@ export abstract class BaseCommand extends Command {
     options: { allowEmpty?: boolean; allowCreate?: boolean; title?: string } = {}
   ): Promise<string> {
     const xata = await this.getXataClient();
-    const { branches = [] } = await xata.branches.getBranchList({ workspace, region, database });
+    const { branches = [] } = await xata.api.branches.getBranchList({ workspace, region, database });
 
     const EMPTY_CHOICE = '$empty';
     const CREATE_CHOICE = '$create';
@@ -425,7 +409,7 @@ export abstract class BaseCommand extends Command {
     );
     if (!name) return this.error('No database name provided');
 
-    const { regions } = await xata.database.listRegions({ workspace });
+    const { regions } = await xata.api.database.listRegions({ workspace });
     const { region } = await this.prompt(
       {
         type: 'select',
@@ -438,7 +422,7 @@ export abstract class BaseCommand extends Command {
     );
     if (!region) return this.error('No region selected');
 
-    const result = await xata.database.createDatabase({ workspace, database: name, data: { region } });
+    const result = await xata.api.database.createDatabase({ workspace, database: name, data: { region } });
 
     return { name: result.databaseName, region };
   }
@@ -459,9 +443,9 @@ export abstract class BaseCommand extends Command {
     });
 
     if (!from) {
-      await xata.branches.createBranch({ workspace, region, database, branch: name });
+      await xata.api.branches.createBranch({ workspace, region, database, branch: name });
     } else {
-      await xata.branches.createBranch({ workspace, region, database, branch: name, from });
+      await xata.api.branches.createBranch({ workspace, region, database, branch: name, from });
     }
 
     return name;
@@ -514,7 +498,7 @@ export abstract class BaseCommand extends Command {
     if (branchFlag) {
       branch = branchFlag;
     } else if (info.source === 'config') {
-      branch = await this.getCurrentBranchName(info.databaseURL);
+      branch = this.getCurrentBranchName();
     } else if (process.env.XATA_BRANCH !== undefined) {
       branch = process.env.XATA_BRANCH;
     } else {
@@ -524,14 +508,8 @@ export abstract class BaseCommand extends Command {
     return { ...info, branch };
   }
 
-  async getCurrentBranchName(databaseURL: string) {
-    const profile = await this.getProfile();
-    return getCurrentBranchName({
-      fetchImpl: fetch,
-      databaseURL,
-      apiKey: profile?.apiKey ?? undefined,
-      clientName: 'cli'
-    });
+  getCurrentBranchName() {
+    return getBranch() ?? 'main';
   }
 
   async updateConfig() {
@@ -575,7 +553,13 @@ export abstract class BaseCommand extends Command {
 
   async deploySchema(workspace: string, region: string, database: string, branch: string, schema: Schemas.Schema) {
     const xata = await this.getXataClient();
-    const compare = await xata.migrations.compareBranchWithUserSchema({ workspace, region, database, branch, schema });
+    const compare = await xata.api.migrations.compareBranchWithUserSchema({
+      workspace,
+      region,
+      database,
+      branch,
+      schema
+    });
 
     if (compare.edits.operations.length === 0) {
       this.log('Your schema is up to date');
@@ -591,7 +575,7 @@ export abstract class BaseCommand extends Command {
       });
       if (!confirm) return this.exit(1);
 
-      await xata.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits: compare.edits });
+      await xata.api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits: compare.edits });
     }
   }
 
@@ -646,10 +630,7 @@ export abstract class BaseCommand extends Command {
     // If there's a flag, use the value of the flag
     if (flagValue != null) return { [String(options.name)]: flagValue } as prompts.Answers<name>;
 
-    const { flags } = await this.parse(
-      { strict: false, flags: { ...BaseCommand.noInputFlag, ...BaseCommand.yesFlag } },
-      this.argv
-    );
+    const { flags } = await this.parseCommand();
     const { 'no-input': noInput, yes } = flags;
 
     if (yes && options.initial != null && typeof options.initial !== 'function') {
@@ -685,5 +666,16 @@ export abstract class BaseCommand extends Command {
         resolve(undefined);
       });
     });
+  }
+
+  async parseCommand() {
+    const { flags, args, argv } = await this.parse({
+      flags: this.ctor.flags,
+      baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
+      args: this.ctor.args,
+      strict: this.ctor.strict
+    });
+
+    return { flags, args, argv } as { flags: Flags<T>; args: Args<T>; argv: string[] };
   }
 }

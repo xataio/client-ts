@@ -2,6 +2,7 @@ import { SchemaPluginResult } from '.';
 import {
   aggregateTable,
   ApiExtraProps,
+  askTable,
   branchTransaction,
   deleteRecord,
   getBranchDetails,
@@ -13,8 +14,10 @@ import {
   searchTable,
   summarizeTable,
   updateRecordWithID,
-  upsertRecordWithID
+  upsertRecordWithID,
+  vectorSearchTable
 } from '../api';
+import { fetchSSERequest } from '../api/fetcher';
 import {
   FuzzinessExpression,
   HighlightExpression,
@@ -27,17 +30,18 @@ import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord } from '../search';
 import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
-import { chunk, compact, isNumber, isObject, isString, isStringArray } from '../util/lang';
+import { chunk, compact, isDefined, isNumber, isObject, isString, isStringArray } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
+import { AskOptions, AskResult } from './ask';
 import { CacheImpl } from './cache';
 import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
-import { EditableData, Identifiable, isIdentifiable, XataRecord } from './record';
-import { SelectableColumn, SelectedPick } from './selection';
+import { EditableData, Identifiable, Identifier, isIdentifiable, XataRecord } from './record';
+import { ColumnsByValue, SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
@@ -81,7 +85,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract create<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     object: Omit<EditableData<Record>, 'id'>,
     columns: K[],
     options?: { ifVersion?: number }
@@ -94,7 +98,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract create(
-    id: string,
+    id: Identifier,
     object: Omit<EditableData<Record>, 'id'>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
@@ -126,7 +130,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The persisted record for the given id or null if the record could not be found.
    */
   abstract read<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns> | null>>;
 
@@ -135,7 +139,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @param id The unique id.
    * @returns The persisted record for the given id or null if the record could not be found.
    */
-  abstract read(id: string): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
+  abstract read(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
 
   /**
    * Queries multiple records from the table given their unique id.
@@ -144,7 +148,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
   abstract read<K extends SelectableColumn<Record>>(
-    ids: string[],
+    ids: Identifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
 
@@ -153,7 +157,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @param ids The unique ids array.
    * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
-  abstract read(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  abstract read(ids: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
 
   /**
    * Queries a single record from the table by the id in the object.
@@ -199,7 +203,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If the record could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
@@ -209,7 +213,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The persisted record for the given id.
    * @throws If the record could not be found.
    */
-  abstract readOrThrow(id: string): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  abstract readOrThrow(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Queries multiple records from the table given their unique id.
@@ -219,7 +223,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If one or more records could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<Record>>(
-    ids: string[],
+    ids: Identifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
 
@@ -229,7 +233,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The persisted records for the given ids in order.
    * @throws If one or more records could not be found.
    */
-  abstract readOrThrow(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  abstract readOrThrow(ids: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 
   /**
    * Queries a single record from the table by the id in the object.
@@ -301,7 +305,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record, null if the record could not be found.
    */
   abstract update<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     object: Partial<EditableData<Record>>,
     columns: K[],
     options?: { ifVersion?: number }
@@ -314,7 +318,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record, null if the record could not be found.
    */
   abstract update(
-    id: string,
+    id: Identifier,
     object: Partial<EditableData<Record>>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
@@ -372,7 +376,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If the record could not be found.
    */
   abstract updateOrThrow<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     object: Partial<EditableData<Record>>,
     columns: K[],
     options?: { ifVersion?: number }
@@ -386,7 +390,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If the record could not be found.
    */
   abstract updateOrThrow(
-    id: string,
+    id: Identifier,
     object: Partial<EditableData<Record>>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
@@ -421,7 +425,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract createOrUpdate<K extends SelectableColumn<Record>>(
-    object: EditableData<Record> & Identifiable,
+    object: Omit<EditableData<Record>, 'id'> & Partial<Identifiable>,
     columns: K[],
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
@@ -433,7 +437,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract createOrUpdate(
-    object: EditableData<Record> & Identifiable,
+    object: Omit<EditableData<Record>, 'id'> & Partial<Identifiable>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
@@ -446,7 +450,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract createOrUpdate<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier | undefined,
     object: Omit<EditableData<Record>, 'id'>,
     columns: K[],
     options?: { ifVersion?: number }
@@ -460,7 +464,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract createOrUpdate(
-    id: string,
+    id: Identifier | undefined,
     object: Omit<EditableData<Record>, 'id'>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
@@ -473,7 +477,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns Array of the persisted records.
    */
   abstract createOrUpdate<K extends SelectableColumn<Record>>(
-    objects: Array<EditableData<Record> & Identifiable>,
+    objects: Array<Omit<EditableData<Record>, 'id'> & Partial<Identifiable>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
 
@@ -484,7 +488,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns Array of the persisted records.
    */
   abstract createOrUpdate(
-    objects: Array<EditableData<Record> & Identifiable>
+    objects: Array<Omit<EditableData<Record>, 'id'> & Partial<Identifiable>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
   /**
@@ -495,7 +499,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract createOrReplace<K extends SelectableColumn<Record>>(
-    object: EditableData<Record> & Identifiable,
+    object: Omit<EditableData<Record>, 'id'> & Partial<Identifiable>,
     columns: K[],
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
@@ -507,7 +511,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract createOrReplace(
-    object: EditableData<Record> & Identifiable,
+    object: Omit<EditableData<Record>, 'id'> & Partial<Identifiable>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
@@ -520,7 +524,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract createOrReplace<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier | undefined,
     object: Omit<EditableData<Record>, 'id'>,
     columns: K[],
     options?: { ifVersion?: number }
@@ -534,7 +538,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The full persisted record.
    */
   abstract createOrReplace(
-    id: string,
+    id: Identifier | undefined,
     object: Omit<EditableData<Record>, 'id'>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
@@ -547,7 +551,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns Array of the persisted records.
    */
   abstract createOrReplace<K extends SelectableColumn<Record>>(
-    objects: Array<EditableData<Record> & Identifiable>,
+    objects: Array<Omit<EditableData<Record>, 'id'> & Partial<Identifiable>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
 
@@ -558,7 +562,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns Array of the persisted records.
    */
   abstract createOrReplace(
-    objects: Array<EditableData<Record> & Identifiable>
+    objects: Array<Omit<EditableData<Record>, 'id'> & Partial<Identifiable>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
 
   /**
@@ -588,7 +592,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The deleted record, null if the record could not be found.
    */
   abstract delete<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
 
@@ -597,7 +601,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @param id The unique id.
    * @returns The deleted record, null if the record could not be found.
    */
-  abstract delete(id: string): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+  abstract delete(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
 
   /**
    * Deletes multiple records given an array of objects with ids.
@@ -626,7 +630,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns Array of the deleted records in order (if a record could not be found null is returned).
    */
   abstract delete<K extends SelectableColumn<Record>>(
-    objects: string[],
+    objects: Identifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
 
@@ -635,7 +639,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @param objects An array of ids.
    * @returns Array of the deleted records in order (if a record could not be found null is returned).
    */
-  abstract delete(objects: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  abstract delete(objects: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
 
   /**
    * Deletes a record given its unique id.
@@ -665,7 +669,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If the record could not be found.
    */
   abstract deleteOrThrow<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
 
@@ -675,7 +679,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The deleted record, null if the record could not be found.
    * @throws If the record could not be found.
    */
-  abstract deleteOrThrow(id: string): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  abstract deleteOrThrow(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>>>;
 
   /**
    * Deletes multiple records given an array of objects with ids.
@@ -707,7 +711,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If one or more records could not be found.
    */
   abstract deleteOrThrow<K extends SelectableColumn<Record>>(
-    objects: string[],
+    objects: Identifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
 
@@ -717,7 +721,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns Array of the deleted records in order.
    * @throws If one or more records could not be found.
    */
-  abstract deleteOrThrow(objects: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  abstract deleteOrThrow(objects: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 
   /**
    * Search for records in the table.
@@ -739,6 +743,35 @@ export abstract class Repository<Record extends XataRecord> extends Query<
   ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
 
   /**
+   * Search for vectors in the table.
+   * @param column The column to search for.
+   * @param query The vector to search for similarities. Must have the same dimension as the vector column used.
+   * @param options The options to search with (like: spaceFunction)
+   */
+  abstract vectorSearch<F extends ColumnsByValue<Record, number[]>>(
+    column: F,
+    query: number[],
+    options?: {
+      /**
+       * The function used to measure the distance between two points. Can be one of:
+       * `cosineSimilarity`, `l1`, `l2`. The default is `cosineSimilarity`.
+       *
+       * @default cosineSimilarity
+       */
+      similarityFunction?: string;
+      /**
+       * Number of results to return.
+       *
+       * @default 10
+       * @maximum 100
+       * @minimum 1
+       */
+      size?: number;
+      filter?: Filter<Record>;
+    }
+  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
+
+  /**
    * Aggregates records in the table.
    * @param expression The aggregations to perform.
    * @param filter The filter to apply to the queried records.
@@ -749,6 +782,16 @@ export abstract class Repository<Record extends XataRecord> extends Query<
     filter?: Filter<Record>
   ): Promise<AggregationResult<Record, Expression>>;
 
+  /**
+   * Experimental: Ask the database to perform a natural language question.
+   */
+  abstract ask(question: string, options?: AskOptions<Record>): Promise<AskResult>;
+
+  /**
+   * Experimental: Ask the database to perform a natural language question.
+   */
+  abstract ask(question: string, options: AskOptions<Record> & { onMessage: (message: AskResult) => void }): void;
+
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
 
@@ -757,9 +800,9 @@ export class RestRepository<Record extends XataRecord>
   implements Repository<Record>
 {
   #table: string;
-  #getFetchProps: () => Promise<ApiExtraProps>;
+  #getFetchProps: () => ApiExtraProps;
   #db: SchemaPluginResult<any>;
-  #cache: CacheImpl;
+  #cache?: CacheImpl;
   #schemaTables?: Schemas.Table[];
   #trace: TraceFunction;
 
@@ -779,10 +822,7 @@ export class RestRepository<Record extends XataRecord>
     this.#db = options.db;
     this.#cache = options.pluginOptions.cache;
     this.#schemaTables = options.schemaTables;
-    this.#getFetchProps = async () => {
-      const props = await options.pluginOptions.getFetchProps();
-      return { ...props, sessionID: generateUUID() };
-    };
+    this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
 
     const trace = options.pluginOptions.trace ?? defaultTrace;
     this.#trace = async <T>(
@@ -809,13 +849,13 @@ export class RestRepository<Record extends XataRecord>
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async create<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     object: EditableData<Record>,
     columns: K[],
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async create(
-    id: string,
+    id: Identifier,
     object: EditableData<Record>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
@@ -827,7 +867,10 @@ export class RestRepository<Record extends XataRecord>
     objects: Array<EditableData<Record> & Partial<Identifiable>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async create<K extends SelectableColumn<Record>>(
-    a: string | (EditableData<Record> & Partial<Identifiable>) | Array<EditableData<Record> & Partial<Identifiable>>,
+    a:
+      | Identifier
+      | (EditableData<Record> & Partial<Identifiable>)
+      | Array<EditableData<Record> & Partial<Identifiable>>,
     b?: EditableData<Record> | K[] | { ifVersion?: number },
     c?: K[] | { ifVersion?: number },
     d?: { ifVersion?: number }
@@ -880,8 +923,6 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
-    const fetchProps = await this.#getFetchProps();
-
     const record = transformObjectLinks(object);
 
     const response = await insertRecord({
@@ -893,7 +934,7 @@ export class RestRepository<Record extends XataRecord>
       },
       queryParams: { columns },
       body: record,
-      ...fetchProps
+      ...this.#getFetchProps()
     });
 
     const schemaTables = await this.#getSchemaTables();
@@ -901,12 +942,12 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #insertRecordWithId(
-    recordId: string,
+    recordId: Identifier,
     object: EditableData<Record>,
     columns: SelectableColumn<Record>[] = ['*'],
     { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
   ) {
-    const fetchProps = await this.#getFetchProps();
+    if (!recordId) return null;
 
     const record = transformObjectLinks(object);
 
@@ -920,7 +961,7 @@ export class RestRepository<Record extends XataRecord>
       },
       body: record,
       queryParams: { createOnly, columns, ifVersion },
-      ...fetchProps
+      ...this.#getFetchProps()
     });
 
     const schemaTables = await this.#getSchemaTables();
@@ -931,8 +972,6 @@ export class RestRepository<Record extends XataRecord>
     objects: EditableData<Record>[],
     { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
   ) {
-    const fetchProps = await this.#getFetchProps();
-
     const chunkedOperations: TransactionOperation[][] = chunk(
       objects.map((object) => ({
         insert: { table: this.#table, record: transformObjectLinks(object), createOnly, ifVersion }
@@ -950,7 +989,7 @@ export class RestRepository<Record extends XataRecord>
           region: '{region}'
         },
         body: { operations },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       for (const result of results) {
@@ -966,15 +1005,15 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async read<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns> | null>>;
   async read(id: string): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
   async read<K extends SelectableColumn<Record>>(
-    ids: string[],
+    ids: Identifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
-  async read(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  async read(ids: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async read<K extends SelectableColumn<Record>>(
     object: Identifiable,
     columns: K[]
@@ -986,7 +1025,7 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
   async read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async read<K extends SelectableColumn<Record>>(
-    a: string | string[] | Identifiable | Identifiable[],
+    a: Identifier | Identifier[] | Identifiable | Identifiable[],
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
@@ -1018,8 +1057,6 @@ export class RestRepository<Record extends XataRecord>
       // Read one record
       const id = extractId(a);
       if (id) {
-        const fetchProps = await this.#getFetchProps();
-
         try {
           const response = await getRecord({
             pathParams: {
@@ -1030,7 +1067,7 @@ export class RestRepository<Record extends XataRecord>
               recordId: id
             },
             queryParams: { columns },
-            ...fetchProps
+            ...this.#getFetchProps()
           });
 
           const schemaTables = await this.#getSchemaTables();
@@ -1049,15 +1086,15 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async readOrThrow<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
-  async readOrThrow(id: string): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async readOrThrow(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async readOrThrow<K extends SelectableColumn<Record>>(
-    ids: string[],
+    ids: Identifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
-  async readOrThrow(ids: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async readOrThrow(ids: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
   async readOrThrow<K extends SelectableColumn<Record>>(
     object: Identifiable,
     columns: K[]
@@ -1069,7 +1106,7 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
   async readOrThrow(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
   async readOrThrow<K extends SelectableColumn<Record>>(
-    a: string | string[] | Identifiable | Identifiable[],
+    a: Identifier | Identifier[] | Identifiable | Identifiable[],
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
@@ -1113,13 +1150,13 @@ export class RestRepository<Record extends XataRecord>
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
   async update<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     object: Partial<EditableData<Record>>,
     columns: K[],
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
   async update(
-    id: string,
+    id: Identifier,
     object: Partial<EditableData<Record>>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
@@ -1131,7 +1168,10 @@ export class RestRepository<Record extends XataRecord>
     objects: Array<Partial<EditableData<Record>> & Identifiable>
   ): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async update<K extends SelectableColumn<Record>>(
-    a: string | (Partial<EditableData<Record>> & Identifiable) | Array<Partial<EditableData<Record>> & Identifiable>,
+    a:
+      | Identifier
+      | (Partial<EditableData<Record>> & Identifiable)
+      | Array<Partial<EditableData<Record>> & Identifiable>,
     b?: Partial<EditableData<Record>> | K[] | { ifVersion?: number },
     c?: K[] | { ifVersion?: number },
     d?: { ifVersion?: number }
@@ -1196,13 +1236,13 @@ export class RestRepository<Record extends XataRecord>
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     object: Partial<EditableData<Record>>,
     columns: K[],
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async updateOrThrow(
-    id: string,
+    id: Identifier,
     object: Partial<EditableData<Record>>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
@@ -1214,7 +1254,10 @@ export class RestRepository<Record extends XataRecord>
     objects: Array<Partial<EditableData<Record>> & Identifiable>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
-    a: string | (Partial<EditableData<Record>> & Identifiable) | Array<Partial<EditableData<Record>> & Identifiable>,
+    a:
+      | Identifier
+      | (Partial<EditableData<Record>> & Identifiable)
+      | Array<Partial<EditableData<Record>> & Identifiable>,
     b?: Partial<EditableData<Record>> | K[] | { ifVersion?: number },
     c?: K[] | { ifVersion?: number },
     d?: { ifVersion?: number }
@@ -1251,12 +1294,12 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #updateRecordWithID(
-    recordId: string,
+    recordId: Identifier,
     object: Partial<EditableData<Record>>,
     columns: SelectableColumn<Record>[] = ['*'],
     { ifVersion }: { ifVersion?: number }
   ) {
-    const fetchProps = await this.#getFetchProps();
+    if (!recordId) return null;
 
     // Ensure id is not present in the update payload
     const { id: _id, ...record } = transformObjectLinks(object);
@@ -1272,7 +1315,7 @@ export class RestRepository<Record extends XataRecord>
         },
         queryParams: { columns, ifVersion },
         body: record,
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       const schemaTables = await this.#getSchemaTables();
@@ -1290,8 +1333,6 @@ export class RestRepository<Record extends XataRecord>
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
     { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
   ) {
-    const fetchProps = await this.#getFetchProps();
-
     const chunkedOperations: TransactionOperation[][] = chunk(
       objects.map(({ id, ...object }) => ({
         update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(object) }
@@ -1309,7 +1350,7 @@ export class RestRepository<Record extends XataRecord>
           region: '{region}'
         },
         body: { operations },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       for (const result of results) {
@@ -1325,34 +1366,34 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async createOrUpdate<K extends SelectableColumn<Record>>(
-    object: EditableData<Record> & Identifiable,
+    object: EditableData<Record> & Partial<Identifiable>,
     columns: K[],
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async createOrUpdate(
-    object: EditableData<Record> & Identifiable,
+    object: EditableData<Record> & Partial<Identifiable>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     object: Omit<EditableData<Record>, 'id'>,
     columns: K[],
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async createOrUpdate(
-    id: string,
+    id: Identifier,
     object: Omit<EditableData<Record>, 'id'>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<Record>>(
-    objects: Array<EditableData<Record> & Identifiable>,
+    objects: Array<EditableData<Record> & Partial<Identifiable>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
   async createOrUpdate(
-    objects: Array<EditableData<Record> & Identifiable>
+    objects: Array<EditableData<Record> & Partial<Identifiable>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async createOrUpdate<K extends SelectableColumn<Record>>(
-    a: string | EditableData<Record> | EditableData<Record>[],
+    a: Identifier | EditableData<Record> | EditableData<Record>[],
     b?: EditableData<Record> | Omit<EditableData<Record>, 'id'> | K[] | { ifVersion?: number },
     c?: K[] | { ifVersion?: number },
     d?: { ifVersion?: number }
@@ -1383,14 +1424,28 @@ export class RestRepository<Record extends XataRecord>
 
       // Create or update one record with id as param
       if (isString(a) && isObject(b)) {
+        if (a === '') throw new Error("The id can't be empty");
+
         const columns = isStringArray(c) ? c : undefined;
-        return this.#upsertRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
+        return await this.#upsertRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
       }
 
       // Create or update one record with id as property
       if (isObject(a) && isString(a.id)) {
+        if (a.id === '') throw new Error("The id can't be empty");
+
         const columns = isStringArray(c) ? c : undefined;
-        return this.#upsertRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
+        return await this.#upsertRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
+      }
+
+      // Create with undefined id as param
+      if (!isDefined(a) && isObject(b)) {
+        return await this.create(b as EditableData<Record>, c as K[]);
+      }
+
+      // Create with undefined id as property
+      if (isObject(a) && !isDefined(a.id)) {
+        return await this.create(a as EditableData<Record>, b as K[]);
       }
 
       throw new Error('Invalid arguments for createOrUpdate method');
@@ -1398,12 +1453,12 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #upsertRecordWithID(
-    recordId: string,
+    recordId: Identifier,
     object: Omit<EditableData<Record>, 'id'>,
     columns: SelectableColumn<Record>[] = ['*'],
     { ifVersion }: { ifVersion?: number }
   ) {
-    const fetchProps = await this.#getFetchProps();
+    if (!recordId) return null;
 
     const response = await upsertRecordWithID({
       pathParams: {
@@ -1414,8 +1469,8 @@ export class RestRepository<Record extends XataRecord>
         recordId
       },
       queryParams: { columns, ifVersion },
-      body: object,
-      ...fetchProps
+      body: object as Schemas.DataInputRecord,
+      ...this.#getFetchProps()
     });
 
     const schemaTables = await this.#getSchemaTables();
@@ -1423,34 +1478,34 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async createOrReplace<K extends SelectableColumn<Record>>(
-    object: EditableData<Record> & Identifiable,
+    object: EditableData<Record> & Partial<Identifiable>,
     columns: K[],
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async createOrReplace(
-    object: EditableData<Record> & Identifiable,
+    object: EditableData<Record> & Partial<Identifiable>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrReplace<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier | undefined,
     object: Omit<EditableData<Record>, 'id'>,
     columns: K[],
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async createOrReplace(
-    id: string,
+    id: Identifier | undefined,
     object: Omit<EditableData<Record>, 'id'>,
     options?: { ifVersion?: number }
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrReplace<K extends SelectableColumn<Record>>(
-    objects: Array<EditableData<Record> & Identifiable>,
+    objects: Array<EditableData<Record> & Partial<Identifiable>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
   async createOrReplace(
-    objects: Array<EditableData<Record> & Identifiable>
+    objects: Array<EditableData<Record> & Partial<Identifiable>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async createOrReplace<K extends SelectableColumn<Record>>(
-    a: string | EditableData<Record> | EditableData<Record>[],
+    a: Identifier | EditableData<Record> | EditableData<Record>[] | undefined,
     b?: EditableData<Record> | Omit<EditableData<Record>, 'id'> | K[] | { ifVersion?: number },
     c?: K[] | { ifVersion?: number },
     d?: { ifVersion?: number }
@@ -1478,14 +1533,28 @@ export class RestRepository<Record extends XataRecord>
 
       // Create or replace one record with id as param
       if (isString(a) && isObject(b)) {
+        if (a === '') throw new Error("The id can't be empty");
+
         const columns = isStringArray(c) ? c : undefined;
-        return this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: false, ifVersion });
+        return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: false, ifVersion });
       }
 
       // Create or replace one record with id as property
       if (isObject(a) && isString(a.id)) {
+        if (a.id === '') throw new Error("The id can't be empty");
+
         const columns = isStringArray(c) ? c : undefined;
-        return this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: false, ifVersion });
+        return await this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: false, ifVersion });
+      }
+
+      // Create with undefined id as param
+      if (!isDefined(a) && isObject(b)) {
+        return await this.create(b as EditableData<Record>, c as K[]);
+      }
+
+      // Create with undefined id as property
+      if (isObject(a) && !isDefined(a.id)) {
+        return await this.create(a as EditableData<Record>, b as K[]);
       }
 
       throw new Error('Invalid arguments for createOrReplace method');
@@ -1498,10 +1567,10 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
   async delete(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
   async delete<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
-  async delete(id: string): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+  async delete(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
   async delete<K extends SelectableColumn<Record>>(
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
     columns: K[]
@@ -1510,12 +1579,12 @@ export class RestRepository<Record extends XataRecord>
     objects: Array<Partial<EditableData<Record>> & Identifiable>
   ): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async delete<K extends SelectableColumn<Record>>(
-    objects: string[],
+    objects: Identifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
-  async delete(objects: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  async delete(objects: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async delete<K extends SelectableColumn<Record>>(
-    a: string | Identifiable | Array<string | Identifiable>,
+    a: Identifier | Identifiable | Array<Identifier | Identifiable>,
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
@@ -1565,10 +1634,10 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async deleteOrThrow(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async deleteOrThrow<K extends SelectableColumn<Record>>(
-    id: string,
+    id: Identifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
-  async deleteOrThrow(id: string): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async deleteOrThrow(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async deleteOrThrow<K extends SelectableColumn<Record>>(
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
     columns: K[]
@@ -1577,12 +1646,12 @@ export class RestRepository<Record extends XataRecord>
     objects: Array<Partial<EditableData<Record>> & Identifiable>
   ): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
   async deleteOrThrow<K extends SelectableColumn<Record>>(
-    objects: string[],
+    objects: Identifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
-  async deleteOrThrow(objects: string[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async deleteOrThrow(objects: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
   async deleteOrThrow<K extends SelectableColumn<Record>>(
-    a: string | Identifiable | Array<string | Identifiable>,
+    a: Identifier | Identifiable | Array<Identifier | Identifiable>,
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
@@ -1614,8 +1683,8 @@ export class RestRepository<Record extends XataRecord>
     });
   }
 
-  async #deleteRecord(recordId: string, columns: SelectableColumn<Record>[] = ['*']) {
-    const fetchProps = await this.#getFetchProps();
+  async #deleteRecord(recordId: Identifier, columns: SelectableColumn<Record>[] = ['*']) {
+    if (!recordId) return null;
 
     try {
       const response = await deleteRecord({
@@ -1627,7 +1696,7 @@ export class RestRepository<Record extends XataRecord>
           recordId
         },
         queryParams: { columns },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       const schemaTables = await this.#getSchemaTables();
@@ -1641,11 +1710,9 @@ export class RestRepository<Record extends XataRecord>
     }
   }
 
-  async #deleteRecords(recordIds: string[]) {
-    const fetchProps = await this.#getFetchProps();
-
+  async #deleteRecords(recordIds: Identifier[]) {
     const chunkedOperations: TransactionOperation[][] = chunk(
-      recordIds.map((id) => ({ delete: { table: this.#table, id } })),
+      compact(recordIds).map((id) => ({ delete: { table: this.#table, id } })),
       BULK_OPERATION_MAX_SIZE
     );
 
@@ -1657,7 +1724,7 @@ export class RestRepository<Record extends XataRecord>
           region: '{region}'
         },
         body: { operations },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
     }
   }
@@ -1675,8 +1742,6 @@ export class RestRepository<Record extends XataRecord>
     } = {}
   ) {
     return this.#trace('search', async () => {
-      const fetchProps = await this.#getFetchProps();
-
       const { records } = await searchTable({
         pathParams: {
           workspace: '{workspaceId}',
@@ -1694,7 +1759,43 @@ export class RestRepository<Record extends XataRecord>
           page: options.page,
           target: options.target as Schemas.TargetExpression
         },
-        ...fetchProps
+        ...this.#getFetchProps()
+      });
+
+      const schemaTables = await this.#getSchemaTables();
+
+      // TODO - Column selection not supported by search endpoint yet
+      return records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any;
+    });
+  }
+
+  async vectorSearch<F extends ColumnsByValue<Record, number[]>>(
+    column: F,
+    query: number[],
+    options?:
+      | {
+          similarityFunction?: string | undefined;
+          size?: number | undefined;
+          filter?: Filter<Record> | undefined;
+        }
+      | undefined
+  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]> {
+    return this.#trace('vectorSearch', async () => {
+      const { records } = await vectorSearchTable({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
+        body: {
+          column,
+          queryVector: query,
+          similarityFunction: options?.similarityFunction,
+          size: options?.size,
+          filter: options?.filter as Schemas.FilterExpression
+        },
+        ...this.#getFetchProps()
       });
 
       const schemaTables = await this.#getSchemaTables();
@@ -1709,8 +1810,6 @@ export class RestRepository<Record extends XataRecord>
     filter?: Filter<Record>
   ) {
     return this.#trace('aggregate', async () => {
-      const fetchProps = await this.#getFetchProps();
-
       const result = await aggregateTable({
         pathParams: {
           workspace: '{workspaceId}',
@@ -1719,7 +1818,7 @@ export class RestRepository<Record extends XataRecord>
           tableName: this.#table
         },
         body: { aggs, filter: filter as Schemas.FilterExpression },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       return result as any;
@@ -1733,7 +1832,6 @@ export class RestRepository<Record extends XataRecord>
 
       const data = query.getQueryOptions();
 
-      const fetchProps = await this.#getFetchProps();
       const { meta, records: objects } = await queryTable({
         pathParams: {
           workspace: '{workspaceId}',
@@ -1749,7 +1847,7 @@ export class RestRepository<Record extends XataRecord>
           consistency: data.consistency
         },
         fetchOptions: data.fetchOptions,
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       const schemaTables = await this.#getSchemaTables();
@@ -1770,7 +1868,6 @@ export class RestRepository<Record extends XataRecord>
     return this.#trace('summarize', async () => {
       const data = query.getQueryOptions();
 
-      const fetchProps = await this.#getFetchProps();
       const result = await summarizeTable({
         pathParams: {
           workspace: '{workspaceId}',
@@ -1787,25 +1884,56 @@ export class RestRepository<Record extends XataRecord>
           summaries,
           summariesFilter
         },
-        ...fetchProps
+        ...this.#getFetchProps()
       });
 
       return result;
     });
   }
 
+  ask(question: string, options?: AskOptions<Record> & { onMessage?: (message: AskResult) => void }): any {
+    const params = {
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table
+      },
+      body: {
+        question,
+        ...options
+      },
+      ...this.#getFetchProps()
+    };
+
+    if (options?.onMessage) {
+      fetchSSERequest({
+        endpoint: 'dataPlane',
+        url: '/db/{dbBranchName}/tables/{tableName}/ask',
+        method: 'POST',
+        onMessage: (message: { text: string; records: string[] }) => {
+          options.onMessage?.({ answer: message.text, records: message.records });
+        },
+        ...params
+      });
+    } else {
+      return askTable(params as any);
+    }
+  }
+
   async #setCacheQuery(query: Query<Record, XataRecord>, meta: RecordsMetadata, records: XataRecord[]): Promise<void> {
-    await this.#cache.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
+    await this.#cache?.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
   }
 
   async #getCacheQuery<T extends XataRecord>(
     query: Query<Record, XataRecord>
   ): Promise<{ meta: RecordsMetadata; records: T[] } | null> {
     const key = `query_${this.#table}:${query.key()}`;
-    const result = await this.#cache.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
+    const result = await this.#cache?.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
     if (!result) return null;
 
-    const { cache: ttl = this.#cache.defaultQueryTTL } = query.getQueryOptions();
+    const defaultTTL = this.#cache?.defaultQueryTTL ?? -1;
+    const { cache: ttl = defaultTTL } = query.getQueryOptions();
     if (ttl < 0) return null;
 
     const hasExpired = result.date.getTime() + ttl < Date.now();
@@ -1814,11 +1942,10 @@ export class RestRepository<Record extends XataRecord>
 
   async #getSchemaTables(): Promise<Schemas.Table[]> {
     if (this.#schemaTables) return this.#schemaTables;
-    const fetchProps = await this.#getFetchProps();
 
     const { schema } = await getBranchDetails({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-      ...fetchProps
+      ...this.#getFetchProps()
     });
 
     this.#schemaTables = schema.tables;
@@ -1826,21 +1953,21 @@ export class RestRepository<Record extends XataRecord>
   }
 }
 
-const transformObjectLinks = (object: any) => {
+const transformObjectLinks = (object: any): Schemas.DataInputRecord => {
   return Object.entries(object).reduce((acc, [key, value]) => {
     // Ignore internal properties
     if (key === 'xata') return acc;
 
     // Transform links to identifier
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
-  }, {} as Record<string, unknown>);
+  }, {});
 };
 
 export const initObject = <T>(
   db: Record<string, Repository<any>>,
   schemaTables: Schemas.Table[],
   table: string,
-  object: Record<string, unknown>,
+  object: Record<string, any>,
   selectedColumns: string[]
 ) => {
   const data: Dictionary<unknown> = {};
@@ -1905,6 +2032,11 @@ export const initObject = <T>(
   }
 
   const record = { ...data };
+  const serializable = { xata, ...transformObjectLinks(data) };
+  const metadata =
+    xata !== undefined
+      ? { ...xata, createdAt: new Date(xata.createdAt), updatedAt: new Date(xata.updatedAt) }
+      : undefined;
 
   record.read = function (columns?: any) {
     return db[table].read(record['id'] as string, columns);
@@ -1928,16 +2060,17 @@ export const initObject = <T>(
     return db[table].delete(record['id'] as string);
   };
 
+  record.xata = Object.freeze(metadata);
   record.getMetadata = function () {
-    return xata;
+    return record.xata;
   };
 
   record.toSerializable = function () {
-    return JSON.parse(JSON.stringify(transformObjectLinks(data)));
+    return JSON.parse(JSON.stringify(serializable));
   };
 
   record.toString = function () {
-    return JSON.stringify(transformObjectLinks(data));
+    return JSON.stringify(transformObjectLinks(serializable));
   };
 
   for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerializable', 'toString']) {
@@ -1949,7 +2082,7 @@ export const initObject = <T>(
   return record as unknown as T;
 };
 
-function extractId(value: any): string | undefined {
+function extractId(value: any): Identifier | undefined {
   if (isString(value)) return value;
   if (isObject(value) && isString(value.id)) return value.id;
   return undefined;

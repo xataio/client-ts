@@ -1,5 +1,105 @@
 # @xata.io/importer
 
+## 0.3.18
+
+### Patch Changes
+
+- Updated dependencies [[`f01d1580`](https://github.com/xataio/client-ts/commit/f01d1580fc450cbf06eb8af85d68cf052fbe83a1), [`52290feb`](https://github.com/xataio/client-ts/commit/52290feb5bba57384cdc14e7722fb5d9883dc581)]:
+  - @xata.io/client@0.24.3
+
+## 0.3.17
+
+### Patch Changes
+
+- Updated dependencies [[`51561b52`](https://github.com/xataio/client-ts/commit/51561b52b56ad5ed9101d8faf12929891419cb2c)]:
+  - @xata.io/client@0.24.2
+
+## 0.3.16
+
+### Patch Changes
+
+- Updated dependencies [[`eaa774f5`](https://github.com/xataio/client-ts/commit/eaa774f542185ef92448155bcdff331686c4da9f)]:
+  - @xata.io/client@0.24.1
+
+## 0.3.15
+
+### Patch Changes
+
+- Updated dependencies [[`45aa2207`](https://github.com/xataio/client-ts/commit/45aa220728e98dd716a55a9a307474732a9b2bc1), [`f28080f0`](https://github.com/xataio/client-ts/commit/f28080f034f02704fe00d64b8f42e1127bde30c7), [`ac9c0604`](https://github.com/xataio/client-ts/commit/ac9c06042bb85105d9a38624676ce6ea5a27d488), [`c163b365`](https://github.com/xataio/client-ts/commit/c163b3658f23fb2eaad6243ebebc92624754099a)]:
+  - @xata.io/client@0.24.0
+
+## 0.3.14
+
+### Patch Changes
+
+- [#972](https://github.com/xataio/client-ts/pull/972) [`89375e76`](https://github.com/xataio/client-ts/commit/89375e76b790fed7e6a26bf3ac4ea9eaed1aecae) Thanks [@SferaDev](https://github.com/SferaDev)! - Add types to exports
+
+- Updated dependencies [[`20cc8c43`](https://github.com/xataio/client-ts/commit/20cc8c43e1659bf112ae2642948c84bfcf46a6ba), [`5099cbbd`](https://github.com/xataio/client-ts/commit/5099cbbd3065a60dcee2f1699afa1ee8ed5edb1c), [`89375e76`](https://github.com/xataio/client-ts/commit/89375e76b790fed7e6a26bf3ac4ea9eaed1aecae), [`5eaee932`](https://github.com/xataio/client-ts/commit/5eaee932b828907ae352d7c0d0584e860845434b), [`109b8790`](https://github.com/xataio/client-ts/commit/109b8790849532d9c442e7c03c67792aeafebd88)]:
+  - @xata.io/client@0.23.5
+
+## 0.3.13
+
+### Patch Changes
+
+- Updated dependencies [[`470cc71f`](https://github.com/xataio/client-ts/commit/470cc71f7c5c8b9fd50f789e157d2b2eecd0b3e8)]:
+  - @xata.io/client@0.23.4
+
+## 0.3.12
+
+### Patch Changes
+
+- Updated dependencies [[`344b0d68`](https://github.com/xataio/client-ts/commit/344b0d687962d569872d1e90d59818d28df7579c)]:
+  - @xata.io/client@0.23.3
+
+## 0.3.11
+
+### Patch Changes
+
+- Updated dependencies [[`c477c177`](https://github.com/xataio/client-ts/commit/c477c17795c01cbf945be413217944a5a38655a5), [`ecdc6553`](https://github.com/xataio/client-ts/commit/ecdc6553d4628289e88953ab6296b80f60e8f757)]:
+  - @xata.io/client@0.23.2
+
+## 0.3.10
+
+### Patch Changes
+
+- Updated dependencies [[`3026d708`](https://github.com/xataio/client-ts/commit/3026d70847830fd0f2024413d823380ff323806c)]:
+  - @xata.io/client@0.23.1
+
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies [[`5838113f`](https://github.com/xataio/client-ts/commit/5838113fca042163b44d7cc7cc1686d5ef89b302)]:
+  - @xata.io/client@0.23.0
+
+## 0.3.8
+
+### Patch Changes
+
+- Updated dependencies [[`22e7dd29`](https://github.com/xataio/client-ts/commit/22e7dd29f7a51dccc087d5fd7fff32084c7733af), [`07fc879d`](https://github.com/xataio/client-ts/commit/07fc879d3f778536e39588e66d7a18b5a9d52ebe), [`58a1c24e`](https://github.com/xataio/client-ts/commit/58a1c24e5d30025dce243eecce44f09d4f65ed66), [`c2c6e244`](https://github.com/xataio/client-ts/commit/c2c6e24459b1acc07f0414066258071fbcf7dde9)]:
+  - @xata.io/client@0.22.4
+
+## 0.3.7
+
+### Patch Changes
+
+- Updated dependencies [[`4210b8c3`](https://github.com/xataio/client-ts/commit/4210b8c3c4169ba781a56deed7ba09c99788db1f)]:
+  - @xata.io/client@0.22.3
+
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies [[`72e13bf9`](https://github.com/xataio/client-ts/commit/72e13bf99d0ebefef91c984a995a28b0e8ca2a8f)]:
+  - @xata.io/client@0.22.2
+
+## 0.3.5
+
+### Patch Changes
+
+- Updated dependencies [[`4cafde72`](https://github.com/xataio/client-ts/commit/4cafde728e4e9e5e83812d475d9980397ae78362), [`639710a5`](https://github.com/xataio/client-ts/commit/639710a52132f260bf3a26560a21ae2193abb71d)]:
+  - @xata.io/client@0.22.1
+
 ## 0.3.4
 
 ### Patch Changes

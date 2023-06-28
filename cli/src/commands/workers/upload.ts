@@ -7,7 +7,7 @@ import Codegen from '../codegen/index.js';
 
 const UPLOAD_ENDPOINT = 'https://app.xata.io/api/workers';
 
-export default class Upload extends BaseCommand {
+export default class Upload extends BaseCommand<typeof Upload> {
   static description = 'Compile and upload xata workers';
 
   static flags = {
@@ -22,7 +22,7 @@ export default class Upload extends BaseCommand {
 
   async run(): Promise<void> {
     // TODO: Load them from .xatarc too
-    const { flags } = await this.parse(Upload);
+    const { flags } = await this.parseCommand();
 
     const profile = await this.getProfile();
     if (!profile) this.error('No profile found');
@@ -59,8 +59,18 @@ export default class Upload extends BaseCommand {
 
         const json = await response.json();
 
-        const { id } = responseSchema.parse(json);
+        if (response.status !== 200) {
+          const parsedError = errorSchema.safeParse(json);
+          const message = parsedError.success ? parsedError.data.message : 'Unknown error';
+          this.error(`Failed to upload workers: ${message}`);
+        }
 
+        const parsedResponse = responseSchema.safeParse(json);
+        if (!parsedResponse.success) {
+          this.error(`Failed to upload workers, invalid response`);
+        }
+
+        const { id } = parsedResponse.data;
         this.info(`Successfully compiled worker ${id}`);
 
         if (this.projectConfig?.codegen) {
@@ -100,4 +110,8 @@ const responseSchema = z.object({
   id: z.string(),
   createdBy: z.string(),
   createdAt: z.string()
+});
+
+const errorSchema = z.object({
+  message: z.string()
 });

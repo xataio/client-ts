@@ -1,5 +1,8 @@
 import { isObject, isString } from '../util/lang';
+import { ExclusiveOr } from '../util/types';
 import { SelectableColumn, SelectedPick } from './selection';
+
+export type Identifier = string;
 
 /**
  * Represents an identifiable record from the database.
@@ -8,7 +11,7 @@ export interface Identifiable {
   /**
    * Unique id of this record.
    */
-  id: string;
+  id: Identifier;
 }
 
 export interface BaseData {
@@ -20,7 +23,13 @@ export interface BaseData {
  */
 export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<any>> extends Identifiable {
   /**
+   * Metadata of this record.
+   */
+  xata: XataRecordMetadata;
+
+  /**
    * Get metadata of this record.
+   * @deprecated Use `xata` property instead.
    */
   getMetadata(): XataRecordMetadata;
 
@@ -121,10 +130,14 @@ export type XataRecordMetadata = {
    * Number that is increased every time the record is updated.
    */
   version: number;
-  /*
-   * Encoding/Decoding errors
+  /**
+   * Timestamp when the record was created.
    */
-  warnings?: string[];
+  createdAt: Date;
+  /**
+   * Timestamp when the record was last updated.
+   */
+  updatedAt: Date;
 };
 
 export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
@@ -138,14 +151,21 @@ export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> 
   return isIdentifiable(x) && isObject(metadata) && typeof metadata.version === 'number';
 }
 
+type NumericOperator = ExclusiveOr<
+  { $increment?: number },
+  ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
+>;
+
 type EditableDataFields<T> = T extends XataRecord
-  ? { id: string } | string
+  ? { id: Identifier } | Identifier
   : NonNullable<T> extends XataRecord
-  ? { id: string } | string | null | undefined
+  ? { id: Identifier } | Identifier | null | undefined
   : T extends Date
   ? string | Date
   : NonNullable<T> extends Date
   ? string | Date | null | undefined
+  : T extends number
+  ? number | NumericOperator
   : T;
 
 export type EditableData<O extends XataRecord> = Identifiable &
@@ -168,7 +188,27 @@ type JSONDataFields<T> = T extends XataRecord
   ? string | null | undefined
   : T;
 
-export type JSONData<O> = Identifiable &
+type JSONDataBase = Identifiable & {
+  /**
+   * Metadata about the record.
+   */
+  xata: {
+    /**
+     * Timestamp when the record was created.
+     */
+    createdAt: string;
+    /**
+     * Timestamp when the record was last updated.
+     */
+    updatedAt: string;
+    /**
+     * Number that is increased every time the record is updated.
+     */
+    version: number;
+  };
+};
+
+export type JSONData<O> = JSONDataBase &
   Partial<
     Omit<
       {

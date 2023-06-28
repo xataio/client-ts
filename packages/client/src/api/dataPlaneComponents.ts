@@ -198,6 +198,51 @@ export const deleteBranch = (variables: DeleteBranchVariables, signal?: AbortSig
     signal
   });
 
+export type CopyBranchPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type CopyBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CopyBranchRequestBody = {
+  destinationBranch: string;
+  limit?: number;
+};
+
+export type CopyBranchVariables = {
+  body: CopyBranchRequestBody;
+  pathParams: CopyBranchPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Create a copy of the branch
+ */
+export const copyBranch = (variables: CopyBranchVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.BranchWithCopyID, CopyBranchError, CopyBranchRequestBody, {}, {}, CopyBranchPathParams>({
+    url: '/db/{dbBranchName}/copy',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type UpdateBranchMetadataPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -1127,7 +1172,7 @@ export type MergeMigrationRequestVariables = {
 } & DataPlaneFetcherExtraProps;
 
 export const mergeMigrationRequest = (variables: MergeMigrationRequestVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.Commit, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
+  dataPlaneFetch<Schemas.BranchOp, MergeMigrationRequestError, undefined, {}, {}, MergeMigrationRequestPathParams>({
     url: '/dbs/{dbName}/migrations/{mrNumber}/merge',
     method: 'post',
     ...variables,
@@ -1432,6 +1477,61 @@ export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables,
     {},
     ApplyBranchSchemaEditPathParams
   >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables, signal });
+
+export type PushBranchMigrationsPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type PushBranchMigrationsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PushBranchMigrationsRequestBody = {
+  migrations: Schemas.MigrationObject[];
+};
+
+export type PushBranchMigrationsVariables = {
+  body: PushBranchMigrationsRequestBody;
+  pathParams: PushBranchMigrationsPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * The `schema/push` API accepts a list of migrations to be applied to the
+ * current branch. A list of applicable migrations can be fetched using
+ * the `schema/history` API from another branch or database.
+ *
+ * The most recent migration must be part of the list or referenced (via
+ * `parentID`) by the first migration in the list of migrations to be pushed.
+ *
+ * Each migration in the list has an `id`, `parentID`, and `checksum`. The
+ * checksum for migrations are generated and verified by xata. The
+ * operation fails if any migration in the list has an invalid checksum.
+ */
+export const pushBranchMigrations = (variables: PushBranchMigrationsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Responses.SchemaUpdateResponse,
+    PushBranchMigrationsError,
+    PushBranchMigrationsRequestBody,
+    {},
+    {},
+    PushBranchMigrationsPathParams
+  >({ url: '/db/{dbBranchName}/schema/push', method: 'post', ...variables, signal });
 
 export type CreateTablePathParams = {
   /**
@@ -1776,9 +1876,7 @@ export type AddTableColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Adds a new column to the table. The body of the request should contain the column definition. In the column definition, the 'name' field should
- * contain the full path separated by dots. If the parent objects do not exists, they will be automatically created. For example,
- * passing `"name": "address.city"` will auto-create the `address` object if it doesn't exist.
+ * Adds a new column to the table. The body of the request should contain the column definition.
  */
 export const addTableColumn = (variables: AddTableColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SchemaUpdateResponse, AddTableColumnError, Schemas.Column, {}, {}, AddTableColumnPathParams>(
@@ -1822,7 +1920,7 @@ export type GetColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Get the definition of a single column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ * Get the definition of a single column.
  */
 export const getColumn = (variables: GetColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Schemas.Column, GetColumnError, undefined, {}, {}, GetColumnPathParams>({
@@ -1877,7 +1975,7 @@ export type UpdateColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Update column with partial data. Can be used for renaming the column by providing a new "name" field. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ * Update column with partial data. Can be used for renaming the column by providing a new "name" field.
  */
 export const updateColumn = (variables: UpdateColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
@@ -1926,7 +2024,7 @@ export type DeleteColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Deletes the specified column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ * Deletes the specified column.
  */
 export const deleteColumn = (variables: DeleteColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SchemaUpdateResponse, DeleteColumnError, undefined, {}, {}, DeleteColumnPathParams>({
@@ -2015,7 +2113,7 @@ export type InsertRecordError = Fetcher.ErrorWrapper<
 >;
 
 export type InsertRecordVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: InsertRecordPathParams;
   queryParams?: InsertRecordQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2027,11 +2125,339 @@ export const insertRecord = (variables: InsertRecordVariables, signal?: AbortSig
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     InsertRecordError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     InsertRecordQueryParams,
     InsertRecordPathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/data', method: 'post', ...variables, signal });
+
+export type GetFileItemPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  /**
+   * The File Identifier
+   */
+  fileId: Schemas.FileItemID;
+  workspace: string;
+  region: string;
+};
+
+export type GetFileItemError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetFileItemVariables = {
+  pathParams: GetFileItemPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieves file content from an array by file ID
+ */
+export const getFileItem = (variables: GetFileItemVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Blob, GetFileItemError, undefined, {}, {}, GetFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileId}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type PutFileItemPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  /**
+   * The File Identifier
+   */
+  fileId: Schemas.FileItemID;
+  workspace: string;
+  region: string;
+};
+
+export type PutFileItemError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PutFileItemVariables = {
+  body?: Blob;
+  pathParams: PutFileItemPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Uploads the file content to an array given the file ID
+ */
+export const putFileItem = (variables: PutFileItemVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, PutFileItemError, Blob, {}, {}, PutFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileId}',
+    method: 'put',
+    ...variables,
+    signal
+  });
+
+export type DeleteFileItemPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  /**
+   * The File Identifier
+   */
+  fileId: Schemas.FileItemID;
+  workspace: string;
+  region: string;
+};
+
+export type DeleteFileItemError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteFileItemVariables = {
+  pathParams: DeleteFileItemPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Deletes an item from an file array column given the file ID
+ */
+export const deleteFileItem = (variables: DeleteFileItemVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, DeleteFileItemError, undefined, {}, {}, DeleteFileItemPathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileId}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type GetFilePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+  region: string;
+};
+
+export type GetFileError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetFileVariables = {
+  pathParams: GetFilePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieves the file content from a file column
+ */
+export const getFile = (variables: GetFileVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Blob, GetFileError, undefined, {}, {}, GetFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type PutFilePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+  region: string;
+};
+
+export type PutFileError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PutFileVariables = {
+  body?: Blob;
+  pathParams: PutFilePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Uploads the file content to the given file column
+ */
+export const putFile = (variables: PutFileVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, PutFileError, Blob, {}, {}, PutFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file',
+    method: 'put',
+    ...variables,
+    signal
+  });
+
+export type DeleteFilePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * The Record name
+   */
+  recordId: Schemas.RecordID;
+  /**
+   * The Column name
+   */
+  columnName: Schemas.ColumnName;
+  workspace: string;
+  region: string;
+};
+
+export type DeleteFileError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteFileVariables = {
+  pathParams: DeleteFilePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Deletes a file referred in a file column
+ */
+export const deleteFile = (variables: DeleteFileVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, DeleteFileError, undefined, {}, {}, DeleteFilePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file',
+    method: 'delete',
+    ...variables,
+    signal
+  });
 
 export type GetRecordPathParams = {
   /**
@@ -2134,7 +2560,7 @@ export type InsertRecordWithIDError = Fetcher.ErrorWrapper<
 >;
 
 export type InsertRecordWithIDVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: InsertRecordWithIDPathParams;
   queryParams?: InsertRecordWithIDQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2146,7 +2572,7 @@ export const insertRecordWithID = (variables: InsertRecordWithIDVariables, signa
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     InsertRecordWithIDError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     InsertRecordWithIDQueryParams,
     InsertRecordWithIDPathParams
@@ -2197,7 +2623,7 @@ export type UpdateRecordWithIDError = Fetcher.ErrorWrapper<
 >;
 
 export type UpdateRecordWithIDVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: UpdateRecordWithIDPathParams;
   queryParams?: UpdateRecordWithIDQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2206,7 +2632,7 @@ export const updateRecordWithID = (variables: UpdateRecordWithIDVariables, signa
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     UpdateRecordWithIDError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     UpdateRecordWithIDQueryParams,
     UpdateRecordWithIDPathParams
@@ -2257,7 +2683,7 @@ export type UpsertRecordWithIDError = Fetcher.ErrorWrapper<
 >;
 
 export type UpsertRecordWithIDVariables = {
-  body?: Record<string, any>;
+  body?: Schemas.DataInputRecord;
   pathParams: UpsertRecordWithIDPathParams;
   queryParams?: UpsertRecordWithIDQueryParams;
 } & DataPlaneFetcherExtraProps;
@@ -2266,7 +2692,7 @@ export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables, signa
   dataPlaneFetch<
     Responses.RecordUpdateResponse,
     UpsertRecordWithIDError,
-    Record<string, any>,
+    Schemas.DataInputRecord,
     {},
     UpsertRecordWithIDQueryParams,
     UpsertRecordWithIDPathParams
@@ -2366,7 +2792,7 @@ export type BulkInsertTableRecordsError = Fetcher.ErrorWrapper<
 >;
 
 export type BulkInsertTableRecordsRequestBody = {
-  records: Record<string, any>[];
+  records: Schemas.DataInputRecord[];
 };
 
 export type BulkInsertTableRecordsVariables = {
@@ -2414,13 +2840,17 @@ export type QueryTableError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
 >;
 
 export type QueryTableRequestBody = {
   filter?: Schemas.FilterExpression;
   sort?: Schemas.SortExpression;
   page?: Schemas.PageConfig;
-  columns?: Schemas.ColumnsProjection;
+  columns?: Schemas.QueryColumnsProjection;
   /**
    * The consistency level for this request.
    *
@@ -3086,25 +3516,40 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * ### Pagination
- *
- * We offer cursor pagination and offset pagination. For queries that are expected to return more than 1000 records,
- * cursor pagination is needed in order to retrieve all of their results. The offset pagination method is limited to 1000 records.
- *
- * Example of size + offset pagination:
+ * It is also possible to sort results randomly:
  *
  * ```json
  * POST /db/demo:main/tables/table/query
  * {
- *   "page": {
- *     "size": 100,
- *     "offset": 200
+ *   "sort": {
+ *     "*": "random"
  *   }
  * }
  * ```
  *
- * The `page.size` parameter represents the maximum number of records returned by this query. It has a default value of 20 and a maximum value of 200.
- * The `page.offset` parameter represents the number of matching records to skip. It has a default value of 0 and a maximum value of 800.
+ * Note that a random sort does not apply to a specific column, hence the special column name `"*"`.
+ *
+ * A random sort can be combined with an ascending or descending sort on a specific column:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "sort": [
+ *     {
+ *       "name": "desc"
+ *     },
+ *     {
+ *       "*": "random"
+ *     }
+ *   ]
+ * }
+ * ```
+ *
+ * This will sort on the `name` column, breaking ties randomly.
+ *
+ * ### Pagination
+ *
+ * We offer cursor pagination and offset pagination. The cursor pagination method can be used for sequential scrolling with unrestricted depth. The offset pagination can be used to skip pages and is limited to 1000 records.
  *
  * Example of cursor pagination:
  *
@@ -3157,6 +3602,34 @@ export type QueryTableVariables = {
  * encoded with the cursor. The pagination request will be invalid if
  * `filter` or `sort` is set. The columns returned and page size can be changed
  * anytime by passing the `columns` or `page.size` settings to the next query.
+ *
+ * In the following example of size + offset pagination we retrieve the third page of up to 100 results:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "page": {
+ *     "size": 100,
+ *     "offset": 200
+ *   }
+ * }
+ * ```
+ *
+ * The `page.size` parameter represents the maximum number of records returned by this query. It has a default value of 20 and a maximum value of 200.
+ * The `page.offset` parameter represents the number of matching records to skip. It has a default value of 0 and a maximum value of 800.
+ *
+ * Cursor pagination also works in combination with offset pagination. For example, starting from a specific cursor position, using a page size of 200 and an offset of 800, you can skip up to 5 pages of 200 records forwards or backwards from the cursor's position:
+ *
+ * ```json
+ * POST /db/demo:main/tables/table/query
+ * {
+ *   "page": {
+ *     "size": 200,
+ *     "offset": 800,
+ *     "after": "fMoxCsIwFIDh3WP8c4amDai5hO5SJCRNfaVSeC9b6d1FD"
+ *   }
+ * }
+ * ```
  *
  * **Special cursors:**
  *
@@ -3219,6 +3692,10 @@ export type SearchBranchError = Fetcher.ErrorWrapper<
   | {
       status: 404;
       payload: Responses.SimpleError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
     }
 >;
 
@@ -3325,6 +3802,251 @@ export type SearchTableVariables = {
 export const searchTable = (variables: SearchTableVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SearchResponse, SearchTableError, SearchTableRequestBody, {}, {}, SearchTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/search',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type SqlQueryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type SqlQueryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
+>;
+
+export type SqlQueryRequestBody = {
+  /**
+   * The query string.
+   *
+   * @minLength 1
+   */
+  query: string;
+  /**
+   * The query parameter list.
+   */
+  params?: string[] | null;
+  /**
+   * The consistency level for this request.
+   *
+   * @default strong
+   */
+  consistency?: 'strong' | 'eventual';
+};
+
+export type SqlQueryVariables = {
+  body: SqlQueryRequestBody;
+  pathParams: SqlQueryPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Run an SQL query across the database branch.
+ */
+export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.SQLResponse, SqlQueryError, SqlQueryRequestBody, {}, {}, SqlQueryPathParams>({
+    url: '/db/{dbBranchName}/sql',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type VectorSearchTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+  region: string;
+};
+
+export type VectorSearchTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type VectorSearchTableRequestBody = {
+  /**
+   * The vector to search for similarities. Must have the same dimension as
+   * the vector column used.
+   */
+  queryVector: number[];
+  /**
+   * The vector column in which to search. It must be of type `vector`.
+   */
+  column: string;
+  /**
+   * The function used to measure the distance between two points. Can be one of:
+   * `cosineSimilarity`, `l1`, `l2`. The default is `cosineSimilarity`.
+   *
+   * @default cosineSimilarity
+   */
+  similarityFunction?: string;
+  /**
+   * Number of results to return.
+   *
+   * @default 10
+   * @maximum 100
+   * @minimum 1
+   */
+  size?: number;
+  filter?: Schemas.FilterExpression;
+};
+
+export type VectorSearchTableVariables = {
+  body: VectorSearchTableRequestBody;
+  pathParams: VectorSearchTablePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * This endpoint can be used to perform vector-based similarity searches in a table.
+ * It can be used for implementing semantic search and product recommendation. To use this
+ * endpoint, you need a column of type vector. The input vector must have the same
+ * dimension as the vector column.
+ */
+export const vectorSearchTable = (variables: VectorSearchTableVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Responses.SearchResponse,
+    VectorSearchTableError,
+    VectorSearchTableRequestBody,
+    {},
+    {},
+    VectorSearchTablePathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/vectorSearch', method: 'post', ...variables, signal });
+
+export type AskTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+  region: string;
+};
+
+export type AskTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 429;
+      payload: Responses.RateLimitError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
+>;
+
+export type AskTableResponse = {
+  /**
+   * The answer to the input question
+   */
+  answer?: string;
+};
+
+export type AskTableRequestBody = {
+  /**
+   * The question you'd like to ask.
+   *
+   * @minLength 3
+   */
+  question: string;
+  /**
+   * The type of search to use. If set to `keyword` (the default), the search can be configured by passing
+   * a `search` object with the following fields. For more details about each, see the Search endpoint documentation.
+   * All fields are optional.
+   *   * fuzziness  - typo tolerance
+   *   * target - columns to search into, and weights.
+   *   * prefix - prefix search type.
+   *   * filter - pre-filter before searching.
+   *   * boosters - control relevancy.
+   * If set to `vector`, a `vectorSearch` object must be passed, with the following parameters. For more details, see the Vector
+   * Search endpoint documentation. The `column` and `contentColumn` parameters are required.
+   *   * column - the vector column containing the embeddings.
+   *   * contentColumn - the column that contains the text from which the embeddings where computed.
+   *   * filter - pre-filter before searching.
+   *
+   * @default keyword
+   */
+  searchType?: 'keyword' | 'vector';
+  search?: {
+    fuzziness?: Schemas.FuzzinessExpression;
+    target?: Schemas.TargetExpression;
+    prefix?: Schemas.PrefixExpression;
+    filter?: Schemas.FilterExpression;
+    boosters?: Schemas.BoosterExpression[];
+  };
+  vectorSearch?: {
+    /**
+     * The column to use for vector search. It must be of type `vector`.
+     */
+    column: string;
+    /**
+     * The column containing the text for vector search. Must be of type `text`.
+     */
+    contentColumn: string;
+    filter?: Schemas.FilterExpression;
+  };
+  rules?: string[];
+};
+
+export type AskTableVariables = {
+  body: AskTableRequestBody;
+  pathParams: AskTablePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Ask your table a question. If the `Accept` header is set to `text/event-stream`, Xata will stream the results back as SSE's.
+ */
+export const askTable = (variables: AskTableVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<AskTableResponse, AskTableError, AskTableRequestBody, {}, {}, AskTablePathParams>({
+    url: '/db/{dbBranchName}/tables/{tableName}/ask',
     method: 'post',
     ...variables,
     signal
@@ -3501,7 +4223,7 @@ export type AggregateTableVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * This endpoint allows you to run aggragations (analytics) on the data from one table.
+ * This endpoint allows you to run aggregations (analytics) on the data from one table.
  * While the summary endpoint is served from a transactional store and the results are strongly
  * consistent, the aggregate endpoint is served from our columnar store and the results are
  * only eventually consistent. On the other hand, the aggregate endpoint uses a
@@ -3520,12 +4242,60 @@ export const aggregateTable = (variables: AggregateTableVariables, signal?: Abor
     AggregateTablePathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/aggregate', method: 'post', ...variables, signal });
 
+export type FileAccessPathParams = {
+  /**
+   * The File Access Identifier
+   */
+  fileId: Schemas.FileAccessID;
+  workspace: string;
+  region: string;
+};
+
+export type FileAccessQueryParams = {
+  /**
+   * File access signature
+   */
+  verify?: Schemas.FileSignature;
+};
+
+export type FileAccessError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type FileAccessVariables = {
+  pathParams: FileAccessPathParams;
+  queryParams?: FileAccessQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve file content by access id
+ */
+export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<undefined, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
+    url: '/file/{fileId}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export const operationsByTag = {
   branch: {
     getBranchList,
     getBranchDetails,
     createBranch,
     deleteBranch,
+    copyBranch,
     updateBranchMetadata,
     getBranchMetadata,
     getBranchStats,
@@ -3543,7 +4313,8 @@ export const operationsByTag = {
     compareBranchSchemas,
     updateBranchSchema,
     previewBranchSchemaEdit,
-    applyBranchSchemaEdit
+    applyBranchSchemaEdit,
+    pushBranchMigrations
   },
   migrationRequests: {
     queryMigrationRequests,
@@ -3577,5 +4348,15 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  searchAndFilter: { queryTable, searchBranch, searchTable, summarizeTable, aggregateTable }
+  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, deleteFile, fileAccess },
+  searchAndFilter: {
+    queryTable,
+    searchBranch,
+    searchTable,
+    sqlQuery,
+    vectorSearchTable,
+    askTable,
+    summarizeTable,
+    aggregateTable
+  }
 };

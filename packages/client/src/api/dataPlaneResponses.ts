@@ -49,8 +49,12 @@ export type RecordUpdateResponse =
       id: string;
       xata: {
         version: number;
+        createdAt: string;
+        updatedAt: string;
       };
     };
+
+export type PutFileResponse = Schemas.FileResponse;
 
 export type RecordResponse = Schemas.XataRecord;
 
@@ -74,9 +78,24 @@ export type QueryResponse = {
   meta: Schemas.RecordsMetadata;
 };
 
+export type ServiceUnavailableError = {
+  id?: string;
+  message: string;
+};
+
 export type SearchResponse = {
   records: Schemas.XataRecord[];
   warning?: string;
+};
+
+export type SQLResponse = {
+  records: Schemas.SQLRecord[];
+  warning?: string;
+};
+
+export type RateLimitError = {
+  id?: string;
+  message: string;
 };
 
 export type SummarizeResponse = {

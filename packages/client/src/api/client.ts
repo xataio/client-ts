@@ -1,5 +1,5 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
-import { getAPIKey } from '../util/apiKey';
+import { getAPIKey } from '../util/environment';
 import { FetchImpl, getFetchImplementation } from '../util/fetch';
 import { generateUUID } from '../util/uuid';
 import type * as Components from './components';
@@ -34,6 +34,7 @@ export class XataApiClient {
     migrationRequests: MigrationRequestsApi;
     tables: TableApi;
     records: RecordsApi;
+    files: FilesApi;
     searchAndFilter: SearchAndFilterApi;
   }> = {};
 
@@ -50,7 +51,7 @@ export class XataApiClient {
     this.#extraProps = {
       apiUrl: getHostUrl(provider, 'main'),
       workspacesApiUrl: getHostUrl(provider, 'workspaces'),
-      fetchImpl: getFetchImplementation(options.fetch),
+      fetch: getFetchImplementation(options.fetch),
       apiKey,
       trace,
       clientName: options.clientName,
@@ -108,6 +109,11 @@ export class XataApiClient {
   public get records() {
     if (!this.#namespaces.records) this.#namespaces.records = new RecordsApi(this.#extraProps);
     return this.#namespaces.records;
+  }
+
+  public get files() {
+    if (!this.#namespaces.files) this.#namespaces.files = new FilesApi(this.#extraProps);
+    return this.#namespaces.files;
   }
 
   public get searchAndFilter() {
@@ -378,6 +384,28 @@ class BranchApi {
   }): Promise<Components.DeleteBranchResponse> {
     return operationsByTag.branch.deleteBranch({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      ...this.extraProps
+    });
+  }
+
+  public copyBranch({
+    workspace,
+    region,
+    database,
+    branch,
+    destinationBranch,
+    limit
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    destinationBranch: Schemas.BranchName;
+    limit?: number;
+  }): Promise<Schemas.BranchWithCopyID> {
+    return operationsByTag.branch.copyBranch({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { destinationBranch, limit },
       ...this.extraProps
     });
   }
@@ -933,6 +961,228 @@ class RecordsApi {
   }
 }
 
+class FilesApi {
+  constructor(private extraProps: ApiExtraProps) {}
+
+  public getFileItem({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column,
+    fileId
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+    fileId: string;
+  }): Promise<any> {
+    return operationsByTag.files.getFileItem({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column,
+        fileId
+      },
+      ...this.extraProps
+    });
+  }
+
+  public putFileItem({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column,
+    fileId,
+    file
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+    fileId: string;
+    file: any;
+  }): Promise<Responses.PutFileResponse> {
+    return operationsByTag.files.putFileItem({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column,
+        fileId
+      },
+      // @ts-ignore
+      body: file,
+      ...this.extraProps
+    });
+  }
+
+  public deleteFileItem({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column,
+    fileId
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+    fileId: string;
+  }): Promise<Responses.PutFileResponse> {
+    return operationsByTag.files.deleteFileItem({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column,
+        fileId
+      },
+      ...this.extraProps
+    });
+  }
+
+  public getFile({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+  }): Promise<any> {
+    return operationsByTag.files.getFile({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column
+      },
+      ...this.extraProps
+    });
+  }
+
+  public putFile({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column,
+    file
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+    file: Blob;
+  }): Promise<Responses.PutFileResponse> {
+    return operationsByTag.files.putFile({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column
+      },
+      body: file,
+      ...this.extraProps
+    });
+  }
+
+  public deleteFile({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    record,
+    column
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    record: Schemas.RecordID;
+    column: Schemas.ColumnName;
+  }): Promise<Responses.PutFileResponse> {
+    return operationsByTag.files.deleteFile({
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`,
+        tableName: table,
+        recordId: record,
+        columnName: column
+      },
+      ...this.extraProps
+    });
+  }
+
+  public fileAccess({
+    workspace,
+    region,
+    fileId,
+    verify
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    fileId: string;
+    verify?: Schemas.FileSignature;
+  }): Promise<any> {
+    return operationsByTag.files.fileAccess({
+      pathParams: {
+        workspace,
+        region,
+        fileId
+      },
+      queryParams: { verify },
+      ...this.extraProps
+    });
+  }
+}
+
 class SearchAndFilterApi {
   constructor(private extraProps: ApiExtraProps) {}
 
@@ -1032,6 +1282,58 @@ class SearchAndFilterApi {
     return operationsByTag.searchAndFilter.searchBranch({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: { tables, query, fuzziness, prefix, highlight },
+      ...this.extraProps
+    });
+  }
+
+  public vectorSearchTable({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    queryVector,
+    column,
+    similarityFunction,
+    size,
+    filter
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    queryVector: number[];
+    column: string;
+    similarityFunction?: string;
+    size?: number;
+    filter?: Schemas.FilterExpression;
+  }): Promise<Responses.SearchResponse> {
+    return operationsByTag.searchAndFilter.vectorSearchTable({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
+      body: { queryVector, column, similarityFunction, size, filter },
+      ...this.extraProps
+    });
+  }
+
+  public askTable({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    options
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    options: Components.AskTableRequestBody;
+  }): Promise<Components.AskTableResponse> {
+    return operationsByTag.searchAndFilter.askTable({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table },
+      body: { ...options },
       ...this.extraProps
     });
   }
@@ -1241,7 +1543,7 @@ class MigrationRequestsApi {
     region: string;
     database: Schemas.DBName;
     migrationRequest: Schemas.MigrationRequestNumber;
-  }): Promise<Schemas.Commit> {
+  }): Promise<Schemas.BranchOp> {
     return operationsByTag.migrationRequests.mergeMigrationRequest({
       pathParams: { workspace, region, dbName: database, mrNumber: migrationRequest },
       ...this.extraProps
@@ -1441,7 +1743,28 @@ class MigrationsApi {
       ...this.extraProps
     });
   }
+
+  public pushBranchMigrations({
+    workspace,
+    region,
+    database,
+    branch,
+    migrations
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    migrations: Schemas.MigrationObject[];
+  }): Promise<Responses.SchemaUpdateResponse> {
+    return operationsByTag.migrations.pushBranchMigrations({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { migrations },
+      ...this.extraProps
+    });
+  }
 }
+
 class DatabaseApi {
   constructor(private extraProps: ApiExtraProps) {}
 
@@ -1506,6 +1829,22 @@ class DatabaseApi {
     return operationsByTag.databases.updateDatabaseMetadata({
       pathParams: { workspaceId: workspace, dbName: database },
       body: metadata,
+      ...this.extraProps
+    });
+  }
+
+  public renameDatabase({
+    workspace,
+    database,
+    newName
+  }: {
+    workspace: Schemas.WorkspaceID;
+    database: Schemas.DBName;
+    newName: Schemas.DBName;
+  }): Promise<Schemas.DatabaseMetadata> {
+    return operationsByTag.databases.renameDatabase({
+      pathParams: { workspaceId: workspace, dbName: database },
+      body: { newName },
       ...this.extraProps
     });
   }

@@ -35,10 +35,7 @@ describe('databases create', () => {
     });
 
     const config = await Config.load();
-    const command = new DatabasesCreate(
-      ['--workspace', 'test-1234', 'hello-world', '--region', 'eu-west-1'],
-      config as Config
-    );
+    const command = new DatabasesCreate(['--workspace', 'test-1234', 'hello-world', '--region', 'eu-west-1'], config);
 
     await expect(command.run()).rejects.toThrow('Something went wrong');
 
@@ -65,10 +62,7 @@ describe('databases create', () => {
     });
 
     const config = await Config.load();
-    const command = new DatabasesCreate(
-      ['--workspace', 'test-1234', 'hello-world', '--region', 'eu-west-1'],
-      config as Config
-    );
+    const command = new DatabasesCreate(['--workspace', 'test-1234', 'hello-world', '--region', 'eu-west-1'], config);
 
     expect(DatabasesCreate.enableJsonFlag).toBe(true);
     vi.spyOn(command, 'jsonEnabled').mockReturnValue(json);
@@ -78,12 +72,10 @@ describe('databases create', () => {
     const result = await command.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot(`
-        {
-          "name": "hello-world",
-          "region": "eu-west-1",
-        }
-      `);
+      expect(result).toEqual({
+        name: 'hello-world',
+        region: 'eu-west-1'
+      });
     } else {
       expect(result).toBeUndefined();
     }

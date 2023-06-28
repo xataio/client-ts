@@ -44,7 +44,7 @@ describe('insert transactions', () => {
   test('insert by ID', async () => {
     const response = await xata.transactions.run([{ insert: { table: 'teams', record: { id: 'i0', name: 'a' } } }]);
 
-    expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1 }]);
+    expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1, columns: {} }]);
 
     await xata.db.teams.delete({ id: 'i0' });
   });
@@ -65,7 +65,7 @@ describe('insert transactions', () => {
       { insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 1 } } }
     ]);
 
-    expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1 }]);
+    expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1, columns: {} }]);
 
     await xata.db.teams.delete({ id: 'i0' });
   });
@@ -76,7 +76,7 @@ describe('insert transactions', () => {
       { insert: { table: 'teams', record: { id: 'i0', name: 'b', index: 1 }, createOnly: false } }
     ]);
 
-    expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1 }]);
+    expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1, columns: {} }]);
 
     await xata.db.teams.delete({ id: 'i0' });
   });
@@ -88,7 +88,7 @@ describe('insert transactions', () => {
       { insert: { table: 'teams', record: { id: 'i0', name: 'c', index: 2 }, ifVersion: 1 } }
     ]);
 
-    expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1 }]);
+    expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1, columns: {} }]);
 
     await xata.db.teams.delete({ id: 'i0' });
   });
@@ -105,9 +105,9 @@ describe('insert transactions', () => {
 
     expect(response.results).toEqual([
       { operation: 'insert', id: expect.any(String), rows: 1 },
-      { operation: 'insert', id: 'j1', rows: 1 },
+      { operation: 'insert', id: 'j1', rows: 1, columns: {} },
       { operation: 'insert', id: 'i1', rows: 1 },
-      { operation: 'insert', id: 'j0', rows: 1 }
+      { operation: 'insert', id: 'j0', rows: 1, columns: {} }
     ]);
 
     await xata.db.teams.delete({ id: response.results[0]?.id });
@@ -133,10 +133,10 @@ describe('update transactions', () => {
     ]);
 
     expect(response.results).toEqual([
-      { operation: 'update', id: 'i0', rows: 1 },
-      { operation: 'update', id: 'i1', rows: 1 },
-      { operation: 'update', id: 'i2', rows: 1 },
-      { operation: 'update', id: 'i2', rows: 1 }
+      { operation: 'update', id: 'i0', rows: 1, columns: {} },
+      { operation: 'update', id: 'i1', rows: 1, columns: {} },
+      { operation: 'update', id: 'i2', rows: 1, columns: {} },
+      { operation: 'update', id: 'i2', rows: 1, columns: {} }
     ]);
 
     const records = await xata.db.teams.read(['i0', 'i1', 'i2']);
@@ -157,7 +157,7 @@ describe('update transactions', () => {
       { update: { table: 'teams', id: 'i0', fields: { name: 'c', index: 2 }, ifVersion: 1 } }
     ]);
 
-    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1 }]);
+    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1, columns: {} }]);
 
     const record = await xata.db.teams.read('i0');
     expect(record?.name).toEqual('c');
@@ -176,9 +176,9 @@ describe('update transactions', () => {
     ]);
 
     expect(response.results).toEqual([
-      { operation: 'insert', id: 'i1', rows: 1 },
-      { operation: 'update', id: 'i0', rows: 1 },
-      { operation: 'update', id: 'i1', rows: 1 }
+      { operation: 'insert', id: 'i1', rows: 1, columns: {} },
+      { operation: 'update', id: 'i0', rows: 1, columns: {} },
+      { operation: 'update', id: 'i1', rows: 1, columns: {} }
     ]);
 
     const records = await xata.db.teams.read(['i0', 'i1']);
@@ -195,7 +195,7 @@ describe('update transactions', () => {
       { update: { table: 'teams', id: 'i0', fields: { name: 'a', index: 0 }, upsert: true } }
     ]);
 
-    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1 }]);
+    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1, columns: {} }]);
 
     const record = await xata.db.teams.read('i0');
     expect(record?.name).toEqual('a');
@@ -211,7 +211,7 @@ describe('update transactions', () => {
       { update: { table: 'teams', id: 'i0', fields: { name: 'b', index: 1 }, upsert: true } }
     ]);
 
-    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1 }]);
+    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1, columns: {} }]);
 
     const record = await xata.db.teams.read('i0');
     expect(record?.name).toEqual('b');
@@ -229,7 +229,7 @@ describe('update transactions', () => {
       { update: { table: 'teams', id: 'i0', fields: { name: 'c' }, upsert: true, ifVersion: 1 } }
     ]);
 
-    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1 }]);
+    expect(response.results).toEqual([{ operation: 'update', id: 'i0', rows: 1, columns: {} }]);
 
     const record = await xata.db.teams.read('i0');
     expect(record?.name).toEqual('c');
@@ -258,7 +258,7 @@ describe('delete transactions', () => {
     ]);
 
     expect(response.results).toEqual([
-      { operation: 'insert', id: 'i0', rows: 1 },
+      { operation: 'insert', id: 'i0', rows: 1, columns: {} },
       { operation: 'delete', rows: 1 }
     ]);
 
@@ -275,7 +275,7 @@ describe('delete transactions', () => {
     ]);
 
     expect(response.results).toEqual([
-      { operation: 'insert', id: 'i1', rows: 1 },
+      { operation: 'insert', id: 'i1', rows: 1, columns: {} },
       { operation: 'delete', rows: 0 }
     ]);
 
@@ -284,5 +284,20 @@ describe('delete transactions', () => {
     expect(record?.index).toEqual(1);
 
     await xata.db.teams.delete('i1');
+  });
+
+  test('delete with failIfMissing', async () => {
+    const records = await xata.transactions.run([{ delete: { table: 'teams', id: 'ab', failIfMissing: false } }]);
+
+    expect(records).toEqual({ results: [{ operation: 'delete', rows: 0 }] });
+
+    try {
+      await xata.transactions.run([{ delete: { table: 'teams', id: 'ab', failIfMissing: true } }]);
+    } catch (error: any) {
+      expect(error.errors).toEqual([{ index: 0, message: 'table [teams]: no rows deleted' }]);
+      return;
+    }
+
+    throw new Error('should not reach here');
   });
 });

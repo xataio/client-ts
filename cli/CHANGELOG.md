@@ -1,5 +1,204 @@
 # @xata.io/cli
 
+## 0.12.6
+
+### Patch Changes
+
+- [#988](https://github.com/xataio/client-ts/pull/988) [`2f700f90`](https://github.com/xataio/client-ts/commit/2f700f90bba1a6223001c2cf72e2a31dcc2daeb0) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Remove plural commands
+
+- Updated dependencies [[`f01d1580`](https://github.com/xataio/client-ts/commit/f01d1580fc450cbf06eb8af85d68cf052fbe83a1), [`52290feb`](https://github.com/xataio/client-ts/commit/52290feb5bba57384cdc14e7722fb5d9883dc581)]:
+  - @xata.io/client@0.24.3
+  - @xata.io/importer@0.3.18
+
+## 0.12.5
+
+### Patch Changes
+
+- [#1037](https://github.com/xataio/client-ts/pull/1037) [`5c060be7`](https://github.com/xataio/client-ts/commit/5c060be7a8a9823d3167edd3cf7d49f3cb32e141) Thanks [@richardgill](https://github.com/richardgill)! - Bugfix: xata init warnings messages fixed
+
+- Updated dependencies [[`51561b52`](https://github.com/xataio/client-ts/commit/51561b52b56ad5ed9101d8faf12929891419cb2c)]:
+  - @xata.io/client@0.24.2
+  - @xata.io/importer@0.3.17
+
+## 0.12.4
+
+### Patch Changes
+
+- Updated dependencies [[`eaa774f5`](https://github.com/xataio/client-ts/commit/eaa774f542185ef92448155bcdff331686c4da9f)]:
+  - @xata.io/client@0.24.1
+  - @xata.io/importer@0.3.16
+
+## 0.12.3
+
+### Patch Changes
+
+- [#1018](https://github.com/xataio/client-ts/pull/1018) [`431e869b`](https://github.com/xataio/client-ts/commit/431e869bdece9de7fe48f07299e0265feeef4e96) Thanks [@richardgill](https://github.com/richardgill)! - bugfix: CLI http://localhost:<port>/new redirects correctly
+
+- [#1019](https://github.com/xataio/client-ts/pull/1019) [`7f4b91a4`](https://github.com/xataio/client-ts/commit/7f4b91a40708d23303b179e7775659cad8b2f002) Thanks [@richardgill](https://github.com/richardgill)! - `xata init` quality of life improvements to wording and option ordering
+
+## 0.12.2
+
+### Patch Changes
+
+- [#1016](https://github.com/xataio/client-ts/pull/1016) [`1530e1bf`](https://github.com/xataio/client-ts/commit/1530e1bf19482c6dbe224e95988a857fa663179b) Thanks [@richardgill](https://github.com/richardgill)! - - Added `xata dbs rename` command
+  - `xata dbs delete` can now be done interactively
+
+## 0.12.1
+
+### Patch Changes
+
+- [#1003](https://github.com/xataio/client-ts/pull/1003) [`e848701d`](https://github.com/xataio/client-ts/commit/e848701dbb1af73acdc9c7a57458d906970598af) Thanks [@richardgill](https://github.com/richardgill)! - Corrected the `xata --help` description for pull
+
+- Updated dependencies [[`45aa2207`](https://github.com/xataio/client-ts/commit/45aa220728e98dd716a55a9a307474732a9b2bc1), [`f28080f0`](https://github.com/xataio/client-ts/commit/f28080f034f02704fe00d64b8f42e1127bde30c7), [`ac9c0604`](https://github.com/xataio/client-ts/commit/ac9c06042bb85105d9a38624676ce6ea5a27d488), [`c163b365`](https://github.com/xataio/client-ts/commit/c163b3658f23fb2eaad6243ebebc92624754099a)]:
+  - @xata.io/client@0.24.0
+  - @xata.io/importer@0.3.15
+
+## 0.12.0
+
+### Minor Changes
+
+- [#977](https://github.com/xataio/client-ts/pull/977) [`cac592fb`](https://github.com/xataio/client-ts/commit/cac592fbe5ddfc1699bfc7ef21508efc92cc92a8) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove `link` and `unlink` commands
+
+- [#977](https://github.com/xataio/client-ts/pull/977) [`cac592fb`](https://github.com/xataio/client-ts/commit/cac592fbe5ddfc1699bfc7ef21508efc92cc92a8) Thanks [@SferaDev](https://github.com/SferaDev)! - Deprecate branches and workspaces commands in plural
+
+### Patch Changes
+
+- [#972](https://github.com/xataio/client-ts/pull/972) [`89375e76`](https://github.com/xataio/client-ts/commit/89375e76b790fed7e6a26bf3ac4ea9eaed1aecae) Thanks [@SferaDev](https://github.com/SferaDev)! - Add types to exports
+
+- [#977](https://github.com/xataio/client-ts/pull/977) [`cac592fb`](https://github.com/xataio/client-ts/commit/cac592fbe5ddfc1699bfc7ef21508efc92cc92a8) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove `git` logic in commands
+
+- [#977](https://github.com/xataio/client-ts/pull/977) [`cac592fb`](https://github.com/xataio/client-ts/commit/cac592fbe5ddfc1699bfc7ef21508efc92cc92a8) Thanks [@SferaDev](https://github.com/SferaDev)! - Add commands for the new workflow features
+
+- [#974](https://github.com/xataio/client-ts/pull/974) [`109b8790`](https://github.com/xataio/client-ts/commit/109b8790849532d9c442e7c03c67792aeafebd88) Thanks [@xata-bot](https://github.com/xata-bot)! - Make checksum mandatory
+
+- [#977](https://github.com/xataio/client-ts/pull/977) [`cac592fb`](https://github.com/xataio/client-ts/commit/cac592fbe5ddfc1699bfc7ef21508efc92cc92a8) Thanks [@SferaDev](https://github.com/SferaDev)! - Run `pull` on `schema edit`
+
+- [#977](https://github.com/xataio/client-ts/pull/977) [`cac592fb`](https://github.com/xataio/client-ts/commit/cac592fbe5ddfc1699bfc7ef21508efc92cc92a8) Thanks [@SferaDev](https://github.com/SferaDev)! - Add region to `browse` command
+
+- Updated dependencies [[`20cc8c43`](https://github.com/xataio/client-ts/commit/20cc8c43e1659bf112ae2642948c84bfcf46a6ba), [`5099cbbd`](https://github.com/xataio/client-ts/commit/5099cbbd3065a60dcee2f1699afa1ee8ed5edb1c), [`89375e76`](https://github.com/xataio/client-ts/commit/89375e76b790fed7e6a26bf3ac4ea9eaed1aecae), [`5eaee932`](https://github.com/xataio/client-ts/commit/5eaee932b828907ae352d7c0d0584e860845434b), [`109b8790`](https://github.com/xataio/client-ts/commit/109b8790849532d9c442e7c03c67792aeafebd88)]:
+  - @xata.io/client@0.23.5
+  - @xata.io/importer@0.3.14
+  - @xata.io/codegen@0.23.5
+
+## 0.11.19
+
+### Patch Changes
+
+- [#962](https://github.com/xataio/client-ts/pull/962) [`0406420f`](https://github.com/xataio/client-ts/commit/0406420f0e071a36c0b63cfc80a7be46e794f26d) Thanks [@richardgill](https://github.com/richardgill)! - Added Vector column to `xata schema edit`
+
+- Updated dependencies [[`470cc71f`](https://github.com/xataio/client-ts/commit/470cc71f7c5c8b9fd50f789e157d2b2eecd0b3e8)]:
+  - @xata.io/client@0.23.4
+  - @xata.io/importer@0.3.13
+
+## 0.11.18
+
+### Patch Changes
+
+- [#957](https://github.com/xataio/client-ts/pull/957) [`096dd2bf`](https://github.com/xataio/client-ts/commit/096dd2bff32744ac4cd1e4750355bc28ee0fafea) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Make branches verbose
+
+## 0.11.17
+
+### Patch Changes
+
+- [#954](https://github.com/xataio/client-ts/pull/954) [`2b8fac39`](https://github.com/xataio/client-ts/commit/2b8fac39882d8932aaef7c2e99d2f059a500e943) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Store checksums for migrations
+
+## 0.11.16
+
+### Patch Changes
+
+- Updated dependencies [[`344b0d68`](https://github.com/xataio/client-ts/commit/344b0d687962d569872d1e90d59818d28df7579c)]:
+  - @xata.io/client@0.23.3
+  - @xata.io/importer@0.3.12
+
+## 0.11.15
+
+### Patch Changes
+
+- [#945](https://github.com/xataio/client-ts/pull/945) [`ecdc6553`](https://github.com/xataio/client-ts/commit/ecdc6553d4628289e88953ab6296b80f60e8f757) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new types
+
+- Updated dependencies [[`c477c177`](https://github.com/xataio/client-ts/commit/c477c17795c01cbf945be413217944a5a38655a5), [`ecdc6553`](https://github.com/xataio/client-ts/commit/ecdc6553d4628289e88953ab6296b80f60e8f757)]:
+  - @xata.io/client@0.23.2
+  - @xata.io/codegen@0.23.2
+  - @xata.io/importer@0.3.11
+
+## 0.11.14
+
+### Patch Changes
+
+- Updated dependencies [[`3026d708`](https://github.com/xataio/client-ts/commit/3026d70847830fd0f2024413d823380ff323806c)]:
+  - @xata.io/client@0.23.1
+  - @xata.io/importer@0.3.10
+
+## 0.11.13
+
+### Patch Changes
+
+- [#867](https://github.com/xataio/client-ts/pull/867) [`5838113f`](https://github.com/xataio/client-ts/commit/5838113fca042163b44d7cc7cc1686d5ef89b302) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Remove fallback branch
+
+- Updated dependencies [[`5838113f`](https://github.com/xataio/client-ts/commit/5838113fca042163b44d7cc7cc1686d5ef89b302)]:
+  - @xata.io/client@0.23.0
+  - @xata.io/importer@0.3.9
+
+## 0.11.12
+
+### Patch Changes
+
+- [#921](https://github.com/xataio/client-ts/pull/921) [`07fc879d`](https://github.com/xataio/client-ts/commit/07fc879d3f778536e39588e66d7a18b5a9d52ebe) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove git branch resolution
+
+- Updated dependencies [[`22e7dd29`](https://github.com/xataio/client-ts/commit/22e7dd29f7a51dccc087d5fd7fff32084c7733af), [`07fc879d`](https://github.com/xataio/client-ts/commit/07fc879d3f778536e39588e66d7a18b5a9d52ebe), [`58a1c24e`](https://github.com/xataio/client-ts/commit/58a1c24e5d30025dce243eecce44f09d4f65ed66), [`c2c6e244`](https://github.com/xataio/client-ts/commit/c2c6e24459b1acc07f0414066258071fbcf7dde9)]:
+  - @xata.io/client@0.22.4
+  - @xata.io/importer@0.3.8
+
+## 0.11.11
+
+### Patch Changes
+
+- [#917](https://github.com/xataio/client-ts/pull/917) [`4210b8c3`](https://github.com/xataio/client-ts/commit/4210b8c3c4169ba781a56deed7ba09c99788db1f) Thanks [@xata-bot](https://github.com/xata-bot)! - [OpenAPI] Spec updates to add better types to Record input
+
+- Updated dependencies [[`4210b8c3`](https://github.com/xataio/client-ts/commit/4210b8c3c4169ba781a56deed7ba09c99788db1f)]:
+  - @xata.io/client@0.22.3
+  - @xata.io/codegen@0.22.3
+  - @xata.io/importer@0.3.7
+
+## 0.11.10
+
+### Patch Changes
+
+- [#898](https://github.com/xataio/client-ts/pull/898) [`72e13bf9`](https://github.com/xataio/client-ts/commit/72e13bf99d0ebefef91c984a995a28b0e8ca2a8f) Thanks [@SferaDev](https://github.com/SferaDev)! - Add methods for vector type
+
+- Updated dependencies [[`72e13bf9`](https://github.com/xataio/client-ts/commit/72e13bf99d0ebefef91c984a995a28b0e8ca2a8f)]:
+  - @xata.io/client@0.22.2
+  - @xata.io/codegen@0.22.2
+  - @xata.io/importer@0.3.6
+
+## 0.11.9
+
+### Patch Changes
+
+- [#909](https://github.com/xataio/client-ts/pull/909) [`c05be3ff`](https://github.com/xataio/client-ts/commit/c05be3ff4d2cd8faf4662bf26896b722041d5597) Thanks [@richardgill](https://github.com/richardgill)! - Bugfixes to adding / editing columns
+
+  - Unique + Not Null errors
+  - Unique + Default Value errors
+  - Emails are now validated
+  - Default values for text type allowed
+  - Setting {unique, notNull, defaultValue} for a type that doesn't support it errors
+  - notNull and unique are set to 'false' initially.
+  - No longer able to attempt to edit fields which cannot be edited on an existing column
+  - Text supports default values
+  - Bugs fixed with boolean default values
+
+- [#876](https://github.com/xataio/client-ts/pull/876) [`43da7869`](https://github.com/xataio/client-ts/commit/43da7869e45666b8c10faa5ec49a448745f21299) Thanks [@xata-bot](https://github.com/xata-bot)! - Update to oclif v2
+
+## 0.11.8
+
+### Patch Changes
+
+- [#882](https://github.com/xataio/client-ts/pull/882) [`76582160`](https://github.com/xataio/client-ts/commit/765821606e49945f2ed0b4a3dba1556eaad3ba65) Thanks [@xata-bot](https://github.com/xata-bot)! - Expose new github settings endpoints
+
+- Updated dependencies [[`4cafde72`](https://github.com/xataio/client-ts/commit/4cafde728e4e9e5e83812d475d9980397ae78362), [`639710a5`](https://github.com/xataio/client-ts/commit/639710a52132f260bf3a26560a21ae2193abb71d)]:
+  - @xata.io/client@0.22.1
+  - @xata.io/importer@0.3.5
+
 ## 0.11.7
 
 ### Patch Changes

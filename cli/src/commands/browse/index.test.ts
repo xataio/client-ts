@@ -37,7 +37,7 @@ describe('browse', () => {
     });
 
     const config = await Config.load();
-    const command = new Browse([], config as Config);
+    const command = new Browse([], config);
     command.projectConfig = {
       databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test'
     };
@@ -46,12 +46,14 @@ describe('browse', () => {
     await command.run();
 
     expect(open).toHaveBeenCalledOnce();
-    expect(openMock.mock.calls[0][0]).toEqual('https://app.xata.io/workspaces/test-r5vcv5/dbs/test/branches/main');
+    expect(openMock.mock.calls[0][0]).toEqual(
+      'https://app.xata.io/workspaces/test-r5vcv5/dbs/test:eu-west-1/branches/main'
+    );
   });
 
   test('works with a branch specified with a flag', async () => {
     const config = await Config.load();
-    const command = new Browse(['--branch', 'foo'], config as Config);
+    const command = new Browse(['--branch', 'foo'], config);
     command.projectConfig = {
       databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test'
     };
@@ -59,6 +61,8 @@ describe('browse', () => {
     await command.run();
 
     expect(open).toHaveBeenCalledOnce();
-    expect(openMock.mock.calls[0][0]).toEqual('https://app.xata.io/workspaces/test-r5vcv5/dbs/test/branches/foo');
+    expect(openMock.mock.calls[0][0]).toEqual(
+      'https://app.xata.io/workspaces/test-r5vcv5/dbs/test:eu-west-1/branches/foo'
+    );
   });
 });

@@ -17,7 +17,7 @@ import { BaseCommand } from '../../base.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default class Shell extends BaseCommand {
+export default class Shell extends BaseCommand<typeof Shell> {
   static description = 'Open a shell to the current database and branch';
 
   static flags = {
@@ -31,7 +31,7 @@ export default class Shell extends BaseCommand {
   };
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(Shell);
+    const { flags } = await this.parseCommand();
     const profile = await this.getProfile();
     const apiKey = profile?.apiKey;
     if (!apiKey) {
@@ -45,7 +45,7 @@ export default class Shell extends BaseCommand {
     const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
     try {
       const xata = await this.getXataClient();
-      const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
+      const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
       const { schema } = branchDetails;
 
       const { javascript } = await generate({ language: 'javascript', databaseURL, schema });

@@ -1,5 +1,4 @@
 {
-  "formatVersion": "1.0",
   "tables": [
     {
       "name": "teams",
@@ -138,6 +137,13 @@
         {
           "name": "account_value",
           "type": "int"
+        },
+        {
+          "name": "vector",
+          "type": "vector",
+          "vector": {
+            "dimension": 4
+          }
         }
       ]
     },

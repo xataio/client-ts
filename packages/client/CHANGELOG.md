@@ -1,5 +1,117 @@
 # @xata.io/client
 
+## 0.24.3
+
+### Patch Changes
+
+- [#1033](https://github.com/xataio/client-ts/pull/1033) [`f01d1580`](https://github.com/xataio/client-ts/commit/f01d1580fc450cbf06eb8af85d68cf052fbe83a1) Thanks [@xata-bot](https://github.com/xata-bot)! - [OpenAPI] Spec updates for column selection
+
+- [#1044](https://github.com/xataio/client-ts/pull/1044) [`52290feb`](https://github.com/xataio/client-ts/commit/52290feb5bba57384cdc14e7722fb5d9883dc581) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow undefined with createOrUpdate/createOrReplace
+
+## 0.24.2
+
+### Patch Changes
+
+- [#1038](https://github.com/xataio/client-ts/pull/1038) [`51561b52`](https://github.com/xataio/client-ts/commit/51561b52b56ad5ed9101d8faf12929891419cb2c) Thanks [@SferaDev](https://github.com/SferaDev)! - Show internal columns in filters
+
+## 0.24.1
+
+### Patch Changes
+
+- [#1030](https://github.com/xataio/client-ts/pull/1030) [`eaa774f5`](https://github.com/xataio/client-ts/commit/eaa774f542185ef92448155bcdff331686c4da9f) Thanks [@SferaDev](https://github.com/SferaDev)! - Make `xata` property enumerable
+
+## 0.24.0
+
+### Minor Changes
+
+- [#1009](https://github.com/xataio/client-ts/pull/1009) [`45aa2207`](https://github.com/xataio/client-ts/commit/45aa220728e98dd716a55a9a307474732a9b2bc1) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `createdAt` and `updatedAt` properties
+
+### Patch Changes
+
+- [#1008](https://github.com/xataio/client-ts/pull/1008) [`f28080f0`](https://github.com/xataio/client-ts/commit/f28080f034f02704fe00d64b8f42e1127bde30c7) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `failIfMissing` to delete transactions
+
+- [#994](https://github.com/xataio/client-ts/pull/994) [`ac9c0604`](https://github.com/xataio/client-ts/commit/ac9c06042bb85105d9a38624676ce6ea5a27d488) Thanks [@xata-bot](https://github.com/xata-bot)! - Update internal endpoints
+
+- [#1015](https://github.com/xataio/client-ts/pull/1015) [`c163b365`](https://github.com/xataio/client-ts/commit/c163b3658f23fb2eaad6243ebebc92624754099a) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `factor` to date boosters
+
+## 0.23.5
+
+### Patch Changes
+
+- [#970](https://github.com/xataio/client-ts/pull/970) [`20cc8c43`](https://github.com/xataio/client-ts/commit/20cc8c43e1659bf112ae2642948c84bfcf46a6ba) Thanks [@xata-bot](https://github.com/xata-bot)! - Add delete file endpoint
+
+- [#976](https://github.com/xataio/client-ts/pull/976) [`5099cbbd`](https://github.com/xataio/client-ts/commit/5099cbbd3065a60dcee2f1699afa1ee8ed5edb1c) Thanks [@SferaDev](https://github.com/SferaDev)! - Re-export JSONData helper type
+
+- [#972](https://github.com/xataio/client-ts/pull/972) [`89375e76`](https://github.com/xataio/client-ts/commit/89375e76b790fed7e6a26bf3ac4ea9eaed1aecae) Thanks [@SferaDev](https://github.com/SferaDev)! - Add types to exports
+
+- [#979](https://github.com/xataio/client-ts/pull/979) [`5eaee932`](https://github.com/xataio/client-ts/commit/5eaee932b828907ae352d7c0d0584e860845434b) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `size` to pagination meta
+
+- [#974](https://github.com/xataio/client-ts/pull/974) [`109b8790`](https://github.com/xataio/client-ts/commit/109b8790849532d9c442e7c03c67792aeafebd88) Thanks [@xata-bot](https://github.com/xata-bot)! - Make checksum mandatory
+
+## 0.23.4
+
+### Patch Changes
+
+- [#951](https://github.com/xataio/client-ts/pull/951) [`470cc71f`](https://github.com/xataio/client-ts/commit/470cc71f7c5c8b9fd50f789e157d2b2eecd0b3e8) Thanks [@SferaDev](https://github.com/SferaDev)! - Add random sorting
+
+## 0.23.3
+
+### Patch Changes
+
+- [#947](https://github.com/xataio/client-ts/pull/947) [`344b0d68`](https://github.com/xataio/client-ts/commit/344b0d687962d569872d1e90d59818d28df7579c) Thanks [@SferaDev](https://github.com/SferaDev)! - Add numeric operators
+
+## 0.23.2
+
+### Patch Changes
+
+- [#939](https://github.com/xataio/client-ts/pull/939) [`c477c177`](https://github.com/xataio/client-ts/commit/c477c17795c01cbf945be413217944a5a38655a5) Thanks [@SferaDev](https://github.com/SferaDev)! - Add deploy preview branch env variable loading
+
+- [#945](https://github.com/xataio/client-ts/pull/945) [`ecdc6553`](https://github.com/xataio/client-ts/commit/ecdc6553d4628289e88953ab6296b80f60e8f757) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new types
+
+## 0.23.1
+
+### Patch Changes
+
+- [#941](https://github.com/xataio/client-ts/pull/941) [`3026d708`](https://github.com/xataio/client-ts/commit/3026d70847830fd0f2024413d823380ff323806c) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose records in ask SSE
+
+## 0.23.0
+
+### Minor Changes
+
+- [#867](https://github.com/xataio/client-ts/pull/867) [`5838113f`](https://github.com/xataio/client-ts/commit/5838113fca042163b44d7cc7cc1686d5ef89b302) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Remove fallback branch
+
+## 0.22.4
+
+### Patch Changes
+
+- [#927](https://github.com/xataio/client-ts/pull/927) [`22e7dd29`](https://github.com/xataio/client-ts/commit/22e7dd29f7a51dccc087d5fd7fff32084c7733af) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose `ask` endpoint in the SDK
+
+- [#921](https://github.com/xataio/client-ts/pull/921) [`07fc879d`](https://github.com/xataio/client-ts/commit/07fc879d3f778536e39588e66d7a18b5a9d52ebe) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove git branch resolution
+
+- [#925](https://github.com/xataio/client-ts/pull/925) [`58a1c24e`](https://github.com/xataio/client-ts/commit/58a1c24e5d30025dce243eecce44f09d4f65ed66) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new methods to API client
+
+- [#932](https://github.com/xataio/client-ts/pull/932) [`c2c6e244`](https://github.com/xataio/client-ts/commit/c2c6e24459b1acc07f0414066258071fbcf7dde9) Thanks [@xata-bot](https://github.com/xata-bot)! - Add new experimental copy branch endpoint
+
+## 0.22.3
+
+### Patch Changes
+
+- [#917](https://github.com/xataio/client-ts/pull/917) [`4210b8c3`](https://github.com/xataio/client-ts/commit/4210b8c3c4169ba781a56deed7ba09c99788db1f) Thanks [@xata-bot](https://github.com/xata-bot)! - [OpenAPI] Spec updates to add better types to Record input
+
+## 0.22.2
+
+### Patch Changes
+
+- [#898](https://github.com/xataio/client-ts/pull/898) [`72e13bf9`](https://github.com/xataio/client-ts/commit/72e13bf99d0ebefef91c984a995a28b0e8ca2a8f) Thanks [@SferaDev](https://github.com/SferaDev)! - Add methods for vector type
+
+## 0.22.1
+
+### Patch Changes
+
+- [#885](https://github.com/xataio/client-ts/pull/885) [`4cafde72`](https://github.com/xataio/client-ts/commit/4cafde728e4e9e5e83812d475d9980397ae78362) Thanks [@SferaDev](https://github.com/SferaDev)! - Update body of compareBranchSchemas
+
+- [#890](https://github.com/xataio/client-ts/pull/890) [`639710a5`](https://github.com/xataio/client-ts/commit/639710a52132f260bf3a26560a21ae2193abb71d) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose consistency settings in summarize
+
 ## 0.22.0
 
 ### Minor Changes

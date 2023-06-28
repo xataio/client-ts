@@ -36,7 +36,20 @@ describe('record creation', () => {
     expect(user.getMetadata).toBeDefined();
     expect(user.birthDate).toBeInstanceOf(Date);
 
+    const metadata = user.getMetadata();
+    expect(metadata.createdAt).toBeInstanceOf(Date);
+    expect(metadata.updatedAt).toBeInstanceOf(Date);
+    expect(metadata.version).toBe(0);
+
+    expect(user.xata.createdAt).toBeInstanceOf(Date);
+    expect(user.xata.updatedAt).toBeInstanceOf(Date);
+    expect(user.xata.version).toBe(0);
+
     const json = user.toSerializable();
+
+    expect(json.xata.createdAt).toBeDefined();
+    expect(json.xata.updatedAt).toBeDefined();
+    expect(json.xata.version).toBe(0);
 
     expect(json.id).toBeDefined();
     expect(json.name).toBe('User ships');
@@ -59,6 +72,15 @@ describe('record creation', () => {
     expect(user.team?.id).toBe(team.id);
     expect(user.team?.read).toBeDefined();
     expect(user.team?.getMetadata).toBeDefined();
+
+    const userMetadata = user.getMetadata();
+    expect(userMetadata.createdAt).toBeInstanceOf(Date);
+    expect(userMetadata.updatedAt).toBeInstanceOf(Date);
+    expect(userMetadata.version).toBe(0);
+
+    expect(user.xata.createdAt).toBeInstanceOf(Date);
+    expect(user.xata.updatedAt).toBeInstanceOf(Date);
+    expect(user.xata.version).toBe(0);
 
     const json = user.toSerializable();
 
@@ -113,6 +135,10 @@ describe('record creation', () => {
     expect(user.id).toBe(apiUser.id);
     expect(user.full_name).toBe(apiUser.full_name);
     expect(user.email).toBe(apiUser.email);
+
+    expect(user.xata.createdAt).toBeInstanceOf(Date);
+    expect(apiUser.xata.createdAt).toBeInstanceOf(Date);
+    expect(user.xata.createdAt.getTime()).toBe(apiUser.xata.createdAt.getTime());
 
     expect(
       xata.db.users.create('a-unique-record-john-4', {

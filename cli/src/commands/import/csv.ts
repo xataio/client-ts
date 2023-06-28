@@ -1,10 +1,10 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { CompareSchemaResult, createProcessor, parseCSVFile, parseCSVStream } from '@xata.io/importer';
 import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
 import { pluralize } from '../../utils.js';
 
-export default class ImportCSV extends BaseCommand {
+export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
 
   static examples = [
@@ -19,7 +19,6 @@ export default class ImportCSV extends BaseCommand {
   ];
 
   static flags = {
-    ...this.noInputFlag,
     ...this.databaseURLFlag,
     ...BaseCommand.forceFlag('Update the database schema if necessary without asking'),
     branch: this.branchFlag,
@@ -61,10 +60,12 @@ export default class ImportCSV extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'file', description: 'The file to be imported' }];
+  static args = {
+    file: Args.string({ description: 'The file to be imported', required: true })
+  };
 
   async run(): Promise<void> {
-    const { flags, args } = await this.parse(ImportCSV);
+    const { args, flags } = await this.parseCommand();
     const { file } = args;
     const {
       table,
@@ -85,7 +86,7 @@ export default class ImportCSV extends BaseCommand {
     const xata = await this.getXataClient();
 
     const options = createProcessor(
-      xata,
+      xata.api,
       { workspace, region, database, branch, table },
       {
         types: splitCommas(types),

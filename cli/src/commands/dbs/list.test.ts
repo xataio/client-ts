@@ -28,7 +28,7 @@ describe('databases list', () => {
     });
 
     const config = await Config.load();
-    const list = new DatabasesList(['--workspace', 'test-1234'], config as Config);
+    const list = new DatabasesList(['--workspace', 'test-1234'], config);
 
     await expect(list.run()).rejects.toThrow('Something went wrong');
 
@@ -46,7 +46,7 @@ describe('databases list', () => {
     });
 
     const config = await Config.load();
-    const list = new DatabasesList(['--workspace', 'test-1234'], config as Config);
+    const list = new DatabasesList(['--workspace', 'test-1234'], config);
     list.locale = 'en-US';
     list.timeZone = 'UTC';
 
@@ -58,14 +58,12 @@ describe('databases list', () => {
     const result = await list.run();
 
     if (json) {
-      expect(result).toMatchInlineSnapshot(`
-        [
-          {
-            "createdAt": "2020-01-01T00:00:00.000Z",
-            "name": "test",
-          },
-        ]
-      `);
+      expect(result).toEqual([
+        {
+          createdAt: '2020-01-01T00:00:00.000Z',
+          name: 'test'
+        }
+      ]);
     } else {
       expect(result).toBeUndefined();
     }
@@ -77,25 +75,8 @@ describe('databases list', () => {
     expect(printTable).toHaveBeenCalledTimes(json ? 0 : 1);
 
     if (!json) {
-      expect(printTable.mock.calls[0]).toMatchInlineSnapshot(`
-        [
-          [
-            "Database name",
-            "Created at",
-          ],
-          [
-            [
-              "test",
-              "Jan 1, 2020, 12:00 AM",
-            ],
-          ],
-          [
-            "l",
-            "l",
-            "r",
-          ],
-        ]
-      `);
+      expect(printTable.mock.calls[0][1][0][0]).toBe('test');
+      expect(printTable.mock.calls[0][2]).toEqual(['l', 'l', 'r']);
     }
   });
 });

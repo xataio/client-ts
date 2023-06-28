@@ -1,17 +1,17 @@
 import { BaseCommand } from '../../base.js';
 import { hasProfile } from '../../credentials.js';
 
-export default class Status extends BaseCommand {
+export default class Status extends BaseCommand<typeof Status> {
   static description = 'Check status of the auth settings';
 
   static examples = [];
 
   static flags = {};
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
-    const profile = await this.getProfile(true);
+    const profile = await this.getProfile({ ignoreEnv: true });
     const loggedIn = await hasProfile(profile.name);
     if (!loggedIn) {
       return this.log('You are not logged in, run `xata auth login` first');

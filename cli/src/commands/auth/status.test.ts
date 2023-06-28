@@ -28,7 +28,7 @@ const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 describe('auth status', () => {
   test('shows informational message when there is no api key configured', async () => {
     const config = await Config.load();
-    const command = new Status([], config as Config);
+    const command = new Status([], config);
 
     const readFile = vi.spyOn(fs, 'readFile').mockImplementation(() => {
       throw new Error('ENOENT');
@@ -45,7 +45,7 @@ describe('auth status', () => {
 
   test('validates the API key if it exists', async () => {
     const config = await Config.load();
-    const command = new Status([], config as Config);
+    const command = new Status([], config);
     const log = vi.spyOn(command, 'log');
 
     const readFile = vi.spyOn(fs, 'readFile').mockResolvedValue(ini.stringify({ default: { apiKey: '1234abcdef' } }));

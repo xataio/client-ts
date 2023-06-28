@@ -1,7 +1,7 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class DatabasesDelete extends BaseCommand {
+export default class DatabasesDelete extends BaseCommand<typeof DatabasesDelete> {
   static description = 'Delete a database';
 
   static examples = [];
@@ -14,14 +14,16 @@ export default class DatabasesDelete extends BaseCommand {
     })
   };
 
-  static args = [{ name: 'database', description: 'The database name to delete', required: true }];
+  static args = {
+    database: Args.string({ description: 'The database name to delete', required: false })
+  };
 
   static enableJsonFlag = true;
 
   async run(): Promise<void | unknown> {
-    const { flags, args } = await this.parse(DatabasesDelete);
+    const { args, flags } = await this.parseCommand();
     const workspace = flags.workspace || (await this.getWorkspace());
-    const database = args.database;
+    const database = args.database || (await this.getDatabase(workspace, { allowCreate: false })).name;
 
     const xata = await this.getXataClient();
 
@@ -29,7 +31,7 @@ export default class DatabasesDelete extends BaseCommand {
       {
         type: 'text',
         name: 'confirm',
-        message: `Are you sure you want to delete database ${database} in the ${workspace} workspace? Please type ${database} to confirm`,
+        message: `Are you sure you want to delete database ${database} in the ${workspace} workspace?\nPlease type ${database} to confirm:\n`,
         initial: false
       },
       flags.force ? database : undefined
@@ -37,7 +39,7 @@ export default class DatabasesDelete extends BaseCommand {
     if (!confirm) return this.exit(1);
     if (confirm !== database) return this.error('The database name did not match');
 
-    await xata.database.deleteDatabase({ workspace, database });
+    await xata.api.database.deleteDatabase({ workspace, database });
 
     if (this.jsonEnabled()) return {};
 

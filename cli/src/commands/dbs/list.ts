@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 
-export default class DatabasesList extends BaseCommand {
+export default class DatabasesList extends BaseCommand<typeof DatabasesList> {
   static description = 'List your databases';
 
   static examples = [];
@@ -13,19 +13,19 @@ export default class DatabasesList extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   static enableJsonFlag = true;
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(DatabasesList);
+    const { flags } = await this.parseCommand();
     const workspace =
       flags.workspace ||
       this.parseDatabaseURL(this.projectConfig?.databaseURL ?? '').workspace ||
       (await this.getWorkspace());
 
     const xata = await this.getXataClient();
-    const { databases: dbs = [] } = await xata.database.getDatabaseList({ workspace });
+    const { databases: dbs = [] } = await xata.api.database.getDatabaseList({ workspace });
 
     if (this.jsonEnabled()) return dbs;
 

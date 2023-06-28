@@ -210,6 +210,16 @@ describe('integration tests', () => {
     expect(teams[2].name).toBe('Mixed team fruits & animals');
   });
 
+  test('sort random', async () => {
+    const teams = await xata.db.teams.sort('*', 'random').getAll();
+    const teams2 = await xata.db.teams.getAll({ sort: { column: '*', direction: 'random' } });
+    const teams3 = await xata.db.teams.getAll({ sort: { '*': 'random' } });
+
+    expect(teams).toHaveLength(3);
+    expect(teams2).toHaveLength(3);
+    expect(teams3).toHaveLength(3);
+  });
+
   test('negative filter', async () => {
     const repository = xata.db.teams;
     const teams = await repository.not(repository.filter('name', 'Team fruits')).sort('name', 'asc').getAll();
@@ -324,6 +334,10 @@ describe('integration tests', () => {
     expect(page1.meta.page.more).toBe(true);
     expect(page2.meta.page.more).toBe(false);
     expect(page3.meta.page.more).toBe(false);
+
+    expect(page1.meta.page.size).toBe(size);
+    expect(page2.meta.page.size).toBe(size);
+    expect(page3.meta.page.size).toBe(size);
 
     expect(startPage.records.length).toEqual(page1.records.length);
 
@@ -467,6 +481,26 @@ describe('integration tests', () => {
     expect(user?.email).toBeDefined();
     //@ts-expect-error
     expect(user?.address).not.toBeDefined();
+  });
+
+  test('returns null to links that do not exist', async () => {
+    const user = await xata.db.users.create({
+      full_name: 'John Doe',
+      email: 'john@doe.com',
+      address: {
+        street: '123 Main St'
+      }
+    });
+
+    const records = await xata.db.users.filter('id', user.id).select(['*', 'team.*']).getAll();
+
+    expect(records).toHaveLength(1);
+    expect(records[0].id).toBe(user.id);
+    expect(records[0].full_name).toBe('John Doe');
+    expect(records[0].address?.street).toBe('123 Main St');
+    expect(records[0].team).toBeNull();
+
+    await user.delete();
   });
 
   test('Partial update of a user', async () => {
@@ -613,6 +647,13 @@ describe('integration tests', () => {
     const updatedUser = await user.read();
     expect(updatedUser?.team?.id).toEqual(team.id);
 
+    // TODO(link.xata) @ts-expect-error
+    expect(updatedUser?.team?.xata?.version).not.toBeDefined();
+    // TODO(link.xata) @ts-expect-error
+    expect(updatedUser?.team?.xata?.createdAt).not.toBeDefined();
+    // TODO(link.xata) @ts-expect-error
+    expect(updatedUser?.team?.xata?.updatedAt).not.toBeDefined();
+
     const response = await xata.db.teams.getFirst({ filter: { id: team.id }, columns: ['*', 'owner.*'] });
     const owner = await response?.owner?.read();
 
@@ -625,13 +666,22 @@ describe('integration tests', () => {
     expect(response?.owner?.id).toBe(owner?.id);
     expect(response?.owner?.full_name).toBe(owner?.full_name);
 
+    const teamMetadata = response?.owner?.getMetadata();
+    expect(teamMetadata?.createdAt).toBeInstanceOf(Date);
+    expect(teamMetadata?.updatedAt).toBeInstanceOf(Date);
+    expect(teamMetadata?.version).toBe(1);
+
+    expect(response?.owner?.xata?.createdAt).toBeInstanceOf(Date);
+    expect(response?.owner?.xata?.updatedAt).toBeInstanceOf(Date);
+    expect(response?.owner?.xata?.version).toBe(1);
+
     const nestedObject = await xata.db.teams.getFirst({
       filter: { id: team.id },
-      columns: ['owner.team.owner.team.owner.team', 'owner.team.owner.team.owner.full_name']
+      columns: ['owner.team', 'owner.full_name']
     });
 
-    const nestedProperty = nestedObject?.owner?.team?.owner?.team?.owner?.team;
-    const nestedName = nestedObject?.owner?.team?.owner?.team?.owner?.full_name;
+    const nestedProperty = nestedObject?.owner?.team;
+    const nestedName = nestedObject?.owner?.full_name;
 
     expect(nestedName).toEqual(user.full_name);
 

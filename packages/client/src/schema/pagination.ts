@@ -2,7 +2,7 @@ import { isDefined, isObject } from '../util/lang';
 import { Query } from './query';
 import { JSONData, XataRecord } from './record';
 
-export type PaginationQueryMeta = { page: { cursor: string; more: boolean } };
+export type PaginationQueryMeta = { page: { cursor: string; more: boolean; size: number } };
 
 export interface Paginable<Record extends XataRecord, Result extends XataRecord = Record> {
   meta: PaginationQueryMeta;

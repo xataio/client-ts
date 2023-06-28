@@ -14,7 +14,7 @@ const writeFileMock = writeFile as unknown as ReturnType<typeof vi.fn>;
 describe('set config', () => {
   test('fails if there is not project configuration', async () => {
     const config = await Config.load();
-    const command = new SetConfig(['foo', 'bar'], config as Config);
+    const command = new SetConfig(['foo', 'bar'], config);
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(
       '[Error: No project configuration found. Use xata init to configure your project.]'
@@ -23,7 +23,7 @@ describe('set config', () => {
 
   test('fails if the key does not exist in the schema definition', async () => {
     const config = await Config.load();
-    const command = new SetConfig(['foo', 'bar'], config as Config);
+    const command = new SetConfig(['foo', 'bar'], config);
     command.projectConfig = {};
 
     await expect(command.run()).rejects.toThrow('Unknown path "foo"');
@@ -31,7 +31,7 @@ describe('set config', () => {
 
   test('fails if the key points to an object', async () => {
     const config = await Config.load();
-    const command = new SetConfig(['codegen', 'bar'], config as Config);
+    const command = new SetConfig(['codegen', 'bar'], config);
     command.projectConfig = {};
 
     await expect(command.run()).rejects.toThrow('Cannot set value at path "codegen" because it is an object');
@@ -39,7 +39,7 @@ describe('set config', () => {
 
   test('updates a configuration key', async () => {
     const config = await Config.load();
-    const command = new SetConfig(['codegen.output', 'src/xata.ts'], config as Config);
+    const command = new SetConfig(['codegen.output', 'src/xata.ts'], config);
     command.projectConfig = {};
     command.projectConfigLocation = '.xatarc.json';
 

@@ -3,11 +3,27 @@ import { z } from 'zod';
 // We need to do this because of problems with Zod and recursive types https://www.npmjs.com/package/zod#recursive-types
 export type Column = {
   name: string;
-  type: 'bool' | 'int' | 'float' | 'string' | 'text' | 'email' | 'multiple' | 'link' | 'object' | 'datetime';
+  type:
+    | 'bool'
+    | 'int'
+    | 'float'
+    | 'string'
+    | 'text'
+    | 'email'
+    | 'multiple'
+    | 'link'
+    | 'object'
+    | 'datetime'
+    | 'vector'
+    | 'file[]'
+    | 'file';
   unique?: boolean;
   description?: string;
   link?: {
     table: string;
+  };
+  vector?: {
+    dimension: number;
   };
   columns?: Column[];
 };
@@ -23,6 +39,11 @@ export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
     link: z
       .object({
         table: z.string()
+      })
+      .optional(),
+    vector: z
+      .object({
+        dimension: z.number()
       })
       .optional(),
     columns: z.array(columnSchema).optional()

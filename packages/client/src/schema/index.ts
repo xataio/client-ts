@@ -10,9 +10,10 @@ export * from './operators';
 export * from './pagination';
 export { Query } from './query';
 export { isIdentifiable, isXataRecord } from './record';
-export type { BaseData, EditableData, Identifiable, Link, XataRecord } from './record';
+export type { BaseData, EditableData, Identifiable, Link, XataRecord, JSONData } from './record';
 export { Repository, RestRepository } from './repository';
 export * from './selection';
+export * from './ask';
 
 export type SchemaDefinition = {
   table: string;

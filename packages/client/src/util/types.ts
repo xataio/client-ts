@@ -42,6 +42,8 @@ export type OmitBy<T, K extends keyof T> = T extends any ? Omit<T, K> : never;
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
 export type ExclusiveOr<T, U> = T | U extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U;
 
+export type ExclusiveUnion<T> = T extends any ? ExclusiveOr<T, T> : never;
+
 type Explode<T> = keyof T extends infer K
   ? K extends unknown
     ? { [I in keyof T]: I extends K ? T[I] : never }

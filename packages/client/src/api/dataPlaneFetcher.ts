@@ -6,7 +6,7 @@ import { fetch, WorkspaceApiUrlBuilder } from './fetcher';
 export type DataPlaneFetcherExtraProps = {
   apiUrl: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
-  fetchImpl: FetchImpl;
+  fetch: FetchImpl;
   apiKey: string;
   trace: TraceFunction;
   signal?: AbortSignal;
@@ -31,7 +31,7 @@ export type DataPlaneFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> 
 export const dataPlaneFetch = async <
   TData,
   TError extends ErrorWrapper<{ status: unknown; payload: PossibleErrors }>,
-  TBody extends Record<string, unknown> | undefined | null,
+  TBody extends Record<string, unknown> | Blob | undefined | null,
   THeaders extends Record<string, unknown>,
   TQueryParams extends Record<string, unknown>,
   TPathParams extends Partial<Record<string, string | number>>

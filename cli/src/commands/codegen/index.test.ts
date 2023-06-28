@@ -26,7 +26,7 @@ const writeFileMock = writeFile as unknown as ReturnType<typeof vi.fn>;
 describe('codegen', () => {
   test('fails if the output filepath is not provided', async () => {
     const config = await Config.load();
-    const command = new Codegen([], config as Config);
+    const command = new Codegen([], config);
     command.projectConfig = {};
 
     await expect(command.run()).rejects.toMatchInlineSnapshot(
@@ -43,7 +43,7 @@ describe('codegen', () => {
     });
 
     const config = await Config.load();
-    const command = new Codegen([], config as Config);
+    const command = new Codegen([], config);
     command.projectConfig = {
       databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test',
       codegen: {
@@ -69,7 +69,7 @@ describe('codegen', () => {
     });
 
     const config = await Config.load();
-    const command = new Codegen([], config as Config);
+    const command = new Codegen([], config);
     command.projectConfig = {
       databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test',
       codegen: {
@@ -97,6 +97,6 @@ describe('codegen', () => {
     }
 
     expect(log).toHaveBeenCalledTimes(1);
-    expect(log.mock.calls[0][0]).toEqual(`✔ Your XataClient is generated at ./src/xata.${ext}`);
+    expect(log.mock.calls[0][0]).toEqual(`Generated Xata code to ./src/xata.${ext}`);
   });
 });

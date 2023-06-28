@@ -1,6 +1,9 @@
 name: Build PR
 
 on:
+  push:
+    branches:
+      - gh-readonly-queue/main/**
   pull_request:
 
 concurrency:
@@ -33,11 +36,11 @@ jobs:
           cache: 'pnpm'
 
       - name: Set build version
-        run: echo ::set-output name=TAG::0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)
+        run: echo "TAG=0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         id: version
 
       - name: Check secrets exist
-        run: echo ::set-output name=exist::${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}
+        run: echo "exist=${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}" >> $GITHUB_OUTPUT
         id: secrets
 
       - name: Find Comment
@@ -157,7 +160,7 @@ jobs:
           git checkout -b test-branch-${{ github.sha }}
 
       - name: Read .nvmrc
-        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        run: echo "NVMRC=$(cat .nvmrc)" >> $GITHUB_OUTPUT
         id: nvm
 
       - name: Install pnpm
@@ -172,7 +175,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Check secrets exist
-        run: echo ::set-output name=exist::${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}
+        run: echo "exist=${{ secrets.GITHUB_TOKEN != '' && 'true' || 'false' }}" >> $GITHUB_OUTPUT
         id: secrets
 
       - name: Install dependencies

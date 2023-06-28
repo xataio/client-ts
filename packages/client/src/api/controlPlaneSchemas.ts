@@ -179,6 +179,7 @@ export type DatabaseGithubSettings = {
 
 export type Region = {
   id: string;
+  name: string;
 };
 
 export type ListRegionsResponse = {

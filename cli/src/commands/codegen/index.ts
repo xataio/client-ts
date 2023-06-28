@@ -3,7 +3,8 @@ import { generate, isValidJavascriptTarget, javascriptTargets } from '@xata.io/c
 import chalk from 'chalk';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
-import { BaseCommand, ProjectConfig } from '../../base.js';
+import { BaseCommand } from '../../base.js';
+import { ProjectConfig } from '../../config.js';
 
 export const languages: Record<string, 'javascript' | 'typescript'> = {
   '.js': 'javascript',
@@ -18,7 +19,7 @@ export const unsupportedExtensionError = (ext: string) => {
   ).join(', ')}`;
 };
 
-export default class Codegen extends BaseCommand {
+export default class Codegen extends BaseCommand<typeof Codegen> {
   static description = 'Generate code from the current database schema';
 
   static examples = [];
@@ -50,10 +51,10 @@ export default class Codegen extends BaseCommand {
     })
   };
 
-  static args = [];
+  static args = {};
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(Codegen);
+    const { flags } = await this.parseCommand();
     const output = flags.output || this.projectConfig?.codegen?.output;
     const moduleType = this.projectConfig?.codegen?.moduleType;
     const javascriptTarget = flags['javascript-output-target'] || this.projectConfig?.codegen?.javascriptTarget;
@@ -87,7 +88,7 @@ export default class Codegen extends BaseCommand {
       flags.db,
       flags.branch
     );
-    const branchDetails = await xata.branches.getBranchDetails({ workspace, region, database, branch });
+    const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
     const { schema } = branchDetails;
 
     const codegenBranch = flags['inject-branch'] ? branch : undefined;
@@ -118,7 +119,7 @@ export default class Codegen extends BaseCommand {
       await writeFile(path.join(dir, 'types.d.ts'), types);
     }
 
-    this.success(`Your XataClient is generated at ./${relative(process.cwd(), output)}`);
+    this.log(`Generated Xata code to ./${relative(process.cwd(), output)}`);
   }
 
   static async runIfConfigured(projectConfig?: ProjectConfig) {

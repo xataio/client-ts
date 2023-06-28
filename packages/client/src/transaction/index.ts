@@ -11,17 +11,15 @@ export type TransactionPluginResult<Schemas extends Record<string, XataRecord>> 
 };
 
 export class TransactionPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
-  build({ getFetchProps }: XataPluginOptions): TransactionPluginResult<Schemas> {
+  build(pluginOptions: XataPluginOptions): TransactionPluginResult<Schemas> {
     return {
       run: async <Tables extends StringKeys<Schemas>, Operations extends TransactionOperation<Schemas, Tables>[]>(
         operations: Narrow<Operations>
       ) => {
-        const fetchProps = await getFetchProps();
-
         const response = await branchTransaction({
           pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
           body: { operations: operations as any },
-          ...fetchProps
+          ...pluginOptions
         });
 
         return response as any;
