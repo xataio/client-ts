@@ -3845,7 +3845,7 @@ export type SqlQueryRequestBody = {
   /**
    * The query parameter list.
    */
-  params?: string[] | null;
+  params?: any[] | null;
   /**
    * The consistency level for this request.
    *
