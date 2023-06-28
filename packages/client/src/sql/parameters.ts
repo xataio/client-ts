@@ -1,5 +1,5 @@
 import { SQLQuery } from '.';
-import { isDefined, isObject, isStringArray } from '../util/lang';
+import { isDefined, isObject, isString, isStringArray } from '../util/lang';
 
 function escapeElement(elementRepresentation: string) {
   const escaped = elementRepresentation.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
@@ -56,6 +56,10 @@ function prepareValue(value: unknown) {
 }
 
 export function prepareParams(param1: SQLQuery, param2?: any[]) {
+  if (isString(param1)) {
+    return { query: param1, params: param2?.map((value) => prepareValue(value)) };
+  }
+
   if (isStringArray(param1)) {
     const query = param1.reduce((acc, str, i) => {
       return acc + str + (i < param1.length - 1 ? `$${i + 1}` : '');
@@ -67,7 +71,7 @@ export function prepareParams(param1: SQLQuery, param2?: any[]) {
   if (isObject(param1)) {
     const { query, params, consistency } = param1;
 
-    return { query, params: params.map((value) => prepareValue(value)), consistency };
+    return { query, params: params?.map((value) => prepareValue(value)), consistency };
   }
 
   throw new Error('Invalid query');

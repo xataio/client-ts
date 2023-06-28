@@ -2,9 +2,9 @@ import { sqlQuery } from '../api';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { prepareParams } from './parameters';
 
-export type SQLQueryParams = {
+export type SQLQueryParams<T = any[]> = {
   query: string;
-  params: any[];
+  params?: T;
   consistency?: 'strong' | 'eventual';
 };
 
