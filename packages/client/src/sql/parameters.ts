@@ -61,9 +61,9 @@ export function prepareParams(param1: SQLQuery, param2?: any[]) {
   }
 
   if (isStringArray(param1)) {
-    const query = param1.reduce((acc, str, i) => {
-      return acc + str + (i < param1.length - 1 ? `$${i + 1}` : '');
-    });
+    const query = param1.reduce((acc, curr, index) => {
+      return acc + curr + (index < (param2?.length ?? 0) ? '$' + (index + 1) : '');
+    }, '');
 
     return { query, params: param2?.map((value) => prepareValue(value)) };
   }
