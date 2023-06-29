@@ -83,7 +83,7 @@ export interface ImageTransformations {
    * - jpeg: generate images in JPEG format.
    * - png: generate images in PNG format.
    */
-  format?: 'avif' | 'webp' | 'json' | 'jpeg' | 'png';
+  format?: 'auto' | 'avif' | 'webp' | 'json' | 'jpeg' | 'png';
   /**
    * Increase exposure by a factor. A value of 1.0 equals no change, a value of
    * 0.5 darkens the image, and a value of 2.0 lightens the image. 0 is ignored.
