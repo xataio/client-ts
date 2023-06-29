@@ -193,6 +193,9 @@ export async function fetch<
         [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', '')
       });
 
+      const message = response.headers?.get('x-xata-message');
+      if (message) console.warn(message);
+
       // No content
       if (response.status === 204) {
         return {} as unknown as TData;
