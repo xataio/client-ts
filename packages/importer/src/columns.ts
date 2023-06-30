@@ -1,114 +1,65 @@
 import type { Schemas } from '@xata.io/client';
-import CSV from 'papaparse';
 import { isDefined } from './utils/lang';
 import AnyDateParser from 'any-date-parser';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 
-export function guessColumnTypes<T>(rows: T[]): Schemas.Column['type'] {
+const isInteger = <T>(
+  value: T
+): boolean => // Check for integers
+  Boolean(
+    Number.isSafeInteger(+value) &&
+      // Without dots (e.g. 1.0)
+      String(value).match(/^\d+$/) &&
+      // Are not dates
+      !(value instanceof Date)
+  );
+
+const isFloat = <T>(
+  value: T
+): boolean => // Check for integers
+  Boolean(
+    // Check for floats
+    !Number.isNaN(+value) &&
+      // Are not dates
+      !(value instanceof Date)
+  );
+
+const isDateTime = <T>(value: T): boolean => anyToDate(value).invalid === undefined;
+
+const BOOLEAN_VALUES = ['true', 'false'];
+
+const isBoolean = <T>(value: T): boolean => BOOLEAN_VALUES.includes(String(value));
+
+const isEmail = <T>(value: T): boolean => /^\S+@\S+\.\S+$/.test(String(value));
+
+const isText = <T>(value: T): boolean =>
+  // Check for newlines
+  String(value).indexOf('\n') >= 0 ||
+  // Check for long strings
+  String(value).length > 180;
+
+export function guessColumnTypes<T>(columnValues: T[]): Schemas.Column['type'] {
   // Integer needs to be checked before Float
-  if (
-    rows.every(
-      (value) =>
-        // Check for integers
-        Number.isSafeInteger(+value) &&
-        // Without dots (e.g. 1.0)
-        String(value).match(/^\d+$/) &&
-        // Are not dates
-        !(value instanceof Date)
-    )
-  ) {
+  if (columnValues.every(isInteger)) {
     return 'int';
   }
-
-  if (
-    rows.every(
-      (value) =>
-        // Check for floats
-        !Number.isNaN(+value) &&
-        // Are not dates
-        !(value instanceof Date)
-    )
-  ) {
+  if (columnValues.every(isFloat)) {
     return 'float';
   }
-
-  if (
-    rows.every(
-      (value) =>
-        // Check for valid dates
-        anyToDate(value).invalid === undefined
-    )
-  ) {
+  if (columnValues.every(isDateTime)) {
     return 'datetime';
   }
-
-  if (
-    rows.every((value) =>
-      // Check for booleans
-      ['true', 'false'].includes(String(value))
-    )
-  ) {
+  if (columnValues.every(isBoolean)) {
     return 'bool';
   }
-
-  if (
-    rows.every((value) =>
-      // Check for emails
-      String(value).match(/^\S+@\S+\.\S+$/)
-    )
-  ) {
+  if (columnValues.every(isEmail)) {
     return 'email';
   }
-
-  // Array needs to be checked before Object
-  try {
-    if (
-      rows.every(
-        (value) =>
-          // Check for arrays
-          Array.isArray(value) ||
-          // JSON arrays
-          JSON.parse(String(value)).length > 0
-      )
-    ) {
-      return 'multiple';
-    }
-  } catch (_error) {
-    // Ignore
-  }
-
-  // CSV Arrays
-  if (rows.every((value) => CSV.parse(String(value), { header: false }).errors.length === 0)) {
-    return 'multiple';
-  }
-
-  try {
-    if (
-      rows.every(
-        (value) =>
-          // Check for valid JSON
-          typeof JSON.parse(String(value)) === 'object'
-      )
-    ) {
-      return 'object';
-    }
-  } catch (_error) {
-    // Ignore
-  }
-
-  if (
-    rows.some(
-      (value) =>
-        // Check for newlines
-        String(value).indexOf('\n') >= 0 ||
-        // Check for long strings
-        String(value).length > 180
-    )
-  ) {
+  // text needs to be checked before string
+  if (columnValues.some(isText)) {
     return 'text';
   }
-
   return 'string';
 }
 

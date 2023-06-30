@@ -20,7 +20,8 @@ describe('@xata.io/importer plugin', () => {
     expect(xata.import).toBeDefined();
     expect(xata.import.parseCsv).toBeDefined();
     expect(xata.import.parseJson).toBeInstanceOf(Function);
-    expect(xata.import.parseCsvFileStream).toBeInstanceOf(Function);
+    expect(xata.import.parseCsvStream).toBeInstanceOf(Function);
+    expect(xata.import.parseCsvStreamBatches).toBeInstanceOf(Function);
     expect(xata.import.importBatch).toBeInstanceOf(Function);
     expect(xata.import.findTable).toBeInstanceOf(Function);
   });
