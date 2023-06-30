@@ -1,8 +1,9 @@
 import type { Schemas } from '@xata.io/client';
 import CSV from 'papaparse';
 import { isDefined } from './utils/lang';
-// @ts-ignore TS doesn't know about the "any-date-parser" module
-import DateParser from 'any-date-parser';
+import { exportAsFunctionAny } from 'any-date-parser';
+
+const anyToDate = exportAsFunctionAny();
 
 export function guessColumnTypes<T>(rows: T[]): Schemas.Column['type'] {
   // Integer needs to be checked before Float
@@ -36,7 +37,7 @@ export function guessColumnTypes<T>(rows: T[]): Schemas.Column['type'] {
     rows.every(
       (value) =>
         // Check for valid dates
-        DateParser.fromAny(value).invalid === undefined
+        anyToDate(value).invalid === undefined
     )
   ) {
     return 'datetime';
@@ -133,7 +134,7 @@ export function coerceValue(value: unknown, type: Schemas.Column['type']): strin
       return isDefined(value) ? String(value) === 'true' || String(value) === '1' : false;
     }
     case 'datetime': {
-      const date = DateParser.fromAny(value);
+      const date = anyToDate(value);
       return date.invalid ? (value as Date) : date;
     }
     default: {
