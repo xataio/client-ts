@@ -80,6 +80,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     // schema edit APIs?
     // compare branch with user schema
     // apply edits
+    // https://github.com/xataio/client-ts/pull/1035/files#diff-ed4fa305f46a5c6cae3a02562f34b8eb6d05d90cb530f0d7846c324a0d8acdea
     await xata.api.tables.createTable({ workspace, region, database, branch, table });
 
     for (const column of columns) {
