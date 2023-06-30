@@ -7,4 +7,5 @@ export {
   parseJson
 } from './parser';
 export * from './plugin';
+export type { SyncCsvResults } from './types';
 export { generateRandomData } from './random-data';

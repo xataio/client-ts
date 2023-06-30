@@ -26,6 +26,7 @@ export const importBatch = async (
     return { successful: result, errors };
   } catch (error: any) {
     if (error.errors) {
+      console.log('error.errors', error);
       const rowErrors = error.errors.filter((e: any) => e.index !== undefined);
       const errorRowIndexes = rowErrors.map((e: any) => e.index);
       const rowsToRetry = rows.filter((_row, index) => !errorRowIndexes.includes(index));
@@ -34,6 +35,7 @@ export const importBatch = async (
       const errors = rowErrors.map((e: any) => ({ row: rows[e.index], error: e.message }));
       return importBatch(pathParams, options, pluginOptions, errors);
     }
+    console.log('error', error);
     throw error;
   }
 };

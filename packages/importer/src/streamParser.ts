@@ -4,7 +4,7 @@ import Papa, { Parser, ParseResult } from 'papaparse';
 import { papaResultToJson, parseCsvOptionsToPapaOptions } from './parser';
 import {
   CsvStreamParserOptions,
-  OnChunkCallback,
+  OnBatchCallback,
   ParseCsvStreamOptions,
   ParseCsvStreamOptionsSync,
   ParseMeta,
@@ -20,7 +20,7 @@ const metaToParseMeta = (meta: Papa.ParseMeta): Omit<ParseMeta, 'estimatedProgre
 });
 
 // https://github.com/mholt/PapaParse/issues/708 passing preview param to papaparse loads entire file in the browser
-export const parseCsvFileStreamSync = async ({
+export const parseCsvStream = async ({
   fileStream,
   parserOptions
 }: ParseCsvStreamOptionsSync): Promise<SyncCsvResults> => {
@@ -37,14 +37,14 @@ export const parseCsvFileStreamSync = async ({
   });
 };
 
-export const parseCsvFileStream = async ({
+export const parseCsvStreamBatches = async ({
   fileStream,
   fileSizeBytes,
   parserOptions,
-  chunkRowCount = 1000,
-  onChunkBatchSizeMin = 10,
-  onChunkConcurrentMax = 5,
-  onChunk = () => new Promise((resolve) => resolve())
+  batchRowCount = 1000,
+  batchSizeMin = 10,
+  concurrentBatchMax = 5,
+  onBatch = () => new Promise((resolve) => resolve())
 }: ParseCsvStreamOptions): Promise<void> => {
   let rowCount = 0;
   let averageCursorPerRow = 0;
@@ -63,18 +63,18 @@ export const parseCsvFileStream = async ({
         }
         rowCount += result.data.length;
         averageCursorPerRow = result.meta.cursor / rowCount;
-        if (chunk.data.length >= chunkRowCount * onChunkBatchSizeMin) {
+        if (chunk.data.length >= batchRowCount * batchSizeMin) {
           parser.pause();
           chunk = await processPapaChunk(
             chunk,
             parser,
             parserOptions,
-            chunkRowCount,
+            batchRowCount,
             averageCursorPerRow,
             fileSizeBytes,
-            onChunkBatchSizeMin,
-            onChunkConcurrentMax,
-            onChunk
+            batchSizeMin,
+            concurrentBatchMax,
+            onBatch
           );
           parser.resume();
         }
@@ -85,12 +85,12 @@ export const parseCsvFileStream = async ({
             chunk,
             null,
             parserOptions,
-            chunkRowCount,
+            batchRowCount,
             averageCursorPerRow,
             fileSizeBytes,
-            onChunkBatchSizeMin,
-            onChunkConcurrentMax,
-            onChunk,
+            batchSizeMin,
+            concurrentBatchMax,
+            onBatch,
             true
           );
         }
@@ -107,7 +107,7 @@ const processChunk = async (
   meta: Papa.ParseMeta,
   parserOptions: CsvStreamParserOptions,
   parser: Papa.Parser | null,
-  onChunk: OnChunkCallback,
+  onChunk: OnBatchCallback,
   fileSizeBytes: number
 ) => {
   const results = papaResultToJson({ data, errors, meta: meta }, parserOptions);
@@ -147,7 +147,7 @@ const processPapaChunk = async (
   fileSizeBytes: number,
   onChunkBatchSizeMin: number,
   onChunkConcurrentMax: number,
-  onChunk: OnChunkCallback,
+  onChunk: OnBatchCallback,
   forceFinish = false
 ): Promise<Papa.ParseResult<unknown>> => {
   const amountToProcess = calcAmountToProcess(papaChunk, chunkRowCount, forceFinish, onChunkBatchSizeMin);

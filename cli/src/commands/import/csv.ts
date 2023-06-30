@@ -77,6 +77,9 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       columns = parseResults.columns;
     }
 
+    // schema edit APIs?
+    // compare branch with user schema
+    // apply edits
     await xata.api.tables.createTable({ workspace, region, database, branch, table });
 
     for (const column of columns) {

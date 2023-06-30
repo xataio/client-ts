@@ -140,6 +140,10 @@ jobs:
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
             ```
 
+            ```
+            npm install @xata.io/importer@${{ steps.version.outputs.TAG }}
+            ```
+
             To test the CLI, run:
 
             ```

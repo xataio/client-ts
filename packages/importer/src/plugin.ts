@@ -1,6 +1,6 @@
 import { BranchTransactionPathParams, Schemas, XataPlugin, XataPluginOptions } from '@xata.io/client';
 import { parseCsv, parseJson } from './parser';
-import { parseCsvFileStreamSync, parseCsvFileStream } from './streamParser';
+import { parseCsvStreamBatches, parseCsvStream } from './streamParser';
 import { importBatch } from './importer';
 import { ImportBatchOptions } from './types';
 import { findTable, TableInfo } from './processor';
@@ -8,8 +8,8 @@ import { findTable, TableInfo } from './processor';
 export class XataImportPlugin extends XataPlugin {
   build(pluginOptions: XataPluginOptions) {
     return {
-      parseCsvFileStreamSync,
-      parseCsvFileStream,
+      parseCsvStream,
+      parseCsvStreamBatches,
       parseJson,
       parseCsv,
       importBatch: (branchTransactionPathParams: BranchTransactionPathParams, options: ImportBatchOptions) =>
