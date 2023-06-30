@@ -3843,6 +3843,10 @@ export type SqlQueryRequestBody = {
    */
   query: string;
   /**
+   * The query parameter list.
+   */
+  params?: any[] | null;
+  /**
    * The consistency level for this request.
    *
    * @default strong
