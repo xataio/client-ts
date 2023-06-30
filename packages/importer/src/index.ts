@@ -1,11 +1,5 @@
 export { guessColumnTypes } from './columns';
-export {
-  DEFAULT_CSV_DELIMITERS_TO_GUESS,
-  DEFAULT_NULL_VALUES,
-  DEFAULT_PARSE_SAMPLE_SIZE,
-  parseCsv,
-  parseJson
-} from './parser';
+export { DEFAULT_CSV_DELIMITERS_TO_GUESS, parseJson } from './parser';
 export * from './plugin';
 export type { SyncCsvResults } from './types';
 export { generateRandomData } from './random-data';

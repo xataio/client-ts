@@ -5,9 +5,7 @@ import { coerceColumns, guessColumns } from './columns';
 import { ParseCsvOptions, ParseJsonOptions, ParseResults } from './types';
 import { isDefined, isObject } from './utils/lang';
 
-export const DEFAULT_PARSE_SAMPLE_SIZE = 100;
 export const DEFAULT_CSV_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x1F'];
-export const DEFAULT_NULL_VALUES = [undefined, null, 'null', 'NULL', 'Null'];
 
 export const parseCsvOptionsToPapaOptions = (options: Omit<ParseCsvOptions, 'data'>) => {
   const {
@@ -50,14 +48,11 @@ export const papaResultToJson = (
   { data, errors }: CSV.ParseResult<unknown>,
   options: Omit<ParseCsvOptions, 'data'>
 ): ParseResults => {
-  const { columns, limit, nullValues } = options;
   const parseWarnings = errors.map((error) => error.message);
 
   const jsonResults = parseJson({
-    columns,
-    limit,
-    nullValues,
-    data: dataForColumns(data, columns)
+    ...options,
+    data: dataForColumns(data, options.columns)
   });
 
   return jsonResults.success
@@ -68,24 +63,14 @@ export const papaResultToJson = (
     : jsonResults;
 };
 
-export const parseCsv = (options: ParseCsvOptions): ParseResults => {
-  const parseResult = CSV.parse(options.data, parseCsvOptionsToPapaOptions(options));
-  return papaResultToJson(parseResult, options);
-};
-
 export const parseJson = (options: ParseJsonOptions): ParseResults => {
-  const {
-    data: input,
-    columns: externalColumns,
-    limit,
-    nullValues = DEFAULT_NULL_VALUES //todo: do we need this?
-  } = options;
+  const { data: input, columns: externalColumns, limit } = options;
 
   const array = Array.isArray(input) ? input : isObject(input) ? [input] : JSON.parse(input);
 
   const arrayUpToLimit = isDefined(limit) ? array.slice(0, limit) : array;
-  const columns = externalColumns ?? guessColumns(arrayUpToLimit, nullValues);
-  const data = coerceColumns(columns, arrayUpToLimit, nullValues);
+  const columns = externalColumns ?? guessColumns(arrayUpToLimit, options);
+  const data = coerceColumns(columns, arrayUpToLimit, options);
 
   return { success: true, columns, warnings: [], data };
 };

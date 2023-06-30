@@ -18,7 +18,6 @@ const xata = new XataClient({ fetch, apiKey: 'xau_test123', databaseURL: 'https:
 describe('@xata.io/importer plugin', () => {
   test('plugin has correct functions', () => {
     expect(xata.import).toBeDefined();
-    expect(xata.import.parseCsv).toBeDefined();
     expect(xata.import.parseJson).toBeInstanceOf(Function);
     expect(xata.import.parseCsvStream).toBeInstanceOf(Function);
     expect(xata.import.parseCsvStreamBatches).toBeInstanceOf(Function);
@@ -99,58 +98,58 @@ describe('@xata.io/importer plugin', () => {
     });
   });
 
-  describe('parseCsv', () => {
-    const testCases: { name: string; input: ParseCsvOptions; expected: ParseResults }[] = [
-      {
-        name: 'empty',
-        input: { data: '' },
-        expected: {
-          success: true,
-          columns: [],
-          warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-          data: []
-        }
-      },
-      {
-        name: 'simple',
-        input: { data: 'name\nXata' },
-        expected: {
-          success: true,
-          columns: [{ name: 'name', type: 'string' }],
-          warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-          data: [{ name: 'Xata' }]
-        }
-      },
-      {
-        name: 'simple with schema',
-        input: { data: 'name\nXata', columns: [{ name: 'name', type: 'text' }] },
-        expected: {
-          success: true,
-          columns: [{ name: 'name', type: 'text' }],
-          warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-          data: [{ name: 'Xata' }]
-        }
-      },
-      {
-        name: 'multiple',
-        input: { data: 'name,dob\nXata,2019-01-01' },
-        expected: {
-          success: true,
-          columns: [
-            { name: 'name', type: 'string' },
-            { name: 'dob', type: 'datetime' }
-          ],
-          warnings: [],
-          data: [{ name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') }]
-        }
-      }
-    ];
+  // describe('parseCsv', () => {
+  //   const testCases: { name: string; input: ParseCsvOptions; expected: ParseResults }[] = [
+  //     {
+  //       name: 'empty',
+  //       input: { data: '' },
+  //       expected: {
+  //         success: true,
+  //         columns: [],
+  //         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
+  //         data: []
+  //       }
+  //     },
+  //     {
+  //       name: 'simple',
+  //       input: { data: 'name\nXata' },
+  //       expected: {
+  //         success: true,
+  //         columns: [{ name: 'name', type: 'string' }],
+  //         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
+  //         data: [{ name: 'Xata' }]
+  //       }
+  //     },
+  //     {
+  //       name: 'simple with schema',
+  //       input: { data: 'name\nXata', columns: [{ name: 'name', type: 'text' }] },
+  //       expected: {
+  //         success: true,
+  //         columns: [{ name: 'name', type: 'text' }],
+  //         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
+  //         data: [{ name: 'Xata' }]
+  //       }
+  //     },
+  //     {
+  //       name: 'multiple',
+  //       input: { data: 'name,dob\nXata,2019-01-01' },
+  //       expected: {
+  //         success: true,
+  //         columns: [
+  //           { name: 'name', type: 'string' },
+  //           { name: 'dob', type: 'datetime' }
+  //         ],
+  //         warnings: [],
+  //         data: [{ name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') }]
+  //       }
+  //     }
+  //   ];
 
-    testCases.forEach(({ name, input, expected }) => {
-      test(name, () => {
-        const result = xata.import.parseCsv(input);
-        expect(result).toEqual(expected);
-      });
-    });
-  });
+  //   testCases.forEach(({ name, input, expected }) => {
+  //     test(name, () => {
+  //       const result = xata.import.parseCsv(input);
+  //       expect(result).toEqual(expected);
+  //     });
+  //   });
+  // });
 });
