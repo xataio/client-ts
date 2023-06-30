@@ -1,9 +1,9 @@
 import type { Schemas } from '@xata.io/client';
 import CSV from 'papaparse';
 import { isDefined } from './utils/lang';
-import { exportAsFunctionAny } from 'any-date-parser';
+import AnyDateParser from 'any-date-parser';
 
-const anyToDate = exportAsFunctionAny();
+const anyToDate = AnyDateParser.exportAsFunctionAny();
 
 export function guessColumnTypes<T>(rows: T[]): Schemas.Column['type'] {
   // Integer needs to be checked before Float
