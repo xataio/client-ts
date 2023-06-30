@@ -39,7 +39,7 @@ const isText = <T>(value: T): boolean =>
   // Check for long strings
   String(value).length > 180;
 
-export function guessColumnTypes<T>(columnValues: T[]): Schemas.Column['type'] {
+export const guessColumnTypes = <T>(columnValues: T[]): Schemas.Column['type'] => {
   // Integer needs to be checked before Float
   if (columnValues.every(isInteger)) {
     return 'int';
@@ -61,9 +61,9 @@ export function guessColumnTypes<T>(columnValues: T[]): Schemas.Column['type'] {
     return 'text';
   }
   return 'string';
-}
+};
 
-export function coerceValue(value: unknown, type: Schemas.Column['type']): string | number | boolean | Date | null {
+export const coerceValue = (value: unknown, type: Schemas.Column['type']): string | number | boolean | Date | null => {
   if (!isDefined(value)) {
     return value;
   } else if (String(value).trim() === '') {
@@ -92,10 +92,10 @@ export function coerceValue(value: unknown, type: Schemas.Column['type']): strin
       return value as string | number | boolean | Date | null;
     }
   }
-}
+};
 
 // todo: honor nullValues
-export function coerceColumns<T>(columns: Schemas.Column[], rows: T[], nullValues: any[] = []): T[] {
+export const coerceColumns = <T>(columns: Schemas.Column[], rows: T[], nullValues: any[] = []): T[] => {
   return rows.map((row) => {
     const newRow = { ...row };
     for (const column of columns) {
@@ -104,10 +104,13 @@ export function coerceColumns<T>(columns: Schemas.Column[], rows: T[], nullValue
     }
     return newRow;
   });
-}
+};
 
 // todo: honor nullValues?
-export function guessColumns<T extends Record<string, unknown>>(rows: T[], nullValues: any[] = []): Schemas.Column[] {
+export const guessColumns = <T extends Record<string, unknown>>(
+  rows: T[],
+  nullValues: any[] = []
+): Schemas.Column[] => {
   const columnNames = new Set<string>(...rows.map((row) => Object.keys(row)));
 
   const columns = [...columnNames].map((columnName) => {
@@ -118,4 +121,4 @@ export function guessColumns<T extends Record<string, unknown>>(rows: T[], nullV
   });
 
   return columns;
-}
+};
