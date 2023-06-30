@@ -155,3 +155,10 @@ export type ImportBatchOptions = {
   table: string;
   batch: ParseResults;
 };
+
+export type BooleanValues = { true: string[]; false: string[] };
+
+export type ColumnOptions = {
+  isNull?: (value: unknown) => boolean;
+  booleanValues?: BooleanValues;
+};
