@@ -64,7 +64,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     }
     const parseStream = await getFileStream();
     const parseResults = (
-      await xata.import.parseCsvFileStreamSync({
+      await xata.import.parseCsvStream({
         fileStream: parseStream,
         parserOptions: { ...csvOptions, limit: 1000 }
       })
@@ -96,12 +96,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     let importSuccessCount = 0;
     let importErrorCount = 0;
     const fileStream = await getFileStream();
-    await xata.import.parseCsvFileStream({
+    await xata.import.parseCsvStreamBatches({
       fileStream: fileStream,
       fileSizeBytes: (await (await open(file, 'r')).stat()).size,
       parserOptions: { ...csvOptions, columns },
-      chunkRowCount: 1000,
-      onChunk: async (parseResults, meta) => {
+      batchRowCount: 1000,
+      onBatch: async (parseResults, meta) => {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
         }
