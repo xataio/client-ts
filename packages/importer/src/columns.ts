@@ -124,18 +124,19 @@ export const coerceValue = (
   }
 };
 
-export const coerceColumns = <T>(columns: Schemas.Column[], rows: T[], options?: ColumnOptions): T[] => {
+export const coerceRows = <T extends Record<string, unknown>>(
+  rows: T[],
+  columns: Schemas.Column[],
+  options?: ColumnOptions
+): T[] => {
   return rows.map((row) => {
-    const newRow = { ...row };
-    for (const column of columns) {
-      // @ts-ignore TODO: Remove this
-      newRow[column.name] = coerceValue(row[column.name], column.type, options);
-    }
-    return newRow;
+    return columns.reduce((newRow, column) => {
+      (newRow as Record<string, unknown>)[column.name] = coerceValue(row[column.name], column.type, options);
+      return newRow;
+    }, {}) as T;
   });
 };
 
-// todo: honor nullValues?
 export const guessColumns = <T extends Record<string, unknown>>(
   rows: T[],
   options?: ColumnOptions

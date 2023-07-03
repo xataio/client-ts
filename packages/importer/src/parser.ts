@@ -1,7 +1,7 @@
 import JSON from 'json5';
 import pick from 'lodash.pick';
 import CSV from 'papaparse';
-import { coerceColumns, guessColumns } from './columns';
+import { coerceRows, guessColumns } from './columns';
 import { ParseCsvOptions, ParseJsonOptions, ParseResults } from './types';
 import { isDefined, isObject } from './utils/lang';
 
@@ -70,7 +70,7 @@ export const parseJson = (options: ParseJsonOptions): ParseResults => {
 
   const arrayUpToLimit = isDefined(limit) ? array.slice(0, limit) : array;
   const columns = externalColumns ?? guessColumns(arrayUpToLimit, options);
-  const data = coerceColumns(columns, arrayUpToLimit, options);
+  const data = coerceRows(arrayUpToLimit, columns, options);
 
   return { success: true, columns, warnings: [], data };
 };

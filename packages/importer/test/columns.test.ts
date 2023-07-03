@@ -1,6 +1,6 @@
 import { Schemas } from '@xata.io/client';
 import { expect, test, describe } from 'vitest';
-import { coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
+import { coerceRows, coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
 import { ColumnOptions } from '../src/types';
 
 const guessNumbersTestCases = [
@@ -224,6 +224,100 @@ describe('coerceValue', () => {
   for (const { input, type, options, expected } of coerceTestCases) {
     test(`coerceValue ${JSON.stringify(input)} returns ${JSON.stringify(expected)}`, () => {
       expect(coerceValue(input, type, options)).toEqual(expected);
+    });
+  }
+});
+
+const coerceRowsTestCases: {
+  rows: Record<string, unknown>[];
+  columns: Schemas.Column[];
+  options?: ColumnOptions;
+  expected: Record<string, unknown>[];
+}[] = [
+  {
+    rows: [{ value: '1' }],
+    columns: [{ name: 'value', type: 'int' }],
+    expected: [{ value: 1 }]
+  },
+  {
+    rows: [{ value: '1.0' }],
+    columns: [{ name: 'value', type: 'float' }],
+    expected: [{ value: 1.0 }]
+  },
+  {
+    rows: [{ value: '1.1' }],
+    columns: [{ name: 'value', type: 'float' }],
+    expected: [{ value: 1.1 }]
+  },
+  {
+    rows: [{ value: 'banana' }],
+    columns: [{ name: 'value', type: 'float' }],
+    expected: [{ value: null }]
+  },
+  {
+    rows: [{ value: '1.1' }],
+    columns: [{ name: 'value', type: 'string' }],
+    expected: [{ value: '1.1' }]
+  },
+  {
+    rows: [{ value: '1' }],
+    columns: [{ name: 'value', type: 'string' }],
+    expected: [{ value: '1' }]
+  },
+  {
+    rows: [{ value: 'true' }],
+    columns: [{ name: 'value', type: 'bool' }],
+    expected: [{ value: true }]
+  },
+  {
+    rows: [{ value: 'false' }],
+    columns: [{ name: 'value', type: 'bool' }],
+    expected: [{ value: false }]
+  },
+  {
+    rows: [{ value: 'T' }],
+    columns: [{ name: 'value', type: 'bool' }],
+    expected: [{ value: true }]
+  },
+  {
+    rows: [{ value: 'notABool' }],
+    columns: [{ name: 'value', type: 'bool' }],
+    expected: [{ value: null }]
+  },
+  {
+    rows: [{ value: 'something' }],
+    columns: [{ name: 'value', type: 'text' }],
+    expected: [{ value: 'something' }]
+  },
+  {
+    rows: [{ value: 'something' }],
+    columns: [{ name: 'value', type: 'string' }],
+    expected: [{ value: 'something' }]
+  },
+  {
+    rows: [{ value: '2000-01-01' }],
+    columns: [{ name: 'value', type: 'datetime' }],
+    expected: [{ value: new Date('2000-01-01') }]
+  },
+  {
+    rows: [{ value: 'something' }],
+    columns: [{ name: 'value', type: 'datetime' }],
+    expected: [{ value: null }]
+  },
+  {
+    rows: [{ value1: '1', value2: 'true' }],
+    columns: [
+      { name: 'value1', type: 'int' },
+      { name: 'value2', type: 'bool' }
+    ],
+    expected: [{ value1: 1, value2: true }]
+  }
+];
+
+describe('coerceRows', () => {
+  for (const { rows, columns, options, expected } of coerceRowsTestCases) {
+    test(`coerceRows ${JSON.stringify(rows)} returns ${JSON.stringify(expected)}`, () => {
+      expect(coerceRows(rows, columns, options)).toEqual(expected);
     });
   }
 });
