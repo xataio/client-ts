@@ -1,7 +1,7 @@
 import chunkArray from 'lodash.chunk';
 import PQueue from 'p-queue';
 import Papa, { Parser, ParseResult } from 'papaparse';
-import { papaResultToJson, parseCsvOptionsToPapaOptions } from './parser';
+import { papaResultToJson, parseCsvOptionsToPapaOptions } from './parsers/csvParser';
 import {
   CsvStreamParserOptions,
   OnBatchCallback,

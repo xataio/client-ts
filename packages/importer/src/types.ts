@@ -5,11 +5,6 @@ type Column = Schemas.Column;
 
 export type ParseOptions = ParseCsvOptions | ParseJsonOptions;
 
-export type ColumnOptions = {
-  isNull?: (value: unknown) => boolean;
-  booleanValues?: BooleanValues;
-};
-
 export type ParseCommonOptions = {
   /**
    * The schema of the columns to use for importing data.
@@ -157,3 +152,8 @@ export type ImportBatchOptions = {
 };
 
 export type BooleanValues = { true: string[]; false: string[] };
+
+export type ColumnOptions = {
+  isNull?: (value: unknown) => boolean;
+  booleanValues?: BooleanValues;
+};
