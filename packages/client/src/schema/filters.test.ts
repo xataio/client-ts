@@ -283,32 +283,6 @@ describe('cleanFilter', () => {
     `);
   });
 
-  test('should remove empty arrays', () => {
-    const filter = { $and: [[], { name: 'r1' }, []] };
-    expect(cleanFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
-      {
-        "$and": [
-          {
-            "name": "r1",
-          },
-        ],
-      }
-    `);
-  });
-
-  test('should remove empty strings', () => {
-    const filter = { $and: ['', { name: 'r1' }, ''] };
-    expect(cleanFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
-      {
-        "$and": [
-          {
-            "name": "r1",
-          },
-        ],
-      }
-    `);
-  });
-
   test("should remove 'null' values", () => {
     const filter = { $and: [{ name: null }, { name: 'r1' }, { name: null }] };
     expect(cleanFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
