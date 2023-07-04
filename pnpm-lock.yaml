@@ -171,16 +171,16 @@ importers:
         version: 3.1.6(@types/node@20.3.3)(typescript@5.1.6)
       '@rollup/plugin-auto-install':
         specifier: ^3.0.4
-        version: 3.0.4(rollup@2.79.1)
+        version: 3.0.4(rollup@3.26.0)
       '@rollup/plugin-commonjs':
         specifier: ^25.0.2
-        version: 25.0.2(rollup@2.79.1)
+        version: 25.0.2(rollup@3.26.0)
       '@rollup/plugin-node-resolve':
         specifier: ^15.1.0
-        version: 15.1.0(rollup@2.79.1)
+        version: 15.1.0(rollup@3.26.0)
       '@rollup/plugin-virtual':
         specifier: ^3.0.1
-        version: 3.0.1(rollup@2.79.1)
+        version: 3.0.1(rollup@3.26.0)
       '@types/ini':
         specifier: ^1.3.31
         version: 1.3.31
@@ -256,15 +256,18 @@ importers:
       relaxed-json:
         specifier: ^1.0.3
         version: 1.0.3
+      rollup:
+        specifier: ^3.26.0
+        version: 3.26.0
       rollup-plugin-esbuild:
         specifier: ^5.0.0
-        version: 5.0.0(esbuild@0.18.9)(rollup@2.79.1)
+        version: 5.0.0(esbuild@0.18.9)(rollup@3.26.0)
       rollup-plugin-hypothetical:
         specifier: ^2.1.1
         version: 2.1.1
       rollup-plugin-import-cdn:
         specifier: ^0.2.2
-        version: 0.2.2(rollup@2.79.1)
+        version: 0.2.2(rollup@3.26.0)
       rollup-plugin-virtual-fs:
         specifier: ^4.0.1-alpha.0
         version: 4.0.1-alpha.0
@@ -4497,7 +4500,7 @@ packages:
     resolution:
       { integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw== }
 
-  /@rollup/plugin-auto-install@3.0.4(rollup@2.79.1):
+  /@rollup/plugin-auto-install@3.0.4(rollup@3.26.0):
     resolution:
       { integrity: sha512-V2eDj8sA/LnwVqFLrgpmnyAlXVgZIX7Mm7DzanQFrckOdEVjGM0hEfAykgsY9nBpCLWteaVtpawXJlTcOEEUZA== }
     engines: { node: '>=14.0.0' }
@@ -4507,10 +4510,10 @@ packages:
       rollup:
         optional: true
     dependencies:
-      rollup: 2.79.1
+      rollup: 3.26.0
     dev: false
 
-  /@rollup/plugin-commonjs@25.0.2(rollup@2.79.1):
+  /@rollup/plugin-commonjs@25.0.2(rollup@3.26.0):
     resolution:
       { integrity: sha512-NGTwaJxIO0klMs+WSFFtBP7b9TdTJ3K76HZkewT8/+yHzMiUGVQgaPtLQxNVYIgT5F7lxkEyVID+yS3K7bhCow== }
     engines: { node: '>=14.0.0' }
@@ -4520,16 +4523,16 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@rollup/pluginutils': 5.0.2(rollup@2.79.1)
+      '@rollup/pluginutils': 5.0.2(rollup@3.26.0)
       commondir: 1.0.1
       estree-walker: 2.0.2
       glob: 8.0.3
       is-reference: 1.2.1
       magic-string: 0.27.0
-      rollup: 2.79.1
+      rollup: 3.26.0
     dev: false
 
-  /@rollup/plugin-node-resolve@15.1.0(rollup@2.79.1):
+  /@rollup/plugin-node-resolve@15.1.0(rollup@3.26.0):
     resolution:
       { integrity: sha512-xeZHCgsiZ9pzYVgAo9580eCGqwh/XCEUM9q6iQfGNocjgkufHAqC3exA+45URvhiYV8sBF9RlBai650eNs7AsA== }
     engines: { node: '>=14.0.0' }
@@ -4539,16 +4542,16 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@rollup/pluginutils': 5.0.2(rollup@2.79.1)
+      '@rollup/pluginutils': 5.0.2(rollup@3.26.0)
       '@types/resolve': 1.20.2
       deepmerge: 4.3.1
       is-builtin-module: 3.2.1
       is-module: 1.0.0
       resolve: 1.22.1
-      rollup: 2.79.1
+      rollup: 3.26.0
     dev: false
 
-  /@rollup/plugin-virtual@3.0.1(rollup@2.79.1):
+  /@rollup/plugin-virtual@3.0.1(rollup@3.26.0):
     resolution:
       { integrity: sha512-fK8O0IL5+q+GrsMLuACVNk2x21g3yaw+sG2qn16SnUd3IlBsQyvWxLMGHmCmXRMecPjGRSZ/1LmZB4rjQm68og== }
     engines: { node: '>=14.0.0' }
@@ -4558,7 +4561,7 @@ packages:
       rollup:
         optional: true
     dependencies:
-      rollup: 2.79.1
+      rollup: 3.26.0
     dev: false
 
   /@rollup/pluginutils@4.2.1:
@@ -4568,22 +4571,6 @@ packages:
     dependencies:
       estree-walker: 2.0.2
       picomatch: 2.3.1
-    dev: false
-
-  /@rollup/pluginutils@5.0.2(rollup@2.79.1):
-    resolution:
-      { integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA== }
-    engines: { node: '>=14.0.0' }
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-    dependencies:
-      '@types/estree': 1.0.0
-      estree-walker: 2.0.2
-      picomatch: 2.3.1
-      rollup: 2.79.1
     dev: false
 
   /@rollup/pluginutils@5.0.2(rollup@3.26.0):
@@ -4600,7 +4587,6 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 3.26.0
-    dev: true
 
   /@sindresorhus/is@4.6.0:
     resolution:
@@ -13620,25 +13606,6 @@ packages:
       '@babel/code-frame': 7.22.5
     dev: true
 
-  /rollup-plugin-esbuild@5.0.0(esbuild@0.18.9)(rollup@2.79.1):
-    resolution:
-      { integrity: sha512-1cRIOHAPh8WQgdQQyyvFdeOdxuiyk+zB5zJ5+YOwrZP4cJ0MT3Fs48pQxrZeyZHcn+klFherytILVfE4aYrneg== }
-    engines: { node: '>=14.18.0', npm: '>=8.0.0' }
-    peerDependencies:
-      esbuild: '>=0.10.1'
-      rollup: ^1.20.0 || ^2.0.0 || ^3.0.0
-    dependencies:
-      '@rollup/pluginutils': 5.0.2(rollup@2.79.1)
-      debug: 4.3.4(supports-color@9.3.1)
-      es-module-lexer: 1.1.0
-      esbuild: 0.18.9
-      joycon: 3.1.1
-      jsonc-parser: 3.2.0
-      rollup: 2.79.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /rollup-plugin-esbuild@5.0.0(esbuild@0.18.9)(rollup@3.26.0):
     resolution:
       { integrity: sha512-1cRIOHAPh8WQgdQQyyvFdeOdxuiyk+zB5zJ5+YOwrZP4cJ0MT3Fs48pQxrZeyZHcn+klFherytILVfE4aYrneg== }
@@ -13656,7 +13623,6 @@ packages:
       rollup: 3.26.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /rollup-plugin-hypothetical@2.1.1:
     resolution:
@@ -13664,14 +13630,14 @@ packages:
     engines: { node: '>=0.12' }
     dev: false
 
-  /rollup-plugin-import-cdn@0.2.2(rollup@2.79.1):
+  /rollup-plugin-import-cdn@0.2.2(rollup@3.26.0):
     resolution:
       { integrity: sha512-hfHB3ZGUSGcWVx1/GAdrk+wOkPIMaI1Mr41X6Knpi1r9OTvOPw1iIyb7VLdjvKeT/vfM5RkyVSw8890p4QMC2w== }
     peerDependencies:
       rollup: ^2.70.2
     dependencies:
       es-module-lexer: 0.10.5
-      rollup: 2.79.1
+      rollup: 3.26.0
     dev: false
 
   /rollup-plugin-node-builtins@2.1.2:
@@ -13730,15 +13696,6 @@ packages:
       estree-walker: 0.6.1
     dev: true
 
-  /rollup@2.79.1:
-    resolution:
-      { integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw== }
-    engines: { node: '>=10.0.0' }
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: false
-
   /rollup@3.26.0:
     resolution:
       { integrity: sha512-YzJH0eunH2hr3knvF3i6IkLO/jTjAEwU4HoMUbQl4//Tnl3ou0e7P5SjxdDr8HQJdeUJShlbEHXrrnEHy1l7Yg== }
@@ -13746,7 +13703,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
-    dev: true
 
   /run-applescript@5.0.0:
     resolution:
