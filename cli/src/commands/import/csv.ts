@@ -1,19 +1,59 @@
-import { Args } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
+import chalk from 'chalk';
 import { open } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
-import { isFileEncoding } from '../../utils/files.js';
-import { commonImportFlags, csvFlags } from '../../utils/importer.js';
 
 export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
 
-  static examples = [];
+  static examples = [
+    'Import a CSV file using the column names of the CSV header',
+    '$ xata import csv users.csv --table=users',
+    'Specify the column names and types. They must follow the order they appear in the CSV file',
+    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email',
+    'Create the table or any missing column if needed without asking',
+    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email --create',
+    'Specify "-" as file name to use the stdin to read the data from',
+    chalk.dim('$ command-that-outputs-csv | xata import csv - --table=users --create')
+  ];
 
   static flags = {
     ...this.databaseURLFlag,
-    ...commonImportFlags(),
-    ...csvFlags('')
+    ...BaseCommand.forceFlag('Update the database schema if necessary without asking'),
+    branch: this.branchFlag,
+    table: Flags.string({
+      description: 'The table where the CSV file will be imported to',
+      required: true
+    }),
+    types: Flags.string({
+      description: 'Column types separated by commas'
+    }),
+    columns: Flags.string({
+      description: 'Column names separated by commas'
+    }),
+    'no-header': Flags.boolean({
+      description: 'Specify that the CSV file has no header'
+    }),
+    create: Flags.boolean({
+      description: "Whether the table or columns should be created if they don't exist without asking"
+    }),
+    'no-column-name-normalization': Flags.boolean({
+      description: 'Avoid changing column names in a normalized way'
+    }),
+    'batch-size': Flags.integer({
+      description: 'Batch size to process and upload records'
+    }),
+    'max-rows': Flags.integer({
+      description: 'Maximum number of rows to process'
+    }),
+    delimiter: Flags.string({
+      description: 'Delimiter to use for splitting CSV data'
+    }),
+    'null-value': Flags.string({
+      description: 'Value to use for null values',
+      multiple: true
+    })
   };
 
   static args = {
@@ -24,35 +64,26 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const { args, flags } = await this.parseCommand();
     const {
       table,
-      encoding,
+      'no-header': noHeader,
+      create,
+      'no-column-name-normalization': noColumnNameNormalization,
+      'batch-size': batchSize,
+      'max-rows': limit,
       delimiter,
-      header,
-      skipEmptyLines,
-      nullValues,
-      quoteChar,
-      escapeChar,
-      newline,
-      commentPrefix
+      'null-value': nullValues
     } = flags;
-
+    const header = !noHeader;
     let columns = flagsToColumns(flags);
 
     const csvOptions = {
       delimiter,
       header,
-      skipEmptyLines,
       nullValues,
-      quoteChar,
-      escapeChar,
-      newline: newline as any,
-      commentPrefix,
-      columns
+      columns,
+      limit
     };
 
-    if (!isFileEncoding(encoding)) {
-      this.error(`Invalid encoding: ${encoding}`);
-    }
-    const getFileStream = async () => (await open(file, 'r')).createReadStream({ encoding });
+    const getFileStream = async () => (await open(file, 'r')).createReadStream();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
 
