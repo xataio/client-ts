@@ -10,6 +10,7 @@ import {
   ParseMeta,
   CsvResults
 } from './types';
+import { isDefined } from './utils/lang';
 
 const CHUNK_SIZE = 1024 * 1024 * 10; // 10MB
 
@@ -24,7 +25,6 @@ export const parseCsvStream = async ({ fileStream, parserOptions }: ParseCsvStre
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
       ...parseCsvOptionsToPapaOptions(parserOptions),
-      preview: parserOptions.limit,
       complete: (papaResults) => {
         const results = papaResultToJson(papaResults, parserOptions);
         resolve({ results, meta: { estimatedProgress: 1, ...metaToParseMeta(papaResults.meta) } });
@@ -156,7 +156,8 @@ const processPapaChunk = async (
   const errors = papaChunk.errors.splice(0, amountToProcess);
   const chunks = chunkArray(data, chunkRowCount);
   const promises = chunks.map((chunkData, index) => {
-    const estimatedCursor = Math.floor(papaChunk.meta.cursor + averageCursorPerRow * chunkData.length * index);
+    const estimatedCursor = Math.floor(papaChunk.meta.cursor - averageCursorPerRow * chunkData.length * index);
+    const fileSizeEstimate = isDefined(parserOptions.limit) ? averageCursorPerRow * parserOptions.limit : fileSizeBytes;
     return () =>
       processChunk(
         chunkData,
@@ -165,7 +166,7 @@ const processPapaChunk = async (
         parserOptions,
         parser,
         onChunk,
-        fileSizeBytes
+        fileSizeEstimate
       );
   });
   const queue = new PQueue({ concurrency: onChunkConcurrentMax, carryoverConcurrencyCount: true });

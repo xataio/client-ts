@@ -40,6 +40,7 @@ const isText = <T>(value: T): boolean =>
   // Check for long strings
   String(value).length > 180;
 
+// should both of these be a function?
 const defaultIsNull = (value: unknown): boolean => {
   return !isDefined(value) || String(value).toLowerCase() === 'null' || String(value).trim() === '';
 };
