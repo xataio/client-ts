@@ -60,10 +60,12 @@ export const parseCsvStreamBatches = async ({
         }
         rowCount += result.data.length;
         averageCursorPerRow = result.meta.cursor / rowCount;
+
+        // Only stop papaparse from parsing the file if we have enough data to process
         if (chunk.data.length >= batchRowCount * batchSizeMin) {
           parser.pause();
-          chunk = await processPapaChunk(
-            chunk,
+          chunk = await processPapaChunk({
+            papaChunk: chunk,
             parser,
             parserOptions,
             batchRowCount,
@@ -72,15 +74,14 @@ export const parseCsvStreamBatches = async ({
             batchSizeMin,
             concurrentBatchMax,
             onBatch
-          );
+          });
           parser.resume();
         }
       },
       complete: async () => {
         if (chunk) {
-          await processPapaChunk(
-            chunk,
-            null,
+          await processPapaChunk({
+            papaChunk: chunk,
             parserOptions,
             batchRowCount,
             averageCursorPerRow,
@@ -88,8 +89,8 @@ export const parseCsvStreamBatches = async ({
             batchSizeMin,
             concurrentBatchMax,
             onBatch,
-            true
-          );
+            forceFinish: true
+          });
         }
         resolve();
       },
@@ -98,20 +99,28 @@ export const parseCsvStreamBatches = async ({
   });
 };
 
-const processChunk = async (
-  data: unknown[],
-  errors: Papa.ParseError[],
-  meta: Papa.ParseMeta,
-  parserOptions: ParseCsvOptions,
-  parser: Papa.Parser | null,
-  onChunk: OnBatchCallback,
-  fileSizeBytes: number
-) => {
+const processBatch = async ({
+  data,
+  errors,
+  meta,
+  parserOptions,
+  parser,
+  onBatch,
+  fileSizeEstimateBytes
+}: {
+  data: unknown[];
+  errors: Papa.ParseError[];
+  meta: Papa.ParseMeta;
+  parserOptions: ParseCsvOptions;
+  parser?: Papa.Parser;
+  onBatch: OnBatchCallback;
+  fileSizeEstimateBytes: number;
+}) => {
   const results = papaResultToJson({ data, errors, meta: meta }, parserOptions);
-  const estimatedProgress = meta.cursor / fileSizeBytes;
+  const estimatedProgress = meta.cursor / fileSizeEstimateBytes;
 
   try {
-    await onChunk(results, { estimatedProgress, ...metaToParseMeta(meta) });
+    await onBatch(results, { estimatedProgress, ...metaToParseMeta(meta) });
   } catch (error) {
     // the user can throw an error to abort processing the file
     parser?.abort();
@@ -121,55 +130,69 @@ const processChunk = async (
 
 const calcAmountToProcess = (
   chunk: Papa.ParseResult<unknown>,
-  chunkRowCount: number,
+  batchRowCount: number,
   forceFinish: boolean,
-  onChunkConcurrentMin: number
+  batchSizeMin: number
 ) => {
   if (forceFinish) {
     return chunk.data.length;
   }
-  const chunks = Math.floor(chunk.data.length / chunkRowCount);
-  if (chunks < onChunkConcurrentMin) {
+  const chunks = Math.floor(chunk.data.length / batchRowCount);
+  if (chunks < batchSizeMin) {
     return 0;
   }
-  return chunks * chunkRowCount;
+  return chunks * batchRowCount;
 };
 
-const processPapaChunk = async (
-  papaChunk: Papa.ParseResult<unknown>,
-  parser: Papa.Parser | null,
-  parserOptions: ParseCsvOptions,
-  chunkRowCount: number,
-  averageCursorPerRow: number,
-  fileSizeBytes: number,
-  onChunkBatchSizeMin: number,
-  onChunkConcurrentMax: number,
-  onChunk: OnBatchCallback,
+const processPapaChunk = async ({
+  papaChunk,
+  parser,
+  parserOptions,
+  batchRowCount,
+  averageCursorPerRow,
+  fileSizeBytes,
+  batchSizeMin,
+  concurrentBatchMax,
+  onBatch,
   forceFinish = false
-): Promise<Papa.ParseResult<unknown>> => {
-  const amountToProcess = calcAmountToProcess(papaChunk, chunkRowCount, forceFinish, onChunkBatchSizeMin);
+}: {
+  papaChunk: Papa.ParseResult<unknown>;
+  parser?: Papa.Parser;
+  parserOptions: ParseCsvOptions;
+  batchRowCount: number;
+  averageCursorPerRow: number;
+  fileSizeBytes: number;
+  batchSizeMin: number;
+  concurrentBatchMax: number;
+  onBatch: OnBatchCallback;
+  forceFinish?: boolean;
+}): Promise<Papa.ParseResult<unknown>> => {
+  const amountToProcess = calcAmountToProcess(papaChunk, batchRowCount, forceFinish, batchSizeMin);
 
   if (amountToProcess <= 0) {
     return papaChunk;
   }
   const data = papaChunk.data.splice(0, amountToProcess);
   const errors = papaChunk.errors.splice(0, amountToProcess);
-  const chunks = chunkArray(data, chunkRowCount);
-  const promises = chunks.map((chunkData, index) => {
-    const estimatedCursor = Math.floor(papaChunk.meta.cursor - averageCursorPerRow * chunkData.length * index);
-    const fileSizeEstimate = isDefined(parserOptions.limit) ? averageCursorPerRow * parserOptions.limit : fileSizeBytes;
+  const batches = chunkArray(data, batchRowCount);
+  const promises = batches.map((batchData, index) => {
+    // cursor is how far through the file we are. Here we interpolate the cursor for the batches we are processing
+    const estimatedCursor = Math.floor(papaChunk.meta.cursor - averageCursorPerRow * batchData.length * index);
+    const fileSizeEstimateBytes = isDefined(parserOptions.limit)
+      ? averageCursorPerRow * parserOptions.limit
+      : fileSizeBytes;
     return () =>
-      processChunk(
-        chunkData,
+      processBatch({
+        data: batchData,
         errors,
-        { ...papaChunk.meta, cursor: estimatedCursor },
+        meta: { ...papaChunk.meta, cursor: estimatedCursor },
         parserOptions,
         parser,
-        onChunk,
-        fileSizeEstimate
-      );
+        onBatch,
+        fileSizeEstimateBytes
+      });
   });
-  const queue = new PQueue({ concurrency: onChunkConcurrentMax, carryoverConcurrencyCount: true });
+  const queue = new PQueue({ concurrency: concurrentBatchMax, carryoverConcurrencyCount: true });
   await queue.addAll(promises);
   return papaChunk;
 };
