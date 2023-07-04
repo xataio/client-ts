@@ -103,5 +103,9 @@
     {
       "path": "packages/codegen/dist/index.cjs"
     }
-  ]
+  ],
+  "engines": {
+    "node": ">=18.12.1 <19",
+    "pnpm": "^8.6.5"
+  }
 }
