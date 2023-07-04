@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.12.7
+
+### Patch Changes
+
+- [#1066](https://github.com/xataio/client-ts/pull/1066) [`c1198fc6`](https://github.com/xataio/client-ts/commit/c1198fc6a3785a325711c71f8b8201601f3ccd4d) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix codegen not using tables from options
+
 ## 0.12.6
 
 ### Patch Changes
