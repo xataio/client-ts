@@ -344,6 +344,9 @@ importers:
 
   packages/codegen:
     dependencies:
+      '@xata.io/client':
+        specifier: workspace:*
+        version: link:../client
       case:
         specifier: ^1.6.3
         version: 1.6.3
