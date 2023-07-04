@@ -30,7 +30,7 @@ const isFloat = <T>(
 const isDateTime = <T>(value: T): boolean => anyToDate(value).invalid === undefined;
 
 const isBoolean = <T>(value: T, booleanValues: BooleanValues): boolean =>
-  [...booleanValues.true, ...booleanValues.false].includes(String(value).toLowerCase());
+  [...booleanValues.true, ...booleanValues.false].map((s) => s.toLowerCase()).includes(String(value).toLowerCase());
 
 const isEmail = <T>(value: T): boolean => /^\S+@\S+\.\S+$/.test(String(value));
 
@@ -80,10 +80,10 @@ export const guessColumnTypes = <T>(
 
 const coerceBoolean = (value: unknown, booleanValues: BooleanValues): boolean | null => {
   const valueString = String(value).toLowerCase();
-  if (booleanValues.true.includes(valueString)) {
+  if (booleanValues.true.map((b) => b.toLowerCase()).includes(valueString)) {
     return true;
   }
-  if (booleanValues.false.includes(valueString)) {
+  if (booleanValues.false.map((b) => b.toLowerCase()).includes(valueString)) {
     return false;
   }
   return null;

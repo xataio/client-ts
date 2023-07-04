@@ -26,6 +26,8 @@ const guessBooleansTestCases = [
   { input: [false], expected: 'bool' },
   { input: ['true', 'false', true, 'false', 'foo'], expected: 'string' },
   { input: ['yep', 'nope'], options: { booleanValues: { true: ['yep'], false: ['nope'] } }, expected: 'bool' },
+  { input: ['Yep', 'Nope'], options: { booleanValues: { true: ['yep'], false: ['nope'] } }, expected: 'bool' },
+  { input: ['Yep', 'Nope'], options: { booleanValues: { true: ['Yep'], false: ['Nope'] } }, expected: 'bool' },
   { input: ['true', 'false'], options: { booleanValues: { true: ['yep'], false: ['nope'] } }, expected: 'string' }
 ];
 
@@ -211,6 +213,8 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
     { input: '1.1', type: 'string', expected: '1.1' },
     { input: '1', type: 'string', expected: '1' },
     { input: 'true', type: 'bool', expected: true },
+    { input: 'nope', type: 'bool', expected: false, options: { booleanValues: { true: ['yep'], false: ['nope'] } } },
+    { input: 'Yep', type: 'bool', expected: true, options: { booleanValues: { true: ['Yep'], false: ['Nope'] } } },
     { input: 'false', type: 'bool', expected: false },
     { input: 'T', type: 'bool', expected: true },
     { input: 'notABool', type: 'bool', expected: null },

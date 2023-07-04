@@ -2,9 +2,8 @@ import { buildClient } from '@xata.io/client';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { join } from 'path';
-import { expect, test, describe } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { XataImportPlugin } from '../src/plugin';
-import { ParseCsvOptions, ParseJsonOptions, ParseResults } from '../src/types';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -94,61 +93,6 @@ describe('@xata.io/importer plugin', () => {
   //   });
   //   test('errors for invalid json', () => {
   //     expect(() => xata.import.parseJson({ data: '{asadasd,}' })).toThrowError('JSON5: invalid character');
-  //   });
-  // });
-
-  // describe('parseCsv', () => {
-  //   const testCases: { name: string; input: ParseCsvOptions; expected: ParseResults }[] = [
-  //     {
-  //       name: 'empty',
-  //       input: { data: '' },
-  //       expected: {
-  //         success: true,
-  //         columns: [],
-  //         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-  //         data: []
-  //       }
-  //     },
-  //     {
-  //       name: 'simple',
-  //       input: { data: 'name\nXata' },
-  //       expected: {
-  //         success: true,
-  //         columns: [{ name: 'name', type: 'string' }],
-  //         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-  //         data: [{ name: 'Xata' }]
-  //       }
-  //     },
-  //     {
-  //       name: 'simple with schema',
-  //       input: { data: 'name\nXata', columns: [{ name: 'name', type: 'text' }] },
-  //       expected: {
-  //         success: true,
-  //         columns: [{ name: 'name', type: 'text' }],
-  //         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-  //         data: [{ name: 'Xata' }]
-  //       }
-  //     },
-  //     {
-  //       name: 'multiple',
-  //       input: { data: 'name,dob\nXata,2019-01-01' },
-  //       expected: {
-  //         success: true,
-  //         columns: [
-  //           { name: 'name', type: 'string' },
-  //           { name: 'dob', type: 'datetime' }
-  //         ],
-  //         warnings: [],
-  //         data: [{ name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') }]
-  //       }
-  //     }
-  //   ];
-
-  //   testCases.forEach(({ name, input, expected }) => {
-  //     test(name, () => {
-  //       const result = xata.import.parseCsv(input);
-  //       expect(result).toEqual(expected);
-  //     });
   //   });
   // });
 });

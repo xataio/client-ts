@@ -1,9 +1,16 @@
 import { Schemas } from '@xata.io/client';
 import stream from 'stream';
 
+type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+
 type Column = Schemas.Column;
 
-export type ParseOptions = ParseCsvOptions | ParseJsonOptions;
+export type BooleanValues = { true: string[]; false: string[] };
+
+export type ColumnOptions = {
+  isNull?: (value: unknown) => boolean;
+  booleanValues?: BooleanValues;
+};
 
 export type ParseCommonOptions = {
   /**
@@ -21,11 +28,6 @@ export type ParseCommonOptions = {
 } & ColumnOptions;
 
 export type ParseCsvOptions = ParseCommonOptions & {
-  /**
-   * The CSV string data to parse.
-   */
-  // todo - move this?
-  data: string;
   /**
    * The delimiting character.
    * Leave blank to auto-detect from a list of most common delimiters, or any values passed in through `delimitersToGuess`.
@@ -74,8 +76,6 @@ export type ParseCsvOptions = ParseCommonOptions & {
   commentPrefix?: string;
 };
 
-type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
-
 export type ParseJsonOptions = ParseCommonOptions & {
   /**
    * The JSON string data to parse.
@@ -85,14 +85,25 @@ export type ParseJsonOptions = ParseCommonOptions & {
   data: string | unknown[] | Record<string, unknown>;
 };
 
-export type CsvStreamParserOptions = Omit<ParseCsvOptions, 'data'>;
-
-export type ParseCsvStreamOptionsSync = ParseStreamOptionsSync<CsvStreamParserOptions>;
-export type ParseCsvStreamOptions = ParseStreamOptions<WithRequired<CsvStreamParserOptions, 'columns'>>;
-
 export type OnBatchCallback = (parseResults: ParseResults, meta: ParseMeta) => Promise<void>;
 
-export type ParseStreamOptions<ParserOptions> = ParseStreamOptionsSync<ParserOptions> & {
+export interface ParseStreamOptions<ParserOptions> {
+  /**
+   * The file to import.
+   */
+  // todo: should/could this be a stream? alexis: node stream or v8 stream.
+  // localfile from papa, without referencing papa!
+  fileStream: stream.Readable | File;
+
+  /**
+   * Additional options to pass to the parser.
+   */
+  parserOptions: ParserOptions;
+}
+
+export type ParseCsvStreamOptions = ParseStreamOptions<ParseCsvOptions>;
+
+export type ParseCsvStreamBatchesOptions = {
   /**
    * todo: comment
    */
@@ -108,21 +119,7 @@ export type ParseStreamOptions<ParserOptions> = ParseStreamOptionsSync<ParserOpt
 
   onBatch?: OnBatchCallback;
   fileSizeBytes: number;
-};
-
-export interface ParseStreamOptionsSync<ParserOptions> {
-  /**
-   * The file to import.
-   */
-  // todo: should/could this be a stream? alexis: node stream or v8 stream.
-  // localfile from papa, without referencing papa!
-  fileStream: stream.Readable | File;
-
-  /**
-   * Additional options to pass to the parser.
-   */
-  parserOptions: ParserOptions;
-}
+} & ParseStreamOptions<WithRequired<ParseCsvOptions, 'columns'>>;
 
 export type ParseMeta = {
   estimatedProgress: number;
@@ -140,7 +137,7 @@ export type ParseResults =
     }
   | { success: false; errors: string[] };
 
-export type SyncCsvResults = {
+export type CsvResults = {
   results: ParseResults;
   meta: ParseMeta;
 };
@@ -149,11 +146,4 @@ export type ImportBatchOptions = {
   columns: Column[];
   table: string;
   batch: ParseResults;
-};
-
-export type BooleanValues = { true: string[]; false: string[] };
-
-export type ColumnOptions = {
-  isNull?: (value: unknown) => boolean;
-  booleanValues?: BooleanValues;
 };

@@ -5,7 +5,7 @@ import { parseJson } from './jsonParser';
 
 export const DEFAULT_CSV_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x1F'];
 
-export const parseCsvOptionsToPapaOptions = (options: Omit<ParseCsvOptions, 'data'>) => {
+export const parseCsvOptionsToPapaOptions = (options: ParseCsvOptions) => {
   const {
     limit,
     delimiter,
@@ -44,7 +44,7 @@ const dataForColumns = (data: unknown[], columns: ParseCsvOptions['columns']) =>
 
 export const papaResultToJson = (
   { data, errors }: CSV.ParseResult<unknown>,
-  options: Omit<ParseCsvOptions, 'data'>
+  options: ParseCsvOptions
 ): ParseResults => {
   const parseWarnings = errors.map((error) => error.message);
 
