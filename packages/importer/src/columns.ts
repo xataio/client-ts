@@ -1,6 +1,6 @@
 import type { Schemas } from '@xata.io/client';
 import AnyDateParser from 'any-date-parser';
-import { BooleanValues, ColumnOptions } from './types';
+import { ColumnOptions, ToBoolean } from './types';
 import { isDefined } from './utils/lang';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
@@ -29,8 +29,10 @@ const isFloat = <T>(
 
 const isDateTime = <T>(value: T): boolean => anyToDate(value).invalid === undefined;
 
-const isBoolean = <T>(value: T, booleanValues: BooleanValues): boolean =>
-  [...booleanValues.true, ...booleanValues.false].map((s) => s.toLowerCase()).includes(String(value).toLowerCase());
+const isBoolean = <T>(value: T, toBoolean: ToBoolean): boolean => {
+  const toBooleanValue = toBoolean(value);
+  return isDefined(toBooleanValue) && [true, false].includes(toBooleanValue);
+};
 
 const isEmail = <T>(value: T): boolean => /^\S+@\S+\.\S+$/.test(String(value));
 
@@ -45,18 +47,28 @@ const defaultIsNull = (value: unknown): boolean => {
   return !isDefined(value) || String(value).toLowerCase() === 'null' || String(value).trim() === '';
 };
 
-const defaultBooleanValues: BooleanValues = { true: ['true', 't', 'yes', 'y'], false: ['false', 'f', 'no', 'n'] };
+const DEFAULT_BOOLEAN_VALUES = { true: ['true', 't', 'yes', 'y'], false: ['false', 'f', 'no', 'n'] };
+
+const defaultToBoolean: ToBoolean = (value) => {
+  if (DEFAULT_BOOLEAN_VALUES.true.includes(String(value).toLocaleLowerCase())) {
+    return true;
+  }
+  if (DEFAULT_BOOLEAN_VALUES.false.includes(String(value).toLocaleLowerCase())) {
+    return false;
+  }
+  return null;
+};
 
 export const guessColumnTypes = <T>(
   columnValuesWithNulls: T[],
   options: ColumnOptions = {}
 ): Schemas.Column['type'] => {
-  const { isNull = defaultIsNull, booleanValues = defaultBooleanValues } = options;
+  const { isNull = defaultIsNull, toBoolean = defaultToBoolean } = options;
   const columnValues = columnValuesWithNulls.filter((value) => !isNull(value));
   if (columnValues.length === 0) {
     return 'string';
   }
-  if (columnValues.every((value) => isBoolean(value, booleanValues))) {
+  if (columnValues.every((value) => isBoolean(value, toBoolean))) {
     return 'bool';
   }
   // Integer needs to be checked before Float
@@ -79,23 +91,12 @@ export const guessColumnTypes = <T>(
   return 'string';
 };
 
-const coerceBoolean = (value: unknown, booleanValues: BooleanValues): boolean | null => {
-  const valueString = String(value).toLowerCase();
-  if (booleanValues.true.map((b) => b.toLowerCase()).includes(valueString)) {
-    return true;
-  }
-  if (booleanValues.false.map((b) => b.toLowerCase()).includes(valueString)) {
-    return false;
-  }
-  return null;
-};
-
 export const coerceValue = (
   value: unknown,
   type: Schemas.Column['type'],
   options: ColumnOptions = {}
 ): string | number | boolean | Date | null => {
-  const { isNull = defaultIsNull, booleanValues = defaultBooleanValues } = options;
+  const { isNull = defaultIsNull, toBoolean = defaultToBoolean } = options;
 
   if (isNull(value)) {
     return null;
@@ -113,7 +114,7 @@ export const coerceValue = (
       return isFloat(value) ? parseFloat(String(value)) : null;
     }
     case 'bool': {
-      return coerceBoolean(value, booleanValues);
+      return toBoolean(value);
     }
     case 'datetime': {
       const date = anyToDate(value);

@@ -1,7 +1,8 @@
 import { Schemas } from '@xata.io/client';
 import { expect, test, describe } from 'vitest';
 import { coerceRows, coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
-import { ColumnOptions } from '../src/types';
+import { ColumnOptions, ToBoolean } from '../src/types';
+import { yepNopeToBoolean } from './utils';
 
 const guessNumbersTestCases = [
   { input: ['1', '2', '3'], expected: 'int' },
@@ -25,10 +26,8 @@ const guessBooleansTestCases = [
   { input: [true], expected: 'bool' },
   { input: [false], expected: 'bool' },
   { input: ['true', 'false', true, 'false', 'foo'], expected: 'string' },
-  { input: ['yep', 'nope'], options: { booleanValues: { true: ['yep'], false: ['nope'] } }, expected: 'bool' },
-  { input: ['Yep', 'Nope'], options: { booleanValues: { true: ['yep'], false: ['nope'] } }, expected: 'bool' },
-  { input: ['Yep', 'Nope'], options: { booleanValues: { true: ['Yep'], false: ['Nope'] } }, expected: 'bool' },
-  { input: ['true', 'false'], options: { booleanValues: { true: ['yep'], false: ['nope'] } }, expected: 'string' }
+  { input: ['yep', 'nope'], options: { toBoolean: yepNopeToBoolean }, expected: 'bool' },
+  { input: ['true', 'false'], options: { toBoolean: yepNopeToBoolean }, expected: 'string' }
 ];
 
 const guessEmailsTestCases = [
@@ -213,8 +212,12 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
     { input: '1.1', type: 'string', expected: '1.1' },
     { input: '1', type: 'string', expected: '1' },
     { input: 'true', type: 'bool', expected: true },
-    { input: 'nope', type: 'bool', expected: false, options: { booleanValues: { true: ['yep'], false: ['nope'] } } },
-    { input: 'Yep', type: 'bool', expected: true, options: { booleanValues: { true: ['Yep'], false: ['Nope'] } } },
+    {
+      input: 'nope',
+      type: 'bool',
+      expected: false,
+      options: { toBoolean: yepNopeToBoolean }
+    },
     { input: 'false', type: 'bool', expected: false },
     { input: 'T', type: 'bool', expected: true },
     { input: 'notABool', type: 'bool', expected: null },

@@ -5,11 +5,11 @@ type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
 type Column = Schemas.Column;
 
-export type BooleanValues = { true: string[]; false: string[] };
+export type ToBoolean = (value: unknown) => boolean | null;
 
 export type ColumnOptions = {
   isNull?: (value: unknown) => boolean;
-  booleanValues?: BooleanValues;
+  toBoolean?: ToBoolean;
 };
 
 export type ParseCommonOptions = {

@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { omit, isNil } from 'lodash';
 import { XataImportPlugin } from '../src/plugin';
 import { CsvResults, ParseCsvOptions, ParseCsvStreamBatchesOptions, ParseMeta, ParseResults } from '../src/types';
+import { yepNopeToBoolean } from './utils';
 
 const ONE_DECIMAL_PLACE = 1;
 
@@ -104,8 +105,8 @@ const commonTestCases: CommonTestCase[] = [
   },
   {
     name: 'booleans custom',
-    fileContents: 'boolean\nYep\nNope',
-    options: { booleanValues: { true: ['Yep'], false: ['Nope'] } },
+    fileContents: 'boolean\nyep\nnope',
+    options: { toBoolean: yepNopeToBoolean },
     expected: {
       results: {
         success: true,
