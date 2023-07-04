@@ -8,7 +8,13 @@ type Column = Schemas.Column;
 export type ToBoolean = (value: unknown) => boolean | null;
 
 export type ColumnOptions = {
+  /**
+   * A function to check if a value is null.
+   */
   isNull?: (value: unknown) => boolean;
+  /**
+   * A function to convert a value to a boolean. Should return true, false or null (not a boolean).
+   */
   toBoolean?: ToBoolean;
 };
 
@@ -91,8 +97,6 @@ export interface ParseStreamOptions<ParserOptions> {
   /**
    * The file to import.
    */
-  // todo: should/could this be a stream? alexis: node stream or v8 stream.
-  // localfile from papa, without referencing papa!
   fileStream: stream.Readable | File;
 
   /**
@@ -105,18 +109,23 @@ export type ParseCsvStreamOptions = ParseStreamOptions<ParseCsvOptions>;
 
 export type ParseCsvStreamBatchesOptions = {
   /**
-   * todo: comment
+   * The number of rows in a batch.
+   * @default 1000
    */
   batchRowCount?: number;
   /**
-   * todo: comment
+   * The minimum number of rows for the csv parser to collect before processing batches.
+   * @default 10
    */
   batchSizeMin?: number;
   /**
-   * todo: comment
+   * The maximum number of `onBatch` callbacks to run concurrently.
+   * @default 5
    */
   concurrentBatchMax?: number;
-
+  /**
+   * Callback to run for each batch.
+   */
   onBatch?: OnBatchCallback;
   fileSizeBytes: number;
 } & ParseStreamOptions<WithRequired<ParseCsvOptions, 'columns'>>;
