@@ -2015,9 +2015,11 @@ export const initObject = <T>(
   const { columns } = schemaTables.find(({ name }) => name === table) ?? {};
   if (!columns) console.error(`Table ${table} not found in schema`);
 
+  const columnsToInit = compact(selectedColumns?.map((column) => column.split('.')[0]) ?? []);
+
   for (const column of columns ?? []) {
     // Ignore columns not selected
-    if (!isValidColumn(selectedColumns, column)) continue;
+    if (!isValidColumn(columnsToInit, column)) continue;
 
     const value = data[column.name];
 
