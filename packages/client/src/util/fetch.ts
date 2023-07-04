@@ -1,11 +1,13 @@
 import { parseNumber, timeout } from './lang';
 
-export type RequestInit = { body?: string; headers?: Record<string, string>; method?: string; signal?: any };
+export type RequestInit = { body?: any; headers?: Record<string, string>; method?: string; signal?: any };
 export type Response = {
   ok: boolean;
   status: number;
   url: string;
   json(): Promise<any>;
+  text(): Promise<string>;
+  blob(): Promise<Blob>;
   headers?: {
     get(name: string): string | null;
   };
