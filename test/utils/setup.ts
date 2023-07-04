@@ -68,11 +68,13 @@ export async function setUpTestEnvironment(
     );
   }
 
-  const fetch = vi.fn(
-    withHar(envFetch ?? realFetch, {
-      onHarEntry: (entry: string) => console.log('HAR', JSON.stringify(entry))
-    })
-  );
+  const fetchToUse = envFetch ?? realFetch;
+  const fetchWithHar = process.env.XATA_DEBUG
+    ? withHar(fetchToUse, {
+        onHarEntry: (entry: string) => console.log('HAR', JSON.stringify(entry))
+      })
+    : fetchToUse;
+  const fetch = vi.fn(fetchWithHar);
 
   const { trace, tracer } = await setupTracing();
 
