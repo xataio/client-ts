@@ -113,20 +113,24 @@ export type ParseCsvStreamBatchesOptions = {
    * @default 1000
    */
   batchRowCount?: number;
+
   /**
    * The minimum number of rows for the csv parser to collect before processing batches.
    * @default 10
    */
   batchSizeMin?: number;
+
   /**
    * The maximum number of `onBatch` callbacks to run concurrently.
    * @default 5
    */
   concurrentBatchMax?: number;
+
   /**
    * Callback to run for each batch.
    */
   onBatch?: OnBatchCallback;
+
   fileSizeBytes: number;
 } & ParseStreamOptions<WithRequired<ParseCsvOptions, 'columns'>>;
 
