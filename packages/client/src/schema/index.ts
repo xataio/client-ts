@@ -9,7 +9,7 @@ export * from './inference';
 export * from './operators';
 export * from './pagination';
 export { Query } from './query';
-export { isIdentifiable, isXataRecord } from './record';
+export { isIdentifiable, isXataRecord, RecordColumnTypes } from './record';
 export type { BaseData, EditableData, Identifiable, Link, XataRecord, JSONData } from './record';
 export { XataFile } from './files';
 export type { XataArrayFile } from './files';

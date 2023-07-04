@@ -31,6 +31,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/codegen/README.md",
   "dependencies": {
+    "@xata.io/client": "workspace:*",
     "case": "^1.6.3",
     "prettier": "^2.8.8",
     "ts-morph": "^19.0.0",

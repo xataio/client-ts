@@ -1,7 +1,23 @@
 import { isObject, isString } from '../util/lang';
-import { ExclusiveOr, RequiredBy } from '../util/types';
+import { ExclusiveOr } from '../util/types';
 import { XataArrayFile, XataFile } from './files';
 import { SelectableColumn, SelectedPick } from './selection';
+
+export const RecordColumnTypes = [
+  'bool',
+  'int',
+  'float',
+  'string',
+  'text',
+  'email',
+  'multiple',
+  'link',
+  'object',
+  'datetime',
+  'vector',
+  'file[]',
+  'file'
+] as const;
 
 export type Identifier = string;
 
