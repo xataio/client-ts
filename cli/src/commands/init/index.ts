@@ -153,6 +153,11 @@ export default class Init extends BaseCommand<typeof Init> {
       await this.installPackage(packageManager, '@xata.io/client');
     }
 
+    const branch = this.getCurrentBranchName();
+    if (schema) {
+      await this.deploySchema(workspace, region, database, branch, schema);
+    }
+
     await Codegen.runIfConfigured(this.projectConfig);
     await this.delay(1000);
 
@@ -160,11 +165,6 @@ export default class Init extends BaseCommand<typeof Init> {
     this.success('Project setup with Xata 🦋');
     await this.delay(2000);
     this.log();
-
-    const branch = this.getCurrentBranchName();
-    if (schema) {
-      await this.deploySchema(workspace, region, database, branch, schema);
-    }
 
     if (this.projectConfig?.codegen?.output) {
       const { schema: currentSchema } = await (
