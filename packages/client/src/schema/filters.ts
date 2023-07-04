@@ -115,8 +115,9 @@ export type Filter<T> = T extends Record<string, any>
     : BaseApiFilter<T> | NestedApiFilter<T>
   : PropertyFilter<T>;
 
-export function cleanFilter(filter?: FilterExpression | FilterPredicate): FilterExpression | undefined {
+export function cleanFilter(filter?: FilterExpression | FilterPredicate): any {
   if (!isDefined(filter)) return undefined;
+  if (!isObject(filter)) return filter;
 
   const values = Object.fromEntries(
     Object.entries(filter).reduce((acc, [key, value]) => {
