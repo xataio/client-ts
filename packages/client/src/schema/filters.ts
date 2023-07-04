@@ -1,5 +1,5 @@
 import { FilterExpression, FilterPredicate } from '../api/schemas';
-import { isDefined } from '../util/lang';
+import { isDefined, isObject } from '../util/lang';
 import { SingleOrArray } from '../util/types';
 import { XataRecordMetadata } from './record';
 import { ColumnsByValue, ValueAtColumn } from './selection';
@@ -129,6 +129,14 @@ export function cleanFilter(filter?: FilterExpression | FilterPredicate): Filter
 
         // Remove empty arrays
         if (clean.length === 0) return acc;
+
+        return [...acc, [key, clean]];
+      }
+
+      if (isObject(value)) {
+        // Remove empty objects
+        const clean = cleanFilter(value);
+        if (!isDefined(clean)) return acc;
 
         return [...acc, [key, clean]];
       }
