@@ -1,24 +1,12 @@
-import { buildClient } from '@xata.io/client';
-import dotenv from 'dotenv';
-import fetch from 'node-fetch';
-import { join } from 'path';
+import { isNil, omit } from 'lodash';
 import { Readable } from 'stream';
 import { describe, expect, test } from 'vitest';
-import { omit, isNil } from 'lodash';
-import { XataImportPlugin } from '../src/plugin';
 import { CsvResults, ParseCsvOptions, ParseCsvStreamBatchesOptions, ParseMeta, ParseResults } from '../src/types';
-import { yepNopeToBoolean } from './utils';
+import { getXataClientWithPlugin, yepNopeToBoolean } from './utils';
 
 const ONE_DECIMAL_PLACE = 1;
 
-// Get environment variables before reading them
-dotenv.config({ path: join(process.cwd(), '.env') });
-
-const XataClient = buildClient({
-  import: new XataImportPlugin()
-});
-
-const xata = new XataClient({ fetch, apiKey: 'xau_test123', databaseURL: 'https://something.com' });
+const xata = getXataClientWithPlugin();
 
 const stringToStream = (str: string) => {
   const stream = new Readable();

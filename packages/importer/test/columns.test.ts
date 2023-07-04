@@ -1,7 +1,7 @@
 import { Schemas } from '@xata.io/client';
-import { expect, test, describe } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { coerceRows, coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
-import { ColumnOptions, ToBoolean } from '../src/types';
+import { ColumnOptions } from '../src/types';
 import { yepNopeToBoolean } from './utils';
 
 const guessNumbersTestCases = [
