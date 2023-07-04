@@ -131,6 +131,9 @@ export type ParseCsvStreamBatchesOptions = {
    */
   onBatch?: OnBatchCallback;
 
+  /**
+   * file size in bytes. Used to estimate progress
+   */
   fileSizeBytes: number;
 } & ParseStreamOptions<WithRequired<ParseCsvOptions, 'columns'>>;
 
