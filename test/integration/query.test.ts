@@ -735,4 +735,13 @@ describe('integration tests', () => {
     const team = await xata.db.teams.filter({ labels: newTeam.labels }).getFirst();
     expect(team?.id).toEqual(newTeam.id);
   });
+
+  test('Partial filters should work', async () => {
+    const newTeam = await xata.db.teams.create({ name: 'A random real team', labels: ['a', 'b'] });
+    const maybeId = undefined;
+
+    const records = await xata.db.teams.filter({ id: maybeId, name: newTeam.name }).getMany();
+
+    expect(records).toHaveLength(1);
+  });
 });
