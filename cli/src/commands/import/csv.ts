@@ -97,6 +97,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       })
     ).results;
     parseStream.close();
+
     if (!parseResults.success) {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }
@@ -126,7 +127,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const fileStream = await getFileStream();
     await xata.import.parseCsvStreamBatches({
       fileStream: fileStream,
-      fileSizeBytes: (await (await open(file, 'r')).stat()).size,
+      fileSizeBytes: await getFileSizeBytes(file),
       parserOptions: { ...csvOptions, columns },
       batchRowCount: 1000,
       onBatch: async (parseResults, meta) => {
@@ -185,3 +186,10 @@ export function splitCommas(value: unknown): string[] {
     .split(',')
     .map((s) => s.trim());
 }
+
+const getFileSizeBytes = async (file: string) => {
+  const fileHandle = await open(file, 'r');
+  const stat = await fileHandle.stat();
+  await fileHandle.close();
+  return stat.size;
+};
