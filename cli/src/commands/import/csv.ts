@@ -54,7 +54,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   };
 
   static args = {
-    file: Args.string({ description: 'File to import', required: true })
+    file: Args.string({ description: 'The file to be imported', required: true })
   };
 
   async run(): Promise<void> {
