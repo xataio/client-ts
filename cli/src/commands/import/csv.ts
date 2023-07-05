@@ -66,7 +66,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       'no-header': noHeader,
       create,
       'no-column-name-normalization': noColumnNameNormalization,
-      'batch-size': batchSize,
+      'batch-size': batchSize = 1000,
       'max-rows': limit,
       delimiter,
       'null-value': nullValues
@@ -130,7 +130,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       fileStream: fileStream,
       fileSizeBytes: await getFileSizeBytes(file),
       parserOptions: { ...csvOptions, columns },
-      batchRowCount: 1000,
+      batchRowCount: batchSize,
       onBatch: async (parseResults, meta) => {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
