@@ -56,6 +56,7 @@ const guessDatesTestCases = [
   { input: ['2020-01-01T00:00:00+00:00'], expected: 'datetime' },
   { input: ['2020-01-01T00:00:00+01:00'], expected: 'datetime' },
   { input: ['today', 'yesterday'], expected: 'datetime' }
+  // todo: add invalid test cases with more variety
 ];
 
 const guessNullTestCases = [

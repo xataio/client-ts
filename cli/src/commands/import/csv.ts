@@ -2,6 +2,7 @@ import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { open } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
+import { importColumnTypes } from '@xata.io/importer';
 
 export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
@@ -170,12 +171,21 @@ const flagsToColumns = (flags: {
   }
   const columns = splitCommas(flags.columns);
   const types = splitCommas(flags.types);
+  const invalidTypes = types.filter((t) => !importColumnTypes.safeParse(t).success);
+
+  if (invalidTypes.length > 0) {
+    throw new Error(
+      `Invalid column types: ${invalidTypes.join(', ')} column type should be one of: ${Object.keys(
+        importColumnTypes.Values
+      ).join(', ')}`
+    );
+  }
+
   if (columns?.length !== types?.length) {
     throw new Error('Must specify same number of columns and types');
   }
   return columns.map((name, i) => {
-    // probably should assert the type here :\
-    const type = types[i] as Schemas.Column['type'];
+    const type = importColumnTypes.parse(types[i]);
     return { name, type };
   });
 };
