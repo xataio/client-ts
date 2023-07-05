@@ -2138,15 +2138,8 @@ function isValidColumn(columns: string[], column: Schemas.Column) {
   // Every column alias
   if (columns.includes('*')) return true;
 
-  // Link columns
-  if (column.type === 'link') {
-    const linkColumns = columns.filter((item) => item.startsWith(column.name));
-
-    return linkColumns.length > 0;
-  }
-
-  // Normal columns
-  return columns.includes(column.name);
+  // Match column name and all its children (foo, foo.bar, foo.bar.baz)
+  return columns.filter((item) => item.startsWith(column.name)).length > 0;
 }
 
 function parseIfVersion(...args: any[]): number | undefined {
