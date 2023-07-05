@@ -21,7 +21,13 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
 
   const fetch = vi.fn(realFetch);
   const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra }, [
-    { name: 'users', columns: [{ name: 'name', type: 'string' }] }
+    {
+      name: 'users',
+      columns: [
+        { name: 'name', type: 'string' },
+        { name: 'email', type: 'string' }
+      ]
+    }
   ]);
 
   const users = client.db.users;
