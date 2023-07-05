@@ -1,5 +1,5 @@
 import { If, IsArray, IsObject, StringKeys, UnionToIntersection, Values } from '../util/types';
-import { XataArrayFile, XataFile } from './files';
+import { XataArrayFile, XataFile, XataFileEditableFields } from './files';
 import { Link, XataRecord } from './record';
 
 // Public: Utility type to get a union with the selectable columns of an object
@@ -80,7 +80,11 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
         [K in DataProps<O>]: NonNullable<O[K]> extends infer Item
           ? If<
               IsArray<Item>,
-              Item extends (infer Type)[] ? K | `${K}.${StringKeys<Type> | '*'}` : never,
+              Item extends (infer Type)[]
+                ? Type extends XataArrayFile
+                  ? K | `${K}.${keyof XataFileEditableFields | '*'}`
+                  : K | `${K}.${StringKeys<Type> | '*'}`
+                : never,
               If<
                 IsObject<Item>,
                 Item extends XataRecord
@@ -91,6 +95,8 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
                     : never
                   : Item extends Date
                   ? K
+                  : Item extends XataFile
+                  ? K | `${K}.${keyof XataFileEditableFields | '*'}` // This allows usage of objects that are not links
                   : `${K}.${StringKeys<Item> | '*'}`, // This allows usage of objects that are not links
                 K
               >

@@ -3,7 +3,7 @@ import { ImageTransformations, transformImage } from '../files/transformations';
 import { compactObject, isDefined } from '../util/lang';
 import { Identifiable } from './record';
 
-type XataFileEditableFields = Partial<Pick<XataArrayFile, keyof InputFileEntry>>;
+export type XataFileEditableFields = Partial<Pick<XataArrayFile, keyof InputFileEntry>>;
 
 export class XataFile {
   /**
