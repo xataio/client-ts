@@ -32,14 +32,19 @@ const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
 
 describe('file support', () => {
   test('create file with record', async () => {
-    const record = await xata.db.users.create({ name: 'test', attachments: [await XataFile.fromBlob(file)] }, [
-      'attachments.base64Content',
-      'attachments.name'
-    ]);
+    const record = await xata.db.users.create(
+      { name: 'test', attachments: [await XataFile.fromBlob(file)], photo: await XataFile.fromBlob(file) },
+      ['attachments.base64Content', 'attachments.name', 'photo.base64Content', 'photo.name']
+    );
 
     expect(record.attachments?.[0]?.name).toBe('hello.txt');
     expect(record.attachments?.[0]?.base64Content).toBeDefined();
     expect(record.attachments?.[0]?.toBlob()).toBeInstanceOf(Blob);
     expect(record.attachments?.[0]?.toString()).toBe('hello');
+
+    expect(record.photo?.name).toBe('hello.txt');
+    expect(record.photo?.base64Content).toBeDefined();
+    expect(record.photo?.toBlob()).toBeInstanceOf(Blob);
+    expect(record.photo?.toString()).toBe('hello');
   });
 });

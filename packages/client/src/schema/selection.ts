@@ -1,5 +1,5 @@
 import { If, IsArray, IsObject, StringKeys, UnionToIntersection, Values } from '../util/types';
-import { XataArrayFile } from './files';
+import { XataArrayFile, XataFile } from './files';
 import { Link, XataRecord } from './record';
 
 // Public: Utility type to get a union with the selectable columns of an object
@@ -111,7 +111,9 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
     ? N extends DataProps<O>
       ? {
           [K in N]: M extends SelectableColumn<NonNullable<O[K]>>
-            ? NonNullable<O[K]> extends XataRecord
+            ? NonNullable<O[K]> extends XataFile
+              ? ForwardNullable<O[K], XataFile>
+              : NonNullable<O[K]> extends XataRecord
               ? ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M> & XataRecord>
               : ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M>>
             : NonNullable<O[K]> extends (infer ArrayType)[]
