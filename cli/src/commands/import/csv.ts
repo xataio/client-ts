@@ -3,6 +3,7 @@ import { Schemas } from '@xata.io/client';
 import { open } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
 import { importColumnTypes } from '@xata.io/importer';
+import { Column } from '@xata.io/codegen';
 
 export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
@@ -83,13 +84,9 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     };
 
     const getFileStream = async () => (await open(file, 'r')).createReadStream();
-    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    const { workspace, region, database, branch } = await this.parseDatabase();
     const xata = await this.getXataClient();
 
-    const existingTable = await xata.import.findTable({ workspace, region, database, branch, table });
-    if (existingTable) {
-      throw new Error(`Table ${table} already exists. Only imports to new tables are supported`);
-    }
     const parseStream = await getFileStream();
     const parseResults = (
       await xata.import.parseCsvStream({
@@ -105,23 +102,10 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (!columns) {
       columns = parseResults.columns;
     }
-
-    // schema edit APIs?
-    // compare branch with user schema
-    // apply edits
-    // https://github.com/xataio/client-ts/pull/1035/files#diff-ed4fa305f46a5c6cae3a02562f34b8eb6d05d90cb530f0d7846c324a0d8acdea
-    await xata.api.tables.createTable({ workspace, region, database, branch, table });
-
-    for (const column of columns) {
-      await xata.api.tables.addTableColumn({
-        workspace,
-        region,
-        database,
-        branch,
-        table,
-        column
-      });
+    if (!columns) {
+      throw new Error('No columns found');
     }
+    await this.migrateSchema({ table, columns, create });
 
     let importSuccessCount = 0;
     let importErrorCount = 0;
@@ -155,6 +139,57 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     fileStream.close();
     this.success('Completed');
     process.exit(0);
+  }
+
+  async parseDatabase() {
+    const { flags } = await this.parseCommand();
+    return await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+  }
+
+  async migrateSchema({
+    table,
+    columns,
+    create
+  }: {
+    table: string;
+    columns: Column[];
+    create: boolean;
+  }): Promise<void> {
+    const xata = await this.getXataClient();
+    const { workspace, region, database, branch } = await this.parseDatabase();
+    const { schema: existingSchema } = await xata.api.branches.getBranchDetails({
+      workspace,
+      region,
+      database,
+      branch
+    });
+    const newSchema = {
+      tables: [...existingSchema.tables.filter((t) => t.name !== table), { name: table, columns }]
+    };
+    const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
+      workspace,
+      region,
+      database,
+      branch: 'main',
+      schema: newSchema
+    });
+    if (edits.operations.length > 0) {
+      const doesTableExist = existingSchema.tables.find((t) => t.name === table);
+      const { applyMigrations } = await this.prompt(
+        {
+          type: 'confirm',
+          name: 'applyMigrations',
+          message: `Do you want to ${doesTableExist ? 'update' : 'create'} table: ${table} with columns ${columns
+            .map((c) => c.name)
+            .join(', ')}?`
+        },
+        create
+      );
+      if (!applyMigrations) {
+        process.exit(1);
+      }
+      await xata.api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits });
+    }
   }
 }
 
