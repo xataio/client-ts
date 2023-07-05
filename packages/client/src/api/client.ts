@@ -1338,6 +1338,30 @@ class SearchAndFilterApi {
     });
   }
 
+  public chatSessionMessage({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    sessionId,
+    message
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    sessionId: string;
+    message: string;
+  }): Promise<Components.ChatSessionMessageResponse> {
+    return operationsByTag.searchAndFilter.chatSessionMessage({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, sessionId },
+      body: { message },
+      ...this.extraProps
+    });
+  }
+
   public summarizeTable({
     workspace,
     region,
