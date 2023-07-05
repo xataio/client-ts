@@ -37,7 +37,7 @@ import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
 import { AskOptions, AskResult } from './ask';
 import { CacheImpl } from './cache';
-import { parseInputFileEntry, XataFile } from './files';
+import { parseInputFileEntry, XataArrayFile, XataFile } from './files';
 import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
@@ -2060,10 +2060,10 @@ export const initObject = <T>(
         break;
       }
       case 'file':
-        data[column.name] = new XataFile(value as any);
+        data[column.name] = isDefined(value) ? new XataFile(value as any) : null;
         break;
       case 'file[]':
-        data[column.name] = (value as any[]).map((item) => new XataFile(item));
+        data[column.name] = (value as XataArrayFile[])?.map((item) => new XataFile(item)) ?? null;
         break;
       default:
         data[column.name] = value ?? null;
