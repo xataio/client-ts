@@ -37,9 +37,6 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     create: Flags.boolean({
       description: "Whether the table or columns should be created if they don't exist without asking"
     }),
-    'no-column-name-normalization': Flags.boolean({
-      description: 'Avoid changing column names in a normalized way'
-    }),
     'batch-size': Flags.integer({
       description: 'Batch size to process and upload records'
     }),
@@ -66,7 +63,6 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       table,
       'no-header': noHeader,
       create,
-      'no-column-name-normalization': noColumnNameNormalization,
       'batch-size': batchSize = 1000,
       'max-rows': limit,
       delimiter,
