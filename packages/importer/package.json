@@ -31,7 +31,7 @@
   "dependencies": {
     "@faker-js/faker": "^8.0.2",
     "@xata.io/client": "^0.24.3",
-    "any-date-parser": "^1.5.3",
+    "any-date-parser": "^1.5.4",
     "lodash.pick": "^4.4.0",
     "lodash.chunk": "^4.2.0",
     "json5": "^2.2.3",
