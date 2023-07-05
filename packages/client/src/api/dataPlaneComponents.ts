@@ -3977,17 +3977,17 @@ export type AskTableError = Fetcher.ErrorWrapper<
       status: 429;
       payload: Responses.RateLimitError;
     }
-  | {
-      status: 503;
-      payload: Responses.ServiceUnavailableError;
-    }
 >;
 
 export type AskTableResponse = {
   /**
    * The answer to the input question
    */
-  answer?: string;
+  answer: string;
+  /**
+   * The session ID for the chat session. Only returned if the `session_type` is `chat`.
+   */
+  sessionID?: string;
 };
 
 export type AskTableRequestBody = {
@@ -3996,7 +3996,7 @@ export type AskTableRequestBody = {
    *
    * @minLength 3
    */
-  question: string;
+  question?: string;
   /**
    * The type of search to use. If set to `keyword` (the default), the search can be configured by passing
    * a `search` object with the following fields. For more details about each, see the Search endpoint documentation.
@@ -4037,7 +4037,7 @@ export type AskTableRequestBody = {
 };
 
 export type AskTableVariables = {
-  body: AskTableRequestBody;
+  body?: AskTableRequestBody;
   pathParams: AskTablePathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -4051,6 +4051,81 @@ export const askTable = (variables: AskTableVariables, signal?: AbortSignal) =>
     ...variables,
     signal
   });
+
+export type ChatSessionMessagePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * @maxLength 36
+   * @minLength 36
+   */
+  sessionId: string;
+  workspace: string;
+  region: string;
+};
+
+export type ChatSessionMessageError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 429;
+      payload: Responses.RateLimitError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
+>;
+
+export type ChatSessionMessageResponse = {
+  /**
+   * The answer to the input question
+   */
+  answer?: string;
+};
+
+export type ChatSessionMessageRequestBody = {
+  /**
+   * The question you'd like to ask.
+   *
+   * @minLength 3
+   */
+  message?: string;
+};
+
+export type ChatSessionMessageVariables = {
+  body?: ChatSessionMessageRequestBody;
+  pathParams: ChatSessionMessagePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Ask a follow-up question. If the `Accept` header is set to `text/event-stream`, Xata will stream the results back as SSE's.
+ */
+export const chatSessionMessage = (variables: ChatSessionMessageVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    ChatSessionMessageResponse,
+    ChatSessionMessageError,
+    ChatSessionMessageRequestBody,
+    {},
+    {},
+    ChatSessionMessagePathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/ask/{sessionId}', method: 'post', ...variables, signal });
 
 export type SummarizeTablePathParams = {
   /**
@@ -4282,7 +4357,7 @@ export type FileAccessVariables = {
  * Retrieve file content by access id
  */
 export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Blob, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
+  dataPlaneFetch<undefined, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
     url: '/file/{fileId}',
     method: 'get',
     ...variables,
@@ -4356,6 +4431,7 @@ export const operationsByTag = {
     sqlQuery,
     vectorSearchTable,
     askTable,
+    chatSessionMessage,
     summarizeTable,
     aggregateTable
   }
