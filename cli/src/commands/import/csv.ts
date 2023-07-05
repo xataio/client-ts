@@ -1,6 +1,5 @@
 import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
-import chalk from 'chalk';
 import { open } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
 
@@ -60,6 +59,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
 
   async run(): Promise<void> {
     const { args, flags } = await this.parseCommand();
+    const { file } = args;
     const {
       table,
       'no-header': noHeader,
@@ -84,8 +84,6 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const getFileStream = async () => (await open(file, 'r')).createReadStream();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
-
-    const { file } = args;
 
     const existingTable = await xata.import.findTable({ workspace, region, database, branch, table });
     if (existingTable) {
