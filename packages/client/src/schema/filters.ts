@@ -1,4 +1,5 @@
-import { FilterExpression } from '../api/schemas';
+import { FilterExpression, FilterPredicate } from '../api/schemas';
+import { isDefined, isObject } from '../util/lang';
 import { SingleOrArray } from '../util/types';
 import { XataRecordMetadata } from './record';
 import { ColumnsByValue, ValueAtColumn } from './selection';
@@ -114,12 +115,36 @@ export type Filter<T> = T extends Record<string, any>
     : BaseApiFilter<T> | NestedApiFilter<T>
   : PropertyFilter<T>;
 
-export function cleanFilter(filter?: FilterExpression) {
-  if (!filter) return undefined;
+export function cleanFilter(filter?: FilterExpression | FilterPredicate): any {
+  if (!isDefined(filter)) return undefined;
+  if (!isObject(filter)) return filter;
 
-  const values = Object.values(filter)
-    .filter(Boolean)
-    .filter((value) => (Array.isArray(value) ? value.length > 0 : true));
+  const values = Object.fromEntries(
+    Object.entries(filter).reduce((acc, [key, value]) => {
+      // Remove null and undefined values
+      if (!isDefined(value)) return acc;
 
-  return values.length > 0 ? filter : undefined;
+      if (Array.isArray(value)) {
+        // Remove empty objects from arrays
+        const clean = value.map((item) => cleanFilter(item)).filter((item) => isDefined(item));
+
+        // Remove empty arrays
+        if (clean.length === 0) return acc;
+
+        return [...acc, [key, clean]];
+      }
+
+      if (isObject(value)) {
+        // Remove empty objects
+        const clean = cleanFilter(value);
+        if (!isDefined(clean)) return acc;
+
+        return [...acc, [key, clean]];
+      }
+
+      return [...acc, [key, value]];
+    }, [] as [string, any][])
+  );
+
+  return Object.keys(values).length > 0 ? values : undefined;
 }

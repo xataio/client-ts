@@ -13,9 +13,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     'Specify the column names and types. They must follow the order they appear in the CSV file',
     '$ xata import csv users.csv --table=users --columns=name,email --types=string,email',
     'Create the table or any missing column if needed without asking',
-    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email --create',
-    'Specify "-" as file name to use the stdin to read the data from',
-    chalk.dim('$ command-that-outputs-csv | xata import csv - --table=users --create')
+    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email --create'
   ];
 
   static flags = {

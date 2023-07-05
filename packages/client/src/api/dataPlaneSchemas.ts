@@ -897,11 +897,31 @@ export type FileResponse = {
   attributes?: Record<string, any>;
 };
 
-export type ProjectionConfig = {
-  name?: string;
-};
-
 export type QueryColumnsProjection = (string | ProjectionConfig)[];
+
+/**
+ * A structured projection that allows for some configuration.
+ */
+export type ProjectionConfig = {
+  /**
+   * The name of the column to project or a reverse link specification, see [API Guide](https://xata.io/docs/concepts/data-model#links-and-relations).
+   */
+  name?: string;
+  columns?: QueryColumnsProjection;
+  /**
+   * An alias for the projected field, this is how it will be returned in the response.
+   */
+  as?: string;
+  sort?: SortExpression;
+  /**
+   * @default 20
+   */
+  limit?: number;
+  /**
+   * @default 0
+   */
+  offset?: number;
+};
 
 /**
  * The target expression is used to filter the search results by the target columns.

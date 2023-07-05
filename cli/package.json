@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/cli",
-  "version": "0.12.6",
+  "version": "0.12.7",
   "description": "Xata.io CLI",
   "author": "Xata Inc.",
   "bin": {
@@ -55,6 +55,7 @@
     "open": "^9.1.0",
     "prompts": "^2.4.2",
     "relaxed-json": "^1.0.3",
+    "rollup": "^3.26.0",
     "rollup-plugin-esbuild": "^5.0.0",
     "rollup-plugin-hypothetical": "^2.1.1",
     "rollup-plugin-import-cdn": "^0.2.2",

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { test } from 'vitest';
-import { Filter } from './filters';
+import { describe, expect, test } from 'vitest';
+import { Filter, cleanFilter } from './filters';
 import { XataRecord } from './record';
+import { FilterExpression } from '../api/schemas';
 
 type Record = XataRecord & {
   name: string;
@@ -266,4 +267,71 @@ const filterOnInternalColumnIsAllowed: Filter<Record> = { 'xata.version': { $is:
 
 test('fake test', () => {
   // This is a fake test to make sure that the type definitions in this file are working
+});
+
+describe('cleanFilter', () => {
+  test('should remove empty objects', () => {
+    const filter = { $and: [{}, { name: 'r1' }, {}] };
+    expect(cleanFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "$and": [
+          {
+            "name": "r1",
+          },
+        ],
+      }
+    `);
+  });
+
+  test("should remove 'null' values", () => {
+    const filter = { $and: [{ name: null }, { name: 'r1' }, { name: null }] };
+    expect(cleanFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "$and": [
+          {
+            "name": "r1",
+          },
+        ],
+      }
+    `);
+  });
+
+  test("should remove 'undefined' values", () => {
+    const filter = { $and: [{ name: undefined }, { name: 'r1' }, { name: undefined }] };
+    expect(cleanFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "$and": [
+          {
+            "name": "r1",
+          },
+        ],
+      }
+    `);
+  });
+
+  test('should remove objects with values to be removed', () => {
+    const filter = { $and: [{ name: { $is: null } }, { name: 'r1' }, { name: { $is: null } }] };
+    expect(cleanFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "$and": [
+          {
+            "name": "r1",
+          },
+        ],
+      }
+    `);
+  });
+
+  test('should remove arrays with values to be removed', () => {
+    const filter = { $and: [{ name: { $any: [null] } }, { name: 'r1' }, { name: { $any: [null] } }] };
+    expect(cleanFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "$and": [
+          {
+            "name": "r1",
+          },
+        ],
+      }
+    `);
+  });
 });

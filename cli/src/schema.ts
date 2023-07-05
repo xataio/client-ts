@@ -1,22 +1,10 @@
+import { RecordColumnTypes } from '@xata.io/client';
 import { z } from 'zod';
 
 // We need to do this because of problems with Zod and recursive types https://www.npmjs.com/package/zod#recursive-types
 export type Column = {
   name: string;
-  type:
-    | 'bool'
-    | 'int'
-    | 'float'
-    | 'string'
-    | 'text'
-    | 'email'
-    | 'multiple'
-    | 'link'
-    | 'object'
-    | 'datetime'
-    | 'vector'
-    | 'file[]'
-    | 'file';
+  type: (typeof RecordColumnTypes)[number];
   unique?: boolean;
   notNull?: boolean;
   defaultValue?: string;
@@ -33,19 +21,7 @@ export type Column = {
 export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
   z.object({
     name: z.string(),
-    type: z.enum([
-      'bool',
-      'int',
-      'float',
-      'string',
-      'text',
-      'email',
-      'multiple',
-      'link',
-      'object',
-      'datetime',
-      'vector'
-    ]),
+    type: z.enum(RecordColumnTypes),
     unique: z.boolean().optional(),
     notNull: z.boolean().optional(),
     defaultValue: z.string().optional(),
