@@ -12,6 +12,7 @@ export type ColumnOptions = {
    * A function to check if a value is null.
    */
   isNull?: (value: unknown) => boolean;
+
   /**
    * A function to convert a value to a boolean. Should return true, false or null (not a boolean).
    */
@@ -25,6 +26,7 @@ export type ParseCommonOptions = {
    * If provided, the data will be coerced to the column types.
    */
   columns?: Column[];
+
   /**
    * Limit the number of rows to import.
    * @default // no limit
@@ -40,32 +42,38 @@ export type ParseCsvOptions = ParseCommonOptions & {
    * Multi-character delimiters are supported.
    */
   delimiter?: string;
+
   /**
    * An array of delimiters to guess from if the delimiter option is not set.
    * @default [',', '\t', '|', ';', '\x1E', '\x1F']
    */
   delimitersToGuess?: string[];
+
   /**
    * If `true`, the first row of parsed data will be interpreted as field names.
    * Warning: Duplicate field names will overwrite values in previous fields having the same name.
    * @default true
    */
   header?: boolean;
+
   /**
    * If `true`, lines that are completely empty (those which evaluate to an empty string) will be skipped.
    * @default true
    */
   skipEmptyLines?: boolean;
+
   /**
    * The newline sequence. Leave blank to auto-detect. Must be one of `\r`, `\n`, or `\r\n`.
    * @default // auto-detect
    */
   newline?: '\r' | '\n' | '\r\n';
+
   /**
    * The character used to quote fields. The quoting of all fields is not mandatory. Any field which is not quoted will correctly read.
    * @default '"'
    */
   quoteChar?: string;
+
   /**
    * The character used to escape the quote character within a field.
    * If not set, this option will default to the value of `quoteChar`,
@@ -74,6 +82,7 @@ export type ParseCsvOptions = ParseCommonOptions & {
    * @default '"'
    */
   escapeChar?: string;
+
   /**
    * A string that indicates a comment (for example, "#" or "//").
    * When we encounter a line starting with this string, it will skip the line.

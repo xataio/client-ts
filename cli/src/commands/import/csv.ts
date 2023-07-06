@@ -90,6 +90,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         parserOptions: { ...csvOptions, limit: 1000 }
       })
     ).results;
+
     parseStream.close();
 
     if (!parseResults.success) {
