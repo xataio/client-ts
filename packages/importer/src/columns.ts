@@ -50,10 +50,10 @@ const defaultIsNull = (value: unknown): boolean => {
 const DEFAULT_BOOLEAN_VALUES = { true: ['true', 't', 'yes', 'y'], false: ['false', 'f', 'no', 'n'] };
 
 const defaultToBoolean: ToBoolean = (value) => {
-  if (DEFAULT_BOOLEAN_VALUES.true.includes(String(value).toLocaleLowerCase())) {
+  if (DEFAULT_BOOLEAN_VALUES.true.includes(String(value).toLowerCase())) {
     return true;
   }
-  if (DEFAULT_BOOLEAN_VALUES.false.includes(String(value).toLocaleLowerCase())) {
+  if (DEFAULT_BOOLEAN_VALUES.false.includes(String(value).toLowerCase())) {
     return false;
   }
   return null;
