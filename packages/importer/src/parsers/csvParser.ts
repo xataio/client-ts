@@ -1,11 +1,31 @@
 import pick from 'lodash.pick';
-import CSV from 'papaparse';
-import { ParseCsvOptions, ParseResults } from '../types';
+import CSV, { ParseConfig } from 'papaparse';
+import { ParseCsvOptions, ParseMeta, ParseResults } from '../types';
 import { parseJson } from './jsonParser';
 
 export const DEFAULT_CSV_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x1F'];
 
-export const parseCsvOptionsToPapaOptions = (options: ParseCsvOptions) => {
+// https://github.com/sindresorhus/strip-bom/blob/main/index.js
+const stripBom = (string: string) => {
+  if (typeof string !== 'string') {
+    throw new TypeError(`Expected a string, got ${typeof string}`);
+  }
+  // Catches EFBBBF (UTF-8 BOM) because the buffer-to-string
+  // conversion translates it to FEFF (UTF-16 BOM).
+  if (string.charCodeAt(0) === 0xfeff) {
+    return string.slice(1);
+  }
+  return string;
+};
+
+export const metaToParseMeta = (meta: Papa.ParseMeta): Omit<ParseMeta, 'estimatedProgress'> => ({
+  delimiter: meta.delimiter,
+  linebreak: meta.linebreak,
+  // trim invisible characters from field names e.g. BOM
+  fields: meta.fields
+});
+
+export const parseCsvOptionsToPapaOptions = (options: ParseCsvOptions): ParseConfig => {
   const {
     limit,
     delimiter,
@@ -26,7 +46,10 @@ export const parseCsvOptionsToPapaOptions = (options: ParseCsvOptions) => {
     newline,
     quoteChar,
     escapeChar,
-    comments: commentPrefix
+    comments: commentPrefix,
+    transformHeader(header) {
+      return stripBom(header);
+    }
   };
 };
 

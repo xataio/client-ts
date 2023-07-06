@@ -1,24 +1,17 @@
 import chunkArray from 'lodash.chunk';
 import PQueue from 'p-queue';
 import Papa, { Parser, ParseResult } from 'papaparse';
-import { papaResultToJson, parseCsvOptionsToPapaOptions } from './parsers/csvParser';
+import { metaToParseMeta, papaResultToJson, parseCsvOptionsToPapaOptions } from './parsers/csvParser';
 import {
-  ParseCsvOptions,
+  CsvResults,
   OnBatchCallback,
+  ParseCsvOptions,
   ParseCsvStreamBatchesOptions,
-  ParseCsvStreamOptions,
-  ParseMeta,
-  CsvResults
+  ParseCsvStreamOptions
 } from './types';
 import { isDefined } from './utils/lang';
 
 const CHUNK_SIZE = 1024 * 1024 * 10; // 10MB
-
-const metaToParseMeta = (meta: Papa.ParseMeta): Omit<ParseMeta, 'estimatedProgress'> => ({
-  delimiter: meta.delimiter,
-  linebreak: meta.linebreak,
-  fields: meta.fields
-});
 
 // https://github.com/mholt/PapaParse/issues/708 passing preview param to papaparse loads entire file in the browser
 export const parseCsvStream = async ({ fileStream, parserOptions }: ParseCsvStreamOptions): Promise<CsvResults> => {

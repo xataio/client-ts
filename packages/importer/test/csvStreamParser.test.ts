@@ -5,6 +5,7 @@ import { CsvResults, ParseCsvOptions, ParseCsvStreamBatchesOptions, ParseMeta, P
 import { getXataClientWithPlugin, yepNopeToBoolean } from './utils';
 
 const ONE_DECIMAL_PLACE = 1;
+const BOM_CHAR = '\uFEFF';
 
 const xata = getXataClientWithPlugin();
 
@@ -397,6 +398,25 @@ const parseCsvStreamTestCases: {
       meta: {
         ...defaultMeta,
         fields: ['boolean_1,"string_1']
+      }
+    }
+  },
+  {
+    name: 'removes unprintable BOM characters',
+    fileContents: `${BOM_CHAR}name,dob\nXata,2019-01-01`,
+    expected: {
+      results: {
+        success: true,
+        columns: [
+          { name: 'name', type: 'string' },
+          { name: 'dob', type: 'datetime' }
+        ],
+        warnings: [],
+        data: [{ name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') }]
+      },
+      meta: {
+        ...defaultMeta,
+        fields: ['name', 'dob']
       }
     }
   }
