@@ -129,7 +129,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         }
         progress = Math.max(progress, meta.estimatedProgress);
         this.info(
-          `${importSuccessCount} rows successfully imported ${importErrorCount} errors. ${Math.floor(
+          `${importSuccessCount} rows successfully imported ${importErrorCount} errors. ${Math.ceil(
             progress * 100
           )}% complete`
         );

@@ -55,6 +55,7 @@ const guessDatesTestCases = [
   { input: ['2020-01-01T00:00:00Z'], expected: 'datetime' },
   { input: ['2020-01-01T00:00:00+00:00'], expected: 'datetime' },
   { input: ['2020-01-01T00:00:00+01:00'], expected: 'datetime' },
+  { input: ['2/4/1964'], expected: 'datetime' },
   // excel formats
   { input: ['02/04/1964'], expected: 'datetime' },
   { input: ['02/04/1964 05:56'], expected: 'datetime' },
@@ -233,6 +234,7 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
     { input: '2020-01-01T00:00:00+00:00', type: 'datetime', expected: new Date('2020-01-01T00:00:00+00:00') },
     { input: '2020-01-01T00:00:00+01:00', type: 'datetime', expected: new Date('2020-01-01T00:00:00+01:00') },
     // excel formats
+    { input: '2/4/1964', type: 'datetime', expected: new Date('1964-04-02') },
     { input: '02/04/1964', type: 'datetime', expected: new Date('1964-04-02') },
     { input: '02/04/1964 05:56', type: 'datetime', expected: new Date('1964-04-02T05:56:00.000Z') },
     { input: '05/02/1968 17:44:00', type: 'datetime', expected: new Date('1968-02-05T17:44:00.000Z') },
