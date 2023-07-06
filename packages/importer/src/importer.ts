@@ -1,5 +1,6 @@
 import { branchTransaction, BranchTransactionPathParams, XataPluginOptions } from '@xata.io/client';
 import { ImportBatchOptions } from './types';
+import { delay } from './utils/delay';
 
 type ImportError = { row: unknown; error: string };
 
@@ -8,7 +9,9 @@ export const importBatch = async (
   pathParams: BranchTransactionPathParams,
   options: ImportBatchOptions,
   pluginOptions: XataPluginOptions,
-  errors?: ImportError[]
+  errors?: ImportError[],
+  maxRetries = 10,
+  retries = 0
 ): Promise<{ successful: Awaited<ReturnType<typeof branchTransaction>>; errors?: ImportError[] }> => {
   if (!options.batch.success) {
     throw new Error('Batch must be successful to import');
@@ -33,9 +36,14 @@ export const importBatch = async (
       options.batch.data = rowsToRetry;
       // what if errors twice?
       const errors = rowErrors.map((e: any) => ({ row: rows[e.index], error: e.message }));
-      return importBatch(pathParams, options, pluginOptions, errors);
+      return importBatch(pathParams, options, pluginOptions, errors, maxRetries, retries);
     }
-    console.error('importBatch error', error);
+    if (retries < maxRetries) {
+      // exponential backoff
+      await delay(1000 * 2 ** retries);
+      return importBatch(pathParams, options, pluginOptions, undefined, maxRetries, retries + 1);
+    }
+
     throw error;
   }
 };
