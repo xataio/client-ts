@@ -106,6 +106,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
 
     let importSuccessCount = 0;
     let importErrorCount = 0;
+    let progress = 0;
     const fileStream = await getFileStream();
     await xata.import.parseCsvStreamBatches({
       fileStream: fileStream,
@@ -126,9 +127,10 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         if (importResult.errors) {
           importErrorCount += importResult.errors.length;
         }
+        progress = Math.max(progress, meta.estimatedProgress);
         this.info(
           `${importSuccessCount} rows successfully imported ${importErrorCount} errors. ${Math.floor(
-            meta.estimatedProgress * 100
+            progress * 100
           )}% complete`
         );
       }
