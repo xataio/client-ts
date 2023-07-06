@@ -21,7 +21,6 @@ const stripBom = (string: string) => {
 export const metaToParseMeta = (meta: Papa.ParseMeta): Omit<ParseMeta, 'estimatedProgress'> => ({
   delimiter: meta.delimiter,
   linebreak: meta.linebreak,
-  // trim invisible characters from field names e.g. BOM
   fields: meta.fields
 });
 
