@@ -159,9 +159,16 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     process.exit(0);
   }
 
+  databaseInfo: Awaited<ReturnType<typeof this.getParsedDatabaseURLWithBranch>> | null = null;
+
   async parseDatabase() {
+    if (this.databaseInfo) {
+      return this.databaseInfo;
+    }
     const { flags } = await this.parseCommand();
-    return await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    const databaseInfo = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch, true);
+    this.databaseInfo = databaseInfo;
+    return databaseInfo;
   }
 
   async migrateSchema({
