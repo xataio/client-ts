@@ -46,6 +46,9 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     delimiter: Flags.string({
       description: 'Delimiter to use for splitting CSV data'
     }),
+    'delimiters-to-guess': Flags.string({
+      description: 'Delimiters to guess for splitting CSV data'
+    }),
     'null-value': Flags.string({
       description: 'Value to use for null values',
       multiple: true
@@ -66,6 +69,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       'batch-size': batchSize = 1000,
       'max-rows': limit,
       delimiter,
+      'delimiters-to-guess': delimitersToGuess,
       'null-value': nullValues
     } = flags;
     const header = !noHeader;
@@ -73,6 +77,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
 
     const csvOptions = {
       delimiter,
+      delimitersToGuess: delimitersToGuess ? splitCommas(delimitersToGuess) : undefined,
       header,
       nullValues,
       columns,
