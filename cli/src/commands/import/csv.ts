@@ -182,7 +182,10 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       branch
     });
     const newSchema = {
-      tables: [...existingSchema.tables.filter((t) => t.name !== table), { name: table, columns }]
+      tables: [
+        ...existingSchema.tables.filter((t) => t.name !== table),
+        { name: table, columns: columns.filter((c) => c.name !== 'id') }
+      ]
     };
     const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
       workspace,
