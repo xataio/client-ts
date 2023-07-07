@@ -1,8 +1,6 @@
 import { branchTransaction, BranchTransactionPathParams, XataPluginOptions } from '@xata.io/client';
-import { ImportBatchOptions } from './types';
+import { ImportBatchOptions, ImportError } from './types';
 import { delay } from './utils/delay';
-
-type ImportError = { row: unknown; error: string };
 
 // todo: tests
 export const importBatch = async (

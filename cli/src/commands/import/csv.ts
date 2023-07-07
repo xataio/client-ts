@@ -1,9 +1,12 @@
 import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
-import { open } from 'fs/promises';
-import { BaseCommand } from '../../base.js';
-import { importColumnTypes } from '@xata.io/importer';
 import { Column } from '@xata.io/codegen';
+import { importColumnTypes } from '@xata.io/importer';
+import { open, writeFile } from 'fs/promises';
+import { BaseCommand } from '../../base.js';
+
+const ERROR_CONSOLE_LOG_LIMIT = 200;
+const ERROR_LOG_FILE = 'errors.log';
 
 export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
@@ -110,7 +113,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     await this.migrateSchema({ table, columns, create });
 
     let importSuccessCount = 0;
-    let importErrorCount = 0;
+    const errors: string[] = [];
     let progress = 0;
     const fileStream = await getFileStream();
     await xata.import.parseCsvStreamBatches({
@@ -130,16 +133,27 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         );
         importSuccessCount += importResult.successful.results.length;
         if (importResult.errors) {
-          importErrorCount += importResult.errors.length;
+          const formattedErrors = importResult.errors.map(
+            (error) => `${error.error}. Record: ${JSON.stringify(error.row)}`
+          );
+          const errorsToLog = formattedErrors.slice(0, Math.abs(ERROR_CONSOLE_LOG_LIMIT - errors.length));
+          for (const error of errorsToLog) {
+            this.logToStderr(`Import Error: ${error}`);
+          }
+          errors.push(...formattedErrors);
         }
         progress = Math.max(progress, meta.estimatedProgress);
         this.info(
-          `${importSuccessCount} rows successfully imported ${importErrorCount} errors. ${Math.ceil(
+          `${importSuccessCount} rows successfully imported ${errors.length} errors. ${Math.ceil(
             progress * 100
           )}% complete`
         );
       }
     });
+    if (errors.length > 0) {
+      await writeFile(ERROR_LOG_FILE, errors.join('\n'), 'utf8');
+      this.log(`Import errors written to ${ERROR_LOG_FILE}`);
+    }
     fileStream.close();
     this.success('Completed');
     process.exit(0);

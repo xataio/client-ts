@@ -172,3 +172,5 @@ export type ImportBatchOptions = {
   table: string;
   batch: ParseResults;
 };
+
+export type ImportError = { row: unknown; error: string };
