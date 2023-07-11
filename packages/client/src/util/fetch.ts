@@ -64,6 +64,7 @@ export class ApiRequestPool {
     const fetch = this.getFetch();
 
     const runRequest = async (stalled = false): Promise<Response> => {
+      // Some fetch implementations don't timeout and network changes hang the connection
       const response = await Promise.race([fetch(url, options), timeout(REQUEST_TIMEOUT).then(() => null)]);
       if (!response) {
         throw new Error('Request timed out');
