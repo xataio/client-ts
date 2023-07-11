@@ -923,7 +923,7 @@ export class RestRepository<Record extends XataRecord>
   }
 
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
-    const record = transformObjectLinks(object);
+    const record = removeLinksFromObject(object);
 
     const response = await insertRecord({
       pathParams: {
@@ -949,7 +949,7 @@ export class RestRepository<Record extends XataRecord>
   ) {
     if (!recordId) return null;
 
-    const record = transformObjectLinks(object);
+    const record = removeLinksFromObject(object);
 
     const response = await insertRecordWithID({
       pathParams: {
@@ -974,7 +974,7 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const chunkedOperations: TransactionOperation[][] = chunk(
       objects.map((object) => ({
-        insert: { table: this.#table, record: transformObjectLinks(object), createOnly, ifVersion }
+        insert: { table: this.#table, record: removeLinksFromObject(object), createOnly, ifVersion }
       })),
       BULK_OPERATION_MAX_SIZE
     );
@@ -1302,7 +1302,7 @@ export class RestRepository<Record extends XataRecord>
     if (!recordId) return null;
 
     // Ensure id is not present in the update payload
-    const { id: _id, ...record } = transformObjectLinks(object);
+    const { id: _id, ...record } = removeLinksFromObject(object);
 
     try {
       const response = await updateRecordWithID({
@@ -1335,7 +1335,7 @@ export class RestRepository<Record extends XataRecord>
   ) {
     const chunkedOperations: TransactionOperation[][] = chunk(
       objects.map(({ id, ...object }) => ({
-        update: { table: this.#table, id, ifVersion, upsert, fields: transformObjectLinks(object) }
+        update: { table: this.#table, id, ifVersion, upsert, fields: removeLinksFromObject(object) }
       })),
       BULK_OPERATION_MAX_SIZE
     );
@@ -1953,12 +1953,13 @@ export class RestRepository<Record extends XataRecord>
   }
 }
 
-const transformObjectLinks = (object: any): Schemas.DataInputRecord => {
+const removeLinksFromObject = (object: any): Schemas.DataInputRecord => {
   return Object.entries(object).reduce((acc, [key, value]) => {
     // Ignore internal properties
     if (key === 'xata') return acc;
 
     // Transform links to identifier
+    // TODO: This is quite weak, we have better ways to identify links
     return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
   }, {});
 };
@@ -2032,7 +2033,7 @@ export const initObject = <T>(
   }
 
   const record = { ...data };
-  const serializable = { xata, ...transformObjectLinks(data) };
+  const serializable = { xata, ...removeLinksFromObject(data) };
   const metadata =
     xata !== undefined
       ? { ...xata, createdAt: new Date(xata.createdAt), updatedAt: new Date(xata.updatedAt) }
@@ -2070,7 +2071,7 @@ export const initObject = <T>(
   };
 
   record.toString = function () {
-    return JSON.stringify(transformObjectLinks(serializable));
+    return JSON.stringify(serializable);
   };
 
   for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerializable', 'toString']) {
@@ -2092,15 +2093,8 @@ function isValidColumn(columns: string[], column: Schemas.Column) {
   // Every column alias
   if (columns.includes('*')) return true;
 
-  // Link columns
-  if (column.type === 'link') {
-    const linkColumns = columns.filter((item) => item.startsWith(column.name));
-
-    return linkColumns.length > 0;
-  }
-
-  // Normal columns
-  return columns.includes(column.name);
+  // Match column name and all its children (foo, foo.bar, foo.bar.baz)
+  return columns.filter((item) => item.startsWith(column.name)).length > 0;
 }
 
 function parseIfVersion(...args: any[]): number | undefined {

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S NODE_OPTIONS=--experimental-vm-modules node --loader ts-node/esm
+#!/usr/bin/env -S NODE_OPTIONS=--experimental-vm-modules node --loader ts-node/esm --inspect
 
 import oclif from '@oclif/core';
 import path, { dirname } from 'path';
