@@ -4357,7 +4357,7 @@ export type FileAccessVariables = {
  * Retrieve file content by access id
  */
 export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
+  dataPlaneFetch<Blob, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
     url: '/file/{fileId}',
     method: 'get',
     ...variables,
