@@ -1,5 +1,7 @@
 import { parseNumber, timeout } from './lang';
 
+const REQUEST_TIMEOUT = 30000;
+
 export type RequestInit = { body?: any; headers?: Record<string, string>; method?: string; signal?: any };
 export type Response = {
   ok: boolean;
@@ -62,7 +64,7 @@ export class ApiRequestPool {
     const fetch = this.getFetch();
 
     const runRequest = async (stalled = false): Promise<Response> => {
-      const response = await Promise.race([fetch(url, options), timeout(10000).then(() => null)]);
+      const response = await Promise.race([fetch(url, options), timeout(REQUEST_TIMEOUT).then(() => null)]);
       if (!response) {
         throw new Error('Request timed out');
       }
