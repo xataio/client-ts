@@ -147,7 +147,7 @@ export const guessColumns = <T extends Record<string, unknown>>(
 
   return [...columnNames].map((columnName) => {
     const values = rows.map((row) => row[columnName]);
-    const type = guessColumnTypes(values, options);
+    const type = columnName === 'id' ? 'string' : guessColumnTypes(values, options);
     return { name: columnName, type };
   });
 };

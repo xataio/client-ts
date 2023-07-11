@@ -198,7 +198,9 @@ const guessColumnsTestCases = [
       { type: 'string', name: 'types' },
       { type: 'bool', name: 'inObject' }
     ]
-  }
+  },
+  // id columns are always strings
+  { input: [{ id: '1' }], expected: [{ type: 'string', name: 'id' }] }
 ];
 
 describe('guessColumns', () => {
