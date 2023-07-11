@@ -1,5 +1,7 @@
 import { parseNumber, timeout } from './lang';
 
+const REQUEST_TIMEOUT = 30000;
+
 export type RequestInit = { body?: any; headers?: Record<string, string>; method?: string; signal?: any };
 export type Response = {
   ok: boolean;
@@ -62,7 +64,11 @@ export class ApiRequestPool {
     const fetch = this.getFetch();
 
     const runRequest = async (stalled = false): Promise<Response> => {
-      const response = await fetch(url, options);
+      // Some fetch implementations don't timeout and network changes hang the connection
+      const response = await Promise.race([fetch(url, options), timeout(REQUEST_TIMEOUT).then(() => null)]);
+      if (!response) {
+        throw new Error('Request timed out');
+      }
 
       if (response.status === 429) {
         const rateLimitReset = parseNumber(response.headers?.get('x-ratelimit-reset')) ?? 1;
@@ -83,8 +89,7 @@ export class ApiRequestPool {
       return await runRequest();
     });
   }
-
-  #enqueue<Result>(task: () => Promise<Result> | Result): Promise<Result> {
+  #enqueue<Result>(task: () => Promise<Result>): Promise<Result> {
     const promise = new Promise<Result>((resolve) => this.#queue.push(resolve))
       .finally(() => {
         this.started--;
