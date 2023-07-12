@@ -43,6 +43,11 @@ export type SchemaCompareResponse = {
   edits: Schemas.SchemaEditScript;
 };
 
+export type RateLimitError = {
+  id?: string;
+  message: string;
+};
+
 export type RecordUpdateResponse =
   | Schemas.XataRecord
   | {
@@ -91,11 +96,6 @@ export type SearchResponse = {
 export type SQLResponse = {
   records: Schemas.SQLRecord[];
   warning?: string;
-};
-
-export type RateLimitError = {
-  id?: string;
-  message: string;
 };
 
 export type SummarizeResponse = {
