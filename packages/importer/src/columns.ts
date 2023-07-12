@@ -104,7 +104,8 @@ export const coerceValue = (
 
   switch (type) {
     case 'string':
-    case 'text': {
+    case 'text':
+    case 'link': {
       return String(value);
     }
     case 'int': {

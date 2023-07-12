@@ -219,6 +219,7 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
     { input: 'banana', type: 'float', expected: null },
     { input: '1.1', type: 'string', expected: '1.1' },
     { input: '1', type: 'string', expected: '1' },
+    { input: 'rec_xyz', type: 'link', expected: 'rec_xyz' },
     { input: 'true', type: 'bool', expected: true },
     {
       input: 'nope',
@@ -335,6 +336,11 @@ const coerceRowsTestCases: {
       { name: 'value2', type: 'bool' }
     ],
     expected: [{ value1: 1, value2: true }]
+  },
+  {
+    rows: [{ link1: 'rec_xyz' }],
+    columns: [{ name: 'link1', type: 'link', link: { table: 'myLink' } }],
+    expected: [{ link1: 'rec_xyz' }]
   }
 ];
 

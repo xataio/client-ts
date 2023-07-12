@@ -202,8 +202,13 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       schema: newSchema
     });
     if (edits.operations.length > 0) {
-      // @ts-ignore
-      const destructiveOperations = edits.operations.map((op) => op?.removeColumn?.column).filter((x) => x);
+      const destructiveOperations = edits.operations
+        .map((op) => {
+          if (!('removeColumn' in op)) return undefined;
+          return op.removeColumn.column;
+        })
+        .filter((x) => x !== undefined);
+
       if (destructiveOperations.length > 0) {
         const { destructiveConfirm } = await this.prompt(
           {
@@ -267,6 +272,9 @@ const flagsToColumns = (flags: {
   }
   return columns.map((name, i) => {
     const type = importColumnTypes.parse(types[i]);
+    if (type === 'link') {
+      return { name, type, link: { table: name } };
+    }
     return { name, type };
   });
 };
