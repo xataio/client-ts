@@ -118,7 +118,7 @@ export default class Init extends BaseCommand<typeof Init> {
         );
       } else {
         this.warn(`Will overwrite ${this.projectConfigLocation} because ${chalk.bold('--force')} is being used`);
-        // Clean up the project ocnfiugration so the user is asked for workspace and database again
+        // Clean up the project configuration so the user is asked for workspace and database again
         this.projectConfig = undefined;
       }
     }
