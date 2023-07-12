@@ -90,7 +90,7 @@ export default class Init extends BaseCommand<typeof Init> {
       options: moduleTypeOptions
     }),
     declarations: Flags.boolean({
-      description: 'Whether or not to generate type declarations for JavaScript code geneartion'
+      description: 'Whether or not to generate type declarations for JavaScript code generation'
     }),
     schema: Flags.string({
       description: 'Initializes a new database or updates an existing one with the given schema'
