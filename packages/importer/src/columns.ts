@@ -120,6 +120,10 @@ export const coerceValue = (
       const date = anyToDate(value);
       return date.invalid ? null : date;
     }
+    case 'link': {
+      // Link ids are always strings
+      return String(value);
+    }
     default: {
       return value as string | number | boolean | Date | null;
     }
