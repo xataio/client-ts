@@ -65,10 +65,16 @@ jobs:
           body: |
             Your pull request has been published to npm.
 
-            You can install it by running:
+            You can install @xata.io/client by running:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
+            ```
+
+            Other packages are published like this:
+
+            ```
+            npm install @xata.io/mypackage@${{ steps.version.outputs.TAG }}
             ```
 
             To test the CLI, run:
@@ -134,10 +140,16 @@ jobs:
           body: |
             Your pull request has been published to npm.
 
-            You can install it by running:
+            You can install @xata.io/client by running:
 
             ```
             npm install @xata.io/client@${{ steps.version.outputs.TAG }}
+            ```
+
+            Other packages are published like this:
+
+            ```
+            npm install @xata.io/mypackage@${{ steps.version.outputs.TAG }}
             ```
 
             To test the CLI, run:
