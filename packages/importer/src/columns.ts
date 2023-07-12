@@ -104,7 +104,8 @@ export const coerceValue = (
 
   switch (type) {
     case 'string':
-    case 'text': {
+    case 'text':
+    case 'link': {
       return String(value);
     }
     case 'int': {
@@ -119,10 +120,6 @@ export const coerceValue = (
     case 'datetime': {
       const date = anyToDate(value);
       return date.invalid ? null : date;
-    }
-    case 'link': {
-      // Link ids are always strings
-      return String(value);
     }
     default: {
       return value as string | number | boolean | Date | null;

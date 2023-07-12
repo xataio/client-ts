@@ -2056,6 +2056,10 @@ export type BranchTransactionError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 429;
+      payload: Responses.RateLimitError;
+    }
 >;
 
 export type BranchTransactionRequestBody = {
