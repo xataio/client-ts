@@ -104,18 +104,22 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (!parseResults.success) {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }
+
     if (!columns) {
       columns = parseResults.columns;
     }
+
     if (!columns) {
       throw new Error('No columns found');
     }
+
     await this.migrateSchema({ table, columns, create });
 
     let importSuccessCount = 0;
     const errors: string[] = [];
     let progress = 0;
     const fileStream = await getFileStream();
+
     await xata.import.parseCsvStreamBatches({
       fileStream: fileStream,
       fileSizeBytes: await getFileSizeBytes(file),
@@ -125,23 +129,30 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
         }
+
         const dbBranchName = `${database}:${branch}`;
         const importResult = await xata.import.importBatch(
-          // @ts-ignore
+          // @ts-ignore - TODO: fix this
           { dbBranchName: dbBranchName, region, workspace: workspace, database },
           { columns: parseResults.columns, table, batch: parseResults }
         );
+
         importSuccessCount += importResult.successful.results.length;
+
         if (importResult.errors) {
           const formattedErrors = importResult.errors.map(
             (error) => `${error.error}. Record: ${JSON.stringify(error.row)}`
           );
+
           const errorsToLog = formattedErrors.slice(0, Math.abs(ERROR_CONSOLE_LOG_LIMIT - errors.length));
+
           for (const error of errorsToLog) {
             this.logToStderr(`Import Error: ${error}`);
           }
+
           errors.push(...formattedErrors);
         }
+
         progress = Math.max(progress, meta.estimatedProgress);
         this.info(
           `${importSuccessCount} rows successfully imported ${errors.length} errors. ${Math.ceil(
@@ -150,10 +161,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         );
       }
     });
+
     if (errors.length > 0) {
       await writeFile(ERROR_LOG_FILE, errors.join('\n'), 'utf8');
       this.log(`Import errors written to ${ERROR_LOG_FILE}`);
     }
+
     fileStream.close();
     this.success('Completed');
     process.exit(0);
@@ -202,8 +215,13 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       schema: newSchema
     });
     if (edits.operations.length > 0) {
-      // @ts-ignore
-      const destructiveOperations = edits.operations.map((op) => op?.removeColumn?.column).filter((x) => x);
+      const destructiveOperations = edits.operations
+        .map((op) => {
+          if (!('removeColumn' in op)) return undefined;
+          return op.removeColumn.column;
+        })
+        .filter((x) => x !== undefined);
+
       if (destructiveOperations.length > 0) {
         const { destructiveConfirm } = await this.prompt(
           {
@@ -244,12 +262,15 @@ const flagsToColumns = (flags: {
   columns: string | undefined;
 }): Schemas.Column[] | undefined => {
   if (!flags.columns && !flags.types) return undefined;
+
   if (flags.columns && !flags.types) {
     throw new Error('Must specify types when specifying columns');
   }
+
   if (!flags.columns && flags.types) {
     throw new Error('Must specify columns when specifying types');
   }
+
   const columns = splitCommas(flags.columns);
   const types = splitCommas(flags.types);
   const invalidTypes = types.filter((t) => !importColumnTypes.safeParse(t).success);
@@ -265,6 +286,7 @@ const flagsToColumns = (flags: {
   if (columns?.length !== types?.length) {
     throw new Error('Must specify same number of columns and types');
   }
+
   return columns.map((name, i) => {
     const type = importColumnTypes.parse(types[i]);
     return { name, type };
