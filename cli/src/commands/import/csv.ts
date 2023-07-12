@@ -302,6 +302,12 @@ const flagsToColumns = (flags: {
 
   return columns.map((name, i) => {
     const type = importColumnTypes.parse(types[i]);
+
+    // For link columns, we do a best effort to guess the table name
+    if (type === 'link') {
+      return { name, type, link: { table: name } };
+    }
+
     return { name, type };
   });
 };
