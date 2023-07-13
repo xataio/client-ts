@@ -91,6 +91,10 @@ export type ServiceUnavailableError = {
 export type SearchResponse = {
   records: Schemas.XataRecord[];
   warning?: string;
+  /**
+   * The total count of records matched. It will be accurately returned up to 10000 records.
+   */
+  totalCount: number;
 };
 
 export type SQLResponse = {
