@@ -55,6 +55,9 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     'null-value': Flags.string({
       description: 'Value to use for null values',
       multiple: true
+    }),
+    'keep-existing-columns': Flags.boolean({
+      description: 'Whether to keep existing columns when updating the schema'
     })
   };
 
@@ -73,7 +76,8 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       'max-rows': limit,
       delimiter,
       'delimiters-to-guess': delimitersToGuess,
-      'null-value': nullValues
+      'null-value': nullValues,
+      'keep-existing-columns': keepExistingColumns
     } = flags;
     const header = !noHeader;
     let columns = flagsToColumns(flags);
@@ -104,44 +108,55 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (!parseResults.success) {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }
+
     if (!columns) {
       columns = parseResults.columns;
     }
+
     if (!columns) {
       throw new Error('No columns found');
     }
-    await this.migrateSchema({ table, columns, create });
+
+    const { schemaColumns } = await this.migrateSchema({ table, columns, create, keepExistingColumns });
 
     let importSuccessCount = 0;
     const errors: string[] = [];
     let progress = 0;
     const fileStream = await getFileStream();
+
     await xata.import.parseCsvStreamBatches({
       fileStream: fileStream,
       fileSizeBytes: await getFileSizeBytes(file),
-      parserOptions: { ...csvOptions, columns },
+      parserOptions: { ...csvOptions, columns: schemaColumns },
       batchRowCount: batchSize,
       onBatch: async (parseResults, meta) => {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
         }
+
         const dbBranchName = `${database}:${branch}`;
         const importResult = await xata.import.importBatch(
-          // @ts-ignore
+          // @ts-ignore - TODO: fix this
           { dbBranchName: dbBranchName, region, workspace: workspace, database },
           { columns: parseResults.columns, table, batch: parseResults }
         );
+
         importSuccessCount += importResult.successful.results.length;
+
         if (importResult.errors) {
           const formattedErrors = importResult.errors.map(
             (error) => `${error.error}. Record: ${JSON.stringify(error.row)}`
           );
+
           const errorsToLog = formattedErrors.slice(0, Math.abs(ERROR_CONSOLE_LOG_LIMIT - errors.length));
+
           for (const error of errorsToLog) {
             this.logToStderr(`Import Error: ${error}`);
           }
+
           errors.push(...formattedErrors);
         }
+
         progress = Math.max(progress, meta.estimatedProgress);
         this.info(
           `${importSuccessCount} rows successfully imported ${errors.length} errors. ${Math.ceil(
@@ -150,10 +165,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         );
       }
     });
+
     if (errors.length > 0) {
       await writeFile(ERROR_LOG_FILE, errors.join('\n'), 'utf8');
       this.log(`Import errors written to ${ERROR_LOG_FILE}`);
     }
+
     fileStream.close();
     this.success('Completed');
     process.exit(0);
@@ -174,12 +191,14 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   async migrateSchema({
     table,
     columns,
-    create
+    create,
+    keepExistingColumns = false
   }: {
     table: string;
     columns: Column[];
     create: boolean;
-  }): Promise<void> {
+    keepExistingColumns?: boolean;
+  }): Promise<{ schemaColumns: Column[] }> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.parseDatabase();
     const { schema: existingSchema } = await xata.api.branches.getBranchDetails({
@@ -188,12 +207,16 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       database,
       branch
     });
+
+    const existingColumns = existingSchema.tables.find((t) => t.name === table)?.columns ?? [];
+    const schemaColumns = getSchemaColumns({ newColumns: columns, existingColumns, keepExistingColumns });
     const newSchema = {
       tables: [
         ...existingSchema.tables.filter((t) => t.name !== table),
-        { name: table, columns: columns.filter((c) => c.name !== 'id') }
+        { name: table, columns: schemaColumns.filter(({ name }) => name !== 'id') }
       ]
     };
+
     const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
       workspace,
       region,
@@ -201,6 +224,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       branch: 'main',
       schema: newSchema
     });
+
     if (edits.operations.length > 0) {
       const destructiveOperations = edits.operations
         .map((op) => {
@@ -241,6 +265,8 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       }
       await xata.api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits });
     }
+
+    return { schemaColumns };
   }
 }
 
@@ -249,12 +275,15 @@ const flagsToColumns = (flags: {
   columns: string | undefined;
 }): Schemas.Column[] | undefined => {
   if (!flags.columns && !flags.types) return undefined;
+
   if (flags.columns && !flags.types) {
     throw new Error('Must specify types when specifying columns');
   }
+
   if (!flags.columns && flags.types) {
     throw new Error('Must specify columns when specifying types');
   }
+
   const columns = splitCommas(flags.columns);
   const types = splitCommas(flags.types);
   const invalidTypes = types.filter((t) => !importColumnTypes.safeParse(t).success);
@@ -270,11 +299,15 @@ const flagsToColumns = (flags: {
   if (columns?.length !== types?.length) {
     throw new Error('Must specify same number of columns and types');
   }
+
   return columns.map((name, i) => {
     const type = importColumnTypes.parse(types[i]);
+
+    // For link columns, we do a best effort to guess the table name
     if (type === 'link') {
       return { name, type, link: { table: name } };
     }
+
     return { name, type };
   });
 };
@@ -291,4 +324,19 @@ const getFileSizeBytes = async (file: string) => {
   const stat = await fileHandle.stat();
   await fileHandle.close();
   return stat.size;
+};
+
+const getSchemaColumns = ({
+  newColumns,
+  existingColumns,
+  keepExistingColumns
+}: {
+  newColumns: Column[];
+  existingColumns: Column[];
+  keepExistingColumns: boolean;
+}): Column[] => {
+  if (!keepExistingColumns) return newColumns;
+
+  const columnsToCreate = newColumns.filter(({ name }) => !existingColumns.find((c) => c.name === name));
+  return [...existingColumns, ...columnsToCreate];
 };
