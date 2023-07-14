@@ -5,7 +5,7 @@ import { ColumnOptions } from '../src/types';
 import { yepNopeToBoolean } from './utils';
 
 const guessNumbersTestCases = [
-  { input: ['1', '2', '3'], expected: 'int' },
+  { input: ['1', '2', '3', '-4'], expected: 'int' },
   { input: ['1', '2', '3', null], expected: 'int' },
   { input: ['1', '2', '3.0'], expected: 'float' },
   { input: ['1', '2', '3.1'], expected: 'float' },
@@ -125,6 +125,7 @@ const guessColumnsTestCases = [
   { input: [{ foo: 'bar' }], expected: [{ type: 'string', name: 'foo' }] },
   { input: [{ num: 1 }], expected: [{ type: 'int', name: 'num' }] },
   { input: [{ num: 1.1 }], expected: [{ type: 'float', name: 'num' }] },
+  { input: [{ num: -1.1 }], expected: [{ type: 'float', name: 'num' }] },
   { input: [{ bool: true }], expected: [{ type: 'bool', name: 'bool' }] },
   { input: [{ email: 'email@example.com' }], expected: [{ type: 'email', name: 'email' }] },
   { input: [{ date: '2020-01-01' }], expected: [{ type: 'datetime', name: 'date' }] },
@@ -260,9 +261,9 @@ const coerceRowsTestCases: {
   expected: Record<string, unknown>[];
 }[] = [
   {
-    rows: [{ value: '1' }],
+    rows: [{ value: '1' }, { value: '-2' }],
     columns: [{ name: 'value', type: 'int' }],
-    expected: [{ value: 1 }]
+    expected: [{ value: 1 }, { value: -2 }]
   },
   {
     rows: [{ value: '1.0' }],
@@ -270,9 +271,9 @@ const coerceRowsTestCases: {
     expected: [{ value: 1.0 }]
   },
   {
-    rows: [{ value: '1.1' }],
+    rows: [{ value: '-1.1' }],
     columns: [{ name: 'value', type: 'float' }],
-    expected: [{ value: 1.1 }]
+    expected: [{ value: -1.1 }]
   },
   {
     rows: [{ value: 'banana' }],
