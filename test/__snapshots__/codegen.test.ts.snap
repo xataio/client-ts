@@ -339,9 +339,9 @@ declare const tables: readonly [
       {
         readonly name: \\"3Labels\\";
         readonly type: \\"multiple\\";
-      }
+      },
     ];
-  }
+  },
 ];
 export type SchemaTables = typeof tables;
 export type InferredTypes = SchemaInference<SchemaTables>;

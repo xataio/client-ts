@@ -137,6 +137,13 @@ declare const tables: readonly [
       {
         readonly name: 'account_value';
         readonly type: 'int';
+      },
+      {
+        readonly name: 'vector';
+        readonly type: 'vector';
+        readonly vector: {
+          readonly dimension: 4;
+        };
       }
     ];
   },
