@@ -59,7 +59,10 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
 export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   #schemaTables?: Table[];
 
-  constructor(private db: SchemaPluginResult<Schemas>, schemaTables?: Table[]) {
+  constructor(
+    private db: SchemaPluginResult<Schemas>,
+    schemaTables?: Table[]
+  ) {
     super();
     this.#schemaTables = schemaTables;
   }

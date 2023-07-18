@@ -1,7 +1,7 @@
 import Case from 'case';
 import prettier from 'prettier';
-import * as parserJavascript from 'prettier/parser-babel.js';
-import * as parserTypeScript from 'prettier/parser-typescript.js';
+import * as parserJavascript from 'prettier/plugins/babel.js';
+import * as parserTypeScript from 'prettier/plugins/typescript.js';
 import { Project, VariableDeclarationKind } from 'ts-morph';
 import ts from 'typescript';
 import { XataDatabaseSchema } from './schema';
@@ -337,19 +337,19 @@ export async function generate({
   sourceFile.saveSync();
   project.emitSync();
 
-  const typescript = prettier.format(sourceFile.getFullText(), {
+  const typescript = await prettier.format(sourceFile.getFullText(), {
     parser: 'typescript',
     plugins: [parserTypeScript]
   });
 
-  const javascript = prettier.format(project.getFileSystem().readFileSync('xata.js'), {
+  const javascript = await prettier.format(project.getFileSystem().readFileSync('xata.js'), {
     parser: 'babel',
     plugins: [parserJavascript]
   });
 
   const rawDeclarations = emitDeclarations(typescript);
   const types = rawDeclarations
-    ? prettier.format(rawDeclarations, {
+    ? await prettier.format(rawDeclarations, {
         parser: 'typescript',
         plugins: [parserTypeScript]
       })

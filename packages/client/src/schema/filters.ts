@@ -120,30 +120,33 @@ export function cleanFilter(filter?: FilterExpression | FilterPredicate): any {
   if (!isObject(filter)) return filter;
 
   const values = Object.fromEntries(
-    Object.entries(filter).reduce((acc, [key, value]) => {
-      // Remove null and undefined values
-      if (!isDefined(value)) return acc;
+    Object.entries(filter).reduce(
+      (acc, [key, value]) => {
+        // Remove null and undefined values
+        if (!isDefined(value)) return acc;
 
-      if (Array.isArray(value)) {
-        // Remove empty objects from arrays
-        const clean = value.map((item) => cleanFilter(item)).filter((item) => isDefined(item));
+        if (Array.isArray(value)) {
+          // Remove empty objects from arrays
+          const clean = value.map((item) => cleanFilter(item)).filter((item) => isDefined(item));
 
-        // Remove empty arrays
-        if (clean.length === 0) return acc;
+          // Remove empty arrays
+          if (clean.length === 0) return acc;
 
-        return [...acc, [key, clean]];
-      }
+          return [...acc, [key, clean]];
+        }
 
-      if (isObject(value)) {
-        // Remove empty objects
-        const clean = cleanFilter(value);
-        if (!isDefined(clean)) return acc;
+        if (isObject(value)) {
+          // Remove empty objects
+          const clean = cleanFilter(value);
+          if (!isDefined(clean)) return acc;
 
-        return [...acc, [key, clean]];
-      }
+          return [...acc, [key, clean]];
+        }
 
-      return [...acc, [key, value]];
-    }, [] as [string, any][])
+        return [...acc, [key, value]];
+      },
+      [] as [string, any][]
+    )
   );
 
   return Object.keys(values).length > 0 ? values : undefined;

@@ -14,19 +14,25 @@ const resolveUrl = (
   pathParams: Partial<Record<string, string | number>> = {}
 ) => {
   // Remove nulls and undefineds from query params
-  const cleanQueryParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
-    if (value === undefined || value === null) return acc;
-    return { ...acc, [key]: value };
-  }, {} as Record<string, any>);
+  const cleanQueryParams = Object.entries(queryParams).reduce(
+    (acc, [key, value]) => {
+      if (value === undefined || value === null) return acc;
+      return { ...acc, [key]: value };
+    },
+    {} as Record<string, any>
+  );
 
   const query = new URLSearchParams(cleanQueryParams).toString();
   const queryString = query.length > 0 ? `?${query}` : '';
 
   // We need to encode the path params because they can contain special characters
   // Special case, `:` does not need to be encoded as we use it as a separator
-  const cleanPathParams = Object.entries(pathParams).reduce((acc, [key, value]) => {
-    return { ...acc, [key]: encodeURIComponent(String(value ?? '')).replace('%3A', ':') };
-  }, {} as Record<string, string>);
+  const cleanPathParams = Object.entries(pathParams).reduce(
+    (acc, [key, value]) => {
+      return { ...acc, [key]: encodeURIComponent(String(value ?? '')).replace('%3A', ':') };
+    },
+    {} as Record<string, string>
+  );
 
   return url.replace(/\{\w*\}/g, (key) => cleanPathParams[key.slice(1, -1)]) + queryString;
 };
