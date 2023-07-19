@@ -11,7 +11,7 @@ const isInteger = <T>(
   Boolean(
     Number.isSafeInteger(+value) &&
       // Without dots (e.g. 1.0)
-      String(value).match(/^\d+$/) &&
+      String(value).match(/^[-]?\d+$/) &&
       // Are not dates
       !(value instanceof Date)
   );
