@@ -43,6 +43,11 @@ export type SchemaCompareResponse = {
   edits: Schemas.SchemaEditScript;
 };
 
+export type RateLimitError = {
+  id?: string;
+  message: string;
+};
+
 export type RecordUpdateResponse =
   | Schemas.XataRecord
   | {
@@ -86,16 +91,15 @@ export type ServiceUnavailableError = {
 export type SearchResponse = {
   records: Schemas.XataRecord[];
   warning?: string;
+  /**
+   * The total count of records matched. It will be accurately returned up to 10000 records.
+   */
+  totalCount: number;
 };
 
 export type SQLResponse = {
   records: Schemas.SQLRecord[];
   warning?: string;
-};
-
-export type RateLimitError = {
-  id?: string;
-  message: string;
 };
 
 export type SummarizeResponse = {

@@ -2056,6 +2056,10 @@ export type BranchTransactionError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 429;
+      payload: Responses.RateLimitError;
+    }
 >;
 
 export type BranchTransactionRequestBody = {
@@ -4357,7 +4361,7 @@ export type FileAccessVariables = {
  * Retrieve file content by access id
  */
 export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
+  dataPlaneFetch<Blob, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
     url: '/file/{fileId}',
     method: 'get',
     ...variables,
