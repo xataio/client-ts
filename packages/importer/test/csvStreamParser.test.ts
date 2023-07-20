@@ -530,11 +530,11 @@ describe('parseCsvStreamBatches', () => {
           parserOptions: { columns: parsed.results.columns, ...(options?.parserOptions ?? {}) }
         });
         if (expectedMeta) {
-          expect(expectedMeta.map((meta) => omit(meta, 'estimatedProgress'))).toEqual(
-            batches.map((b) => omit(b.meta, 'estimatedProgress'))
+          expect(batches.map((b) => omit(b.meta, 'estimatedProgress'))).toEqual(
+            expectedMeta.map((meta) => omit(meta, 'estimatedProgress'))
           );
           for (const i in expectedMeta) {
-            expect(expectedMeta[i].estimatedProgress).toBeCloseTo(batches[i].meta.estimatedProgress, ONE_DECIMAL_PLACE);
+            expect(batches[i].meta.estimatedProgress).toBeCloseTo(expectedMeta[i].estimatedProgress, ONE_DECIMAL_PLACE);
           }
         }
       });
