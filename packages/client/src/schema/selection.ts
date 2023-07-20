@@ -1,4 +1,5 @@
 import { If, IsArray, IsObject, StringKeys, UnionToIntersection, Values } from '../util/types';
+import { XataArrayFile, XataFile, XataFileEditableFields } from './files';
 import { Link, XataRecord } from './record';
 
 // Public: Utility type to get a union with the selectable columns of an object
@@ -79,7 +80,11 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
         [K in DataProps<O>]: NonNullable<O[K]> extends infer Item
           ? If<
               IsArray<Item>,
-              K, // If the property is an array, we stop recursion. We don't support object arrays yet
+              Item extends (infer Type)[]
+                ? Type extends XataArrayFile
+                  ? K | `${K}.${keyof XataFileEditableFields | '*'}`
+                  : K | `${K}.${StringKeys<Type> | '*'}`
+                : never,
               If<
                 IsObject<Item>,
                 Item extends XataRecord
@@ -90,6 +95,8 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
                     : never
                   : Item extends Date
                   ? K
+                  : Item extends XataFile
+                  ? K | `${K}.${keyof XataFileEditableFields | '*'}` // This allows usage of objects that are not links
                   : `${K}.${StringKeys<Item> | '*'}`, // This allows usage of objects that are not links
                 K
               >
@@ -110,9 +117,17 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
     ? N extends DataProps<O>
       ? {
           [K in N]: M extends SelectableColumn<NonNullable<O[K]>>
-            ? NonNullable<O[K]> extends XataRecord
+            ? NonNullable<O[K]> extends XataFile
+              ? ForwardNullable<O[K], XataFile>
+              : NonNullable<O[K]> extends XataRecord
               ? ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M> & XataRecord>
               : ForwardNullable<O[K], NestedValueAtColumn<NonNullable<O[K]>, M>>
+            : NonNullable<O[K]> extends (infer ArrayType)[]
+            ? ArrayType extends XataArrayFile
+              ? ForwardNullable<O[K], XataArrayFile[]>
+              : M extends SelectableColumn<NonNullable<ArrayType>>
+              ? ForwardNullable<O[K], NestedValueAtColumn<NonNullable<ArrayType>, M>[]>
+              : unknown //`Property ${M} is not selectable on type ${ArrayType}`
             : unknown; //`Property ${M} is not selectable on type ${K}`
         }
       : unknown //`Property ${N} is not a property of type ${O}`

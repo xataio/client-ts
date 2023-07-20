@@ -20,7 +20,15 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
   } = options;
 
   const fetch = vi.fn(realFetch);
-  const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra });
+  const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra }, [
+    {
+      name: 'users',
+      columns: [
+        { name: 'name', type: 'string' },
+        { name: 'email', type: 'string' }
+      ]
+    }
+  ]);
 
   const users = client.db.users;
 
@@ -286,11 +294,6 @@ describe('query', () => {
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
-          {
-            "body": undefined,
-            "method": "GET",
-            "url": "https://mock.xata.sh/db/xata:main",
-          },
         ]
       `);
     });
@@ -310,11 +313,6 @@ describe('query', () => {
             "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
-          },
-          {
-            "body": undefined,
-            "method": "GET",
-            "url": "https://mock.xata.sh/db/xata:main",
           },
         ]
       `);
@@ -344,11 +342,6 @@ describe('query', () => {
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
-          {
-            "body": undefined,
-            "method": "GET",
-            "url": "https://mock.xata.sh/db/xata:main",
-          },
         ]
       `);
     });
@@ -374,11 +367,6 @@ describe('query', () => {
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
-          {
-            "body": undefined,
-            "method": "GET",
-            "url": "https://mock.xata.sh/db/xata:main",
-          },
         ]
       `);
     });
@@ -400,11 +388,6 @@ describe('read', () => {
           "method": "GET",
           "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
         },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main",
-        },
       ]
     `);
   });
@@ -422,11 +405,6 @@ describe('read', () => {
           "body": undefined,
           "method": "GET",
           "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=name%2Cage",
-        },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main",
         },
       ]
     `);
@@ -459,11 +437,6 @@ describe('Repository.update', () => {
           "method": "PATCH",
           "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
         },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main",
-        },
       ]
     `);
   });
@@ -485,11 +458,6 @@ describe('Repository.delete', () => {
           "body": undefined,
           "method": "DELETE",
           "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
-        },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main",
         },
       ]
     `);
@@ -527,11 +495,6 @@ describe('create', () => {
           "body": "{\\"name\\":\\"Ada\\"}",
           "method": "POST",
           "url": "https://mock.xata.sh/db/xata:main/tables/users/data?columns=*",
-        },
-        {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main",
         },
       ]
     `);
