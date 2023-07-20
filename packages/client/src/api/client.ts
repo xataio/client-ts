@@ -1802,15 +1802,18 @@ class DatabaseApi {
   public createDatabase({
     workspace,
     database,
-    data
+    data,
+    headers
   }: {
     workspace: Schemas.WorkspaceID;
     database: Schemas.DBName;
     data: Components.CreateDatabaseRequestBody;
+    headers?: Record<string, string>;
   }): Promise<Components.CreateDatabaseResponse> {
     return operationsByTag.databases.createDatabase({
       pathParams: { workspaceId: workspace, dbName: database },
       body: data,
+      headers,
       ...this.extraProps
     });
   }

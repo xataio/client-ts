@@ -1,4 +1,5 @@
 import { ApiExtraProps, HostProvider, Schemas } from './api';
+import { FilesPlugin, FilesPluginResult } from './files';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
 import { CacheImpl, SimpleCache } from './schema/cache';
@@ -40,6 +41,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     search: SearchPluginResult<any>;
     transactions: TransactionPluginResult<any>;
     sql: SQLPluginResult;
+    files: FilesPluginResult<any>;
 
     constructor(options: BaseClientOptions = {}, schemaTables?: Schemas.Table[]) {
       const safeOptions = this.#parseOptions(options);
@@ -55,12 +57,14 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const search = new SearchPlugin(db, schemaTables).build(pluginOptions);
       const transactions = new TransactionPlugin().build(pluginOptions);
       const sql = new SQLPlugin().build(pluginOptions);
+      const files = new FilesPlugin().build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
       this.db = db;
       this.search = search;
       this.transactions = transactions;
       this.sql = sql;
+      this.files = files;
 
       for (const [key, namespace] of Object.entries(plugins ?? {})) {
         if (namespace === undefined) continue;
@@ -180,6 +184,7 @@ export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
       search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
       transactions: Awaited<ReturnType<TransactionPlugin<Schemas>['build']>>;
       sql: Awaited<ReturnType<SQLPlugin['build']>>;
+      files: Awaited<ReturnType<FilesPlugin<Schemas>['build']>>;
     },
     keyof Plugins
   > & {
