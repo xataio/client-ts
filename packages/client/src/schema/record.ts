@@ -173,7 +173,7 @@ type NumericOperator = ExclusiveOr<
   ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
 >;
 
-export type InputXataFile = Partial<XataFile> | Partial<XataArrayFile>;
+export type InputXataFile = Partial<XataArrayFile> | Promise<Partial<XataArrayFile>>;
 
 type EditableDataFields<T> = T extends XataRecord
   ? { id: Identifier } | Identifier

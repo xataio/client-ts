@@ -41,7 +41,7 @@ import { parseInputFileEntry, XataArrayFile, XataFile } from './files';
 import { cleanFilter, Filter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
-import { EditableData, Identifiable, Identifier, isIdentifiable, XataRecord } from './record';
+import { EditableData, Identifiable, Identifier, InputXataFile, isIdentifiable, XataRecord } from './record';
 import { ColumnsByValue, SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
@@ -1976,10 +1976,10 @@ export class RestRepository<Record extends XataRecord>
           break;
         }
         case `file`:
-          result[key] = parseInputFileEntry(value as XataFile);
+          result[key] = await parseInputFileEntry(value as InputXataFile);
           break;
         case 'file[]':
-          result[key] = (value as XataFile[]).map((item) => parseInputFileEntry(item));
+          result[key] = await promiseMap(value as InputXataFile[], (item) => parseInputFileEntry(item));
           break;
         default:
           result[key] = value;

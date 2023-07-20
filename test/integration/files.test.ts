@@ -33,7 +33,7 @@ const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
 describe('file support', () => {
   test('create file with record', async () => {
     const record = await xata.db.users.create(
-      { name: 'test', attachments: [await XataFile.fromBlob(file)], photo: await XataFile.fromBlob(file) },
+      { name: 'test', attachments: [XataFile.fromBlob(file)], photo: XataFile.fromBlob(file) },
       ['attachments.base64Content', 'attachments.name', 'photo.base64Content', 'photo.name']
     );
 
