@@ -170,7 +170,9 @@ const processPapaChunk = async ({
   const batches: unknown[][] = chunkArray(data, batchRowCount);
   const promises = batches.map((batchData, index) => {
     // cursor is how far through the file we are. Here we interpolate the cursor for the batches we are processing
-    const estimatedCursor = Math.floor(papaChunk.meta.cursor - averageCursorPerRow * batchData.length * index);
+    const rowsSoFar = batchData.length + batchRowCount * index; //batchData.length and batchRowCount can be different
+    const rowsFromEnd = data.length - rowsSoFar;
+    const estimatedCursor = Math.floor(papaChunk.meta.cursor - averageCursorPerRow * rowsFromEnd);
     const fileSizeEstimateBytes = isDefined(parserOptions.limit)
       ? averageCursorPerRow * parserOptions.limit
       : fileSizeBytes;
