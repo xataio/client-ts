@@ -4,6 +4,7 @@ import {
   ApiExtraProps,
   askTable,
   branchTransaction,
+  chatSessionMessage,
   deleteRecord,
   getBranchDetails,
   getRecord,
@@ -1897,7 +1898,8 @@ export class RestRepository<Record extends XataRecord>
         workspace: '{workspaceId}',
         dbBranchName: '{dbBranch}',
         region: '{region}',
-        tableName: this.#table
+        tableName: this.#table,
+        sessionId: options?.session
       },
       body: {
         question,
@@ -1909,7 +1911,7 @@ export class RestRepository<Record extends XataRecord>
     if (options?.onMessage) {
       fetchSSERequest({
         endpoint: 'dataPlane',
-        url: '/db/{dbBranchName}/tables/{tableName}/ask',
+        url: '/db/{dbBranchName}/tables/{tableName}/ask/{sessionId}',
         method: 'POST',
         onMessage: (message: { text: string; records: string[] }) => {
           options.onMessage?.({ answer: message.text, records: message.records });
@@ -1917,7 +1919,7 @@ export class RestRepository<Record extends XataRecord>
         ...params
       });
     } else {
-      return askTable(params as any);
+      return chatSessionMessage(params as any);
     }
   }
 

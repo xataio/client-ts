@@ -34,8 +34,9 @@ type TypeAskOptions<Record extends XataRecord> = KeywordAskOptions<Record> | Vec
 
 type BaseAskOptions = {
   rules?: string[];
+  session?: string;
 };
 
 export type AskOptions<Record extends XataRecord> = TypeAskOptions<Record> & BaseAskOptions;
 
-export type AskResult = { answer?: string; records?: string[] };
+export type AskResult = { answer?: string; records?: string[]; session?: string };
