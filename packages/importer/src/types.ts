@@ -174,4 +174,4 @@ export type ImportBatchOptions = {
   batch: ParseResults;
 };
 
-export type ImportError = { row: unknown; error: string };
+export type ImportError = { row: unknown; error: string; index: number };

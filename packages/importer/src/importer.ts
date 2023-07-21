@@ -33,7 +33,7 @@ export const importBatch = async (
       const rowsToRetry = rows.filter((_row, index) => !errorRowIndexes.includes(index));
       options.batch.data = rowsToRetry;
       // what if errors twice?
-      const errors = rowErrors.map((e: any) => ({ row: rows[e.index], error: e.message }));
+      const errors = rowErrors.map((e: any) => ({ row: rows[e.index], error: e.message, index: e.index }));
       return importBatch(pathParams, options, pluginOptions, errors, maxRetries, retries);
     }
     if (retries < maxRetries) {
