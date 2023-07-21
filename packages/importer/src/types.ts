@@ -154,12 +154,18 @@ export type ParseMeta = {
   rowIndex: number;
 };
 
+export type ParseResultData = {
+  data: unknown;
+  uncoerced: unknown;
+  index: number;
+};
+
 export type ParseResults =
   | {
       success: true;
       columns: Column[];
       warnings: string[];
-      data: { data: unknown; uncoerced: unknown; index: number }[];
+      data: ParseResultData[];
     }
   | { success: false; errors: string[] };
 
