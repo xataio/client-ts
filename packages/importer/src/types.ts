@@ -151,6 +151,7 @@ export type ParseMeta = {
   delimiter: string;
   linebreak: string;
   fields: string[] | undefined;
+  rowIndex: number;
 };
 
 export type ParseResults =
@@ -158,7 +159,7 @@ export type ParseResults =
       success: true;
       columns: Column[];
       warnings: string[];
-      data: unknown[];
+      data: { data: unknown; uncoerced: unknown; index: number }[];
     }
   | { success: false; errors: string[] };
 

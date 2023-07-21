@@ -18,7 +18,7 @@ const stripBom = (string: string) => {
   return string;
 };
 
-export const metaToParseMeta = (meta: Papa.ParseMeta): Omit<ParseMeta, 'estimatedProgress'> => ({
+export const metaToParseMeta = (meta: Papa.ParseMeta): Omit<ParseMeta, 'estimatedProgress' | 'rowIndex'> => ({
   delimiter: meta.delimiter,
   linebreak: meta.linebreak,
   fields: meta.fields
@@ -66,14 +66,18 @@ const dataForColumns = (data: unknown[], columns: ParseCsvOptions['columns']) =>
 
 export const papaResultToJson = (
   { data, errors }: CSV.ParseResult<unknown>,
-  options: ParseCsvOptions
+  options: ParseCsvOptions,
+  startIndex = 0
 ): ParseResults => {
   const parseWarnings = errors.map((error) => error.message);
 
-  const jsonResults = parseJson({
-    ...options,
-    data: dataForColumns(data, options.columns)
-  });
+  const jsonResults = parseJson(
+    {
+      ...options,
+      data: dataForColumns(data, options.columns)
+    },
+    startIndex
+  );
 
   return jsonResults.success
     ? {

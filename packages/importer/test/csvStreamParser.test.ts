@@ -16,7 +16,7 @@ const stringToStream = (str: string) => {
   return stream;
 };
 
-const defaultMeta = { delimiter: ',', estimatedProgress: 1, linebreak: '\n' };
+const defaultMeta = { delimiter: ',', estimatedProgress: 1, linebreak: '\n', rowIndex: 0 };
 type CommonTestCase = {
   name: string;
   fileContents: string;
@@ -32,7 +32,7 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'name', type: 'string' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-        data: [{ name: 'Xata' }]
+        data: [{ data: { name: 'Xata' }, index: 0, uncoerced: { name: 'Xata' } }]
       },
       meta: {
         ...defaultMeta,
@@ -49,7 +49,7 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'name', type: 'text' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-        data: [{ name: 'Xata' }]
+        data: [{ data: { name: 'Xata' }, index: 0, uncoerced: { name: 'Xata' } }]
       },
       meta: {
         ...defaultMeta,
@@ -68,7 +68,13 @@ const commonTestCases: CommonTestCase[] = [
           { name: 'dob', type: 'datetime' }
         ],
         warnings: [],
-        data: [{ name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') }]
+        data: [
+          {
+            data: { name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') },
+            index: 0,
+            uncoerced: { name: 'Xata', dob: '2019-01-01' }
+          }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -84,7 +90,10 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'boolean_1', type: 'bool' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-        data: [{ boolean_1: true }, { boolean_1: false }]
+        data: [
+          { data: { boolean_1: true }, index: 0, uncoerced: { boolean_1: 'T' } },
+          { data: { boolean_1: false }, index: 1, uncoerced: { boolean_1: 'F' } }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -101,7 +110,10 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'boolean', type: 'bool' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-        data: [{ boolean: true }, { boolean: false }]
+        data: [
+          { data: { boolean: true }, index: 0, uncoerced: { boolean: 'yep' } },
+          { data: { boolean: false }, index: 1, uncoerced: { boolean: 'nope' } }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -118,7 +130,10 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'boolean_1', type: 'string' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-        data: [{ boolean_1: 'T' }, { boolean_1: 'F' }]
+        data: [
+          { data: { boolean_1: 'T' }, index: 0, uncoerced: { boolean_1: 'T' } },
+          { data: { boolean_1: 'F' }, index: 1, uncoerced: { boolean_1: 'F' } }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -138,8 +153,12 @@ const commonTestCases: CommonTestCase[] = [
         ],
         warnings: [],
         data: [
-          { boolean_1: true, string_1: 'something' },
-          { boolean_1: false, string_1: 'else' }
+          {
+            data: { boolean_1: true, string_1: 'something' },
+            index: 0,
+            uncoerced: { boolean_1: 'T', string_1: 'something' }
+          },
+          { data: { boolean_1: false, string_1: 'else' }, index: 1, uncoerced: { boolean_1: 'F', string_1: 'else' } }
         ]
       },
       meta: {
@@ -161,8 +180,12 @@ const commonTestCases: CommonTestCase[] = [
         ],
         warnings: [],
         data: [
-          { boolean_1: true, string_1: 'something' },
-          { boolean_1: false, string_1: 'else' }
+          {
+            data: { boolean_1: true, string_1: 'something' },
+            index: 0,
+            uncoerced: { boolean_1: 'T', string_1: 'something' }
+          },
+          { data: { boolean_1: false, string_1: 'else' }, index: 1, uncoerced: { boolean_1: 'F', string_1: 'else' } }
         ]
       },
       meta: {
@@ -185,8 +208,8 @@ const commonTestCases: CommonTestCase[] = [
         ],
         warnings: [],
         data: [
-          { 0: true, 1: 'something' },
-          { 0: false, 1: 'else' }
+          { data: { 0: true, 1: 'something' }, index: 0, uncoerced: { 0: 'T', 1: 'something' } },
+          { data: { 0: false, 1: 'else' }, index: 1, uncoerced: { 0: 'F', 1: 'else' } }
         ]
       },
       meta: {
@@ -203,7 +226,10 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'boolean_1', type: 'bool' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-        data: [{ boolean_1: true }, { boolean_1: false }]
+        data: [
+          { data: { boolean_1: true }, index: 0, uncoerced: { boolean_1: 'T' } },
+          { data: { boolean_1: false }, index: 1, uncoerced: { boolean_1: 'F' } }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -220,7 +246,11 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'boolean_1', type: 'bool' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-        data: [{ boolean_1: true }, { boolean_1: null }, { boolean_1: false }]
+        data: [
+          { data: { boolean_1: true }, index: 0, uncoerced: { boolean_1: 'T' } },
+          { data: { boolean_1: null }, index: 1, uncoerced: { boolean_1: '' } },
+          { data: { boolean_1: false }, index: 2, uncoerced: { boolean_1: 'F' } }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -240,8 +270,12 @@ const commonTestCases: CommonTestCase[] = [
         ],
         warnings: [],
         data: [
-          { boolean_1: true, string_1: 'something' },
-          { boolean_1: false, string_1: 'else' }
+          {
+            data: { boolean_1: true, string_1: 'something' },
+            index: 0,
+            uncoerced: { boolean_1: 'T', string_1: 'something' }
+          },
+          { data: { boolean_1: false, string_1: 'else' }, index: 1, uncoerced: { boolean_1: 'F', string_1: 'else' } }
         ]
       },
       meta: {
@@ -262,8 +296,12 @@ const commonTestCases: CommonTestCase[] = [
         ],
         warnings: [],
         data: [
-          { boolean_1: true, string_1: 'something"' },
-          { boolean_1: false, string_1: '"else' }
+          {
+            data: { boolean_1: true, string_1: 'something"' },
+            index: 0,
+            uncoerced: { boolean_1: 'T', string_1: 'something"' }
+          },
+          { data: { boolean_1: false, string_1: '"else' }, index: 1, uncoerced: { boolean_1: 'F', string_1: '"else' } }
         ]
       },
       meta: {
@@ -284,7 +322,13 @@ const commonTestCases: CommonTestCase[] = [
           { name: 'string_1', type: 'string' }
         ],
         warnings: [],
-        data: [{ boolean_1: true, string_1: 'something' }]
+        data: [
+          {
+            data: { boolean_1: true, string_1: 'something' },
+            index: 0,
+            uncoerced: { boolean_1: 'T', string_1: 'something' }
+          }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -304,8 +348,8 @@ const commonTestCases: CommonTestCase[] = [
         ],
         warnings: [],
         data: [
-          { boolean_1: true, string_1: null },
-          { boolean_1: false, string_1: 'else' }
+          { data: { boolean_1: true, string_1: null }, index: 0, uncoerced: { boolean_1: 'T', string_1: 'null' } },
+          { data: { boolean_1: false, string_1: 'else' }, index: 1, uncoerced: { boolean_1: 'F', string_1: 'else' } }
         ]
       },
       meta: {
@@ -327,8 +371,8 @@ const commonTestCases: CommonTestCase[] = [
         ],
         warnings: [],
         data: [
-          { boolean_1: true, string_1: null },
-          { boolean_1: false, string_1: 'null' }
+          { data: { boolean_1: true, string_1: null }, index: 0, uncoerced: { boolean_1: 'T', string_1: 'nil' } },
+          { data: { boolean_1: false, string_1: 'null' }, index: 1, uncoerced: { boolean_1: 'F', string_1: 'null' } }
         ]
       },
       meta: {
@@ -346,7 +390,10 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'boolean_1', type: 'bool' }],
         warnings: [],
-        data: [{ boolean_1: true }, { boolean_1: false }]
+        data: [
+          { data: { boolean_1: true }, index: 0, uncoerced: { boolean_1: 'T' } },
+          { data: { boolean_1: false }, index: 1, uncoerced: { boolean_1: 'F' } }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -393,7 +440,14 @@ const parseCsvStreamTestCases: {
           'Too many fields: expected 1 fields but parsed 2',
           'Too many fields: expected 1 fields but parsed 2'
         ],
-        data: [{ boolean_1: null }, { boolean_1: null }]
+        data: [
+          {
+            data: { boolean_1: null },
+            index: 0,
+            uncoerced: {}
+          },
+          { data: { boolean_1: null }, index: 1, uncoerced: {} }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -412,7 +466,13 @@ const parseCsvStreamTestCases: {
           { name: 'dob', type: 'datetime' }
         ],
         warnings: [],
-        data: [{ name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') }]
+        data: [
+          {
+            data: { name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') },
+            index: 0,
+            uncoerced: { name: 'Xata', dob: '2019-01-01' }
+          }
+        ]
       },
       meta: {
         ...defaultMeta,
@@ -490,8 +550,8 @@ describe('parseCsvStreamBatches', () => {
       fileContents: `boolean_1;string_1\n${row.repeat(4)}`,
       options: { batchRowCount: 2, batchSizeMin: 2, concurrentBatchMax: 1 } as ParseCsvStreamBatchesOptions,
       expectedMeta: [
-        { delimiter: ';', estimatedProgress: 0.5, fields: ['boolean_1', 'string_1'], linebreak: '\n' },
-        { delimiter: ';', estimatedProgress: 1, fields: ['boolean_1', 'string_1'], linebreak: '\n' }
+        { delimiter: ';', estimatedProgress: 0.5, fields: ['boolean_1', 'string_1'], linebreak: '\n', rowIndex: 0 },
+        { delimiter: ';', estimatedProgress: 1, fields: ['boolean_1', 'string_1'], linebreak: '\n', rowIndex: 2 }
       ]
     },
     {
@@ -499,8 +559,8 @@ describe('parseCsvStreamBatches', () => {
       fileContents: `boolean_1;string_1\n${row.repeat(1500)}`,
       options: { concurrentBatchMax: 1 } as ParseCsvStreamBatchesOptions,
       expectedMeta: [
-        { delimiter: ';', estimatedProgress: 0.66, fields: ['boolean_1', 'string_1'], linebreak: '\n' },
-        { delimiter: ';', estimatedProgress: 1, fields: ['boolean_1', 'string_1'], linebreak: '\n' }
+        { delimiter: ';', estimatedProgress: 0.66, fields: ['boolean_1', 'string_1'], linebreak: '\n', rowIndex: 0 },
+        { delimiter: ';', estimatedProgress: 1, fields: ['boolean_1', 'string_1'], linebreak: '\n', rowIndex: 1000 }
       ]
     }
   ];

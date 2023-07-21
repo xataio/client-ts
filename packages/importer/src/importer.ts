@@ -19,7 +19,7 @@ export const importBatch = async (
     return {
       insert: {
         table: options.table,
-        record: row as { [key: string]: any }
+        record: row.data as { [key: string]: any }
       }
     };
   });
