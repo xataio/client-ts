@@ -9,7 +9,8 @@ export type {
   ParseMeta,
   ParseResults,
   ParseCsvStreamOptions,
-  ParseCsvStreamBatchesOptions
+  ParseCsvStreamBatchesOptions,
+  ParseResultData
 } from './types';
 export { generateRandomData } from './random-data';
 export { importColumnTypes } from './constants';
