@@ -158,6 +158,7 @@ export type ParseResultData = {
   data: unknown;
   original: unknown;
   index: number;
+  errorKeys: string[];
 };
 
 export type ParseResults =

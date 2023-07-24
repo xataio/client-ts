@@ -18,10 +18,17 @@ export const parseJson = (options: ParseJsonOptions, startIndex = 0): ParseResul
     const original = Array.isArray(arrayUpToLimit[index])
       ? arrayToObject(arrayUpToLimit[index])
       : arrayUpToLimit[index];
+
+    const errorKeys = Object.entries(row)
+      .filter(([_key, value]) => value.isError)
+      .map(([key]) => key);
+
+    const data = Object.fromEntries(Object.entries(row).map(([key, value]) => [key, value.value]));
     return {
-      data: row,
+      data,
       original,
-      index: index + startIndex
+      index: index + startIndex,
+      errorKeys
     };
   });
 
