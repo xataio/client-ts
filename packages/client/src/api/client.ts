@@ -1338,7 +1338,7 @@ class SearchAndFilterApi {
     });
   }
 
-  public chatSessionMessage({
+  public askTableSession({
     workspace,
     region,
     database,
@@ -1354,8 +1354,8 @@ class SearchAndFilterApi {
     table: Schemas.TableName;
     sessionId: string;
     message: string;
-  }): Promise<Components.ChatSessionMessageResponse> {
-    return operationsByTag.searchAndFilter.chatSessionMessage({
+  }): Promise<Components.AskTableSessionResponse> {
+    return operationsByTag.searchAndFilter.askTableSession({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, sessionId },
       body: { message },
       ...this.extraProps
