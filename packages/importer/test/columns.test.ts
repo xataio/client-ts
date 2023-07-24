@@ -1,6 +1,6 @@
 import { Schemas } from '@xata.io/client';
 import { describe, expect, test } from 'vitest';
-import { coerceRows, coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
+import { CoercedValue, coerceRows, coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
 import { ColumnOptions } from '../src/types';
 import { yepNopeToBoolean } from './utils';
 
@@ -214,36 +214,48 @@ describe('guessColumns', () => {
 
 const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?: ColumnOptions; expected: unknown }[] =
   [
-    { input: '1', type: 'int', expected: 1 },
-    { input: '1', type: 'float', expected: 1.0 },
-    { input: '1.1', type: 'float', expected: 1.1 },
-    { input: 'banana', type: 'float', expected: null },
-    { input: '1.1', type: 'string', expected: '1.1' },
-    { input: '1', type: 'string', expected: '1' },
-    { input: 'rec_xyz', type: 'link', expected: 'rec_xyz' },
-    { input: 'true', type: 'bool', expected: true },
+    { input: '1', type: 'int', expected: { value: 1, isError: false } },
+    { input: '1', type: 'float', expected: { value: 1.0, isError: false } },
+    { input: '1.1', type: 'float', expected: { value: 1.1, isError: false } },
+    { input: 'banana', type: 'float', expected: { value: null, isError: true } },
+    { input: '1.1', type: 'string', expected: { value: '1.1', isError: false } },
+    { input: '1', type: 'string', expected: { value: '1', isError: false } },
+    { input: 'rec_xyz', type: 'link', expected: { value: 'rec_xyz', isError: false } },
+    { input: 'true', type: 'bool', expected: { value: true, isError: false } },
     {
       input: 'nope',
       type: 'bool',
-      expected: false,
+      expected: { value: false, isError: false },
       options: { toBoolean: yepNopeToBoolean }
     },
-    { input: 'false', type: 'bool', expected: false },
-    { input: 'T', type: 'bool', expected: true },
-    { input: 'notABool', type: 'bool', expected: null },
-    { input: 'something', type: 'text', expected: 'something' },
-    { input: 'something', type: 'string', expected: 'something' },
-    { input: '2000-01-01', type: 'datetime', expected: new Date('2000-01-01') },
-    { input: '2020-01-01T00:00:00Z', type: 'datetime', expected: new Date('2020-01-01T00:00:00Z') },
-    { input: '2020-01-01T00:00:00+00:00', type: 'datetime', expected: new Date('2020-01-01T00:00:00+00:00') },
-    { input: '2020-01-01T00:00:00+01:00', type: 'datetime', expected: new Date('2020-01-01T00:00:00+01:00') },
+    { input: 'false', type: 'bool', expected: { value: false, isError: false } },
+    { input: 'T', type: 'bool', expected: { value: true, isError: false } },
+    { input: 'notABool', type: 'bool', expected: { value: null, isError: true } },
+    { input: 'something', type: 'text', expected: { value: 'something', isError: false } },
+    { input: 'something', type: 'string', expected: { value: 'something', isError: false } },
+    { input: '2000-01-01', type: 'datetime', expected: { value: new Date('2000-01-01'), isError: false } },
+    {
+      input: '2020-01-01T00:00:00Z',
+      type: 'datetime',
+      expected: { value: new Date('2020-01-01T00:00:00Z'), isError: false }
+    },
+    {
+      input: '2020-01-01T00:00:00+00:00',
+      type: 'datetime',
+      expected: { value: new Date('2020-01-01T00:00:00+00:00'), isError: false }
+    },
+    {
+      input: '2020-01-01T00:00:00+01:00',
+      type: 'datetime',
+      expected: { value: new Date('2020-01-01T00:00:00+01:00'), isError: false }
+    },
     // excel formats
-    // { input: '2/4/1964', type: 'datetime', expected: new Date('1964-04-02') },
-    // { input: '02/04/1964', type: 'datetime', expected: new Date('1964-04-02') },
-    // { input: '02/04/1964 05:56', type: 'datetime', expected: new Date('1964-04-02T05:56:00.000Z') },
-    // { input: '05/02/1968 17:44:00', type: 'datetime', expected: new Date('1968-02-05T17:44:00.000Z') },
-    { input: '2000-01-01', type: 'datetime', expected: new Date('2000-01-01') },
-    { input: 'something', type: 'datetime', expected: null }
+    // { input: '2/4/1964', type: 'datetime', expected: {value: new Date('1964-04-02') }},
+    // { input: '02/04/1964', type: 'datetime', expected: {value: new Date('1964-04-02') }},
+    // { input: '02/04/1964 05:56', type: 'datetime', expected: {value: new Date('1964-04-02T05:56:00.000Z') }},
+    // { input: '05/02/1968 17:44:00', type: 'datetime', expected: {value: new Date('1968-02-05T17:44:00.000Z') }},
+    { input: '2000-01-01', type: 'datetime', expected: { value: new Date('2000-01-01'), isError: false } },
+    { input: 'something', type: 'datetime', expected: { value: null, isError: true } }
   ];
 
 describe('coerceValue', () => {
@@ -258,90 +270,95 @@ const coerceRowsTestCases: {
   rows: Record<string, unknown>[];
   columns: Schemas.Column[];
   options?: ColumnOptions;
-  expected: Record<string, unknown>[];
+  expected: Record<string, CoercedValue>[];
 }[] = [
   {
-    rows: [{ value: '1' }, { value: '-2' }],
-    columns: [{ name: 'value', type: 'int' }],
-    expected: [{ value: 1 }, { value: -2 }]
+    rows: [{ col: '1' }, { col: '-2' }],
+    columns: [{ name: 'col', type: 'int' }],
+    expected: [{ col: { value: 1, isError: false } }, { col: { value: -2, isError: false } }]
   },
   {
-    rows: [{ value: '1.0' }],
-    columns: [{ name: 'value', type: 'float' }],
-    expected: [{ value: 1.0 }]
+    rows: [{ col: '1.0' }],
+    columns: [{ name: 'col', type: 'float' }],
+    expected: [{ col: { value: 1.0, isError: false } }]
   },
   {
-    rows: [{ value: '-1.1' }],
-    columns: [{ name: 'value', type: 'float' }],
-    expected: [{ value: -1.1 }]
+    rows: [{ col: '-1.1' }],
+    columns: [{ name: 'col', type: 'float' }],
+    expected: [{ col: { value: -1.1, isError: false } }]
   },
   {
-    rows: [{ value: 'banana' }],
-    columns: [{ name: 'value', type: 'float' }],
-    expected: [{ value: null }]
+    rows: [{ col: 'banana' }],
+    columns: [{ name: 'col', type: 'float' }],
+    expected: [{ col: { value: null, isError: true } }]
   },
   {
-    rows: [{ value: '1.1' }],
-    columns: [{ name: 'value', type: 'string' }],
-    expected: [{ value: '1.1' }]
+    rows: [{ col: '1.1' }],
+    columns: [{ name: 'col', type: 'string' }],
+    expected: [{ col: { value: '1.1', isError: false } }]
   },
   {
-    rows: [{ value: '1' }],
-    columns: [{ name: 'value', type: 'string' }],
-    expected: [{ value: '1' }]
+    rows: [{ col: '1' }],
+    columns: [{ name: 'col', type: 'string' }],
+    expected: [{ col: { value: '1', isError: false } }]
   },
   {
-    rows: [{ value: 'true' }],
-    columns: [{ name: 'value', type: 'bool' }],
-    expected: [{ value: true }]
+    rows: [{ col: 'null' }],
+    columns: [{ name: 'col', type: 'string' }],
+    expected: [{ col: { value: null, isError: false } }]
   },
   {
-    rows: [{ value: 'false' }],
-    columns: [{ name: 'value', type: 'bool' }],
-    expected: [{ value: false }]
+    rows: [{ col: 'true' }],
+    columns: [{ name: 'col', type: 'bool' }],
+    expected: [{ col: { value: true, isError: false } }]
   },
   {
-    rows: [{ value: 'T' }],
-    columns: [{ name: 'value', type: 'bool' }],
-    expected: [{ value: true }]
+    rows: [{ col: 'false' }],
+    columns: [{ name: 'col', type: 'bool' }],
+    expected: [{ col: { value: false, isError: false } }]
   },
   {
-    rows: [{ value: 'notABool' }],
-    columns: [{ name: 'value', type: 'bool' }],
-    expected: [{ value: null }]
+    rows: [{ col: 'T' }],
+    columns: [{ name: 'col', type: 'bool' }],
+    expected: [{ col: { value: true, isError: false } }]
   },
   {
-    rows: [{ value: 'something' }],
-    columns: [{ name: 'value', type: 'text' }],
-    expected: [{ value: 'something' }]
+    rows: [{ col: 'notABool' }],
+    columns: [{ name: 'col', type: 'bool' }],
+    expected: [{ col: { value: null, isError: true } }]
   },
   {
-    rows: [{ value: 'something' }],
-    columns: [{ name: 'value', type: 'string' }],
-    expected: [{ value: 'something' }]
+    rows: [{ col: 'something' }],
+    columns: [{ name: 'col', type: 'text' }],
+    expected: [{ col: { value: 'something', isError: false } }]
   },
   {
-    rows: [{ value: '2000-01-01' }],
-    columns: [{ name: 'value', type: 'datetime' }],
-    expected: [{ value: new Date('2000-01-01') }]
+    rows: [{ col: 'something' }],
+    columns: [{ name: 'col', type: 'string' }],
+    expected: [{ col: { value: 'something', isError: false } }]
   },
   {
-    rows: [{ value: 'something' }],
-    columns: [{ name: 'value', type: 'datetime' }],
-    expected: [{ value: null }]
+    rows: [{ col: '2000-01-01' }],
+    columns: [{ name: 'col', type: 'datetime' }],
+    expected: [{ col: { value: new Date('2000-01-01'), isError: false } }]
   },
   {
-    rows: [{ value1: '1', value2: 'true' }],
+    rows: [{ col: 'something' }],
+    columns: [{ name: 'col', type: 'datetime' }],
+    expected: [{ col: { value: null, isError: true } }]
+  },
+  {
+    rows: [{ col1: '1', col2: 'true' }],
     columns: [
-      { name: 'value1', type: 'int' },
-      { name: 'value2', type: 'bool' }
+      { name: 'col1', type: 'int' },
+      { name: 'col2', type: 'bool' }
     ],
-    expected: [{ value1: 1, value2: true }]
+    expected: [{ col1: { value: 1, isError: false }, col2: { value: true, isError: false } }]
   },
   {
     rows: [{ link1: 'rec_xyz' }],
     columns: [{ name: 'link1', type: 'link', link: { table: 'myLink' } }],
-    expected: [{ link1: 'rec_xyz' }]
+    expected: [{ link1: { value: 'rec_xyz', isError: false } }]
   }
 ];
 

@@ -91,38 +91,41 @@ export const guessColumnTypes = <T>(
   return 'string';
 };
 
+export type CoercedValue = { value: string | number | boolean | Date | null; isError: boolean };
+
 export const coerceValue = (
   value: unknown,
   type: Schemas.Column['type'],
   options: ColumnOptions = {}
-): string | number | boolean | Date | null => {
+): CoercedValue => {
   const { isNull = defaultIsNull, toBoolean = defaultToBoolean } = options;
 
   if (isNull(value)) {
-    return null;
+    return { value: null, isError: false };
   }
 
   switch (type) {
     case 'string':
     case 'text':
     case 'link': {
-      return String(value);
+      return { value: String(value), isError: false };
     }
     case 'int': {
-      return isInteger(value) ? parseInt(String(value), 10) : null;
+      return isInteger(value) ? { value: parseInt(String(value), 10), isError: false } : { value: null, isError: true };
     }
     case 'float': {
-      return isFloat(value) ? parseFloat(String(value)) : null;
+      return isFloat(value) ? { value: parseFloat(String(value)), isError: false } : { value: null, isError: true };
     }
     case 'bool': {
-      return toBoolean(value);
+      const boolValue = toBoolean(value);
+      return { value: boolValue, isError: boolValue === null };
     }
     case 'datetime': {
       const date = anyToDate(value);
-      return date.invalid ? null : date;
+      return date.invalid ? { value: null, isError: true } : { value: date, isError: false };
     }
     default: {
-      return value as string | number | boolean | Date | null;
+      return { value: null, isError: true };
     }
   }
 };
@@ -131,12 +134,12 @@ export const coerceRows = <T extends Record<string, unknown>>(
   rows: T[],
   columns: Schemas.Column[],
   options?: ColumnOptions
-): T[] => {
+): Record<string, CoercedValue>[] => {
   return rows.map((row) => {
     return columns.reduce((newRow, column) => {
-      (newRow as Record<string, unknown>)[column.name] = coerceValue(row[column.name], column.type, options);
+      (newRow as Record<string, CoercedValue>)[column.name] = coerceValue(row[column.name], column.type, options);
       return newRow;
-    }, {}) as T;
+    }, {}) as Record<string, CoercedValue>;
   });
 };
 
