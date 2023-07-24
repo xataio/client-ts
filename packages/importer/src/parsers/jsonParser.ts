@@ -15,12 +15,12 @@ export const parseJson = (options: ParseJsonOptions, startIndex = 0): ParseResul
   const arrayUpToLimit = isDefined(limit) ? array.slice(0, limit) : array;
   const columns = externalColumns ?? guessColumns(arrayUpToLimit, options);
   const data = coerceRows(arrayUpToLimit, columns, options).map((row, index) => {
-    const uncoerced = Array.isArray(arrayUpToLimit[index])
+    const original = Array.isArray(arrayUpToLimit[index])
       ? arrayToObject(arrayUpToLimit[index])
       : arrayUpToLimit[index];
     return {
       data: row,
-      uncoerced,
+      original,
       index: index + startIndex
     };
   });

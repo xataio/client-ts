@@ -156,7 +156,7 @@ export type ParseMeta = {
 
 export type ParseResultData = {
   data: unknown;
-  uncoerced: unknown;
+  original: unknown;
   index: number;
 };
 
