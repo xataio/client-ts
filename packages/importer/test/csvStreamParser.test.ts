@@ -143,6 +143,27 @@ const commonTestCases: CommonTestCase[] = [
     }
   },
   {
+    name: 'with errors',
+    fileContents: 'boolean_1\nnotABool\nF',
+    options: { columns: [{ name: 'boolean_1', type: 'bool' }] },
+
+    expected: {
+      results: {
+        success: true,
+        columns: [{ name: 'boolean_1', type: 'bool' }],
+        warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
+        data: [
+          { data: { boolean_1: null }, index: 0, original: { boolean_1: 'notABool' }, errorKeys: ['boolean_1'] },
+          { data: { boolean_1: false }, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
+        ]
+      },
+      meta: {
+        ...defaultMeta,
+        fields: ['boolean_1']
+      }
+    }
+  },
+  {
     name: 'semicolon delimited',
     fileContents: 'boolean_1;string_1\nT;something\nF;else',
     expected: {

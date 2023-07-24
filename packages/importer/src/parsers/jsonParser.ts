@@ -22,7 +22,7 @@ export const parseJson = (options: ParseJsonOptions, startIndex = 0): ParseResul
     const errorKeys = Object.entries(row)
       .filter(([_key, value]) => value.isError)
       .map(([key]) => key);
-
+    console.log('zzz errorKeys', errorKeys);
     const data = Object.fromEntries(Object.entries(row).map(([key, value]) => [key, value.value]));
     return {
       data,
