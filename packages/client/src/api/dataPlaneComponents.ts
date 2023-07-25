@@ -3989,9 +3989,9 @@ export type AskTableResponse = {
    */
   answer: string;
   /**
-   * The session ID for the chat session. Only returned if the `session_type` is `chat`.
+   * The session ID for the chat session.
    */
-  sessionID?: string;
+  sessionId: string;
 };
 
 export type AskTableRequestBody = {
@@ -4056,7 +4056,7 @@ export const askTable = (variables: AskTableVariables, signal?: AbortSignal) =>
     signal
   });
 
-export type ChatSessionMessagePathParams = {
+export type AskTableSessionPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
@@ -4074,7 +4074,7 @@ export type ChatSessionMessagePathParams = {
   region: string;
 };
 
-export type ChatSessionMessageError = Fetcher.ErrorWrapper<
+export type AskTableSessionError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -4097,14 +4097,14 @@ export type ChatSessionMessageError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type ChatSessionMessageResponse = {
+export type AskTableSessionResponse = {
   /**
    * The answer to the input question
    */
   answer?: string;
 };
 
-export type ChatSessionMessageRequestBody = {
+export type AskTableSessionRequestBody = {
   /**
    * The question you'd like to ask.
    *
@@ -4113,22 +4113,22 @@ export type ChatSessionMessageRequestBody = {
   message?: string;
 };
 
-export type ChatSessionMessageVariables = {
-  body?: ChatSessionMessageRequestBody;
-  pathParams: ChatSessionMessagePathParams;
+export type AskTableSessionVariables = {
+  body?: AskTableSessionRequestBody;
+  pathParams: AskTableSessionPathParams;
 } & DataPlaneFetcherExtraProps;
 
 /**
  * Ask a follow-up question. If the `Accept` header is set to `text/event-stream`, Xata will stream the results back as SSE's.
  */
-export const chatSessionMessage = (variables: ChatSessionMessageVariables, signal?: AbortSignal) =>
+export const askTableSession = (variables: AskTableSessionVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    ChatSessionMessageResponse,
-    ChatSessionMessageError,
-    ChatSessionMessageRequestBody,
+    AskTableSessionResponse,
+    AskTableSessionError,
+    AskTableSessionRequestBody,
     {},
     {},
-    ChatSessionMessagePathParams
+    AskTableSessionPathParams
   >({ url: '/db/{dbBranchName}/tables/{tableName}/ask/{sessionId}', method: 'post', ...variables, signal });
 
 export type SummarizeTablePathParams = {
@@ -4435,7 +4435,7 @@ export const operationsByTag = {
     sqlQuery,
     vectorSearchTable,
     askTable,
-    chatSessionMessage,
+    askTableSession,
     summarizeTable,
     aggregateTable
   }
