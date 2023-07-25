@@ -115,8 +115,8 @@ export type Column = {
 };
 
 export type RevLink = {
-  linkID: string;
   table: string;
+  column: string;
 };
 
 export type Table = {
