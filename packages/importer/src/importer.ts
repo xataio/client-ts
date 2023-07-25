@@ -42,7 +42,7 @@ export const importBatch = async (
     if (retries < maxRetries) {
       // exponential backoff
       await delay(1000 * 2 ** retries);
-      return importBatch(pathParams, options, pluginOptions, undefined, maxRetries, retries + 1);
+      return importBatch(pathParams, options, pluginOptions, errors, maxRetries, retries + 1);
     }
 
     throw error;
