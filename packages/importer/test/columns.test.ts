@@ -65,8 +65,8 @@ const guessDatesTestCases = [
 ];
 
 const guessMultipleTestCases = [
-  { input: ['foo,bar'], expected: 'multiple' },
-  { input: ['foo,bar', 'bar'], expected: 'multiple' },
+  { input: ['foo,bar'], expected: 'string' },
+  { input: ['foo,bar', 'bar'], expected: 'string' },
   { input: ['["foo", "bar"]'], expected: 'multiple' },
   { input: [['foo', 'bar']], expected: 'multiple' }
 ];
@@ -186,8 +186,8 @@ const guessColumnsTestCases = [
     ]
   },
   { input: [{ date: 'today' }], expected: [{ type: 'datetime', name: 'date' }] },
-  { input: [{ multiple: 'foo,bar' }], expected: [{ type: 'multiple', name: 'multiple' }] },
-  { input: [{ multiple: 'foo,bar' }, { multiple: 'something' }], expected: [{ type: 'multiple', name: 'multiple' }] },
+  { input: [{ multiple: 'foo,bar' }], expected: [{ type: 'string', name: 'multiple' }] },
+  { input: [{ multiple: 'foo,bar' }, { multiple: 'something' }], expected: [{ type: 'string', name: 'multiple' }] },
   { input: [{ multiple: '["foo","bar"]' }], expected: [{ type: 'multiple', name: 'multiple' }] },
   { input: [{ nullValue: null }], expected: [{ type: 'string', name: 'nullValue' }] },
   { input: [{ undefinedValue: undefined }], expected: [{ type: 'string', name: 'undefinedValue' }] },

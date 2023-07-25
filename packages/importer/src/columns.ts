@@ -67,8 +67,9 @@ const parseMultiple = (value: string): string[] | null => {
   return CSV.parse(value, { header: false }).data[0] as string[];
 };
 
-const isMultiple = <T>(value: T): boolean =>
-  Array.isArray(value) || tryIsJsonArray(String(value)) || tryIsCsvArray(String(value));
+const isGuessableMultiple = <T>(value: T): boolean => Array.isArray(value) || tryIsJsonArray(String(value));
+
+const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIsCsvArray(String(value));
 
 const isMaybeMultiple = <T>(value: T): boolean => isMultiple(value) || typeof value === 'string';
 
@@ -114,7 +115,7 @@ export const guessColumnTypes = <T>(
   if (columnValues.every(isEmail)) {
     return 'email';
   }
-  if (columnValues.some(isMultiple)) {
+  if (columnValues.some(isGuessableMultiple)) {
     return 'multiple';
   }
   // text needs to be checked before string
