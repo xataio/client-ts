@@ -178,7 +178,7 @@ export type CsvResults = {
 export type ImportBatchOptions = {
   columns: Column[];
   table: string;
-  batch: ParseResults;
+  batchRows: unknown[];
 };
 
 export type ImportError = { row: unknown; error: string; index: number };
