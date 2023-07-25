@@ -19,6 +19,7 @@ import Codegen, { languages, unsupportedExtensionError } from '../codegen/index.
 import RandomData from '../random-data/index.js';
 import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
+import Pull from '../pull/index.js';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 
@@ -158,7 +159,8 @@ export default class Init extends BaseCommand<typeof Init> {
       await this.deploySchema(workspace, region, database, branch, schema);
     }
 
-    await Codegen.runIfConfigured(this.projectConfig);
+    // Run pull to retrieve remote migrations, remove any local migrations, and generate code
+    await Pull.run([branch, '-f']);
     await this.delay(1000);
 
     this.log();
@@ -170,6 +172,7 @@ export default class Init extends BaseCommand<typeof Init> {
       const { schema: currentSchema } = await (
         await this.getXataClient()
       ).api.branches.getBranchDetails({ workspace, database, region, branch });
+
       const hasTables = currentSchema?.tables && currentSchema?.tables.length > 0;
       const hasColumns = currentSchema?.tables.some((t) => t.columns.length > 0);
       const isSchemaSetup = hasTables && hasColumns;
