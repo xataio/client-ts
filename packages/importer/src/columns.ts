@@ -1,4 +1,5 @@
 import type { Schemas } from '@xata.io/client';
+import CSV from 'papaparse';
 import AnyDateParser from 'any-date-parser';
 import { ColumnOptions, ToBoolean } from './types';
 import { isDefined } from './utils/lang';
@@ -42,6 +43,36 @@ const isText = <T>(value: T): boolean =>
   // Check for long strings
   String(value).length > 180;
 
+const tryIsJsonArray = (string: string): boolean => {
+  try {
+    const parsed = JSON.parse(string);
+    return parsed.length > 0 && Array.isArray(parsed);
+  } catch (_error) {
+    return false;
+  }
+};
+
+const tryIsCsvArray = (string: string): boolean => {
+  try {
+    return CSV.parse(string, { header: false }).errors.length === 0;
+  } catch (_error) {
+    return false;
+  }
+};
+
+const parseMultiple = (value: string): string[] | null => {
+  if (tryIsJsonArray(value)) {
+    return JSON.parse(value) as string[];
+  }
+  return CSV.parse(value, { header: false }).data[0] as string[];
+};
+
+const isGuessableMultiple = <T>(value: T): boolean => Array.isArray(value) || tryIsJsonArray(String(value));
+
+const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIsCsvArray(String(value));
+
+const isMaybeMultiple = <T>(value: T): boolean => isMultiple(value) || typeof value === 'string';
+
 // should both of these be a function?
 const defaultIsNull = (value: unknown): boolean => {
   return !isDefined(value) || String(value).toLowerCase() === 'null' || String(value).trim() === '';
@@ -84,6 +115,9 @@ export const guessColumnTypes = <T>(
   if (columnValues.every(isEmail)) {
     return 'email';
   }
+  if (columnValues.some(isGuessableMultiple)) {
+    return 'multiple';
+  }
   // text needs to be checked before string
   if (columnValues.some(isText)) {
     return 'text';
@@ -91,7 +125,7 @@ export const guessColumnTypes = <T>(
   return 'string';
 };
 
-export type CoercedValue = { value: string | number | boolean | Date | null; isError: boolean };
+export type CoercedValue = { value: string | string[] | number | boolean | Date | null; isError: boolean };
 
 export const coerceValue = (
   value: unknown,
@@ -123,6 +157,11 @@ export const coerceValue = (
     case 'datetime': {
       const date = anyToDate(value);
       return date.invalid ? { value: null, isError: true } : { value: date, isError: false };
+    }
+    case 'multiple': {
+      return isMaybeMultiple(value)
+        ? { value: parseMultiple(String(value)), isError: false }
+        : { value: null, isError: true };
     }
     default: {
       return { value: null, isError: true };
