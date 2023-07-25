@@ -64,6 +64,13 @@ const guessDatesTestCases = [
   // todo: add invalid test cases with more variety
 ];
 
+const guessMultipleTestCases = [
+  { input: ['foo,bar'], expected: 'string' },
+  { input: ['foo,bar', 'bar'], expected: 'string' },
+  { input: ['["foo", "bar"]'], expected: 'multiple' },
+  { input: [['foo', 'bar']], expected: 'multiple' }
+];
+
 const guessNullTestCases = [
   { input: [undefined], expected: 'string' },
   { input: ['null'], expected: 'string' },
@@ -109,6 +116,13 @@ describe('guessColumnTypes', () => {
     for (const { input, expected } of guessDatesTestCases) {
       test(`guesses ${expected} for ${JSON.stringify(input)}`, () => {
         expect(guessColumnTypes<string | Date>(input)).toEqual(expected);
+      });
+    }
+  });
+  describe('schema guessing for multiples', () => {
+    for (const { input, expected } of guessMultipleTestCases) {
+      test(`guesses ${expected} for ${JSON.stringify(input)}`, () => {
+        expect(guessColumnTypes(input as any)).toEqual(expected);
       });
     }
   });
@@ -172,14 +186,17 @@ const guessColumnsTestCases = [
     ]
   },
   { input: [{ date: 'today' }], expected: [{ type: 'datetime', name: 'date' }] },
+  { input: [{ multiple: 'foo,bar' }], expected: [{ type: 'string', name: 'multiple' }] },
+  { input: [{ multiple: 'foo,bar' }, { multiple: 'something' }], expected: [{ type: 'string', name: 'multiple' }] },
+  { input: [{ multiple: '["foo","bar"]' }], expected: [{ type: 'multiple', name: 'multiple' }] },
   { input: [{ nullValue: null }], expected: [{ type: 'string', name: 'nullValue' }] },
   { input: [{ undefinedValue: undefined }], expected: [{ type: 'string', name: 'undefinedValue' }] },
   { input: [{ obj: { key: 'value' } }], expected: [{ type: 'string', name: 'obj' }] },
-  { input: [{ arr: [1, 2, 3] }], expected: [{ type: 'string', name: 'arr' }] },
-  { input: [{ booleanStrings: ['true', 'false'] }], expected: [{ type: 'string', name: 'booleanStrings' }] },
-  { input: [{ booleanMixed: ['true', false] }], expected: [{ type: 'string', name: 'booleanMixed' }] },
-  { input: [{ mixedNumbers: ['1', 2, '3.0'] }], expected: [{ type: 'string', name: 'mixedNumbers' }] },
-  { input: [{ dateStrings: ['2020-01-01', '2020-01-02'] }], expected: [{ type: 'string', name: 'dateStrings' }] },
+  { input: [{ arr: [1, 2, 3] }], expected: [{ type: 'multiple', name: 'arr' }] },
+  { input: [{ booleanStrings: ['true', 'false'] }], expected: [{ type: 'multiple', name: 'booleanStrings' }] },
+  { input: [{ booleanMixed: ['true', false] }], expected: [{ type: 'multiple', name: 'booleanMixed' }] },
+  { input: [{ mixedNumbers: ['1', 2, '3.0'] }], expected: [{ type: 'multiple', name: 'mixedNumbers' }] },
+  { input: [{ dateStrings: ['2020-01-01', '2020-01-02'] }], expected: [{ type: 'multiple', name: 'dateStrings' }] },
   { input: [{ complex: { num: 1, text: 'foo', bool: true } }], expected: [{ type: 'string', name: 'complex' }] },
   {
     input: [{ multiple: 1, types: 'string', inObject: true }],
@@ -233,6 +250,9 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
     { input: 'notABool', type: 'bool', expected: { value: null, isError: true } },
     { input: 'something', type: 'text', expected: { value: 'something', isError: false } },
     { input: 'something', type: 'string', expected: { value: 'something', isError: false } },
+    { input: 'a,b', type: 'multiple', expected: { value: ['a', 'b'], isError: false } },
+    { input: '["a","b"]', type: 'multiple', expected: { value: ['a', 'b'], isError: false } },
+    { input: 'a', type: 'multiple', expected: { value: ['a'], isError: false } },
     { input: '2000-01-01', type: 'datetime', expected: { value: new Date('2000-01-01'), isError: false } },
     {
       input: '2020-01-01T00:00:00Z',
@@ -341,6 +361,21 @@ const coerceRowsTestCases: {
     rows: [{ col: '2000-01-01' }],
     columns: [{ name: 'col', type: 'datetime' }],
     expected: [{ col: { value: new Date('2000-01-01'), isError: false } }]
+  },
+  {
+    rows: [{ col: 'something,else' }],
+    columns: [{ name: 'col', type: 'multiple' }],
+    expected: [{ col: { value: ['something', 'else'], isError: false } }]
+  },
+  {
+    rows: [{ col: '["something","else"]' }],
+    columns: [{ name: 'col', type: 'multiple' }],
+    expected: [{ col: { value: ['something', 'else'], isError: false } }]
+  },
+  {
+    rows: [{ col: 'something' }],
+    columns: [{ name: 'col', type: 'multiple' }],
+    expected: [{ col: { value: ['something'], isError: false } }]
   },
   {
     rows: [{ col: 'something' }],
