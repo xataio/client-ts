@@ -11,6 +11,8 @@ export * from './pagination';
 export { Query } from './query';
 export { isIdentifiable, isXataRecord, RecordColumnTypes } from './record';
 export type { BaseData, EditableData, Identifiable, Link, XataRecord, JSONData } from './record';
+export { XataFile } from './files';
+export type { XataArrayFile } from './files';
 export { Repository, RestRepository } from './repository';
 export * from './selection';
 export * from './ask';

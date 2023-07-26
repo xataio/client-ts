@@ -125,11 +125,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
         }
+        const batchRows = parseResults.data.map(({ data }) => data);
         const dbBranchName = `${database}:${branch}`;
         const importResult = await xata.import.importBatch(
           // @ts-ignore
           { dbBranchName: dbBranchName, region, workspace: workspace, database },
-          { columns: parseResults.columns, table, batch: parseResults }
+          { columns: parseResults.columns, table, batchRows }
         );
         importSuccessCount += importResult.successful.results.length;
         if (importResult.errors) {

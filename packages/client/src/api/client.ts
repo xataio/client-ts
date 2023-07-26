@@ -1338,7 +1338,7 @@ class SearchAndFilterApi {
     });
   }
 
-  public chatSessionMessage({
+  public askTableSession({
     workspace,
     region,
     database,
@@ -1354,8 +1354,8 @@ class SearchAndFilterApi {
     table: Schemas.TableName;
     sessionId: string;
     message: string;
-  }): Promise<Components.ChatSessionMessageResponse> {
-    return operationsByTag.searchAndFilter.chatSessionMessage({
+  }): Promise<Components.AskTableSessionResponse> {
+    return operationsByTag.searchAndFilter.askTableSession({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, sessionId },
       body: { message },
       ...this.extraProps
@@ -1802,15 +1802,18 @@ class DatabaseApi {
   public createDatabase({
     workspace,
     database,
-    data
+    data,
+    headers
   }: {
     workspace: Schemas.WorkspaceID;
     database: Schemas.DBName;
     data: Components.CreateDatabaseRequestBody;
+    headers?: Record<string, string>;
   }): Promise<Components.CreateDatabaseResponse> {
     return operationsByTag.databases.createDatabase({
       pathParams: { workspaceId: workspace, dbName: database },
       body: data,
+      headers,
       ...this.extraProps
     });
   }

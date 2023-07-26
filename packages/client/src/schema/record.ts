@@ -1,5 +1,6 @@
 import { isObject, isString } from '../util/lang';
 import { ExclusiveOr } from '../util/types';
+import { XataArrayFile, XataFile } from './files';
 import { SelectableColumn, SelectedPick } from './selection';
 
 export const RecordColumnTypes = [
@@ -172,6 +173,8 @@ type NumericOperator = ExclusiveOr<
   ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
 >;
 
+export type InputXataFile = Partial<XataArrayFile> | Promise<Partial<XataArrayFile>>;
+
 type EditableDataFields<T> = T extends XataRecord
   ? { id: Identifier } | Identifier
   : NonNullable<T> extends XataRecord
@@ -180,6 +183,10 @@ type EditableDataFields<T> = T extends XataRecord
   ? string | Date
   : NonNullable<T> extends Date
   ? string | Date | null | undefined
+  : T extends XataFile
+  ? InputXataFile
+  : T extends XataFile[]
+  ? InputXataFile[]
   : T extends number
   ? number | NumericOperator
   : T;

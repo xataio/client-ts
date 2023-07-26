@@ -30,6 +30,8 @@ const tables = [
     columns: [
       { name: 'email', type: 'email', unique: true },
       { name: 'name', type: 'string' },
+      { name: 'photo', type: 'file' },
+      { name: 'attachments', type: 'file[]' },
       {
         name: 'settings',
         type: 'object',

@@ -151,6 +151,14 @@ export type ParseMeta = {
   delimiter: string;
   linebreak: string;
   fields: string[] | undefined;
+  rowIndex: number;
+};
+
+export type ParseResultData = {
+  data: unknown;
+  original: unknown;
+  index: number;
+  errorKeys: string[];
 };
 
 export type ParseResults =
@@ -158,7 +166,7 @@ export type ParseResults =
       success: true;
       columns: Column[];
       warnings: string[];
-      data: unknown[];
+      data: ParseResultData[];
     }
   | { success: false; errors: string[] };
 
@@ -170,7 +178,7 @@ export type CsvResults = {
 export type ImportBatchOptions = {
   columns: Column[];
   table: string;
-  batch: ParseResults;
+  batchRows: unknown[];
 };
 
-export type ImportError = { row: unknown; error: string };
+export type ImportError = { row: unknown; error: string; index: number };

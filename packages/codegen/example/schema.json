@@ -71,6 +71,14 @@
           "type": "string"
         },
         {
+          "name": "photo",
+          "type": "file"
+        },
+        {
+          "name": "attachments",
+          "type": "file[]"
+        },
+        {
           "name": "settings",
           "type": "object",
           "columns": [
