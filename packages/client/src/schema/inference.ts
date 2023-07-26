@@ -14,6 +14,10 @@ export type BaseSchema = {
     | { name: string; type: 'link'; link: { table: string } }
     | { name: string; type: 'object'; columns: { name: string; type: string }[] }
   )[];
+  revLinks?: readonly {
+    table: string;
+    column: string;
+  }[];
 };
 
 export type SchemaInference<T extends readonly BaseSchema[]> = T extends never[]
