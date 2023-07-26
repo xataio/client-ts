@@ -1,6 +1,6 @@
 import { Schemas } from '@xata.io/client';
+import { columnSchema } from '@xata.io/codegen';
 import z from 'zod';
-import { columnSchema } from '../schema.js';
 
 const addTable = z.object({
   addTable: z.object({ table: z.string() })

@@ -23,7 +23,8 @@ const tables = [
         ]
       },
       { name: 'owner', type: 'link', link: { table: 'users' } }
-    ]
+    ],
+    revLinks: [{ table: 'users', column: 'team' }]
   },
   {
     name: 'users',
@@ -62,7 +63,8 @@ const tables = [
       { name: 'pet', type: 'link', link: { table: 'pets' } },
       { name: 'account_value', type: 'int' },
       { name: 'vector', type: 'vector', vector: { dimension: 4 } }
-    ]
+    ],
+    revLinks: [{ table: 'teams', column: 'owner' }]
   },
   {
     name: 'pets',
@@ -70,7 +72,8 @@ const tables = [
       { name: 'name', type: 'string' },
       { name: 'type', type: 'string' },
       { name: 'num_legs', type: 'int' }
-    ]
+    ],
+    revLinks: [{ table: 'users', column: 'pet' }]
   }
 ] as const;
 
