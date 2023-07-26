@@ -9,7 +9,8 @@ const __dirname = dirname(__filename);
 
 async function main() {
   const databaseURL = 'https://test-r5vcv5.eu-west-1.xata.sh/db/test';
-  const schema = await parseSchemaFile(readFileSync(join(__dirname, 'schema.json'), 'utf-8'));
+  const fileContents = readFileSync(join(__dirname, 'schema.json'), 'utf-8');
+  const { data: schema } = parseSchemaFile(fileContents);
 
   // Test for existing code
   const typescriptContents = await readFile(join(__dirname, 'xata.ts'), 'utf-8').catch(() => undefined);

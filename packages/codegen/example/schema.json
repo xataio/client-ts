@@ -56,6 +56,12 @@
             "table": "users"
           }
         }
+      ],
+      "revLinks": [
+        {
+          "column": "team",
+          "table": "users"
+        }
       ]
     },
     {
@@ -153,6 +159,12 @@
             "dimension": 4
           }
         }
+      ],
+      "revLinks": [
+        {
+          "column": "owner",
+          "table": "teams"
+        }
       ]
     },
     {
@@ -169,6 +181,12 @@
         {
           "name": "num_legs",
           "type": "int"
+        }
+      ],
+      "revLinks": [
+        {
+          "column": "pet",
+          "table": "users"
         }
       ]
     }

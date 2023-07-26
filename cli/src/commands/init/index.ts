@@ -1,6 +1,6 @@
 import { Flags } from '@oclif/core';
 import { buildProviderString, Schemas } from '@xata.io/client';
-import { ModuleType } from '@xata.io/codegen';
+import { ModuleType, parseSchemaFile } from '@xata.io/codegen';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { access, readFile, writeFile } from 'fs/promises';
@@ -10,7 +10,6 @@ import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand, ENV_FILES } from '../../base.js';
 import { isIgnored } from '../../git.js';
-import { xataDatabaseSchema } from '../../schema.js';
 import { getDbTableExpression } from '../../utils/codeSnippet.js';
 import { delay } from '../../utils/delay.js';
 import { enumFlag } from '../../utils/oclif.js';
@@ -480,7 +479,7 @@ export default class Init extends BaseCommand<typeof Init> {
       this.error(`Could not parse the schema file at ${file}. Either it does not exist or is not valid JSON`);
     }
 
-    const schema = xataDatabaseSchema.safeParse(content);
+    const schema = parseSchemaFile(content);
     if (!schema.success) {
       this.warn(`The schema file is malformed`);
       this.printZodError(schema.error);
