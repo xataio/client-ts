@@ -1876,9 +1876,7 @@ export type AddTableColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Adds a new column to the table. The body of the request should contain the column definition. In the column definition, the 'name' field should
- * contain the full path separated by dots. If the parent objects do not exists, they will be automatically created. For example,
- * passing `"name": "address.city"` will auto-create the `address` object if it doesn't exist.
+ * Adds a new column to the table. The body of the request should contain the column definition.
  */
 export const addTableColumn = (variables: AddTableColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SchemaUpdateResponse, AddTableColumnError, Schemas.Column, {}, {}, AddTableColumnPathParams>(
@@ -1922,7 +1920,7 @@ export type GetColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Get the definition of a single column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ * Get the definition of a single column.
  */
 export const getColumn = (variables: GetColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Schemas.Column, GetColumnError, undefined, {}, {}, GetColumnPathParams>({
@@ -1977,7 +1975,7 @@ export type UpdateColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Update column with partial data. Can be used for renaming the column by providing a new "name" field. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ * Update column with partial data. Can be used for renaming the column by providing a new "name" field.
  */
 export const updateColumn = (variables: UpdateColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
@@ -2026,7 +2024,7 @@ export type DeleteColumnVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * Deletes the specified column. To refer to sub-objects, the column name can contain dots. For example `address.country`.
+ * Deletes the specified column.
  */
 export const deleteColumn = (variables: DeleteColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SchemaUpdateResponse, DeleteColumnError, undefined, {}, {}, DeleteColumnPathParams>({
@@ -2057,6 +2055,10 @@ export type BranchTransactionError = Fetcher.ErrorWrapper<
   | {
       status: 404;
       payload: Responses.SimpleError;
+    }
+  | {
+      status: 429;
+      payload: Responses.RateLimitError;
     }
 >;
 
@@ -2842,13 +2844,17 @@ export type QueryTableError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
 >;
 
 export type QueryTableRequestBody = {
   filter?: Schemas.FilterExpression;
   sort?: Schemas.SortExpression;
   page?: Schemas.PageConfig;
-  columns?: Schemas.ColumnsProjection;
+  columns?: Schemas.QueryColumnsProjection;
   /**
    * The consistency level for this request.
    *
@@ -3691,6 +3697,10 @@ export type SearchBranchError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
 >;
 
 export type SearchBranchRequestBody = {
@@ -3823,6 +3833,10 @@ export type SqlQueryError = Fetcher.ErrorWrapper<
       status: 404;
       payload: Responses.SimpleError;
     }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
 >;
 
 export type SqlQueryRequestBody = {
@@ -3832,6 +3846,10 @@ export type SqlQueryRequestBody = {
    * @minLength 1
    */
   query: string;
+  /**
+   * The query parameter list.
+   */
+  params?: any[] | null;
   /**
    * The consistency level for this request.
    *
@@ -3969,7 +3987,11 @@ export type AskTableResponse = {
   /**
    * The answer to the input question
    */
-  answer?: string;
+  answer: string;
+  /**
+   * The session ID for the chat session.
+   */
+  sessionId: string;
 };
 
 export type AskTableRequestBody = {
@@ -3978,7 +4000,7 @@ export type AskTableRequestBody = {
    *
    * @minLength 3
    */
-  question: string;
+  question?: string;
   /**
    * The type of search to use. If set to `keyword` (the default), the search can be configured by passing
    * a `search` object with the following fields. For more details about each, see the Search endpoint documentation.
@@ -4019,7 +4041,7 @@ export type AskTableRequestBody = {
 };
 
 export type AskTableVariables = {
-  body: AskTableRequestBody;
+  body?: AskTableRequestBody;
   pathParams: AskTablePathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -4033,6 +4055,81 @@ export const askTable = (variables: AskTableVariables, signal?: AbortSignal) =>
     ...variables,
     signal
   });
+
+export type AskTableSessionPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  /**
+   * @maxLength 36
+   * @minLength 36
+   */
+  sessionId: string;
+  workspace: string;
+  region: string;
+};
+
+export type AskTableSessionError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 429;
+      payload: Responses.RateLimitError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
+>;
+
+export type AskTableSessionResponse = {
+  /**
+   * The answer to the input question
+   */
+  answer?: string;
+};
+
+export type AskTableSessionRequestBody = {
+  /**
+   * The question you'd like to ask.
+   *
+   * @minLength 3
+   */
+  message?: string;
+};
+
+export type AskTableSessionVariables = {
+  body?: AskTableSessionRequestBody;
+  pathParams: AskTableSessionPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Ask a follow-up question. If the `Accept` header is set to `text/event-stream`, Xata will stream the results back as SSE's.
+ */
+export const askTableSession = (variables: AskTableSessionVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    AskTableSessionResponse,
+    AskTableSessionError,
+    AskTableSessionRequestBody,
+    {},
+    {},
+    AskTableSessionPathParams
+  >({ url: '/db/{dbBranchName}/tables/{tableName}/ask/{sessionId}', method: 'post', ...variables, signal });
 
 export type SummarizeTablePathParams = {
   /**
@@ -4264,7 +4361,7 @@ export type FileAccessVariables = {
  * Retrieve file content by access id
  */
 export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
+  dataPlaneFetch<Blob, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
     url: '/file/{fileId}',
     method: 'get',
     ...variables,
@@ -4338,6 +4435,7 @@ export const operationsByTag = {
     sqlQuery,
     vectorSearchTable,
     askTable,
+    askTableSession,
     summarizeTable,
     aggregateTable
   }

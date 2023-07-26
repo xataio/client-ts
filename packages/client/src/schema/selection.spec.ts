@@ -67,18 +67,16 @@ const invalidDeleteTeamColumn: SelectableColumn<Team> = 'owner.delete';
 const invalidReadTeamColumn: SelectableColumn<Team> = 'owner.read.*';
 // @ts-expect-error
 const invalidInternalDateColumns: SelectableColumn<Team> = 'owner.date.getFullYear';
+
+// Internal columns
+const internalVersionColumns: SelectableColumn<Team> = 'xata.version';
+const internalCreatedAtColumns: SelectableColumn<Team> = 'xata.createdAt';
+const internalUpdatedAtColumns: SelectableColumn<Team> = 'xata.updatedAt';
+const linkVersionColumns: SelectableColumn<Team> = 'owner.xata.version';
+const linkCreatedAtColumns: SelectableColumn<Team> = 'owner.xata.createdAt';
+const linkUpdatedAtColumns: SelectableColumn<Team> = 'owner.xata.updatedAt';
 // @ts-expect-error
-const invalidInternalVersionColumns: SelectableColumn<Team> = 'xata.version';
-// @ts-expect-error
-const invalidInternalCreatedAtColumns: SelectableColumn<Team> = 'xata.createdAt';
-// @ts-expect-error
-const invalidInternalUpdatedAtColumns: SelectableColumn<Team> = 'xata.updatedAt';
-// @ts-expect-error
-const invalidLinkVersionColumns: SelectableColumn<Team> = 'owner.xata.version';
-// @ts-expect-error
-const invalidLinkCreatedAtColumns: SelectableColumn<Team> = 'owner.xata.createdAt';
-// @ts-expect-error
-const invalidLinkUpdatedAtColumns: SelectableColumn<Team> = 'owner.xata.updatedAt';
+const invalidInternalVersionColumnInObject: SelectableColumn<Team> = 'owner.settings.xata.version';
 
 //                              ValueAtColumn<O, P>                            //
 // --------------------------------------------------------------------------- //

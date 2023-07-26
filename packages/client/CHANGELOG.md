@@ -1,5 +1,25 @@
 # @xata.io/client
 
+## 0.24.3
+
+### Patch Changes
+
+- [#1033](https://github.com/xataio/client-ts/pull/1033) [`f01d1580`](https://github.com/xataio/client-ts/commit/f01d1580fc450cbf06eb8af85d68cf052fbe83a1) Thanks [@xata-bot](https://github.com/xata-bot)! - [OpenAPI] Spec updates for column selection
+
+- [#1044](https://github.com/xataio/client-ts/pull/1044) [`52290feb`](https://github.com/xataio/client-ts/commit/52290feb5bba57384cdc14e7722fb5d9883dc581) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow undefined with createOrUpdate/createOrReplace
+
+## 0.24.2
+
+### Patch Changes
+
+- [#1038](https://github.com/xataio/client-ts/pull/1038) [`51561b52`](https://github.com/xataio/client-ts/commit/51561b52b56ad5ed9101d8faf12929891419cb2c) Thanks [@SferaDev](https://github.com/SferaDev)! - Show internal columns in filters
+
+## 0.24.1
+
+### Patch Changes
+
+- [#1030](https://github.com/xataio/client-ts/pull/1030) [`eaa774f5`](https://github.com/xataio/client-ts/commit/eaa774f542185ef92448155bcdff331686c4da9f) Thanks [@SferaDev](https://github.com/SferaDev)! - Make `xata` property enumerable
+
 ## 0.24.0
 
 ### Minor Changes

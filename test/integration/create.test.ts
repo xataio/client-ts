@@ -136,6 +136,10 @@ describe('record creation', () => {
     expect(user.full_name).toBe(apiUser.full_name);
     expect(user.email).toBe(apiUser.email);
 
+    expect(user.xata.createdAt).toBeInstanceOf(Date);
+    expect(apiUser.xata.createdAt).toBeInstanceOf(Date);
+    expect(user.xata.createdAt.getTime()).toBe(apiUser.xata.createdAt.getTime());
+
     expect(
       xata.db.users.create('a-unique-record-john-4', {
         full_name: 'John Doe 5',
@@ -360,5 +364,18 @@ describe('record creation', () => {
 
       	😇"
     `);
+  });
+
+  test("create link and read it's value", async () => {
+    const user = await xata.db.users.create({ name: 'John Doe 3' });
+    const team = await xata.db.teams.create({ name: 'Team cars', owner: user }, ['owner.name']);
+
+    expect(team).toBeDefined();
+    expect(team.id).toBeDefined();
+    // @ts-expect-error
+    expect(team.name).toBeUndefined();
+    expect(team.owner).toBeDefined();
+    expect(team.owner?.id).toBe(user.id);
+    expect(team.owner?.name).toBe('John Doe 3');
   });
 });

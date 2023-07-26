@@ -1,5 +1,47 @@
 # @xata.io/cli
 
+## 0.12.7
+
+### Patch Changes
+
+- [#1066](https://github.com/xataio/client-ts/pull/1066) [`c1198fc6`](https://github.com/xataio/client-ts/commit/c1198fc6a3785a325711c71f8b8201601f3ccd4d) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix codegen not using tables from options
+
+## 0.12.6
+
+### Patch Changes
+
+- [#988](https://github.com/xataio/client-ts/pull/988) [`2f700f90`](https://github.com/xataio/client-ts/commit/2f700f90bba1a6223001c2cf72e2a31dcc2daeb0) Thanks [@SferaDev](https://github.com/SferaDev)! - [Workflow] Remove plural commands
+
+- Updated dependencies [[`f01d1580`](https://github.com/xataio/client-ts/commit/f01d1580fc450cbf06eb8af85d68cf052fbe83a1), [`52290feb`](https://github.com/xataio/client-ts/commit/52290feb5bba57384cdc14e7722fb5d9883dc581)]:
+  - @xata.io/client@0.24.3
+  - @xata.io/importer@0.3.18
+
+## 0.12.5
+
+### Patch Changes
+
+- [#1037](https://github.com/xataio/client-ts/pull/1037) [`5c060be7`](https://github.com/xataio/client-ts/commit/5c060be7a8a9823d3167edd3cf7d49f3cb32e141) Thanks [@richardgill](https://github.com/richardgill)! - Bugfix: xata init warnings messages fixed
+
+- Updated dependencies [[`51561b52`](https://github.com/xataio/client-ts/commit/51561b52b56ad5ed9101d8faf12929891419cb2c)]:
+  - @xata.io/client@0.24.2
+  - @xata.io/importer@0.3.17
+
+## 0.12.4
+
+### Patch Changes
+
+- Updated dependencies [[`eaa774f5`](https://github.com/xataio/client-ts/commit/eaa774f542185ef92448155bcdff331686c4da9f)]:
+  - @xata.io/client@0.24.1
+  - @xata.io/importer@0.3.16
+
+## 0.12.3
+
+### Patch Changes
+
+- [#1018](https://github.com/xataio/client-ts/pull/1018) [`431e869b`](https://github.com/xataio/client-ts/commit/431e869bdece9de7fe48f07299e0265feeef4e96) Thanks [@richardgill](https://github.com/richardgill)! - bugfix: CLI http://localhost:<port>/new redirects correctly
+
+- [#1019](https://github.com/xataio/client-ts/pull/1019) [`7f4b91a4`](https://github.com/xataio/client-ts/commit/7f4b91a40708d23303b179e7775659cad8b2f002) Thanks [@richardgill](https://github.com/richardgill)! - `xata init` quality of life improvements to wording and option ordering
+
 ## 0.12.2
 
 ### Patch Changes

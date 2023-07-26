@@ -1,8 +1,12 @@
 import { Args, Flags } from '@oclif/core';
-import { CompareSchemaResult, createProcessor, parseCSVFile, parseCSVStream } from '@xata.io/importer';
-import chalk from 'chalk';
+import { Schemas } from '@xata.io/client';
+import { Column } from '@xata.io/codegen';
+import { importColumnTypes } from '@xata.io/importer';
+import { open, writeFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
-import { pluralize } from '../../utils.js';
+
+const ERROR_CONSOLE_LOG_LIMIT = 200;
+const ERROR_LOG_FILE = 'errors.log';
 
 export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
@@ -13,9 +17,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     'Specify the column names and types. They must follow the order they appear in the CSV file',
     '$ xata import csv users.csv --table=users --columns=name,email --types=string,email',
     'Create the table or any missing column if needed without asking',
-    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email --create',
-    'Specify "-" as file name to use the stdin to read the data from',
-    chalk.dim('$ command-that-outputs-csv | xata import csv - --table=users --create')
+    '$ xata import csv users.csv --table=users --columns=name,email --types=string,email --create'
   ];
 
   static flags = {
@@ -38,21 +40,17 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     create: Flags.boolean({
       description: "Whether the table or columns should be created if they don't exist without asking"
     }),
-    'no-column-name-normalization': Flags.boolean({
-      description: 'Avoid changing column names in a normalized way'
-    }),
     'batch-size': Flags.integer({
       description: 'Batch size to process and upload records'
     }),
     'max-rows': Flags.integer({
       description: 'Maximum number of rows to process'
     }),
-    'skip-rows': Flags.integer({
-      description: 'Number of rows to skip'
-    }),
     delimiter: Flags.string({
-      description: 'Delimiters to use for splitting CSV data',
-      multiple: true
+      description: 'Delimiter to use for splitting CSV data'
+    }),
+    'delimiters-to-guess': Flags.string({
+      description: 'Delimiters to guess for splitting CSV data'
     }),
     'null-value': Flags.string({
       description: 'Value to use for null values',
@@ -69,100 +67,229 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const { file } = args;
     const {
       table,
-      types,
-      columns,
       'no-header': noHeader,
       create,
-      'no-column-name-normalization': ignoreColumnNormalization,
-      'batch-size': batchSize,
-      'max-rows': maxRows,
-      'skip-rows': skipRows,
+      'batch-size': batchSize = 1000,
+      'max-rows': limit,
       delimiter,
-      'null-value': nullValue
+      'delimiters-to-guess': delimitersToGuess,
+      'null-value': nullValues
     } = flags;
+    const header = !noHeader;
+    let columns = flagsToColumns(flags);
 
-    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    const csvOptions = {
+      delimiter,
+      delimitersToGuess: delimitersToGuess ? splitCommas(delimitersToGuess) : undefined,
+      header,
+      nullValues,
+      columns,
+      limit
+    };
 
+    const getFileStream = async () => (await open(file, 'r')).createReadStream();
+    const { workspace, region, database, branch } = await this.parseDatabase();
     const xata = await this.getXataClient();
 
-    const options = createProcessor(
-      xata.api,
-      { workspace, region, database, branch, table },
-      {
-        types: splitCommas(types),
-        columns: splitCommas(columns),
-        noheader: Boolean(noHeader),
-        batchSize,
-        maxRows,
-        skipRows,
-        delimiter,
-        nullValue,
-        ignoreColumnNormalization,
-        shouldContinue: async (compare) => {
-          return Boolean(await this.shouldContinue(compare, table, create));
-        },
-        onBatchProcessed: async (rows) => {
-          this.info(`${chalk.bold(rows)} ${pluralize('row', rows)} processed`);
-        }
-      }
-    );
+    const parseStream = await getFileStream();
+    const parseResults = (
+      await xata.import.parseCsvStream({
+        fileStream: parseStream,
+        parserOptions: { ...csvOptions, limit: 1000 }
+      })
+    ).results;
 
-    if (file === '-') {
-      await parseCSVStream(process.stdin, options);
-    } else {
-      await parseCSVFile(file, options);
+    parseStream.close();
+
+    if (!parseResults.success) {
+      throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }
-    this.success('Finished importing data');
-  }
+    if (!columns) {
+      columns = parseResults.columns;
+    }
+    if (!columns) {
+      throw new Error('No columns found');
+    }
+    await this.migrateSchema({ table, columns, create });
 
-  async shouldContinue(compare: CompareSchemaResult, table: string, create: boolean): Promise<boolean | void> {
-    let error = false;
-    compare.columnTypes.forEach((type) => {
-      if (type.error) {
-        error = true;
-        this.warn(
-          `Column ${type.columnName} exists with type ${type.schemaType} but a type of ${type.castedType} would be needed.`
+    let importSuccessCount = 0;
+    const errors: string[] = [];
+    let progress = 0;
+    const fileStream = await getFileStream();
+    await xata.import.parseCsvStreamBatches({
+      fileStream: fileStream,
+      fileSizeBytes: await getFileSizeBytes(file),
+      parserOptions: { ...csvOptions, columns },
+      batchRowCount: batchSize,
+      onBatch: async (parseResults, meta) => {
+        if (!parseResults.success) {
+          throw new Error('Failed to parse CSV file');
+        }
+        const batchRows = parseResults.data.map(({ data }) => data);
+        const dbBranchName = `${database}:${branch}`;
+        const importResult = await xata.import.importBatch(
+          // @ts-ignore
+          { dbBranchName: dbBranchName, region, workspace: workspace, database },
+          { columns: parseResults.columns, table, batchRows }
+        );
+        importSuccessCount += importResult.successful.results.length;
+        if (importResult.errors) {
+          const formattedErrors = importResult.errors.map(
+            (error) => `${error.error}. Record: ${JSON.stringify(error.row)}`
+          );
+          const errorsToLog = formattedErrors.slice(0, Math.abs(ERROR_CONSOLE_LOG_LIMIT - errors.length));
+          for (const error of errorsToLog) {
+            this.logToStderr(`Import Error: ${error}`);
+          }
+          errors.push(...formattedErrors);
+        }
+        progress = Math.max(progress, meta.estimatedProgress);
+        this.info(
+          `${importSuccessCount} rows successfully imported ${errors.length} errors. ${Math.ceil(
+            progress * 100
+          )}% complete`
         );
       }
     });
-    if (error) {
-      return process.exit(1);
+    if (errors.length > 0) {
+      await writeFile(ERROR_LOG_FILE, errors.join('\n'), 'utf8');
+      this.log(`Import errors written to ${ERROR_LOG_FILE}`);
     }
+    fileStream.close();
+    this.success('Completed');
+    process.exit(0);
+  }
 
-    if (compare.missingTable) {
-      if (!create) {
-        const response = await this.prompt({
-          type: 'confirm',
-          name: 'confirm',
-          message: `Table ${table} does not exist. Do you want to create it?`,
-          initial: false
-        });
-        if (!response.confirm) return false;
-      }
-    } else if (compare.missingColumns.length > 0) {
-      if (!create) {
-        const response = await this.prompt({
-          type: 'confirm',
-          name: 'confirm',
-          message: `These columns are missing: ${missingColumnsList(compare)}. Do you want to create them?`,
-          initial: false
-        });
-        if (!response.confirm) return false;
-      }
+  databaseInfo: Awaited<ReturnType<typeof this.getParsedDatabaseURLWithBranch>> | null = null;
+
+  async parseDatabase() {
+    if (this.databaseInfo) {
+      return this.databaseInfo;
     }
+    const { flags } = await this.parseCommand();
+    const databaseInfo = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch, true);
+    this.databaseInfo = databaseInfo;
+    return databaseInfo;
+  }
 
-    return true;
+  async migrateSchema({
+    table,
+    columns,
+    create
+  }: {
+    table: string;
+    columns: Column[];
+    create: boolean;
+  }): Promise<void> {
+    const xata = await this.getXataClient();
+    const { workspace, region, database, branch } = await this.parseDatabase();
+    const { schema: existingSchema } = await xata.api.branches.getBranchDetails({
+      workspace,
+      region,
+      database,
+      branch
+    });
+    const newSchema = {
+      tables: [
+        ...existingSchema.tables.filter((t) => t.name !== table),
+        { name: table, columns: columns.filter((c) => c.name !== 'id') }
+      ]
+    };
+    const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
+      workspace,
+      region,
+      database,
+      branch: 'main',
+      schema: newSchema
+    });
+    if (edits.operations.length > 0) {
+      const destructiveOperations = edits.operations
+        .map((op) => {
+          if (!('removeColumn' in op)) return undefined;
+          return op.removeColumn.column;
+        })
+        .filter((x) => x !== undefined);
+
+      if (destructiveOperations.length > 0) {
+        const { destructiveConfirm } = await this.prompt(
+          {
+            type: 'confirm',
+            name: 'destructiveConfirm',
+            message: `WARNING: The following columns will be removed and you will lose data. ${destructiveOperations.join(
+              ', '
+            )}. \nDo you want to continue?`
+          },
+          create
+        );
+        if (!destructiveConfirm) {
+          process.exit(1);
+        }
+      }
+
+      const doesTableExist = existingSchema.tables.find((t) => t.name === table);
+      const { applyMigrations } = await this.prompt(
+        {
+          type: 'confirm',
+          name: 'applyMigrations',
+          message: `Do you want to ${doesTableExist ? 'update' : 'create'} table: ${table} with columns ${columns
+            .map((c) => c.name)
+            .join(', ')}?`
+        },
+        create
+      );
+      if (!applyMigrations) {
+        process.exit(1);
+      }
+      await xata.api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits });
+    }
   }
 }
 
-function missingColumnsList(compare: CompareSchemaResult) {
-  const missing = compare.missingColumns.map((col) => `${col.column} (${col.type})`);
-  return missing.join(', ');
-}
+const flagsToColumns = (flags: {
+  types: string | undefined;
+  columns: string | undefined;
+}): Schemas.Column[] | undefined => {
+  if (!flags.columns && !flags.types) return undefined;
+  if (flags.columns && !flags.types) {
+    throw new Error('Must specify types when specifying columns');
+  }
+  if (!flags.columns && flags.types) {
+    throw new Error('Must specify columns when specifying types');
+  }
+  const columns = splitCommas(flags.columns);
+  const types = splitCommas(flags.types);
+  const invalidTypes = types.filter((t) => !importColumnTypes.safeParse(t).success);
 
-export function splitCommas(value: unknown): string[] | undefined {
-  if (!value) return;
+  if (invalidTypes.length > 0) {
+    throw new Error(
+      `Invalid column types: ${invalidTypes.join(', ')} column type should be one of: ${Object.keys(
+        importColumnTypes.Values
+      ).join(', ')}`
+    );
+  }
+
+  if (columns?.length !== types?.length) {
+    throw new Error('Must specify same number of columns and types');
+  }
+  return columns.map((name, i) => {
+    const type = importColumnTypes.parse(types[i]);
+    if (type === 'link') {
+      return { name, type, link: { table: name } };
+    }
+    return { name, type };
+  });
+};
+
+export function splitCommas(value: unknown): string[] {
+  if (!value) return [];
   return String(value)
     .split(',')
     .map((s) => s.trim());
 }
+
+const getFileSizeBytes = async (file: string) => {
+  const fileHandle = await open(file, 'r');
+  const stat = await fileHandle.stat();
+  await fileHandle.close();
+  return stat.size;
+};

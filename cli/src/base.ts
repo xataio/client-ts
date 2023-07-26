@@ -8,6 +8,7 @@ import {
   Schemas,
   XataApiPlugin
 } from '@xata.io/client';
+import { XataImportPlugin } from '@xata.io/importer';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
@@ -33,7 +34,8 @@ import {
 import { reportBugURL } from './utils.js';
 
 export class XataClient extends buildClient({
-  api: new XataApiPlugin()
+  api: new XataApiPlugin(),
+  import: new XataImportPlugin()
 }) {}
 
 export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';

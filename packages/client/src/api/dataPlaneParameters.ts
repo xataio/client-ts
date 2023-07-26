@@ -23,6 +23,12 @@ export type RecordIDParam = Schemas.RecordID;
 
 export type FileItemIDParam = Schemas.FileItemID;
 
+/**
+ * @maxLength 36
+ * @minLength 36
+ */
+export type ChatSessionIDParam = string;
+
 export type FileAccessIDParam = Schemas.FileAccessID;
 
 export type FileSignatureParam = Schemas.FileSignature;

@@ -31,14 +31,15 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/codegen/README.md",
   "dependencies": {
+    "@xata.io/client": "workspace:*",
     "case": "^1.6.3",
     "prettier": "^2.8.8",
-    "ts-morph": "^18.0.0",
-    "typescript": "^5.0.4",
+    "ts-morph": "^19.0.0",
+    "typescript": "^5.1.6",
     "zod": "^3.21.4"
   },
   "devDependencies": {
     "@types/pluralize": "^0.0.29",
-    "@types/prettier": "^2.7.2"
+    "@types/prettier": "^2.7.3"
   }
 }

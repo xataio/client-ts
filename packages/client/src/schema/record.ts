@@ -1,6 +1,25 @@
 import { isObject, isString } from '../util/lang';
 import { ExclusiveOr } from '../util/types';
+import { XataArrayFile, XataFile } from './files';
 import { SelectableColumn, SelectedPick } from './selection';
+
+export const RecordColumnTypes = [
+  'bool',
+  'int',
+  'float',
+  'string',
+  'text',
+  'email',
+  'multiple',
+  'link',
+  'object',
+  'datetime',
+  'vector',
+  'file[]',
+  'file'
+] as const;
+
+export type Identifier = string;
 
 /**
  * Represents an identifiable record from the database.
@@ -9,7 +28,7 @@ export interface Identifiable {
   /**
    * Unique id of this record.
    */
-  id: string;
+  id: Identifier;
 }
 
 export interface BaseData {
@@ -154,14 +173,20 @@ type NumericOperator = ExclusiveOr<
   ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
 >;
 
+export type InputXataFile = Partial<XataArrayFile> | Promise<Partial<XataArrayFile>>;
+
 type EditableDataFields<T> = T extends XataRecord
-  ? { id: string } | string
+  ? { id: Identifier } | Identifier
   : NonNullable<T> extends XataRecord
-  ? { id: string } | string | null | undefined
+  ? { id: Identifier } | Identifier | null | undefined
   : T extends Date
   ? string | Date
   : NonNullable<T> extends Date
   ? string | Date | null | undefined
+  : T extends XataFile
+  ? InputXataFile
+  : T extends XataFile[]
+  ? InputXataFile[]
   : T extends number
   ? number | NumericOperator
   : T;

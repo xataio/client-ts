@@ -43,12 +43,19 @@ export type SchemaCompareResponse = {
   edits: Schemas.SchemaEditScript;
 };
 
+export type RateLimitError = {
+  id?: string;
+  message: string;
+};
+
 export type RecordUpdateResponse =
   | Schemas.XataRecord
   | {
       id: string;
       xata: {
         version: number;
+        createdAt: string;
+        updatedAt: string;
       };
     };
 
@@ -76,19 +83,23 @@ export type QueryResponse = {
   meta: Schemas.RecordsMetadata;
 };
 
+export type ServiceUnavailableError = {
+  id?: string;
+  message: string;
+};
+
 export type SearchResponse = {
   records: Schemas.XataRecord[];
   warning?: string;
+  /**
+   * The total count of records matched. It will be accurately returned up to 10000 records.
+   */
+  totalCount: number;
 };
 
 export type SQLResponse = {
   records: Schemas.SQLRecord[];
   warning?: string;
-};
-
-export type RateLimitError = {
-  id?: string;
-  message: string;
 };
 
 export type SummarizeResponse = {

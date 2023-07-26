@@ -1338,6 +1338,30 @@ class SearchAndFilterApi {
     });
   }
 
+  public askTableSession({
+    workspace,
+    region,
+    database,
+    branch,
+    table,
+    sessionId,
+    message
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    table: Schemas.TableName;
+    sessionId: string;
+    message: string;
+  }): Promise<Components.AskTableSessionResponse> {
+    return operationsByTag.searchAndFilter.askTableSession({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table, sessionId },
+      body: { message },
+      ...this.extraProps
+    });
+  }
+
   public summarizeTable({
     workspace,
     region,
@@ -1778,15 +1802,18 @@ class DatabaseApi {
   public createDatabase({
     workspace,
     database,
-    data
+    data,
+    headers
   }: {
     workspace: Schemas.WorkspaceID;
     database: Schemas.DBName;
     data: Components.CreateDatabaseRequestBody;
+    headers?: Record<string, string>;
   }): Promise<Components.CreateDatabaseResponse> {
     return operationsByTag.databases.createDatabase({
       pathParams: { workspaceId: workspace, dbName: database },
       body: data,
+      headers,
       ...this.extraProps
     });
   }

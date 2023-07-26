@@ -2,11 +2,11 @@ import { describe, expect, test } from 'vitest';
 import { splitCommas } from './csv';
 
 describe('splitCommas', () => {
-  test('returns undefined for falsy values', () => {
-    expect(splitCommas(null)).toBeUndefined();
-    expect(splitCommas('')).toBeUndefined();
-    expect(splitCommas(false)).toBeUndefined();
-    expect(splitCommas(undefined)).toBeUndefined();
+  test('returns [] for falsy values', () => {
+    expect(splitCommas(null)).toEqual([]);
+    expect(splitCommas('')).toEqual([]);
+    expect(splitCommas(false)).toEqual([]);
+    expect(splitCommas(undefined)).toEqual([]);
   });
 
   test('returns an array with the comma separated values', () => {

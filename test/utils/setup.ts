@@ -15,6 +15,8 @@ import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
 import { schema } from '../mock_data';
+// @ts-expect-error - no types available
+import { withHar } from 'node-fetch-har';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -66,7 +68,13 @@ export async function setUpTestEnvironment(
     );
   }
 
-  const fetch = vi.fn(envFetch ?? realFetch);
+  const fetchToUse = envFetch ?? realFetch;
+  const fetchWithHar = process.env.XATA_DEBUG
+    ? withHar(fetchToUse, {
+        onHarEntry: (entry: string) => console.log('HAR', JSON.stringify(entry))
+      })
+    : fetchToUse;
+  const fetch = vi.fn(fetchWithHar);
 
   const { trace, tracer } = await setupTracing();
 
@@ -77,7 +85,8 @@ export async function setUpTestEnvironment(
   const { databaseName: database } = await api.database.createDatabase({
     workspace,
     database: `sdk-integration-test-${prefix}-${id}`,
-    data: { region }
+    data: { region },
+    headers: { 'X-Xata-Files': 'true' }
   });
 
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace).replace('{region}', region);
@@ -92,39 +101,15 @@ export async function setUpTestEnvironment(
     clientName: 'sdk-tests'
   };
 
-  await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'teams' });
-  await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'pets' });
-  await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'users' });
+  const { edits } = await api.migrations.compareBranchWithUserSchema({
+    workspace,
+    region,
+    database,
+    branch: 'main',
+    schema
+  });
 
-  const teamColumns = schema.tables.find(({ name }) => name === 'teams')?.columns;
-  const petColumns = schema.tables.find(({ name }) => name === 'pets')?.columns;
-  const userColumns = schema.tables.find(({ name }) => name === 'users')?.columns;
-  if (!teamColumns || !userColumns || !petColumns) throw new Error('Unable to find tables');
-
-  await api.tables.setTableSchema({
-    workspace,
-    region,
-    database,
-    branch: 'main',
-    table: 'teams',
-    schema: { columns: teamColumns }
-  });
-  await api.tables.setTableSchema({
-    workspace,
-    region,
-    database,
-    branch: 'main',
-    table: 'pets',
-    schema: { columns: petColumns }
-  });
-  await api.tables.setTableSchema({
-    workspace,
-    region,
-    database,
-    branch: 'main',
-    table: 'users',
-    schema: { columns: userColumns }
-  });
+  await api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch: 'main', edits });
 
   let span: Span | undefined;
 

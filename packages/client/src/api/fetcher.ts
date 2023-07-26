@@ -1,6 +1,6 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
-import { compact, isDefined, isString } from '../util/lang';
+import { compact, compactObject, isDefined, isString } from '../util/lang';
 import { fetchEventSource } from '../util/sse';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -46,6 +46,8 @@ export type FetcherExtraProps = {
   clientName?: string;
   xataAgentExtra?: Record<string, string>;
   fetchOptions?: Record<string, unknown>;
+  rawResponse?: boolean;
+  headers?: Record<string, unknown>;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
@@ -96,6 +98,17 @@ function hostHeader(url: string): { Host?: string } {
   return groups?.host ? { Host: groups.host } : {};
 }
 
+function parseBody<T>(body?: T, headers?: Record<string, unknown>): any {
+  if (!isDefined(body)) return undefined;
+
+  const { 'Content-Type': contentType } = headers ?? {};
+  if (String(contentType).toLowerCase() === 'application/json') {
+    return JSON.stringify(body);
+  }
+
+  return body;
+}
+
 const defaultClientID = generateUUID();
 
 export async function fetch<
@@ -123,7 +136,8 @@ export async function fetch<
   sessionID,
   clientName,
   xataAgentExtra,
-  fetchOptions = {}
+  fetchOptions = {},
+  rawResponse = false
 }: FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> & FetcherExtraProps): Promise<TData> {
   pool.setFetch(fetch);
 
@@ -150,7 +164,7 @@ export async function fetch<
         .map(([key, value]) => `${key}=${value}`)
         .join('; ');
 
-      const headers = {
+      const headers = compactObject({
         'Accept-Encoding': 'identity',
         'Content-Type': 'application/json',
         'X-Xata-Client-ID': clientID ?? defaultClientID,
@@ -159,12 +173,12 @@ export async function fetch<
         ...customHeaders,
         ...hostHeader(fullUrl),
         Authorization: `Bearer ${apiKey}`
-      };
+      });
 
       const response = await pool.request(url, {
         ...fetchOptions,
         method: method.toUpperCase(),
-        body: body ? JSON.stringify(body) : undefined,
+        body: parseBody(body, headers),
         headers,
         signal
       });
@@ -179,6 +193,9 @@ export async function fetch<
         [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', '')
       });
 
+      const message = response.headers?.get('x-xata-message');
+      if (message) console.warn(message);
+
       // No content
       if (response.status === 204) {
         return {} as unknown as TData;
@@ -190,7 +207,7 @@ export async function fetch<
       }
 
       try {
-        const jsonResponse = await response.json();
+        const jsonResponse = rawResponse ? await response.blob() : await response.json();
 
         if (response.ok) {
           return jsonResponse;

@@ -14,6 +14,8 @@ export type DataPlaneFetcherExtraProps = {
   sessionID?: string;
   clientName?: string;
   xataAgentExtra?: Record<string, string>;
+  rawResponse?: boolean;
+  headers?: Record<string, unknown>;
 };
 
 export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };

@@ -47,6 +47,17 @@ describe('record create or replace', () => {
     expect(apiTeam?.email).toBeNull();
   });
 
+  test('create or replace with optional id', async () => {
+    const id: string | undefined = undefined;
+
+    const team = await xata.db.teams.createOrReplace({ id, name: 'Team ships' });
+    expect(team.id).toBeDefined();
+  });
+
+  test('create or replace fails with empty id', async () => {
+    await expect(xata.db.teams.createOrReplace({ id: '', name: 'Team ships' })).rejects.toThrowError();
+  });
+
   test('create or replace team with inline id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships', email: 'ships2@example.com' });
 

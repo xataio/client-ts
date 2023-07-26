@@ -71,6 +71,14 @@ declare const tables: readonly [
         readonly type: 'string';
       },
       {
+        readonly name: 'photo';
+        readonly type: 'file';
+      },
+      {
+        readonly name: 'attachments';
+        readonly type: 'file[]';
+      },
+      {
         readonly name: 'settings';
         readonly type: 'object';
         readonly columns: readonly [
@@ -137,6 +145,13 @@ declare const tables: readonly [
       {
         readonly name: 'account_value';
         readonly type: 'int';
+      },
+      {
+        readonly name: 'vector';
+        readonly type: 'vector';
+        readonly vector: {
+          readonly dimension: 4;
+        };
       }
     ];
   },
