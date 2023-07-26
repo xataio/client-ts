@@ -40,9 +40,15 @@ export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
   })
 );
 
+export const revlinkSchema = z.object({
+  table: z.string(),
+  column: z.string()
+});
+
 export const tableSchema = z.object({
   name: z.string(),
-  columns: z.array(columnSchema)
+  columns: z.array(columnSchema),
+  revLinks: z.array(revlinkSchema).optional()
 });
 
 export type Table = z.infer<typeof tableSchema>;
@@ -54,5 +60,5 @@ export const xataDatabaseSchema = z.object({
 export type XataDatabaseSchema = z.infer<typeof xataDatabaseSchema>;
 
 export const parseSchemaFile = (input: string) => {
-  return xataDatabaseSchema.parse(JSON.parse(input));
+  return xataDatabaseSchema.safeParse(JSON.parse(input));
 };
