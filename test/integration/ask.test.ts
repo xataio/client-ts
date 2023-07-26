@@ -1,43 +1,19 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
-import { XataClient } from '../../packages/codegen/example/xata';
-import { setUpTestEnvironment, TestEnvironmentResult } from '../utils/setup';
-import { animalUsers, fruitUsers, ownerAnimals, ownerFruits } from '../mock_data';
+import { BaseClient } from '../../packages/client';
+import { TestEnvironmentResult, setUpTestEnvironment } from '../utils/setup';
 
-let xata: XataClient;
+const xata = new BaseClient({
+  databaseURL: 'https://xata-uq2d57.eu-west-1.xata.sh/db/docs'
+});
+
 let hooks: TestEnvironmentResult['hooks'];
 
 beforeAll(async (ctx) => {
-  const result = await setUpTestEnvironment('query');
+  const result = await setUpTestEnvironment('search');
 
-  xata = result.client;
   hooks = result.hooks;
 
   await hooks.beforeAll(ctx);
-
-  const { id: ownerAnimalsId } = await xata.db.users.create(ownerAnimals);
-  const { id: ownerFruitsId } = await xata.db.users.create(ownerFruits);
-
-  const fruitsTeam = await xata.db.teams.create({
-    name: 'Team fruits',
-    labels: ['apple', 'banana', 'orange'],
-    owner: ownerFruitsId
-  });
-
-  const animalsTeam = await xata.db.teams.create({
-    name: 'Team animals',
-    labels: ['monkey', 'lion', 'eagle', 'dolphin'],
-    owner: ownerAnimalsId
-  });
-
-  await xata.db.teams.create({
-    name: 'Mixed team fruits & animals',
-    labels: ['monkey', 'banana', 'apple', 'dolphin']
-  });
-
-  await xata.db.users.create([
-    ...animalUsers.map((item) => ({ ...item, team: animalsTeam })),
-    ...fruitUsers.map((item) => ({ ...item, team: fruitsTeam }))
-  ]);
 });
 
 afterAll(async (ctx) => {
@@ -54,8 +30,17 @@ afterEach(async (ctx) => {
 
 describe('ask questions', () => {
   test('ask a question', async () => {
-    const result = await xata.db.teams.ask("What's your names?");
+    const result = await xata.db.search.ask(`My name is Alexis. What is Xata?`);
+    expect(result).toBeDefined();
+    expect(typeof result.answer).toBe('string');
+    expect(typeof result.sessionId).toBe('string');
+    expect(result.records).toBeDefined();
+    expect(result.records?.length).toBeGreaterThan(0);
 
-    expect(result).toBe('Team animals');
+    const result2 = await xata.db.search.ask(`What's my name?`, { sessionId: result.sessionId });
+    expect(result2).toBeDefined();
+    expect(typeof result2.answer).toBe('string');
+    expect(result2.records).toBeDefined();
+    expect(result2.records?.length).toBeGreaterThan(0);
   });
 });
