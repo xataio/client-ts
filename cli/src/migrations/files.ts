@@ -80,7 +80,11 @@ export async function writeLocalMigrationFiles(files: Schemas.MigrationObject[])
 }
 
 export async function removeLocalMigrations() {
-  await rm(migrationsDir, { recursive: true });
+  try {
+    await rm(migrationsDir, { recursive: true });
+  } catch (e) {
+    // Ignore
+  }
 }
 
 export function commitToMigrationFile(logs: Schemas.Commit[]): Schemas.MigrationObject[] {
