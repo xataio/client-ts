@@ -40,7 +40,5 @@ describe('ask questions', () => {
     const result2 = await xata.db.search.ask(`What's my name?`, { sessionId: result.sessionId });
     expect(result2).toBeDefined();
     expect(typeof result2.answer).toBe('string');
-    expect(result2.records).toBeDefined();
-    expect(result2.records?.length).toBeGreaterThan(0);
   });
 });

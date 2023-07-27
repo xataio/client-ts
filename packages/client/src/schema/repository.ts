@@ -1898,6 +1898,8 @@ export class RestRepository<Record extends XataRecord>
   }
 
   ask(question: string, options?: AskOptions<Record> & { onMessage?: (message: AskResult) => void }): any {
+    // Ask with session uses message, ask without session uses question param
+    const questionParam = options?.sessionId ? { message: question } : { question };
     const params = {
       pathParams: {
         workspace: '{workspaceId}',
@@ -1907,7 +1909,7 @@ export class RestRepository<Record extends XataRecord>
         sessionId: options?.sessionId
       },
       body: {
-        question,
+        ...questionParam,
         rules: options?.rules,
         searchType: options?.searchType,
         search: options?.searchType === 'keyword' ? options?.search : undefined,
