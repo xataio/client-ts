@@ -98,6 +98,21 @@ export async function timeout(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function timeoutWithCancel(ms: number) {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  const promise = new Promise<void>((resolve) => {
+    timeoutId = setTimeout(() => {
+      resolve();
+    }, ms);
+  });
+
+  return {
+    cancel: () => clearTimeout(timeoutId),
+    promise
+  };
+}
+
 /* Map sequentially over T[] with an asynchronous function and return array of mapped values */
 export function promiseMap<T, S>(inputValues: T[], mapper: (value: T) => Promise<S>): Promise<S[]> {
   const reducer = (acc$: Promise<S[]>, inputValue: T): Promise<S[]> =>
