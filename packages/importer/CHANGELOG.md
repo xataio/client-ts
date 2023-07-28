@@ -1,5 +1,11 @@
 # @xata.io/importer
 
+## 1.0.1
+
+### Patch Changes
+
+- [`6f744f3d`](https://github.com/xataio/client-ts/commit/6f744f3d60fd9d106248cc8a311ab6a09dd3bd3e) Thanks [@richardgill](https://github.com/richardgill)! - importer: Fixed email validation to match the Xata APIs
+
 ## 1.0.0
 
 ### Major Changes
