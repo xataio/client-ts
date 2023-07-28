@@ -1,5 +1,21 @@
 # @xata.io/client
 
+## 0.25.0
+
+### Minor Changes
+
+- [#1041](https://github.com/xataio/client-ts/pull/1041) [`ac3b968f`](https://github.com/xataio/client-ts/commit/ac3b968f7ca476f2c82b1b2719d020fbd7164f38) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for files and attachments
+
+### Patch Changes
+
+- [#1024](https://github.com/xataio/client-ts/pull/1024) [`aef9c834`](https://github.com/xataio/client-ts/commit/aef9c834a850494020e7585cb4ce67b446f9ccfc) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix type inconsistency with `xata` internal property
+
+- [#1085](https://github.com/xataio/client-ts/pull/1085) [`bcce0d3b`](https://github.com/xataio/client-ts/commit/bcce0d3b0b53468937accd4fee3b5485c35f69ad) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for sessions in ask endpoint
+
+- [#1067](https://github.com/xataio/client-ts/pull/1067) [`c1f2d264`](https://github.com/xataio/client-ts/commit/c1f2d2649e077cdffae97c90b9d2b1c75d6858fb) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix error 400 with partial filters
+
+- [#1071](https://github.com/xataio/client-ts/pull/1071) [`6c2c2630`](https://github.com/xataio/client-ts/commit/6c2c26308d4cbd25e7a9677c7d25c836396d4965) Thanks [@SferaDev](https://github.com/SferaDev)! - Add request timeout
+
 ## 0.24.3
 
 ### Patch Changes
