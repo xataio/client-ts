@@ -134,7 +134,10 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
     : Key extends DataProps<O>
     ? {
         [K in Key]: NonNullable<O[K]> extends XataRecord
-          ? ForwardNullable<O[K], SelectedPick<NonNullable<O[K]>, ['*']>>
+          ? // If the property is a link, we forward the type of the internal XataRecord
+            // Since it can be nullable, we use ForwardNullable to avoid loosing the internal type
+            // Links that are not expanded ["link"] instead of ["link.*"] don't have the xata property
+            ForwardNullable<O[K], Omit<SelectedPick<NonNullable<O[K]>, ['*']>, 'xata' | 'getMetadata'>>
           : O[K];
       }
     : Key extends '*'

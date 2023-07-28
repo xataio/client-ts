@@ -1,8 +1,9 @@
 import { SchemaPluginResult } from '.';
 import {
-  aggregateTable,
   ApiExtraProps,
-  askTable,
+  Schemas,
+  aggregateTable,
+  askTableSession,
   branchTransaction,
   deleteRecord,
   getBranchDetails,
@@ -10,7 +11,6 @@ import {
   insertRecord,
   insertRecordWithID,
   queryTable,
-  Schemas,
   searchTable,
   summarizeTable,
   updateRecordWithID,
@@ -37,15 +37,15 @@ import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
 import { AskOptions, AskResult } from './ask';
 import { CacheImpl } from './cache';
-import { parseInputFileEntry, XataArrayFile, XataFile } from './files';
-import { cleanFilter, Filter } from './filters';
+import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
+import { Filter, cleanFilter } from './filters';
 import { Page } from './pagination';
 import { Query } from './query';
-import { EditableData, Identifiable, Identifier, InputXataFile, isIdentifiable, XataRecord } from './record';
+import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
 import { ColumnsByValue, SelectableColumn, SelectedPick } from './selection';
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
-import { AttributeDictionary, defaultTrace, TraceAttributes, TraceFunction } from './tracing';
+import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -787,6 +787,11 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * Experimental: Ask the database to perform a natural language question.
    */
   abstract ask(question: string, options?: AskOptions<Record>): Promise<AskResult>;
+
+  /**
+   * Experimental: Ask the database to perform a natural language question.
+   */
+  abstract ask(question: string, options: AskOptions<Record>): Promise<AskResult>;
 
   /**
    * Experimental: Ask the database to perform a natural language question.
@@ -1893,16 +1898,22 @@ export class RestRepository<Record extends XataRecord>
   }
 
   ask(question: string, options?: AskOptions<Record> & { onMessage?: (message: AskResult) => void }): any {
+    // Ask with session uses message, ask without session uses question param
+    const questionParam = options?.sessionId ? { message: question } : { question };
     const params = {
       pathParams: {
         workspace: '{workspaceId}',
         dbBranchName: '{dbBranch}',
         region: '{region}',
-        tableName: this.#table
+        tableName: this.#table,
+        sessionId: options?.sessionId
       },
       body: {
-        question,
-        ...options
+        ...questionParam,
+        rules: options?.rules,
+        searchType: options?.searchType,
+        search: options?.searchType === 'keyword' ? options?.search : undefined,
+        vectorSearch: options?.searchType === 'vector' ? options?.vectorSearch : undefined
       },
       ...this.#getFetchProps()
     };
@@ -1910,7 +1921,7 @@ export class RestRepository<Record extends XataRecord>
     if (options?.onMessage) {
       fetchSSERequest({
         endpoint: 'dataPlane',
-        url: '/db/{dbBranchName}/tables/{tableName}/ask',
+        url: '/db/{dbBranchName}/tables/{tableName}/ask/{sessionId}',
         method: 'POST',
         onMessage: (message: { text: string; records: string[] }) => {
           options.onMessage?.({ answer: message.text, records: message.records });
@@ -1918,7 +1929,7 @@ export class RestRepository<Record extends XataRecord>
         ...params
       });
     } else {
-      return askTable(params as any);
+      return askTableSession(params as any);
     }
   }
 
