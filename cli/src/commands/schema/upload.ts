@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
 
 export default class UploadSchema extends BaseCommand<typeof UploadSchema> {
-  static description = 'Edit the schema of the current database';
+  static description = 'Apply a schema to the current database from file';
 
   static examples = [];
 
