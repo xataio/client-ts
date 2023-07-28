@@ -1,12 +1,8 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { BaseClient } from '../../packages/client';
 import { TestEnvironmentResult, setUpTestEnvironment } from '../utils/setup';
-import fetch from 'cross-fetch';
 
-const xata = new BaseClient({
-  databaseURL: 'https://xata-uq2d57.eu-west-1.xata.sh/db/docs',
-  fetch
-});
+let xata: BaseClient;
 
 let hooks: TestEnvironmentResult['hooks'];
 
@@ -14,6 +10,11 @@ beforeAll(async (ctx) => {
   const result = await setUpTestEnvironment('search');
 
   hooks = result.hooks;
+
+  xata = new BaseClient({
+    ...result.clientOptions,
+    databaseURL: 'https://xata-uq2d57.eu-west-1.xata.sh/db/docs'
+  });
 
   await hooks.beforeAll(ctx);
 });
