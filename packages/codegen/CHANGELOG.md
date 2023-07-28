@@ -1,5 +1,18 @@
 # @xata.io/codegen
 
+## 0.25.0
+
+### Minor Changes
+
+- [#1096](https://github.com/xataio/client-ts/pull/1096) [`16693d59`](https://github.com/xataio/client-ts/commit/16693d59785bcd0a64a293ff2fa671d84104e1eb) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for reverse links to codegen
+
+### Patch Changes
+
+- [#1041](https://github.com/xataio/client-ts/pull/1041) [`ac3b968f`](https://github.com/xataio/client-ts/commit/ac3b968f7ca476f2c82b1b2719d020fbd7164f38) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for files and attachments
+
+- Updated dependencies [[`ac3b968f`](https://github.com/xataio/client-ts/commit/ac3b968f7ca476f2c82b1b2719d020fbd7164f38), [`aef9c834`](https://github.com/xataio/client-ts/commit/aef9c834a850494020e7585cb4ce67b446f9ccfc), [`bcce0d3b`](https://github.com/xataio/client-ts/commit/bcce0d3b0b53468937accd4fee3b5485c35f69ad), [`c1f2d264`](https://github.com/xataio/client-ts/commit/c1f2d2649e077cdffae97c90b9d2b1c75d6858fb), [`6c2c2630`](https://github.com/xataio/client-ts/commit/6c2c26308d4cbd25e7a9677c7d25c836396d4965)]:
+  - @xata.io/client@0.25.0
+
 ## 0.23.5
 
 ### Patch Changes
