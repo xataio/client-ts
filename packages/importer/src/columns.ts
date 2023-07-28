@@ -145,6 +145,9 @@ export const coerceValue = (
     case 'link': {
       return { value: String(value), isError: false };
     }
+    case 'email': {
+      return isEmail(value) ? { value: String(value), isError: false } : { value: null, isError: true };
+    }
     case 'int': {
       return isInteger(value) ? { value: parseInt(String(value), 10), isError: false } : { value: null, isError: true };
     }

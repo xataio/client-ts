@@ -35,6 +35,7 @@ const guessEmailsTestCases = [
   { input: ['foo', 'email@example.com'], expected: 'string' },
   { input: [2, 'email@example.com'], expected: 'string' },
   { input: ['email+1@example.com'], expected: 'email' },
+  { input: ['johnrandall@schmidt-hoover.biz'], expected: 'email' },
   { input: ['email+1@example.com', undefined], expected: 'email' }
 ];
 
@@ -250,6 +251,11 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
     { input: 'notABool', type: 'bool', expected: { value: null, isError: true } },
     { input: 'something', type: 'text', expected: { value: 'something', isError: false } },
     { input: 'something', type: 'string', expected: { value: 'something', isError: false } },
+    {
+      input: 'johnrandall@schmidt-hoover.biz',
+      type: 'email',
+      expected: { value: 'johnrandall@schmidt-hoover.biz', isError: false }
+    },
     { input: 'a,b', type: 'multiple', expected: { value: ['a', 'b'], isError: false } },
     { input: '["a","b"]', type: 'multiple', expected: { value: ['a', 'b'], isError: false } },
     { input: 'a', type: 'multiple', expected: { value: ['a'], isError: false } },
