@@ -4000,7 +4000,7 @@ export type AskTableRequestBody = {
    *
    * @minLength 3
    */
-  question?: string;
+  question: string;
   /**
    * The type of search to use. If set to `keyword` (the default), the search can be configured by passing
    * a `search` object with the following fields. For more details about each, see the Search endpoint documentation.
@@ -4041,7 +4041,7 @@ export type AskTableRequestBody = {
 };
 
 export type AskTableVariables = {
-  body?: AskTableRequestBody;
+  body: AskTableRequestBody;
   pathParams: AskTablePathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -4101,7 +4101,7 @@ export type AskTableSessionResponse = {
   /**
    * The answer to the input question
    */
-  answer?: string;
+  answer: string;
 };
 
 export type AskTableSessionRequestBody = {
