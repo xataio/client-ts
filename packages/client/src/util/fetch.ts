@@ -1,4 +1,4 @@
-import { parseNumber, timeout } from './lang';
+import { parseNumber, timeout, timeoutWithCancel } from './lang';
 
 const REQUEST_TIMEOUT = 30000;
 
@@ -65,7 +65,8 @@ export class ApiRequestPool {
 
     const runRequest = async (stalled = false): Promise<Response> => {
       // Some fetch implementations don't timeout and network changes hang the connection
-      const response = await Promise.race([fetchImpl(url, options), timeout(REQUEST_TIMEOUT).then(() => null)]);
+      const { promise, cancel } = timeoutWithCancel(REQUEST_TIMEOUT);
+      const response = await Promise.race([fetchImpl(url, options), promise.then(() => null)]).finally(cancel);
       if (!response) {
         throw new Error('Request timed out');
       }
