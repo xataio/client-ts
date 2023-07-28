@@ -369,6 +369,11 @@ const coerceRowsTestCases: {
     expected: [{ col: { value: 'johnrandall@schmidt-hoover.biz', isError: false } }]
   },
   {
+    rows: [{ col: 'not_an_email' }],
+    columns: [{ name: 'col', type: 'email' }],
+    expected: [{ col: { value: null, isError: true } }]
+  },
+  {
     rows: [{ col: '2000-01-01' }],
     columns: [{ name: 'col', type: 'datetime' }],
     expected: [{ col: { value: new Date('2000-01-01'), isError: false } }]
