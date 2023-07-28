@@ -25,6 +25,7 @@ const isFloat = <T>(
     !Number.isNaN(+value) &&
       // Are not dates
       !(value instanceof Date) &&
+      // @ts-ignore TS 4.7 errors TS2367 here, remove when we drop support for TS 4.7 or change implementation
       value !== ''
   );
 
