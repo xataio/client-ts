@@ -6,27 +6,11 @@ import { isDefined } from './utils/lang';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 
-const isInteger = <T>(
-  value: T
-): boolean => // Check for integers
-  Boolean(
-    Number.isSafeInteger(+value) &&
-      // Without dots (e.g. 1.0)
-      String(value).match(/^[-]?\d+$/) &&
-      // Are not dates
-      !(value instanceof Date)
-  );
+const isInteger = <T>(value: T): boolean =>
+  ['number', 'string'].includes(typeof value) && /^[-]?(\d|,)+$/.test(String(value));
 
-const isFloat = <T>(
-  value: T
-): boolean => // Check for integers
-  Boolean(
-    // Check for floats
-    !Number.isNaN(+value) &&
-      // Are not dates
-      !(value instanceof Date) &&
-      value !== ''
-  );
+const isFloat = <T>(value: T): boolean =>
+  ['number', 'string'].includes(typeof value) && /^[-]?(\d|,)+\.?\d*$/.test(String(value));
 
 const isDateTime = <T>(value: T): boolean => anyToDate(value).invalid === undefined;
 
@@ -145,10 +129,14 @@ export const coerceValue = (
       return { value: String(value), isError: false };
     }
     case 'int': {
-      return isInteger(value) ? { value: parseInt(String(value), 10), isError: false } : { value: null, isError: true };
+      return isInteger(value)
+        ? { value: parseInt(String(value).replaceAll(',', ''), 10), isError: false }
+        : { value: null, isError: true };
     }
     case 'float': {
-      return isFloat(value) ? { value: parseFloat(String(value)), isError: false } : { value: null, isError: true };
+      return isFloat(value)
+        ? { value: parseFloat(String(value).replaceAll(',', '')), isError: false }
+        : { value: null, isError: true };
     }
     case 'bool': {
       const boolValue = toBoolean(value);

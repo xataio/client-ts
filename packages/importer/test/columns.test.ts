@@ -7,9 +7,13 @@ import { yepNopeToBoolean } from './utils';
 const guessNumbersTestCases = [
   { input: ['1', '2', '3', '-4'], expected: 'int' },
   { input: ['1', '2', '3', null], expected: 'int' },
+  { input: ['1', '2', '3,000'], expected: 'int' },
+  { input: ['1', '2', '-3,000'], expected: 'int' },
   { input: ['1', '2', '3.0'], expected: 'float' },
   { input: ['1', '2', '3.1'], expected: 'float' },
   { input: ['1', '2', '3.1', '3.2'], expected: 'float' },
+  { input: ['1', '2', '3.1', '3.2'], expected: 'float' },
+  { input: ['1', '2', '-3,000.1', '3,000.2'], expected: 'float' },
   { input: ['1', 2], expected: 'int' },
   { input: ['1', 2, '3.1'], expected: 'float' },
   { input: ['1', 2, 3.2], expected: 'float' },
@@ -232,7 +236,11 @@ describe('guessColumns', () => {
 const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?: ColumnOptions; expected: unknown }[] =
   [
     { input: '1', type: 'int', expected: { value: 1, isError: false } },
+    { input: '1,000', type: 'int', expected: { value: 1000, isError: false } },
+    { input: '-1,000', type: 'int', expected: { value: -1000, isError: false } },
     { input: '1', type: 'float', expected: { value: 1.0, isError: false } },
+    { input: '1,000', type: 'float', expected: { value: 1000.0, isError: false } },
+    { input: '-1,000', type: 'float', expected: { value: -1000.0, isError: false } },
     { input: '1.1', type: 'float', expected: { value: 1.1, isError: false } },
     { input: 'banana', type: 'float', expected: { value: null, isError: true } },
     { input: '1.1', type: 'string', expected: { value: '1.1', isError: false } },
@@ -296,6 +304,11 @@ const coerceRowsTestCases: {
     rows: [{ col: '1' }, { col: '-2' }],
     columns: [{ name: 'col', type: 'int' }],
     expected: [{ col: { value: 1, isError: false } }, { col: { value: -2, isError: false } }]
+  },
+  {
+    rows: [{ col: '1,000' }, { col: '-2' }],
+    columns: [{ name: 'col', type: 'int' }],
+    expected: [{ col: { value: 1000, isError: false } }, { col: { value: -2, isError: false } }]
   },
   {
     rows: [{ col: '1.0' }],
