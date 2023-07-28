@@ -1,9 +1,11 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { BaseClient } from '../../packages/client';
 import { TestEnvironmentResult, setUpTestEnvironment } from '../utils/setup';
+import fetch from 'cross-fetch';
 
 const xata = new BaseClient({
-  databaseURL: 'https://xata-uq2d57.eu-west-1.xata.sh/db/docs'
+  databaseURL: 'https://xata-uq2d57.eu-west-1.xata.sh/db/docs',
+  fetch
 });
 
 let hooks: TestEnvironmentResult['hooks'];

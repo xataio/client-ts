@@ -1929,10 +1929,7 @@ export class RestRepository<Record extends XataRecord>
         ...params
       });
     } else {
-      return askTableSession(params as any).catch((e) => {
-        console.error(e);
-        throw e;
-      });
+      return askTableSession(params as any);
     }
   }
 
