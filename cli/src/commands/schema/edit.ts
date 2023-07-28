@@ -2,6 +2,7 @@
 import { Flags } from '@oclif/core';
 import { getBranchDetails, Schemas } from '@xata.io/client';
 import { parseSchemaFile } from '@xata.io/codegen';
+import { isValidEmail } from '@xata.io/importer';
 import chalk from 'chalk';
 import enquirer from 'enquirer';
 import { getEditor } from 'env-editor';
@@ -9,7 +10,7 @@ import { readFile, writeFile } from 'fs/promises';
 import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
-import { isNil, isValidEmail, reportBugURL } from '../../utils.js';
+import { isNil, reportBugURL } from '../../utils.js';
 import Codegen from '../codegen/index.js';
 import Pull from '../pull/index.js';
 

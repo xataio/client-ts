@@ -3,6 +3,7 @@ import CSV from 'papaparse';
 import AnyDateParser from 'any-date-parser';
 import { ColumnOptions, ToBoolean } from './types';
 import { isDefined } from './utils/lang';
+import { isValidEmail } from './utils/email';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 
@@ -35,7 +36,7 @@ const isBoolean = <T>(value: T, toBoolean: ToBoolean): boolean => {
   return isDefined(toBooleanValue) && [true, false].includes(toBooleanValue);
 };
 
-const isEmail = <T>(value: T): boolean => /^\S+@\S+\.\S+$/.test(String(value));
+const isEmail = <T>(value: T): boolean => isValidEmail(String(value));
 
 const isText = <T>(value: T): boolean =>
   // Check for newlines
