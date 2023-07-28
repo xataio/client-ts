@@ -1,5 +1,12 @@
 # @xata.io/plugin-client-cache
 
+## 0.1.22
+
+### Patch Changes
+
+- Updated dependencies [[`ac3b968f`](https://github.com/xataio/client-ts/commit/ac3b968f7ca476f2c82b1b2719d020fbd7164f38), [`aef9c834`](https://github.com/xataio/client-ts/commit/aef9c834a850494020e7585cb4ce67b446f9ccfc), [`bcce0d3b`](https://github.com/xataio/client-ts/commit/bcce0d3b0b53468937accd4fee3b5485c35f69ad), [`c1f2d264`](https://github.com/xataio/client-ts/commit/c1f2d2649e077cdffae97c90b9d2b1c75d6858fb), [`6c2c2630`](https://github.com/xataio/client-ts/commit/6c2c26308d4cbd25e7a9677c7d25c836396d4965)]:
+  - @xata.io/client@0.25.0
+
 ## 0.1.21
 
 ### Patch Changes

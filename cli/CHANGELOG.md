@@ -1,5 +1,31 @@
 # @xata.io/cli
 
+## 0.13.0
+
+### Minor Changes
+
+- [#1096](https://github.com/xataio/client-ts/pull/1096) [`16693d59`](https://github.com/xataio/client-ts/commit/16693d59785bcd0a64a293ff2fa671d84104e1eb) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for reverse links to codegen
+
+- [#1051](https://github.com/xataio/client-ts/pull/1051) [`02361aa1`](https://github.com/xataio/client-ts/commit/02361aa197c02267d52157daebf457d526da3e41) Thanks [@richardgill](https://github.com/richardgill)! - Rewrite of: @xata.io/importer with a new design.
+
+  CLI now uses the @xata.io/importer. Improvements:
+
+  - 2.5x performance
+  - Better column type inference
+  - Better date inference
+  - API errors are displayed in the console and written to an `error.log` file
+
+### Patch Changes
+
+- [#1041](https://github.com/xataio/client-ts/pull/1041) [`ac3b968f`](https://github.com/xataio/client-ts/commit/ac3b968f7ca476f2c82b1b2719d020fbd7164f38) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for files and attachments
+
+- [#1092](https://github.com/xataio/client-ts/pull/1092) [`ee82aa0a`](https://github.com/xataio/client-ts/commit/ee82aa0a98d64074844044ed92f80124fd753200) Thanks [@SferaDev](https://github.com/SferaDev)! - Run pull on init
+
+- Updated dependencies [[`ac3b968f`](https://github.com/xataio/client-ts/commit/ac3b968f7ca476f2c82b1b2719d020fbd7164f38), [`aef9c834`](https://github.com/xataio/client-ts/commit/aef9c834a850494020e7585cb4ce67b446f9ccfc), [`bcce0d3b`](https://github.com/xataio/client-ts/commit/bcce0d3b0b53468937accd4fee3b5485c35f69ad), [`16693d59`](https://github.com/xataio/client-ts/commit/16693d59785bcd0a64a293ff2fa671d84104e1eb), [`c1f2d264`](https://github.com/xataio/client-ts/commit/c1f2d2649e077cdffae97c90b9d2b1c75d6858fb), [`6c2c2630`](https://github.com/xataio/client-ts/commit/6c2c26308d4cbd25e7a9677c7d25c836396d4965), [`02361aa1`](https://github.com/xataio/client-ts/commit/02361aa197c02267d52157daebf457d526da3e41)]:
+  - @xata.io/client@0.25.0
+  - @xata.io/codegen@0.25.0
+  - @xata.io/importer@1.0.0
+
 ## 0.12.7
 
 ### Patch Changes
