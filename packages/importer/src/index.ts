@@ -14,3 +14,4 @@ export type {
 } from './types';
 export { generateRandomData } from './random-data';
 export { importColumnTypes } from './constants';
+export { isValidEmail } from './utils/email';

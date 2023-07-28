@@ -3,6 +3,7 @@ import CSV from 'papaparse';
 import AnyDateParser from 'any-date-parser';
 import { ColumnOptions, ToBoolean } from './types';
 import { isDefined } from './utils/lang';
+import { isValidEmail } from './utils/email';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 
@@ -36,7 +37,7 @@ const isBoolean = <T>(value: T, toBoolean: ToBoolean): boolean => {
   return isDefined(toBooleanValue) && [true, false].includes(toBooleanValue);
 };
 
-const isEmail = <T>(value: T): boolean => /^\S+@\S+\.\S+$/.test(String(value));
+const isEmail = <T>(value: T): boolean => isValidEmail(String(value));
 
 const isText = <T>(value: T): boolean =>
   // Check for newlines
@@ -144,6 +145,9 @@ export const coerceValue = (
     case 'text':
     case 'link': {
       return { value: String(value), isError: false };
+    }
+    case 'email': {
+      return isEmail(value) ? { value: String(value), isError: false } : { value: null, isError: true };
     }
     case 'int': {
       return isInteger(value) ? { value: parseInt(String(value), 10), isError: false } : { value: null, isError: true };
