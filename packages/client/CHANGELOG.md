@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.25.1
+
+### Patch Changes
+
+- [#1101](https://github.com/xataio/client-ts/pull/1101) [`321c33ff`](https://github.com/xataio/client-ts/commit/321c33ff684c416a6cc813be2a970fd8f826b885) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix bug with cancellable timeouts
+
 ## 0.25.0
 
 ### Minor Changes
