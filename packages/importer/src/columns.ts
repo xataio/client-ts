@@ -9,7 +9,7 @@ const anyToDate = AnyDateParser.exportAsFunctionAny();
 
 const isInteger = <T>(value: T): boolean => /^[-]?\d+$/.test(String(value).trim());
 
-const isFloat = <T>(value: T): boolean => /^[-]?\d(\.\d*)?$/.test(String(value).trim());
+const isFloat = <T>(value: T): boolean => /^[-]?\d+(\.\d*)?$/.test(String(value).trim());
 
 const isDateTime = <T>(value: T): boolean => anyToDate(value).invalid === undefined;
 

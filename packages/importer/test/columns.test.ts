@@ -14,6 +14,7 @@ const guessNumbersTestCases = [
   { input: [' 1 '], expected: 'int' },
   { input: ['1', 2], expected: 'int' },
   { input: ['1', 2, '3.1'], expected: 'float' },
+  { input: ['1', 2, '3.1', '1000'], expected: 'float' },
   { input: ['1', 2, 3.2], expected: 'float' },
   { input: ['1', 2, 3.2, 'null'], expected: 'float' },
   { input: ['foo', 2, 3.2, '3.3'], expected: 'string' }
@@ -241,6 +242,7 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
     { input: '1', type: 'int', expected: { value: 1, isError: false } },
     { input: ' 1 ', type: 'int', expected: { value: 1, isError: false } },
     { input: '1', type: 'float', expected: { value: 1.0, isError: false } },
+    { input: '1000', type: 'float', expected: { value: 1000, isError: false } },
     { input: '1.1', type: 'float', expected: { value: 1.1, isError: false } },
     { input: ' 1.1 ', type: 'float', expected: { value: 1.1, isError: false } },
     { input: 'banana', type: 'float', expected: { value: null, isError: true } },
@@ -324,6 +326,11 @@ const coerceRowsTestCases: {
     rows: [{ col: '1.0' }],
     columns: [{ name: 'col', type: 'float' }],
     expected: [{ col: { value: 1.0, isError: false } }]
+  },
+  {
+    rows: [{ col: '1000' }],
+    columns: [{ name: 'col', type: 'float' }],
+    expected: [{ col: { value: 1000.0, isError: false } }]
   },
   {
     rows: [{ col: '-1.1' }],
