@@ -7,28 +7,9 @@ import { isValidEmail } from './utils/email';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 
-const isInteger = <T>(
-  value: T
-): boolean => // Check for integers
-  Boolean(
-    Number.isSafeInteger(+value) &&
-      // Without dots (e.g. 1.0)
-      String(value).match(/^[-]?\d+$/) &&
-      // Are not dates
-      !(value instanceof Date)
-  );
+const isInteger = <T>(value: T): boolean => /^[-]?\d+$/.test(String(value).trim());
 
-const isFloat = <T>(
-  value: T
-): boolean => // Check for integers
-  Boolean(
-    // Check for floats
-    !Number.isNaN(+value) &&
-      // Are not dates
-      !(value instanceof Date) &&
-      // @ts-ignore TS 4.7 errors TS2367 here, remove when we drop support for TS 4.7 or change implementation
-      value !== ''
-  );
+const isFloat = <T>(value: T): boolean => /^[-]?\d+(\.\d*)?$/.test(String(value).trim());
 
 const isDateTime = <T>(value: T): boolean => anyToDate(value).invalid === undefined;
 
@@ -37,7 +18,7 @@ const isBoolean = <T>(value: T, toBoolean: ToBoolean): boolean => {
   return isDefined(toBooleanValue) && [true, false].includes(toBooleanValue);
 };
 
-const isEmail = <T>(value: T): boolean => isValidEmail(String(value));
+const isEmail = <T>(value: T): boolean => isValidEmail(String(value).trim());
 
 const isText = <T>(value: T): boolean =>
   // Check for newlines
@@ -83,10 +64,10 @@ const defaultIsNull = (value: unknown): boolean => {
 const DEFAULT_BOOLEAN_VALUES = { true: ['true', 't', 'yes', 'y'], false: ['false', 'f', 'no', 'n'] };
 
 const defaultToBoolean: ToBoolean = (value) => {
-  if (DEFAULT_BOOLEAN_VALUES.true.includes(String(value).toLowerCase())) {
+  if (DEFAULT_BOOLEAN_VALUES.true.includes(String(value).trim().toLowerCase())) {
     return true;
   }
-  if (DEFAULT_BOOLEAN_VALUES.false.includes(String(value).toLowerCase())) {
+  if (DEFAULT_BOOLEAN_VALUES.false.includes(String(value).trim().toLowerCase())) {
     return false;
   }
   return null;
@@ -147,7 +128,7 @@ export const coerceValue = (
       return { value: String(value), isError: false };
     }
     case 'email': {
-      return isEmail(value) ? { value: String(value), isError: false } : { value: null, isError: true };
+      return isEmail(value) ? { value: String(value).trim(), isError: false } : { value: null, isError: true };
     }
     case 'int': {
       return isInteger(value) ? { value: parseInt(String(value), 10), isError: false } : { value: null, isError: true };
