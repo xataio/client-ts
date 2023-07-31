@@ -10,8 +10,11 @@ const guessNumbersTestCases = [
   { input: ['1', '2', '3.0'], expected: 'float' },
   { input: ['1', '2', '3.1'], expected: 'float' },
   { input: ['1', '2', '3.1', '3.2'], expected: 'float' },
+  { input: ['1', '2 ', ' 3.1 ', ' 3.2'], expected: 'float' },
+  { input: [' 1 '], expected: 'int' },
   { input: ['1', 2], expected: 'int' },
   { input: ['1', 2, '3.1'], expected: 'float' },
+  { input: ['1', 2, '3.1', '1000'], expected: 'float' },
   { input: ['1', 2, 3.2], expected: 'float' },
   { input: ['1', 2, 3.2, 'null'], expected: 'float' },
   { input: ['foo', 2, 3.2, '3.3'], expected: 'string' }
@@ -19,6 +22,7 @@ const guessNumbersTestCases = [
 
 const guessBooleansTestCases = [
   { input: ['true', 'false'], expected: 'bool' },
+  { input: [' true', 'false '], expected: 'bool' },
   { input: ['true', 'false', 'true'], expected: 'bool' },
   { input: ['true', 'false', true], expected: 'bool' },
   { input: ['true', 'false', true, null], expected: 'bool' },
@@ -32,6 +36,7 @@ const guessBooleansTestCases = [
 
 const guessEmailsTestCases = [
   { input: ['email@example.com'], expected: 'email' },
+  { input: [' email@example.com '], expected: 'email' },
   { input: ['foo', 'email@example.com'], expected: 'string' },
   { input: [2, 'email@example.com'], expected: 'string' },
   { input: ['email+1@example.com'], expected: 'email' },
@@ -54,6 +59,7 @@ const guessDatesTestCases = [
   { input: ['2020-01-01', '2020-01-02'], expected: 'datetime' },
   { input: ['2020-01-01', 'foo'], expected: 'string' },
   { input: ['2020-01-01T00:00:00Z'], expected: 'datetime' },
+  { input: [' 2020-01-01T00:00:00Z '], expected: 'datetime' },
   { input: ['2020-01-01T00:00:00+00:00'], expected: 'datetime' },
   { input: ['2020-01-01T00:00:00+01:00'], expected: 'datetime' },
   { input: ['2/4/1964'], expected: 'datetime' },
@@ -75,6 +81,7 @@ const guessMultipleTestCases = [
 const guessNullTestCases = [
   { input: [undefined], expected: 'string' },
   { input: ['null'], expected: 'string' },
+  { input: [' null'], expected: 'string' },
   { input: ['NULL'], expected: 'string' },
   { input: [null], expected: 'string' },
   { input: [''], expected: 'string' }
@@ -233,13 +240,17 @@ describe('guessColumns', () => {
 const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?: ColumnOptions; expected: unknown }[] =
   [
     { input: '1', type: 'int', expected: { value: 1, isError: false } },
+    { input: ' 1 ', type: 'int', expected: { value: 1, isError: false } },
     { input: '1', type: 'float', expected: { value: 1.0, isError: false } },
+    { input: '1000', type: 'float', expected: { value: 1000, isError: false } },
     { input: '1.1', type: 'float', expected: { value: 1.1, isError: false } },
+    { input: ' 1.1 ', type: 'float', expected: { value: 1.1, isError: false } },
     { input: 'banana', type: 'float', expected: { value: null, isError: true } },
     { input: '1.1', type: 'string', expected: { value: '1.1', isError: false } },
     { input: '1', type: 'string', expected: { value: '1', isError: false } },
     { input: 'rec_xyz', type: 'link', expected: { value: 'rec_xyz', isError: false } },
     { input: 'true', type: 'bool', expected: { value: true, isError: false } },
+    { input: ' true ', type: 'bool', expected: { value: true, isError: false } },
     {
       input: 'nope',
       type: 'bool',
@@ -256,10 +267,18 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
       type: 'email',
       expected: { value: 'johnrandall@schmidt-hoover.biz', isError: false }
     },
+    {
+      input: ' johnrandall@schmidt-hoover.biz ',
+      type: 'email',
+      expected: { value: 'johnrandall@schmidt-hoover.biz', isError: false }
+    },
     { input: 'a,b', type: 'multiple', expected: { value: ['a', 'b'], isError: false } },
+    { input: ' a,b', type: 'multiple', expected: { value: [' a', 'b'], isError: false } },
     { input: '["a","b"]', type: 'multiple', expected: { value: ['a', 'b'], isError: false } },
+    { input: ' ["a","b"]', type: 'multiple', expected: { value: ['a', 'b'], isError: false } },
     { input: 'a', type: 'multiple', expected: { value: ['a'], isError: false } },
     { input: '2000-01-01', type: 'datetime', expected: { value: new Date('2000-01-01'), isError: false } },
+    { input: ' 2000-01-01', type: 'datetime', expected: { value: new Date('2000-01-01'), isError: false } },
     {
       input: '2020-01-01T00:00:00Z',
       type: 'datetime',
@@ -307,6 +326,11 @@ const coerceRowsTestCases: {
     rows: [{ col: '1.0' }],
     columns: [{ name: 'col', type: 'float' }],
     expected: [{ col: { value: 1.0, isError: false } }]
+  },
+  {
+    rows: [{ col: '1000' }],
+    columns: [{ name: 'col', type: 'float' }],
+    expected: [{ col: { value: 1000.0, isError: false } }]
   },
   {
     rows: [{ col: '-1.1' }],
