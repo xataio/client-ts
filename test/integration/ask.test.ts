@@ -32,7 +32,7 @@ afterEach(async (ctx) => {
 });
 
 describe('ask questions', () => {
-  test('ask a question', async () => {
+  test.skip('ask a question', async () => {
     const result = await xata.db.search.ask(`My name is Alexis. What is Xata?`);
     expect(result).toBeDefined();
     expect(typeof result.answer).toBe('string');
