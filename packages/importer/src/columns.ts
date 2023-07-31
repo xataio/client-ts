@@ -50,7 +50,7 @@ const parseMultiple = (value: string): string[] | null => {
   return CSV.parse(value, { header: false }).data[0] as string[];
 };
 
-const isGuessableMultiple = <T>(value: T): boolean => Array.isArray(value) || tryIsJsonArray(String(value).trim());
+const isGuessableMultiple = <T>(value: T): boolean => Array.isArray(value) || tryIsJsonArray(String(value));
 
 const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIsCsvArray(String(value));
 
