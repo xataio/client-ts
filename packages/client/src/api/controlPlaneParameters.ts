@@ -7,8 +7,6 @@ import type * as Schemas from './controlPlaneSchemas';
 
 export type APIKeyNameParam = Schemas.APIKeyName;
 
-export type AccessTokenParam = Schemas.AccessToken;
-
 export type InviteIDParam = Schemas.InviteID;
 
 export type InviteKeyParam = Schemas.InviteKey;
