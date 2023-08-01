@@ -55,40 +55,6 @@ export const grantAuthorizationCode = (variables: GrantAuthorizationCodeVariable
     {}
   >({ url: '/oauth/authorize', method: 'post', ...variables, signal });
 
-export type GenerateAccessTokenError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
-  | {
-      status: 409;
-      payload: Responses.SimpleError;
-    }
->;
-
-export type GenerateAccessTokenVariables = {
-  body?: Schemas.AccessTokenInput;
-} & ControlPlaneFetcherExtraProps;
-
-/**
- * Creates/refreshes, stores and returns an access token to be used by a third party app
- */
-export const generateAccessToken = (variables: GenerateAccessTokenVariables, signal?: AbortSignal) =>
-  controlPlaneFetch<Schemas.AccessTokenOutput, GenerateAccessTokenError, Schemas.AccessTokenInput, {}, {}, {}>({
-    url: '/oauth/token',
-    method: 'post',
-    ...variables,
-    signal
-  });
-
 export type GetUserError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -1343,7 +1309,7 @@ export const listRegions = (variables: ListRegionsVariables, signal?: AbortSigna
   });
 
 export const operationsByTag = {
-  authOther: { grantAuthorizationCode, generateAccessToken },
+  authOther: { grantAuthorizationCode },
   users: { getUser, updateUser, deleteUser },
   authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
   workspaces: {
