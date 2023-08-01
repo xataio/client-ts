@@ -13,29 +13,6 @@ export type AuthorizationCode = {
   expires?: string;
 };
 
-export type AccessTokenInput =
-  | {
-      grantType: string;
-      clientId: string;
-      clientSecret: string;
-      refreshToken: string;
-    }
-  | {
-      grantType: string;
-      clientId: string;
-      clientSecret: string;
-      code: string;
-      redirectUri: string;
-      codeVerifier?: string;
-    };
-
-export type AccessTokenOutput = {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  expires?: number;
-};
-
 export type User = {
   /**
    * @format email
@@ -124,8 +101,6 @@ export type WorkspaceMembers = {
  * @pattern ^ik_[a-zA-Z0-9]+
  */
 export type InviteKey = string;
-
-export type AccessToken = string;
 
 /**
  * Metadata of databases
