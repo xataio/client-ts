@@ -1,5 +1,11 @@
 # @xata.io/importer
 
+## 1.0.2
+
+### Patch Changes
+
+- [#1108](https://github.com/xataio/client-ts/pull/1108) [`bcb5b989`](https://github.com/xataio/client-ts/commit/bcb5b989478c2288a230d63b1b48dc1fdf7f88e5) Thanks [@richardgill](https://github.com/richardgill)! - Importer: trim whitespace for int, float, datetime and email column types
+
 ## 1.0.1
 
 ### Patch Changes
