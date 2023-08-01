@@ -1,5 +1,14 @@
 # @xata.io/cli
 
+## 0.13.3
+
+### Patch Changes
+
+- [#1104](https://github.com/xataio/client-ts/pull/1104) [`187f43a7`](https://github.com/xataio/client-ts/commit/187f43a722a9421ff277ec2e8aecb7f52e6fb1ea) Thanks [@kostasb](https://github.com/kostasb)! - Change schema upload description
+
+- Updated dependencies [[`bcb5b989`](https://github.com/xataio/client-ts/commit/bcb5b989478c2288a230d63b1b48dc1fdf7f88e5)]:
+  - @xata.io/importer@1.0.2
+
 ## 0.13.2
 
 ### Patch Changes
