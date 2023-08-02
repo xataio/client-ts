@@ -42,6 +42,13 @@ export type DateTime = string;
  */
 export type APIKeyName = string;
 
+export type OAuthClientPublicDetails = {
+  name?: string;
+  description?: string;
+  icon?: string;
+  clientId: string;
+};
+
 /**
  * @pattern ^([a-zA-Z0-9][a-zA-Z0-9_\-~]+-)?[a-zA-Z0-9]{6}
  * @x-go-type auth.WorkspaceID
