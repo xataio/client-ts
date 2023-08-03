@@ -3841,11 +3841,11 @@ export type SqlQueryError = Fetcher.ErrorWrapper<
 
 export type SqlQueryRequestBody = {
   /**
-   * The query string.
+   * The SQL statement.
    *
    * @minLength 1
    */
-  query: string;
+  statement: string;
   /**
    * The query parameter list.
    */
