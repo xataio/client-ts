@@ -256,6 +256,38 @@ export const deleteUserAPIKey = (variables: DeleteUserAPIKeyVariables, signal?: 
     signal
   });
 
+export type GetUserOAuthClientsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetUserOAuthClientsResponse = {
+  clients?: Schemas.OAuthClientPublicDetails[];
+};
+
+export type GetUserOAuthClientsVariables = ControlPlaneFetcherExtraProps;
+
+/**
+ * Retrieve the list of OAuth Clients that a user has authorized
+ */
+export const getUserOAuthClients = (variables: GetUserOAuthClientsVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<GetUserOAuthClientsResponse, GetUserOAuthClientsError, undefined, {}, {}, {}>({
+    url: '/user/oauth/clients',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type GetWorkspacesListError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -1311,7 +1343,7 @@ export const listRegions = (variables: ListRegionsVariables, signal?: AbortSigna
 export const operationsByTag = {
   authOther: { grantAuthorizationCode },
   users: { getUser, updateUser, deleteUser },
-  authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
+  authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey, getUserOAuthClients },
   workspaces: {
     getWorkspacesList,
     createWorkspace,
