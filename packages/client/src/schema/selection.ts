@@ -13,30 +13,16 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   // Properties of the current level
   | DataProps<O>
   // Nested properties of the lower levels
-  | NestedColumns<O, RecursivePath>
-  // Column projections
-  | ExpandedColumnNotation;
-
-type ExpandedColumnNotation = {
-  name: string;
-  columns?: SelectableColumn<any>[];
-  as?: string;
-  limit?: number;
-  offset?: number;
-  order?: { column: string; order: 'asc' | 'desc' }[];
-};
-
-type StringColumns<T> = T extends string ? T : never;
-type ProjectionColumns<T> = T extends { as: string } ? 'posts' : never;
+  | NestedColumns<O, RecursivePath>;
 
 // Private: Returns columns ending with a wildcard
 type WildcardColumns<O> = Values<{
-  [K in StringColumns<SelectableColumn<O>>]: K extends `${string}*` ? K : never;
+  [K in SelectableColumn<O>]: K extends `${string}*` ? K : never;
 }>;
 
 // Public: Utility type to get a union with the selectable columns of an object by a given type
 export type ColumnsByValue<O, Value> = Values<{
-  [K in StringColumns<SelectableColumn<O>>]: ValueAtColumn<O, K> extends infer C
+  [K in SelectableColumn<O>]: ValueAtColumn<O, K> extends infer C
     ? C extends Value
       ? K extends WildcardColumns<O>
         ? never
@@ -50,13 +36,7 @@ export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]
   // For each column, we get its nested value and join it as an intersection
   UnionToIntersection<
     Values<{
-      [K in StringColumns<Key[number]>]: NestedValueAtColumn<O, K> & XataRecord<O>;
-    }>
-  > &
-  // For each column projection, we get its nested value and join it as an intersection
-  UnionToIntersection<
-    Values<{
-      [K in ProjectionColumns<Key[number]>]: XataRecord<O>[];
+      [K in Key[number]]: NestedValueAtColumn<O, K> & XataRecord<O>;
     }>
   >;
 
