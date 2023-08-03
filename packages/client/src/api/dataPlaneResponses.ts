@@ -98,7 +98,7 @@ export type SearchResponse = {
 };
 
 export type SQLResponse = {
-  records: Schemas.SQLRecord[];
+  records?: Schemas.SQLRecord[];
   warning?: string;
 };
 
