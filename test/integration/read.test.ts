@@ -153,6 +153,28 @@ describe('record read', () => {
     expect(copy?.owner?.address?.city).not.toBeDefined();
     // @ts-expect-error
     expect(copy?.owner?.full_name).not.toBeDefined();
+
+    // Reverse links
+    const copy2 = await xata.db.users.read(owner.id, [
+      'id',
+      'name',
+      {
+        name: '<-posts.author',
+        columns: ['title'],
+        as: 'posts',
+        limit: 10,
+        offset: 0,
+        order: [
+          {
+            column: 'createdAt',
+            order: 'desc'
+          }
+        ]
+      }
+    ]);
+
+    expect(copy2?.name).toBe(owner.name);
+    expect(copy2?.posts).toHaveLength(0);
   });
 
   test('replace team with record method', async () => {
