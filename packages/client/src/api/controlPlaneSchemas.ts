@@ -3,14 +3,28 @@
  *
  * @version 1.0
  */
-export type AuthorizationCode = {
+export type OAuthResponseType = 'code';
+
+export type OAuthScope = 'admin:all';
+
+export type AuthorizationCodeResponse = {
   state?: string;
   redirectUri?: string;
-  scopes?: string[];
+  scopes?: OAuthScope[];
+  clientId?: string;
   /**
    * @format date-time
    */
   expires?: string;
+  code?: string;
+};
+
+export type AuthorizationCodeRequest = {
+  state?: string;
+  redirectUri?: string;
+  scopes?: OAuthScope[];
+  clientId: string;
+  responseType: OAuthResponseType;
 };
 
 export type User = {

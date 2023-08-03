@@ -8,6 +8,50 @@ import { controlPlaneFetch, ControlPlaneFetcherExtraProps } from './controlPlane
 import type * as Schemas from './controlPlaneSchemas';
 import type * as Responses from './controlPlaneResponses';
 
+export type GetAuthorizationCodeQueryParams = {
+  clientID: string;
+  responseType: Schemas.OAuthResponseType;
+  redirectUri?: string;
+  scopes?: Schemas.OAuthScope[];
+  state?: string;
+};
+
+export type GetAuthorizationCodeError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetAuthorizationCodeVariables = {
+  queryParams: GetAuthorizationCodeQueryParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Creates, stores and returns an authorization code to be used by a third party app. Supporting use of GET is required by OAuth2 spec
+ */
+export const getAuthorizationCode = (variables: GetAuthorizationCodeVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.AuthorizationCodeResponse,
+    GetAuthorizationCodeError,
+    undefined,
+    {},
+    GetAuthorizationCodeQueryParams,
+    {}
+  >({ url: '/oauth/authorize', method: 'get', ...variables, signal });
+
 export type GrantAuthorizationCodeError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -27,19 +71,8 @@ export type GrantAuthorizationCodeError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type GrantAuthorizationCodeResponse = Schemas.AuthorizationCode & {
-  code: string;
-};
-
-export type GrantAuthorizationCodeRequestBody = Schemas.AuthorizationCode & {
-  responseType: string;
-  clientId: string;
-  codeChallenge?: string;
-  codeChallengeMethod?: string;
-};
-
 export type GrantAuthorizationCodeVariables = {
-  body?: GrantAuthorizationCodeRequestBody;
+  body: Schemas.AuthorizationCodeRequest;
 } & ControlPlaneFetcherExtraProps;
 
 /**
@@ -47,9 +80,9 @@ export type GrantAuthorizationCodeVariables = {
  */
 export const grantAuthorizationCode = (variables: GrantAuthorizationCodeVariables, signal?: AbortSignal) =>
   controlPlaneFetch<
-    GrantAuthorizationCodeResponse,
+    Schemas.AuthorizationCodeResponse,
     GrantAuthorizationCodeError,
-    GrantAuthorizationCodeRequestBody,
+    Schemas.AuthorizationCodeRequest,
     {},
     {},
     {}
@@ -1341,7 +1374,7 @@ export const listRegions = (variables: ListRegionsVariables, signal?: AbortSigna
   });
 
 export const operationsByTag = {
-  authOther: { grantAuthorizationCode },
+  authOther: { getAuthorizationCode, grantAuthorizationCode },
   users: { getUser, updateUser, deleteUser },
   authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey, getUserOAuthClients },
   workspaces: {
