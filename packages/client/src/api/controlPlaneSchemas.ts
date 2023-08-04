@@ -63,6 +63,24 @@ export type OAuthClientPublicDetails = {
   clientId: string;
 };
 
+export type OAuthAccessToken = {
+  token: string;
+  scopes: string[];
+  /**
+   * @format date-time
+   */
+  createdAt: string;
+  /**
+   * @format date-time
+   */
+  updatedAt: string;
+  /**
+   * @format date-time
+   */
+  expiresAt: string;
+  clientId: string;
+};
+
 /**
  * @pattern ^([a-zA-Z0-9][a-zA-Z0-9_\-~]+-)?[a-zA-Z0-9]{6}
  * @x-go-type auth.WorkspaceID
