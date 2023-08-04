@@ -81,6 +81,8 @@ export type OAuthAccessToken = {
   clientId: string;
 };
 
+export type AccessToken = string;
+
 /**
  * @pattern ^([a-zA-Z0-9][a-zA-Z0-9_\-~]+-)?[a-zA-Z0-9]{6}
  * @x-go-type auth.WorkspaceID
