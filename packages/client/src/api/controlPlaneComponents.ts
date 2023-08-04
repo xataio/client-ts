@@ -321,6 +321,38 @@ export const getUserOAuthClients = (variables: GetUserOAuthClientsVariables, sig
     signal
   });
 
+export type GetUserOAuthAccessTokensError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetUserOAuthAccessTokensResponse = {
+  accessTokens: Schemas.OAuthAccessToken[];
+};
+
+export type GetUserOAuthAccessTokensVariables = ControlPlaneFetcherExtraProps;
+
+/**
+ * Retrieve the list of valid OAuth Access Tokens on the current user's account
+ */
+export const getUserOAuthAccessTokens = (variables: GetUserOAuthAccessTokensVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<GetUserOAuthAccessTokensResponse, GetUserOAuthAccessTokensError, undefined, {}, {}, {}>({
+    url: '/user/oauth/tokens',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type GetWorkspacesListError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -1376,7 +1408,7 @@ export const listRegions = (variables: ListRegionsVariables, signal?: AbortSigna
 export const operationsByTag = {
   authOther: { getAuthorizationCode, grantAuthorizationCode },
   users: { getUser, updateUser, deleteUser },
-  authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey, getUserOAuthClients },
+  authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey, getUserOAuthClients, getUserOAuthAccessTokens },
   workspaces: {
     getWorkspacesList,
     createWorkspace,
