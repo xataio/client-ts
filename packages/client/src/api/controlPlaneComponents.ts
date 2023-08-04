@@ -353,6 +353,92 @@ export const getUserOAuthAccessTokens = (variables: GetUserOAuthAccessTokensVari
     signal
   });
 
+export type DeleteOAuthAccessTokenPathParams = {
+  token: Schemas.AccessToken;
+};
+
+export type DeleteOAuthAccessTokenError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteOAuthAccessTokenVariables = {
+  pathParams: DeleteOAuthAccessTokenPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Expires the access token for a third party app
+ */
+export const deleteOAuthAccessToken = (variables: DeleteOAuthAccessTokenVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<undefined, DeleteOAuthAccessTokenError, undefined, {}, {}, DeleteOAuthAccessTokenPathParams>({
+    url: '/user/oauth/tokens/{token}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type UpdateOAuthAccessTokenPathParams = {
+  token: Schemas.AccessToken;
+};
+
+export type UpdateOAuthAccessTokenError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateOAuthAccessTokenRequestBody = {
+  /**
+   * expiration time of the token as a unix timestamp
+   */
+  expires: number;
+};
+
+export type UpdateOAuthAccessTokenVariables = {
+  body: UpdateOAuthAccessTokenRequestBody;
+  pathParams: UpdateOAuthAccessTokenPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Updates partially the access token for a third party app
+ */
+export const updateOAuthAccessToken = (variables: UpdateOAuthAccessTokenVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.OAuthAccessToken,
+    UpdateOAuthAccessTokenError,
+    UpdateOAuthAccessTokenRequestBody,
+    {},
+    {},
+    UpdateOAuthAccessTokenPathParams
+  >({ url: '/user/oauth/tokens/{token}', method: 'patch', ...variables, signal });
+
 export type GetWorkspacesListError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -1406,7 +1492,7 @@ export const listRegions = (variables: ListRegionsVariables, signal?: AbortSigna
   });
 
 export const operationsByTag = {
-  authOther: { getAuthorizationCode, grantAuthorizationCode },
+  authOther: { getAuthorizationCode, grantAuthorizationCode, deleteOAuthAccessToken, updateOAuthAccessToken },
   users: { getUser, updateUser, deleteUser },
   authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey, getUserOAuthClients, getUserOAuthAccessTokens },
   workspaces: {
