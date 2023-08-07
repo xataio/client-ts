@@ -10,7 +10,19 @@ import url, { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export function handler(publicKey: string, privateKey: string, passphrase: string, callback: (apiKey: string) => void) {
+export function handler({
+  domain,
+  publicKey,
+  privateKey,
+  passphrase,
+  callback
+}: {
+  domain: string;
+  publicKey: string;
+  privateKey: string;
+  passphrase: string;
+  callback: (apiKey: string) => void;
+}) {
   return (req: http.IncomingMessage, res: http.ServerResponse) => {
     try {
       if (req.method !== 'GET') {
@@ -22,7 +34,7 @@ export function handler(publicKey: string, privateKey: string, passphrase: strin
       if (parsedURL.pathname === '/new') {
         const port = req.socket.localPort ?? 80;
         res.writeHead(302, {
-          location: generateURL(port, publicKey)
+          location: generateURL({ port, publicKey, domain })
         });
         res.end();
         return;
@@ -58,17 +70,20 @@ function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse, 
   res.end(html.replace('data-color-mode=""', `data-color-mode="${colorMode}"`));
 }
 
-export function generateURL(port: number, publicKey: string) {
+export function generateURL({ port, publicKey, domain }: { port: number; publicKey: string; domain: string }) {
+  const name = 'Xata CLI';
+  const redirect = `http://localhost:${port}`;
   const pub = publicKey
     .replace(/\n/g, '')
     .replace('-----BEGIN PUBLIC KEY-----', '')
     .replace('-----END PUBLIC KEY-----', '');
-  const name = 'Xata CLI';
-  const redirect = `http://localhost:${port}`;
-  const url = new URL('https://app.xata.io/new-api-key');
-  url.searchParams.append('pub', pub);
-  url.searchParams.append('name', name);
-  url.searchParams.append('redirect', redirect);
+
+  const url = new URL(`${domain}/integrations/oauth/authorize`);
+  url.searchParams.set('client_id', 'cli-demo');
+  url.searchParams.set('redirect_uri', `${domain}/integrations/cli/callback`);
+  url.searchParams.set('response_type', 'code');
+  url.searchParams.set('scope', 'admin:all');
+  url.searchParams.set('state', Buffer.from(JSON.stringify({ name, pub, redirect })).toString('base64'));
   return url.toString();
 }
 
@@ -90,19 +105,25 @@ export function generateKeys() {
   return { publicKey, privateKey, passphrase };
 }
 
-export async function createAPIKeyThroughWebUI() {
+export async function createAPIKeyThroughWebUI(domain: string) {
   const { publicKey, privateKey, passphrase } = generateKeys();
 
   return new Promise<string>((resolve) => {
     const server = http.createServer(
-      handler(publicKey, privateKey, passphrase, (apiKey) => {
-        resolve(apiKey);
-        server.close();
+      handler({
+        domain,
+        publicKey,
+        privateKey,
+        passphrase,
+        callback: (apiKey) => {
+          resolve(apiKey);
+          server.close();
+        }
       })
     );
     server.listen(() => {
       const { port } = server.address() as AddressInfo;
-      const openURL = generateURL(port, publicKey);
+      const openURL = generateURL({ port, publicKey, domain });
       console.log(
         `We are opening your default browser. If your browser doesn't open automatically, please copy and paste the following URL into your browser: ${chalk.bold(
           `http://localhost:${port}/new`

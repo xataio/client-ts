@@ -541,7 +541,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     if (!decision) this.exit(2);
 
     if (decision === 'create') {
-      return createAPIKeyThroughWebUI();
+      const domain = (await this.getProfile())?.web || 'https://app.xata.io';
+      return createAPIKeyThroughWebUI(domain);
     } else if (decision === 'existing') {
       const { key } = await this.prompt({
         type: 'password',
