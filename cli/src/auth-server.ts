@@ -6,9 +6,17 @@ import { AddressInfo } from 'net';
 import open from 'open';
 import path, { dirname } from 'path';
 import url, { fileURLToPath } from 'url';
+import { z } from 'zod';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const ResponseSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string()
+});
+
+type OAuthResponse = z.infer<typeof ResponseSchema>;
 
 export function handler({
   domain,
@@ -21,7 +29,7 @@ export function handler({
   publicKey: string;
   privateKey: string;
   passphrase: string;
-  callback: (apiKey: string) => void;
+  callback: (response: OAuthResponse) => void;
 }) {
   return (req: http.IncomingMessage, res: http.ServerResponse) => {
     try {
@@ -49,12 +57,12 @@ export function handler({
         return res.end('Missing key parameter');
       }
       const privKey = crypto.createPrivateKey({ key: privateKey, passphrase });
-      const apiKey = crypto
+      const response = crypto
         .privateDecrypt(privKey, Buffer.from(String(parsedURL.query.key).replace(/ /g, '+'), 'base64'))
         .toString('utf8');
       renderSuccessPage(req, res, String(parsedURL.query['color-mode']));
       req.destroy();
-      callback(apiKey);
+      callback(ResponseSchema.parse(JSON.parse(response)));
     } catch (err) {
       res.writeHead(500);
       res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
@@ -62,7 +70,7 @@ export function handler({
   };
 }
 
-function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse, colorMode: string) {
+function renderSuccessPage(_req: http.IncomingMessage, res: http.ServerResponse, colorMode: string) {
   res.writeHead(200, {
     'Content-Type': 'text/html'
   });
@@ -108,7 +116,7 @@ export function generateKeys() {
 export async function createAPIKeyThroughWebUI(domain: string) {
   const { publicKey, privateKey, passphrase } = generateKeys();
 
-  return new Promise<string>((resolve) => {
+  return new Promise<OAuthResponse>((resolve) => {
     const server = http.createServer(
       handler({
         domain,

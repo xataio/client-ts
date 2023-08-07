@@ -374,14 +374,14 @@ export default class Init extends BaseCommand<typeof Init> {
 
     const profile = await this.getProfile();
     // TODO: generate a database-scoped API key
-    let apiKey = profile.apiKey;
+    const apiKey = profile.apiKey;
 
     if (!apiKey) {
       const domain = profile?.web || 'https://app.xata.io';
-      apiKey = await createAPIKeyThroughWebUI(domain);
+      const { accessToken, refreshToken } = await createAPIKeyThroughWebUI(domain);
       this.apiKeyLocation = 'new';
       // Any following API call must use this API key
-      process.env.XATA_API_KEY = apiKey;
+      process.env.XATA_API_KEY = accessToken;
 
       await this.waitUntilAPIKeyIsValid(workspace, region, database);
     }
