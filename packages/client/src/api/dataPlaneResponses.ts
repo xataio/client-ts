@@ -97,11 +97,6 @@ export type SearchResponse = {
   totalCount: number;
 };
 
-export type SQLResponse = {
-  records?: Schemas.SQLRecord[];
-  warning?: string;
-};
-
 export type SummarizeResponse = {
   summaries: Record<string, any>[];
 };
@@ -113,4 +108,9 @@ export type AggResponse = {
   aggs?: {
     [key: string]: Schemas.AggResponse;
   };
+};
+
+export type SQLResponse = {
+  records?: Schemas.SQLRecord[];
+  warning?: string;
 };
