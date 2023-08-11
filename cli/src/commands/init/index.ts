@@ -1,13 +1,13 @@
 import { Flags } from '@oclif/core';
-import { buildProviderString, Schemas } from '@xata.io/client';
+import { buildProviderString, Schemas, XataApiClient } from '@xata.io/client';
 import { ModuleType, parseSchemaFile } from '@xata.io/codegen';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { access, readFile, writeFile } from 'fs/promises';
 import compact from 'lodash.compact';
+import { nanoid } from 'nanoid';
 import path, { extname } from 'path';
 import which from 'which';
-import { createAPIKeyThroughWebUI } from '../../auth-server.js';
 import { BaseCommand, ENV_FILES } from '../../base.js';
 import { isIgnored } from '../../git.js';
 import { getDbTableExpression } from '../../utils/codeSnippet.js';
@@ -15,10 +15,10 @@ import { delay } from '../../utils/delay.js';
 import { enumFlag } from '../../utils/oclif.js';
 import Browse from '../browse/index.js';
 import Codegen, { languages, unsupportedExtensionError } from '../codegen/index.js';
+import Pull from '../pull/index.js';
 import RandomData from '../random-data/index.js';
 import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
-import Pull from '../pull/index.js';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 
@@ -143,10 +143,7 @@ export default class Init extends BaseCommand<typeof Init> {
     this.log();
 
     await this.writeEnvFile(workspace, region, database);
-
-    if (ignoreEnvFile) {
-      await this.ignoreEnvFile();
-    }
+    if (ignoreEnvFile) await this.ignoreEnvFile();
 
     this.log();
     if (packageManager) {
@@ -368,23 +365,21 @@ export default class Init extends BaseCommand<typeof Init> {
     return envFile;
   }
 
+  // In the future, create it scoped to the workspace and database
+  async generateApiKey(workspace: string, region: string, database: string) {
+    const xata = await this.getXataClient();
+
+    const name = `sdk-${workspace}-${database}-${nanoid(11)}`;
+    const response = await xata.api.authentication.createUserAPIKey({ name });
+    await this.waitUntilAPIKeyIsValid({ apiKey: response.key, workspace, region, database });
+
+    return response;
+  }
+
   async writeEnvFile(workspace: string, region: string, database: string) {
     const envFile = await this.findEnvFile();
     const doesEnvFileExist = await this.access(envFile);
-
     const profile = await this.getProfile();
-    // TODO: generate a database-scoped API key
-    const apiKey = profile.apiKey;
-
-    if (!apiKey) {
-      const domain = profile?.web || 'https://app.xata.io';
-      const { accessToken, refreshToken } = await createAPIKeyThroughWebUI(domain);
-      this.apiKeyLocation = 'new';
-      // Any following API call must use this API key
-      process.env.XATA_API_KEY = accessToken;
-
-      await this.waitUntilAPIKeyIsValid(workspace, region, database);
-    }
 
     // eslint-disable-next-line prefer-const
     let { content, containsXataApiKey } = await readEnvFile(envFile);
@@ -392,12 +387,14 @@ export default class Init extends BaseCommand<typeof Init> {
     if (containsXataApiKey) {
       this.warn(`Your ${envFile} file already contains XATA_API_KEY key. skipping...`);
     } else {
+      const { key, name: keyName } = await this.generateApiKey(workspace, region, database);
       const setBranch = `XATA_BRANCH=main`;
       if (content) content += '\n\n';
       content += '# [Xata] Configuration used by the CLI and the SDK\n';
       content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
       content += `${setBranch}\n`;
-      content += `XATA_API_KEY=${apiKey}\n`;
+      content += `# API Key: ${keyName}\n`;
+      content += `XATA_API_KEY=${key}\n`;
       if (profile.host !== 'production') content += `XATA_API_PROVIDER=${buildProviderString(profile.host)}\n`;
 
       this.log(`${doesEnvFileExist ? 'Updating' : 'Creating'} ${envFile} file`);
@@ -411,13 +408,23 @@ export default class Init extends BaseCommand<typeof Init> {
   }
 
   // New API keys need to be replicated until can be used in a particular region/database
-  async waitUntilAPIKeyIsValid(workspace: string, region: string, database: string) {
-    const xata = await this.getXataClient();
+  async waitUntilAPIKeyIsValid({
+    apiKey,
+    workspace,
+    region,
+    database
+  }: {
+    apiKey: string;
+    workspace: string;
+    region: string;
+    database: string;
+  }) {
+    const api = new XataApiClient({ apiKey });
     const maxRetries = 10;
     let retries = 0;
     while (retries++ < maxRetries) {
       try {
-        await xata.api.branches.getBranchList({ workspace, region, database });
+        await api.branches.getBranchList({ workspace, region, database });
         return;
       } catch (err) {
         if (err instanceof Error && err.message.includes('Invalid API key')) {

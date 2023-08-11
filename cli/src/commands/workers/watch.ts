@@ -22,7 +22,7 @@ export default class WorkersCompile extends BaseCommand<typeof WorkersCompile> {
     const watchPort = 64749;
 
     const { databaseURL } = await this.getDatabaseURL(flags.db);
-    const { apiKey } = (await this.getProfile()) ?? {};
+    const { token } = (await this.getProfile()) ?? {};
 
     buildWatcher({
       compile: async (path) => {
@@ -35,7 +35,7 @@ export default class WorkersCompile extends BaseCommand<typeof WorkersCompile> {
             modules: true,
             script: modules.find(({ name }) => name === main)?.content ?? modules[0].content,
             bindings: {
-              XATA_API_KEY: apiKey,
+              XATA_API_KEY: token,
               XATA_DATABASE_URL: databaseURL
             },
             routes: [`http://localhost:${watchPort}/${name}`]

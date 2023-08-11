@@ -13,7 +13,8 @@ const __dirname = dirname(__filename);
 
 const ResponseSchema = z.object({
   accessToken: z.string(),
-  refreshToken: z.string()
+  refreshToken: z.string(),
+  expires: z.string()
 });
 
 type OAuthResponse = z.infer<typeof ResponseSchema>;
@@ -87,8 +88,8 @@ export function generateURL({ port, publicKey, domain }: { port: number; publicK
     .replace('-----END PUBLIC KEY-----', '');
 
   const url = new URL(`${domain}/integrations/oauth/authorize`);
-  url.searchParams.set('client_id', 'cli-demo');
-  url.searchParams.set('redirect_uri', `${domain}/integrations/cli/callback`);
+  url.searchParams.set('client_id', 'cli-demo-2');
+  url.searchParams.set('redirect_uri', `${domain}/api/integrations/cli/callback`);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('scope', 'admin:all');
   url.searchParams.set('state', Buffer.from(JSON.stringify({ name, pub, redirect })).toString('base64'));
@@ -113,7 +114,7 @@ export function generateKeys() {
   return { publicKey, privateKey, passphrase };
 }
 
-export async function createAPIKeyThroughWebUI(domain: string) {
+export async function loginWithWebUI(domain: string) {
   const { publicKey, privateKey, passphrase } = generateKeys();
 
   return new Promise<OAuthResponse>((resolve) => {
@@ -123,8 +124,8 @@ export async function createAPIKeyThroughWebUI(domain: string) {
         publicKey,
         privateKey,
         passphrase,
-        callback: (apiKey) => {
-          resolve(apiKey);
+        callback: (credentials) => {
+          resolve(credentials);
           server.close();
         }
       })

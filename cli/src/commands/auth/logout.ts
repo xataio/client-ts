@@ -1,5 +1,5 @@
 import { BaseCommand } from '../../base.js';
-import { hasProfile, removeProfile } from '../../credentials.js';
+import { hasProfile, removeCredential } from '../../credentials.js';
 
 export default class Logout extends BaseCommand<typeof Logout> {
   static description = 'Logout from Xata';
@@ -32,7 +32,7 @@ export default class Logout extends BaseCommand<typeof Logout> {
     );
     if (!confirm) this.exit(2);
 
-    await removeProfile(profile.name);
+    await removeCredential(profile.name);
 
     this.success('Logged out correctly');
   }

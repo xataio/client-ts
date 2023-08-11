@@ -45,7 +45,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
           connection: {
             databaseUrl: databaseURL,
             // TODO: Database scoped service API Key (backend generated)
-            apiKey: profile.apiKey
+            apiKey: profile.token ?? ''
           },
           environment,
           scripts: Array.from(workers.values())
@@ -53,7 +53,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
         const response = await fetch(UPLOAD_ENDPOINT, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${profile.apiKey}`, 'Content-Type': 'application/json' },
+          headers: { Authorization: `Bearer ${profile.token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         });
 

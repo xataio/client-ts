@@ -4,14 +4,15 @@ import url from 'url';
 import { describe, expect, test, vi } from 'vitest';
 import { generateKeys, generateURL, handler } from './auth-server.js';
 
+const domain = 'https://app.xata.io';
 const port = 1234;
 const { publicKey, privateKey, passphrase } = generateKeys();
 
 describe('generateURL', () => {
   test('generates a URL', async () => {
-    const uiURL = generateURL(port, publicKey);
+    const uiURL = generateURL({ port, publicKey, domain });
 
-    expect(uiURL.startsWith('https://app.xata.io/new-api-key?')).toBe(true);
+    expect(uiURL.startsWith(`${domain}/new-api-key?`)).toBe(true);
 
     const parsed = url.parse(uiURL, true);
     const { pub, name, redirect } = parsed.query;
@@ -25,7 +26,7 @@ describe('generateURL', () => {
 describe('handler', () => {
   test('405s if the method is not GET', async () => {
     const callback = vi.fn();
-    const httpHandler = handler(publicKey, privateKey, passphrase, callback);
+    const httpHandler = handler({ publicKey, privateKey, passphrase, callback, domain });
 
     const req = { method: 'POST', url: '/' } as unknown as IncomingMessage;
     const res = {
@@ -42,7 +43,7 @@ describe('handler', () => {
 
   test('redirects if the path is /new', async () => {
     const callback = vi.fn();
-    const httpHandler = handler(publicKey, privateKey, passphrase, callback);
+    const httpHandler = handler({ publicKey, privateKey, passphrase, callback, domain });
 
     const writeHead = vi.fn();
     const req = { method: 'GET', url: '/new', socket: { localPort: 9999 } } as unknown as IncomingMessage;
@@ -55,7 +56,7 @@ describe('handler', () => {
 
     const [status, headers] = writeHead.mock.calls[0];
     expect(status).toEqual(302);
-    expect(String(headers.location).startsWith('https://app.xata.io/new-api-key?pub=')).toBeTruthy();
+    expect(String(headers.location).startsWith(`${domain}/new-api-key?pub=`)).toBeTruthy();
     expect(String(headers.location).includes('9999')).toBeTruthy();
     expect(res.end).toHaveBeenCalledWith();
     expect(callback).not.toHaveBeenCalled();
@@ -63,7 +64,7 @@ describe('handler', () => {
 
   test('404s if the path is not the root path', async () => {
     const callback = vi.fn();
-    const httpHandler = handler(publicKey, privateKey, passphrase, callback);
+    const httpHandler = handler({ publicKey, privateKey, passphrase, callback, domain });
 
     const req = { method: 'GET', url: '/foo' } as unknown as IncomingMessage;
     const res = {
@@ -80,7 +81,7 @@ describe('handler', () => {
 
   test('returns 400 if resource is called with the wrong parameters', async () => {
     const callback = vi.fn();
-    const httpHandler = handler(publicKey, privateKey, passphrase, callback);
+    const httpHandler = handler({ publicKey, privateKey, passphrase, callback, domain });
 
     const req = { method: 'GET', url: '/' } as unknown as IncomingMessage;
     const res = {
@@ -97,7 +98,7 @@ describe('handler', () => {
 
   test('hadles errors correctly', async () => {
     const callback = vi.fn();
-    const httpHandler = handler(publicKey, privateKey, passphrase, callback);
+    const httpHandler = handler({ publicKey, privateKey, passphrase, callback, domain });
 
     const req = { method: 'GET', url: '/?key=malformed-key' } as unknown as IncomingMessage;
     const res = {
@@ -115,7 +116,7 @@ describe('handler', () => {
 
   test('receives the API key if everything is fine', async () => {
     const callback = vi.fn();
-    const httpHandler = handler(publicKey, privateKey, passphrase, callback);
+    const httpHandler = handler({ publicKey, privateKey, passphrase, callback, domain });
     const apiKey = 'abcdef1234';
     const encryptedKey = crypto.publicEncrypt(publicKey, Buffer.from(apiKey));
 

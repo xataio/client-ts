@@ -8,8 +8,12 @@ import z from 'zod';
 const credentialSchema = z.object({
   api: z.string().optional(),
   web: z.string().optional(),
-  apiKey: z.string()
+  apiKey: z.string().optional(),
+  accessToken: z.string().optional(),
+  refreshToken: z.string().optional(),
+  expiresAt: z.string().optional()
 });
+
 const credentialsDictionarySchema = z.record(credentialSchema);
 
 export type Credential = z.infer<typeof credentialSchema>;
@@ -19,9 +23,9 @@ export const credentialsFilePath = path.join(homedir(), '.config', 'xata', 'cred
 
 export type Profile = {
   name: string;
-  apiKey: string;
   web: string;
   host: HostProvider;
+  token: string;
 };
 
 export async function readCredentialsDictionary(): Promise<CredentialsDictionary> {
@@ -67,7 +71,7 @@ async function writeCredentials(credentials: CredentialsDictionary) {
   await writeFile(credentialsFilePath, ini.stringify(credentials), { mode: 0o600 });
 }
 
-export async function setProfile(name: string, profile: Credential) {
+export async function saveCredentials(name: string, profile: Credential) {
   const credentials = await readCredentialsDictionary();
   credentials[name] = {
     apiKey: profile.apiKey,
@@ -76,7 +80,7 @@ export async function setProfile(name: string, profile: Credential) {
   await writeCredentials(credentials);
 }
 
-export async function removeProfile(name: string) {
+export async function removeCredential(name: string) {
   const credentials = await readCredentialsDictionary();
   if (credentials[name]) delete credentials[name];
   await writeCredentials(credentials);
@@ -84,13 +88,4 @@ export async function removeProfile(name: string) {
 
 export function getEnvProfileName() {
   return process.env.XATA_PROFILE || 'default';
-}
-
-export function buildProfile(base: Partial<Credential> & { name: string }): Profile {
-  return {
-    name: base.name,
-    apiKey: base.apiKey ?? process.env.XATA_API_KEY ?? '',
-    web: base.web ?? process.env.XATA_WEB_URL ?? '',
-    host: parseProviderString(base.api ?? process.env.XATA_API_PROVIDER) ?? 'production'
-  };
 }
