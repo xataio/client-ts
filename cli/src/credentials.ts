@@ -1,4 +1,4 @@
-import { HostProvider, parseProviderString } from '@xata.io/client';
+import { HostProvider } from '@xata.io/client';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import ini from 'ini';
 import { homedir } from 'os';
