@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.25.2
+
+### Patch Changes
+
+- [#1111](https://github.com/xataio/client-ts/pull/1111) [`9d1ace5f`](https://github.com/xataio/client-ts/commit/9d1ace5f12788755f3150449120b27cd030af3a9) Thanks [@SferaDev](https://github.com/SferaDev)! - Export file helpers
+
+- [#1114](https://github.com/xataio/client-ts/pull/1114) [`f6665593`](https://github.com/xataio/client-ts/commit/f6665593c301dc9400834cbd68ae32b92bbdea5d) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix warning with default env branch
+
 ## 0.25.1
 
 ### Patch Changes
