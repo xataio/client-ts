@@ -10,7 +10,7 @@ export default class Login extends BaseCommand<typeof Login> {
 
   static flags = {
     ...BaseCommand.forceFlag('Overwrite existing credentials if they exist'),
-    host: Flags.string({
+    api: Flags.string({
       description: 'Xata API host provider'
     }),
     web: Flags.string({
@@ -37,19 +37,18 @@ export default class Login extends BaseCommand<typeof Login> {
       if (!overwrite) this.exit(2);
     }
 
-    const host = parseProviderString(flags.host);
+    const host = parseProviderString(flags.api);
     if (!host) {
       this.error('Invalid host provider, expected either "production", "staging" or "{apiUrl},{workspacesUrl}"');
     }
 
     const { accessToken, refreshToken, expires } = await this.obtainKey(flags.web);
     const credential: Credential = {
-      ...profile,
+      api: flags.api,
+      web: flags.web || profile.web,
       accessToken,
       refreshToken,
-      expiresAt: expires,
-      web: flags.web || profile.web,
-      api: flags.host
+      expiresAt: expires
     };
 
     await saveCredentials(profile.name, credential);

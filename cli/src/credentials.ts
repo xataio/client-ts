@@ -71,16 +71,16 @@ async function writeCredentials(credentials: CredentialsDictionary) {
   await writeFile(credentialsFilePath, ini.stringify(credentials), { mode: 0o600 });
 }
 
-export async function saveCredentials(name: string, profile: Credential) {
+export async function saveCredentials(name: string, credential: Credential) {
   const credentials = await readCredentialsDictionary();
   credentials[name] = Object.fromEntries(
     Object.entries({
-      api: profile.api,
-      web: profile.web,
-      apiKey: profile.apiKey,
-      accessToken: profile.accessToken,
-      refreshToken: profile.refreshToken,
-      expiresAt: profile.expiresAt
+      api: credential.api,
+      web: credential.web,
+      apiKey: credential.apiKey,
+      accessToken: credential.accessToken,
+      refreshToken: credential.refreshToken,
+      expiresAt: credential.expiresAt
     }).filter(([, value]) => !!value)
   );
   await writeCredentials(credentials);
