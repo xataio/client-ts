@@ -204,9 +204,9 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     return {
       name,
       web: credential?.web ?? defaultWeb,
-      host: parseProviderString(credential.api) ?? defaultHost,
+      host: parseProviderString(credential?.api) ?? defaultHost,
       // TODO Verify refresh token is valid
-      token: credential.accessToken ?? credential.apiKey ?? ''
+      token: credential?.accessToken ?? credential?.apiKey ?? ''
     };
   }
 
