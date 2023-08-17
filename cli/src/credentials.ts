@@ -73,10 +73,7 @@ async function writeCredentials(credentials: CredentialsDictionary) {
 
 export async function saveCredentials(name: string, profile: Credential) {
   const credentials = await readCredentialsDictionary();
-  credentials[name] = {
-    apiKey: profile.apiKey,
-    ...Object.fromEntries(Object.entries(profile).filter(([, value]) => value))
-  };
+  credentials[name] = Object.fromEntries(Object.entries(profile).filter(([, value]) => !!value));
   await writeCredentials(credentials);
 }
 
