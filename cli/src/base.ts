@@ -203,7 +203,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     if (credential?.apiKey) this.apiKeyLocation = 'profile';
     return {
       name,
-      web: credential.web ?? defaultWeb,
+      web: credential?.web ?? defaultWeb,
       host: parseProviderString(credential.api) ?? defaultHost,
       // TODO Verify refresh token is valid
       token: credential.accessToken ?? credential.apiKey ?? ''
