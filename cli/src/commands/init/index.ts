@@ -480,14 +480,8 @@ export default class Init extends BaseCommand<typeof Init> {
   }
 
   async parseSchema(file: string) {
-    let content: any;
-    try {
-      content = JSON.parse(await readFile(file, 'utf-8'));
-    } catch (err) {
-      this.error(`Could not parse the schema file at ${file}. Either it does not exist or is not valid JSON`);
-    }
-
-    const schema = parseSchemaFile(content);
+    const json = await readFile(file, 'utf-8');
+    const schema = parseSchemaFile(json);
     if (!schema.success) {
       this.warn(`The schema file is malformed`);
       this.printZodError(schema.error);
