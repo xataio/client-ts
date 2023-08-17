@@ -81,7 +81,8 @@ function renderSuccessPage(_req: http.IncomingMessage, res: http.ServerResponse,
 
 export function generateURL({ port, publicKey, domain }: { port: number; publicKey: string; domain: string }) {
   const name = 'Xata CLI';
-  const redirect = `http://localhost:${port}`;
+  const serverRedirect = `${domain}/api/integrations/cli/callback`;
+  const cliRedirect = `http://localhost:${port}`;
   const pub = publicKey
     .replace(/\n/g, '')
     .replace('-----BEGIN PUBLIC KEY-----', '')
@@ -89,10 +90,13 @@ export function generateURL({ port, publicKey, domain }: { port: number; publicK
 
   const url = new URL(`${domain}/integrations/oauth/authorize`);
   url.searchParams.set('client_id', 'kav7lscnhp0k5a608rg58fjf6g');
-  url.searchParams.set('redirect_uri', `${domain}/api/integrations/cli/callback`);
+  url.searchParams.set('redirect_uri', serverRedirect);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('scope', 'admin:all');
-  url.searchParams.set('state', Buffer.from(JSON.stringify({ name, pub, redirect })).toString('base64'));
+  url.searchParams.set(
+    'state',
+    Buffer.from(JSON.stringify({ name, pub, cliRedirect, serverRedirect })).toString('base64')
+  );
   return url.toString();
 }
 
