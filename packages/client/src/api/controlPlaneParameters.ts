@@ -13,6 +13,8 @@ export type InviteKeyParam = Schemas.InviteKey;
 
 export type OAuthAccessTokenParam = Schemas.AccessToken;
 
+export type OAuthClientIDParam = Schemas.OAuthClientID;
+
 export type UserIDParam = Schemas.UserID;
 
 export type WorkspaceIDParam = Schemas.WorkspaceID;

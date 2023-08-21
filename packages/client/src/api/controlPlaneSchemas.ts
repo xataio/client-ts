@@ -63,6 +63,8 @@ export type OAuthClientPublicDetails = {
   clientId: string;
 };
 
+export type OAuthClientID = string;
+
 export type OAuthAccessToken = {
   token: string;
   scopes: string[];

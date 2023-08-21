@@ -321,6 +321,40 @@ export const getUserOAuthClients = (variables: GetUserOAuthClientsVariables, sig
     signal
   });
 
+export type DeleteUserOAuthClientPathParams = {
+  clientId: Schemas.OAuthClientID;
+};
+
+export type DeleteUserOAuthClientError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteUserOAuthClientVariables = {
+  pathParams: DeleteUserOAuthClientPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Delete the oauth client for the user and revoke all access
+ */
+export const deleteUserOAuthClient = (variables: DeleteUserOAuthClientVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<undefined, DeleteUserOAuthClientError, undefined, {}, {}, DeleteUserOAuthClientPathParams>({
+    url: '/user/oauth/clients/{clientId}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
 export type GetUserOAuthAccessTokensError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -1494,7 +1528,14 @@ export const listRegions = (variables: ListRegionsVariables, signal?: AbortSigna
 export const operationsByTag = {
   authOther: { getAuthorizationCode, grantAuthorizationCode, deleteOAuthAccessToken, updateOAuthAccessToken },
   users: { getUser, updateUser, deleteUser },
-  authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey, getUserOAuthClients, getUserOAuthAccessTokens },
+  authentication: {
+    getUserAPIKeys,
+    createUserAPIKey,
+    deleteUserAPIKey,
+    getUserOAuthClients,
+    deleteUserOAuthClient,
+    getUserOAuthAccessTokens
+  },
   workspaces: {
     getWorkspacesList,
     createWorkspace,
