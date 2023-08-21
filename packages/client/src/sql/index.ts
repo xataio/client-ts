@@ -3,7 +3,7 @@ import { XataPlugin, XataPluginOptions } from '../plugins';
 import { prepareParams } from './parameters';
 
 export type SQLQueryParams<T = any[]> = {
-  query: string;
+  statement: string;
   params?: T;
   consistency?: 'strong' | 'eventual';
 };
@@ -21,11 +21,11 @@ export type SQLPluginResult = <T>(
 export class SQLPlugin extends XataPlugin {
   build(pluginOptions: XataPluginOptions): SQLPluginResult {
     return async <T>(param1: SQLQuery, ...param2: any[]) => {
-      const { query, params, consistency } = prepareParams(param1, param2);
+      const { statement, params, consistency } = prepareParams(param1, param2);
 
       const { records, warning } = await sqlQuery({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-        body: { query, params, consistency },
+        body: { statement, params, consistency },
         ...pluginOptions
       });
 

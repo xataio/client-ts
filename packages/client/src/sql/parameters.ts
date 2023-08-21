@@ -57,21 +57,21 @@ function prepareValue(value: unknown) {
 
 export function prepareParams(param1: SQLQuery, param2?: any[]) {
   if (isString(param1)) {
-    return { query: param1, params: param2?.map((value) => prepareValue(value)) };
+    return { statement: param1, params: param2?.map((value) => prepareValue(value)) };
   }
 
   if (isStringArray(param1)) {
-    const query = param1.reduce((acc, curr, index) => {
+    const statement = param1.reduce((acc, curr, index) => {
       return acc + curr + (index < (param2?.length ?? 0) ? '$' + (index + 1) : '');
     }, '');
 
-    return { query, params: param2?.map((value) => prepareValue(value)) };
+    return { statement, params: param2?.map((value) => prepareValue(value)) };
   }
 
   if (isObject(param1)) {
-    const { query, params, consistency } = param1;
+    const { statement, params, consistency } = param1;
 
-    return { query, params: params?.map((value) => prepareValue(value)), consistency };
+    return { statement, params: params?.map((value) => prepareValue(value)), consistency };
   }
 
   throw new Error('Invalid query');
