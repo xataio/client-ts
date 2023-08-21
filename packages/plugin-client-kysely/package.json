@@ -1,5 +1,5 @@
 {
-  "name": "@xata.io/plugin-client-kysely",
+  "name": "@xata.io/kysely",
   "version": "0.0.0",
   "description": "",
   "main": "./dist/index.cjs",
