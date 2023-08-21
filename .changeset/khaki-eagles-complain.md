@@ -1,5 +1,5 @@
 ---
-'@xata.io/kysely': patch
+'@xata.io/kysely': minor
 ---
 
 Initial release
