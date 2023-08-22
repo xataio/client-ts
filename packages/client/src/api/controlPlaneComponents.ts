@@ -1526,16 +1526,17 @@ export const listRegions = (variables: ListRegionsVariables, signal?: AbortSigna
   });
 
 export const operationsByTag = {
-  authOther: { getAuthorizationCode, grantAuthorizationCode, deleteOAuthAccessToken, updateOAuthAccessToken },
-  users: { getUser, updateUser, deleteUser },
-  authentication: {
-    getUserAPIKeys,
-    createUserAPIKey,
-    deleteUserAPIKey,
+  oAuth: {
+    getAuthorizationCode,
+    grantAuthorizationCode,
     getUserOAuthClients,
     deleteUserOAuthClient,
-    getUserOAuthAccessTokens
+    getUserOAuthAccessTokens,
+    deleteOAuthAccessToken,
+    updateOAuthAccessToken
   },
+  users: { getUser, updateUser, deleteUser },
+  authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
   workspaces: {
     getWorkspacesList,
     createWorkspace,
