@@ -1,13 +1,13 @@
 import { Command, Flags, Interfaces } from '@oclif/core';
 import {
+  Schemas,
+  XataApiPlugin,
   buildClient,
   getAPIKey,
   getBranch,
   getHostUrl,
   parseProviderString,
-  parseWorkspacesUrlParts,
-  Schemas,
-  XataApiPlugin
+  parseWorkspacesUrlParts
 } from '@xata.io/client';
 import { XataImportPlugin } from '@xata.io/importer';
 import ansiRegex from 'ansi-regex';
@@ -23,9 +23,15 @@ import prompts from 'prompts';
 import table from 'text-table';
 import which from 'which';
 import { ZodError } from 'zod';
-import { loginWithWebUI } from './auth-server.js';
-import { partialProjectConfig, ProjectConfig } from './config.js';
-import { credentialsFilePath, getEnvProfileName, Profile, readCredentialsDictionary } from './credentials.js';
+import { loginWithWebUI, refreshAccessToken } from './auth-server.js';
+import { ProjectConfig, partialProjectConfig } from './config.js';
+import {
+  Profile,
+  credentialsFilePath,
+  getEnvProfileName,
+  readCredentialsDictionary,
+  saveCredentials
+} from './credentials.js';
 import { reportBugURL } from './utils.js';
 
 export class XataClient extends buildClient({
@@ -34,6 +40,8 @@ export class XataClient extends buildClient({
 }) {}
 
 export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
+
+const ACCESS_TOKEN_EXPIRATION_THRESHOLD = 15 * 24 * 60 * 60 * 1000; // 15 days
 
 const moduleName = 'xata';
 const commonFlagsHelpGroup = 'Common';
@@ -201,12 +209,32 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     const credentials = await readCredentialsDictionary();
     const credential = credentials[name];
     if (credential?.apiKey) this.apiKeyLocation = 'profile';
+
+    // Check if the token is valid, if not, refresh it
+    let token: string | undefined;
+    if (
+      credential?.expiresAt &&
+      credential?.refreshToken &&
+      new Date(credential.expiresAt).getTime() - Date.now() < ACCESS_TOKEN_EXPIRATION_THRESHOLD
+    ) {
+      const refresh = await refreshAccessToken(credential.web ?? defaultWeb, credential.refreshToken);
+      await saveCredentials(name, {
+        ...credential,
+        accessToken: refresh.accessToken,
+        refreshToken: refresh.refreshToken,
+        expiresAt: refresh.expires
+      });
+
+      token = refresh.accessToken;
+    } else if (credential?.accessToken) {
+      token = credential.accessToken;
+    }
+
     return {
       name,
       web: credential?.web ?? defaultWeb,
       host: parseProviderString(credential?.api) ?? defaultHost,
-      // TODO Verify refresh token is valid
-      token: credential?.accessToken ?? credential?.apiKey ?? ''
+      token: token ?? credential?.apiKey ?? ''
     };
   }
 

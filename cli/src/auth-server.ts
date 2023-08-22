@@ -146,3 +146,17 @@ export async function loginWithWebUI(domain: string) {
     });
   });
 }
+
+export async function refreshAccessToken(domain: string, refreshToken: string) {
+  const response = await fetch(`${domain}/api/integrations/cli/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to refresh access token: ${response.status} ${response.statusText}`);
+  }
+
+  return ResponseSchema.parse(await response.json());
+}
