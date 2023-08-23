@@ -103,7 +103,8 @@ export type Column = {
     | 'datetime'
     | 'vector'
     | 'file[]'
-    | 'file';
+    | 'file'
+    | 'json';
   link?: ColumnLink;
   vector?: ColumnVector;
   file?: ColumnFile;
