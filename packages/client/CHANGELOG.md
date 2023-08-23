@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.25.3
+
+### Patch Changes
+
+- [#1131](https://github.com/xataio/client-ts/pull/1131) [`3b9e1984`](https://github.com/xataio/client-ts/commit/3b9e1984329cd0e9f885f6af4155cc85ab61ba41) Thanks [@xata-bot](https://github.com/xata-bot)! - Add json type for columns
+
 ## 0.25.2
 
 ### Patch Changes
