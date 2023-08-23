@@ -16,7 +16,8 @@ export const RecordColumnTypes = [
   'datetime',
   'vector',
   'file[]',
-  'file'
+  'file',
+  'json'
 ] as const;
 
 export type Identifier = string;
