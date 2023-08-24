@@ -1,5 +1,15 @@
 # @xata.io/client
 
+## 0.26.0
+
+### Minor Changes
+
+- [#893](https://github.com/xataio/client-ts/pull/893) [`6ec862f8`](https://github.com/xataio/client-ts/commit/6ec862f8f799eb692f62be79dd0b613b83a34780) Thanks [@SferaDev](https://github.com/SferaDev)! - Add SQL plugin
+
+### Patch Changes
+
+- [#1134](https://github.com/xataio/client-ts/pull/1134) [`0c0149ad`](https://github.com/xataio/client-ts/commit/0c0149ad1ee3f7c0fe9d31030552b022c907edb0) Thanks [@SferaDev](https://github.com/SferaDev)! - Make transformImage accept object-shaped parameters
+
 ## 0.25.3
 
 ### Patch Changes

@@ -26,7 +26,7 @@ afterEach(async (ctx) => {
   await hooks.afterEach(ctx);
 });
 
-describe.skip('SQL proxy', () => {
+describe('SQL proxy', () => {
   test('read single team with id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
