@@ -78,9 +78,9 @@ export class XataConnection implements DatabaseConnection {
 
   async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
     const { sql } = this.#config.xata;
-    const { sql: query, parameters } = compiledQuery;
+    const { sql: statement, parameters } = compiledQuery;
 
-    const { records, warning } = await sql({ query, params: parameters as any[] });
+    const { records, warning } = await sql({ statement, params: parameters as any[] });
     if (warning) {
       console.warn(warning);
     }
