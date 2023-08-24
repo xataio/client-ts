@@ -159,8 +159,8 @@ export class XataFile {
 
   public transform(...options: ImageTransformations[]) {
     return {
-      url: transformImage(this.url, options),
-      signedUrl: transformImage(this.signedUrl, options)
+      url: transformImage(this.url, ...options),
+      signedUrl: transformImage(this.signedUrl, ...options)
     };
   }
 }
