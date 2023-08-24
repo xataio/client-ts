@@ -12,6 +12,7 @@ export * from './client';
 export * from './plugins';
 export * from './schema';
 export * from './search';
+export * from './sql';
 export * from './serializer';
 export * from './files';
 export { transformImage } from './files/transformations';
