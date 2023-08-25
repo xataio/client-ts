@@ -177,6 +177,8 @@ function buildTransformString(transformations: ImageTransformations[]): string {
     .join(',');
 }
 
+export function transformImage(url: string, ...transformations: ImageTransformations[]): string;
+export function transformImage(url: string | undefined, ...transformations: ImageTransformations[]): string | undefined;
 export function transformImage(url: string | undefined, ...transformations: ImageTransformations[]) {
   if (!isDefined(url)) return undefined;
 
