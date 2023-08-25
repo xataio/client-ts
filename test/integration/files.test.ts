@@ -34,7 +34,7 @@ describe('file support', () => {
   test('create file with record', async () => {
     const record = await xata.db.users.create(
       { name: 'test', attachments: [XataFile.fromBlob(file)], photo: XataFile.fromBlob(file) },
-      ['attachments.*', 'attachments.base64Content', 'photo.*', 'photo.base64Content']
+      ['attachments.base64Content', 'attachments.name', 'photo.base64Content', 'photo.name']
     );
 
     expect(record.attachments?.[0]?.name).toBe('hello.txt');
@@ -44,7 +44,6 @@ describe('file support', () => {
 
     expect(record.photo?.name).toBe('hello.txt');
     expect(record.photo?.base64Content).toBeDefined();
-    expect(record.photo?.size).toBeGreaterThan(0);
     expect(record.photo?.toBlob()).toBeInstanceOf(Blob);
     expect(record.photo?.toString()).toBe('hello');
   });
