@@ -1,6 +1,6 @@
 import { isObject, isString } from '../util/lang';
 import { ExclusiveOr } from '../util/types';
-import { XataArrayFile, XataFile } from './files';
+import { XataArrayFile, XataFile, XataFileEditableFields } from './files';
 import { SelectableColumn, SelectedPick } from './selection';
 
 export const RecordColumnTypes = [
@@ -210,6 +210,8 @@ type JSONDataFields<T> = T extends XataRecord
   ? string
   : NonNullable<T> extends Date
   ? string | null | undefined
+  : NonNullable<T> extends XataFile
+  ? XataFileEditableFields
   : T;
 
 type JSONDataBase = Identifiable & {
