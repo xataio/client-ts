@@ -45,7 +45,7 @@ export class XataFile {
   /**
    * Attributes of this file.
    */
-  public attributes: Record<string, unknown>;
+  public attributes: Record<string, any>;
 
   constructor(file: Partial<XataFile>) {
     this.name = file.name || '';
