@@ -70,6 +70,7 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
         const { table, record, column, fileId = '' } = location ?? {};
 
         return await putFileItem({
+          ...pluginOptions,
           pathParams: {
             workspace: '{workspaceId}',
             dbBranchName: '{dbBranch}',
@@ -80,7 +81,7 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
             fileId
           },
           body: file as Blob,
-          ...pluginOptions
+          headers: { 'Content-Type': file instanceof Blob ? file.type : 'application/octet-stream' }
         });
       },
       delete: async (location: Record<string, string | undefined>) => {

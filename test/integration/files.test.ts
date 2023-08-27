@@ -29,6 +29,7 @@ afterEach(async (ctx) => {
 });
 
 const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+const blob = new Blob([JSON.stringify({ hello: 'world' })], { type: 'application/json' });
 
 describe('file support', () => {
   test('create file with record', async () => {
@@ -47,5 +48,23 @@ describe('file support', () => {
     expect(record.photo?.size).toBeGreaterThan(0);
     expect(record.photo?.toBlob()).toBeInstanceOf(Blob);
     expect(record.photo?.toString()).toBe('hello');
+  });
+
+  test('create with with binary endpoint', async () => {
+    const record = await xata.db.users.create({ name: 'another' });
+    const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, blob);
+
+    expect(file.id).toBeDefined();
+    expect(file.mediaType).toBe('application/json');
+
+    const query = await record.read(['*', 'attachments.*', 'attachments.base64Content']);
+
+    expect(query?.attachments?.[0]?.mediaType).toBe('application/json');
+    expect(query?.attachments?.[0]?.base64Content).toBeDefined();
+
+    const attachment = query?.attachments?.[0]?.toBlob();
+
+    expect(attachment).toBeInstanceOf(Blob);
+    expect(await attachment?.text()).toBe('{"hello":"world"}');
   });
 });
