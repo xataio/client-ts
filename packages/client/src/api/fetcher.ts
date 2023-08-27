@@ -1,6 +1,6 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
-import { compact, compactObject, isDefined, isString } from '../util/lang';
+import { compact, compactObject, isDefined, isObject, isString } from '../util/lang';
 import { fetchEventSource } from '../util/sse';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -102,7 +102,7 @@ function parseBody<T>(body?: T, headers?: Record<string, unknown>): any {
   if (!isDefined(body)) return undefined;
 
   const { 'Content-Type': contentType } = headers ?? {};
-  if (String(contentType).toLowerCase() === 'application/json') {
+  if (String(contentType).toLowerCase() === 'application/json' && isObject(body)) {
     return JSON.stringify(body);
   }
 
