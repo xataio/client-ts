@@ -59,7 +59,7 @@ describe('file support', () => {
     expect(file.id).toBeDefined();
     expect(file.mediaType).toBe('application/json');
 
-    const query = await record.read(['*', 'attachments.*', 'attachments.base64Content']);
+    const query = await record.read(['attachments', 'attachments.base64Content']);
 
     expect(query?.attachments?.[0]?.mediaType).toBe('application/json');
     expect(query?.attachments?.[0]?.base64Content).toBeDefined();
