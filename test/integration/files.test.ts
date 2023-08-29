@@ -52,21 +52,42 @@ describe('file support', () => {
     expect(record.photo?.toString()).toBe('hello');
   });
 
-  test('create with with binary endpoint', async () => {
+  test('create with with binary endpoint JSON', async () => {
     const record = await xata.db.users.create({ name: 'another' });
     const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, json);
 
     expect(file.id).toBeDefined();
     expect(file.mediaType).toBe('application/json');
 
-    const query = await record.read(['attachments', 'attachments.base64Content']);
+    const query = await record.read(['attachments.*', 'attachments.base64Content']);
 
     expect(query?.attachments?.[0]?.mediaType).toBe('application/json');
+    expect(query?.attachments?.[0]?.base64Content).toBeDefined();
+
+    console.log(query?.attachments);
+    const attachment = query?.attachments?.[0]?.toBlob();
+
+    expect(attachment).toBeInstanceOf(Blob);
+    const content = await attachment?.text();
+    expect(content).toBe('{"hello":"world"}');
+  });
+
+  test.skip('create with with binary endpoint CSV', async () => {
+    const record = await xata.db.users.create({ name: 'another' });
+    const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, csv);
+
+    expect(file.id).toBeDefined();
+    expect(file.mediaType).toBe('text/csv');
+
+    const query = await record.read(['attachments.*', 'attachments.base64Content']);
+
+    expect(query?.attachments?.[0]?.mediaType).toBe('text/csv');
     expect(query?.attachments?.[0]?.base64Content).toBeDefined();
 
     const attachment = query?.attachments?.[0]?.toBlob();
 
     expect(attachment).toBeInstanceOf(Blob);
-    expect(await attachment?.text()).toBe('{"hello":"world"}');
+    const content = await attachment?.text();
+    expect(content).toBe('hello,world');
   });
 });
