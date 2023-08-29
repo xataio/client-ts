@@ -3641,12 +3641,12 @@ export type QueryTableVariables = {
  *   returned is empty, but `page.meta.cursor` will include a cursor that can be
  *   used to "tail" the table from the end waiting for new data to be inserted.
  * - `page.before=end`: This cursor returns the last page.
- * - `page.start=<cursor>`: Start at the beginning of the result set of the <cursor> query. This is equivalent to querying the
+ * - `page.start=$cursor`: Start at the beginning of the result set of the $cursor query. This is equivalent to querying the
  *   first page without a cursor but applying `filter` and `sort` . Yet the `page.start`
  *   cursor can be convenient at times as user code does not need to remember the
  *   filter, sort, columns or page size configuration. All these information are
  *   read from the cursor.
- * - `page.end=<cursor>`: Move to the end of the result set of the <cursor> query. This is equivalent to querying the
+ * - `page.end=$cursor`: Move to the end of the result set of the $cursor query. This is equivalent to querying the
  *   last page with `page.before=end`, `filter`, and `sort` . Yet the
  *   `page.end` cursor can be more convenient at times as user code does not
  *   need to remember the filter, sort, columns or page size configuration. All
