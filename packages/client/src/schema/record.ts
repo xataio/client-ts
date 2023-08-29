@@ -1,6 +1,6 @@
 import { isObject, isString } from '../util/lang';
 import { ExclusiveOr } from '../util/types';
-import { XataArrayFile, XataFile, XataFileEditableFields } from './files';
+import { XataArrayFile, XataFile } from './files';
 import { SelectableColumn, SelectedPick } from './selection';
 
 export const RecordColumnTypes = [
