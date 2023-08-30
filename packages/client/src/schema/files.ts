@@ -9,7 +9,7 @@ export class XataFile {
   /**
    * Name of this file.
    */
-  public name?: string;
+  public name: string;
   /**
    * Media type of this file.
    */
@@ -21,11 +21,11 @@ export class XataFile {
   /**
    * Whether to enable public url for this file.
    */
-  public enablePublicUrl?: boolean;
+  public enablePublicUrl: boolean;
   /**
    * Timeout for the signed url.
    */
-  public signedUrlTimeout?: number;
+  public signedUrlTimeout: number;
   /**
    * Size of this file.
    */
@@ -33,11 +33,11 @@ export class XataFile {
   /**
    * Version of this file.
    */
-  public version?: number;
+  public version: number;
   /**
    * Url of this file.
    */
-  public url?: string;
+  public url: string;
   /**
    * Signed url of this file.
    */
@@ -45,19 +45,19 @@ export class XataFile {
   /**
    * Attributes of this file.
    */
-  public attributes?: Record<string, unknown>;
+  public attributes: Record<string, any>;
 
   constructor(file: Partial<XataFile>) {
-    this.name = file.name;
+    this.name = file.name || '';
     this.mediaType = file.mediaType || 'application/octet-stream';
     this.base64Content = file.base64Content;
-    this.enablePublicUrl = file.enablePublicUrl;
-    this.signedUrlTimeout = file.signedUrlTimeout;
-    this.size = file.size;
-    this.version = file.version;
-    this.url = file.url;
+    this.enablePublicUrl = file.enablePublicUrl ?? false;
+    this.signedUrlTimeout = file.signedUrlTimeout ?? 300;
+    this.size = file.size ?? 0;
+    this.version = file.version ?? 1;
+    this.url = file.url || '';
     this.signedUrl = file.signedUrl;
-    this.attributes = file.attributes;
+    this.attributes = file.attributes || {};
   }
 
   static fromBuffer(buffer: Buffer, options: XataFileEditableFields = {}): XataFile {
@@ -127,9 +127,14 @@ export class XataFile {
       throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
     }
 
-    const arrayBuffer = this.toArrayBuffer();
-    // @ts-ignore - Blob and ArrayBuffer might not be type compatible
-    return new Blob([arrayBuffer], { type: this.mediaType });
+    const binary = atob(this.base64Content);
+    const uint8Array = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+      uint8Array[i] = binary.charCodeAt(i);
+    }
+
+    return new Blob([uint8Array], { type: this.mediaType });
   }
 
   static fromString(string: string, options: XataFileEditableFields = {}): XataFile {
