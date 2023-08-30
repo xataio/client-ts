@@ -23,11 +23,16 @@ You can pass a new instance of `XataDialect` as the `dialect` option when creati
 
 ```typescript
 import { Kysely } from 'kysely';
-import { XataDialect } from '@xata.io/kysely';
+import { XataDialect, Model } from '@xata.io/kysely';
+import { DatabaseSchema, getXataClient } from './xata.ts';
 
-const db = new Kysely<Database>({
-  xata // Your Xata client instance
+const xata = getXataClient();
+
+const db = new Kysely<Model<DatabaseSchema>>({
+  dialect: new XataDialect({ xata })
 });
+
+const drivers = await db.selectFrom('users').select(['name', 'email']).execute();
 ```
 
 `XataDialect` accepts your Xata client instance as its only option. You can find more information about creating a Xata client instance in our [getting started guide](https://xata.io/docs/getting-started/installation).
