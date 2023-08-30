@@ -98,8 +98,13 @@ function hostHeader(url: string): { Host?: string } {
   return groups?.host ? { Host: groups.host } : {};
 }
 
-function parseBody<T>(body?: T, headers?: Record<string, unknown>): any {
+async function parseBody<T>(body?: T, headers?: Record<string, unknown>): Promise<any> {
   if (!isDefined(body)) return undefined;
+
+  // If body is a blob or has a text() method, we don't need to do anything
+  if (body instanceof Blob || typeof (body as any).text === 'function') {
+    return body;
+  }
 
   const { 'Content-Type': contentType } = headers ?? {};
   if (String(contentType).toLowerCase() === 'application/json' && isObject(body)) {
@@ -178,7 +183,7 @@ export async function fetch<
       const response = await pool.request(url, {
         ...fetchOptions,
         method: method.toUpperCase(),
-        body: parseBody(body, headers),
+        body: await parseBody(body, headers),
         headers,
         signal
       });

@@ -127,9 +127,14 @@ export class XataFile {
       throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
     }
 
-    const arrayBuffer = this.toArrayBuffer();
-    // @ts-ignore - Blob and ArrayBuffer might not be type compatible
-    return new Blob([arrayBuffer], { type: this.mediaType });
+    const binary = atob(this.base64Content);
+    const uint8Array = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+      uint8Array[i] = binary.charCodeAt(i);
+    }
+
+    return new Blob([uint8Array], { type: this.mediaType });
   }
 
   static fromString(string: string, options: XataFileEditableFields = {}): XataFile {

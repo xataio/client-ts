@@ -68,7 +68,7 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
       },
       upload: async (location: Record<string, string | undefined>, file: BinaryFile) => {
         const { table, record, column, fileId = '' } = location ?? {};
-        const contentType = file instanceof Blob ? file.type : 'application/octet-stream';
+        const contentType = getContentType(file);
 
         return await putFileItem({
           ...pluginOptions,
@@ -103,4 +103,23 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
       }
     };
   }
+}
+
+function getContentType(file: BinaryFile): string {
+  if (typeof file === 'string') {
+    return 'text/plain';
+  }
+
+  if (file instanceof Blob) {
+    return file.type;
+  }
+
+  try {
+    // Check for Blobs that are not instances of Blob
+    return (file as any).type;
+  } catch (e) {
+    // ignore
+  }
+
+  return 'application/octet-stream';
 }
