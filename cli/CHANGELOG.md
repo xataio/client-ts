@@ -1,5 +1,13 @@
 # @xata.io/cli
 
+## 0.13.7
+
+### Patch Changes
+
+- Updated dependencies [[`922e6e54`](https://github.com/xataio/client-ts/commit/922e6e54e8b31641770a36b6b4ff8f4fa65d304d), [`13f6f3e4`](https://github.com/xataio/client-ts/commit/13f6f3e4b1a2f925d50a5380b62ef1057f5c3893), [`f02fc165`](https://github.com/xataio/client-ts/commit/f02fc165bf6558e4377eb9f8e1d0f4222f004c70)]:
+  - @xata.io/client@0.26.1
+  - @xata.io/codegen@0.26.1
+
 ## 0.13.6
 
 ### Patch Changes
