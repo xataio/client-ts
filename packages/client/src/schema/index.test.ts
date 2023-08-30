@@ -3,7 +3,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { BaseClient, BaseClientOptions } from '..';
 import { server } from '../../../../test/mock_server';
-import realFetch from 'cross-fetch';
+import realFetch, { Response } from 'node-fetch';
 
 interface User {
   id: string;

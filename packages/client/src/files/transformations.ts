@@ -184,10 +184,12 @@ export function buildTransformString(transformations: ImageTransformations[]): s
     .join(',');
 }
 
-export function transformImage(url: string | undefined, ...items: ImageTransformations[]) {
+export function transformImage(url: string, ...transformations: ImageTransformations[]): string;
+export function transformImage(url: string | undefined, ...transformations: ImageTransformations[]): string | undefined;
+export function transformImage(url: string | undefined, ...transformations: ImageTransformations[]) {
   if (!isDefined(url)) return undefined;
 
-  const newTransformations = buildTransformString(items);
+  const newTransformations = buildTransformString(transformations);
 
   const { hostname, pathname, search } = new URL(url);
 
@@ -197,8 +199,8 @@ export function transformImage(url: string | undefined, ...items: ImageTransform
   const removedItems = transformIndex >= 0 ? pathParts.splice(transformIndex, 2) : [];
 
   // Build the new URL parts
-  const transformations = [removedItems[1], newTransformations].filter(isDefined).join(',');
+  const transform = `/transform/${[removedItems[1], newTransformations].filter(isDefined).join(',')}`;
   const path = pathParts.join('/');
 
-  return `https://${hostname}/transform/${transformations}${path}${search}`;
+  return `https://${hostname}${transform}${path}${search}`;
 }

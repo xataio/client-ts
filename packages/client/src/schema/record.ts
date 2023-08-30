@@ -202,7 +202,15 @@ export type EditableData<O extends XataRecord> = Identifiable &
     >
   >;
 
-type JSONDataFields<T> = T extends XataRecord
+type JSONDataFile = {
+  [K in keyof XataFile]: XataFile[K] extends Function ? never : XataFile[K];
+};
+
+type JSONDataFields<T> = T extends XataFile
+  ? JSONDataFile
+  : NonNullable<T> extends XataFile
+  ? JSONDataFile | null | undefined
+  : T extends XataRecord
   ? string
   : NonNullable<T> extends XataRecord
   ? string | null | undefined
