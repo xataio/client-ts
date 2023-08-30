@@ -6,8 +6,8 @@ describe('transformImage', () => {
     expect(transformImage(undefined)).toBe(undefined);
   });
 
-  test('should return undefined if url is not valid', () => {
-    expect(transformImage('not-valid-url')).toBe(undefined);
+  test('should throw if url is not valid', () => {
+    expect(() => transformImage('not-valid')).toThrow();
   });
 
   test('should add one transformation', () => {

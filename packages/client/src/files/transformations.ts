@@ -184,25 +184,21 @@ export function buildTransformString(transformations: ImageTransformations[]): s
     .join(',');
 }
 
-export function transformImage(url: string | undefined, ...transformations: ImageTransformations[]) {
+export function transformImage(url: string | undefined, ...items: ImageTransformations[]) {
   if (!isDefined(url)) return undefined;
 
-  const newTransformations = buildTransformString(transformations);
+  const newTransformations = buildTransformString(items);
 
-  try {
-    const { hostname, pathname, search } = new URL(url);
+  const { hostname, pathname, search } = new URL(url);
 
-    // If pathname includes transform, we need to remove them
-    const pathParts = pathname.split('/');
-    const transformIndex = pathParts.findIndex((part) => part === 'transform');
-    const removedItems = transformIndex >= 0 ? pathParts.splice(transformIndex, 2) : [];
+  // If pathname includes transform, we need to remove them
+  const pathParts = pathname.split('/');
+  const transformIndex = pathParts.findIndex((part) => part === 'transform');
+  const removedItems = transformIndex >= 0 ? pathParts.splice(transformIndex, 2) : [];
 
-    // Build the new URL parts
-    const transformations = [removedItems[1], newTransformations].filter(isDefined).join(',');
-    const path = pathParts.join('/');
+  // Build the new URL parts
+  const transformations = [removedItems[1], newTransformations].filter(isDefined).join(',');
+  const path = pathParts.join('/');
 
-    return `https://${hostname}/transform/${transformations}${path}${search}`;
-  } catch (e) {
-    return undefined;
-  }
+  return `https://${hostname}/transform/${transformations}${path}${search}`;
 }
