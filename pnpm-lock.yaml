@@ -448,7 +448,7 @@ importers:
         specifier: ^7.22.11
         version: 7.22.11
       '@netlify/build':
-        specifier: ^29.20.10
+        specifier: ^29.20.6
         version: 29.20.10(@types/node@20.5.7)
       '@xata.io/client':
         specifier: workspace:*

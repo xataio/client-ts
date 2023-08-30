@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.22.11",
-    "@netlify/build": "^29.20.10",
+    "@netlify/build": "^29.20.6",
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
