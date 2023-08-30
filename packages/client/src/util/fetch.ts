@@ -21,7 +21,7 @@ export type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>;
 export function getFetchImplementation(userFetch?: FetchImpl) {
   // @ts-ignore - fetch might not be a global
   const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
-  const fetchImpl = userFetch ?? globalFetch;
+  const fetchImpl: FetchImpl | undefined = userFetch ?? globalFetch;
   if (!fetchImpl) {
     /** @todo add a link after docs exist */
     throw new Error(

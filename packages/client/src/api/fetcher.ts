@@ -1,6 +1,6 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
-import { compact, compactObject, isDefined, isString } from '../util/lang';
+import { compact, compactObject, isDefined, isObject, isString } from '../util/lang';
 import { fetchEventSource } from '../util/sse';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -98,11 +98,16 @@ function hostHeader(url: string): { Host?: string } {
   return groups?.host ? { Host: groups.host } : {};
 }
 
-function parseBody<T>(body?: T, headers?: Record<string, unknown>): any {
+async function parseBody<T>(body?: T, headers?: Record<string, unknown>): Promise<any> {
   if (!isDefined(body)) return undefined;
 
+  // If body is a blob or has a text() method, we don't need to do anything
+  if (body instanceof Blob || typeof (body as any).text === 'function') {
+    return body;
+  }
+
   const { 'Content-Type': contentType } = headers ?? {};
-  if (String(contentType).toLowerCase() === 'application/json') {
+  if (String(contentType).toLowerCase() === 'application/json' && isObject(body)) {
     return JSON.stringify(body);
   }
 
@@ -178,7 +183,7 @@ export async function fetch<
       const response = await pool.request(url, {
         ...fetchOptions,
         method: method.toUpperCase(),
-        body: parseBody(body, headers),
+        body: await parseBody(body, headers),
         headers,
         signal
       });

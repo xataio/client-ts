@@ -1,4 +1,4 @@
-import fetch from 'cross-fetch';
+import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { describe, expect, test } from 'vitest';
