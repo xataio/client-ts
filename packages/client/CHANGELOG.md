@@ -1,5 +1,15 @@
 # @xata.io/client
 
+## 0.26.1
+
+### Patch Changes
+
+- [#1139](https://github.com/xataio/client-ts/pull/1139) [`922e6e54`](https://github.com/xataio/client-ts/commit/922e6e54e8b31641770a36b6b4ff8f4fa65d304d) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix scenario with merging existing transformations
+
+- [#1140](https://github.com/xataio/client-ts/pull/1140) [`13f6f3e4`](https://github.com/xataio/client-ts/commit/13f6f3e4b1a2f925d50a5380b62ef1057f5c3893) Thanks [@SferaDev](https://github.com/SferaDev)! - Add metadata url for transformations
+
+- [#1136](https://github.com/xataio/client-ts/pull/1136) [`f02fc165`](https://github.com/xataio/client-ts/commit/f02fc165bf6558e4377eb9f8e1d0f4222f004c70) Thanks [@SferaDev](https://github.com/SferaDev)! - Fixes for Blob files in binary APIs
+
 ## 0.26.0
 
 ### Minor Changes
