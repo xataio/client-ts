@@ -40,9 +40,9 @@ const drivers = pgTable('drivers', {
 const result = await db.select().from(drivers).execute();
 ```
 
-## Model generation
+## [Experimental] Model generation
 
-We offer an experimental model generation helper that will generate the models for you from your `tables` array in your `xata.ts` file.
+We offer an experimental model generation helper that will generate the models for you from your `tables` array in your `xata.ts` file. Since it's a work in progress, we don't recommend using it in production yet, please build your models manually.
 
 ```ts
 import { buildModels } from '@xata.io/drizzle';
