@@ -21,7 +21,7 @@ npm install drizzle-orm @xata.io/drizzle @xata.io/client
 
 ## Usage
 
-To work with drizzle you need to define your models and then create a drizzle instance with the models. In the future, we will offer a helper function to create the drizzle models from the Xata schema.
+To work with drizzle you need to define your models and then create a drizzle instance with the models.
 
 ```ts
 import { pgTable, text } from 'drizzle-orm/pg-core';
@@ -37,7 +37,20 @@ const drivers = pgTable('drivers', {
   forename: text('forename')
 });
 
-const drivers = await db.select().from(drivers).execute();
+const result = await db.select().from(drivers).execute();
+```
+
+## Model generation
+
+We offer an experimental model generation helper that will generate the models for you from your `tables` array in your `xata.ts` file.
+
+```ts
+import { buildModels } from '@xata.io/drizzle';
+import { tables } from './xata';
+
+const { drivers } = buildModels(tables);
+
+const result = await db.select().from(drivers).execute();
 ```
 
 ## Limitations
