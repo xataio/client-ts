@@ -166,7 +166,8 @@ export class XataFile {
     return {
       url: transformImage(this.url, ...options),
       signedUrl: transformImage(this.signedUrl, ...options),
-      metadataUrl: transformImage(this.url, ...options, { format: 'json' })
+      metadataUrl: transformImage(this.url, ...options, { format: 'json' }),
+      metadataSignedUrl: transformImage(this.signedUrl, ...options, { format: 'json' })
     };
   }
 }
