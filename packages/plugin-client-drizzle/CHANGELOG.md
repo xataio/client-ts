@@ -1,5 +1,11 @@
 # @xata.io/drizzle
 
+## 0.0.2
+
+### Patch Changes
+
+- [#1149](https://github.com/xataio/client-ts/pull/1149) [`ec521dd6`](https://github.com/xataio/client-ts/commit/ec521dd603dee8b875df6d8bd491ceedac29962c) Thanks [@SferaDev](https://github.com/SferaDev)! - [Drizzle] Fix case where response returns nothing
+
 ## 0.0.1
 
 ### Patch Changes
