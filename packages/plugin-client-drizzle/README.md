@@ -18,3 +18,29 @@ yarn add drizzle-orm @xata.io/drizzle @xata.io/client
 # with npm
 npm install drizzle-orm @xata.io/drizzle @xata.io/client
 ```
+
+## Usage
+
+To work with drizzle you need to define your models and then create a drizzle instance with the models. In the future, we will offer a helper function to create the drizzle models from the Xata schema.
+
+```ts
+import { pgTable, text } from 'drizzle-orm/pg-core';
+import { drizzle } from '@xata.io/drizzle';
+import { getXataClient } from './xata';
+
+const xata = getXataClient();
+const db = drizzle(xata);
+
+const drivers = pgTable('drivers', {
+  id: text('id').primaryKey(),
+  surname: text('surname'),
+  forename: text('forename')
+});
+
+const drivers = await db.select().from(drivers).execute();
+```
+
+## Limitations
+
+- Migrations from drizzle are not supported yet, we will add them once the SQL endpoint allows it.
+- Transactions are not supported yet, we will add them once the SQL endpoint allows it.
