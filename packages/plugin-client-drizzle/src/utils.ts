@@ -60,3 +60,7 @@ export function mapResultRow<TResult>(
 
   return result as TResult;
 }
+
+export const exhaustiveCheck = (x: never): never => {
+  throw new Error(`Unhandled discriminated union member: ${x}`);
+};
