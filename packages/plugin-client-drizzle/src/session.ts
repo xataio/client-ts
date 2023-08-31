@@ -55,7 +55,7 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
 
     this.logger.logQuery(this.query.statement, params);
 
-    const { records } = await this.client.sql<Record<string, unknown>>({
+    const { records = [], warning } = await this.client.sql<Record<string, unknown>>({
       statement: this.query.statement,
       params
     });
@@ -76,6 +76,8 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
             }
           } as any)
       );
+
+    if (warning) console.warn(warning);
 
     const rows = records.map((record) => fields.map((field) => record[field.path.join('.')]));
 
