@@ -60,13 +60,30 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
       params
     });
 
-    const rows = records.map((record) => this.fields!.map((field) => record[field.path.join('.')]));
+    // FIXME: This is a hack, we should be able to get the fields from the query but SELECT * fails
+    const fields =
+      this.fields ??
+      Object.keys(records[0]!).map(
+        (key) =>
+          ({
+            path: [key],
+            field: {
+              sql: {
+                decoder: {
+                  mapFromDriverValue: (value: unknown) => value
+                }
+              }
+            }
+          } as any)
+      );
+
+    const rows = records.map((record) => fields.map((field) => record[field.path.join('.')]));
 
     if (this.customResultMapper) {
       return this.customResultMapper(rows);
     }
 
-    return rows.map((row) => mapResultRow<T['execute']>(this.fields!, row, undefined));
+    return rows.map((row) => mapResultRow<T['execute']>(fields, row, undefined));
   }
 
   async all(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['all']> {
