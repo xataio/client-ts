@@ -24,33 +24,47 @@ npm install drizzle-orm @xata.io/drizzle @xata.io/client
 To work with drizzle you need to define your models and then create a drizzle instance with the models.
 
 ```ts
-import { pgTable, text } from 'drizzle-orm/pg-core';
 import { drizzle } from '@xata.io/drizzle';
+import { sql } from 'drizzle-orm';
+import { pgTable, text } from 'drizzle-orm/pg-core';
 import { getXataClient } from './xata';
 
 const xata = getXataClient();
-const db = drizzle(xata);
 
 const drivers = pgTable('drivers', {
   id: text('id').primaryKey(),
   surname: text('surname'),
-  forename: text('forename')
+  forename: text('forename'),
+  nationality: text('nationality')
 });
 
-const result = await db.select().from(drivers).execute();
+const schema = {
+  drivers
+};
+
+const db = drizzle(xata, { schema });
+
+const result = await db.execute(sql`select * from ${drivers} where ${drivers.nationality} = 'Spanish'`);
 ```
 
 ## [Experimental] Model generation
 
-We offer an experimental model generation helper that will generate the models for you from your `tables` array in your `xata.ts` file. Since it's a work in progress, we don't recommend using it in production yet, please build your models manually.
+We offer an experimental model generation helper that will generate the models for you from your `tables` array in your `xata.ts` file. Since it's a work in progress, we don't recommend using it in your applications yet, please build your models manually. However, we would love to hear your feedback on it.
 
 ```ts
-import { buildModels } from '@xata.io/drizzle';
-import { tables } from './xata';
+import { drizzle, buildModels } from '@xata.io/drizzle';
+import { sql } from 'drizzle-orm';
+import { pgTable, text } from 'drizzle-orm/pg-core';
+import { getXataClient, tables } from './xata';
 
-const { drivers } = buildModels(tables);
+const xata = getXataClient();
 
-const result = await db.select().from(drivers).execute();
+const schema = buildModels(tables);
+const { drivers } = schema;
+
+const db = drizzle(xata, { schema });
+
+const result = await db.execute(sql`select * from ${drivers} where ${drivers.nationality} = 'Spanish'`);
 ```
 
 ## Limitations
