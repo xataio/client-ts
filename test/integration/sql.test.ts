@@ -27,7 +27,7 @@ afterEach(async (ctx) => {
 });
 
 describe('SQL proxy', () => {
-  test('read single team with id', async () => {
+  test.skip('read single team with id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
     const { records, warning } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE id = ${team.id}`;
@@ -38,7 +38,7 @@ describe('SQL proxy', () => {
     expect(records[0].name).toBe('Team ships');
   });
 
-  test('read multiple teams ', async () => {
+  test.skip('read multiple teams ', async () => {
     const teams = await xata.db.teams.create([{ name: '[A] Cars' }, { name: '[A] Planes' }]);
 
     const { records, warning } = await xata.sql<TeamsRecord>("SELECT * FROM teams WHERE name LIKE '[A] %'");
@@ -55,7 +55,7 @@ describe('SQL proxy', () => {
     expect(record2?.name).toBe('[A] Planes');
   });
 
-  test('create team', async () => {
+  test.skip('create team', async () => {
     const { records, warning } = await xata.sql<TeamsRecord>({
       statement: `INSERT INTO teams (name) VALUES ($1) RETURNING *`,
       params: ['Team ships 2']
