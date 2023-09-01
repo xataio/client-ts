@@ -5,6 +5,7 @@ import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './sche
 import { CacheImpl, SimpleCache } from './schema/cache';
 import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
+import { SQLPlugin, SQLPluginResult } from './sql';
 import { TransactionPlugin, TransactionPluginResult } from './transaction';
 import { getAPIKey, getBranch, getDatabaseURL, getEnableBrowserVariable, getPreviewBranch } from './util/environment';
 import { FetchImpl, getFetchImplementation } from './util/fetch';
@@ -39,6 +40,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
     transactions: TransactionPluginResult<any>;
+    sql: SQLPluginResult;
     files: FilesPluginResult<any>;
 
     constructor(options: BaseClientOptions = {}, schemaTables?: Schemas.Table[]) {
@@ -54,12 +56,14 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const db = new SchemaPlugin(schemaTables).build(pluginOptions);
       const search = new SearchPlugin(db, schemaTables).build(pluginOptions);
       const transactions = new TransactionPlugin().build(pluginOptions);
+      const sql = new SQLPlugin().build(pluginOptions);
       const files = new FilesPlugin().build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
       this.db = db;
       this.search = search;
       this.transactions = transactions;
+      this.sql = sql;
       this.files = files;
 
       for (const [key, namespace] of Object.entries(plugins ?? {})) {
@@ -179,6 +183,7 @@ export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
       db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
       search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
       transactions: Awaited<ReturnType<TransactionPlugin<Schemas>['build']>>;
+      sql: Awaited<ReturnType<SQLPlugin['build']>>;
       files: Awaited<ReturnType<FilesPlugin<Schemas>['build']>>;
     },
     keyof Plugins

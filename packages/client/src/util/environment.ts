@@ -133,7 +133,7 @@ export function getAPIKey() {
 export function getBranch() {
   try {
     const { branch } = getEnvironment();
-    return branch ?? 'main';
+    return branch;
   } catch (err) {
     return undefined;
   }

@@ -21,7 +21,7 @@ export type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>;
 export function getFetchImplementation(userFetch?: FetchImpl) {
   // @ts-ignore - fetch might not be a global
   const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
-  const fetchImpl = userFetch ?? globalFetch;
+  const fetchImpl: FetchImpl | undefined = userFetch ?? globalFetch;
   if (!fetchImpl) {
     /** @todo add a link after docs exist */
     throw new Error(
@@ -80,7 +80,7 @@ export class ApiRequestPool {
 
       if (stalled) {
         const stalledTime = new Date().getTime() - start.getTime();
-        console.warn(`A request to Xata hit your workspace limits, was retried and stalled for ${stalledTime}ms`);
+        console.warn(`A request to Xata hit branch rate limits, was retried and stalled for ${stalledTime}ms`);
       }
 
       return response;

@@ -3641,12 +3641,12 @@ export type QueryTableVariables = {
  *   returned is empty, but `page.meta.cursor` will include a cursor that can be
  *   used to "tail" the table from the end waiting for new data to be inserted.
  * - `page.before=end`: This cursor returns the last page.
- * - `page.start=<cursor>`: Start at the beginning of the result set of the <cursor> query. This is equivalent to querying the
+ * - `page.start=$cursor`: Start at the beginning of the result set of the $cursor query. This is equivalent to querying the
  *   first page without a cursor but applying `filter` and `sort` . Yet the `page.start`
  *   cursor can be convenient at times as user code does not need to remember the
  *   filter, sort, columns or page size configuration. All these information are
  *   read from the cursor.
- * - `page.end=<cursor>`: Move to the end of the result set of the <cursor> query. This is equivalent to querying the
+ * - `page.end=$cursor`: Move to the end of the result set of the $cursor query. This is equivalent to querying the
  *   last page with `page.before=end`, `filter`, and `sort` . Yet the
  *   `page.end` cursor can be more convenient at times as user code does not
  *   need to remember the filter, sort, columns or page size configuration. All
@@ -3806,69 +3806,6 @@ export type SearchTableVariables = {
 export const searchTable = (variables: SearchTableVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SearchResponse, SearchTableError, SearchTableRequestBody, {}, {}, SearchTablePathParams>({
     url: '/db/{dbBranchName}/tables/{tableName}/search',
-    method: 'post',
-    ...variables,
-    signal
-  });
-
-export type SqlQueryPathParams = {
-  /**
-   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
-   */
-  dbBranchName: Schemas.DBBranchName;
-  workspace: string;
-  region: string;
-};
-
-export type SqlQueryError = Fetcher.ErrorWrapper<
-  | {
-      status: 400;
-      payload: Responses.BadRequestError;
-    }
-  | {
-      status: 401;
-      payload: Responses.AuthError;
-    }
-  | {
-      status: 404;
-      payload: Responses.SimpleError;
-    }
-  | {
-      status: 503;
-      payload: Responses.ServiceUnavailableError;
-    }
->;
-
-export type SqlQueryRequestBody = {
-  /**
-   * The query string.
-   *
-   * @minLength 1
-   */
-  query: string;
-  /**
-   * The query parameter list.
-   */
-  params?: any[] | null;
-  /**
-   * The consistency level for this request.
-   *
-   * @default strong
-   */
-  consistency?: 'strong' | 'eventual';
-};
-
-export type SqlQueryVariables = {
-  body: SqlQueryRequestBody;
-  pathParams: SqlQueryPathParams;
-} & DataPlaneFetcherExtraProps;
-
-/**
- * Run an SQL query across the database branch.
- */
-export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Responses.SQLResponse, SqlQueryError, SqlQueryRequestBody, {}, {}, SqlQueryPathParams>({
-    url: '/db/{dbBranchName}/sql',
     method: 'post',
     ...variables,
     signal
@@ -4368,6 +4305,69 @@ export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal)
     signal
   });
 
+export type SqlQueryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type SqlQueryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
+>;
+
+export type SqlQueryRequestBody = {
+  /**
+   * The SQL statement.
+   *
+   * @minLength 1
+   */
+  statement: string;
+  /**
+   * The query parameter list.
+   */
+  params?: any[] | null;
+  /**
+   * The consistency level for this request.
+   *
+   * @default strong
+   */
+  consistency?: 'strong' | 'eventual';
+};
+
+export type SqlQueryVariables = {
+  body: SqlQueryRequestBody;
+  pathParams: SqlQueryPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Run an SQL query across the database branch.
+ */
+export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.SQLResponse, SqlQueryError, SqlQueryRequestBody, {}, {}, SqlQueryPathParams>({
+    url: '/db/{dbBranchName}/sql',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export const operationsByTag = {
   branch: {
     getBranchList,
@@ -4432,11 +4432,11 @@ export const operationsByTag = {
     queryTable,
     searchBranch,
     searchTable,
-    sqlQuery,
     vectorSearchTable,
     askTable,
     askTableSession,
     summarizeTable,
     aggregateTable
-  }
+  },
+  sql: { sqlQuery }
 };

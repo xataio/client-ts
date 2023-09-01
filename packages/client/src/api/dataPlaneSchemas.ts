@@ -103,7 +103,8 @@ export type Column = {
     | 'datetime'
     | 'vector'
     | 'file[]'
-    | 'file';
+    | 'file'
+    | 'json';
   link?: ColumnLink;
   vector?: ColumnVector;
   file?: ColumnFile;
@@ -1101,13 +1102,6 @@ export type SearchPageConfig = {
 };
 
 /**
- * Xata Table SQL Record
- */
-export type SQLRecord = {
-  [key: string]: any;
-};
-
-/**
  * A summary expression is the description of a single summary operation. It consists of a single
  * key representing the operation, and a value representing the column to be operated on.
  *
@@ -1374,6 +1368,13 @@ export type FileAccessID = string;
  * File signature
  */
 export type FileSignature = string;
+
+/**
+ * Xata Table SQL Record
+ */
+export type SQLRecord = {
+  [key: string]: any;
+};
 
 /**
  * Xata Table Record Metadata

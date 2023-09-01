@@ -3,14 +3,28 @@
  *
  * @version 1.0
  */
-export type AuthorizationCode = {
+export type OAuthResponseType = 'code';
+
+export type OAuthScope = 'admin:all';
+
+export type AuthorizationCodeResponse = {
   state?: string;
   redirectUri?: string;
-  scopes?: string[];
+  scopes?: OAuthScope[];
+  clientId?: string;
   /**
    * @format date-time
    */
   expires?: string;
+  code?: string;
+};
+
+export type AuthorizationCodeRequest = {
+  state?: string;
+  redirectUri?: string;
+  scopes?: OAuthScope[];
+  clientId: string;
+  responseType: OAuthResponseType;
 };
 
 export type User = {
@@ -48,6 +62,28 @@ export type OAuthClientPublicDetails = {
   icon?: string;
   clientId: string;
 };
+
+export type OAuthClientID = string;
+
+export type OAuthAccessToken = {
+  token: string;
+  scopes: string[];
+  /**
+   * @format date-time
+   */
+  createdAt: string;
+  /**
+   * @format date-time
+   */
+  updatedAt: string;
+  /**
+   * @format date-time
+   */
+  expiresAt: string;
+  clientId: string;
+};
+
+export type AccessToken = string;
 
 /**
  * @pattern ^([a-zA-Z0-9][a-zA-Z0-9_\-~]+-)?[a-zA-Z0-9]{6}

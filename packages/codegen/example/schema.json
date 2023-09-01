@@ -50,6 +50,10 @@
           ]
         },
         {
+          "name": "config",
+          "type": "json"
+        },
+        {
           "name": "owner",
           "type": "link",
           "link": {
@@ -85,24 +89,6 @@
           "type": "file[]"
         },
         {
-          "name": "settings",
-          "type": "object",
-          "columns": [
-            {
-              "name": "plan",
-              "type": "string"
-            },
-            {
-              "name": "dark",
-              "type": "bool"
-            },
-            {
-              "name": "labels",
-              "type": "multiple"
-            }
-          ]
-        },
-        {
           "name": "full_name",
           "type": "string",
           "notNull": true,
@@ -119,20 +105,6 @@
         {
           "name": "birthDate",
           "type": "datetime"
-        },
-        {
-          "name": "address",
-          "type": "object",
-          "columns": [
-            {
-              "name": "street",
-              "type": "string"
-            },
-            {
-              "name": "zipcode",
-              "type": "int"
-            }
-          ]
         },
         {
           "name": "team",

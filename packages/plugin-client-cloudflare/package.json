@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/plugin-client-cloudflare",
-  "version": "0.0.22",
+  "version": "0.0.27",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -22,7 +22,7 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "^4.20230518.0",
+    "@cloudflare/workers-types": "^4.20230821.0",
     "@xata.io/client": "workspace:*"
   }
 }

@@ -8,6 +8,50 @@ import { controlPlaneFetch, ControlPlaneFetcherExtraProps } from './controlPlane
 import type * as Schemas from './controlPlaneSchemas';
 import type * as Responses from './controlPlaneResponses';
 
+export type GetAuthorizationCodeQueryParams = {
+  clientID: string;
+  responseType: Schemas.OAuthResponseType;
+  redirectUri?: string;
+  scopes?: Schemas.OAuthScope[];
+  state?: string;
+};
+
+export type GetAuthorizationCodeError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetAuthorizationCodeVariables = {
+  queryParams: GetAuthorizationCodeQueryParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Creates, stores and returns an authorization code to be used by a third party app. Supporting use of GET is required by OAuth2 spec
+ */
+export const getAuthorizationCode = (variables: GetAuthorizationCodeVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.AuthorizationCodeResponse,
+    GetAuthorizationCodeError,
+    undefined,
+    {},
+    GetAuthorizationCodeQueryParams,
+    {}
+  >({ url: '/oauth/authorize', method: 'get', ...variables, signal });
+
 export type GrantAuthorizationCodeError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -27,19 +71,8 @@ export type GrantAuthorizationCodeError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type GrantAuthorizationCodeResponse = Schemas.AuthorizationCode & {
-  code: string;
-};
-
-export type GrantAuthorizationCodeRequestBody = Schemas.AuthorizationCode & {
-  responseType: string;
-  clientId: string;
-  codeChallenge?: string;
-  codeChallengeMethod?: string;
-};
-
 export type GrantAuthorizationCodeVariables = {
-  body?: GrantAuthorizationCodeRequestBody;
+  body: Schemas.AuthorizationCodeRequest;
 } & ControlPlaneFetcherExtraProps;
 
 /**
@@ -47,9 +80,9 @@ export type GrantAuthorizationCodeVariables = {
  */
 export const grantAuthorizationCode = (variables: GrantAuthorizationCodeVariables, signal?: AbortSignal) =>
   controlPlaneFetch<
-    GrantAuthorizationCodeResponse,
+    Schemas.AuthorizationCodeResponse,
     GrantAuthorizationCodeError,
-    GrantAuthorizationCodeRequestBody,
+    Schemas.AuthorizationCodeRequest,
     {},
     {},
     {}
@@ -287,6 +320,158 @@ export const getUserOAuthClients = (variables: GetUserOAuthClientsVariables, sig
     ...variables,
     signal
   });
+
+export type DeleteUserOAuthClientPathParams = {
+  clientId: Schemas.OAuthClientID;
+};
+
+export type DeleteUserOAuthClientError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteUserOAuthClientVariables = {
+  pathParams: DeleteUserOAuthClientPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Delete the oauth client for the user and revoke all access
+ */
+export const deleteUserOAuthClient = (variables: DeleteUserOAuthClientVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<undefined, DeleteUserOAuthClientError, undefined, {}, {}, DeleteUserOAuthClientPathParams>({
+    url: '/user/oauth/clients/{clientId}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type GetUserOAuthAccessTokensError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetUserOAuthAccessTokensResponse = {
+  accessTokens: Schemas.OAuthAccessToken[];
+};
+
+export type GetUserOAuthAccessTokensVariables = ControlPlaneFetcherExtraProps;
+
+/**
+ * Retrieve the list of valid OAuth Access Tokens on the current user's account
+ */
+export const getUserOAuthAccessTokens = (variables: GetUserOAuthAccessTokensVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<GetUserOAuthAccessTokensResponse, GetUserOAuthAccessTokensError, undefined, {}, {}, {}>({
+    url: '/user/oauth/tokens',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type DeleteOAuthAccessTokenPathParams = {
+  token: Schemas.AccessToken;
+};
+
+export type DeleteOAuthAccessTokenError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type DeleteOAuthAccessTokenVariables = {
+  pathParams: DeleteOAuthAccessTokenPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Expires the access token for a third party app
+ */
+export const deleteOAuthAccessToken = (variables: DeleteOAuthAccessTokenVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<undefined, DeleteOAuthAccessTokenError, undefined, {}, {}, DeleteOAuthAccessTokenPathParams>({
+    url: '/user/oauth/tokens/{token}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type UpdateOAuthAccessTokenPathParams = {
+  token: Schemas.AccessToken;
+};
+
+export type UpdateOAuthAccessTokenError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 409;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateOAuthAccessTokenRequestBody = {
+  /**
+   * expiration time of the token as a unix timestamp
+   */
+  expires: number;
+};
+
+export type UpdateOAuthAccessTokenVariables = {
+  body: UpdateOAuthAccessTokenRequestBody;
+  pathParams: UpdateOAuthAccessTokenPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Updates partially the access token for a third party app
+ */
+export const updateOAuthAccessToken = (variables: UpdateOAuthAccessTokenVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.OAuthAccessToken,
+    UpdateOAuthAccessTokenError,
+    UpdateOAuthAccessTokenRequestBody,
+    {},
+    {},
+    UpdateOAuthAccessTokenPathParams
+  >({ url: '/user/oauth/tokens/{token}', method: 'patch', ...variables, signal });
 
 export type GetWorkspacesListError = Fetcher.ErrorWrapper<
   | {
@@ -1341,9 +1526,17 @@ export const listRegions = (variables: ListRegionsVariables, signal?: AbortSigna
   });
 
 export const operationsByTag = {
-  authOther: { grantAuthorizationCode },
+  oAuth: {
+    getAuthorizationCode,
+    grantAuthorizationCode,
+    getUserOAuthClients,
+    deleteUserOAuthClient,
+    getUserOAuthAccessTokens,
+    deleteOAuthAccessToken,
+    updateOAuthAccessToken
+  },
   users: { getUser, updateUser, deleteUser },
-  authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey, getUserOAuthClients },
+  authentication: { getUserAPIKeys, createUserAPIKey, deleteUserAPIKey },
   workspaces: {
     getWorkspacesList,
     createWorkspace,

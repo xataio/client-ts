@@ -50,6 +50,10 @@ declare const tables: readonly [
         ];
       },
       {
+        readonly name: 'config';
+        readonly type: 'json';
+      },
+      {
         readonly name: 'owner';
         readonly type: 'link';
         readonly link: {
@@ -85,24 +89,6 @@ declare const tables: readonly [
         readonly type: 'file[]';
       },
       {
-        readonly name: 'settings';
-        readonly type: 'object';
-        readonly columns: readonly [
-          {
-            readonly name: 'plan';
-            readonly type: 'string';
-          },
-          {
-            readonly name: 'dark';
-            readonly type: 'bool';
-          },
-          {
-            readonly name: 'labels';
-            readonly type: 'multiple';
-          }
-        ];
-      },
-      {
         readonly name: 'full_name';
         readonly type: 'string';
         readonly notNull: true;
@@ -119,20 +105,6 @@ declare const tables: readonly [
       {
         readonly name: 'birthDate';
         readonly type: 'datetime';
-      },
-      {
-        readonly name: 'address';
-        readonly type: 'object';
-        readonly columns: readonly [
-          {
-            readonly name: 'street';
-            readonly type: 'string';
-          },
-          {
-            readonly name: 'zipcode';
-            readonly type: 'int';
-          }
-        ];
       },
       {
         readonly name: 'team';

@@ -2,7 +2,7 @@ import { Schemas } from '../api';
 import { FilterExpression } from '../api/schemas';
 import { compact, isDefined, isObject, isString, isStringArray, toBase64 } from '../util/lang';
 import { Dictionary, OmitBy, RequiredBy, SingleOrArray } from '../util/types';
-import { Filter } from './filters';
+import { Filter, FilterColumns, FilterValueAtColumn, JSONFilterColumns } from './filters';
 import {
   CursorNavigationOptions,
   OffsetNavigationOptions,
@@ -158,9 +158,9 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param value The value to filter.
    * @returns A new Query object.
    */
-  filter<F extends SelectableColumn<Record>>(
+  filter<F extends FilterColumns<Record> | JSONFilterColumns<Record>>(
     column: F,
-    value: Filter<NonNullable<ValueAtColumn<Record, F>>>
+    value: FilterValueAtColumn<Record, F>
   ): Query<Record, Result>;
 
   /**

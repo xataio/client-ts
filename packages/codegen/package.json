@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/codegen",
-  "version": "0.25.1",
+  "version": "0.26.2",
   "description": "Generates types based on a Xata.io database schema. Meant to be used with @xata.io/client",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -33,13 +33,13 @@
   "dependencies": {
     "@xata.io/client": "workspace:*",
     "case": "^1.6.3",
-    "prettier": "^2.8.8",
+    "prettier": "=2.8.8",
     "ts-morph": "^19.0.0",
-    "typescript": "^5.1.6",
-    "zod": "^3.21.4"
+    "typescript": "^5.2.2",
+    "zod": "^3.22.2"
   },
   "devDependencies": {
-    "@types/pluralize": "^0.0.29",
+    "@types/pluralize": "^0.0.30",
     "@types/prettier": "^2.7.3"
   }
 }

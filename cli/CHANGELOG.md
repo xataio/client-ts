@@ -1,5 +1,48 @@
 # @xata.io/cli
 
+## 0.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`22fccb51`](https://github.com/xataio/client-ts/commit/22fccb51709749c319897702c15749b74ce4b820)]:
+  - @xata.io/client@0.26.2
+  - @xata.io/codegen@0.26.2
+
+## 0.13.7
+
+### Patch Changes
+
+- Updated dependencies [[`922e6e54`](https://github.com/xataio/client-ts/commit/922e6e54e8b31641770a36b6b4ff8f4fa65d304d), [`13f6f3e4`](https://github.com/xataio/client-ts/commit/13f6f3e4b1a2f925d50a5380b62ef1057f5c3893), [`f02fc165`](https://github.com/xataio/client-ts/commit/f02fc165bf6558e4377eb9f8e1d0f4222f004c70)]:
+  - @xata.io/client@0.26.1
+  - @xata.io/codegen@0.26.1
+
+## 0.13.6
+
+### Patch Changes
+
+- Updated dependencies [[`6ec862f8`](https://github.com/xataio/client-ts/commit/6ec862f8f799eb692f62be79dd0b613b83a34780), [`0c0149ad`](https://github.com/xataio/client-ts/commit/0c0149ad1ee3f7c0fe9d31030552b022c907edb0)]:
+  - @xata.io/client@0.26.0
+  - @xata.io/codegen@0.26.0
+  - @xata.io/importer@1.0.3
+
+## 0.13.5
+
+### Patch Changes
+
+- Updated dependencies [[`3b9e1984`](https://github.com/xataio/client-ts/commit/3b9e1984329cd0e9f885f6af4155cc85ab61ba41)]:
+  - @xata.io/client@0.25.3
+  - @xata.io/codegen@0.25.3
+
+## 0.13.4
+
+### Patch Changes
+
+- [#1126](https://github.com/xataio/client-ts/pull/1126) [`dfb41d8c`](https://github.com/xataio/client-ts/commit/dfb41d8cda8056a060473dadd55b017a7a8fe248) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix init with schema option
+
+- Updated dependencies [[`9d1ace5f`](https://github.com/xataio/client-ts/commit/9d1ace5f12788755f3150449120b27cd030af3a9), [`f6665593`](https://github.com/xataio/client-ts/commit/f6665593c301dc9400834cbd68ae32b92bbdea5d)]:
+  - @xata.io/client@0.25.2
+  - @xata.io/codegen@0.25.2
+
 ## 0.13.3
 
 ### Patch Changes
