@@ -16,8 +16,8 @@ import {
 } from './pagination';
 import { XataRecord } from './record';
 import { RestRepository } from './repository';
-import { ColumnsByValue, SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
-import { SortDirection, SortFilter } from './sorting';
+import { SelectableColumn, SelectedPick } from './selection';
+import { SortColumns, SortDirection, SortFilter } from './sorting';
 import { SummarizeExpression, SummarizeParams, SummarizeResult } from './summarize';
 
 type BaseOptions<T extends XataRecord> = {
@@ -215,9 +215,9 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param direction The direction. Either ascending or descending.
    * @returns A new Query object.
    */
-  sort<F extends ColumnsByValue<Record, any>>(column: F, direction: SortDirection): Query<Record, Result>;
+  sort<F extends SortColumns<Record>>(column: F, direction: SortDirection): Query<Record, Result>;
   sort(column: '*', direction: 'random'): Query<Record, Result>;
-  sort<F extends ColumnsByValue<Record, any>>(column: F): Query<Record, Result>;
+  sort<F extends SortColumns<Record>>(column: F): Query<Record, Result>;
   sort(column: string, direction = 'asc'): Query<Record, Result> {
     const originalSort = [this.#data.sort ?? []].flat() as SortFilter<Record, any>[];
     const sort = [...originalSort, { column, direction }];

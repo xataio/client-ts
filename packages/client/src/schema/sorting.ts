@@ -8,7 +8,7 @@ export type SortDirection = 'asc' | 'desc';
 type RandomFilter = { '*': 'random' };
 type RandomFilterExtended = { column: '*'; direction: 'random' };
 
-type SortColumns<T extends XataRecord> = ColumnsByValue<T, any> | `xata.${keyof XataRecordMetadata}`;
+export type SortColumns<T extends XataRecord> = ColumnsByValue<T, any> | `xata.${keyof XataRecordMetadata}`;
 
 export type SortFilterExtended<T extends XataRecord, Columns extends string = SortColumns<T>> =
   | RandomFilterExtended

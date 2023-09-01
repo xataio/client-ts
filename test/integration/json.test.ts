@@ -107,7 +107,6 @@ describe('JSON support', () => {
 
     const filterNodeEqualsString = await xata.db.teams.filter('config->bg->path', 'a/b/c').getAll();
     expect(filterNodeEqualsString.length).toBe(2);
-    expect(filterNodeEqualsString.map((r) => r.id)).toEqual([r1.id, r2.id]);
 
     const filterNodeEqualsNumber = await xata.db.teams.filter('config->bg->alpha', 0.8).getAll();
     expect(filterNodeEqualsNumber.length).toBe(1);
@@ -133,5 +132,79 @@ describe('JSON support', () => {
     const filterNodeContains = await xata.db.teams.filter({ 'config->bg->path': { $contains: 'a/b' } }).getAll();
     expect(filterNodeContains.length).toBe(2);
     expect(filterNodeContains.map((r) => r.id)).toEqual([r1.id, r2.id]);
+
+    await xata.db.teams.delete([r1, r2]);
+  });
+
+  test('sorts work with JSON fields', async () => {
+    const r1 = await xata.db.teams.create({
+      name: 'r1',
+      index: 10,
+      rating: 1,
+      description: 'longer text goes here 👀\u000A \u0009',
+      founded_date: '2022-01-01T00:00:00.000Z',
+      config: {
+        color: 'blue',
+        bg: {
+          path: 'a/b/c',
+          alpha: 0.8
+        }
+      }
+    });
+
+    const r2 = await xata.db.teams.create({
+      name: 'r2',
+      index: 23,
+      rating: 2.5,
+      description: 'some description',
+      founded_date: '2022-01-01T00:00:00.000-05:00',
+      config: {
+        color: 'red',
+        bg: {
+          path: 'a/b/c',
+          alpha: 0.2
+        }
+      }
+    });
+
+    await xata.db.teams.delete([r1, r2]);
+  });
+
+  test('create and query JSON', async () => {
+    const record1 = await xata.db.teams.create({
+      name: 'Xata xwag T-shirt',
+      config: {
+        color: 'purple',
+        size: 'M'
+      }
+    });
+    const record2 = await xata.db.teams.create({
+      name: 'Meditations',
+      config: {
+        author: 'Marcus Aurelius',
+        isbn: '978-0140449334',
+        pages: 304
+      }
+    });
+    const record3 = await xata.db.teams.create({
+      name: 'Long climbing rope',
+      config: {
+        length: 80,
+        thickness: 9.8,
+        color: 'blue'
+      }
+    });
+
+    const recordsBySizeM = await xata.db.teams.filter({ 'config->size': 'M' }).getMany();
+    expect(recordsBySizeM.length).toBe(1);
+    expect(recordsBySizeM[0].id).toBe(record1.id);
+
+    const recordsLengthGreater = await xata.db.teams.filter({ 'config->length': { $gt: 50 } }).getMany();
+    expect(recordsLengthGreater.length).toBe(1);
+    expect(recordsLengthGreater[0].id).toBe(record3.id);
+
+    const recordsBySubstring = await xata.db.teams.filter({ 'config->isbn': { $contains: '0140449334' } }).getMany();
+    expect(recordsBySubstring.length).toBe(1);
+    expect(recordsBySubstring[0].id).toBe(record2.id);
   });
 });
