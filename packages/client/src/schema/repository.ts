@@ -39,6 +39,7 @@ import { AskOptions, AskResult } from './ask';
 import { CacheImpl } from './cache';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter } from './filters';
+import { parseJson, stringifyJson } from './json';
 import { Page } from './pagination';
 import { Query } from './query';
 import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
@@ -1992,6 +1993,9 @@ export class RestRepository<Record extends XataRecord>
         case 'file[]':
           result[key] = await promiseMap(value as InputXataFile[], (item) => parseInputFileEntry(item));
           break;
+        case 'json':
+          result[key] = stringifyJson(value as any);
+          break;
         default:
           result[key] = value;
       }
@@ -2075,6 +2079,9 @@ export const initObject = <T>(
         break;
       case 'file[]':
         data[column.name] = (value as XataArrayFile[])?.map((item) => new XataFile(item)) ?? null;
+        break;
+      case 'json':
+        data[column.name] = parseJson(value as string);
         break;
       default:
         data[column.name] = value ?? null;

@@ -26,7 +26,8 @@ const tables = [
           { name: 'zipcode', type: 'int' }
         ]
       },
-      { name: 'team', type: 'link', link: { table: 'teams' } }
+      { name: 'team', type: 'link', link: { table: 'teams' } },
+      { name: 'json', type: 'json' }
     ]
   }
 ] as const;
@@ -49,6 +50,11 @@ function simpleUser(user: SchemaInference<typeof tables>['users'] & XataRecord) 
   user.team?.getMetadata();
 
   user.address = { street: '' };
+  // @ts-expect-error
+  user.address = '';
+
+  user.json?.foo;
+  user.json?.[0];
 }
 
 test('fake test', () => {
