@@ -32,7 +32,25 @@ declare const tables: readonly [
         readonly type: 'email';
       },
       {
-        readonly name: 'json';
+        readonly name: 'settings';
+        readonly type: 'object';
+        readonly columns: readonly [
+          {
+            readonly name: 'plan';
+            readonly type: 'string';
+          },
+          {
+            readonly name: 'dark';
+            readonly type: 'bool';
+          },
+          {
+            readonly name: 'labels';
+            readonly type: 'multiple';
+          }
+        ];
+      },
+      {
+        readonly name: 'config';
         readonly type: 'json';
       },
       {

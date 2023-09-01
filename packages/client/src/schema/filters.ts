@@ -1,10 +1,23 @@
 import { FilterExpression, FilterPredicate } from '../api/schemas';
 import { isDefined, isObject } from '../util/lang';
-import { SingleOrArray } from '../util/types';
+import { SingleOrArray, Values } from '../util/types';
+import { JSONValue } from './json';
 import { XataRecordMetadata } from './record';
 import { ColumnsByValue, ValueAtColumn } from './selection';
 
+export type JSONFilterColumns<Record> = Values<{
+  [K in keyof Record]: NonNullable<Record[K]> extends JSONValue<any>
+    ? K extends string
+      ? `${K}->${string}`
+      : never
+    : never;
+}>;
+
 export type FilterColumns<T> = ColumnsByValue<T, any> | `xata.${keyof XataRecordMetadata}`;
+
+export type FilterValueAtColumn<Record, F> = NonNullable<ValueAtColumn<Record, F>> extends JSONValue<any>
+  ? PropertyFilter<any>
+  : Filter<NonNullable<ValueAtColumn<Record, F>>>;
 
 /**
  * PropertyMatchFilter
@@ -28,6 +41,8 @@ type PropertyAccessFilter<Record> = {
   [key in FilterColumns<Record>]?:
     | NestedApiFilter<ValueAtColumn<Record, key>>
     | PropertyFilter<ValueAtColumn<Record, key>>;
+} & {
+  [key in JSONFilterColumns<Record>]?: PropertyFilter<Record[keyof Record]>;
 };
 
 export type PropertyFilter<T> = T | { $is: T } | { $isNot: T } | { $any: T[] } | { $none: T[] } | ValueTypeFilters<T>;

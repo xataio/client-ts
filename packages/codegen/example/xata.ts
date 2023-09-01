@@ -1,5 +1,7 @@
+import { Values } from '@xata.io/client/src/util/types';
 import { buildClient } from '../../client/src';
 import type { BaseClientOptions, SchemaInference, XataRecord } from '../../client/src';
+import { JSONValue } from '@xata.io/client/src/schema/json';
 
 // This comment should be preserved by the codegen
 const tables = [
@@ -13,7 +15,16 @@ const tables = [
       { name: 'rating', type: 'float' },
       { name: 'founded_date', type: 'datetime' },
       { name: 'email', type: 'email' },
-      { name: 'json', type: 'json' },
+      {
+        name: 'settings',
+        type: 'object',
+        columns: [
+          { name: 'plan', type: 'string' },
+          { name: 'dark', type: 'bool' },
+          { name: 'labels', type: 'multiple' }
+        ]
+      },
+      { name: 'config', type: 'json' },
       { name: 'owner', type: 'link', link: { table: 'users' } }
     ],
     revLinks: [{ table: 'users', column: 'team' }]
@@ -89,3 +100,13 @@ export type UsersRecord = Users & XataRecord;
 
 export type Pets = InferredTypes['pets'];
 export type PetsRecord = Pets & XataRecord;
+
+type JSONFilter<Record> = Values<{
+  [K in keyof Record]?: NonNullable<Record[K]> extends JSONValue<any>
+    ? K extends string
+      ? `${K}->string`
+      : never
+    : never;
+}>;
+
+type Foo = JSONFilter<Teams>;
