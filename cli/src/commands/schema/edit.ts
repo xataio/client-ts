@@ -58,11 +58,11 @@ type ColumnEditState = {
   };
 };
 
-const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime', 'vector'];
+const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime', 'vector', 'json'];
 const typesList = types.join(', ');
 const identifier = /^[a-zA-Z0-9-_~]+$/;
 
-const uniqueUnsupportedTypes = ['text', 'multiple', 'vector'];
+const uniqueUnsupportedTypes = ['text', 'multiple', 'vector', 'json'];
 const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
 const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
 
