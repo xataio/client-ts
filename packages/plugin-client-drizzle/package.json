@@ -1,6 +1,6 @@
 {
-  "name": "@xata.io/plugin-client-cache",
-  "version": "0.1.28",
+  "name": "@xata.io/drizzle",
+  "version": "0.0.2",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -25,9 +25,9 @@
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
-    "lru-cache": "^10.0.1"
+    "drizzle-orm": "^0.28.5"
   },
   "peerDependencies": {
-    "lru-cache": "^7"
+    "drizzle-orm": "^0.28.5"
   }
 }
