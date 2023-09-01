@@ -206,5 +206,9 @@ describe('JSON support', () => {
     const recordsBySubstring = await xata.db.teams.filter({ 'config->isbn': { $contains: '0140449334' } }).getMany();
     expect(recordsBySubstring.length).toBe(1);
     expect(recordsBySubstring[0].id).toBe(record2.id);
+
+    const recordsWithNegationOperator = await xata.db.teams.filter({ 'config->color': { $isNot: 'yellow' } }).getMany();
+    expect(recordsWithNegationOperator.length).toBe(2);
+    expect(recordsWithNegationOperator.map((r) => r.id).sort()).toEqual([record1.id, record3.id]);
   });
 });
