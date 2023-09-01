@@ -16,12 +16,12 @@ import {
 } from './pagination';
 import { XataRecord } from './record';
 import { RestRepository } from './repository';
-import { SelectableColumn, SelectedPick } from './selection';
+import { SelectableColumn, SelectableColumnWithObjectNotation, SelectedPick } from './selection';
 import { SortColumns, SortDirection, SortFilter } from './sorting';
 import { SummarizeExpression, SummarizeParams, SummarizeResult } from './summarize';
 
 type BaseOptions<T extends XataRecord> = {
-  columns?: SelectableColumn<T>[];
+  columns?: SelectableColumnWithObjectNotation<T>[];
   consistency?: 'strong' | 'eventual';
   cache?: number;
   fetchOptions?: Record<string, unknown>;
@@ -229,7 +229,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param columns Array of column names to be returned by the query.
    * @returns A new Query object.
    */
-  select<K extends SelectableColumn<Record>>(columns: K[]) {
+  select<K extends SelectableColumnWithObjectNotation<Record>>(columns: K[]) {
     return new Query<Record, SelectedPick<Record, typeof columns>>(
       this.#repository,
       this.#table,

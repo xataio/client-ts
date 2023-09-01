@@ -54,7 +54,13 @@ export function isValidSelectableColumns(columns: any): columns is SelectableCol
 }
 
 type StringColumns<T> = T extends string ? T : never;
-type ProjectionColumns<T> = T extends { as: string } ? 'posts' : never;
+type ProjectionColumns<T> = T extends string
+  ? never
+  : T extends { as: infer As }
+  ? NonNullable<As> extends string
+    ? NonNullable<As>
+    : never
+  : never;
 
 // Private: Returns columns ending with a wildcard
 type WildcardColumns<O> = Values<{
@@ -63,7 +69,7 @@ type WildcardColumns<O> = Values<{
 
 // Public: Utility type to get a union with the selectable columns of an object by a given type
 export type ColumnsByValue<O, Value> = Values<{
-  [K in StringColumns<SelectableColumn<O>>]: ValueAtColumn<O, K> extends infer C
+  [K in SelectableColumn<O>]: ValueAtColumn<O, K> extends infer C
     ? C extends Value
       ? K extends WildcardColumns<O>
         ? never
@@ -73,7 +79,7 @@ export type ColumnsByValue<O, Value> = Values<{
 }>;
 
 // Public: Utility type to get the XataRecord built from a list of selected columns
-export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]> = XataRecord<O> &
+export type SelectedPick<O extends XataRecord, Key extends SelectableColumnWithObjectNotation<O>[]> = XataRecord<O> &
   // For each column, we get its nested value and join it as an intersection
   UnionToIntersection<
     Values<{
@@ -81,9 +87,10 @@ export type SelectedPick<O extends XataRecord, Key extends SelectableColumn<O>[]
     }>
   > &
   // For each column projection, we get its nested value and join it as an intersection
+  // The typings here are a bit tricky, but it works, can definetely be improved
   UnionToIntersection<
     Values<{
-      [K in ProjectionColumns<Key[number]>]: XataRecord<O>[];
+      [K in ProjectionColumns<Key[number]>]: { [Key in K]: { records: (Record<string, any> & XataRecord<O>)[] } };
     }>
   >;
 
