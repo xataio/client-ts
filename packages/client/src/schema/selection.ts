@@ -64,7 +64,7 @@ type ProjectionColumns<T> = T extends string
 
 // Private: Returns columns ending with a wildcard
 type WildcardColumns<O> = Values<{
-  [K in StringColumns<SelectableColumn<O>>]: K extends `${string}*` ? K : never;
+  [K in SelectableColumn<O>]: K extends `${string}*` ? K : never;
 }>;
 
 // Public: Utility type to get a union with the selectable columns of an object by a given type
