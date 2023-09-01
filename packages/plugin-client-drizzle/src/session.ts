@@ -21,7 +21,7 @@ import { XataClient } from './driver';
 import { mapResultRow } from './utils';
 
 type QueryResult<T = Record<string, unknown>> = {
-  records: T[];
+  rows: T[];
   warning?: string;
 };
 
@@ -146,11 +146,21 @@ export class XataSession<
 
   async query(query: string, params: unknown[]): Promise<QueryResult> {
     this.logger.logQuery(query, params);
-    return await this.client.sql({ statement: query, params });
+    const result = await this.client.sql<Record<string, unknown>>({ statement: query, params });
+
+    return {
+      rows: result.records,
+      warning: result.warning
+    };
   }
 
   async queryObjects<T extends Record<string, unknown>>(query: string, params: unknown[]): Promise<QueryResult<T>> {
-    return this.client.sql({ statement: query, params });
+    const result = await this.client.sql<T>({ statement: query, params });
+
+    return {
+      rows: result.records,
+      warning: result.warning
+    };
   }
 
   override async transaction<T>(

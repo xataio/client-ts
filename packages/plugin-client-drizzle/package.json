@@ -14,7 +14,8 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "test": "NODE_OPTIONS='--loader=tsx --no-warnings' ava --serial test/*.ava.ts"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -25,9 +26,17 @@
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
-    "drizzle-orm": "^0.28.5"
+    "ava": "^5.3.1",
+    "drizzle-orm": "^0.28.5",
+    "tsx": "^3.12.7",
+    "uuid": "^9.0.0"
   },
   "peerDependencies": {
     "drizzle-orm": "^0.28.5"
+  },
+  "ava": {
+    "extensions": {
+      "ts": "module"
+    }
   }
 }
