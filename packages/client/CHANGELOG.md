@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.26.3
+
+### Patch Changes
+
+- [#1144](https://github.com/xataio/client-ts/pull/1144) [`4910dce2`](https://github.com/xataio/client-ts/commit/4910dce29d3cc17d13aadf32e4eb476ffb571fad) Thanks [@SferaDev](https://github.com/SferaDev)! - Support for JSON and Revlinks
+
 ## 0.26.2
 
 ### Patch Changes
