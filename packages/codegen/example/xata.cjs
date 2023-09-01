@@ -38,6 +38,15 @@ const tables = [
       { name: "photo", type: "file" },
       { name: "attachments", type: "file[]" },
       {
+        name: "settings",
+        type: "object",
+        columns: [
+          { name: "plan", type: "string" },
+          { name: "dark", type: "bool" },
+          { name: "labels", type: "multiple" },
+        ],
+      },
+      {
         name: "full_name",
         type: "string",
         notNull: true,
@@ -46,6 +55,14 @@ const tables = [
       { name: "index", type: "int" },
       { name: "rating", type: "float" },
       { name: "birthDate", type: "datetime" },
+      {
+        name: "address",
+        type: "object",
+        columns: [
+          { name: "street", type: "string" },
+          { name: "zipcode", type: "int" },
+        ],
+      },
       { name: "team", type: "link", link: { table: "teams" } },
       { name: "pet", type: "link", link: { table: "pets" } },
       { name: "account_value", type: "int" },
