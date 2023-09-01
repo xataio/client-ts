@@ -1,6 +1,7 @@
 import { Schemas } from '../api';
 import { UnionToIntersection, Values } from '../util/types';
 import { XataArrayFile, XataFile } from './files';
+import { JSONValue } from './json';
 import { Identifiable, XataRecord } from './record';
 
 export type BaseSchema = {
@@ -73,6 +74,8 @@ type InnerType<Type, ObjectColumns, Tables, LinkedTable> = Type extends 'string'
   ? XataFile
   : Type extends 'file[]'
   ? XataArrayFile[]
+  : Type extends 'json'
+  ? JSONValue<any>
   : Type extends 'object'
   ? ObjectColumns extends readonly unknown[]
     ? ObjectColumns[number] extends { name: string; type: string }
