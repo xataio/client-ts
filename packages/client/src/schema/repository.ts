@@ -2072,7 +2072,7 @@ export const initObject = <T>(
         if (!linkTable) {
           console.error(`Failed to parse link for field ${column.name}`);
         } else if (isObject(value)) {
-          const selectedLinkColumns = selectedColumns.reduce((acc, item) => {
+          const selectedLinkColumns = (selectedColumns as string[]).reduce((acc, item) => {
             if (item === column.name) {
               return [...acc, '*'];
             }

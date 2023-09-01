@@ -1,5 +1,12 @@
 # @xata.io/plugin-client-opentelemetry
 
+## 0.2.27
+
+### Patch Changes
+
+- Updated dependencies [[`4910dce2`](https://github.com/xataio/client-ts/commit/4910dce29d3cc17d13aadf32e4eb476ffb571fad)]:
+  - @xata.io/client@0.26.3
+
 ## 0.2.26
 
 ### Patch Changes
