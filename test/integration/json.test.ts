@@ -209,6 +209,6 @@ describe('JSON support', () => {
 
     const recordsWithNegationOperator = await xata.db.teams.filter({ 'config->color': { $isNot: 'yellow' } }).getMany();
     expect(recordsWithNegationOperator.length).toBe(2);
-    expect(recordsWithNegationOperator.map((r) => r.id).sort()).toEqual([record1.id, record3.id]);
+    expect(recordsWithNegationOperator.map((r) => r.name).sort()).toEqual(['Long climbing rope', 'Xata xwag T-shirt']);
   });
 });
