@@ -1,3 +1,4 @@
+import { isObject, isString } from '../util/lang';
 import { If, IsArray, IsObject, StringKeys, UnionToIntersection, Values } from '../util/types';
 import { XataArrayFile, XataFile, XataFileEditableFields } from './files';
 import { Link, XataRecord } from './record';
@@ -13,9 +14,7 @@ export type SelectableColumn<O, RecursivePath extends any[] = []> =
   // Properties of the current level
   | DataProps<O>
   // Nested properties of the lower levels
-  | NestedColumns<O, RecursivePath>
-  // Column projections
-  | ExpandedColumnNotation;
+  | NestedColumns<O, RecursivePath>;
 
 type ExpandedColumnNotation = {
   name: string;
@@ -25,6 +24,34 @@ type ExpandedColumnNotation = {
   offset?: number;
   order?: { column: string; order: 'asc' | 'desc' }[];
 };
+
+// Right now, we only support object notation in queryTable endpoint
+// Once we support it in other endpoints, we can remove this and use SelectableColumn<O> instead
+export type SelectableColumnWithObjectNotation<O, RecursivePath extends any[] = []> =
+  | SelectableColumn<O, RecursivePath>
+  | ExpandedColumnNotation;
+
+export function isValidExpandedColumn(column: any): column is ExpandedColumnNotation {
+  return isObject(column) && isString(column.name);
+}
+
+export function isValidSelectableColumns(columns: any): columns is SelectableColumn<any>[] {
+  if (!Array.isArray(columns)) {
+    return false;
+  }
+
+  return columns.every((column) => {
+    if (typeof column === 'string') {
+      return true;
+    }
+
+    if (typeof column === 'object') {
+      return isValidExpandedColumn(column);
+    }
+
+    return false;
+  });
+}
 
 type StringColumns<T> = T extends string ? T : never;
 type ProjectionColumns<T> = T extends { as: string } ? 'posts' : never;
