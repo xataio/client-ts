@@ -131,7 +131,7 @@ describe('JSON support', () => {
 
     const filterNodeContains = await xata.db.teams.filter({ 'config->bg->path': { $contains: 'a/b' } }).getAll();
     expect(filterNodeContains.length).toBe(2);
-    expect(filterNodeContains.map((r) => r.id)).toEqual([r1.id, r2.id]);
+    expect(filterNodeContains.map((r) => r.name).sort()).toEqual(['r1', 'r2']);
 
     await xata.db.teams.delete([r1, r2]);
   });
