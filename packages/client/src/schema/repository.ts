@@ -1903,7 +1903,7 @@ export class RestRepository<Record extends XataRecord>
         body: {
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
-          columns: data.columns as string[],
+          columns: data.columns as SelectableColumn<Record>[],
           consistency: data.consistency,
           page: data.pagination?.size !== undefined ? { size: data.pagination?.size } : undefined,
           summaries,
