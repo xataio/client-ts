@@ -6,7 +6,7 @@ export function stringifyJson(value: string): string;
 export function stringifyJson(value: null): null;
 export function stringifyJson(value: undefined): undefined;
 export function stringifyJson(value: string | null | undefined): string | null | undefined;
-export function stringifyJson<T>(value: any): string;
+export function stringifyJson(value: any): string | null | undefined;
 export function stringifyJson(value: any) {
   if (!isDefined(value)) return value;
   if (isString(value)) return value;
@@ -18,10 +18,10 @@ export function stringifyJson(value: any) {
   }
 }
 
-export function parseJson<T>(value: string) {
+export function parseJson(value: string) {
   try {
     return JSON.parse(value);
   } catch (e) {
-    return value as any;
+    return value;
   }
 }
