@@ -51,7 +51,7 @@ export interface ImageTransformations {
   contrast?: number;
   /**
    * Download file. Forces browser to download the image.
-   * Value is used for the download file name.
+   * Value is used for the download file name. Extension is optional.
    */
   download?: string;
   /**
