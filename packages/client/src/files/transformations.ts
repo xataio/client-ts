@@ -50,6 +50,11 @@ export interface ImageTransformations {
    */
   contrast?: number;
   /**
+   * Download file. Forces browser to download the image.
+   * Value is used for the download file name. Extension is optional.
+   */
+  download?: string;
+  /**
    * Device Pixel Ratio. Default 1. Multiplier for width/height that makes it
    * easier to specify higher-DPI sizes in <img srcset>.
    */
