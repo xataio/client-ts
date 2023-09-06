@@ -63,7 +63,7 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
     // FIXME: This is a hack, we should be able to get the fields from the query but SELECT * fails
     const fields =
       this.fields ??
-      Object.keys(records[0]!).map(
+      Object.keys(records[0] ?? {}).map(
         (key) =>
           ({
             path: [key],
