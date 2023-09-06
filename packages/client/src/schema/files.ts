@@ -7,19 +7,23 @@ export type XataFileEditableFields = Partial<Pick<XataArrayFile, keyof InputFile
 
 export class XataFile {
   /**
-   * Name of this file.
+   * Identifier of the file.
+   */
+  public id?: string;
+  /**
+   * Name of the file.
    */
   public name: string;
   /**
-   * Media type of this file.
+   * Media type of the file.
    */
   public mediaType: string;
   /**
-   * Base64 encoded content of this file.
+   * Base64 encoded content of the file.
    */
   public base64Content?: string;
   /**
-   * Whether to enable public url for this file.
+   * Whether to enable public url for the file.
    */
   public enablePublicUrl: boolean;
   /**
@@ -27,27 +31,28 @@ export class XataFile {
    */
   public signedUrlTimeout: number;
   /**
-   * Size of this file.
+   * Size of the file.
    */
   public size?: number;
   /**
-   * Version of this file.
+   * Version of the file.
    */
   public version: number;
   /**
-   * Url of this file.
+   * Url of the file.
    */
   public url: string;
   /**
-   * Signed url of this file.
+   * Signed url of the file.
    */
   public signedUrl?: string;
   /**
-   * Attributes of this file.
+   * Attributes of the file.
    */
   public attributes: Record<string, any>;
 
   constructor(file: Partial<XataFile>) {
+    this.id = file.id;
     this.name = file.name || '';
     this.mediaType = file.mediaType || 'application/octet-stream';
     this.base64Content = file.base64Content;
