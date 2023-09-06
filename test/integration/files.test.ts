@@ -39,6 +39,7 @@ describe('file support', () => {
       ['attachments.*', 'attachments.base64Content', 'photo.*', 'photo.base64Content']
     );
 
+    expect(record.attachments?.[0]?.id).toBeDefined();
     expect(record.attachments?.[0]?.name).toBe('hello.txt');
     expect(record.attachments?.[0]?.base64Content).toBeDefined();
     expect(record.attachments?.[0]?.toBlob()).toBeInstanceOf(Blob);
