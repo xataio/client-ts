@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.26.4
+
+### Patch Changes
+
+- [#1160](https://github.com/xataio/client-ts/pull/1160) [`7166797c`](https://github.com/xataio/client-ts/commit/7166797c28839198d20a9115d0414cebc2fed39b) Thanks [@SferaDev](https://github.com/SferaDev)! - [Files] Return file id on array
+
+- [#1156](https://github.com/xataio/client-ts/pull/1156) [`b85df75f`](https://github.com/xataio/client-ts/commit/b85df75f2f466762a8b3d9824c9292c7e3db03fd) Thanks [@SferaDev](https://github.com/SferaDev)! - [Files] Add download transformation
+
 ## 0.26.3
 
 ### Patch Changes
