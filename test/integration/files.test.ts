@@ -34,7 +34,11 @@ const csv = new Blob([['hello', 'world'].join(',')], { type: 'text/csv' });
 describe('file support', () => {
   test('create file with record', async () => {
     const record = await xata.db.users.create(
-      { name: 'test', attachments: [XataFile.fromBlob(file)], photo: XataFile.fromBlob(file) },
+      {
+        name: 'test',
+        attachments: [XataFile.fromBlob(file, { name: 'hello.txt' })],
+        photo: XataFile.fromBlob(file, { name: 'hello.txt' })
+      },
       ['attachments.*', 'attachments.base64Content', 'photo.*', 'photo.base64Content']
     );
 
