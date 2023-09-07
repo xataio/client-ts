@@ -172,7 +172,6 @@ export async function fetch<
       const headers = compactObject({
         'Accept-Encoding': 'identity',
         'Content-Type': 'application/json',
-        Connection: 'keep-alive',
         'X-Xata-Client-ID': clientID ?? defaultClientID,
         'X-Xata-Session-ID': sessionID ?? generateUUID(),
         'X-Xata-Agent': xataAgent,
