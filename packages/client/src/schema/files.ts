@@ -183,5 +183,13 @@ export const parseInputFileEntry = async (entry: InputXataFile): Promise<InputFi
   if (!isDefined(entry)) return null;
 
   const { id, name, mediaType, base64Content, enablePublicUrl, signedUrlTimeout } = await entry;
-  return compactObject({ id, name, mediaType, base64Content, enablePublicUrl, signedUrlTimeout });
+  return compactObject({
+    id,
+    // Name cannot be an empty string in our API
+    name: name ? name : undefined,
+    mediaType,
+    base64Content,
+    enablePublicUrl,
+    signedUrlTimeout
+  });
 };

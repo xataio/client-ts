@@ -3,6 +3,7 @@ import { parseNumber, timeout, timeoutWithCancel } from './lang';
 const REQUEST_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 export type RequestInit = { body?: any; headers?: Record<string, string>; method?: string; signal?: any };
+
 export type Response = {
   ok: boolean;
   status: number;
@@ -21,12 +22,12 @@ export type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>;
 export function getFetchImplementation(userFetch?: FetchImpl) {
   // @ts-ignore - fetch might not be a global
   const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
-  const fetchImpl: FetchImpl | undefined = userFetch ?? globalFetch;
+  // @ts-ignore - globalThis might not be a global
+  const globalThisFetch = typeof globalThis !== 'undefined' ? globalThis.fetch : undefined;
+  const fetchImpl: FetchImpl | undefined = userFetch ?? globalFetch ?? globalThisFetch;
   if (!fetchImpl) {
     /** @todo add a link after docs exist */
-    throw new Error(
-      `Couldn't find \`fetch\`. Install a fetch implementation such as \`node-fetch\` and pass it explicitly.`
-    );
+    throw new Error(`Couldn't find a global \`fetch\`. Pass a fetch implementation explicitly.`);
   }
   return fetchImpl;
 }
