@@ -53,7 +53,7 @@ describe('file support', () => {
     expect(record.photo?.toString()).toBe('hello');
   });
 
-  test('create with with binary endpoint JSON', async () => {
+  test('create file with binary endpoint JSON', async () => {
     const record = await xata.db.users.create({ name: 'another' });
     const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, json);
 
@@ -72,7 +72,7 @@ describe('file support', () => {
     expect(content).toBe('{"hello":"world"}');
   });
 
-  test('create with with binary endpoint CSV', async () => {
+  test('create file with binary endpoint CSV', async () => {
     const record = await xata.db.users.create({ name: 'another' });
     const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, csv);
 
