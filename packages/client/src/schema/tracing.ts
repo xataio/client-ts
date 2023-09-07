@@ -37,5 +37,7 @@ export const TraceAttributes = {
   HTTP_METHOD: 'http.method',
   HTTP_URL: 'http.url',
   HTTP_ROUTE: 'http.route',
-  HTTP_TARGET: 'http.target'
+  HTTP_TARGET: 'http.target',
+
+  CLOUDFLARE_RAY_ID: 'cf.ray'
 };

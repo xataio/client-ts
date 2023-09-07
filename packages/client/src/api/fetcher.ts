@@ -195,7 +195,8 @@ export async function fetch<
         [TraceAttributes.HTTP_REQUEST_ID]: requestId,
         [TraceAttributes.HTTP_STATUS_CODE]: response.status,
         [TraceAttributes.HTTP_HOST]: host,
-        [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', '')
+        [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', ''),
+        [TraceAttributes.CLOUDFLARE_RAY_ID]: response.headers?.get('cf-ray') ?? undefined
       });
 
       const message = response.headers?.get('x-xata-message');
