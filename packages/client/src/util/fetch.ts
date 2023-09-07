@@ -66,11 +66,10 @@ export class ApiRequestPool {
     const runRequest = async (stalled = false): Promise<Response> => {
       // Some fetch implementations don't timeout and network changes hang the connection
       const { promise, cancel } = timeoutWithCancel(REQUEST_TIMEOUT);
-
-      const foo = fetchImpl(url, options).then((response) => response);
-      const bar = promise.then(async () => null);
-
-      const response = await Promise.race([foo, bar]).finally(cancel);
+      const response = await Promise.any([
+        Promise.resolve(fetchImpl(url, options)),
+        promise.then(async () => null)
+      ]).finally(cancel);
       if (!response) {
         throw new Error('Request timed out');
       }
