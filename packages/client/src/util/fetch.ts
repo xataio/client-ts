@@ -66,24 +66,32 @@ export class ApiRequestPool {
     const runRequest = async (stalled = false): Promise<Response> => {
       // Some fetch implementations don't timeout and network changes hang the connection
       const { promise, cancel } = timeoutWithCancel(REQUEST_TIMEOUT);
-      const response = await Promise.race([fetchImpl(url, options), promise.then(async () => null)]).finally(cancel);
-      if (!response) {
-        throw new Error('Request timed out');
+
+      try {
+        const response = await Promise.race([fetchImpl(url, options), promise.then(async () => null)]);
+        if (!response) {
+          throw new Error('Request timed out');
+        }
+
+        if (response.status === 429) {
+          const rateLimitReset = parseNumber(response.headers?.get('x-ratelimit-reset')) ?? 1;
+
+          await timeout(rateLimitReset * 1000);
+          return await runRequest(true);
+        }
+
+        if (stalled) {
+          const stalledTime = new Date().getTime() - start.getTime();
+          console.warn(`A request to Xata hit branch rate limits, was retried and stalled for ${stalledTime}ms`);
+        }
+
+        return response;
+      } catch (error) {
+        console.error(`Request to Xata failed`);
+        throw error;
+      } finally {
+        cancel();
       }
-
-      if (response.status === 429) {
-        const rateLimitReset = parseNumber(response.headers?.get('x-ratelimit-reset')) ?? 1;
-
-        await timeout(rateLimitReset * 1000);
-        return await runRequest(true);
-      }
-
-      if (stalled) {
-        const stalledTime = new Date().getTime() - start.getTime();
-        console.warn(`A request to Xata hit branch rate limits, was retried and stalled for ${stalledTime}ms`);
-      }
-
-      return response;
     };
 
     return this.#enqueue(async () => {
