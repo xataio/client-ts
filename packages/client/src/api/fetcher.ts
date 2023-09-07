@@ -185,10 +185,7 @@ export async function fetch<
         method: method.toUpperCase(),
         body: await parseBody(body, headers),
         headers,
-        signal,
-        // required in order to stream some body types to Cloudflare
-        // currently only supported in Node.js, we may have to feature detect this
-        duplex: 'half'
+        signal
       });
 
       const { host, protocol } = parseUrl(response.url);
