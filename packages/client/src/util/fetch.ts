@@ -1,6 +1,6 @@
 import { parseNumber, timeout, timeoutWithCancel } from './lang';
 
-const REQUEST_TIMEOUT = 30000;
+const REQUEST_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 export type RequestInit = { body?: any; headers?: Record<string, string>; method?: string; signal?: any };
 export type Response = {
