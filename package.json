@@ -69,7 +69,6 @@
     "typescript": "^5.2.2",
     "vite": "^4.4.9",
     "vitest": "^0.34.3",
-    "web-file-polyfill": "^1.0.4",
     "zod": "^3.22.2"
   },
   "lint-staged": {

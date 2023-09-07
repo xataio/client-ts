@@ -1,5 +1,4 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
-import { File } from 'web-file-polyfill';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { TestEnvironmentResult, setUpTestEnvironment } from '../utils/setup';
 import { XataFile } from '../../packages/client/src';
@@ -28,9 +27,9 @@ afterEach(async (ctx) => {
   await hooks.afterEach(ctx);
 });
 
-const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
-const json = new File([JSON.stringify({ hello: 'world' })], 'hello.json', { type: 'application/json' });
-const csv = new File([['hello', 'world'].join(',')], 'hello.csv', { type: 'text/csv' });
+const file = new Blob(['hello'], { type: 'text/plain' });
+const json = new Blob([JSON.stringify({ hello: 'world' })], { type: 'application/json' });
+const csv = new Blob([['hello', 'world'].join(',')], { type: 'text/csv' });
 
 describe('file support', () => {
   test('create file with record', async () => {
