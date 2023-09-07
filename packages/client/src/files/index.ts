@@ -70,26 +70,20 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
         const { table, record, column, fileId = '' } = location ?? {};
         const contentType = getContentType(file);
 
-        try {
-          console.log('Uploading file', { table, record, column });
-          return await putFileItem({
-            ...pluginOptions,
-            pathParams: {
-              workspace: '{workspaceId}',
-              dbBranchName: '{dbBranch}',
-              region: '{region}',
-              tableName: table ?? '',
-              recordId: record ?? '',
-              columnName: column ?? '',
-              fileId
-            },
-            body: file as Blob,
-            headers: { 'Content-Type': contentType }
-          });
-        } catch (error) {
-          console.error(`Error uploading file`, error);
-          throw error;
-        }
+        return await putFileItem({
+          ...pluginOptions,
+          pathParams: {
+            workspace: '{workspaceId}',
+            dbBranchName: '{dbBranch}',
+            region: '{region}',
+            tableName: table ?? '',
+            recordId: record ?? '',
+            columnName: column ?? '',
+            fileId
+          },
+          body: file as Blob,
+          headers: { 'Content-Type': contentType }
+        });
       },
       delete: async (location: Record<string, string | undefined>) => {
         const { table, record, column, fileId = '' } = location ?? {};
