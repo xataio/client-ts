@@ -9,6 +9,7 @@ export type RequestInit = {
   signal?: any;
   duplex?: 'half' | 'full';
 };
+
 export type Response = {
   ok: boolean;
   status: number;
@@ -72,10 +73,7 @@ export class ApiRequestPool {
     const runRequest = async (stalled = false): Promise<Response> => {
       // Some fetch implementations don't timeout and network changes hang the connection
       const { promise, cancel } = timeoutWithCancel(REQUEST_TIMEOUT);
-      const response = await Promise.any([
-        Promise.resolve(fetchImpl(url, options)),
-        promise.then(async () => null)
-      ]).finally(cancel);
+      const response = await Promise.race([fetchImpl(url, options), promise.then(() => null)]).finally(cancel);
       if (!response) {
         throw new Error('Request timed out');
       }
