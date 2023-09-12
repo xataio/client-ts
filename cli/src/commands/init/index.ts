@@ -159,10 +159,9 @@ export default class Init extends BaseCommand<typeof Init> {
     }
 
     // Run pull to retrieve remote migrations, remove any local migrations, and generate code
-    const result = await Pull.run([branch, '-f']);
-    if (!result?.codegenComplete) {
-      await Codegen.runIfConfigured(this.projectConfig);
-    }
+    await Pull.run([branch, '-f', '-s']);
+    await Codegen.runIfConfigured(this.projectConfig);
+
     await this.delay(1000);
 
     this.log();

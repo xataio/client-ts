@@ -21,6 +21,11 @@ export default class Pull extends BaseCommand<typeof Pull> {
       char: 'f',
       description: 'Overwrite local migrations',
       default: false
+    }),
+    'skip-code-generation': Flags.boolean({
+      char: 's',
+      description: 'Skip code generation',
+      default: false
     })
   };
 
@@ -64,10 +69,9 @@ export default class Pull extends BaseCommand<typeof Pull> {
 
     this.log(`Successfully pulled ${newMigrations.length} migrations from ${branch} branch`);
 
-    if (this.projectConfig?.codegen) {
+    if (this.projectConfig?.codegen && !flags['skip-code-generation']) {
       this.log(`Running codegen...`);
       await Codegen.run(['--branch', branch]);
-      return { codegenComplete: true };
     }
   }
 
