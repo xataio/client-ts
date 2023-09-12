@@ -12,13 +12,18 @@ export function compactObject<T>(obj: Record<string, T | null | undefined>): Rec
 
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
+export function isBlob(value: any): value is Blob {
+  try {
+    return value instanceof Blob;
+  } catch (error) {
+    // Node prior to v18.0.0 doesn't support instanceof Blob and throws a ReferenceError
+    return false;
+  }
+}
+
 export function isObject(value: any): value is Record<string, unknown> {
   return (
-    Boolean(value) &&
-    typeof value === 'object' &&
-    !Array.isArray(value) &&
-    !(value instanceof Date) &&
-    !(value instanceof Blob)
+    Boolean(value) && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date) && !isBlob(value)
   );
 }
 
