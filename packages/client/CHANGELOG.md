@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.26.5
+
+### Patch Changes
+
+- [#1166](https://github.com/xataio/client-ts/pull/1166) [`b9b9058f`](https://github.com/xataio/client-ts/commit/b9b9058f0bc81b660da45318c27191a62f041f21) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix error with Node 16
+
 ## 0.26.4
 
 ### Patch Changes
