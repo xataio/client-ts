@@ -3,6 +3,7 @@ import { FileResponse } from '../api/dataPlaneSchemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { ColumnsByValue, XataArrayFile, XataFile } from '../schema';
 import { BaseData, XataRecord } from '../schema/record';
+import { isBlob } from '../util/lang';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
 export type BinaryFile = string | Blob | ArrayBuffer;
@@ -110,7 +111,7 @@ function getContentType(file: BinaryFile): string {
     return 'text/plain';
   }
 
-  if (file instanceof Blob) {
+  if (isBlob(file)) {
     return file.type;
   }
 

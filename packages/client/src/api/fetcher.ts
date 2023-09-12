@@ -1,6 +1,6 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
-import { compact, compactObject, isDefined, isObject, isString } from '../util/lang';
+import { compact, compactObject, isBlob, isDefined, isObject, isString } from '../util/lang';
 import { fetchEventSource } from '../util/sse';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -102,7 +102,7 @@ async function parseBody<T>(body?: T, headers?: Record<string, unknown>): Promis
   if (!isDefined(body)) return undefined;
 
   // If body is a blob or has a text() method, we don't need to do anything
-  if (body instanceof Blob || typeof (body as any).text === 'function') {
+  if (isBlob(body) || typeof (body as any).text === 'function') {
     return body;
   }
 
