@@ -332,6 +332,8 @@ export default class Init extends BaseCommand<typeof Init> {
       return packageManagers.yarn;
     } else if (await this.access('pnpm-lock.yaml')) {
       return packageManagers.pnpm;
+    } else if (await this.access('bun.lockb')) {
+      return packageManagers.bun;
     }
     return null;
   }
