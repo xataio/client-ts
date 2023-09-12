@@ -214,7 +214,9 @@ describe('xata init', () => {
     expect(promptsMock.mock.calls.flat().find((p) => p.name === 'packageManagerName')).toBeFalsy();
     expect(warn.mock.calls.flat()).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('No package.json found. Please run one of: pnpm init, yarn init, npm init. Then rerun')
+        expect.stringContaining(
+          'No package.json found. Please run one of: pnpm init, yarn init, npm init, bun init. Then rerun'
+        )
       ])
     );
 

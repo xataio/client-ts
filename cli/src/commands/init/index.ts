@@ -27,6 +27,10 @@ type PackageManager = { command: string; args: string };
 type PackageManageKey = keyof typeof packageManagers;
 
 const packageManagers = {
+  bun: {
+    command: 'bun',
+    args: 'install'
+  },
   pnpm: {
     command: 'pnpm',
     args: 'add'
@@ -178,7 +182,7 @@ export default class Init extends BaseCommand<typeof Init> {
       const isSchemaSetup = hasTables && hasColumns;
       if (shouldInstallPackage && !canInstallPackage) {
         this.warn(
-          `No package.json found. Please run one of: pnpm init, yarn init, npm init. Then rerun ${chalk.bold(
+          `No package.json found. Please run one of: pnpm init, yarn init, npm init, bun init. Then rerun ${chalk.bold(
             'xata init --force'
           )}`
         );
