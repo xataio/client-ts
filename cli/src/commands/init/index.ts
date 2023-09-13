@@ -159,7 +159,7 @@ export default class Init extends BaseCommand<typeof Init> {
     }
 
     // Run pull to retrieve remote migrations, remove any local migrations, and generate code
-    await Pull.run([branch, '-f', '-s']);
+    await Pull.run([branch, '-f', '--skip-code-generation']);
     await Codegen.runIfConfigured(this.projectConfig);
 
     await this.delay(1000);
