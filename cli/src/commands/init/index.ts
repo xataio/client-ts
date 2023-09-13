@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { buildProviderString, Schemas } from '@xata.io/client';
+import { buildProviderString, Schemas, XataApiClient } from '@xata.io/client';
 import { ModuleType, parseSchemaFile } from '@xata.io/codegen';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
@@ -157,7 +157,32 @@ export default class Init extends BaseCommand<typeof Init> {
       await this.installPackage(packageManager, '@xata.io/client');
     }
 
-    const branch = this.getCurrentBranchName();
+    let branch = this.getCurrentBranchName();
+
+    if (branch === 'main') {
+      const xataClient = await this.getXataClient();
+      const branches = await xataClient.api.branches.getBranchList({
+        database,
+        region,
+        workspace
+      });
+      if (branches.branches.length === 0) {
+        return this.error('No branches found, please create one first');
+      } else if (!branches.branches.map(({ name }) => name).includes('main')) {
+        if (branches.branches.length === 1) {
+          branch = branches.branches[0].name;
+        } else {
+          const { branchToUse } = await this.prompt({
+            type: 'select',
+            name: 'branchToUse',
+            message: 'Select the branch you would like to use',
+            choices: branches.branches.map(({ name }) => ({ title: name, value: name }))
+          });
+          branch = branchToUse;
+        }
+      }
+    }
+
     if (schema) {
       await this.deploySchema(workspace, region, database, branch, schema);
     }
