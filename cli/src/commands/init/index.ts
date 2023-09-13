@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { buildProviderString, Schemas, XataApiClient } from '@xata.io/client';
+import { buildProviderString, Schemas } from '@xata.io/client';
 import { ModuleType, parseSchemaFile } from '@xata.io/codegen';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
