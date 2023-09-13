@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.13.12
+
+### Patch Changes
+
+- [#1169](https://github.com/xataio/client-ts/pull/1169) [`641809d4`](https://github.com/xataio/client-ts/commit/641809d4317dc356c538e7a49deb93d30bc34f82) Thanks [@y-71](https://github.com/y-71)! - Support for the bun package manager
+
 ## 0.13.11
 
 ### Patch Changes

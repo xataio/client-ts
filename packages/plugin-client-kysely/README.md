@@ -7,6 +7,9 @@ A [Kysely](https://github.com/kysely-org/kysely) dialect for [Xata](https://xata
 You should install both `kysely` and `@xata.io/kysely` with `@xata.io/client`. You can install them with your favorite package manager:
 
 ```bash
+# with bun
+bun install kysely @xata.io/kysely @xata.io/client
+
 # with pnpm
 pnpm add kysely @xata.io/kysely @xata.io/client
 
