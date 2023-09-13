@@ -58,8 +58,16 @@ const fetchImplementation = (url: string, request: any) => {
       ok: true,
       json: async () => ({ meta: { cursor: '', more: false }, logs: [] })
     };
+  } else if (url === `https://test-1234.${REGION}.xata.sh/dbs/db1` && request.method === 'GET') {
+    return {
+      ok: true,
+      json: async () => {
+        return {
+          branches: [{ name: 'main', id: 'main' }]
+        };
+      }
+    };
   }
-
   throw new Error(`Unexpected fetch request: ${url} ${request.method}`);
 };
 
