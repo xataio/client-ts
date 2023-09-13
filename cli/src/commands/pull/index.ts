@@ -23,7 +23,6 @@ export default class Pull extends BaseCommand<typeof Pull> {
       default: false
     }),
     'skip-code-generation': Flags.boolean({
-      char: 's',
       description: 'Skip code generation',
       default: false
     })
