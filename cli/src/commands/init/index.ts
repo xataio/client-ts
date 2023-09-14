@@ -45,6 +45,8 @@ const packageManagers = {
   }
 };
 
+const defaultBranch = 'main';
+
 const isPackageManagerInstalled = (packageManager: PackageManager) =>
   which.sync(packageManager.command, { nothrow: true });
 
@@ -134,6 +136,18 @@ export default class Init extends BaseCommand<typeof Init> {
 
     const { workspace, region, database, databaseURL } = await this.getParsedDatabaseURL(flags.db, true);
 
+    let branch = this.getCurrentBranchName();
+
+    if (defaultBranch === branch) {
+      branch = await this.getBranch(workspace, region, database, {
+        allowCreate: false,
+        allowEmpty: false,
+        checkDefaultExists: {
+          branch: defaultBranch
+        }
+      });
+    }
+
     this.projectConfig = { databaseURL };
     const ignoreEnvFile = await this.promptIgnoreEnvFile();
 
@@ -146,7 +160,7 @@ export default class Init extends BaseCommand<typeof Init> {
     await this.writeConfig();
     this.log();
 
-    await this.writeEnvFile(workspace, region, database);
+    await this.writeEnvFile(workspace, region, database, branch);
 
     if (ignoreEnvFile) {
       await this.ignoreEnvFile();
@@ -157,39 +171,13 @@ export default class Init extends BaseCommand<typeof Init> {
       await this.installPackage(packageManager, '@xata.io/client');
     }
 
-    let branch = this.getCurrentBranchName();
-
-    if (branch === 'main') {
-      const xataClient = await this.getXataClient();
-      const branches = await xataClient.api.branches.getBranchList({
-        database,
-        region,
-        workspace
-      });
-      if (branches.branches.length === 0) {
-        return this.error('No branches found, please create one first');
-      } else if (!branches.branches.map(({ name }) => name).includes('main')) {
-        if (branches.branches.length === 1) {
-          branch = branches.branches[0].name;
-        } else {
-          const { branchToUse } = await this.prompt({
-            type: 'select',
-            name: 'branchToUse',
-            message: 'Select the branch you would like to use',
-            choices: branches.branches.map(({ name }) => ({ title: name, value: name }))
-          });
-          branch = branchToUse;
-        }
-      }
-    }
-
     if (schema) {
       await this.deploySchema(workspace, region, database, branch, schema);
     }
 
     // Run pull to retrieve remote migrations, remove any local migrations, and generate code
     await Pull.run([branch, '-f', '--skip-code-generation']);
-    await Codegen.runIfConfigured(this.projectConfig);
+    await Codegen.runIfConfigured(this.projectConfig, [`--branch=${branch}`]);
 
     await this.delay(1000);
 
@@ -219,7 +207,7 @@ export default class Init extends BaseCommand<typeof Init> {
           }columns at https://app.xata.io/workspaces/${workspace}/dbs/${database}:${region}`
         );
         this.log();
-        this.info(`Use ${chalk.bold(`xata pull main`)} to regenerate code and types from your Xata database`);
+        this.info(`Use ${chalk.bold(`xata pull ${branch}`)} to regenerate code and types from your Xata database`);
       } else {
         this.log(`To make your first query:`);
         this.log(``);
@@ -400,7 +388,7 @@ export default class Init extends BaseCommand<typeof Init> {
     return envFile;
   }
 
-  async writeEnvFile(workspace: string, region: string, database: string) {
+  async writeEnvFile(workspace: string, region: string, database: string, branch: string) {
     const envFile = await this.findEnvFile();
     const doesEnvFileExist = await this.access(envFile);
 
@@ -423,7 +411,7 @@ export default class Init extends BaseCommand<typeof Init> {
     if (containsXataApiKey) {
       this.warn(`Your ${envFile} file already contains XATA_API_KEY key. skipping...`);
     } else {
-      const setBranch = `XATA_BRANCH=main`;
+      const setBranch = `XATA_BRANCH=${branch}`;
       if (content) content += '\n\n';
       content += '# [Xata] Configuration used by the CLI and the SDK\n';
       content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
