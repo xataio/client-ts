@@ -142,7 +142,7 @@ export default class Init extends BaseCommand<typeof Init> {
       branch = await this.getBranch(workspace, region, database, {
         allowCreate: false,
         allowEmpty: false,
-        checkDefaultExists: {
+        useBranchIfExists: {
           branch: defaultBranch
         }
       });
