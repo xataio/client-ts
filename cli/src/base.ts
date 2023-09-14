@@ -350,7 +350,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       allowEmpty?: boolean;
       allowCreate?: boolean;
       title?: string;
-      useBranchIfExists?: { branch: string };
+      // Branch to default if exists
+      defaultBranch?: string;
     } = {}
   ): Promise<string> {
     const xata = await this.getXataClient();
@@ -359,10 +360,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     const EMPTY_CHOICE = '$empty';
     const CREATE_CHOICE = '$create';
 
-    if (options.useBranchIfExists) {
-      if (branches.map(({ name }) => name).includes(options.useBranchIfExists.branch)) {
-        return options.useBranchIfExists.branch;
-      }
+    if (options.defaultBranch && branches.map(({ name }) => name).includes(options.defaultBranch)) {
+      return options.defaultBranch;
     }
 
     if (branches.length > 0) {

@@ -45,7 +45,7 @@ const packageManagers = {
   }
 };
 
-const defaultBranch = 'main';
+const DEFAULT_BRANCH = 'main';
 
 const isPackageManagerInstalled = (packageManager: PackageManager) =>
   which.sync(packageManager.command, { nothrow: true });
@@ -136,17 +136,15 @@ export default class Init extends BaseCommand<typeof Init> {
 
     const { workspace, region, database, databaseURL } = await this.getParsedDatabaseURL(flags.db, true);
 
-    let branch = this.getCurrentBranchName();
-
-    if (defaultBranch === branch) {
-      branch = await this.getBranch(workspace, region, database, {
-        allowCreate: false,
-        allowEmpty: false,
-        useBranchIfExists: {
-          branch: defaultBranch
-        }
-      });
-    }
+    const detectedBranch = this.getCurrentBranchName();
+    const branch =
+      detectedBranch === DEFAULT_BRANCH
+        ? await this.getBranch(workspace, region, database, {
+            allowCreate: false,
+            allowEmpty: false,
+            defaultBranch: DEFAULT_BRANCH
+          })
+        : detectedBranch;
 
     this.projectConfig = { databaseURL };
     const ignoreEnvFile = await this.promptIgnoreEnvFile();
