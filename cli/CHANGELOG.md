@@ -1,5 +1,13 @@
 # @xata.io/cli
 
+## 0.13.13
+
+### Patch Changes
+
+- [#1168](https://github.com/xataio/client-ts/pull/1168) [`5daf6972`](https://github.com/xataio/client-ts/commit/5daf69721602755c8e785484679159d51489003a) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add skip code generation flag to pull command
+
+- [#1173](https://github.com/xataio/client-ts/pull/1173) [`c2885adf`](https://github.com/xataio/client-ts/commit/c2885adf710d0dc603be3fe50ed14a18362b3283) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add ability to interactively select branch on xata init when main branch does not exist
+
 ## 0.13.12
 
 ### Patch Changes
