@@ -62,7 +62,7 @@ describe('record creation', () => {
 
   test('create user with team', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
-    const user = await xata.db.users.create({ name: 'User ships', team });
+    const user = await xata.db.users.create({ name: 'User ships', team }, ['*', 'team.*']);
 
     expect(user.id).toBeDefined();
     expect(user.name).toBe('User ships');
@@ -70,6 +70,7 @@ describe('record creation', () => {
     expect(user.getMetadata).toBeDefined();
     expect(user.team).toBeDefined();
     expect(user.team?.id).toBe(team.id);
+    expect(user.team?.name).toBe('Team ships');
     expect(user.team?.read).toBeDefined();
     expect(user.team?.getMetadata).toBeDefined();
 
