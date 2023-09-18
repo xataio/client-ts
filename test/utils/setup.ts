@@ -8,12 +8,12 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { File, Mock, Suite, TestContext, vi } from 'vitest';
-import { BaseClient, CacheImpl, XataApiClient } from '../../packages/client/src';
+import { BaseClient, CacheImpl, Schemas, XataApiClient } from '../../packages/client/src';
 import { getHostUrl, parseProviderString } from '../../packages/client/src/api/providers';
 import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
-import { schema } from '../mock_data';
+import { schema as defaultSchema } from '../mock_data';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -31,6 +31,7 @@ const host = parseProviderString(process.env.XATA_API_PROVIDER);
 export type EnvironmentOptions = {
   cache?: CacheImpl;
   fetch?: any;
+  schema?: Schemas.Schema;
 };
 
 export type TestEnvironmentResult = {
@@ -57,7 +58,7 @@ export type TestEnvironmentResult = {
 
 export async function setUpTestEnvironment(
   prefix: string,
-  { cache, fetch: envFetch }: EnvironmentOptions = {}
+  { cache, fetch: envFetch, schema = defaultSchema }: EnvironmentOptions = {}
 ): Promise<TestEnvironmentResult> {
   if (host === null) {
     throw new Error(
@@ -65,7 +66,6 @@ export async function setUpTestEnvironment(
     );
   }
 
-  // @ts-expect-error - Fetch doesn't appear in globalThis yet
   const fetch = vi.fn(envFetch ?? globalThis.fetch);
 
   const { trace, tracer } = await setupTracing();
