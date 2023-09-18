@@ -10,5 +10,6 @@ export const importColumnTypes = z.enum([
   'email',
   'datetime',
   'link',
-  'multiple'
+  'multiple',
+  'file'
 ]);

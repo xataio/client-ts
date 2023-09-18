@@ -439,8 +439,8 @@ const coerceRowsTestCases: {
 
 describe('coerceRows', () => {
   for (const { rows, columns, options, expected } of coerceRowsTestCases) {
-    test(`coerceRows ${JSON.stringify(rows)} returns ${JSON.stringify(expected)}`, () => {
-      expect(coerceRows(rows, columns, options)).toEqual(expected);
+    test(`coerceRows ${JSON.stringify(rows)} returns ${JSON.stringify(expected)}`, async () => {
+      expect(await coerceRows(rows, columns, options)).toEqual(expected);
     });
   }
 });

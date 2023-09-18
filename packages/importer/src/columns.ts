@@ -110,11 +110,11 @@ export const guessColumnTypes = <T>(
 
 export type CoercedValue = { value: string | string[] | number | boolean | Date | null; isError: boolean };
 
-export const coerceValue = (
+export const coerceValue = async (
   value: unknown,
   type: Schemas.Column['type'],
   options: ColumnOptions = {}
-): CoercedValue => {
+): Promise<CoercedValue> => {
   const { isNull = defaultIsNull, toBoolean = defaultToBoolean } = options;
 
   if (isNull(value)) {
@@ -149,23 +149,55 @@ export const coerceValue = (
         ? { value: parseMultiple(String(value)), isError: false }
         : { value: null, isError: true };
     }
+    case 'file': {
+      const res = await urlToXataFile(value as string);
+      return { value: res.base64Content, isError: false };
+      // TODO validate data is a URL
+      //RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(String(value)) ? { value: String(value), isError: false } : { value: null, isError: true };
+    }
     default: {
       return { value: null, isError: true };
     }
   }
 };
 
-export const coerceRows = <T extends Record<string, unknown>>(
+const urlToXataFile = async (url: string) => {
+  // TODO accept the proxy URL as a parameter.
+  try {
+    try {
+      const validUrl = new URL(url);
+      const res = await fetch('/api/importer', {
+        method: 'POST',
+        body: JSON.stringify({ url: validUrl.href }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      return res.json();
+    } catch (error) {
+      // TODO  if there was an error, prevent importing.
+      console.error(error);
+    }
+  } catch (e) {
+    // TODO  if there was an error, prevent importing.
+    console.log('Could not fetch file contents from url', e);
+  }
+};
+
+export const coerceRows = async <T extends Record<string, unknown>>(
   rows: T[],
   columns: Schemas.Column[],
   options?: ColumnOptions
-): Record<string, CoercedValue>[] => {
-  return rows.map((row) => {
-    return columns.reduce((newRow, column) => {
-      (newRow as Record<string, CoercedValue>)[column.name] = coerceValue(row[column.name], column.type, options);
-      return newRow;
-    }, {}) as Record<string, CoercedValue>;
-  });
+): Promise<Record<string, CoercedValue>[]> => {
+  const mapped = [];
+  for (const row of rows) {
+    const mappedRow: Record<string, CoercedValue> = {};
+    for (const column of columns) {
+      mappedRow[column.name] = await coerceValue(row[column.name], column.type, options);
+    }
+    mapped.push(mappedRow);
+  }
+  return mapped;
 };
 
 export const guessColumns = <T extends Record<string, unknown>>(
