@@ -91,7 +91,8 @@ describe('record creation', () => {
     // @ts-expect-error
     expect(json.getMetadata).not.toBeDefined();
     expect(json.team).toBeDefined();
-    expect(json.team).toBe(team.id);
+    expect(json.team?.id).toBe(team.id);
+    expect(json.team?.name).toBe('Team ships');
     // @ts-expect-error
     expect(json.team.read).not.toBeDefined();
     // @ts-expect-error

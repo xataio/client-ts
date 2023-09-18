@@ -211,9 +211,9 @@ type JSONDataFields<T> = T extends XataFile
   : NonNullable<T> extends XataFile
   ? JSONDataFile | null | undefined
   : T extends XataRecord
-  ? string
+  ? JSONData<T>
   : NonNullable<T> extends XataRecord
-  ? string | null | undefined
+  ? JSONData<T> | null | undefined
   : T extends Date
   ? string
   : NonNullable<T> extends Date
