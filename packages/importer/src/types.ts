@@ -156,6 +156,15 @@ export type ParseMeta = {
 
 export type ParseResultData = {
   data: unknown;
+  dataFiles: [
+    string,
+    {
+      name: string;
+      mediaType: string;
+      value: string;
+    },
+    number
+  ][];
   original: unknown;
   index: number;
   errorKeys: string[];
