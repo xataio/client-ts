@@ -108,7 +108,12 @@ export const guessColumnTypes = <T>(
   return 'string';
 };
 
-export type CoercedValue = { value: string | string[] | number | boolean | Date | null; isError: boolean };
+export type CoercedValue = {
+  value: string | string[] | number | boolean | Date | null;
+  mediaType?: string;
+  name?: string;
+  isError: boolean;
+};
 
 export const coerceValue = async (
   value: unknown,
@@ -151,7 +156,7 @@ export const coerceValue = async (
     }
     case 'file': {
       const res = await urlToXataFile(value as string);
-      return { value: res.base64Content, isError: false };
+      return { value: res.base64Content, name: res.name, mediaType: res.mediaType, isError: false };
       // TODO validate data is a URL
       //RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(String(value)) ? { value: String(value), isError: false } : { value: null, isError: true };
     }

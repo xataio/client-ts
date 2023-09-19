@@ -22,9 +22,24 @@ export const parseJson = async (options: ParseJsonOptions, startIndex = 0): Prom
     const errorKeys = Object.entries(row)
       .filter(([_key, value]) => value.isError)
       .map(([key]) => key);
-    const data = Object.fromEntries(Object.entries(row).map(([key, value]) => [key, value.value]));
+
+    const dataFiles = Object.entries(row)
+      .filter(([_key, value]) => value.mediaType)
+      .map(([key, value]) => {
+        if (value.mediaType) {
+          return [key, value];
+        }
+      })
+      .filter((e) => e !== undefined);
+
+    const data2 = Object.fromEntries(
+      Object.entries(row)
+        .filter(([_key, value]) => !value.mediaType)
+        .map(([key, value]) => [key, value.value])
+    );
     return {
-      data,
+      data: data2,
+      dataFiles,
       original,
       index: index + startIndex,
       errorKeys
