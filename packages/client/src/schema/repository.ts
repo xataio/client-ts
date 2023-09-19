@@ -2023,17 +2023,6 @@ export class RestRepository<Record extends XataRecord>
   }
 }
 
-const removeLinksFromObject = (object: any): Schemas.DataInputRecord => {
-  return Object.entries(object).reduce((acc, [key, value]) => {
-    // Ignore internal properties
-    if (key === 'xata') return acc;
-
-    // Transform links to identifier
-    // TODO: This is quite weak, we have better ways to identify links
-    return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
-  }, {});
-};
-
 export const initObject = <T>(
   db: Record<string, Repository<any>>,
   schemaTables: Schemas.Table[],
@@ -2118,7 +2107,6 @@ export const initObject = <T>(
   }
 
   const record = { ...data };
-  const serializable = { xata, ...removeLinksFromObject(data) };
   const metadata =
     xata !== undefined
       ? { ...xata, createdAt: new Date(xata.createdAt), updatedAt: new Date(xata.updatedAt) }
@@ -2152,11 +2140,11 @@ export const initObject = <T>(
   };
 
   record.toSerializable = function () {
-    return JSON.parse(JSON.stringify(serializable));
+    return JSON.parse(JSON.stringify(record));
   };
 
   record.toString = function () {
-    return JSON.stringify(serializable);
+    return JSON.stringify(record);
   };
 
   for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerializable', 'toString']) {
