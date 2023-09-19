@@ -1,5 +1,5 @@
-import type { BaseClientOptions, SchemaInference, XataRecord } from '../../client/src';
 import { buildClient } from '../../client/src';
+import type { BaseClientOptions, SchemaInference, XataRecord } from '../../client/src';
 
 // This comment should be preserved by the codegen
 const tables = [
