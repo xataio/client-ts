@@ -155,10 +155,12 @@ export const coerceValue = async (
         : { value: null, isError: true };
     }
     case 'file': {
+      const pattern = /^(http|https):/m;
+      if (!pattern.test(String(value))) {
+        return { value: null, isError: true };
+      }
       const res = await urlToXataFile(value as string);
       return { value: res.base64Content, name: res.name, mediaType: res.mediaType, isError: false };
-      // TODO validate data is a URL
-      //RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(String(value)) ? { value: String(value), isError: false } : { value: null, isError: true };
     }
     default: {
       return { value: null, isError: true };
