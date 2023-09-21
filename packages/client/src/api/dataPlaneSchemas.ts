@@ -1207,6 +1207,17 @@ export type AverageAgg = {
 };
 
 /**
+ * Calculate given percentiles of the numeric values in a particular column.
+ */
+export type PercentilesAgg = {
+  /**
+   * The column on which to compute the average. Must be a numeric type.
+   */
+  column: string;
+  percentiles: number[];
+};
+
+/**
  * Count the number of distinct values in a particular column.
  */
 export type UniqueCountAgg = {
@@ -1332,6 +1343,9 @@ export type AggExpression =
       average?: AverageAgg;
     }
   | {
+      percentiles?: PercentilesAgg;
+    }
+  | {
       uniqueCount?: UniqueCountAgg;
     }
   | {
@@ -1347,12 +1361,16 @@ export type AggExpression =
 export type AggResponse =
   | (number | null)
   | {
-      values: ({
-        $key: string | number;
-        $count: number;
-      } & {
-        [key: string]: AggResponse;
-      })[];
+      values:
+        | ({
+            $key: string | number;
+            $count: number;
+          } & {
+            [key: string]: AggResponse;
+          })[]
+        | {
+            [key: string]: number;
+          };
     };
 
 /**
