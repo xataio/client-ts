@@ -29,7 +29,3 @@ export function partition<T>(array: T[], predicate: (item: T) => boolean): [T[],
     [[], []] as [T[], T[]]
   );
 }
-
-export function flattenDeep<T>(arr: Array<any>): Array<T> {
-  return Array.isArray(arr) ? arr.reduce((acc, item) => [...flattenDeep(acc), ...flattenDeep(item)], []) : [arr];
-}
