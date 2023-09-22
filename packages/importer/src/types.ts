@@ -1,4 +1,4 @@
-import { Schemas } from '@xata.io/client';
+import { Schemas, XataFile } from '@xata.io/client';
 import stream from 'stream';
 
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
@@ -155,16 +155,8 @@ export type ParseMeta = {
 };
 
 export type ParseResultData = {
-  data: unknown;
-  dataFiles: [
-    string,
-    {
-      name: string;
-      mediaType: string;
-      value: string;
-    },
-    number
-  ][];
+  data: Record<string, unknown>;
+  files: Record<string, XataFile | XataFile[]>;
   original: unknown;
   index: number;
   errorKeys: string[];
@@ -185,9 +177,14 @@ export type CsvResults = {
 };
 
 export type ImportBatchOptions = {
-  columns: Column[];
   table: string;
   batchRows: unknown[];
+};
+
+export type ImportFilesOptions = {
+  table: string;
+  ids: string[];
+  files: Record<string, XataFile | XataFile[]>[];
 };
 
 export type ImportError = { row: unknown; error: string; index: number };

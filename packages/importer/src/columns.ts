@@ -1,8 +1,8 @@
-import type { Schemas } from '@xata.io/client';
+import { Schemas, XataFile } from '@xata.io/client';
 import CSV from 'papaparse';
 import AnyDateParser from 'any-date-parser';
 import { ColumnOptions, ToBoolean } from './types';
-import { isDefined } from './utils/lang';
+import { compact, isDefined } from './utils/lang';
 import { isValidEmail } from './utils/email';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
@@ -109,9 +109,7 @@ export const guessColumnTypes = <T>(
 };
 
 export type CoercedValue = {
-  value: string | string[] | number | boolean | Date | null;
-  mediaType?: string;
-  name?: string;
+  value: string | string[] | number | boolean | Date | XataFile | XataFile[] | null;
   isError: boolean;
 };
 
@@ -155,12 +153,14 @@ export const coerceValue = async (
         : { value: null, isError: true };
     }
     case 'file': {
-      const pattern = /^(http|https):/m;
-      if (!pattern.test(String(value))) {
-        return { value: null, isError: true };
-      }
-      const res = await urlToXataFile(value as string);
-      return { value: res.base64Content, name: res.name, mediaType: res.mediaType, isError: false };
+      const file = await parseFile(value as string);
+      return { value: file, isError: file === null };
+    }
+    case 'file[]': {
+      const promises = (value as string).split(/[,;|]/).map((uri) => parseFile(uri));
+      const files = await Promise.all(promises);
+      const isError = files.some((file) => file === null);
+      return { value: compact(files), isError };
     }
     default: {
       return { value: null, isError: true };
@@ -168,26 +168,31 @@ export const coerceValue = async (
   }
 };
 
-const urlToXataFile = async (url: string) => {
-  // TODO accept the proxy URL as a parameter.
+const parseFile = async (uri: string): Promise<XataFile | null> => {
   try {
-    try {
-      const validUrl = new URL(url);
-      const res = await fetch('/api/importer', {
-        method: 'POST',
-        body: JSON.stringify({ url: validUrl.href }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      return res.json();
-    } catch (error) {
-      // TODO  if there was an error, prevent importing.
-      console.error(error);
+    if (uri.startsWith('data:')) {
+      const [mediaType, base64Content] = uri.split(',');
+      return new XataFile({ base64Content, mediaType });
+    } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      const response = await fetch(uri, { mode: 'no-cors' });
+      const blob = await response.blob();
+
+      return XataFile.fromBlob(blob, { name: uri });
+    } else {
+      // Fallback attempt to check if it's a local file and fs is available
+      // This will likely fail in the browser, but the try/catch will catch it
+      // If static analysis catches this, we will likely need to change this
+      const fs = await import('fs');
+      const path = await import('path');
+      const filePath = path.resolve(uri.replace('file://', ''));
+
+      const file = fs.readFileSync(filePath);
+      const blob = new Blob([file], { type: 'application/octet-stream' });
+      return XataFile.fromBlob(blob, { name: path.basename(filePath) });
     }
-  } catch (e) {
-    // TODO  if there was an error, prevent importing.
-    console.log('Could not fetch file contents from url', e);
+  } catch (error) {
+    console.error(error);
+    return null;
   }
 };
 
@@ -196,15 +201,19 @@ export const coerceRows = async <T extends Record<string, unknown>>(
   columns: Schemas.Column[],
   options?: ColumnOptions
 ): Promise<Record<string, CoercedValue>[]> => {
-  const mapped = [];
+  const result = [];
+
   for (const row of rows) {
-    const mappedRow: Record<string, CoercedValue> = {};
+    const item: Record<string, CoercedValue> = {};
+
     for (const column of columns) {
-      mappedRow[column.name] = await coerceValue(row[column.name], column.type, options);
+      item[column.name] = await coerceValue(row[column.name], column.type, options);
     }
-    mapped.push(mappedRow);
+
+    result.push(item);
   }
-  return mapped;
+
+  return result;
 };
 
 export const guessColumns = <T extends Record<string, unknown>>(
@@ -214,8 +223,9 @@ export const guessColumns = <T extends Record<string, unknown>>(
   const columnNames = new Set<string>(...rows.map((row) => Object.keys(row)));
 
   return [...columnNames].map((columnName) => {
+    const name = columnName.trim().replace(/[^a-zA-Z0-9-_~]/g, '_');
     const values = rows.map((row) => row[columnName]);
-    const type = columnName === 'id' ? 'string' : guessColumnTypes(values, options);
-    return { name: columnName, type };
+    const type = name === 'id' ? 'string' : guessColumnTypes(values, options);
+    return { name, type };
   });
 };
