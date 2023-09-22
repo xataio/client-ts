@@ -157,6 +157,7 @@ export const coerceValue = async (
       return { value: file, isError: file === null };
     }
     case 'file[]': {
+      // Split by delimiters and map to XataFile
       const promises = (value as string).split(/[,;|]/).map((uri) => parseFile(uri));
       const files = await Promise.all(promises);
       const isError = files.some((file) => file === null);
