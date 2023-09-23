@@ -4,7 +4,6 @@ import { Column } from '@xata.io/codegen';
 import { importColumnTypes } from '@xata.io/importer';
 import { open, writeFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
-
 const ERROR_CONSOLE_LOG_LIMIT = 200;
 const ERROR_LOG_FILE = 'errors.log';
 
@@ -25,8 +24,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     ...BaseCommand.forceFlag('Update the database schema if necessary without asking'),
     branch: this.branchFlag,
     table: Flags.string({
-      description: 'The table where the CSV file will be imported to',
-      required: true
+      description: 'The table where the CSV file will be imported to'
     }),
     types: Flags.string({
       description: 'Column types separated by commas'
@@ -65,8 +63,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   async run(): Promise<void> {
     const { args, flags } = await this.parseCommand();
     const { file } = args;
+    const defaultTable = file
+      .replace(/^.*[\\/]/, '')
+      .replace(/\.[^/.]+$/, '')
+      .replace(/[^a-zA-Z0-9-_~]/g, '');
     const {
-      table,
+      table = defaultTable,
       'no-header': noHeader,
       create,
       'batch-size': batchSize = 1000,
@@ -110,7 +112,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (!columns) {
       throw new Error('No columns found');
     }
-    await this.migrateSchema({ table, columns, create });
+    await this.migrateSchema({ table: table!, columns, create });
 
     let importSuccessCount = 0;
     const errors: string[] = [];
@@ -132,6 +134,16 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
           { dbBranchName: dbBranchName, region, workspace: workspace, database },
           { columns: parseResults.columns, table, batchRows }
         );
+        await xata.import.importFiles(
+          { database, branch, region, workspace: workspace },
+          // @ts-expect-error
+          {
+            table,
+            ids: importResult.successful.results.map((r) => r.id),
+            files: parseResults.data.map(({ files }) => files)
+          }
+        );
+
         importSuccessCount += importResult.successful.results.length;
         if (importResult.errors) {
           const formattedErrors = importResult.errors.map(
@@ -143,6 +155,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
           }
           errors.push(...formattedErrors);
         }
+
         progress = Math.max(progress, meta.estimatedProgress);
         this.info(
           `${importSuccessCount} rows successfully imported ${errors.length} errors. ${Math.ceil(

@@ -1,7 +1,7 @@
 import JSON from 'json5';
 import { coerceRows, guessColumns } from '../columns';
 import { ParseJsonOptions, ParseResults } from '../types';
-import { isDefined, isObject } from '../utils/lang';
+import { isDefined, isObject, isXataFile, partition } from '../utils/lang';
 
 const arrayToObject = (array: unknown[]) => {
   return Object.fromEntries(array.map((value, index) => [index, value]));
@@ -14,7 +14,9 @@ export const parseJson = async (options: ParseJsonOptions, startIndex = 0): Prom
 
   const arrayUpToLimit = isDefined(limit) ? array.slice(0, limit) : array;
   const columns = externalColumns ?? guessColumns(arrayUpToLimit, options);
-  const data = (await coerceRows(arrayUpToLimit, columns, options)).map((row, index) => {
+  const item = await coerceRows(arrayUpToLimit, columns, options);
+
+  const data = item.map((row, index) => {
     const original = Array.isArray(arrayUpToLimit[index])
       ? arrayToObject(arrayUpToLimit[index])
       : arrayUpToLimit[index];
@@ -23,23 +25,14 @@ export const parseJson = async (options: ParseJsonOptions, startIndex = 0): Prom
       .filter(([_key, value]) => value.isError)
       .map(([key]) => key);
 
-    const dataFiles = Object.entries(row)
-      .filter(([_key, value]) => value.mediaType)
-      .map(([key, value]) => {
-        if (value.mediaType) {
-          return [key, value];
-        }
-      })
-      .filter((e) => e !== undefined);
-
-    const data2 = Object.fromEntries(
-      Object.entries(row)
-        .filter(([_key, value]) => !value.mediaType)
-        .map(([key, value]) => [key, value.value])
+    const [files, data] = partition(
+      Object.entries(row).map(([key, item]) => [key, item.value]),
+      ([_key, value]) => isXataFile(value) || (Array.isArray(value) && value.some(isXataFile))
     );
+
     return {
-      data: data2,
-      dataFiles,
+      data: Object.fromEntries(data),
+      files: Object.fromEntries(files),
       original,
       index: index + startIndex,
       errorKeys

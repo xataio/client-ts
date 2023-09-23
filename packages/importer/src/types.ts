@@ -1,3 +1,4 @@
+import { XataFile } from '@xata.io/client';
 import { Schemas } from '@xata.io/client';
 import stream from 'stream';
 
@@ -146,6 +147,11 @@ export type ParseCsvStreamBatchesOptions = {
   fileSizeBytes: number;
 } & ParseStreamOptions<WithRequired<ParseCsvOptions, 'columns'>>;
 
+export type ImportFilesOptions = {
+  table: string;
+  ids: string[];
+  files: ParseResultData['files'];
+};
 export type ParseMeta = {
   estimatedProgress: number;
   delimiter: string;
@@ -155,7 +161,8 @@ export type ParseMeta = {
 };
 
 export type ParseResultData = {
-  data: unknown;
+  data: Record<string, unknown>;
+  files: Record<string, XataFile | XataFile[]>;
   original: unknown;
   index: number;
   errorKeys: string[];

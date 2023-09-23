@@ -1,8 +1,9 @@
-import type { Schemas } from '@xata.io/client';
+import { Schemas, XataFile } from '@xata.io/client';
+
 import CSV from 'papaparse';
 import AnyDateParser from 'any-date-parser';
 import { ColumnOptions, ToBoolean } from './types';
-import { isDefined } from './utils/lang';
+import { compact, isDefined } from './utils/lang';
 import { isValidEmail } from './utils/email';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
@@ -109,9 +110,7 @@ export const guessColumnTypes = <T>(
 };
 
 export type CoercedValue = {
-  value: string | string[] | number | boolean | Date | null;
-  mediaType?: string;
-  name?: string;
+  value: string | string[] | number | boolean | Date | null | XataFile | XataFile[];
   isError: boolean;
 };
 
@@ -155,10 +154,21 @@ export const coerceValue = async (
         : { value: null, isError: true };
     }
     case 'file': {
-      const res = await urlToXataFile(value as string);
-      return { value: res.base64Content, name: res.name, mediaType: res.mediaType, isError: false };
-      // TODO validate data is a URL
-      //RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(String(value)) ? { value: String(value), isError: false } : { value: null, isError: true };
+      const res = await parseFile((value as string).trim());
+      if (!res) return { value: null, isError: true };
+      return {
+        value: { name: 'upload', mediaType: res.mediaType, base64Content: res.base64Content } as XataFile,
+        isError: false
+      };
+    }
+    case 'file[]': {
+      const promises = (value as string).split(/[,;|]/).map((uri) => parseFile(uri));
+      const files = await Promise.all(promises);
+      const isError = files.some((file) => file === null);
+      const formatted = files.map(
+        (file) => ({ name: 'upload', mediaType: file?.mediaType, base64Content: file?.base64Content } as XataFile)
+      );
+      return { value: compact(formatted), isError };
     }
     default: {
       return { value: null, isError: true };
@@ -166,26 +176,48 @@ export const coerceValue = async (
   }
 };
 
-const urlToXataFile = async (url: string) => {
-  // TODO accept the proxy URL as a parameter.
+const parseFile = async (url: string): Promise<XataFile | null> => {
+  const uri = url.trim();
   try {
-    try {
-      const validUrl = new URL(url);
-      const res = await fetch('/api/importer', {
-        method: 'POST',
-        body: JSON.stringify({ url: validUrl.href }),
+    // TODO test this
+    if (uri.startsWith('data:')) {
+      const [mediaType, base64Content] = uri.split(',');
+      return new XataFile({ base64Content, mediaType });
+    } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      const validUrl = new URL(uri);
+      // If running from the CLI use this.
+      const response = await fetch(validUrl.href, {
+        mode: 'no-cors',
         headers: {
           'Content-Type': 'application/json'
         }
       });
-      return res.json();
-    } catch (error) {
-      // TODO  if there was an error, prevent importing.
-      console.error(error);
+      const blob = XataFile.fromBlob(await response.blob());
+      return blob;
+      // If running from the browser use this.
+      // const res = await fetch('/api/importer', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ url: validUrl.href }),
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   }
+      // });
+      // return res.json();
+    } else {
+      // Its a file on disk
+      const fs = await import('fs');
+      const path = await import('path');
+      const ft = await import('file-type');
+      const filePath = path.resolve(uri.replace('file://', ''));
+      const file = fs.readFileSync(filePath);
+      const fileType = await ft.fileTypeFromBuffer(file);
+      const type = fileType?.mime ?? 'application/octet-stream';
+      const blob = new Blob([file], { type });
+      return XataFile.fromBlob(blob, { name: path.basename(filePath) });
     }
-  } catch (e) {
-    // TODO  if there was an error, prevent importing.
-    console.log('Could not fetch file contents from url', e);
+  } catch (error) {
+    console.log(error);
+    return null;
   }
 };
 

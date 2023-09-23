@@ -1,8 +1,9 @@
-import { branchTransaction, BranchTransactionPathParams, XataPluginOptions } from '@xata.io/client';
-import { ImportBatchOptions, ImportError } from './types';
+import { branchTransaction, BranchTransactionPathParams, putFile, XataFile, XataPluginOptions } from '@xata.io/client';
+import { ImportBatchOptions, ImportError, ImportFilesOptions } from './types';
 import { delay } from './utils/delay';
 
 // todo: tests
+
 export const importBatch = async (
   pathParams: BranchTransactionPathParams,
   options: ImportBatchOptions,
@@ -46,5 +47,44 @@ export const importBatch = async (
     }
 
     throw error;
+  }
+};
+
+export const importFiles = async (
+  location: { workspace: string; region: string; database: string; branch: string },
+  options: ImportFilesOptions,
+  pluginOptions: XataPluginOptions
+) => {
+  const { workspace, database, region, branch } = location;
+  const { table, ids, files } = options;
+
+  for (const index in files) {
+    const row = files[index];
+    const record = ids[index];
+
+    for (const [columnName, value] of Object.entries(row)) {
+      const files = Array.isArray(value) ? value : [value];
+      for (const file of files) {
+        const fileBlob = XataFile.fromBase64(file.base64Content, { mediaType: file.mediaType, name: file.name });
+        try {
+          await putFile({
+            ...pluginOptions,
+            pathParams: {
+              workspace: workspace,
+              database: database,
+              branch: branch,
+              region: region,
+              tableName: table,
+              recordId: record,
+              columnName
+            },
+            body: fileBlob.toBlob(),
+            headers: { 'Content-Type': file.mediaType ?? 'application/octet-stream' }
+          });
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    }
   }
 };
