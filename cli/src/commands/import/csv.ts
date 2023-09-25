@@ -112,7 +112,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (!columns) {
       throw new Error('No columns found');
     }
-    await this.migrateSchema({ table: table!, columns, create });
+    await this.migrateSchema({ table, columns, create });
 
     let importSuccessCount = 0;
     const errors: string[] = [];
