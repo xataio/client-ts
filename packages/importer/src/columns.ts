@@ -119,7 +119,7 @@ export const coerceValue = async (
   type: Schemas.Column['type'],
   options: ColumnOptions = {}
 ): Promise<CoercedValue> => {
-  const { isNull = defaultIsNull, toBoolean = defaultToBoolean } = options;
+  const { isNull = defaultIsNull, toBoolean = defaultToBoolean, proxyFunction } = options;
 
   if (isNull(value)) {
     return { value: null, isError: false };
@@ -154,7 +154,7 @@ export const coerceValue = async (
         : { value: null, isError: true };
     }
     case 'file': {
-      const res = await parseFile((value as string).trim());
+      const res = await parseFile((value as string).trim(), proxyFunction);
       if (!res) return { value: null, isError: true };
       return {
         value: { name: 'upload', mediaType: res.mediaType, base64Content: res.base64Content } as XataFile,
@@ -162,7 +162,8 @@ export const coerceValue = async (
       };
     }
     case 'file[]': {
-      const promises = (value as string).split(/[,;|]/).map((uri) => parseFile(uri));
+      // Cannot import multiple raw Base64 files because we will split in the wrong place
+      const promises = (value as string).split(/[,;|]/).map((uri) => parseFile(uri, proxyFunction));
       const files = await Promise.all(promises);
       const isError = files.some((file) => file === null);
       const formatted = files.map(
@@ -176,36 +177,29 @@ export const coerceValue = async (
   }
 };
 
-const parseFile = async (url: string): Promise<XataFile | null> => {
+const parseFile = async (url: string, proxyFunction: ColumnOptions['proxyFunction']): Promise<XataFile | null> => {
   const uri = url.trim();
   try {
-    // TODO test this
     if (uri.startsWith('data:')) {
       const [mediaType, base64Content] = uri.split(',');
       return new XataFile({ base64Content, mediaType });
     } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
       const validUrl = new URL(uri);
-      // If running from the CLI use this.
+      if (proxyFunction) {
+        const blob = await proxyFunction(uri, { url: validUrl.href });
+        if (!blob) return null;
+        return XataFile.fromBlob(blob);
+      }
       const response = await fetch(validUrl.href, {
-        mode: 'no-cors',
         headers: {
           'Content-Type': 'application/json'
         }
       });
       const blob = XataFile.fromBlob(await response.blob());
       return blob;
-      // If running from the browser use this.
-      // const res = await fetch('/api/importer', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ url: validUrl.href }),
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   }
-      // });
-      // return res.json();
     } else {
-      // Its a file on disk
-      const fs = await import('fs');
+      const fsString = 'fs';
+      const fs = await import(fsString);
       const path = await import('path');
       const ft = await import('file-type');
       const filePath = path.resolve(uri.replace('file://', ''));

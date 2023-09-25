@@ -18,6 +18,9 @@ export type ColumnOptions = {
    * A function to convert a value to a boolean. Should return true, false or null (not a boolean).
    */
   toBoolean?: ToBoolean;
+  /** Proxy url to use if the importing fetching will encounter CORS.
+   * Proxy function will be a POST request and the url to fetch will be the body/ */
+  proxyFunction?: (url: string, body: { [url: string]: string }) => Promise<Blob | null>;
 };
 
 export type ParseCommonOptions = {
