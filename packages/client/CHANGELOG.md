@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.26.6
+
+### Patch Changes
+
+- [#1180](https://github.com/xataio/client-ts/pull/1180) [`3330c9cf`](https://github.com/xataio/client-ts/commit/3330c9cf8d8db18b8e355a576e4afd589b6152bf) Thanks [@SferaDev](https://github.com/SferaDev)! - Support expanded links in `toSerialized`
+
+- [#1191](https://github.com/xataio/client-ts/pull/1191) [`a738816d`](https://github.com/xataio/client-ts/commit/a738816d355f4415b0622bb5a23b4154f9855177) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for `percentiles` aggregation
+
 ## 0.26.5
 
 ### Patch Changes
