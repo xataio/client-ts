@@ -136,10 +136,11 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         );
         await xata.import.importFiles(
           { database, branch, region, workspace: workspace },
-          // @ts-expect-error
           {
             table,
+            // @ts-expect-error
             ids: importResult.successful.results.map((r) => r.id),
+            // @ts-expect-error
             files: parseResults.data.map(({ files }) => files)
           }
         );
