@@ -1,8 +1,10 @@
 import { Schemas } from '@xata.io/client';
-import { describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { CoercedValue, coerceRows, coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
 import { ColumnOptions } from '../src/types';
 import { yepNopeToBoolean } from './utils';
+import path from 'path';
+import fs from 'fs/promises';
 
 const guessNumbersTestCases = [
   { input: ['1', '2', '3', '-4'], expected: 'int' },
@@ -86,6 +88,15 @@ const guessNullTestCases = [
   { input: [null], expected: 'string' },
   { input: [''], expected: 'string' }
 ];
+
+const tempFile = path.join(__dirname, `test.txt`);
+
+beforeAll(async () => {
+  await fs.writeFile(tempFile, 'hello world');
+});
+afterAll(async () => {
+  fs.unlink(tempFile);
+});
 
 describe('guessColumnTypes', () => {
   describe('schema guessing for numbers', () => {
@@ -294,6 +305,51 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
       type: 'datetime',
       expected: { value: new Date('2020-01-01T00:00:00+01:00'), isError: false }
     },
+    // Remote file test
+    // {
+    //   input: 'https://i.imgur.com/byMVuLJ.png',
+    //   type: 'file',
+    //   expected: { value: {}, isError: false }
+    // },
+    // {
+    // Remote files test
+    //   input: 'https://i.imgur.com/byMVuLJ.png|https://i.imgur.com/byMVuLJ.png',
+    //   type: 'file[]',
+    //   expected: { value: {}, isError: false }
+    // },
+    {
+      // Local file test
+      input: tempFile,
+      type: 'file',
+      expected: {
+        value: {
+          base64Content: 'aGVsbG8gd29ybGQ=',
+          mediaType: 'application/octet-stream',
+          name: 'upload'
+        },
+        isError: false
+      }
+    },
+    {
+      // Local files test
+      input: `${tempFile}|${tempFile}`,
+      type: 'file[]',
+      expected: {
+        value: [
+          {
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            mediaType: 'application/octet-stream',
+            name: 'upload'
+          },
+          {
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            mediaType: 'application/octet-stream',
+            name: 'upload'
+          }
+        ],
+        isError: false
+      }
+    },
     // excel formats
     // { input: '2/4/1964', type: 'datetime', expected: {value: new Date('1964-04-02') }},
     // { input: '02/04/1964', type: 'datetime', expected: {value: new Date('1964-04-02') }},
@@ -305,8 +361,8 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
 
 describe('coerceValue', () => {
   for (const { input, type, options, expected } of coerceTestCases) {
-    test(`coerceValue ${JSON.stringify(input)} returns ${JSON.stringify(expected)}`, () => {
-      expect(coerceValue(input, type, options)).toEqual(expected);
+    test(`coerceValue ${JSON.stringify(input)} returns ${JSON.stringify(expected)}`, async () => {
+      expect(await coerceValue(input, type, options)).toEqual(expected);
     });
   }
 });
