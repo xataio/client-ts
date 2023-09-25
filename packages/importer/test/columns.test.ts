@@ -305,20 +305,66 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
       type: 'datetime',
       expected: { value: new Date('2020-01-01T00:00:00+01:00'), isError: false }
     },
-    // Remote file test
+    // This test should have the response mocked
     // {
     //   input: 'https://i.imgur.com/byMVuLJ.png',
     //   type: 'file',
-    //   expected: { value: {}, isError: false }
-    // },
-    // {
-    // Remote files test
-    //   input: 'https://i.imgur.com/byMVuLJ.png|https://i.imgur.com/byMVuLJ.png',
-    //   type: 'file[]',
-    //   expected: { value: {}, isError: false }
+    //   expected: {
+    //     value: {
+    //       base64Content: 'aGVsbG8gd29ybGQ=',
+    //       mediaType: 'application/octet-stream',
+    //       name: "upload"
+    //     }, isError: false
+    //   },
     // },
     {
-      // Local file test
+      input: 'https://i.imgur.com/byMVuLJ.png',
+      type: 'file',
+      expected: {
+        value: {
+          base64Content: 'aGVsbG8gd29ybGQ=',
+          mediaType: 'application/octet-stream',
+          name: 'upload'
+        },
+        isError: false
+      },
+      options: {
+        proxyFunction(url) {
+          return Promise.resolve({
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            mediaType: 'application/octet-stream'
+          });
+        }
+      }
+    },
+    {
+      input: 'https://i.imgur.com/byMVuLJ.png|https://i.imgur.com/byMVuLJ.png',
+      type: 'file[]',
+      expected: {
+        value: [
+          {
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            mediaType: 'application/octet-stream',
+            name: 'upload'
+          },
+          {
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            mediaType: 'application/octet-stream',
+            name: 'upload'
+          }
+        ],
+        isError: false
+      },
+      options: {
+        proxyFunction(url) {
+          return Promise.resolve({
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            mediaType: 'application/octet-stream'
+          });
+        }
+      }
+    },
+    {
       input: tempFile,
       type: 'file',
       expected: {
@@ -331,7 +377,6 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
       }
     },
     {
-      // Local files test
       input: `${tempFile}|${tempFile}`,
       type: 'file[]',
       expected: {
