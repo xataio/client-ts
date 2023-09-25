@@ -186,7 +186,7 @@ const parseFile = async (url: string, proxyFunction: ColumnOptions['proxyFunctio
     } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
       const validUrl = new URL(uri);
       if (proxyFunction) {
-        const blob = await proxyFunction(uri, { url: validUrl.href });
+        const blob = await proxyFunction(validUrl.href);
         if (!blob) return null;
         return XataFile.fromBlob(blob);
       }
@@ -201,11 +201,9 @@ const parseFile = async (url: string, proxyFunction: ColumnOptions['proxyFunctio
       const fsString = 'fs';
       const fs = await import(fsString);
       const path = await import('path');
-      const ft = await import('file-type');
       const filePath = path.resolve(uri.replace('file://', ''));
       const file = fs.readFileSync(filePath);
-      const fileType = await ft.fileTypeFromBuffer(file);
-      const type = fileType?.mime ?? 'application/octet-stream';
+      const type = 'application/octet-stream';
       const blob = new Blob([file], { type });
       return XataFile.fromBlob(blob, { name: path.basename(filePath) });
     }

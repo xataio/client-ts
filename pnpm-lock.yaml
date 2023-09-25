@@ -372,9 +372,6 @@ importers:
       any-date-parser:
         specifier: ^1.5.4
         version: 1.5.4
-      file-type:
-        specifier: ^18.5.0
-        version: 18.5.0
       json5:
         specifier: ^2.2.3
         version: 2.2.3
@@ -5085,11 +5082,6 @@ packages:
       - supports-color
     dev: true
 
-  /@tokenizer/token@0.3.0:
-    resolution:
-      { integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A== }
-    dev: false
-
   /@tootallnate/once@1.1.2:
     resolution:
       { integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw== }
@@ -9031,16 +9023,6 @@ packages:
     dependencies:
       flat-cache: 3.0.4
     dev: true
-
-  /file-type@18.5.0:
-    resolution:
-      { integrity: sha512-yvpl5U868+V6PqXHMmsESpg6unQ5GfnPssl4dxdJudBrr9qy7Fddt7EVX1VLlddFfe8Gj9N7goCZH22FXuSQXQ== }
-    engines: { node: '>=14.16' }
-    dependencies:
-      readable-web-to-node-stream: 3.0.2
-      strtok3: 7.0.0
-      token-types: 5.0.1
-    dev: false
 
   /file-uri-to-path@1.0.0:
     resolution:
@@ -13132,12 +13114,6 @@ packages:
       sha.js: 2.4.11
     dev: true
 
-  /peek-readable@5.0.0:
-    resolution:
-      { integrity: sha512-YtCKvLUOvwtMGmrniQPdO7MwPjgkFBtFIrmfSbYmYuq3tKDV/mcfAhBth1+C3ru7uXIZasc/pHnb+YDYNkkj4A== }
-    engines: { node: '>=14.16' }
-    dev: false
-
   /picocolors@1.0.0:
     resolution:
       { integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ== }
@@ -13684,14 +13660,6 @@ packages:
       inherits: 2.0.4
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
-
-  /readable-web-to-node-stream@3.0.2:
-    resolution:
-      { integrity: sha512-ePeK6cc1EcKLEhJFt/AebMCLL+GgSKhuygrZ/GLaKZYEecIgIECf4UaUuaByiGtzckwR4ain9VzUh95T1exYGw== }
-    engines: { node: '>=8' }
-    dependencies:
-      readable-stream: 3.6.0
-    dev: false
 
   /readdir-glob@1.1.2:
     resolution:
@@ -14858,15 +14826,6 @@ packages:
       acorn: 8.9.0
     dev: true
 
-  /strtok3@7.0.0:
-    resolution:
-      { integrity: sha512-pQ+V+nYQdC5H3Q7qBZAz/MO6lwGhoC2gOAjuouGf/VO0m7vQRh8QNMl2Uf6SwAtzZ9bOw3UIeBukEGNJl5dtXQ== }
-    engines: { node: '>=14.16' }
-    dependencies:
-      '@tokenizer/token': 0.3.0
-      peek-readable: 5.0.0
-    dev: false
-
   /supports-color@5.5.0:
     resolution:
       { integrity: sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow== }
@@ -15083,15 +15042,6 @@ packages:
     engines: { node: '>=8.0' }
     dependencies:
       is-number: 7.0.0
-
-  /token-types@5.0.1:
-    resolution:
-      { integrity: sha512-Y2fmSnZjQdDb9W4w4r1tswlMHylzWIeOKpx0aZH9BgGtACHhrk3OkT52AzwcuqTRBZtvvnTjDBh8eynMulu8Vg== }
-    engines: { node: '>=14.16' }
-    dependencies:
-      '@tokenizer/token': 0.3.0
-      ieee754: 1.2.1
-    dev: false
 
   /toml@3.0.0:
     resolution:

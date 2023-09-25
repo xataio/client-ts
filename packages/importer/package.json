@@ -32,7 +32,6 @@
     "@faker-js/faker": "^8.0.2",
     "@xata.io/client": "^0.26.5",
     "any-date-parser": "^1.5.4",
-    "file-type": "^18.5.0",
     "json5": "^2.2.3",
     "lodash.chunk": "^4.2.0",
     "lodash.pick": "^4.4.0",
