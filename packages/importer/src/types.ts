@@ -18,7 +18,9 @@ export type ColumnOptions = {
    * A function to convert a value to a boolean. Should return true, false or null (not a boolean).
    */
   toBoolean?: ToBoolean;
-  /** Proxy url to use if the importing fetching will encounter CORS.
+  /**
+   * Proxy function to use for environments that are not able to reach remote files due to CORS.
+   * This function will be called with the remote file URL to be fetched.
    * */
   proxyFunction?: (url: string) => Promise<{ base64Content: string; mediaType: string } | null>;
 };
