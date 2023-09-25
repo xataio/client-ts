@@ -1,5 +1,14 @@
 # @xata.io/codegen
 
+## 0.26.6
+
+### Patch Changes
+
+- [#1179](https://github.com/xataio/client-ts/pull/1179) [`c155c91e`](https://github.com/xataio/client-ts/commit/c155c91e9d5e8125ff07d5f530b0e66d153b3bb9) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix import in js types
+
+- Updated dependencies [[`3330c9cf`](https://github.com/xataio/client-ts/commit/3330c9cf8d8db18b8e355a576e4afd589b6152bf), [`a738816d`](https://github.com/xataio/client-ts/commit/a738816d355f4415b0622bb5a23b4154f9855177)]:
+  - @xata.io/client@0.26.6
+
 ## 0.26.5
 
 ### Patch Changes
