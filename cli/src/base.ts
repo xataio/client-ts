@@ -346,13 +346,23 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     workspace: string,
     region: string,
     database: string,
-    options: { allowEmpty?: boolean; allowCreate?: boolean; title?: string } = {}
+    options: {
+      allowEmpty?: boolean;
+      allowCreate?: boolean;
+      title?: string;
+      // Branch to default if exists
+      defaultBranch?: string;
+    } = {}
   ): Promise<string> {
     const xata = await this.getXataClient();
     const { branches = [] } = await xata.api.branches.getBranchList({ workspace, region, database });
 
     const EMPTY_CHOICE = '$empty';
     const CREATE_CHOICE = '$create';
+
+    if (options.defaultBranch && branches.map(({ name }) => name).includes(options.defaultBranch)) {
+      return options.defaultBranch;
+    }
 
     if (branches.length > 0) {
       const choices = branches.map((db) => ({

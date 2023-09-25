@@ -9,6 +9,9 @@ The goal of this package is polish the implementation and contribute it back to 
 You should install both `drizzle-orm` and `@xata.io/drizzle` with `@xata.io/client`. You can install them with your favorite package manager:
 
 ```bash
+# with bun
+bun install drizzle-orm @xata.io/drizzle @xata.io/client
+
 # with pnpm
 pnpm add drizzle-orm @xata.io/drizzle @xata.io/client
 

@@ -222,7 +222,7 @@ export async function generate({
       declarationKind: VariableDeclarationKind.Const,
       declarations: [{ name: 'DatabaseClient', initializer: databaseClientContent }],
       leadingTrivia:
-        language === 'javascript' ? `\n/** @type { import('../../client/src').ClientConstructor<{}> } */\n` : undefined,
+        language === 'javascript' ? `\n/** @type { import('@xata.io/client').ClientConstructor<{}> } */\n` : undefined,
       trailingTrivia: '\n'
     });
   } else {

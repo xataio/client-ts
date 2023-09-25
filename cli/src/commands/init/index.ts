@@ -27,6 +27,10 @@ type PackageManager = { command: string; args: string };
 type PackageManageKey = keyof typeof packageManagers;
 
 const packageManagers = {
+  bun: {
+    command: 'bun',
+    args: 'install'
+  },
   pnpm: {
     command: 'pnpm',
     args: 'add'
@@ -40,6 +44,8 @@ const packageManagers = {
     args: 'add'
   }
 };
+
+const DEFAULT_BRANCH = 'main';
 
 const isPackageManagerInstalled = (packageManager: PackageManager) =>
   which.sync(packageManager.command, { nothrow: true });
@@ -130,6 +136,16 @@ export default class Init extends BaseCommand<typeof Init> {
 
     const { workspace, region, database, databaseURL } = await this.getParsedDatabaseURL(flags.db, true);
 
+    const detectedBranch = this.getCurrentBranchName();
+    const branch =
+      detectedBranch === DEFAULT_BRANCH
+        ? await this.getBranch(workspace, region, database, {
+            allowCreate: false,
+            allowEmpty: false,
+            defaultBranch: DEFAULT_BRANCH
+          })
+        : detectedBranch;
+
     this.projectConfig = { databaseURL };
     const ignoreEnvFile = await this.promptIgnoreEnvFile();
 
@@ -142,7 +158,7 @@ export default class Init extends BaseCommand<typeof Init> {
     await this.writeConfig();
     this.log();
 
-    await this.writeEnvFile(workspace, region, database);
+    await this.writeEnvFile(workspace, region, database, branch);
 
     if (ignoreEnvFile) {
       await this.ignoreEnvFile();
@@ -153,14 +169,14 @@ export default class Init extends BaseCommand<typeof Init> {
       await this.installPackage(packageManager, '@xata.io/client');
     }
 
-    const branch = this.getCurrentBranchName();
     if (schema) {
       await this.deploySchema(workspace, region, database, branch, schema);
     }
 
     // Run pull to retrieve remote migrations, remove any local migrations, and generate code
-    await Pull.run([branch, '-f']);
-    await Codegen.runIfConfigured(this.projectConfig);
+    await Pull.run([branch, '-f', '--skip-code-generation']);
+    await Codegen.runIfConfigured(this.projectConfig, [`--branch=${branch}`]);
+
     await this.delay(1000);
 
     this.log();
@@ -178,7 +194,7 @@ export default class Init extends BaseCommand<typeof Init> {
       const isSchemaSetup = hasTables && hasColumns;
       if (shouldInstallPackage && !canInstallPackage) {
         this.warn(
-          `No package.json found. Please run one of: pnpm init, yarn init, npm init. Then rerun ${chalk.bold(
+          `No package.json found. Please run one of: pnpm init, yarn init, npm init, bun init. Then rerun ${chalk.bold(
             'xata init --force'
           )}`
         );
@@ -189,7 +205,7 @@ export default class Init extends BaseCommand<typeof Init> {
           }columns at https://app.xata.io/workspaces/${workspace}/dbs/${database}:${region}`
         );
         this.log();
-        this.info(`Use ${chalk.bold(`xata pull main`)} to regenerate code and types from your Xata database`);
+        this.info(`Use ${chalk.bold(`xata pull ${branch}`)} to regenerate code and types from your Xata database`);
       } else {
         this.log(`To make your first query:`);
         this.log(``);
@@ -328,6 +344,8 @@ export default class Init extends BaseCommand<typeof Init> {
       return packageManagers.yarn;
     } else if (await this.access('pnpm-lock.yaml')) {
       return packageManagers.pnpm;
+    } else if (await this.access('bun.lockb')) {
+      return packageManagers.bun;
     }
     return null;
   }
@@ -368,7 +386,7 @@ export default class Init extends BaseCommand<typeof Init> {
     return envFile;
   }
 
-  async writeEnvFile(workspace: string, region: string, database: string) {
+  async writeEnvFile(workspace: string, region: string, database: string, branch: string) {
     const envFile = await this.findEnvFile();
     const doesEnvFileExist = await this.access(envFile);
 
@@ -391,7 +409,7 @@ export default class Init extends BaseCommand<typeof Init> {
     if (containsXataApiKey) {
       this.warn(`Your ${envFile} file already contains XATA_API_KEY key. skipping...`);
     } else {
-      const setBranch = `XATA_BRANCH=main`;
+      const setBranch = `XATA_BRANCH=${branch}`;
       if (content) content += '\n\n';
       content += '# [Xata] Configuration used by the CLI and the SDK\n';
       content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';

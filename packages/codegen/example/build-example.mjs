@@ -15,7 +15,12 @@ async function main() {
   // Test for existing code
   const typescriptContents = await readFile(join(__dirname, 'xata.ts'), 'utf-8').catch(() => undefined);
 
-  const { typescript } = await generate({ schema, databaseURL, language: 'typescript', existingCode: undoReplaceImport(typescriptContents) });
+  const { typescript } = await generate({
+    schema,
+    databaseURL,
+    language: 'typescript',
+    existingCode: undoReplaceImport(typescriptContents)
+  });
   const { javascript: mjs, types } = await generate({ schema, databaseURL, language: 'javascript' });
   const { javascript: cjs } = await generate({ schema, databaseURL, language: 'javascript', moduleType: 'cjs' });
 
