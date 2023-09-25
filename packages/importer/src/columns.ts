@@ -186,9 +186,9 @@ const parseFile = async (url: string, proxyFunction: ColumnOptions['proxyFunctio
     } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
       const validUrl = new URL(uri);
       if (proxyFunction) {
-        const blob = await proxyFunction(validUrl.href);
-        if (!blob) return null;
-        return XataFile.fromBlob(blob);
+        const response = await proxyFunction(validUrl.href);
+        if (!response) return null;
+        return XataFile.fromBase64(response.base64Content, { mediaType: response.mediaType });
       }
       const response = await fetch(validUrl.href, {
         headers: {

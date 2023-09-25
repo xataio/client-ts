@@ -20,7 +20,7 @@ export type ColumnOptions = {
   toBoolean?: ToBoolean;
   /** Proxy url to use if the importing fetching will encounter CORS.
    * */
-  proxyFunction?: (url: string) => Promise<Blob | null>;
+  proxyFunction?: (url: string) => Promise<{ base64Content: string; mediaType: string } | null>;
 };
 
 export type ParseCommonOptions = {

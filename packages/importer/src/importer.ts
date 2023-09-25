@@ -76,7 +76,7 @@ export const importFiles = async (
               region: region,
               tableName: table,
               recordId: record,
-              columnName
+              columnName: columnName.trim()
             },
             body: fileBlob.toBlob(),
             headers: { 'Content-Type': file.mediaType ?? 'application/octet-stream' }
