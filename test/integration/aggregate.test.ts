@@ -146,7 +146,8 @@ describe('aggregate', () => {
       minIndex: { min: { column: 'index' } },
       minRating: { min: { column: 'rating' } },
       averageIndex: { average: { column: 'index' } },
-      averageRating: { average: { column: 'rating' } }
+      averageRating: { average: { column: 'rating' } },
+      median: { percentiles: { column: 'rating', percentiles: [50] } }
     });
 
     expect(result.aggs.sumIndex).toBeCloseTo(31);
@@ -157,6 +158,7 @@ describe('aggregate', () => {
     expect(result.aggs.minRating).toBeCloseTo(1);
     expect(result.aggs.averageIndex).toBeCloseTo(6.2);
     expect(result.aggs.averageRating).toBeCloseTo(3.12);
+    expect(result.aggs.median.values['50.0']).toBeCloseTo(3.1);
   });
 
   test('simple date histogram', async () => {
@@ -303,6 +305,66 @@ describe('aggregate', () => {
     expect(result.aggs.byIndex.values?.[2].$key).toBeCloseTo(10);
     expect(result.aggs.byIndex.values?.[2].$count).toBeCloseTo(1);
     expect(result.aggs.byIndex.values?.[2].avgRating).toBeCloseTo(5.3);
+  });
+
+  test('percentiles aggregation', async () => {
+    const result = await xata.db.teams.aggregate({
+      percents: {
+        percentiles: {
+          column: 'index',
+          percentiles: [10, 20, 30, 40, 50, 60, 70, 80, 90]
+        }
+      }
+    });
+
+    expect(Object.keys(result.aggs.percents.values)).toHaveLength(9);
+    expect(result.aggs.percents.values?.['10.0']).toBeCloseTo(2);
+    expect(result.aggs.percents.values?.['20.0']).toBeCloseTo(2.5);
+    expect(result.aggs.percents.values?.['30.0']).toBeCloseTo(3);
+    expect(result.aggs.percents.values?.['40.0']).toBeCloseTo(4.5);
+    expect(result.aggs.percents.values?.['50.0']).toBeCloseTo(6);
+    expect(result.aggs.percents.values?.['60.0']).toBeCloseTo(7);
+    expect(result.aggs.percents.values?.['70.0']).toBeCloseTo(8);
+    expect(result.aggs.percents.values?.['80.0']).toBeCloseTo(10);
+    expect(result.aggs.percents.values?.['90.0']).toBeCloseTo(12);
+  });
+
+  test('percentiles on a non-numeric column', async () => {
+    const promise = xata.db.teams.aggregate({
+      percents: {
+        percentiles: {
+          // @ts-expect-error - this should fail
+          column: 'name',
+          percentiles: [50]
+        }
+      }
+    });
+
+    await expect(promise).rejects.toThrowError();
+  });
+
+  test('percentiles key missing', async () => {
+    const promise = xata.db.teams.aggregate({
+      percents: {
+        // @ts-expect-error - this should fail
+        percentiles: { column: 'index' }
+      }
+    });
+
+    await expect(promise).rejects.toThrowError();
+  });
+
+  test('percentiles with negative percentile', async () => {
+    const promise = xata.db.teams.aggregate({
+      percents: {
+        percentiles: {
+          column: 'index',
+          percentiles: [-1]
+        }
+      }
+    });
+
+    await expect(promise).rejects.toThrowError();
   });
 });
 
