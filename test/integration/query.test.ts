@@ -595,14 +595,14 @@ describe('integration tests', () => {
   test('Pagination size limit', async () => {
     expect(xata.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
       'message',
-      'page size exceeds max limit of 200'
+      'page size exceeds max limit of 1000'
     );
   });
 
   test('Pagination offset limit', async () => {
     expect(xata.db.users.getPaginated({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
       'message',
-      'page offset must not exceed 800'
+      'page offset must not exceed 49000'
     );
   });
 
