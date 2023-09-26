@@ -154,22 +154,19 @@ export const coerceValue = async (
         : { value: null, isError: true };
     }
     case 'file': {
-      const res = await parseFile((value as string).trim(), proxyFunction);
-      if (!res) return { value: null, isError: true };
-      return {
-        value: { name: 'upload', mediaType: res.mediaType, base64Content: res.base64Content } as XataFile,
-        isError: false
-      };
+      const file = await parseFile((value as string).trim(), proxyFunction);
+      if (!file) return { value: null, isError: true };
+
+      return { value: file, isError: false };
     }
     case 'file[]': {
-      // Cannot import multiple raw Base64 files because we will split in the wrong place
-      const promises = (value as string).split(/[,;|]/).map((uri) => parseFile(uri, proxyFunction));
-      const files = await Promise.all(promises);
+      // Limitation: Cannot import multiple raw Base64 files because we will split them in the wrong place
+      const items = (value as string).startsWith('data:') ? [value as string] : (value as string).split(/[,;|]/);
+
+      const files = await Promise.all(items.map((url) => parseFile(url, proxyFunction)));
       const isError = files.some((file) => file === null);
-      const formatted = files.map(
-        (file) => ({ name: 'upload', mediaType: file?.mediaType, base64Content: file?.base64Content } as XataFile)
-      );
-      return { value: compact(formatted), isError };
+
+      return { value: compact(files), isError };
     }
     default: {
       return { value: null, isError: true };
