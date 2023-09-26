@@ -2,7 +2,7 @@ import { Schemas, XataFile } from '@xata.io/client';
 
 import CSV from 'papaparse';
 import AnyDateParser from 'any-date-parser';
-import { ColumnOptions, ToBoolean } from './types';
+import { ColumnOptions, ProxyFunction, ToBoolean } from './types';
 import { compact, isDefined } from './utils/lang';
 import { isValidEmail } from './utils/email';
 
@@ -177,34 +177,24 @@ export const coerceValue = async (
   }
 };
 
-const parseFile = async (url: string, proxyFunction: ColumnOptions['proxyFunction']): Promise<XataFile | null> => {
+const fetchFile = async (url: string) => {
+  const response = await fetch(url);
+  return await response.blob();
+};
+
+const parseFile = async (url: string, request = fetchFile): Promise<XataFile | null> => {
   const uri = url.trim();
   try {
     if (uri.startsWith('data:')) {
       const [mediaType, base64Content] = uri.split(',');
       return new XataFile({ base64Content, mediaType });
     } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
-      const validUrl = new URL(uri);
-      if (proxyFunction) {
-        const response = await proxyFunction(validUrl.href);
-        if (!response) return null;
-        return XataFile.fromBase64(response.base64Content, { mediaType: response.mediaType });
-      }
-      const response = await fetch(validUrl.href, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      const blob = XataFile.fromBlob(await response.blob());
-      return blob;
+      const blob = await request(url);
+      return XataFile.fromBlob(blob);
     } else {
-      const fsString = 'fs';
-      const fs = await import(fsString);
-      const path = await import('path');
+      const [fs, path] = await Promise.all(['fs', 'path'].map((name) => import(name)));
       const filePath = path.resolve(uri.replace('file://', ''));
-      const file = fs.readFileSync(filePath);
-      const type = 'application/octet-stream';
-      const blob = new Blob([file], { type });
+      const blob = new Blob([fs.readFileSync(filePath)], { type: 'application/octet-stream' });
       return XataFile.fromBlob(blob, { name: path.basename(filePath) });
     }
   } catch (error) {

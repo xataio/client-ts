@@ -1,4 +1,4 @@
-import { XataFile } from '@xata.io/client';
+import type { XataFile } from '@xata.io/client';
 
 export function isDefined<T>(value: T | undefined | null): value is T {
   return value !== undefined && value !== null;
@@ -17,8 +17,7 @@ export function compact<T>(arr: Array<T | null | undefined>): T[] {
 }
 
 export function isXataFile(value: unknown): value is XataFile {
-  // TODO fix this predicate
-  return isObject(value) && (value as any).mediaType !== undefined;
+  return isObject(value) && (value as XataFile).base64Content !== undefined;
 }
 
 export function partition<T>(array: T[], predicate: (item: T) => boolean): [T[], T[]] {

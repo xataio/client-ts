@@ -8,6 +8,8 @@ type Column = Schemas.Column;
 
 export type ToBoolean = (value: unknown) => boolean | null;
 
+export type ProxyFunction = (url: string) => Promise<Blob>;
+
 export type ColumnOptions = {
   /**
    * A function to check if a value is null.
@@ -22,7 +24,7 @@ export type ColumnOptions = {
    * Proxy function to use for environments that are not able to reach remote files due to CORS.
    * This function will be called with the remote file URL to be fetched.
    * */
-  proxyFunction?: (url: string) => Promise<{ base64Content: string; mediaType: string } | null>;
+  proxyFunction?: ProxyFunction;
 };
 
 export type ParseCommonOptions = {
@@ -154,9 +156,10 @@ export type ParseCsvStreamBatchesOptions = {
 
 export type ImportFilesOptions = {
   table: string;
-  ids: string[];
-  files: ParseResultData['files'];
+  ids: Array<string | null>;
+  files: Array<ParseResultData['files']>;
 };
+
 export type ParseMeta = {
   estimatedProgress: number;
   delimiter: string;
@@ -191,6 +194,13 @@ export type ImportBatchOptions = {
   columns: Column[];
   table: string;
   batchRows: unknown[];
+};
+
+export type ImportLocation = {
+  workspace: string;
+  region: string;
+  database: string;
+  branch: string;
 };
 
 export type ImportError = { row: unknown; error: string; index: number };

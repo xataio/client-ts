@@ -4,6 +4,7 @@ import { Column } from '@xata.io/codegen';
 import { importColumnTypes } from '@xata.io/importer';
 import { open, writeFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
+
 const ERROR_CONSOLE_LOG_LIMIT = 200;
 const ERROR_LOG_FILE = 'errors.log';
 
@@ -128,24 +129,21 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
           throw new Error('Failed to parse CSV file');
         }
         const batchRows = parseResults.data.map(({ data }) => data);
-        const dbBranchName = `${database}:${branch}`;
         const importResult = await xata.import.importBatch(
-          // @ts-ignore
-          { dbBranchName: dbBranchName, region, workspace: workspace, database },
+          { workspace, region, database, branch },
           { columns: parseResults.columns, table, batchRows }
         );
+
         await xata.import.importFiles(
           { database, branch, region, workspace: workspace },
           {
             table,
-            // @ts-expect-error
-            ids: importResult.successful.results.map((r) => r.id),
-            // @ts-expect-error
+            ids: importResult.ids,
             files: parseResults.data.map(({ files }) => files)
           }
         );
 
-        importSuccessCount += importResult.successful.results.length;
+        importSuccessCount += importResult.ids.length;
         if (importResult.errors) {
           const formattedErrors = importResult.errors.map(
             (error) => `${error.error}. Record: ${JSON.stringify(error.row)}`

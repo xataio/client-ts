@@ -1,17 +1,15 @@
-import { branchTransaction, BranchTransactionPathParams, putFile, XataFile, XataPluginOptions } from '@xata.io/client';
-import { ImportBatchOptions, ImportError, ImportFilesOptions } from './types';
+import { branchTransaction, putFile, XataFile, XataPluginOptions } from '@xata.io/client';
+import { ImportBatchOptions, ImportLocation, ImportError, ImportFilesOptions } from './types';
 import { delay } from './utils/delay';
 
-// todo: tests
-
 export const importBatch = async (
-  pathParams: BranchTransactionPathParams,
+  location: ImportLocation,
   options: ImportBatchOptions,
   pluginOptions: XataPluginOptions,
   errors?: ImportError[],
   maxRetries = 10,
   retries = 0
-): Promise<{ successful: Awaited<ReturnType<typeof branchTransaction>>; errors?: ImportError[] }> => {
+): Promise<{ ids: Array<string | null>; errors?: ImportError[] }> => {
   const { batchRows } = options;
   const operations = batchRows.map((row) => {
     return {
@@ -21,29 +19,37 @@ export const importBatch = async (
       }
     };
   });
+
   try {
-    const result = await branchTransaction({ ...pluginOptions, pathParams, body: { operations } });
-    return { successful: result, errors };
+    const { results } = await branchTransaction({
+      ...pluginOptions,
+      pathParams: {
+        workspace: location.workspace,
+        region: location.region,
+        dbBranchName: `${location.database}:${location.branch}`,
+        // @ts-expect-error For some reason, database is required...
+        database: location.database
+      },
+      body: { operations }
+    });
+
+    const ids = results.map((r) => ('id' in r ? r.id : null));
+
+    return { ids, errors };
   } catch (error: any) {
     if (error.errors) {
       const rowErrors = error.errors.filter((e: any) => e.index !== undefined);
       const errorRowIndexes = rowErrors.map((e: any) => e.index);
       const rowsToRetry = batchRows.filter((_row, index) => !errorRowIndexes.includes(index));
+
       // what if errors twice?
       const errors = rowErrors.map((e: any) => ({ row: batchRows[e.index], error: e.message, index: e.index }));
-      return importBatch(
-        pathParams,
-        { ...options, batchRows: rowsToRetry },
-        pluginOptions,
-        errors,
-        maxRetries,
-        retries
-      );
+      return importBatch(location, { ...options, batchRows: rowsToRetry }, pluginOptions, errors, maxRetries, retries);
     }
     if (retries < maxRetries) {
       // exponential backoff
       await delay(1000 * 2 ** retries);
-      return importBatch(pathParams, options, pluginOptions, errors, maxRetries, retries + 1);
+      return importBatch(location, options, pluginOptions, errors, maxRetries, retries + 1);
     }
 
     throw error;
@@ -51,7 +57,7 @@ export const importBatch = async (
 };
 
 export const importFiles = async (
-  location: { workspace: string; region: string; database: string; branch: string },
+  location: ImportLocation,
   options: ImportFilesOptions,
   pluginOptions: XataPluginOptions
 ) => {
@@ -65,20 +71,20 @@ export const importFiles = async (
     for (const [columnName, value] of Object.entries(row)) {
       const files = Array.isArray(value) ? value : [value];
       for (const file of files) {
-        const fileBlob = XataFile.fromBase64(file.base64Content, { mediaType: file.mediaType, name: file.name });
         try {
           await putFile({
             ...pluginOptions,
             pathParams: {
               workspace: workspace,
+              // @ts-expect-error For some reason we need to send it
               database: database,
               branch: branch,
               region: region,
               tableName: table,
-              recordId: record,
+              recordId: record ?? '',
               columnName: columnName.trim()
             },
-            body: fileBlob.toBlob(),
+            body: file.toBlob(),
             headers: { 'Content-Type': file.mediaType ?? 'application/octet-stream' }
           });
         } catch (error) {
