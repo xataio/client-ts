@@ -12,6 +12,7 @@ export type AggregationExpression<O extends XataRecord> = ExactlyOne<{
   max: MaxAggregation<O>;
   min: MinAggregation<O>;
   average: AverageAggregation<O>;
+  percentiles: PercentilesAggregation<O>;
   uniqueCount: UniqueCountAggregation<O>;
   dateHistogram: DateHistogramAggregation<O>;
   topValues: TopValuesAggregation<O>;
@@ -85,6 +86,17 @@ export type AverageAggregation<O extends XataRecord> = {
    * The column on which to compute the average. Must be a numeric type.
    */
   column: ColumnsByValue<O, number>;
+};
+
+/**
+ * Calculate given percentiles of the numeric values in a particular column.
+ */
+export type PercentilesAggregation<O extends XataRecord> = {
+  /**
+   * The column on which to compute the average. Must be a numeric type.
+   */
+  column: ColumnsByValue<O, number>;
+  percentiles: number[];
 };
 
 /**
@@ -186,6 +198,7 @@ type AggregationExpressionResultTypes = {
   max: number | null;
   min: number | null;
   average: number | null;
+  percentiles: { values: { [key: string]: number } };
   uniqueCount: number;
   dateHistogram: ComplexAggregationResult;
   topValues: ComplexAggregationResult;
