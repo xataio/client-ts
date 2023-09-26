@@ -1,5 +1,5 @@
-import { branchTransaction, putFile, XataFile, XataPluginOptions } from '@xata.io/client';
-import { ImportBatchOptions, ImportLocation, ImportError, ImportFilesOptions } from './types';
+import { branchTransaction, putFile, XataPluginOptions } from '@xata.io/client';
+import { ImportBatchOptions, ImportError, ImportFilesOptions, ImportLocation } from './types';
 import { delay } from './utils/delay';
 
 export const importBatch = async (
