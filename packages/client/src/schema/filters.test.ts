@@ -208,6 +208,9 @@ const filterWithPartialMatch: Filter<Record> = { name: { $contains: 'value' } };
 // Filter with pattern operator
 const filterWithPatternOperator: Filter<Record> = { name: { $pattern: 'value' } };
 
+// Filter with iPatter operator
+const filterWithIPatterOperator: Filter<Record> = { name: { $iPattern: 'value' } };
+
 // Filter with $startsWith and $endsWith operators
 const filterWithStartsWithAndEndsWithOperators: Filter<Record> = {
   name: { $startsWith: 'value', $endsWith: 'value' }
