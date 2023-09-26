@@ -318,49 +318,67 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
     //   },
     // },
     {
-      input: 'https://i.imgur.com/byMVuLJ.png',
+      input: 'https://does_not_exist.com',
       type: 'file',
       expected: {
         value: {
+          attributes: {},
           base64Content: 'aGVsbG8gd29ybGQ=',
+          enablePublicUrl: false,
+          id: undefined,
           mediaType: 'application/octet-stream',
-          name: 'upload'
+          name: '',
+          signedUrl: undefined,
+          signedUrlTimeout: 300,
+          size: 0,
+          url: '',
+          version: 1
         },
         isError: false
       },
       options: {
-        proxyFunction(url) {
-          return Promise.resolve({
-            base64Content: 'aGVsbG8gd29ybGQ=',
-            mediaType: 'application/octet-stream'
-          });
+        proxyFunction: async (url) => {
+          return new Blob(['hello world']);
         }
       }
     },
     {
-      input: 'https://i.imgur.com/byMVuLJ.png|https://i.imgur.com/byMVuLJ.png',
+      input: 'https://does_not_exist.com|https://does_not_exist.com',
       type: 'file[]',
       expected: {
         value: [
           {
+            attributes: {},
             base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
             mediaType: 'application/octet-stream',
-            name: 'upload'
+            name: '',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
           },
           {
+            attributes: {},
             base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
             mediaType: 'application/octet-stream',
-            name: 'upload'
+            name: '',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
           }
         ],
         isError: false
       },
       options: {
-        proxyFunction(url) {
-          return Promise.resolve({
-            base64Content: 'aGVsbG8gd29ybGQ=',
-            mediaType: 'application/octet-stream'
-          });
+        proxyFunction: async (url) => {
+          return new Blob(['hello world']);
         }
       }
     },
@@ -369,9 +387,17 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
       type: 'file',
       expected: {
         value: {
+          attributes: {},
           base64Content: 'aGVsbG8gd29ybGQ=',
+          enablePublicUrl: false,
+          id: undefined,
           mediaType: 'application/octet-stream',
-          name: 'upload'
+          name: 'test.txt',
+          signedUrl: undefined,
+          signedUrlTimeout: 300,
+          size: 0,
+          url: '',
+          version: 1
         },
         isError: false
       }
@@ -382,14 +408,30 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
       expected: {
         value: [
           {
+            attributes: {},
             base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
             mediaType: 'application/octet-stream',
-            name: 'upload'
+            name: 'test.txt',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
           },
           {
+            attributes: {},
             base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
             mediaType: 'application/octet-stream',
-            name: 'upload'
+            name: 'test.txt',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
           }
         ],
         isError: false
