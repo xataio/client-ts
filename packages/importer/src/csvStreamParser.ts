@@ -87,21 +87,25 @@ export const parseCsvStreamBatches = async ({
         }
       },
       complete: async () => {
-        if (chunk) {
-          await processPapaChunk({
-            papaChunk: chunk,
-            parserOptions,
-            batchRowCount,
-            averageCursorPerRow,
-            fileSizeBytes,
-            batchSizeMin,
-            concurrentBatchMax,
-            onBatch,
-            forceFinish: true,
-            startRowIndex: rowCount - chunk.data.length
-          });
+        try {
+          if (chunk) {
+            await processPapaChunk({
+              papaChunk: chunk,
+              parserOptions,
+              batchRowCount,
+              averageCursorPerRow,
+              fileSizeBytes,
+              batchSizeMin,
+              concurrentBatchMax,
+              onBatch,
+              forceFinish: true,
+              startRowIndex: rowCount - chunk.data.length
+            });
+          }
+          resolve();
+        } catch (error) {
+          reject(error);
         }
-        resolve();
       },
       error: (error) => reject(error)
     });
