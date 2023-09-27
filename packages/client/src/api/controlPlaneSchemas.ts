@@ -154,6 +154,27 @@ export type ClusterID = string;
 /**
  * @x-internal true
  */
+export type ClusterShortMetadata = {
+  id: ClusterID;
+  state: string;
+  region: string;
+  name: string;
+  /**
+   * @format int64
+   */
+  branches: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type ListClustersResponse = {
+  clusters: ClusterShortMetadata[];
+};
+
+/**
+ * @x-internal true
+ */
 export type AutoscalingConfig = {
   enabled: boolean;
   /**
@@ -192,17 +213,41 @@ export type ClusterConfiguration = {
 /**
  * @x-internal true
  */
-export type ClusterMetadata = {
-  id: ClusterID;
-  state: string;
+export type ClusterCreateDetails = {
+  /**
+   * @minLength 1
+   */
+  region: string;
+  /**
+   * @maxLength 63
+   * @minLength 1
+   * @pattern [a-zA-Z0-9_-~:]+
+   */
+  name: string;
   configuration: ClusterConfiguration;
 };
 
 /**
  * @x-internal true
  */
-export type ListClustersResponse = {
-  clusters: ClusterMetadata[];
+export type ClusterResponse = {
+  state: string;
+  clusterID: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterMetadata = {
+  id: ClusterID;
+  state: string;
+  region: string;
+  name: string;
+  /**
+   * @format int64
+   */
+  branches: number;
+  configuration?: ClusterConfiguration;
 };
 
 /**
@@ -218,14 +263,7 @@ export type ClusterUpdateDetails = {
   name?: string;
   configuration?: ClusterConfiguration;
   state?: string;
-};
-
-/**
- * @x-internal true
- */
-export type ClusterResponse = {
-  state: string;
-  clusterID: string;
+  region?: string;
 };
 
 /**
