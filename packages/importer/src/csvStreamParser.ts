@@ -45,34 +45,45 @@ export const parseCsvStreamBatches = async ({
       ...parseCsvOptionsToPapaOptions(parserOptions),
       chunkSize: CHUNK_SIZE,
       chunk: async (result: ParseResult<unknown>, parser: Parser) => {
-        if (!chunk) {
-          chunk = result;
-        } else {
-          chunk.data.push(...result.data);
-          chunk.meta = result.meta; // overwrite meta to be latest meta
-          chunk.errors.push(...result.errors);
-        }
-        const oldRowCount = rowCount;
-        rowCount += result.data.length;
-        averageCursorPerRow = result.meta.cursor / rowCount;
+        try {
+          if (!chunk) {
+            chunk = result;
+          } else {
+            // cannot use push(...result.data) because stack size might be exceeded https://stackoverflow.com/a/61740952
+            for (const item of result.data) {
+              chunk.data.push(item);
+            }
+            chunk.meta = result.meta; // overwrite meta to be latest meta
+            for (const error of result.errors) {
+              chunk.errors.push(error);
+            }
+          }
+          const oldRowCount = rowCount;
+          rowCount += result.data.length;
+          averageCursorPerRow = result.meta.cursor / rowCount;
 
-        // Only stop papaparse from parsing the file if we have enough data to process
-        if (chunk.data.length >= batchRowCount * batchSizeMin) {
-          parser.pause();
-          chunk = await processPapaChunk({
-            papaChunk: chunk,
-            parser,
-            parserOptions,
-            batchRowCount,
-            averageCursorPerRow,
-            fileSizeBytes,
-            batchSizeMin,
-            concurrentBatchMax,
-            onBatch,
-            startRowIndex: lastChunkProcessedRowCount
-          });
-          lastChunkProcessedRowCount = oldRowCount;
-          parser.resume();
+          // Only stop papaparse from parsing the file if we have enough data to process
+          if (chunk.data.length >= batchRowCount * batchSizeMin) {
+            parser.pause();
+            chunk = await processPapaChunk({
+              papaChunk: chunk,
+              parser,
+              parserOptions,
+              batchRowCount,
+              averageCursorPerRow,
+              fileSizeBytes,
+              batchSizeMin,
+              concurrentBatchMax,
+              onBatch,
+              startRowIndex: lastChunkProcessedRowCount
+            });
+            lastChunkProcessedRowCount = oldRowCount;
+            parser.resume();
+          }
+        } catch (error) {
+          reject(error);
+          // abort after reject to avoid `complete` callback being called
+          parser.abort();
         }
       },
       complete: async () => {

@@ -2,7 +2,6 @@ import { branchTransaction, BranchTransactionPathParams, XataPluginOptions } fro
 import { ImportBatchOptions, ImportError } from './types';
 import { delay } from './utils/delay';
 
-// todo: tests
 export const importBatch = async (
   pathParams: BranchTransactionPathParams,
   options: ImportBatchOptions,
