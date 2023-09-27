@@ -1117,7 +1117,7 @@ export type CreateClusterError = Fetcher.ErrorWrapper<
 >;
 
 export type CreateClusterVariables = {
-  body: Schemas.ClusterUpdateDetails;
+  body: Schemas.ClusterCreateDetails;
   pathParams: CreateClusterPathParams;
 } & ControlPlaneFetcherExtraProps;
 
@@ -1125,7 +1125,7 @@ export const createCluster = (variables: CreateClusterVariables, signal?: AbortS
   controlPlaneFetch<
     Schemas.ClusterResponse,
     CreateClusterError,
-    Schemas.ClusterUpdateDetails,
+    Schemas.ClusterCreateDetails,
     {},
     {},
     CreateClusterPathParams
