@@ -160,6 +160,7 @@ export const coerceValue = async (
       return { value: file, isError: false };
     }
     case 'file[]': {
+      // Regex in 3 parts to detect delimited strings of base64 data uris, URLs and local files
       const items =
         (value as string)
           .match(/(data:.*?;base64,.*?(?:[;,|]|$))|(https?:\/\/.*?(?:[;,|]|$))|((?:file:\/\/)?.*?(?:[;,|]|$))/g)
