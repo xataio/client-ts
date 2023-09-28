@@ -1,10 +1,10 @@
 import { Schemas, XataFile } from '@xata.io/client';
 
-import CSV from 'papaparse';
 import AnyDateParser from 'any-date-parser';
-import { ColumnOptions, ProxyFunction, ToBoolean } from './types';
-import { compact, isDefined } from './utils/lang';
+import CSV from 'papaparse';
+import { ColumnOptions, ToBoolean } from './types';
 import { isValidEmail } from './utils/email';
+import { compact, isDefined } from './utils/lang';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 
@@ -183,7 +183,7 @@ const parseFile = async (url: string, request = fetchFile): Promise<XataFile | n
   const uri = url.trim();
   try {
     if (uri.startsWith('data:')) {
-      const [mediaType, base64Content] = uri.split(',');
+      const [mediaType, base64Content] = uri.replace('data:', '').split(';base64,');
       return new XataFile({ base64Content, mediaType });
     } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
       const blob = await request(url);
