@@ -26,9 +26,7 @@ export const importBatch = async (
       pathParams: {
         workspace: location.workspace,
         region: location.region,
-        dbBranchName: `${location.database}:${location.branch}`,
-        // @ts-expect-error For some reason, database is required...
-        database: location.database
+        dbBranchName: `${location.database}:${location.branch}`
       },
       body: { operations }
     });
@@ -76,10 +74,8 @@ export const importFiles = async (
             ...pluginOptions,
             pathParams: {
               workspace: workspace,
-              // @ts-expect-error For some reason we need to send it
-              database: database,
-              branch: branch,
               region: region,
+              dbBranchName: `${database}:${branch}`,
               tableName: table,
               recordId: record ?? '',
               columnName: columnName.trim()
