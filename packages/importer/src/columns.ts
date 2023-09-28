@@ -162,8 +162,8 @@ export const coerceValue = async (
     case 'file[]': {
       const items =
         (value as string)
-          .match(/(data:.*?;base64,)|(https?:\/\/.*?(?:[;,|]|$))|((?:file:\/\/)?.*?(?:[;,|]|$))/g)
-          ?.map((item) => item.replace(/[;,|]/g, ''))
+          .match(/(data:.*?;base64,.*?(?:[;,|]|$))|(https?:\/\/.*?(?:[;,|]|$))|((?:file:\/\/)?.*?(?:[;,|]|$))/g)
+          ?.map((item) => item.replace(/[;,|]$/g, ''))
           ?.filter((item) => item !== '') ?? [];
 
       const files = await Promise.all(items.map((url) => parseFile(url, proxyFunction)));

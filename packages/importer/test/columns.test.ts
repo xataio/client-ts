@@ -1,5 +1,5 @@
 import { Schemas } from '@xata.io/client';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { CoercedValue, coerceRows, coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
 import { ColumnOptions } from '../src/types';
 import { yepNopeToBoolean } from './utils';
@@ -305,18 +305,6 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
       type: 'datetime',
       expected: { value: new Date('2020-01-01T00:00:00+01:00'), isError: false }
     },
-    // This test should have the response mocked
-    // {
-    //   input: 'https://i.imgur.com/byMVuLJ.png',
-    //   type: 'file',
-    //   expected: {
-    //     value: {
-    //       base64Content: 'aGVsbG8gd29ybGQ=',
-    //       mediaType: 'application/octet-stream',
-    //       name: "upload"
-    //     }, isError: false
-    //   },
-    // },
     {
       input: 'https://does_not_exist.com',
       type: 'file',
@@ -435,6 +423,84 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
           }
         ],
         isError: false
+      }
+    },
+    {
+      input: `data:text/plain;base64,aGVsbG8gd29ybGQ=`,
+      type: 'file',
+      expected: {
+        value: {
+          attributes: {},
+          base64Content: 'aGVsbG8gd29ybGQ=',
+          enablePublicUrl: false,
+          id: undefined,
+          mediaType: 'text/plain',
+          name: '',
+          signedUrl: undefined,
+          signedUrlTimeout: 300,
+          size: 0,
+          url: '',
+          version: 1
+        },
+        isError: false
+      },
+      options: {
+        proxyFunction: async () => {
+          return new Blob(['hello world']);
+        }
+      }
+    },
+    {
+      input: `data:text/plain;base64,aGVsbG8gd29ybGQ=;${tempFile},https://does_not_exist.com`,
+      type: 'file[]',
+      expected: {
+        value: [
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'text/plain',
+            name: '',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          },
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'application/octet-stream',
+            name: 'test.txt',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          },
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'application/octet-stream',
+            name: '',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          }
+        ],
+        isError: false
+      },
+      options: {
+        proxyFunction: async () => {
+          return new Blob(['hello world']);
+        }
       }
     },
     // excel formats
