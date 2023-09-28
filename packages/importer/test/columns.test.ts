@@ -448,8 +448,9 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
 
 describe('coerceValue', () => {
   for (const { input, type, options, expected } of coerceTestCases) {
-    test(`coerceValue ${JSON.stringify(input)} returns ${JSON.stringify(expected)}`, async () => {
-      expect(await coerceValue(input, type, options)).toEqual(expected);
+    test(`coerceValue ${JSON.stringify(input)} should return ${JSON.stringify(expected)}`, async () => {
+      const result = await coerceValue(input, type, options);
+      expect(result).toEqual(expected);
     });
   }
 });

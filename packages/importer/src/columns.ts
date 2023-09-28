@@ -160,8 +160,11 @@ export const coerceValue = async (
       return { value: file, isError: false };
     }
     case 'file[]': {
-      // Limitation: Cannot import multiple raw Base64 files because we will split them in the wrong place
-      const items = (value as string).startsWith('data:') ? [value as string] : (value as string).split(/[,;|]/);
+      const items =
+        (value as string)
+          .match(/(data:.*?;base64,)|(https?:\/\/.*?(?:[;,|]|$))|((?:file:\/\/)?.*?(?:[;,|]|$))/g)
+          ?.map((item) => item.replace(/[;,|]/g, ''))
+          ?.filter((item) => item !== '') ?? [];
 
       const files = await Promise.all(items.map((url) => parseFile(url, proxyFunction)));
       const isError = files.some((file) => file === null);
