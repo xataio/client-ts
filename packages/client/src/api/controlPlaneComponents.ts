@@ -1057,6 +1057,157 @@ export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInvi
     ResendWorkspaceMemberInvitePathParams
   >({ url: '/workspaces/{workspaceId}/invites/{inviteId}/resend', method: 'post', ...variables, signal });
 
+export type ListClustersPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+};
+
+export type ListClustersError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type ListClustersVariables = {
+  pathParams: ListClustersPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * List all clusters available in your Workspace.
+ */
+export const listClusters = (variables: ListClustersVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<Schemas.ListClustersResponse, ListClustersError, undefined, {}, {}, ListClustersPathParams>({
+    url: '/workspaces/{workspaceId}/clusters',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type CreateClusterPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+};
+
+export type CreateClusterError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 422;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 423;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CreateClusterVariables = {
+  body: Schemas.ClusterCreateDetails;
+  pathParams: CreateClusterPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+export const createCluster = (variables: CreateClusterVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.ClusterResponse,
+    CreateClusterError,
+    Schemas.ClusterCreateDetails,
+    {},
+    {},
+    CreateClusterPathParams
+  >({ url: '/workspaces/{workspaceId}/clusters', method: 'post', ...variables, signal });
+
+export type GetClusterPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+};
+
+export type GetClusterError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type GetClusterVariables = {
+  pathParams: GetClusterPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Retrieve metadata for given cluster ID
+ */
+export const getCluster = (variables: GetClusterVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<Schemas.ClusterMetadata, GetClusterError, undefined, {}, {}, GetClusterPathParams>({
+    url: '/workspaces/{workspaceId}/clusters/{clusterId}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type UpdateClusterPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+};
+
+export type UpdateClusterError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type UpdateClusterVariables = {
+  body: Schemas.ClusterUpdateDetails;
+  pathParams: UpdateClusterPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Update cluster for given cluster ID
+ */
+export const updateCluster = (variables: UpdateClusterVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.ClusterMetadata,
+    UpdateClusterError,
+    Schemas.ClusterUpdateDetails,
+    {},
+    {},
+    UpdateClusterPathParams
+  >({ url: '/workspaces/{workspaceId}/clusters/{clusterId}', method: 'patch', ...variables, signal });
+
 export type GetDatabaseListPathParams = {
   /**
    * Workspace ID
@@ -1554,6 +1705,7 @@ export const operationsByTag = {
     acceptWorkspaceMemberInvite,
     resendWorkspaceMemberInvite
   },
+  xbcontrolOther: { listClusters, createCluster, getCluster, updateCluster },
   databases: {
     getDatabaseList,
     createDatabase,

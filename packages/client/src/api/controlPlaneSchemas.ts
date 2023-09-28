@@ -146,6 +146,127 @@ export type WorkspaceMembers = {
 export type InviteKey = string;
 
 /**
+ * @x-internal true
+ * @pattern [a-zA-Z0-9_-~:]+
+ */
+export type ClusterID = string;
+
+/**
+ * @x-internal true
+ */
+export type ClusterShortMetadata = {
+  id: ClusterID;
+  state: string;
+  region: string;
+  name: string;
+  /**
+   * @format int64
+   */
+  branches: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type ListClustersResponse = {
+  clusters: ClusterShortMetadata[];
+};
+
+/**
+ * @x-internal true
+ */
+export type AutoscalingConfig = {
+  enabled: boolean;
+  /**
+   * @format int64
+   */
+  minCapacity: number;
+  /**
+   * @format int64
+   */
+  maxCapacity: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type MaintenanceConfig = {
+  autoMinorVersionUpgrade?: boolean;
+  maintenanceWindow?: string;
+  plannedChangesWindow?: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterConfiguration = {
+  instanceType: string;
+  /**
+   * @format int64
+   */
+  replicas?: number;
+  deletionProtection?: boolean;
+  autoscaling?: AutoscalingConfig;
+  maintenance?: MaintenanceConfig;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterCreateDetails = {
+  /**
+   * @minLength 1
+   */
+  region: string;
+  /**
+   * @maxLength 63
+   * @minLength 1
+   * @pattern [a-zA-Z0-9_-~:]+
+   */
+  name: string;
+  configuration: ClusterConfiguration;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterResponse = {
+  state: string;
+  clusterID: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterMetadata = {
+  id: ClusterID;
+  state: string;
+  region: string;
+  name: string;
+  /**
+   * @format int64
+   */
+  branches: number;
+  configuration?: ClusterConfiguration;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterUpdateDetails = {
+  id: ClusterID;
+  /**
+   * @maxLength 63
+   * @minLength 1
+   * @pattern [a-zA-Z0-9_-~:]+
+   */
+  name?: string;
+  configuration?: ClusterConfiguration;
+  state?: string;
+  region?: string;
+};
+
+/**
  * Metadata of databases
  */
 export type DatabaseMetadata = {
