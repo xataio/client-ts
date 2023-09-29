@@ -257,9 +257,11 @@ export type FilterPredicateOp = {
   $gt?: FilterRangeValue;
   $ge?: FilterRangeValue;
   $contains?: string;
+  $iContains?: string;
   $startsWith?: string;
   $endsWith?: string;
   $pattern?: string;
+  $iPattern?: string;
 };
 
 /**
