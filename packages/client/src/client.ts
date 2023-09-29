@@ -162,10 +162,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         // Instead of using workspace and dbBranch, we inject a probably CNAME'd URL
         workspacesApiUrl: (path, params) => {
           const hasBranch = params.dbBranchName ?? params.branch;
-          const newPath = path.replace(
-            /^\/db\/[^/]+/,
-            hasBranch !== undefined && branch !== undefined ? `:${branch}` : ''
-          );
+          const newPath = path.replace(/^\/db\/[^/]+/, hasBranch !== undefined ? `:${branch}` : '');
           return databaseURL + newPath;
         },
         trace,
