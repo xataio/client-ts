@@ -1,9 +1,16 @@
 import { InputFileEntry } from '../api/schemas';
 import { ImageTransformations, transformImage } from '../files/transformations';
 import { compactObject, isDefined } from '../util/lang';
+import { StringKeys } from '../util/types';
 import { Identifiable, InputXataFile } from './record';
 
 export type XataFileEditableFields = Partial<Pick<XataArrayFile, keyof InputFileEntry>>;
+export type XataFileFields = Partial<
+  Pick<
+    XataArrayFile,
+    { [K in StringKeys<XataArrayFile>]: XataArrayFile[K] extends Function ? never : K }[keyof XataArrayFile]
+  >
+>;
 
 export class XataFile {
   /**
