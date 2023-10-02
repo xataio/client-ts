@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.26.7
+
+### Patch Changes
+
+- [#1205](https://github.com/xataio/client-ts/pull/1205) [`0e1c50de`](https://github.com/xataio/client-ts/commit/0e1c50de5850db2dfbbdfff9d66eda3bf1322836) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add optional mediaType override to binary file API
+
+- [#1203](https://github.com/xataio/client-ts/pull/1203) [`d093d363`](https://github.com/xataio/client-ts/commit/d093d363a51fc23c8513d51600bb3b31bbc45334) Thanks [@SferaDev](https://github.com/SferaDev)! - [Attachments] Fix column selection
+
 ## 0.26.6
 
 ### Patch Changes

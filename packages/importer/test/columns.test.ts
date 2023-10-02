@@ -1,8 +1,10 @@
 import { Schemas } from '@xata.io/client';
-import { describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { CoercedValue, coerceRows, coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
 import { ColumnOptions } from '../src/types';
 import { yepNopeToBoolean } from './utils';
+import path from 'path';
+import fs from 'fs/promises';
 
 const guessNumbersTestCases = [
   { input: ['1', '2', '3', '-4'], expected: 'int' },
@@ -87,6 +89,20 @@ const guessNullTestCases = [
   { input: [''], expected: 'string' }
 ];
 
+const guessDataUriTestCases = [
+  { input: ['data:text/plain;base64,aGVsbG8gd29ybGQ='], expected: 'file[]' },
+  { input: ['data:text/plain;base64,aGVsbG8gd29ybGQ=|data:text/plain;base64,aGVsbG8gd29ybGQ='], expected: 'file[]' }
+];
+
+const tempFile = path.join(__dirname, `test.txt`);
+
+beforeAll(async () => {
+  await fs.writeFile(tempFile, 'hello world');
+});
+afterAll(async () => {
+  fs.unlink(tempFile);
+});
+
 describe('guessColumnTypes', () => {
   describe('schema guessing for numbers', () => {
     for (const { input, expected } of guessNumbersTestCases) {
@@ -136,6 +152,13 @@ describe('guessColumnTypes', () => {
   });
   describe('schema guessing for nulls', () => {
     for (const { input, expected } of guessNullTestCases) {
+      test(`guesses ${expected} for ${JSON.stringify(input)}`, () => {
+        expect(guessColumnTypes(input)).toEqual(expected);
+      });
+    }
+  });
+  describe('schema guessing for data uris', () => {
+    for (const { input, expected } of guessDataUriTestCases) {
       test(`guesses ${expected} for ${JSON.stringify(input)}`, () => {
         expect(guessColumnTypes(input)).toEqual(expected);
       });
@@ -294,6 +317,204 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
       type: 'datetime',
       expected: { value: new Date('2020-01-01T00:00:00+01:00'), isError: false }
     },
+    {
+      input: 'https://does_not_exist.com',
+      type: 'file',
+      expected: {
+        value: {
+          attributes: {},
+          base64Content: 'aGVsbG8gd29ybGQ=',
+          enablePublicUrl: false,
+          id: undefined,
+          mediaType: 'application/octet-stream',
+          name: '',
+          signedUrl: undefined,
+          signedUrlTimeout: 300,
+          size: 0,
+          url: '',
+          version: 1
+        },
+        isError: false
+      },
+      options: {
+        proxyFunction: async (url) => {
+          return new Blob(['hello world']);
+        }
+      }
+    },
+    {
+      input: 'https://does_not_exist.com|https://does_not_exist.com',
+      type: 'file[]',
+      expected: {
+        value: [
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'application/octet-stream',
+            name: '',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          },
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'application/octet-stream',
+            name: '',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          }
+        ],
+        isError: false
+      },
+      options: {
+        proxyFunction: async (url) => {
+          return new Blob(['hello world']);
+        }
+      }
+    },
+    {
+      input: tempFile,
+      type: 'file',
+      expected: {
+        value: {
+          attributes: {},
+          base64Content: 'aGVsbG8gd29ybGQ=',
+          enablePublicUrl: false,
+          id: undefined,
+          mediaType: 'application/octet-stream',
+          name: 'test.txt',
+          signedUrl: undefined,
+          signedUrlTimeout: 300,
+          size: 0,
+          url: '',
+          version: 1
+        },
+        isError: false
+      }
+    },
+    {
+      input: `${tempFile}|${tempFile}`,
+      type: 'file[]',
+      expected: {
+        value: [
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'application/octet-stream',
+            name: 'test.txt',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          },
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'application/octet-stream',
+            name: 'test.txt',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          }
+        ],
+        isError: false
+      }
+    },
+    {
+      input: `data:text/plain;base64,aGVsbG8gd29ybGQ=`,
+      type: 'file',
+      expected: {
+        value: {
+          attributes: {},
+          base64Content: 'aGVsbG8gd29ybGQ=',
+          enablePublicUrl: false,
+          id: undefined,
+          mediaType: 'text/plain',
+          name: '',
+          signedUrl: undefined,
+          signedUrlTimeout: 300,
+          size: 0,
+          url: '',
+          version: 1
+        },
+        isError: false
+      },
+      options: {
+        proxyFunction: async () => {
+          return new Blob(['hello world']);
+        }
+      }
+    },
+    {
+      input: `data:text/plain;base64,aGVsbG8gd29ybGQ=;${tempFile},https://does_not_exist.com`,
+      type: 'file[]',
+      expected: {
+        value: [
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'text/plain',
+            name: '',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          },
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'application/octet-stream',
+            name: 'test.txt',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          },
+          {
+            attributes: {},
+            base64Content: 'aGVsbG8gd29ybGQ=',
+            enablePublicUrl: false,
+            id: undefined,
+            mediaType: 'application/octet-stream',
+            name: '',
+            signedUrl: undefined,
+            signedUrlTimeout: 300,
+            size: 0,
+            url: '',
+            version: 1
+          }
+        ],
+        isError: false
+      },
+      options: {
+        proxyFunction: async () => {
+          return new Blob(['hello world']);
+        }
+      }
+    },
     // excel formats
     // { input: '2/4/1964', type: 'datetime', expected: {value: new Date('1964-04-02') }},
     // { input: '02/04/1964', type: 'datetime', expected: {value: new Date('1964-04-02') }},
@@ -305,8 +526,9 @@ const coerceTestCases: { input: unknown; type: Schemas.Column['type']; options?:
 
 describe('coerceValue', () => {
   for (const { input, type, options, expected } of coerceTestCases) {
-    test(`coerceValue ${JSON.stringify(input)} returns ${JSON.stringify(expected)}`, () => {
-      expect(coerceValue(input, type, options)).toEqual(expected);
+    test(`coerceValue ${JSON.stringify(input)} should return ${JSON.stringify(expected)}`, async () => {
+      const result = await coerceValue(input, type, options);
+      expect(result).toEqual(expected);
     });
   }
 });
@@ -439,8 +661,8 @@ const coerceRowsTestCases: {
 
 describe('coerceRows', () => {
   for (const { rows, columns, options, expected } of coerceRowsTestCases) {
-    test(`coerceRows ${JSON.stringify(rows)} returns ${JSON.stringify(expected)}`, () => {
-      expect(coerceRows(rows, columns, options)).toEqual(expected);
+    test(`coerceRows ${JSON.stringify(rows)} returns ${JSON.stringify(expected)}`, async () => {
+      expect(await coerceRows(rows, columns, options)).toEqual(expected);
     });
   }
 });

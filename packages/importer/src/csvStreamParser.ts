@@ -18,8 +18,8 @@ export const parseCsvStream = async ({ fileStream, parserOptions }: ParseCsvStre
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
       ...parseCsvOptionsToPapaOptions(parserOptions),
-      complete: (papaResults) => {
-        const results = papaResultToJson(papaResults, parserOptions);
+      complete: async (papaResults) => {
+        const results = await papaResultToJson(papaResults, parserOptions);
         resolve({ results, meta: { estimatedProgress: 1, rowIndex: 0, ...metaToParseMeta(papaResults.meta) } });
       },
       error: (error) => reject(error)
@@ -131,7 +131,7 @@ const processBatch = async ({
   fileSizeEstimateBytes: number;
   startRowIndex: number;
 }) => {
-  const results = papaResultToJson({ data, errors, meta: meta }, parserOptions, startRowIndex);
+  const results = await papaResultToJson({ data, errors, meta: meta }, parserOptions, startRowIndex);
   const estimatedProgress = meta.cursor / fileSizeEstimateBytes;
 
   try {

@@ -12,7 +12,8 @@ export type FilesPluginResult<Schemas extends Record<string, BaseData>> = {
   download: <Tables extends StringKeys<Schemas>>(location: DownloadDestination<Schemas, Tables>) => Promise<Blob>;
   upload: <Tables extends StringKeys<Schemas>>(
     location: UploadDestination<Schemas, Tables>,
-    file: BinaryFile
+    file: BinaryFile,
+    options?: { mediaType?: string }
   ) => Promise<FileResponse>;
   delete: <Tables extends StringKeys<Schemas>>(location: DownloadDestination<Schemas, Tables>) => Promise<FileResponse>;
 };
@@ -67,9 +68,13 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
           rawResponse: true
         });
       },
-      upload: async (location: Record<string, string | undefined>, file: BinaryFile) => {
+      upload: async (
+        location: Record<string, string | undefined>,
+        file: BinaryFile,
+        options?: { mediaType?: string }
+      ) => {
         const { table, record, column, fileId = '' } = location ?? {};
-        const contentType = getContentType(file);
+        const contentType = options?.mediaType || getContentType(file);
 
         return await putFileItem({
           ...pluginOptions,

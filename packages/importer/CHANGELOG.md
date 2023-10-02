@@ -1,5 +1,21 @@
 # @xata.io/importer
 
+## 1.1.0
+
+### Minor Changes
+
+- [#1190](https://github.com/xataio/client-ts/pull/1190) [`e77644b5`](https://github.com/xataio/client-ts/commit/e77644b560ad02ce6085bc083b07105ae6dddff4) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add support for importing single and multiple files (remote and local) via pathname in CSV column
+
+### Patch Changes
+
+- [#1199](https://github.com/xataio/client-ts/pull/1199) [`652db16b`](https://github.com/xataio/client-ts/commit/652db16b40e507be06ff662e2ffe7a5161f56100) Thanks [@richardgill](https://github.com/richardgill)! - Importer bug fixes
+
+  - Bug fix where CSV chunks of certain sizes caused stackoverflow in some browsers
+  - Better error handling if CSV batch parsing fails
+
+- Updated dependencies [[`0e1c50de`](https://github.com/xataio/client-ts/commit/0e1c50de5850db2dfbbdfff9d66eda3bf1322836), [`d093d363`](https://github.com/xataio/client-ts/commit/d093d363a51fc23c8513d51600bb3b31bbc45334)]:
+  - @xata.io/client@0.26.7
+
 ## 1.0.3
 
 ### Patch Changes

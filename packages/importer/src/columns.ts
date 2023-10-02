@@ -1,9 +1,10 @@
-import type { Schemas } from '@xata.io/client';
-import CSV from 'papaparse';
+import { Schemas, XataFile } from '@xata.io/client';
+
 import AnyDateParser from 'any-date-parser';
+import CSV from 'papaparse';
 import { ColumnOptions, ToBoolean } from './types';
-import { isDefined } from './utils/lang';
 import { isValidEmail } from './utils/email';
+import { compact, isDefined, isString } from './utils/lang';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 
@@ -56,6 +57,8 @@ const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIs
 
 const isMaybeMultiple = <T>(value: T): boolean => isMultiple(value) || typeof value === 'string';
 
+const isDataUri = <T>(value: T): boolean => isString(value) && /(data:.*?;base64,.*?(?:[;,|]|$))/g.test(value);
+
 // should both of these be a function?
 const defaultIsNull = (value: unknown): boolean => {
   return !isDefined(value) || String(value).toLowerCase() === 'null' || String(value).trim() === '';
@@ -101,6 +104,9 @@ export const guessColumnTypes = <T>(
   if (columnValues.some(isGuessableMultiple)) {
     return 'multiple';
   }
+  if (columnValues.some((value) => isDataUri(value))) {
+    return 'file[]';
+  }
   // text needs to be checked before string
   if (columnValues.some(isText)) {
     return 'text';
@@ -108,14 +114,17 @@ export const guessColumnTypes = <T>(
   return 'string';
 };
 
-export type CoercedValue = { value: string | string[] | number | boolean | Date | null; isError: boolean };
+export type CoercedValue = {
+  value: string | string[] | number | boolean | Date | null | XataFile | XataFile[];
+  isError: boolean;
+};
 
-export const coerceValue = (
+export const coerceValue = async (
   value: unknown,
   type: Schemas.Column['type'],
   options: ColumnOptions = {}
-): CoercedValue => {
-  const { isNull = defaultIsNull, toBoolean = defaultToBoolean } = options;
+): Promise<CoercedValue> => {
+  const { isNull = defaultIsNull, toBoolean = defaultToBoolean, proxyFunction } = options;
 
   if (isNull(value)) {
     return { value: null, isError: false };
@@ -149,23 +158,71 @@ export const coerceValue = (
         ? { value: parseMultiple(String(value)), isError: false }
         : { value: null, isError: true };
     }
+    case 'file': {
+      const file = await parseFile((value as string).trim(), proxyFunction);
+      if (!file) return { value: null, isError: true };
+
+      return { value: file, isError: false };
+    }
+    case 'file[]': {
+      // Regex in 3 parts to detect delimited strings of base64 data uris, URLs and local files
+      const items =
+        (value as string)
+          .match(/(data:.*?;base64,.*?(?:[;,|]|$))|(https?:\/\/.*?(?:[;,|]|$))|((?:file:\/\/)?.*?(?:[;,|]|$))/g)
+          ?.map((item) => item.replace(/[;,|]$/g, ''))
+          ?.filter((item) => item !== '') ?? [];
+
+      const files = await Promise.all(items.map((url) => parseFile(url, proxyFunction)));
+      const isError = files.some((file) => file === null);
+
+      return { value: compact(files), isError };
+    }
     default: {
       return { value: null, isError: true };
     }
   }
 };
 
-export const coerceRows = <T extends Record<string, unknown>>(
+const fetchFile = async (url: string) => {
+  const response = await fetch(url);
+  return await response.blob();
+};
+
+const parseFile = async (url: string, request = fetchFile): Promise<XataFile | null> => {
+  const uri = url.trim();
+  try {
+    if (uri.startsWith('data:')) {
+      const [mediaType, base64Content] = uri.replace('data:', '').split(';base64,');
+      return new XataFile({ base64Content, mediaType });
+    } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      const blob = await request(url);
+      return XataFile.fromBlob(blob);
+    } else {
+      const [fs, path] = await Promise.all(['fs', 'path'].map((name) => import(name)));
+      const filePath = path.resolve(uri.replace('file://', ''));
+      const blob = new Blob([fs.readFileSync(filePath)], { type: 'application/octet-stream' });
+      return XataFile.fromBlob(blob, { name: path.basename(filePath) });
+    }
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+export const coerceRows = async <T extends Record<string, unknown>>(
   rows: T[],
   columns: Schemas.Column[],
   options?: ColumnOptions
-): Record<string, CoercedValue>[] => {
-  return rows.map((row) => {
-    return columns.reduce((newRow, column) => {
-      (newRow as Record<string, CoercedValue>)[column.name] = coerceValue(row[column.name], column.type, options);
-      return newRow;
-    }, {}) as Record<string, CoercedValue>;
-  });
+): Promise<Record<string, CoercedValue>[]> => {
+  const mapped = [];
+  for (const row of rows) {
+    const mappedRow: Record<string, CoercedValue> = {};
+    for (const column of columns) {
+      mappedRow[column.name] = await coerceValue(row[column.name], column.type, options);
+    }
+    mapped.push(mappedRow);
+  }
+  return mapped;
 };
 
 export const guessColumns = <T extends Record<string, unknown>>(
