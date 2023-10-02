@@ -94,6 +94,11 @@ export const endsWith = (value: string): StringTypeFilter => ({ $endsWith: value
 export const pattern = (value: string): StringTypeFilter => ({ $pattern: value });
 
 /**
+ * Operator to restrict results to only values that match the given pattern (case insensitive).
+ */
+export const iPattern = (value: string): StringTypeFilter => ({ $iPattern: value });
+
+/**
  * Operator to restrict results to only values that are equal to the given value.
  */
 export const is = <T>(value: T): PropertyFilter<T> => ({ $is: value });
@@ -112,6 +117,11 @@ export const isNot = <T>(value: T): PropertyFilter<T> => ({ $isNot: value });
  * Operator to restrict results to only values that contain the given value.
  */
 export const contains = (value: string): StringTypeFilter => ({ $contains: value });
+
+/**
+ * Operator to restrict results to only values that contain the given value (case insensitive).
+ */
+export const iContains = (value: string): StringTypeFilter => ({ $iContains: value });
 
 /**
  * Operator to restrict results if some array items match the predicate.

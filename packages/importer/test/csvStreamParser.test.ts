@@ -32,7 +32,7 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'name', type: 'string' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-        data: [{ data: { name: 'Xata' }, index: 0, original: { name: 'Xata' }, errorKeys: [] }]
+        data: [{ data: { name: 'Xata' }, files: {}, index: 0, original: { name: 'Xata' }, errorKeys: [] }]
       },
       meta: {
         ...defaultMeta,
@@ -49,7 +49,7 @@ const commonTestCases: CommonTestCase[] = [
         success: true,
         columns: [{ name: 'name', type: 'text' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
-        data: [{ data: { name: 'Xata' }, index: 0, original: { name: 'Xata' }, errorKeys: [] }]
+        data: [{ data: { name: 'Xata' }, files: {}, index: 0, original: { name: 'Xata' }, errorKeys: [] }]
       },
       meta: {
         ...defaultMeta,
@@ -71,6 +71,7 @@ const commonTestCases: CommonTestCase[] = [
         data: [
           {
             data: { name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') },
+            files: {},
             index: 0,
             original: { name: 'Xata', dob: '2019-01-01' },
             errorKeys: []
@@ -92,8 +93,8 @@ const commonTestCases: CommonTestCase[] = [
         columns: [{ name: 'boolean_1', type: 'bool' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
         data: [
-          { data: { boolean_1: true }, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
-          { data: { boolean_1: false }, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
+          { data: { boolean_1: true }, files: {}, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
+          { data: { boolean_1: false }, files: {}, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
         ]
       },
       meta: {
@@ -112,8 +113,8 @@ const commonTestCases: CommonTestCase[] = [
         columns: [{ name: 'boolean', type: 'bool' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
         data: [
-          { data: { boolean: true }, index: 0, original: { boolean: 'yep' }, errorKeys: [] },
-          { data: { boolean: false }, index: 1, original: { boolean: 'nope' }, errorKeys: [] }
+          { data: { boolean: true }, files: {}, index: 0, original: { boolean: 'yep' }, errorKeys: [] },
+          { data: { boolean: false }, files: {}, index: 1, original: { boolean: 'nope' }, errorKeys: [] }
         ]
       },
       meta: {
@@ -132,8 +133,8 @@ const commonTestCases: CommonTestCase[] = [
         columns: [{ name: 'boolean_1', type: 'string' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
         data: [
-          { data: { boolean_1: 'T' }, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
-          { data: { boolean_1: 'F' }, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
+          { data: { boolean_1: 'T' }, files: {}, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
+          { data: { boolean_1: 'F' }, files: {}, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
         ]
       },
       meta: {
@@ -142,6 +143,7 @@ const commonTestCases: CommonTestCase[] = [
       }
     }
   },
+
   {
     name: 'with errors',
     fileContents: 'boolean_1\nnotABool\nF',
@@ -153,8 +155,14 @@ const commonTestCases: CommonTestCase[] = [
         columns: [{ name: 'boolean_1', type: 'bool' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
         data: [
-          { data: { boolean_1: null }, index: 0, original: { boolean_1: 'notABool' }, errorKeys: ['boolean_1'] },
-          { data: { boolean_1: false }, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
+          {
+            data: { boolean_1: null },
+            files: {},
+            index: 0,
+            original: { boolean_1: 'notABool' },
+            errorKeys: ['boolean_1']
+          },
+          { data: { boolean_1: false }, files: {}, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
         ]
       },
       meta: {
@@ -177,12 +185,14 @@ const commonTestCases: CommonTestCase[] = [
         data: [
           {
             data: { boolean_1: true, string_1: 'something' },
+            files: {},
             index: 0,
             original: { boolean_1: 'T', string_1: 'something' },
             errorKeys: []
           },
           {
             data: { boolean_1: false, string_1: 'else' },
+            files: {},
             index: 1,
             original: { boolean_1: 'F', string_1: 'else' },
             errorKeys: []
@@ -210,12 +220,14 @@ const commonTestCases: CommonTestCase[] = [
         data: [
           {
             data: { boolean_1: true, string_1: 'something' },
+            files: {},
             index: 0,
             original: { boolean_1: 'T', string_1: 'something' },
             errorKeys: []
           },
           {
             data: { boolean_1: false, string_1: 'else' },
+            files: {},
             index: 1,
             original: { boolean_1: 'F', string_1: 'else' },
             errorKeys: []
@@ -242,8 +254,14 @@ const commonTestCases: CommonTestCase[] = [
         ],
         warnings: [],
         data: [
-          { data: { 0: true, 1: 'something' }, index: 0, original: { 0: 'T', 1: 'something' }, errorKeys: [] },
-          { data: { 0: false, 1: 'else' }, index: 1, original: { 0: 'F', 1: 'else' }, errorKeys: [] }
+          {
+            data: { 0: true, 1: 'something' },
+            files: {},
+            index: 0,
+            original: { 0: 'T', 1: 'something' },
+            errorKeys: []
+          },
+          { data: { 0: false, 1: 'else' }, files: {}, index: 1, original: { 0: 'F', 1: 'else' }, errorKeys: [] }
         ]
       },
       meta: {
@@ -261,8 +279,8 @@ const commonTestCases: CommonTestCase[] = [
         columns: [{ name: 'boolean_1', type: 'bool' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
         data: [
-          { data: { boolean_1: true }, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
-          { data: { boolean_1: false }, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
+          { data: { boolean_1: true }, files: {}, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
+          { data: { boolean_1: false }, files: {}, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
         ]
       },
       meta: {
@@ -281,9 +299,9 @@ const commonTestCases: CommonTestCase[] = [
         columns: [{ name: 'boolean_1', type: 'bool' }],
         warnings: ["Unable to auto-detect delimiting character; defaulted to ','"],
         data: [
-          { data: { boolean_1: true }, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
-          { data: { boolean_1: null }, index: 1, original: { boolean_1: '' }, errorKeys: [] },
-          { data: { boolean_1: false }, index: 2, original: { boolean_1: 'F' }, errorKeys: [] }
+          { data: { boolean_1: true }, files: {}, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
+          { data: { boolean_1: null }, files: {}, index: 1, original: { boolean_1: '' }, errorKeys: [] },
+          { data: { boolean_1: false }, files: {}, index: 2, original: { boolean_1: 'F' }, errorKeys: [] }
         ]
       },
       meta: {
@@ -306,12 +324,14 @@ const commonTestCases: CommonTestCase[] = [
         data: [
           {
             data: { boolean_1: true, string_1: 'something' },
+            files: {},
             index: 0,
             original: { boolean_1: 'T', string_1: 'something' },
             errorKeys: []
           },
           {
             data: { boolean_1: false, string_1: 'else' },
+            files: {},
             index: 1,
             original: { boolean_1: 'F', string_1: 'else' },
             errorKeys: []
@@ -338,12 +358,14 @@ const commonTestCases: CommonTestCase[] = [
         data: [
           {
             data: { boolean_1: true, string_1: 'something"' },
+            files: {},
             index: 0,
             original: { boolean_1: 'T', string_1: 'something"' },
             errorKeys: []
           },
           {
             data: { boolean_1: false, string_1: '"else' },
+            files: {},
             index: 1,
             original: { boolean_1: 'F', string_1: '"else' },
             errorKeys: []
@@ -371,6 +393,7 @@ const commonTestCases: CommonTestCase[] = [
         data: [
           {
             data: { boolean_1: true, string_1: 'something' },
+            files: {},
             index: 0,
             original: { boolean_1: 'T', string_1: 'something' },
             errorKeys: []
@@ -397,12 +420,14 @@ const commonTestCases: CommonTestCase[] = [
         data: [
           {
             data: { boolean_1: true, string_1: null },
+            files: {},
             index: 0,
             original: { boolean_1: 'T', string_1: 'null' },
             errorKeys: []
           },
           {
             data: { boolean_1: false, string_1: 'else' },
+            files: {},
             index: 1,
             original: { boolean_1: 'F', string_1: 'else' },
             errorKeys: []
@@ -430,12 +455,14 @@ const commonTestCases: CommonTestCase[] = [
         data: [
           {
             data: { boolean_1: true, string_1: null },
+            files: {},
             index: 0,
             original: { boolean_1: 'T', string_1: 'nil' },
             errorKeys: []
           },
           {
             data: { boolean_1: false, string_1: 'null' },
+            files: {},
             index: 1,
             original: { boolean_1: 'F', string_1: 'null' },
             errorKeys: []
@@ -458,8 +485,8 @@ const commonTestCases: CommonTestCase[] = [
         columns: [{ name: 'boolean_1', type: 'bool' }],
         warnings: [],
         data: [
-          { data: { boolean_1: true }, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
-          { data: { boolean_1: false }, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
+          { data: { boolean_1: true }, files: {}, index: 0, original: { boolean_1: 'T' }, errorKeys: [] },
+          { data: { boolean_1: false }, files: {}, index: 1, original: { boolean_1: 'F' }, errorKeys: [] }
         ]
       },
       meta: {
@@ -510,11 +537,12 @@ const parseCsvStreamTestCases: {
         data: [
           {
             data: { boolean_1: null },
+            files: {},
             index: 0,
             original: {},
             errorKeys: []
           },
-          { data: { boolean_1: null }, index: 1, original: {}, errorKeys: [] }
+          { data: { boolean_1: null }, files: {}, index: 1, original: {}, errorKeys: [] }
         ]
       },
       meta: {
@@ -537,6 +565,7 @@ const parseCsvStreamTestCases: {
         data: [
           {
             data: { name: 'Xata', dob: new Date('2019-01-01T00:00:00.000Z') },
+            files: {},
             index: 0,
             original: { name: 'Xata', dob: '2019-01-01' },
             errorKeys: []

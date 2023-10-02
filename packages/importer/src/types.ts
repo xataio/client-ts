@@ -1,3 +1,4 @@
+import { XataFile } from '@xata.io/client';
 import { Schemas } from '@xata.io/client';
 import stream from 'stream';
 
@@ -6,6 +7,8 @@ type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 type Column = Schemas.Column;
 
 export type ToBoolean = (value: unknown) => boolean | null;
+
+export type ProxyFunction = (url: string) => Promise<Blob>;
 
 export type ColumnOptions = {
   /**
@@ -17,6 +20,11 @@ export type ColumnOptions = {
    * A function to convert a value to a boolean. Should return true, false or null (not a boolean).
    */
   toBoolean?: ToBoolean;
+  /**
+   * Proxy function to use for environments that are not able to reach remote files due to CORS.
+   * This function will be called with the remote file URL to be fetched.
+   * */
+  proxyFunction?: ProxyFunction;
 };
 
 export type ParseCommonOptions = {
@@ -146,6 +154,12 @@ export type ParseCsvStreamBatchesOptions = {
   fileSizeBytes: number;
 } & ParseStreamOptions<WithRequired<ParseCsvOptions, 'columns'>>;
 
+export type ImportFilesOptions = {
+  table: string;
+  ids: Array<string | null>;
+  files: Array<ParseResultData['files']>;
+};
+
 export type ParseMeta = {
   estimatedProgress: number;
   delimiter: string;
@@ -155,7 +169,8 @@ export type ParseMeta = {
 };
 
 export type ParseResultData = {
-  data: unknown;
+  data: Record<string, unknown>;
+  files: Record<string, XataFile | XataFile[]>;
   original: unknown;
   index: number;
   errorKeys: string[];
@@ -179,6 +194,13 @@ export type ImportBatchOptions = {
   columns: Column[];
   table: string;
   batchRows: unknown[];
+};
+
+export type ImportLocation = {
+  workspace: string;
+  region: string;
+  database: string;
+  branch: string;
 };
 
 export type ImportError = { row: unknown; error: string; index: number };

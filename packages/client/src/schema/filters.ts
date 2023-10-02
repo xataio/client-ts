@@ -53,7 +53,9 @@ type IncludesFilter<T> =
       [key in '$all' | '$none' | '$any']?: IncludesFilter<T> | Array<IncludesFilter<T> | { $not: IncludesFilter<T> }>;
     };
 
-export type StringTypeFilter = { [key in '$contains' | '$pattern' | '$startsWith' | '$endsWith']?: string };
+export type StringTypeFilter = {
+  [key in '$contains' | '$iContains' | '$pattern' | '$iPattern' | '$startsWith' | '$endsWith']?: string;
+};
 export type ComparableType = number | Date;
 export type ComparableTypeFilter<T extends ComparableType> = { [key in '$gt' | '$lt' | '$ge' | '$le']?: T };
 export type ArrayFilter<T> =
