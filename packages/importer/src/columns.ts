@@ -4,7 +4,7 @@ import AnyDateParser from 'any-date-parser';
 import CSV from 'papaparse';
 import { ColumnOptions, ToBoolean } from './types';
 import { isValidEmail } from './utils/email';
-import { compact, isDefined } from './utils/lang';
+import { compact, isDefined, isString } from './utils/lang';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 
@@ -57,6 +57,8 @@ const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIs
 
 const isMaybeMultiple = <T>(value: T): boolean => isMultiple(value) || typeof value === 'string';
 
+const isDataUri = <T>(value: T): boolean => isString(value) && /(data:.*?;base64,.*?(?:[;,|]|$))/g.test(value);
+
 // should both of these be a function?
 const defaultIsNull = (value: unknown): boolean => {
   return !isDefined(value) || String(value).toLowerCase() === 'null' || String(value).trim() === '';
@@ -101,6 +103,9 @@ export const guessColumnTypes = <T>(
   }
   if (columnValues.some(isGuessableMultiple)) {
     return 'multiple';
+  }
+  if (columnValues.some((value) => isDataUri(value))) {
+    return 'file[]';
   }
   // text needs to be checked before string
   if (columnValues.some(isText)) {
