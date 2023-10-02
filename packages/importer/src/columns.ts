@@ -5,6 +5,7 @@ import CSV from 'papaparse';
 import { ColumnOptions, ToBoolean } from './types';
 import { isValidEmail } from './utils/email';
 import { compact, isDefined } from './utils/lang';
+import { isString } from 'util';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 
@@ -57,7 +58,7 @@ const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIs
 
 const isMaybeMultiple = <T>(value: T): boolean => isMultiple(value) || typeof value === 'string';
 
-const isDataUri = <T>(value: T): boolean => /(data:.*?;base64,.*?(?:[;,|]|$))/g.test(value as string);
+const isDataUri = <T>(value: T): boolean => isString(value) && /(data:.*?;base64,.*?(?:[;,|]|$))/g.test(value);
 
 // should both of these be a function?
 const defaultIsNull = (value: unknown): boolean => {
