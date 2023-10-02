@@ -89,6 +89,11 @@ const guessNullTestCases = [
   { input: [''], expected: 'string' }
 ];
 
+const guessDataUriTestCases = [
+  { input: ['data:text/plain;base64,aGVsbG8gd29ybGQ='], expected: 'file' },
+  { input: ['data:text/plain;base64,aGVsbG8gd29ybGQ=|data:text/plain;base64,aGVsbG8gd29ybGQ='], expected: 'file[]' }
+];
+
 const tempFile = path.join(__dirname, `test.txt`);
 
 beforeAll(async () => {
@@ -147,6 +152,13 @@ describe('guessColumnTypes', () => {
   });
   describe('schema guessing for nulls', () => {
     for (const { input, expected } of guessNullTestCases) {
+      test(`guesses ${expected} for ${JSON.stringify(input)}`, () => {
+        expect(guessColumnTypes(input)).toEqual(expected);
+      });
+    }
+  });
+  describe('schema guessing for data uris', () => {
+    for (const { input, expected } of guessDataUriTestCases) {
       test(`guesses ${expected} for ${JSON.stringify(input)}`, () => {
         expect(guessColumnTypes(input)).toEqual(expected);
       });
