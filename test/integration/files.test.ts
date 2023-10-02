@@ -58,11 +58,9 @@ describe('file support', () => {
 
   test('create file with binary endpoint JSON and mediaType override', async () => {
     const record = await xata.db.users.create({ name: 'another' });
-    const file = await xata.files.upload(
-      { table: 'users', column: 'attachments', record: record.id },
-      json,
-      'text/plain'
-    );
+    const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, json, {
+      mediaType: 'text/plain'
+    });
 
     expect(file.id).toBeDefined();
     expect(file.mediaType).toBe('text/plain');
