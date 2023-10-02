@@ -4,8 +4,7 @@ import AnyDateParser from 'any-date-parser';
 import CSV from 'papaparse';
 import { ColumnOptions, ToBoolean } from './types';
 import { isValidEmail } from './utils/email';
-import { compact, isDefined } from './utils/lang';
-import { isString } from 'util';
+import { compact, isDefined, isString } from './utils/lang';
 
 const anyToDate = AnyDateParser.exportAsFunctionAny();
 

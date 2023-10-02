@@ -8,6 +8,10 @@ export function isObject<T>(value: T | unknown): value is T {
   return isDefined(value) && typeof value === 'object';
 }
 
+export function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
 function notEmpty<T>(value: T | null | undefined): value is T {
   return value !== null && value !== undefined;
 }
