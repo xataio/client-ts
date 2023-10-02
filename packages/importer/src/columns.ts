@@ -57,17 +57,7 @@ const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIs
 
 const isMaybeMultiple = <T>(value: T): boolean => isMultiple(value) || typeof value === 'string';
 
-const dataUriRegex = RegExp(/(data:.*?;base64,.*?(?:[;,|]|$))/g);
-
-const isDataUri = <T>(value: T): boolean => {
-  const matches = new String(value as string).match(dataUriRegex);
-  return matches && matches.length === 1 ? true : false;
-};
-
-const isDataUriMultiple = <T>(value: T): boolean => {
-  const matches = new String(value as string).match(dataUriRegex);
-  return matches && matches.length > 1 ? true : false;
-};
+const isDataUri = <T>(value: T): boolean => /(data:.*?;base64,.*?(?:[;,|]|$))/g.test(value as string);
 
 // should both of these be a function?
 const defaultIsNull = (value: unknown): boolean => {
@@ -115,9 +105,6 @@ export const guessColumnTypes = <T>(
     return 'multiple';
   }
   if (columnValues.some((value) => isDataUri(value))) {
-    return 'file';
-  }
-  if (columnValues.some((value) => isDataUriMultiple(value))) {
     return 'file[]';
   }
   // text needs to be checked before string

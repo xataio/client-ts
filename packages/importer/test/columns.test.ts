@@ -90,7 +90,7 @@ const guessNullTestCases = [
 ];
 
 const guessDataUriTestCases = [
-  { input: ['data:text/plain;base64,aGVsbG8gd29ybGQ='], expected: 'file' },
+  { input: ['data:text/plain;base64,aGVsbG8gd29ybGQ='], expected: 'file[]' },
   { input: ['data:text/plain;base64,aGVsbG8gd29ybGQ=|data:text/plain;base64,aGVsbG8gd29ybGQ='], expected: 'file[]' }
 ];
 
