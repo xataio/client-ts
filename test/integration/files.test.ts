@@ -56,6 +56,29 @@ describe('file support', () => {
     expect(record.photo?.toString()).toBe('hello');
   });
 
+  test('create file with binary endpoint JSON and mediaType override', async () => {
+    const record = await xata.db.users.create({ name: 'another' });
+    const file = await xata.files.upload(
+      { table: 'users', column: 'attachments', record: record.id },
+      json,
+      'text/plain'
+    );
+
+    expect(file.id).toBeDefined();
+    expect(file.mediaType).toBe('text/plain');
+
+    const query = await record.read(['attachments.*', 'attachments.base64Content']);
+
+    expect(query?.attachments?.[0]?.mediaType).toBe('text/plain');
+    expect(query?.attachments?.[0]?.base64Content).toBeDefined();
+
+    const attachment = query?.attachments?.[0]?.toBlob();
+
+    expect(attachment).toBeInstanceOf(Blob);
+    const content = await attachment?.text();
+    expect(content).toBe('{"hello":"world"}');
+  });
+
   test('create file with binary endpoint JSON', async () => {
     const record = await xata.db.users.create({ name: 'another' });
     const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, json);
