@@ -30,7 +30,7 @@
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
     "@faker-js/faker": "^8.1.0",
-    "@xata.io/client": "^0.26.5",
+    "@xata.io/client": "^0.26.6",
     "any-date-parser": "^1.5.4",
     "lodash.pick": "^4.4.0",
     "lodash.chunk": "^4.2.0",
