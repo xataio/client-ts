@@ -153,6 +153,7 @@ export const coerceValue = async (
       const date = anyToDate(value);
       return date.invalid ? { value: null, isError: true } : { value: date, isError: false };
     }
+    case 'vector':
     case 'multiple': {
       return isMaybeMultiple(value)
         ? { value: parseMultiple(String(value)), isError: false }
