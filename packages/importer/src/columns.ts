@@ -214,11 +214,23 @@ export const coerceRows = async <T extends Record<string, unknown>>(
   columns: Schemas.Column[],
   options?: ColumnOptions
 ): Promise<Record<string, CoercedValue>[]> => {
-  const mapped = [];
+  const columnValues = [];
   for (const row of rows) {
+    for (const column of columns) {
+      columnValues.push(coerceValue(row[column.name], column.type, options));
+    }
+  }
+  const results = await Promise.allSettled(columnValues);
+  const mapped = [];
+  let index = 0;
+  for (const _row of rows) {
     const mappedRow: Record<string, CoercedValue> = {};
     for (const column of columns) {
-      mappedRow[column.name] = await coerceValue(row[column.name], column.type, options);
+      const result = results[index];
+      if (result.status === 'fulfilled') {
+        mappedRow[column.name] = result.value;
+      }
+      index = index + 1;
     }
     mapped.push(mappedRow);
   }
