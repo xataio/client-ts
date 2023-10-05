@@ -80,6 +80,12 @@ const guessMultipleTestCases = [
   { input: [['foo', 'bar']], expected: 'multiple' }
 ];
 
+const guessVectorTestCases = [
+  { input: [JSON.stringify(Array.from({ length: 500 }, () => Math.random()))], expected: 'vector' },
+  { input: [JSON.stringify(Array.from({ length: 10 }, () => Math.random()))], expected: 'multiple' },
+  { input: [JSON.stringify(['a', ...Array.from({ length: 500 }, () => Math.random())])], expected: 'multiple' }
+];
+
 const guessNullTestCases = [
   { input: [undefined], expected: 'string' },
   { input: ['null'], expected: 'string' },
@@ -145,6 +151,13 @@ describe('guessColumnTypes', () => {
   });
   describe('schema guessing for multiples', () => {
     for (const { input, expected } of guessMultipleTestCases) {
+      test(`guesses ${expected} for ${JSON.stringify(input)}`, () => {
+        expect(guessColumnTypes(input as any)).toEqual(expected);
+      });
+    }
+  });
+  describe('schema guessing for vectors', () => {
+    for (const { input, expected } of guessVectorTestCases) {
       test(`guesses ${expected} for ${JSON.stringify(input)}`, () => {
         expect(guessColumnTypes(input as any)).toEqual(expected);
       });

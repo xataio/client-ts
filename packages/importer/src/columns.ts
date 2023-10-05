@@ -64,8 +64,9 @@ const isGuessableVectorColumn = <T>(values: T[]): boolean => {
     return array.length;
   });
 
+  // Some old papers used vectors of length 300, ideally they have more than 200
   const length = checks.find((value) => value !== null);
-  if (length === null || length === undefined) return false;
+  if (!length || length < 200) return false;
 
   return checks.every((value) => value !== null && value === length);
 };
