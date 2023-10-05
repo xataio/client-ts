@@ -10,7 +10,8 @@ export default class BranchCreate extends BaseCommand<typeof BranchCreate> {
     ...this.commonFlags,
     ...this.databaseURLFlag,
     from: Flags.string({
-      description: 'Branch name to branch off from'
+      description: 'Branch name to branch off from',
+      default: 'main'
     })
   };
 
