@@ -15,7 +15,7 @@
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "tsc": "tsc --noEmit",
-    "test": "NODE_OPTIONS='--loader=tsx --no-warnings' ava --serial test/*.ava.ts"
+    "test": "NODE_OPTIONS='--loader=tsx --no-warnings' ava --verbose --serial test/*.ava.ts"
   },
   "author": "",
   "license": "Apache-2.0",

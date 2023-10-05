@@ -60,6 +60,8 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
       params
     });
 
+    console.debug('execute', { statement: this.query.statement, params, result: records.length });
+
     // FIXME: This is a hack, we should be able to get the fields from the query but SELECT * fails
     const fields =
       this.fields ??
