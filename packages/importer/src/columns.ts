@@ -53,6 +53,23 @@ const parseMultiple = (value: string): string[] | null => {
 
 const isGuessableMultiple = <T>(value: T): boolean => Array.isArray(value) || tryIsJsonArray(String(value));
 
+const isGuessableVectorColumn = <T>(values: T[]): boolean => {
+  const checks = values.map((value) => {
+    const isMultiple = isGuessableMultiple(value);
+    if (!isMultiple) return null;
+
+    const array = parseMultiple(String(value)) ?? [];
+    if (array.some((item) => !isFloat(item))) return null;
+
+    return array.length;
+  });
+
+  const length = checks.find((value) => value !== null);
+  if (length === null || length === undefined) return false;
+
+  return checks.every((value) => value !== null && value === length);
+};
+
 const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIsCsvArray(String(value));
 
 const isMaybeMultiple = <T>(value: T): boolean => isMultiple(value) || typeof value === 'string';
@@ -100,6 +117,9 @@ export const guessColumnTypes = <T>(
   }
   if (columnValues.every(isEmail)) {
     return 'email';
+  }
+  if (isGuessableVectorColumn(columnValues)) {
+    return 'vector';
   }
   if (columnValues.some(isGuessableMultiple)) {
     return 'multiple';

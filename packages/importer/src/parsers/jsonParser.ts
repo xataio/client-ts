@@ -2,9 +2,24 @@ import JSON from 'json5';
 import { coerceRows, guessColumns } from '../columns';
 import { ParseJsonOptions, ParseResults } from '../types';
 import { isDefined, isObject, isXataFile, partition } from '../utils/lang';
+import { Schemas } from '@xata.io/client';
 
 const arrayToObject = (array: unknown[]) => {
   return Object.fromEntries(array.map((value, index) => [index, value]));
+};
+
+// Some columns need to be prepared before coercing the rows
+const prepareColumns = (columns: Schemas.Column[], values: { data: Record<string, unknown> }[]): Schemas.Column[] => {
+  return columns.map((column) => {
+    switch (column.type) {
+      case 'vector': {
+        const dimension = (values[0]?.data?.[column.name] as unknown[])?.length ?? 0;
+        return { ...column, vector: { dimension } };
+      }
+      default:
+        return column;
+    }
+  });
 };
 
 export const parseJson = async (options: ParseJsonOptions, startIndex = 0): Promise<ParseResults> => {
@@ -13,8 +28,8 @@ export const parseJson = async (options: ParseJsonOptions, startIndex = 0): Prom
   const array = Array.isArray(input) ? input : isObject(input) ? [input] : JSON.parse(input);
 
   const arrayUpToLimit = isDefined(limit) ? array.slice(0, limit) : array;
-  const columns = externalColumns ?? guessColumns(arrayUpToLimit, options);
-  const item = await coerceRows(arrayUpToLimit, columns, options);
+  const columnsGuessed = externalColumns ?? guessColumns(arrayUpToLimit, options);
+  const item = await coerceRows(arrayUpToLimit, columnsGuessed, options);
 
   const data = item.map((row, index) => {
     const original = Array.isArray(arrayUpToLimit[index])
@@ -38,6 +53,8 @@ export const parseJson = async (options: ParseJsonOptions, startIndex = 0): Prom
       errorKeys
     };
   });
+
+  const columns = prepareColumns(columnsGuessed, data);
 
   return { success: true, columns, warnings: [], data };
 };

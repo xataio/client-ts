@@ -79,14 +79,14 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       'null-value': nullValues
     } = flags;
     const header = !noHeader;
-    let columns = flagsToColumns(flags);
+    const flagColumns = flagsToColumns(flags);
 
     const csvOptions = {
       delimiter,
       delimitersToGuess: delimitersToGuess ? splitCommas(delimitersToGuess) : undefined,
       header,
       nullValues,
-      columns,
+      columns: flagColumns,
       limit
     };
 
@@ -107,12 +107,8 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (!parseResults.success) {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }
-    if (!columns) {
-      columns = parseResults.columns;
-    }
-    if (!columns) {
-      throw new Error('No columns found');
-    }
+
+    const { columns } = parseResults;
     await this.migrateSchema({ table, columns, create });
 
     let importSuccessCount = 0;
