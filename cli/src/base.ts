@@ -148,13 +148,13 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       // Just skip this check then
       return;
     }
-    const compatibleVersions = packageInfo.cli.compatibility
+    const compatibleRange = packageInfo.cli.compatibility
       .filter((v) => v.compatible)
       .map((v) => v.range)
       .join('||');
-    const semverCompatible = semver.satisfies(currentVersion, compatibleVersions);
+    const semverCompatible = semver.satisfies(currentVersion, compatibleRange);
     if (!semverCompatible)
-      this.error(`Incompatible version of CLI. Please upgrade to a version that satisfies: ${compatibleVersions}.`);
+      this.error(`Incompatible version of CLI. Please upgrade to a version that satisfies: ${compatibleRange}.`);
 
     const latestVersion = packageInfo.cli.latest;
     const latest = semver.lt(currentVersion, latestVersion);
