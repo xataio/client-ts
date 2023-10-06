@@ -142,8 +142,11 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     const currentVersion = this.config.version;
     let packageInfo: VersionResponse;
     try {
-      const res = await fetch('https://app.xata.io/api/integrations/cli/compatibility');
-      packageInfo = (await res.json()) as unknown as VersionResponse;
+      const res = await fetch('https://xata-kums55dn8-xata.vercel.app/api/integrations/cli/compatibility');
+      const body = (await res.json()) as unknown as VersionResponse;
+      if (res.status !== 200) throw new Error(`Unexpected status code: ${res.status}`);
+      if (!body.cli.latest || body.cli.latest === 'unknown') throw new Error(`Latest version is unknown`);
+      packageInfo = body;
     } catch (e) {
       // Just skip this check then
       return;
