@@ -139,27 +139,29 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   }
 
   async checkCompatibility() {
+    const currentVersion = this.config.version;
+    let packageInfo: VersionResponse;
     try {
-      const currentVersion = this.config.version;
       const res = await fetch('https://app.xata.io/api/integrations/cli/compatibility');
-      const packageInfo = (await res.json()) as unknown as VersionResponse;
-
-      const compatibleVersions = packageInfo.cli.compatibility
-        .filter((v) => v.compatible)
-        .map((v) => v.range)
-        .join('||');
-      const semverCompatible = semver.satisfies(currentVersion, compatibleVersions);
-      if (!semverCompatible) this.error(`Incompatible version of CLI. Does not satisfy ${compatibleVersions}.`);
-
-      const latestVersion = packageInfo.cli.latest;
-      const latest = semver.lt(currentVersion, latestVersion);
-      if (latest)
-        this.log(
-          `✨ A newer version of the Xata CLI is now available: ${latestVersion}. You are currently using version ${currentVersion}.`
-        );
+      packageInfo = (await res.json()) as unknown as VersionResponse;
     } catch (e) {
       // Just skip this check then
+      return;
     }
+    const compatibleVersions = packageInfo.cli.compatibility
+      .filter((v) => v.compatible)
+      .map((v) => v.range)
+      .join('||');
+    const semverCompatible = semver.satisfies(currentVersion, compatibleVersions);
+    if (!semverCompatible)
+      this.error(`Incompatible version of CLI. Please upgrade to a version that satisfies: ${compatibleVersions}.`);
+
+    const latestVersion = packageInfo.cli.latest;
+    const latest = semver.lt(currentVersion, latestVersion);
+    if (latest)
+      this.log(
+        `✨ A newer version of the Xata CLI is now available: ${latestVersion}. You are currently using version ${currentVersion}.`
+      );
   }
 
   async init() {
