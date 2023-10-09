@@ -19,27 +19,23 @@ const hook: Hook<'init'> = async function (_options) {
   const compatibilityFile = `${dir}/compatibility.json`;
 
   const checkWarning = async () => {
-    try {
-      // Latest version check
-      const tag: LatestResponse = JSON.parse(await readFile(latestFile, 'utf-8'));
-      const updateAvailable = semver.lt(this.config.version, tag.latest);
-      if (updateAvailable)
-        this.warn(
-          `✨ A newer version of the Xata CLI is now available: ${tag.latest}. You are currently using version: ${this.config.version}`
-        );
+    // Latest version check
+    const tag: LatestResponse = JSON.parse(await readFile(latestFile, 'utf-8'));
+    const updateAvailable = semver.lt(this.config.version, tag.latest);
+    if (updateAvailable)
+      this.log(
+        `✨ A newer version of the Xata CLI is now available: ${tag.latest}. You are currently using version: ${this.config.version}`
+      );
 
-      // Compatibility check
-      const compatibility: VersionResponse = JSON.parse(await readFile(compatibilityFile, 'utf-8'));
-      const compatibleRange = compatibility.cli.compatibility
-        .filter((v) => v.compatible)
-        .map((v) => v.range)
-        .join('||');
-      const semverCompatible = semver.satisfies(this.config.version, compatibleRange);
-      if (!semverCompatible)
-        this.error(`Incompatible version of CLI. Please upgrade to a version that satisfies: ${compatibleRange}.`);
-    } catch (_e) {
-      // Do nothing
-    }
+    // Compatibility check
+    const compatibility: VersionResponse = JSON.parse(await readFile(compatibilityFile, 'utf-8'));
+    const compatibleRange = compatibility.cli.compatibility
+      .filter((v) => v.compatible)
+      .map((v) => v.range)
+      .join('||');
+    const semverCompatible = semver.satisfies(this.config.version, compatibleRange);
+    if (!semverCompatible)
+      this.error(`Incompatible version of CLI. Please upgrade to a version that satisfies: ${compatibleRange}.`);
   };
 
   const refreshNeeded = async () => {
