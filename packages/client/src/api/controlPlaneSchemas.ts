@@ -176,35 +176,90 @@ export type ListClustersResponse = {
  * @x-internal true
  */
 export type AutoscalingConfig = {
-  enabled: boolean;
   /**
-   * @format int64
+   * @format double
+   * @default 2
    */
-  minCapacity: number;
+  minCapacity?: number;
   /**
-   * @format int64
+   * @format double
+   * @default 16
    */
-  maxCapacity: number;
+  maxCapacity?: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type WeeklyTimeWindow = {
+  day: 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+  /**
+   * @maximum 24
+   * @minimum 0
+   */
+  hour: number;
+  /**
+   * @maximum 60
+   * @minimum 0
+   */
+  minute: number;
+  /**
+   * @format float
+   * @maximum 23.5
+   * @minimum 0.5
+   */
+  duration: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type DailyTimeWindow = {
+  /**
+   * @maximum 24
+   * @minimum 0
+   */
+  hour: number;
+  /**
+   * @maximum 60
+   * @minimum 0
+   */
+  minute: number;
+  /**
+   * @format float
+   */
+  duration: number;
 };
 
 /**
  * @x-internal true
  */
 export type MaintenanceConfig = {
+  /**
+   * @default false
+   */
   autoMinorVersionUpgrade?: boolean;
-  maintenanceWindow?: string;
-  plannedChangesWindow?: string;
+  /**
+   * @default false
+   */
+  applyImmediately?: boolean;
+  maintenanceWindow?: WeeklyTimeWindow;
+  backupWindow?: DailyTimeWindow;
 };
 
 /**
  * @x-internal true
  */
 export type ClusterConfiguration = {
+  engineVersion: string;
   instanceType: string;
   /**
    * @format int64
    */
   replicas?: number;
+  /**
+   * @default false
+   */
   deletionProtection?: boolean;
   autoscaling?: AutoscalingConfig;
   maintenance?: MaintenanceConfig;
