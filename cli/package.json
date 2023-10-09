@@ -47,6 +47,7 @@
     "edge-runtime": "^2.5.3",
     "enquirer": "^2.4.1",
     "env-editor": "^1.1.0",
+    "http-call": "^5.3.0",
     "ini": "^4.1.1",
     "lodash.compact": "^3.0.1",
     "lodash.get": "^4.4.2",
@@ -88,6 +89,9 @@
   },
   "oclif": {
     "bin": "xata",
+    "hooks": {
+      "init": "./dist/hooks/init/compatibility"
+    },
     "dirname": "xata",
     "commands": "./dist/commands",
     "plugins": [

@@ -1,5 +1,4 @@
 import { Command, Flags, Interfaces } from '@oclif/core';
-import * as semver from 'semver';
 import {
   buildClient,
   getAPIKey,
@@ -48,13 +47,6 @@ export const ENV_FILES = ['.env.local', '.env'];
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<(typeof BaseCommand)['baseFlags'] & T['flags']>;
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
-type Packages = 'cli' | 'sdk';
-type VersionResponse = {
-  [key in Packages]: {
-    latest: string;
-    compatibility: { range: string; compatible: boolean; error?: string }[];
-  };
-};
 
 export abstract class BaseCommand<T extends typeof Command> extends Command {
   // Date formatting is not consistent across locales and timezones, so we need to set the locale and timezone for unit tests.
@@ -138,35 +130,6 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
   }
 
-  async checkCompatibility() {
-    const currentVersion = this.config.version;
-    let packageInfo: VersionResponse;
-    try {
-      const res = await fetch('https://xata-kums55dn8-xata.vercel.app/api/integrations/cli/compatibility');
-      const body = (await res.json()) as unknown as VersionResponse;
-      if (res.status !== 200) throw new Error(`Unexpected status code: ${res.status}`);
-      if (!body.cli.latest || body.cli.latest === 'unknown') throw new Error(`Latest version is unknown`);
-      packageInfo = body;
-    } catch (e) {
-      // Just skip this check then
-      return;
-    }
-    const compatibleRange = packageInfo.cli.compatibility
-      .filter((v) => v.compatible)
-      .map((v) => v.range)
-      .join('||');
-    const semverCompatible = semver.satisfies(currentVersion, compatibleRange);
-    if (!semverCompatible)
-      this.error(`Incompatible version of CLI. Please upgrade to a version that satisfies: ${compatibleRange}.`);
-
-    const latestVersion = packageInfo.cli.latest;
-    const latest = semver.lt(currentVersion, latestVersion);
-    if (latest)
-      this.log(
-        `✨ A newer version of the Xata CLI is now available: ${latestVersion}. You are currently using version ${currentVersion}.`
-      );
-  }
-
   async init() {
     if (process.env.XATA_API_KEY) this.apiKeyLocation = 'shell';
     for (const envFile of ENV_FILES) {
@@ -185,8 +148,6 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
         this.printZodError(result.error);
       }
     }
-
-    await this.checkCompatibility();
   }
 
   async catch(err: Error & { exitCode?: number | undefined }): Promise<any> {
