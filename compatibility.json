@@ -1,0 +1,28 @@
+{
+  "cli": {
+    "compatibility": [
+      {
+        "range": ">0.0.1",
+        "compatible": true
+      },
+      {
+        "range": "<0.0.1",
+        "compatbile": false,
+        "error": "Please update to v0.0.1"
+      }
+    ]
+  },
+  "sdk": {
+    "compatibility": [
+      {
+        "range": ">0.0.1",
+        "compatible": true
+      },
+      {
+        "range": "<0.0.1",
+        "compatbile": false,
+        "error": "Please update to v0.0.1"
+      }
+    ]
+  }
+}

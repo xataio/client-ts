@@ -63,10 +63,13 @@ const hook: Hook<'init'> = async function (_options) {
       const latest = latestVersionResponse.body['dist-tags'].latest;
       await writeFile(latestFile, JSON.stringify({ latest }, null, 2));
 
-      // TODO replace with prod once PR merged
-      const latestCompatibilityResponse = await HTTP.get('http://localhost:3000/api/integrations/cli/compatibility', {
-        timeout: 5000
-      });
+      // TODO replace branch with main
+      const latestCompatibilityResponse = await HTTP.get(
+        'https://raw.githubusercontent.com/xataio/client-ts/feat/compatibility-endpoint/compatibility.json',
+        {
+          timeout: 5000
+        }
+      );
       const body = latestCompatibilityResponse.body as any;
       await writeFile(compatibilityFile, JSON.stringify({ ...body }, null, 2));
     } catch (_e) {
