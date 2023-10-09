@@ -62,16 +62,14 @@ const hook: Hook<'init'> = async function (_options) {
       const latestVersionResponse: any = await HTTP.get('https://registry.npmjs.org/@xata.io%2fcli', { timeout: 5000 });
       const latest = latestVersionResponse.body['dist-tags'].latest;
       await writeFile(latestFile, JSON.stringify({ latest }, null, 2));
-
-      // TODO replace branch with main
       const latestCompatibilityResponse = await HTTP.get(
-        'https://raw.githubusercontent.com/xataio/client-ts/feat/compatibility-endpoint/compatibility.json',
+        'https://raw.githubusercontent.com/xataio/client-ts/main/compatibility.json',
         {
           timeout: 5000
         }
       );
       const body = latestCompatibilityResponse.body as any;
-      await writeFile(compatibilityFile, JSON.stringify({ ...body }, null, 2));
+      await writeFile(compatibilityFile, body);
     } catch (_e) {
       // Do nothing
     }
