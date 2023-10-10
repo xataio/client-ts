@@ -64,11 +64,7 @@ const isGuessableVectorColumn = <T>(values: T[]): boolean => {
     return array.length;
   });
 
-  // Some old papers used vectors of length 300, ideally they have more than 200
-  const length = checks.find((value) => value !== null);
-  if (!length || length < 200) return false;
-
-  return checks.every((value) => value !== null && value === length);
+  return checks.every((length) => length !== null && length > 50);
 };
 
 const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIsCsvArray(String(value));
@@ -142,7 +138,7 @@ export type CoercedValue = {
 
 export const coerceValue = async (
   value: unknown,
-  type: Schemas.Column['type'],
+  column: Schemas.Column,
   options: ColumnOptions = {}
 ): Promise<CoercedValue> => {
   const { isNull = defaultIsNull, toBoolean = defaultToBoolean, proxyFunction } = options;
@@ -151,7 +147,7 @@ export const coerceValue = async (
     return { value: null, isError: false };
   }
 
-  switch (type) {
+  switch (column.type) {
     case 'string':
     case 'text':
     case 'link': {
@@ -174,11 +170,19 @@ export const coerceValue = async (
       const date = anyToDate(value);
       return date.invalid ? { value: null, isError: true } : { value: date, isError: false };
     }
-    case 'vector':
     case 'multiple': {
       return isMaybeMultiple(value)
         ? { value: parseMultiple(String(value)), isError: false }
         : { value: null, isError: true };
+    }
+    case 'vector': {
+      const array = parseMultiple(String(value));
+      if (!array) return { value: null, isError: true };
+
+      return {
+        value: array,
+        isError: array.some((item) => !isFloat(item)) || array.length !== column.vector?.dimension
+      };
     }
     case 'file': {
       const file = await parseFile((value as string).trim(), proxyFunction);
@@ -240,7 +244,7 @@ export const coerceRows = async <T extends Record<string, unknown>>(
   for (const row of rows) {
     const mappedRow: Record<string, CoercedValue> = {};
     for (const column of columns) {
-      mappedRow[column.name] = await coerceValue(row[column.name], column.type, options);
+      mappedRow[column.name] = await coerceValue(row[column.name], column, options);
     }
     mapped.push(mappedRow);
   }

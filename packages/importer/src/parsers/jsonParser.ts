@@ -13,6 +13,7 @@ const prepareColumns = (columns: Schemas.Column[], values: { data: Record<string
   return columns.map((column) => {
     switch (column.type) {
       case 'vector': {
+        // We get the dimension from the first row
         const dimension = (values[0]?.data?.[column.name] as unknown[])?.length ?? 0;
         return { ...column, vector: { dimension } };
       }
