@@ -1911,8 +1911,14 @@ export class RestRepository<Record extends XataRecord>
         },
         ...this.#getFetchProps()
       });
-
-      return result;
+      const schemaTables = await this.#getSchemaTables();
+      const response = {
+        ...result,
+        summaries: result.summaries.map((summary) =>
+          initObject(this.#db, schemaTables, this.#table, summary, data.columns ?? [])
+        )
+      };
+      return response;
     });
   }
 
@@ -2107,7 +2113,7 @@ export const initObject = <T>(
   }
 
   const record = { ...data };
-  const metadata =
+  const metadata: Object | undefined =
     xata !== undefined
       ? { ...xata, createdAt: new Date(xata.createdAt), updatedAt: new Date(xata.updatedAt) }
       : undefined;
@@ -2134,7 +2140,10 @@ export const initObject = <T>(
     return db[table].delete(record['id'] as string);
   };
 
-  record.xata = Object.freeze(metadata);
+  if (metadata) {
+    record.xata = Object.freeze(metadata);
+  }
+
   record.getMetadata = function () {
     return record.xata;
   };

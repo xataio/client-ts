@@ -27,6 +27,20 @@ afterEach(async (ctx) => {
 });
 
 describe('JSON support', () => {
+  test('read returns json', async () => {
+    const record = await xata.db.teams.create({ name: 'test', config: { hello: 'world' } });
+    const read = await xata.db.teams.read(record.id, ['config']);
+    expect(read?.config.hello).toBe('world');
+  });
+  test('summarize returns json', async () => {
+    await xata.db.teams.create({ name: 'test', config: { hello: 'world' } });
+    const summarize = await xata.db.teams.summarize({
+      columns: ['config'],
+      summaries: {}
+    });
+    expect(summarize?.summaries[0].config.hello).toBe('world');
+  });
+
   test('create file with JSON as object', async () => {
     const record = await xata.db.teams.create({ name: 'test', config: { hello: 'world' } });
 
