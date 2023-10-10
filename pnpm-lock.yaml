@@ -223,9 +223,6 @@ importers:
       env-editor:
         specifier: ^1.1.0
         version: 1.1.0
-      http-call:
-        specifier: ^5.3.0
-        version: 5.3.0
       ini:
         specifier: ^4.1.1
         version: 4.1.1

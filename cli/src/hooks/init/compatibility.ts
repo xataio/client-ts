@@ -1,9 +1,9 @@
 import { Hook } from '@oclif/core';
 import { readFile, stat, writeFile } from 'fs/promises';
 import semver from 'semver';
-import { HTTP } from 'http-call';
 import { mkdir } from 'fs';
 import path from 'path';
+import fetch from 'node-fetch';
 
 export type Packages = 'cli' | 'sdk';
 export type VersionResponse = {
@@ -51,20 +51,17 @@ const hook: Hook<'init'> = async function (_options) {
     }
   };
 
-  // Could be separate child process
   const fetchInfo = async () => {
     try {
       mkdir(dir, { recursive: true }, () => {});
-      const latestVersionResponse: any = await HTTP.get('https://registry.npmjs.org/@xata.io%2fcli', { timeout: 5000 });
-      const latest = latestVersionResponse.body['dist-tags'].latest;
+      const latestVersionResponse = await fetch('https://registry.npmjs.org/@xata.io%2fcli');
+      const latestBody: any = await latestVersionResponse.json();
+      const latest = latestBody['dist-tags'].latest;
       await writeFile(latestFile, JSON.stringify({ latest }, null, 2));
-      const latestCompatibilityResponse = await HTTP.get(
-        'https://raw.githubusercontent.com/xataio/client-ts/main/compatibility.json',
-        {
-          timeout: 5000
-        }
+      const latestCompatibilityResponse = await fetch(
+        'https://raw.githubusercontent.com/xataio/client-ts/main/compatibility.json'
       );
-      const body = latestCompatibilityResponse.body as any;
+      const body: any = latestCompatibilityResponse.body;
       await writeFile(compatibilityFile, body);
     } catch (_e) {
       // Do nothing
