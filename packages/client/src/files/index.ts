@@ -70,11 +70,12 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
       },
       upload: async (
         location: Record<string, string | undefined>,
-        file: BinaryFile,
+        file: BinaryFile | XataFile,
         options?: { mediaType?: string }
       ) => {
         const { table, record, column, fileId = '' } = location ?? {};
         const contentType = options?.mediaType || getContentType(file);
+        const body = file instanceof XataFile ? file.toBlob() : (file as Blob);
 
         return await putFileItem({
           ...pluginOptions,
@@ -87,7 +88,7 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
             columnName: column ?? '',
             fileId
           },
-          body: file as Blob,
+          body,
           headers: { 'Content-Type': contentType }
         });
       },
@@ -111,9 +112,14 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
   }
 }
 
-function getContentType(file: BinaryFile): string {
+function getContentType(file: BinaryFile | XataFile): string {
   if (typeof file === 'string') {
     return 'text/plain';
+  }
+
+  // Check for XataFile
+  if ('mediaType' in file) {
+    return file.mediaType;
   }
 
   if (isBlob(file)) {
