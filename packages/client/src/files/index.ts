@@ -6,7 +6,7 @@ import { BaseData, XataRecord } from '../schema/record';
 import { isBlob } from '../util/lang';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
-export type BinaryFile = string | Blob | ArrayBuffer;
+export type BinaryFile = string | Blob | ArrayBuffer | XataFile | Promise<XataFile>;
 
 export type FilesPluginResult<Schemas extends Record<string, BaseData>> = {
   download: <Tables extends StringKeys<Schemas>>(location: DownloadDestination<Schemas, Tables>) => Promise<Blob>;
@@ -70,7 +70,7 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
       },
       upload: async (
         location: Record<string, string | undefined>,
-        file: BinaryFile | XataFile | Promise<BinaryFile | XataFile>,
+        file: BinaryFile,
         options?: { mediaType?: string }
       ) => {
         const { table, record, column, fileId = '' } = location ?? {};
@@ -113,7 +113,7 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
   }
 }
 
-function getContentType(file: BinaryFile | XataFile): string {
+function getContentType(file: BinaryFile): string {
   if (typeof file === 'string') {
     return 'text/plain';
   }
