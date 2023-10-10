@@ -114,4 +114,26 @@ describe('file support', () => {
     const content = await attachment?.text();
     expect(content).toBe('hello,world');
   });
+
+  test('create XataFile on binary endpoint', async () => {
+    const record = await xata.db.users.create({ name: 'another' });
+    const file = await xata.files.upload(
+      { table: 'users', column: 'attachments', record: record.id },
+      XataFile.fromBlob(csv)
+    );
+
+    expect(file.id).toBeDefined();
+    expect(file.mediaType).toBe('text/csv');
+
+    const query = await record.read(['attachments.*', 'attachments.base64Content']);
+
+    expect(query?.attachments?.[0]?.mediaType).toBe('text/csv');
+    expect(query?.attachments?.[0]?.base64Content).toBeDefined();
+
+    const attachment = query?.attachments?.[0]?.toBlob();
+
+    expect(attachment).toBeInstanceOf(Blob);
+    const content = await attachment?.text();
+    expect(content).toBe('hello,world');
+  });
 });
