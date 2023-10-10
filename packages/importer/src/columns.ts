@@ -170,19 +170,19 @@ export const coerceValue = async (
       const date = anyToDate(value);
       return date.invalid ? { value: null, isError: true } : { value: date, isError: false };
     }
+    case 'vector': {
+      if (!isMaybeMultiple(value)) return { value: null, isError: true };
+      const array = parseMultiple(String(value));
+
+      return {
+        value: array,
+        isError: array?.some((item) => !isFloat(item)) || array?.length !== column.vector?.dimension
+      };
+    }
     case 'multiple': {
       return isMaybeMultiple(value)
         ? { value: parseMultiple(String(value)), isError: false }
         : { value: null, isError: true };
-    }
-    case 'vector': {
-      const array = parseMultiple(String(value));
-      if (!array) return { value: null, isError: true };
-
-      return {
-        value: array,
-        isError: array.some((item) => !isFloat(item)) || array.length !== column.vector?.dimension
-      };
     }
     case 'file': {
       const file = await parseFile((value as string).trim(), proxyFunction);
