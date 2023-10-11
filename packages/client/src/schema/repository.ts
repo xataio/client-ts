@@ -1912,13 +1912,12 @@ export class RestRepository<Record extends XataRecord>
         ...this.#getFetchProps()
       });
       const schemaTables = await this.#getSchemaTables();
-      const response = {
+      return {
         ...result,
         summaries: result.summaries.map((summary) =>
           initObject(this.#db, schemaTables, this.#table, summary, data.columns ?? [])
         )
       };
-      return response;
     });
   }
 
