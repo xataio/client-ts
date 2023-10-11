@@ -1,0 +1,1 @@
+# @xata.io/prisma

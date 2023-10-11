@@ -474,6 +474,15 @@ importers:
         specifier: workspace:*
         version: link:../client
 
+  packages/plugin-client-prisma:
+    dependencies:
+      '@prisma/driver-adapter-utils':
+        specifier: ^5.4.2
+        version: 5.4.2
+      '@xata.io/client':
+        specifier: workspace:*
+        version: link:../client
+
 packages:
   /@aashutoshrathi/word-wrap@1.2.6:
     resolution:
@@ -4905,6 +4914,15 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@prisma/driver-adapter-utils@5.4.2:
+    resolution:
+      { integrity: sha512-V+mtlBXBxQuiOufaSH98S3x2j9G1G0+tgnx3lAlfd6YEeceTCcFFhg85rESW9UIshHvULeGFJsG7+qScgGX0Ng== }
+    dependencies:
+      debug: 4.3.4(supports-color@9.4.0)
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
 
   /@protobufjs/aspromise@1.1.2:
     resolution:
