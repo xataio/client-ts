@@ -770,7 +770,6 @@ describe('coerceValue', () => {
     const column: Schemas.Column = { name: 'column', type, ...extraColumn };
     test(`coerceValue ${JSON.stringify(input)} should return ${JSON.stringify(expected)}`, async () => {
       const result = await coerceValue(input, column, options);
-      console.log(result);
       expect(result).toEqual(expected);
     });
   }
