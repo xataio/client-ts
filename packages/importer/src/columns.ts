@@ -53,6 +53,20 @@ const parseMultiple = (value: string): string[] | null => {
 
 const isGuessableMultiple = <T>(value: T): boolean => Array.isArray(value) || tryIsJsonArray(String(value));
 
+const isGuessableVectorColumn = <T>(values: T[]): boolean => {
+  const checks = values.map((value) => {
+    const isMultiple = isGuessableMultiple(value);
+    if (!isMultiple) return null;
+
+    const array = parseMultiple(String(value)) ?? [];
+    if (array.some((item) => !isFloat(item))) return null;
+
+    return array.length;
+  });
+
+  return checks.every((length) => length !== null && length > 50);
+};
+
 const isMultiple = <T>(value: T): boolean => isGuessableMultiple(value) || tryIsCsvArray(String(value));
 
 const isMaybeMultiple = <T>(value: T): boolean => isMultiple(value) || typeof value === 'string';
@@ -101,6 +115,9 @@ export const guessColumnTypes = <T>(
   if (columnValues.every(isEmail)) {
     return 'email';
   }
+  if (isGuessableVectorColumn(columnValues)) {
+    return 'vector';
+  }
   if (columnValues.some(isGuessableMultiple)) {
     return 'multiple';
   }
@@ -121,7 +138,7 @@ export type CoercedValue = {
 
 export const coerceValue = async (
   value: unknown,
-  type: Schemas.Column['type'],
+  column: Schemas.Column,
   options: ColumnOptions = {}
 ): Promise<CoercedValue> => {
   const { isNull = defaultIsNull, toBoolean = defaultToBoolean, proxyFunction } = options;
@@ -130,7 +147,7 @@ export const coerceValue = async (
     return { value: null, isError: false };
   }
 
-  switch (type) {
+  switch (column.type) {
     case 'string':
     case 'text':
     case 'link': {
@@ -152,6 +169,15 @@ export const coerceValue = async (
     case 'datetime': {
       const date = anyToDate(value);
       return date.invalid ? { value: null, isError: true } : { value: date, isError: false };
+    }
+    case 'vector': {
+      if (!isMaybeMultiple(value)) return { value: null, isError: true };
+      const array = parseMultiple(String(value));
+
+      return {
+        value: array,
+        isError: array?.some((item) => !isFloat(item)) || array?.length !== column.vector?.dimension
+      };
     }
     case 'multiple': {
       return isMaybeMultiple(value)
@@ -218,7 +244,7 @@ export const coerceRows = async <T extends Record<string, unknown>>(
   for (const row of rows) {
     const mappedRow: Record<string, CoercedValue> = {};
     for (const column of columns) {
-      mappedRow[column.name] = await coerceValue(row[column.name], column.type, options);
+      mappedRow[column.name] = await coerceValue(row[column.name], column, options);
     }
     mapped.push(mappedRow);
   }
