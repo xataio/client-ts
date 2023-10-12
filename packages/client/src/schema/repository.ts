@@ -2112,7 +2112,7 @@ export const initObject = <T>(
   }
 
   const record = { ...data };
-  const metadata: Object | undefined =
+  const metadata =
     xata !== undefined
       ? { ...xata, createdAt: new Date(xata.createdAt), updatedAt: new Date(xata.updatedAt) }
       : undefined;
@@ -2139,7 +2139,7 @@ export const initObject = <T>(
     return db[table].delete(record['id'] as string);
   };
 
-  if (metadata) {
+  if (metadata !== undefined) {
     record.xata = Object.freeze(metadata);
   }
 
