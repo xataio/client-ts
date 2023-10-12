@@ -6,7 +6,7 @@ import { BaseData, XataRecord } from '../schema/record';
 import { isBlob } from '../util/lang';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
-export type BinaryFile = string | Blob | ArrayBuffer;
+export type BinaryFile = string | Blob | ArrayBuffer | XataFile | Promise<XataFile>;
 
 export type FilesPluginResult<Schemas extends Record<string, BaseData>> = {
   download: <Tables extends StringKeys<Schemas>>(location: DownloadDestination<Schemas, Tables>) => Promise<Blob>;
@@ -74,7 +74,9 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
         options?: { mediaType?: string }
       ) => {
         const { table, record, column, fileId = '' } = location ?? {};
-        const contentType = options?.mediaType || getContentType(file);
+        const resolvedFile = await file;
+        const contentType = options?.mediaType || getContentType(resolvedFile);
+        const body = resolvedFile instanceof XataFile ? resolvedFile.toBlob() : (resolvedFile as Blob);
 
         return await putFileItem({
           ...pluginOptions,
@@ -87,7 +89,7 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
             columnName: column ?? '',
             fileId
           },
-          body: file as Blob,
+          body,
           headers: { 'Content-Type': contentType }
         });
       },
@@ -114,6 +116,11 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
 function getContentType(file: BinaryFile): string {
   if (typeof file === 'string') {
     return 'text/plain';
+  }
+
+  // Check for XataFile
+  if ('mediaType' in file) {
+    return file.mediaType;
   }
 
   if (isBlob(file)) {

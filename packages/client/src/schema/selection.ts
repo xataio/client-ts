@@ -122,7 +122,7 @@ export type ValueAtColumn<Object, Key> = Key extends '*'
   : never;
 
 // Private: To avoid circular dependencies, we limit the recursion depth
-type MAX_RECURSION = 2;
+type MAX_RECURSION = 3;
 
 // Private: Utility type to get a union with the columns below the current level
 // Exclude type in union: never
