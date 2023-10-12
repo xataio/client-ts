@@ -1,6 +1,6 @@
 import type { DriverAdapter, Query, Queryable, Result, ResultSet, Transaction } from '@prisma/driver-adapter-utils';
 import { Debug, ok } from '@prisma/driver-adapter-utils';
-import { Schemas, Responses, SQLPluginResult } from '@xata.io/client';
+import { Responses, SQLPluginResult, Schemas } from '@xata.io/client';
 import { fieldToColumnType } from './conversion';
 
 const debug = Debug('prisma:driver-adapter:xata');
@@ -40,7 +40,7 @@ abstract class XataQueryable implements Queryable {
   abstract performIO(query: Query): Promise<Result<PerformIOResult>>;
 }
 
-type XataClient = { sql: SQLPluginResult };
+type XataClient = { schema: Schemas.Schema; sql: SQLPluginResult };
 
 export class PrismaXataHTTP extends XataQueryable implements DriverAdapter {
   constructor(private client: XataClient, _tables?: Schemas.Table[]) {
