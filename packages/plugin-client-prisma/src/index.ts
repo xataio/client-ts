@@ -5,7 +5,7 @@ export class PrismaPlugin extends XataPlugin {
   build(pluginOptions: XataPluginOptions) {
     const xata = { sql: new SQLPlugin().build(pluginOptions) };
 
-    return new PrismaXataHTTP(xata);
+    return new PrismaXataHTTP(xata, pluginOptions.tables);
   }
 }
 
