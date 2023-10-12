@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.26.9
+
+### Patch Changes
+
+- [#1224](https://github.com/xataio/client-ts/pull/1224) [`302798e8`](https://github.com/xataio/client-ts/commit/302798e8d210c89f420a5c927e0f836a27dbaed9) Thanks [@SferaDev](https://github.com/SferaDev)! - Export transaction types
+
 ## 0.26.8
 
 ### Patch Changes
