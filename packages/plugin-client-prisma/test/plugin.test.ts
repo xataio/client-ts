@@ -22,21 +22,25 @@ const data = {
 // Should pass locally with matching schemas
 describe.skip('@xata.io/prisma plugin', () => {
   beforeAll(async () => {
+    await prisma.user.create({
+      data
+    });
     await prisma.post.create({
       data: {
         ...data,
         bool: true,
         float: 2.2324,
         int: 44,
-        authorId: '',
         json: {
           hello: 'world'
         },
+        // With this, the link object in Xata is not populated
+        // So if using this plugin we could suggest just not using links?
+        // connect or create is not supported anyways because it involves transactions.
+        //https://github.com/prisma/prisma-engines/blob/main/query-engine/driver-adapters/js/adapter-neon/src/neon.ts#L159
+        authorId: 'id',
         datetime: new Date()
       }
-    });
-    await prisma.user.create({
-      data
     });
   });
   afterAll(async () => {
@@ -69,12 +73,23 @@ describe.skip('@xata.io/prisma plugin', () => {
     });
     expect(res[0]).toHaveProperty('id');
   });
-  test.skip('can query relations', async () => {
+  test('can query relations on user', async () => {
     const res = await prisma.user.findFirst({
       include: {
         posts: true
       }
     });
     expect(res).toHaveProperty('posts');
+    expect(res?.posts).toHaveLength(1);
   });
+  test('can query relations on post', async () => {
+    const res = await prisma.post.findFirst({
+      include: {
+        author: true
+      }
+    });
+    expect(res).toHaveProperty('author');
+    expect(res?.author).toHaveProperty('id');
+  });
+  // TODO try many to many
 });
