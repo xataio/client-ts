@@ -22,4 +22,7 @@ model Post {
   name  String?
   author    User?    @relation(fields: [authorId], references: [id])
   authorId  String?
+  int Int?
+  bool Boolean?
+  float Float?
 }

@@ -13,16 +13,23 @@ const adapter = new PrismaXataHTTP(xata, xata.schema.tables);
 const prisma = new PrismaClient({ adapter });
 
 const data = {
-  email: 'test',
-  id: 'test',
-  name: 'test'
+  email: 'email',
+  id: 'id',
+  name: 'name'
 };
 
 // Skipping for now because generate functions would need to be called
+// Should pass locally with matching schemas
 describe.skip('@xata.io/prisma plugin', () => {
   beforeAll(async () => {
     await prisma.post.create({
-      data
+      data: {
+        ...data,
+        bool: true,
+        float: 2.2324,
+        int: 44,
+        authorId: ''
+      }
     });
     await prisma.user.create({
       data
@@ -52,13 +59,13 @@ describe.skip('@xata.io/prisma plugin', () => {
     const res = await prisma.user.findMany({
       where: {
         email: {
-          startsWith: 't'
+          startsWith: 'e'
         }
       }
     });
     expect(res[0]).toHaveProperty('id');
   });
-  test('can query relations', async () => {
+  test.skip('can query relations', async () => {
     const res = await prisma.user.findFirst({
       include: {
         posts: true

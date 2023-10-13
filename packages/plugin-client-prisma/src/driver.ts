@@ -87,8 +87,15 @@ export class PrismaXataHTTP extends XataQueryable implements DriverAdapter {
 
 const orderRecordKeys = (params: { appearanceIn: string; record: Record<string, any> }) => {
   // Will break if column names are inside a string literal in the query
+  let toCheck = params.appearanceIn;
+  const divider = 'RETURNING';
+  // If there is a returning clause we need to check the columns in the order they appear
+  // instead of the order they were inserted/updated in
+  if (params.appearanceIn.includes(divider)) {
+    toCheck = params.appearanceIn.split(divider)[1];
+  }
   const ordered = Object.keys(params.record).sort((a, b) => {
-    return params.appearanceIn.indexOf(a) > params.appearanceIn.indexOf(b) ? 1 : -1;
+    return toCheck.indexOf(a) > toCheck.indexOf(b) ? 1 : -1;
   });
   return ordered;
 };
@@ -103,6 +110,8 @@ const prepareSql = (query: Query, tables: Schemas.Table[]) => {
   // Xata does not keep the ID as part of the table schema
   // so we need to add it manually
   if (!table) throw new Error('Table not found');
-  table.columns.push({ type: 'string', name: 'id' });
+  if (!table.id) {
+    table.columns.push({ type: 'string', name: 'id' });
+  }
   return { formatted, table };
 };

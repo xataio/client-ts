@@ -1,6 +1,7 @@
 import { ColumnTypeEnum, type ColumnType, JsonNullMarker } from '@prisma/driver-adapter-utils';
 import { Schemas } from '@xata.io/client';
 
+// According to https://xata.io/docs/sdk/sql/overview
 export function xataToColumnTypeEnum(column: Schemas.Column) {
   switch (column.type) {
     case 'string':
@@ -11,16 +12,18 @@ export function xataToColumnTypeEnum(column: Schemas.Column) {
     case 'bool':
       return ScalarColumnType.BOOL;
     case 'int':
-      return ScalarColumnType.INT2;
+      return ScalarColumnType.INT;
     case 'float':
-      return ScalarColumnType.FLOAT8;
+      return ScalarColumnType.FLOAT;
     case 'datetime':
       return ScalarColumnType.DATE;
     case 'multiple':
-    case 'object':
-    case 'vector':
+      return ScalarColumnType.TEXT_ARRAY;
     case 'file[]':
     case 'file':
+      return ScalarColumnType.JSONB;
+    case 'object':
+    case 'vector':
     case 'json':
       throw new Error(`Unsupported column type: ${column.type}`);
   }
@@ -29,9 +32,11 @@ export function xataToColumnTypeEnum(column: Schemas.Column) {
 const ScalarColumnType = {
   TEXT: ColumnTypeEnum.Text,
   BOOL: ColumnTypeEnum.Boolean,
-  INT2: ColumnTypeEnum.Int32,
-  FLOAT8: ColumnTypeEnum.Double,
-  DATE: ColumnTypeEnum.Date
+  INT: ColumnTypeEnum.Int64,
+  FLOAT: ColumnTypeEnum.Double,
+  DATE: ColumnTypeEnum.Time,
+  TEXT_ARRAY: ColumnTypeEnum.TextArray,
+  JSONB: ColumnTypeEnum.Json
 };
 
 /**
@@ -99,15 +104,15 @@ export function fieldToColumnType(fieldTypeId: number): ColumnType {
     case ArrayColumnType.UUID_ARRAY:
       return ColumnTypeEnum.UuidArray;
     case ScalarColumnType.TEXT:
-      return ColumnTypeEnum.Text;
+      return ScalarColumnType.TEXT;
     case ScalarColumnType.BOOL:
-      return ColumnTypeEnum.Boolean;
-    case ScalarColumnType.INT2:
-      return ColumnTypeEnum.Int32;
-    case ScalarColumnType.FLOAT8:
-      return ColumnTypeEnum.Double;
+      return ScalarColumnType.BOOL;
+    case ScalarColumnType.INT:
+      return ScalarColumnType.INT;
+    case ScalarColumnType.FLOAT:
+      return ScalarColumnType.FLOAT;
     case ScalarColumnType.DATE:
-      return ColumnTypeEnum.Date;
+      return ScalarColumnType.DATE;
     default:
       if (fieldTypeId >= 10000) {
         // Postgres Custom Types
