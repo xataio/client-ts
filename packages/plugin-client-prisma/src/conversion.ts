@@ -1,4 +1,38 @@
 import { ColumnTypeEnum, type ColumnType, JsonNullMarker } from '@prisma/driver-adapter-utils';
+import { Schemas } from '@xata.io/client';
+
+export function xataToColumnTypeEnum(column: Schemas.Column) {
+  switch (column.type) {
+    case 'string':
+    case 'text':
+    case 'email':
+    case 'link':
+      return ScalarColumnType.TEXT;
+    case 'bool':
+      return ScalarColumnType.BOOL;
+    case 'int':
+      return ScalarColumnType.INT2;
+    case 'float':
+      return ScalarColumnType.FLOAT8;
+    case 'datetime':
+      return ScalarColumnType.DATE;
+    case 'multiple':
+    case 'object':
+    case 'vector':
+    case 'file[]':
+    case 'file':
+    case 'json':
+      throw new Error(`Unsupported column type: ${column.type}`);
+  }
+}
+
+const ScalarColumnType = {
+  TEXT: ColumnTypeEnum.Text,
+  BOOL: ColumnTypeEnum.Boolean,
+  INT2: ColumnTypeEnum.Int32,
+  FLOAT8: ColumnTypeEnum.Double,
+  DATE: ColumnTypeEnum.Date
+};
 
 /**
  * PostgreSQL array column types.
@@ -64,7 +98,16 @@ export function fieldToColumnType(fieldTypeId: number): ColumnType {
       return ColumnTypeEnum.BytesArray;
     case ArrayColumnType.UUID_ARRAY:
       return ColumnTypeEnum.UuidArray;
-
+    case ScalarColumnType.TEXT:
+      return ColumnTypeEnum.Text;
+    case ScalarColumnType.BOOL:
+      return ColumnTypeEnum.Boolean;
+    case ScalarColumnType.INT2:
+      return ColumnTypeEnum.Int32;
+    case ScalarColumnType.FLOAT8:
+      return ColumnTypeEnum.Double;
+    case ScalarColumnType.DATE:
+      return ColumnTypeEnum.Date;
     default:
       if (fieldTypeId >= 10000) {
         // Postgres Custom Types

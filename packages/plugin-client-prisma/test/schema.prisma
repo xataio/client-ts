@@ -1,0 +1,25 @@
+// schema.prisma
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgres://notexistent"
+}
+
+model User {
+  id    String     @id
+  email String  @unique
+  name  String?
+  posts     Post[]
+}
+
+model Post {
+  id    String @id
+  email String  @unique
+  name  String?
+  author    User?    @relation(fields: [authorId], references: [id])
+  authorId  String?
+}
