@@ -25,4 +25,6 @@ model Post {
   int Int?
   bool Boolean?
   float Float?
+  json Json?
+  datetime DateTime @default(now())
 }

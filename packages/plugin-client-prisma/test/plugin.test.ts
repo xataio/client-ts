@@ -28,7 +28,11 @@ describe.skip('@xata.io/prisma plugin', () => {
         bool: true,
         float: 2.2324,
         int: 44,
-        authorId: ''
+        authorId: '',
+        json: {
+          hello: 'world'
+        },
+        datetime: new Date()
       }
     });
     await prisma.user.create({

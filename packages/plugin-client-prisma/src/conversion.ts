@@ -19,12 +19,12 @@ export function xataToColumnTypeEnum(column: Schemas.Column) {
       return ScalarColumnType.DATE;
     case 'multiple':
       return ScalarColumnType.TEXT_ARRAY;
+    case 'json':
+      return ScalarColumnType.JSONB;
     case 'file[]':
     case 'file':
-      return ScalarColumnType.JSONB;
     case 'object':
     case 'vector':
-    case 'json':
       throw new Error(`Unsupported column type: ${column.type}`);
   }
 }
@@ -34,7 +34,7 @@ const ScalarColumnType = {
   BOOL: ColumnTypeEnum.Boolean,
   INT: ColumnTypeEnum.Int64,
   FLOAT: ColumnTypeEnum.Double,
-  DATE: ColumnTypeEnum.Time,
+  DATE: ColumnTypeEnum.DateTime,
   TEXT_ARRAY: ColumnTypeEnum.TextArray,
   JSONB: ColumnTypeEnum.Json
 };
@@ -113,6 +113,8 @@ export function fieldToColumnType(fieldTypeId: number): ColumnType {
       return ScalarColumnType.FLOAT;
     case ScalarColumnType.DATE:
       return ScalarColumnType.DATE;
+    case ScalarColumnType.JSONB:
+      return ScalarColumnType.JSONB;
     default:
       if (fieldTypeId >= 10000) {
         // Postgres Custom Types
