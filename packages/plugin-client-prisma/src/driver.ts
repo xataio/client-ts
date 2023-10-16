@@ -72,7 +72,6 @@ export class PrismaXataHTTP extends XataQueryable implements DriverAdapter {
     const { formatted, table } = prepareSql(query, this.#_tables);
     const result = await this.client.sql({ statement: formatted, params: query.args });
     const resultFormatted = { ...result, table };
-    // @ts-expect-error
     return ok(resultFormatted);
   }
 
@@ -106,11 +105,12 @@ const orderRecordKeys = (params: { appearanceIn: string; record: Record<string, 
 const prepareSql = (query: Query, tables: Schemas.Table[]) => {
   // Xata client will throw error with a schema prefixed table name
   const formatted = query.sql.replaceAll('"public".', '');
-  const table = tables.find((table) => formatted.includes(table.name));
-  // Xata does not keep the ID as part of the table schema
+  const tname = new RegExp(`${tables.map((t) => t.name).join('|')}`).exec(formatted)?.[0]; // First occurrence of table name
+  const table = tables.find((t) => t.name === tname);
   // so we need to add it manually
   if (!table) throw new Error('Table not found');
   if (!table.id) {
+    // Xata does not keep the ID as part of the table schema
     table.columns.push({ type: 'string', name: 'id' });
   }
   return { formatted, table };

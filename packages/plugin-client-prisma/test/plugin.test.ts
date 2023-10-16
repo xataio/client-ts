@@ -92,4 +92,31 @@ describe.skip('@xata.io/prisma plugin', () => {
     expect(res?.author).toHaveProperty('id');
   });
   // TODO try many to many
+  test('can filter on relations', async () => {
+    const res = await prisma.post.findFirst({
+      where: {
+        author: {
+          id: 'id'
+        }
+      },
+      include: {
+        author: true
+      }
+    });
+
+    expect(res).toHaveProperty('author');
+    expect(res?.author).toHaveProperty('id');
+    expect(res?.author?.id).toBe('id');
+  });
+  test.skip('can filter on relations', async () => {
+    const res = await prisma.user.findFirst({
+      select: {
+        // aggregations don't work
+        _count: true
+      }
+    });
+
+    expect(res).toHaveProperty('author');
+    expect(res?._count).toHaveProperty('id');
+  });
 });
