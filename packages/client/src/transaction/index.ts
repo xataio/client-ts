@@ -27,3 +27,5 @@ export class TransactionPlugin<Schemas extends Record<string, XataRecord>> exten
     };
   }
 }
+
+export * from './operations';

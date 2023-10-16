@@ -1,5 +1,21 @@
 # @xata.io/client
 
+## 0.26.9
+
+### Patch Changes
+
+- [#1224](https://github.com/xataio/client-ts/pull/1224) [`302798e8`](https://github.com/xataio/client-ts/commit/302798e8d210c89f420a5c927e0f836a27dbaed9) Thanks [@SferaDev](https://github.com/SferaDev)! - Export transaction types
+
+## 0.26.8
+
+### Patch Changes
+
+- [#1222](https://github.com/xataio/client-ts/pull/1222) [`fa2883b0`](https://github.com/xataio/client-ts/commit/fa2883b0639e48d68097401bf515c8cb95df5b4b) Thanks [@SferaDev](https://github.com/SferaDev)! - Increase recursion for circular references to 3
+
+- [#1216](https://github.com/xataio/client-ts/pull/1216) [`c04faece`](https://github.com/xataio/client-ts/commit/c04faece8830699d978e03c89f29e383e479e824) Thanks [@SferaDev](https://github.com/SferaDev)! - Support binary upload of XataFile
+
+- [#1217](https://github.com/xataio/client-ts/pull/1217) [`cb45cc9f`](https://github.com/xataio/client-ts/commit/cb45cc9f6829e1b555762e656cc1b0b2e977aaf9) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - JSON responses for JSON fields in summarize API
+
 ## 0.26.7
 
 ### Patch Changes
