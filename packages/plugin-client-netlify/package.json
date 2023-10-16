@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/babel__core": "^7.20.2",
-    "@types/node": "^20.8.4",
+    "@types/node": "^20.8.6",
     "typescript": "^5.2.2"
   }
 }
