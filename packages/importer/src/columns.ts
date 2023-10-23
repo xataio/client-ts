@@ -243,7 +243,7 @@ export const coerceRows = async <T extends Record<string, unknown>>(
   const columnValues = [];
   for (const row of rows) {
     for (const column of columns) {
-      columnValues.push(coerceValue(row[column.name], column.type, options));
+      columnValues.push(coerceValue(row[column.name], column, options));
     }
   }
   const results = await Promise.allSettled(columnValues);
