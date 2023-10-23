@@ -1,5 +1,24 @@
 # @xata.io/cli
 
+## 0.14.2
+
+### Patch Changes
+
+- Updated dependencies [[`302798e8`](https://github.com/xataio/client-ts/commit/302798e8d210c89f420a5c927e0f836a27dbaed9)]:
+  - @xata.io/client@0.26.9
+  - @xata.io/codegen@0.26.9
+
+## 0.14.1
+
+### Patch Changes
+
+- [#1210](https://github.com/xataio/client-ts/pull/1210) [`05fd69d8`](https://github.com/xataio/client-ts/commit/05fd69d8d86791f32617a068924fc770e38ee9a6) Thanks [@andrew-farries](https://github.com/andrew-farries)! - Make `branch create` default to branch from `main`
+
+- Updated dependencies [[`fa2883b0`](https://github.com/xataio/client-ts/commit/fa2883b0639e48d68097401bf515c8cb95df5b4b), [`c04faece`](https://github.com/xataio/client-ts/commit/c04faece8830699d978e03c89f29e383e479e824), [`cb45cc9f`](https://github.com/xataio/client-ts/commit/cb45cc9f6829e1b555762e656cc1b0b2e977aaf9), [`9865f127`](https://github.com/xataio/client-ts/commit/9865f1276ffc75f7beeee69b62c7bce6af8568c8)]:
+  - @xata.io/client@0.26.8
+  - @xata.io/importer@1.1.1
+  - @xata.io/codegen@0.26.8
+
 ## 0.14.0
 
 ### Minor Changes

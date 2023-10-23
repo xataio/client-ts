@@ -23,7 +23,6 @@ export function buildWorkerRunner<XataClient>(config: WorkerRunnerConfig) {
           ? `http://localhost:64749/${name}`
           : `https://dispatcher.xata.workers.dev/${config.workspace}/${config.worker}/${name}`;
 
-      // @ts-ignore - This is a browser only feature - fetch will be defined in the browser
       const result = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -32,7 +31,7 @@ export function buildWorkerRunner<XataClient>(config: WorkerRunnerConfig) {
 
       // TODO: Detect if not compiled yet (+ other errors)
 
-      const text = await result.text();
+      const text = await (result as any).text();
       return deserialize<any>(text);
     };
   };

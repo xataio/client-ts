@@ -24,7 +24,7 @@ export function getFetchImplementation(userFetch?: FetchImpl) {
   const globalFetch = typeof fetch !== 'undefined' ? fetch : undefined;
   // @ts-ignore - globalThis might not be a global
   const globalThisFetch = typeof globalThis !== 'undefined' ? globalThis.fetch : undefined;
-  const fetchImpl: FetchImpl | undefined = userFetch ?? globalFetch ?? globalThisFetch;
+  const fetchImpl: FetchImpl | undefined = (userFetch as any) ?? (globalFetch as any) ?? (globalThisFetch as any);
   if (!fetchImpl) {
     /** @todo add a link after docs exist */
     throw new Error(`Couldn't find a global \`fetch\`. Pass a fetch implementation explicitly.`);
