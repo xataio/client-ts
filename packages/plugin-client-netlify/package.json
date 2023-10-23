@@ -27,8 +27,8 @@
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
-    "@types/babel__core": "^7.20.2",
-    "@types/node": "^20.8.4",
+    "@types/babel__core": "^7.20.3",
+    "@types/node": "^20.8.7",
     "typescript": "^5.2.2"
   }
 }
