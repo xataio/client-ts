@@ -47,6 +47,7 @@ jobs:
         run: pnpm build
 
       - name: Create Release Pull Request or Publish to npm
+        id: release
         uses: changesets/action@v1
         with:
           title: Release tracking
@@ -54,3 +55,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Versions
+        if: ${{ steps.release.outputs.published == 'true' }}
+        run: |
+          touch .env
+          echo PUBLISHED_PACKAGES=${{ steps.versions.outputs.publishedPackages }} >> .env
+          pnpm changeset-version

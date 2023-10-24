@@ -18,7 +18,8 @@
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "tsc": "tsc --noEmit",
-    "add-version": "node ../../scripts/add-version-file.mjs"
+    "add-version": "node ../../scripts/add-version-file.mjs",
+    "changeset-version": "node ../../scripts/changeset-version.mjs && git add ../../scripts/changeset-version.mjs"
   },
   "peerDependencies": {
     "typescript": ">=4.5"
