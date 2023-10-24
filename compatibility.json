@@ -1,5 +1,6 @@
 {
   "cli": {
+    "latest": "0.14.2",
     "compatibility": [
       {
         "range": ">0.0.1",
@@ -13,6 +14,7 @@
     ]
   },
   "sdk": {
+    "latest": "0.26.9",
     "compatibility": [
       {
         "range": ">0.0.1",
