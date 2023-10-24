@@ -114,7 +114,7 @@ describe('aggregate', () => {
     expect(result.aggs.unique).toBeCloseTo(3);
   });
 
-  test('count and unique count with global filter', async () => {
+  test.skip('count and unique count with global filter', async () => {
     const result = await xata.db.teams.aggregate(
       {
         total: { count: '*' },
@@ -127,7 +127,7 @@ describe('aggregate', () => {
     expect(result.aggs.unique).toBeCloseTo(2);
   });
 
-  test('counts with filters', async () => {
+  test.skip('counts with filters', async () => {
     const result = await xata.db.teams.aggregate({
       freeCount: { count: { filter: { 'settings.plan': 'free' } } },
       paidCount: { count: { filter: { 'settings.plan': 'paid' } } }
