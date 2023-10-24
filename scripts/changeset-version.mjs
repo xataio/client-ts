@@ -9,10 +9,10 @@ const compatibilityPath = path.join(process.cwd(), 'compatibility.json');
 const compatibility = fs.readFileSync(compatibilityPath, 'utf8');
 
 for (const pkg of packages) {
-    const oldVersion = JSON.parse(compatibility)[name].latest
     const newVersion = pkg.version
     const name = pkg.name
-    compatibility.replace(oldVersion, newVersion)
+    const oldVersion = JSON.parse(compatibility)[name].latest
+    compatibility = compatibility.replace(oldVersion, newVersion)
 }
 
 fs.writeFileSync(compatibilityPath, compatibility);
