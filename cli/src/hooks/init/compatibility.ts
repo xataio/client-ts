@@ -27,7 +27,7 @@ export const checkLatest = async (params: {
       ? `✨ A newer version of the Xata ${pkg.toUpperCase()} is now available: ${
           compatibilityObj[pkg].latest
         }. You are currently using version: ${currentVersion}`
-      : undefined
+      : null
   };
 };
 
@@ -42,7 +42,7 @@ export const checkCompatibility = async (params: {
   return {
     error: !semverCompatible
       ? `Incompatible version of ${pkg.toUpperCase()}: ${currentVersion}. Please upgrade to a version that satisfies: ${compatibleRange}.`
-      : undefined
+      : null
   };
 };
 

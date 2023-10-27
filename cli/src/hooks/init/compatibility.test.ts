@@ -131,11 +131,11 @@ describe('checks', () => {
       const sdkResponse = await checkLatest({ ...defaultParams, pkg: 'sdk', currentVersion: currentSdk });
       expect(sdkResponse.warn).toMatchInlineSnapshot(sdkUpdateAvailable);
     });
-    test('returns undefined if no newer package available', async () => {
+    test('returns null if no newer package available', async () => {
       const cliResponse = await checkLatest({ ...defaultParams, pkg: 'cli', currentVersion: latestCli });
-      expect(cliResponse.warn).toBeUndefined();
+      expect(cliResponse.warn).toBeNull();
       const sdkResponse = await checkLatest({ ...defaultParams, pkg: 'sdk', currentVersion: latestSdk });
-      expect(sdkResponse.warn).toBeUndefined();
+      expect(sdkResponse.warn).toBeNull();
     });
   });
   describe('compatibility', () => {
@@ -156,19 +156,19 @@ describe('checks', () => {
       });
       expect(sdkResponse.error).toMatchInlineSnapshot(sdkError);
     });
-    test('returns undefined if compatible', async () => {
+    test('returns null if compatible', async () => {
       const cliResponse = await checkCompatibility({
         ...defaultParams,
         pkg: 'cli',
         currentVersion: latestCli
       });
-      expect(cliResponse.error).toBeUndefined();
+      expect(cliResponse.error).toBeNull();
       const sdkResponse = await checkCompatibility({
         ...defaultParams,
         pkg: 'sdk',
         currentVersion: latestSdk
       });
-      expect(sdkResponse.error).toBeUndefined();
+      expect(sdkResponse.error).toBeNull();
     });
   });
 });
