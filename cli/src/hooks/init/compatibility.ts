@@ -15,31 +15,23 @@ export type Compatibility = {
 };
 export type PackageJson = { dependencies: Record<string, string> };
 
-export const checkLatest = async (params: {
+export const check = async (params: {
   pkg: 'cli' | 'sdk';
   currentVersion: string;
   compatibilityObj: Compatibility;
 }) => {
   const { pkg, currentVersion, compatibilityObj } = params;
   const updateAvailable = semver.lt(currentVersion, compatibilityObj[pkg].latest);
+
+  const compatibleRange = compatibilityObj[pkg].compatibility.map((v) => v.range).join('||');
+  const semverCompatible = semver.satisfies(currentVersion, compatibleRange);
+
   return {
     warn: updateAvailable
       ? `✨ A newer version of the Xata ${pkg.toUpperCase()} is now available: ${
           compatibilityObj[pkg].latest
         }. You are currently using version: ${currentVersion}`
-      : null
-  };
-};
-
-export const checkCompatibility = async (params: {
-  pkg: 'cli' | 'sdk';
-  currentVersion: string;
-  compatibilityObj: Compatibility;
-}) => {
-  const { pkg, currentVersion, compatibilityObj } = params;
-  const compatibleRange = compatibilityObj[pkg].compatibility.map((v) => v.range).join('||');
-  const semverCompatible = semver.satisfies(currentVersion, compatibleRange);
-  return {
+      : null,
     error: !semverCompatible
       ? `Incompatible version of ${pkg.toUpperCase()}: ${currentVersion}. Please upgrade to a version that satisfies: ${compatibleRange}.`
       : null
@@ -97,18 +89,17 @@ const hook: Hook<'init'> = async function (_options) {
 
     const cliPkg = 'cli';
     const cliVersion = this.config.version;
-    const cliWarn = await checkLatest({ ...defaultParams, pkg: cliPkg, currentVersion: cliVersion });
-    if (cliWarn.warn) this.log(cliWarn.warn);
-    const cliError = await checkCompatibility({ ...defaultParams, pkg: cliPkg, currentVersion: cliVersion });
-    if (cliError.error) this.error(cliError.error);
+    const { warn, error } = await check({ ...defaultParams, pkg: cliPkg, currentVersion: cliVersion });
+    if (warn) this.log(warn);
+    if (error) this.error(error);
 
     const sdkVersion = await getSdkVersion();
-    if (!sdkVersion) return;
-    const sdkPkg = 'sdk';
-    const sdkWarn = await checkLatest({ ...defaultParams, pkg: sdkPkg, currentVersion: sdkVersion });
-    if (sdkWarn.warn) this.log(sdkWarn.warn);
-    const sdkError = await checkCompatibility({ ...defaultParams, pkg: sdkPkg, currentVersion: sdkVersion });
-    if (sdkError.error) this.error(sdkError.error);
+    if (sdkVersion) {
+      const sdkPkg = 'sdk';
+      const { warn, error } = await check({ ...defaultParams, pkg: sdkPkg, currentVersion: cliVersion });
+      if (warn) this.log(warn);
+      if (error) this.error(error);
+    }
   };
 
   await fetchInfo({ compatibilityFile, compatibilityUri });

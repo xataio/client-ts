@@ -1,7 +1,7 @@
 import { writeFile, readFile, stat } from 'fs/promises';
 import fetch from 'node-fetch';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { ONE_DAY, checkCompatibility, checkLatest, fetchInfo, getSdkVersion } from './compatibility.js';
+import { ONE_DAY, check, fetchInfo, getSdkVersion } from './compatibility.js';
 
 vi.mock('node-fetch');
 vi.mock('fs/promises');
@@ -126,15 +126,15 @@ describe('checks', () => {
       readFileMock.mockReturnValue(JSON.stringify(compatibilityObj));
     });
     test('returns warn if newer package available', async () => {
-      const cliResponse = await checkLatest({ ...defaultParams, pkg: 'cli', currentVersion: currentCli });
+      const cliResponse = await check({ ...defaultParams, pkg: 'cli', currentVersion: currentCli });
       expect(cliResponse.warn).toMatchInlineSnapshot(cliUpdateAvailable);
-      const sdkResponse = await checkLatest({ ...defaultParams, pkg: 'sdk', currentVersion: currentSdk });
+      const sdkResponse = await check({ ...defaultParams, pkg: 'sdk', currentVersion: currentSdk });
       expect(sdkResponse.warn).toMatchInlineSnapshot(sdkUpdateAvailable);
     });
     test('returns null if no newer package available', async () => {
-      const cliResponse = await checkLatest({ ...defaultParams, pkg: 'cli', currentVersion: latestCli });
+      const cliResponse = await check({ ...defaultParams, pkg: 'cli', currentVersion: latestCli });
       expect(cliResponse.warn).toBeNull();
-      const sdkResponse = await checkLatest({ ...defaultParams, pkg: 'sdk', currentVersion: latestSdk });
+      const sdkResponse = await check({ ...defaultParams, pkg: 'sdk', currentVersion: latestSdk });
       expect(sdkResponse.warn).toBeNull();
     });
   });
@@ -143,13 +143,13 @@ describe('checks', () => {
       readFileMock.mockReturnValue(JSON.stringify(compatibilityObj));
     });
     test('returns error if not compatible', async () => {
-      const cliResponse = await checkCompatibility({
+      const cliResponse = await check({
         ...defaultParams,
         pkg: 'cli',
         currentVersion: currentCli
       });
       expect(cliResponse.error).toMatchInlineSnapshot(cliError);
-      const sdkResponse = await checkCompatibility({
+      const sdkResponse = await check({
         ...defaultParams,
         pkg: 'sdk',
         currentVersion: currentSdk
@@ -157,13 +157,13 @@ describe('checks', () => {
       expect(sdkResponse.error).toMatchInlineSnapshot(sdkError);
     });
     test('returns null if compatible', async () => {
-      const cliResponse = await checkCompatibility({
+      const cliResponse = await check({
         ...defaultParams,
         pkg: 'cli',
         currentVersion: latestCli
       });
       expect(cliResponse.error).toBeNull();
-      const sdkResponse = await checkCompatibility({
+      const sdkResponse = await check({
         ...defaultParams,
         pkg: 'sdk',
         currentVersion: latestSdk
