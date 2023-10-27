@@ -1,4 +1,18 @@
 {
-  "cli": { "latest": "1.0.0", "compatibility": [{ "range": "1.0.0", "compatible": true }] },
-  "sdk": { "latest": "1.0.0", "compatibility": [{ "range": "1.0.0", "compatible": true }] }
+  "cli": {
+    "latest": "0.14.2",
+    "compatibility": [
+      {
+        "range": ">0.0.1"
+      }
+    ]
+  },
+  "sdk": {
+    "latest": "0.26.9",
+    "compatibility": [
+      {
+        "range": ">0.0.1"
+      }
+    ]
+  }
 }

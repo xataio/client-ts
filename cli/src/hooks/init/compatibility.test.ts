@@ -18,12 +18,13 @@ const statMock = stat as unknown as ReturnType<typeof vi.fn>;
 const currentCli = '0.0.1';
 const currentSdk = '0.0.2';
 const latestCli = '1.0.0';
-const latestSdk = '1.0.0';
+const latestSdk = '2.0.0';
+const specificCliVersion = '0.0.8';
 
 const cliUpdateAvailable = `"✨ A newer version of the Xata CLI is now available: ${latestCli}. You are currently using version: ${currentCli}"`;
 const sdkUpdateAvailable = `"✨ A newer version of the Xata SDK is now available: ${latestSdk}. You are currently using version: ${currentSdk}"`;
 
-const cliError = `"Incompatible version of CLI: ${currentCli}. Please upgrade to a version that satisfies: ${latestCli}."`;
+const cliError = `"Incompatible version of CLI: ${currentCli}. Please upgrade to a version that satisfies: >=${latestCli}||${specificCliVersion}."`;
 const sdkError = `"Incompatible version of SDK: ${currentSdk}. Please upgrade to a version that satisfies: ${latestSdk}."`;
 
 const compatibilityFile = './compatibility.json';
@@ -33,8 +34,10 @@ const compatibilityObj = {
     latest: latestCli,
     compatibility: [
       {
-        range: latestCli,
-        compatible: true
+        range: `>=${latestCli}`
+      },
+      {
+        range: `${specificCliVersion}`
       }
     ]
   },
@@ -42,8 +45,7 @@ const compatibilityObj = {
     latest: latestSdk,
     compatibility: [
       {
-        range: latestSdk,
-        compatible: true
+        range: latestSdk
       }
     ]
   }
@@ -118,7 +120,7 @@ describe('fetchInfo', () => {
 });
 
 describe('checks', () => {
-  const defaultParams = { tag: compatibilityObj };
+  const defaultParams = { compatibilityObj };
   describe('latest', () => {
     beforeEach(() => {
       readFileMock.mockReturnValue(JSON.stringify(compatibilityObj));
@@ -130,7 +132,7 @@ describe('checks', () => {
       expect(sdkResponse.warn).toMatchInlineSnapshot(sdkUpdateAvailable);
     });
     test('returns undefined if no newer package available', async () => {
-      const cliResponse = await checkLatest({ ...defaultParams, pkg: 'cli', currentVersion: latestSdk });
+      const cliResponse = await checkLatest({ ...defaultParams, pkg: 'cli', currentVersion: latestCli });
       expect(cliResponse.warn).toBeUndefined();
       const sdkResponse = await checkLatest({ ...defaultParams, pkg: 'sdk', currentVersion: latestSdk });
       expect(sdkResponse.warn).toBeUndefined();

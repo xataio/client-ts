@@ -10,18 +10,22 @@ export type Packages = 'cli' | 'sdk';
 export type Compatibility = {
   [key in Packages]: {
     latest: string;
-    compatibility: { range: string; compatible: boolean }[];
+    compatibility: { range: string }[];
   };
 };
 export type PackageJson = { dependencies: Record<string, string> };
 
-export const checkLatest = async (params: { pkg: 'cli' | 'sdk'; currentVersion: string; tag: Compatibility }) => {
-  const { pkg, currentVersion, tag } = params;
-  const updateAvailable = semver.lt(currentVersion, tag[pkg].latest);
+export const checkLatest = async (params: {
+  pkg: 'cli' | 'sdk';
+  currentVersion: string;
+  compatibilityObj: Compatibility;
+}) => {
+  const { pkg, currentVersion, compatibilityObj } = params;
+  const updateAvailable = semver.lt(currentVersion, compatibilityObj[pkg].latest);
   return {
     warn: updateAvailable
       ? `✨ A newer version of the Xata ${pkg.toUpperCase()} is now available: ${
-          tag[pkg].latest
+          compatibilityObj[pkg].latest
         }. You are currently using version: ${currentVersion}`
       : undefined
   };
@@ -30,13 +34,10 @@ export const checkLatest = async (params: { pkg: 'cli' | 'sdk'; currentVersion: 
 export const checkCompatibility = async (params: {
   pkg: 'cli' | 'sdk';
   currentVersion: string;
-  tag: Compatibility;
+  compatibilityObj: Compatibility;
 }) => {
-  const { pkg, currentVersion, tag } = params;
-  const compatibleRange = tag[pkg].compatibility
-    .filter((v) => v.compatible)
-    .map((v) => v.range)
-    .join('||');
+  const { pkg, currentVersion, compatibilityObj } = params;
+  const compatibleRange = compatibilityObj[pkg].compatibility.map((v) => v.range).join('||');
   const semverCompatible = semver.satisfies(currentVersion, compatibleRange);
   return {
     error: !semverCompatible
@@ -91,8 +92,8 @@ const hook: Hook<'init'> = async function (_options) {
   const compatibilityUri = 'https://raw.githubusercontent.com/xataio/client-ts/main/compatibility.json';
 
   const displayWarning = async () => {
-    const tag: Compatibility = JSON.parse(await readFile(compatibilityFile, 'utf-8'));
-    const defaultParams = { tag };
+    const compatibilityObj: Compatibility = JSON.parse(await readFile(compatibilityFile, 'utf-8'));
+    const defaultParams = { compatibilityObj };
 
     const cliPkg = 'cli';
     const cliVersion = this.config.version;
