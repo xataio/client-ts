@@ -1,7 +1,6 @@
 import { Hook } from '@oclif/core';
-import { readFile, stat, writeFile } from 'fs/promises';
+import { readFile, stat, writeFile, mkdir } from 'fs/promises';
 import semver from 'semver';
-import { mkdir } from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
 
@@ -11,29 +10,30 @@ export type Packages = 'cli' | 'sdk';
 export type Compatibility = {
   [key in Packages]: {
     latest: string;
-    compatibility: { range: string; compatible: boolean; error?: string }[];
+    compatibility: { range: string; compatible: boolean }[];
   };
 };
-export type Latest = { latest: { [key in Packages]: string } };
 export type PackageJson = { dependencies: Record<string, string> };
 
-export const checkLatest = async (params: { pkg: 'cli' | 'sdk'; currentVersion: string; file: string }) => {
-  const { pkg, currentVersion, file } = params;
-  const tag: Latest = JSON.parse(await readFile(file, 'utf-8'));
-  const updateAvailable = semver.lt(currentVersion, tag.latest[pkg]);
+export const checkLatest = async (params: { pkg: 'cli' | 'sdk'; currentVersion: string; tag: Compatibility }) => {
+  const { pkg, currentVersion, tag } = params;
+  const updateAvailable = semver.lt(currentVersion, tag[pkg].latest);
   return {
     warn: updateAvailable
       ? `✨ A newer version of the Xata ${pkg.toUpperCase()} is now available: ${
-          tag.latest[pkg]
+          tag[pkg].latest
         }. You are currently using version: ${currentVersion}`
       : undefined
   };
 };
 
-export const checkCompatibility = async (params: { pkg: 'cli' | 'sdk'; currentVersion: string; file: string }) => {
-  const { pkg, currentVersion, file } = params;
-  const compatibility: Compatibility = JSON.parse(await readFile(file, 'utf-8'));
-  const compatibleRange = compatibility[pkg].compatibility
+export const checkCompatibility = async (params: {
+  pkg: 'cli' | 'sdk';
+  currentVersion: string;
+  tag: Compatibility;
+}) => {
+  const { pkg, currentVersion, tag } = params;
+  const compatibleRange = tag[pkg].compatibility
     .filter((v) => v.compatible)
     .map((v) => v.range)
     .join('||');
@@ -44,6 +44,7 @@ export const checkCompatibility = async (params: { pkg: 'cli' | 'sdk'; currentVe
       : undefined
   };
 };
+
 export const getSdkVersion = async (): Promise<null | string> => {
   const packageJson: PackageJson = JSON.parse(await readFile(`${path.join(process.cwd())}/package.json`, 'utf-8'));
   return packageJson && packageJson.dependencies && packageJson.dependencies['@xata.io/client']
@@ -51,17 +52,12 @@ export const getSdkVersion = async (): Promise<null | string> => {
     : null;
 };
 
-export const fetchInfo = async (params: {
-  latestFile: string;
-  compatibilityUri: string;
-  compatibilityFile: string;
-  dir: string;
-}) => {
-  const { dir, latestFile, compatibilityUri, compatibilityFile } = params;
+export const fetchInfo = async (params: { compatibilityUri: string; compatibilityFile: string }) => {
+  const { compatibilityUri, compatibilityFile } = params;
   let shouldRefresh = true;
   try {
     // Latest time of one of the files should be enough
-    const statResult = await stat(latestFile);
+    const statResult = await stat(compatibilityFile);
     const lastModified = new Date(statResult.mtime);
     // Last param is the number of days - we fetch new package info if the file is older than 1 day
     const staleAt = new Date(lastModified.valueOf() + ONE_DAY);
@@ -71,15 +67,18 @@ export const fetchInfo = async (params: {
   }
   if (shouldRefresh) {
     try {
-      mkdir(dir, { recursive: true }, () => {});
       const latestCompatibilityResponse = await fetch(compatibilityUri);
+      if (!latestCompatibilityResponse.ok) return;
       const body = await latestCompatibilityResponse.json();
-      await writeFile(compatibilityFile, body as NodeJS.ReadStream);
-      const compatibility: Compatibility = JSON.parse(await readFile(compatibilityFile, 'utf-8'));
-      await writeFile(
-        latestFile,
-        JSON.stringify({ latest: { cli: compatibility.cli.latest, sdk: compatibility.sdk.latest } }, null, 2)
-      );
+      if (!(body as Compatibility).cli) return;
+      try {
+        await writeFile(compatibilityFile, JSON.stringify(body));
+      } catch (e) {
+        if ((e as any).code === 'ENOENT') {
+          await mkdir(path.dirname(compatibilityFile), { recursive: true });
+          await writeFile(compatibilityFile, JSON.stringify(body));
+        }
+      }
     } catch (_e) {
       // Do nothing
     }
@@ -88,29 +87,30 @@ export const fetchInfo = async (params: {
 
 const hook: Hook<'init'> = async function (_options) {
   const dir = path.join(process.cwd(), '.xata', 'version');
-  const latestFile = `${dir}/version.json`;
   const compatibilityFile = `${dir}/compatibility.json`;
   const compatibilityUri = 'https://raw.githubusercontent.com/xataio/client-ts/main/compatibility.json';
 
   const displayWarning = async () => {
-    const cliWarn = await checkLatest({ pkg: 'cli', currentVersion: this.config.version, file: compatibilityFile });
-    if (cliWarn.warn) this.warn(cliWarn.warn);
-    const cliError = await checkCompatibility({
-      pkg: 'cli',
-      currentVersion: this.config.version,
-      file: compatibilityFile
-    });
-    if (cliError.error) this.warn(cliError.error);
+    const tag: Compatibility = JSON.parse(await readFile(compatibilityFile, 'utf-8'));
+    const defaultParams = { tag };
+
+    const cliPkg = 'cli';
+    const cliVersion = this.config.version;
+    const cliWarn = await checkLatest({ ...defaultParams, pkg: cliPkg, currentVersion: cliVersion });
+    if (cliWarn.warn) this.log(cliWarn.warn);
+    const cliError = await checkCompatibility({ ...defaultParams, pkg: cliPkg, currentVersion: cliVersion });
+    if (cliError.error) this.error(cliError.error);
 
     const sdkVersion = await getSdkVersion();
     if (!sdkVersion) return;
-    const sdkWarn = await checkLatest({ pkg: 'sdk', currentVersion: this.config.version, file: latestFile });
-    if (sdkWarn.warn) this.warn(sdkWarn.warn);
-    const sdkError = await checkCompatibility({ pkg: 'sdk', currentVersion: this.config.version, file: latestFile });
-    if (sdkError.error) this.warn(sdkError.error);
+    const sdkPkg = 'sdk';
+    const sdkWarn = await checkLatest({ ...defaultParams, pkg: sdkPkg, currentVersion: sdkVersion });
+    if (sdkWarn.warn) this.log(sdkWarn.warn);
+    const sdkError = await checkCompatibility({ ...defaultParams, pkg: sdkPkg, currentVersion: sdkVersion });
+    if (sdkError.error) this.error(sdkError.error);
   };
 
-  await fetchInfo({ compatibilityFile, compatibilityUri, dir, latestFile });
+  await fetchInfo({ compatibilityFile, compatibilityUri });
   await displayWarning();
 };
 

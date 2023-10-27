@@ -6,11 +6,6 @@ import { ONE_DAY, checkCompatibility, checkLatest, fetchInfo, getSdkVersion } fr
 vi.mock('node-fetch');
 vi.mock('fs/promises');
 
-beforeEach(() => {
-  process.env.XATA_API_KEY = '1234abcdef';
-  process.env.XATA_BRANCH = 'main';
-});
-
 afterEach(() => {
   vi.clearAllMocks();
 });
@@ -20,27 +15,34 @@ const writeFileMock = writeFile as unknown as ReturnType<typeof vi.fn>;
 const readFileMock = readFile as unknown as ReturnType<typeof vi.fn>;
 const statMock = stat as unknown as ReturnType<typeof vi.fn>;
 
-const latestFileObj = {
-  latest: {
-    cli: '1.0.0',
-    sdk: '1.0.0'
-  }
-};
+const currentCli = '0.0.1';
+const currentSdk = '0.0.2';
+const latestCli = '1.0.0';
+const latestSdk = '1.0.0';
+
+const cliUpdateAvailable = `"✨ A newer version of the Xata CLI is now available: ${latestCli}. You are currently using version: ${currentCli}"`;
+const sdkUpdateAvailable = `"✨ A newer version of the Xata SDK is now available: ${latestSdk}. You are currently using version: ${currentSdk}"`;
+
+const cliError = `"Incompatible version of CLI: ${currentCli}. Please upgrade to a version that satisfies: ${latestCli}."`;
+const sdkError = `"Incompatible version of SDK: ${currentSdk}. Please upgrade to a version that satisfies: ${latestSdk}."`;
+
+const compatibilityFile = './compatibility.json';
+
 const compatibilityObj = {
   cli: {
-    latest: '1.0.0',
+    latest: latestCli,
     compatibility: [
       {
-        range: '1.0.0',
+        range: latestCli,
         compatible: true
       }
     ]
   },
   sdk: {
-    latest: '1.0.0',
+    latest: latestSdk,
     compatibility: [
       {
-        range: '1.0.0',
+        range: latestSdk,
         compatible: true
       }
     ]
@@ -52,11 +54,9 @@ const packageJsonObj = (withPackage: boolean) => {
     name: 'client-ts',
     dependencies: withPackage
       ? {
-          '@xata.io/client': '1.0.0'
+          '@xata.io/client': currentSdk
         }
-      : {
-          someOtherPackage: '1.0.0'
-        }
+      : {}
   };
 };
 
@@ -68,7 +68,7 @@ fetchMock.mockReturnValue({
 describe('getSdkVersion', () => {
   test('returns version when @xata package', async () => {
     readFileMock.mockReturnValue(JSON.stringify(packageJsonObj(true)));
-    expect(await getSdkVersion()).toEqual('1.0.0');
+    expect(await getSdkVersion()).toEqual(currentSdk);
   });
   test('returns null when no @xata package', async () => {
     readFileMock.mockReturnValue(JSON.stringify(packageJsonObj(false)));
@@ -77,6 +77,10 @@ describe('getSdkVersion', () => {
 });
 
 describe('fetchInfo', () => {
+  const fetchInfoParams = {
+    compatibilityFile,
+    compatibilityUri: ''
+  };
   describe('refreshes', () => {
     beforeEach(() => {
       readFileMock.mockReturnValue(JSON.stringify(compatibilityObj));
@@ -84,24 +88,14 @@ describe('fetchInfo', () => {
     });
     test('when no files exist', async () => {
       statMock.mockRejectedValue(undefined);
-      await fetchInfo({
-        compatibilityFile: './compatibility.json',
-        compatibilityUri: '',
-        dir: '',
-        latestFile: './version.json'
-      });
-      expect(writeFileMock).toHaveBeenCalledTimes(2);
+      await fetchInfo(fetchInfoParams);
+      expect(writeFileMock).toHaveBeenCalledTimes(1);
     });
     test('when file is stale', async () => {
       const yesterday = new Date().getDate() - ONE_DAY + 1000;
       statMock.mockReturnValue({ mtime: new Date(yesterday) });
-      await fetchInfo({
-        compatibilityFile: './compatibility.json',
-        compatibilityUri: '',
-        dir: '',
-        latestFile: './version.json'
-      });
-      expect(writeFileMock).toHaveBeenCalledTimes(2);
+      await fetchInfo(fetchInfoParams);
+      expect(writeFileMock).toHaveBeenCalledTimes(1);
     });
     test('when problem fetching, no file writes', async () => {
       fetchMock.mockReturnValue({
@@ -109,24 +103,14 @@ describe('fetchInfo', () => {
       });
       const yesterday = new Date().getDate() - ONE_DAY + 1000;
       statMock.mockReturnValue({ mtime: new Date(yesterday) });
-      await fetchInfo({
-        compatibilityFile: './compatibility.json',
-        compatibilityUri: '',
-        dir: '',
-        latestFile: './version.json'
-      });
+      await fetchInfo(fetchInfoParams);
       expect(writeFileMock).not.toHaveBeenCalled();
     });
   });
   describe('does not refresh', () => {
     test('if file is not stale', async () => {
       statMock.mockReturnValue({ mtime: new Date() });
-      await fetchInfo({
-        compatibilityFile: './compatibility.json',
-        compatibilityUri: '',
-        dir: '',
-        latestFile: './version.json'
-      });
+      await fetchInfo(fetchInfoParams);
       expect(fetchMock).not.toHaveBeenCalled();
       expect(writeFileMock).not.toHaveBeenCalled();
     });
@@ -134,24 +118,21 @@ describe('fetchInfo', () => {
 });
 
 describe('checks', () => {
+  const defaultParams = { tag: compatibilityObj };
   describe('latest', () => {
     beforeEach(() => {
-      readFileMock.mockReturnValue(JSON.stringify(latestFileObj));
+      readFileMock.mockReturnValue(JSON.stringify(compatibilityObj));
     });
     test('returns warn if newer package available', async () => {
-      const cliResponse = await checkLatest({ pkg: 'cli', currentVersion: '0.0.1', file: './version.json' });
-      expect(cliResponse.warn).toMatchInlineSnapshot(
-        `"✨ A newer version of the Xata CLI is now available: 1.0.0. You are currently using version: 0.0.1"`
-      );
-      const sdkResponse = await checkLatest({ pkg: 'sdk', currentVersion: '0.0.2', file: './version.json' });
-      expect(sdkResponse.warn).toMatchInlineSnapshot(
-        `"✨ A newer version of the Xata SDK is now available: 1.0.0. You are currently using version: 0.0.2"`
-      );
+      const cliResponse = await checkLatest({ ...defaultParams, pkg: 'cli', currentVersion: currentCli });
+      expect(cliResponse.warn).toMatchInlineSnapshot(cliUpdateAvailable);
+      const sdkResponse = await checkLatest({ ...defaultParams, pkg: 'sdk', currentVersion: currentSdk });
+      expect(sdkResponse.warn).toMatchInlineSnapshot(sdkUpdateAvailable);
     });
     test('returns undefined if no newer package available', async () => {
-      const cliResponse = await checkLatest({ pkg: 'cli', currentVersion: '1.0.0', file: './version.json' });
+      const cliResponse = await checkLatest({ ...defaultParams, pkg: 'cli', currentVersion: latestSdk });
       expect(cliResponse.warn).toBeUndefined();
-      const sdkResponse = await checkLatest({ pkg: 'sdk', currentVersion: '1.0.0', file: './version.json' });
+      const sdkResponse = await checkLatest({ ...defaultParams, pkg: 'sdk', currentVersion: latestSdk });
       expect(sdkResponse.warn).toBeUndefined();
     });
   });
@@ -161,33 +142,29 @@ describe('checks', () => {
     });
     test('returns error if not compatible', async () => {
       const cliResponse = await checkCompatibility({
+        ...defaultParams,
         pkg: 'cli',
-        file: './compatibility.json',
-        currentVersion: '0.0.1'
+        currentVersion: currentCli
       });
-      expect(cliResponse.error).toMatchInlineSnapshot(
-        `"Incompatible version of CLI: 0.0.1. Please upgrade to a version that satisfies: 1.0.0."`
-      );
+      expect(cliResponse.error).toMatchInlineSnapshot(cliError);
       const sdkResponse = await checkCompatibility({
-        pkg: 'cli',
-        file: './compatibility.json',
-        currentVersion: '0.0.2'
+        ...defaultParams,
+        pkg: 'sdk',
+        currentVersion: currentSdk
       });
-      expect(sdkResponse.error).toMatchInlineSnapshot(
-        `"Incompatible version of CLI: 0.0.2. Please upgrade to a version that satisfies: 1.0.0."`
-      );
+      expect(sdkResponse.error).toMatchInlineSnapshot(sdkError);
     });
     test('returns undefined if compatible', async () => {
       const cliResponse = await checkCompatibility({
+        ...defaultParams,
         pkg: 'cli',
-        file: './compatibility.json',
-        currentVersion: '1.0.0'
+        currentVersion: latestCli
       });
       expect(cliResponse.error).toBeUndefined();
       const sdkResponse = await checkCompatibility({
+        ...defaultParams,
         pkg: 'sdk',
-        file: './compatibility.json',
-        currentVersion: '1.0.0'
+        currentVersion: latestSdk
       });
       expect(sdkResponse.error).toBeUndefined();
     });

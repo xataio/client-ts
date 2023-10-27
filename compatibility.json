@@ -1,30 +1,4 @@
 {
-  "cli": {
-    "latest": "0.14.2",
-    "compatibility": [
-      {
-        "range": ">0.0.1",
-        "compatible": true
-      },
-      {
-        "range": "<0.0.1",
-        "compatbile": false,
-        "error": "Please update to v0.0.1"
-      }
-    ]
-  },
-  "sdk": {
-    "latest": "0.26.9",
-    "compatibility": [
-      {
-        "range": ">0.0.1",
-        "compatible": true
-      },
-      {
-        "range": "<0.0.1",
-        "compatbile": false,
-        "error": "Please update to v0.0.1"
-      }
-    ]
-  }
+  "cli": { "latest": "1.0.0", "compatibility": [{ "range": "1.0.0", "compatible": true }] },
+  "sdk": { "latest": "1.0.0", "compatibility": [{ "range": "1.0.0", "compatible": true }] }
 }
