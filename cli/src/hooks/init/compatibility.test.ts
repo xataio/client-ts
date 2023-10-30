@@ -2,6 +2,7 @@ import { writeFile, readFile, stat } from 'fs/promises';
 import fetch from 'node-fetch';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ONE_DAY, check, fetchInfo, getSdkVersion } from './compatibility.js';
+import semver from 'semver';
 
 vi.mock('node-fetch');
 vi.mock('fs/promises');
@@ -15,38 +16,47 @@ const writeFileMock = writeFile as unknown as ReturnType<typeof vi.fn>;
 const readFileMock = readFile as unknown as ReturnType<typeof vi.fn>;
 const statMock = stat as unknown as ReturnType<typeof vi.fn>;
 
-const currentCli = '0.0.1';
-const currentSdk = '0.0.2';
-const latestCli = '1.0.0';
-const latestSdk = '2.0.0';
-const specificCliVersion = '0.0.8';
-const alphaVersion = `${latestCli}-alpha.v927d47c`;
+const latestAvailableVersionCLI = '1.0.0';
+const latestAvailableVersionSDK = '2.0.0';
+const specificVersionCLI = '0.0.8';
 
-const cliUpdateAvailable = `"✨ A newer version of the Xata CLI is now available: ${latestCli}. You are currently using version: ${currentCli}"`;
-const sdkUpdateAvailable = `"✨ A newer version of the Xata SDK is now available: ${latestSdk}. You are currently using version: ${currentSdk}"`;
+const userVersionCLI = '~0.0.1';
+const userVersionSDK = '^0.0.2';
+const userVersionAlpha = `${latestAvailableVersionCLI}-alpha.v927d47c`;
 
-const cliError = `"Incompatible version of CLI: ${currentCli}. Please upgrade to a version that satisfies: >=${latestCli}||${specificCliVersion}."`;
-const sdkError = `"Incompatible version of SDK: ${currentSdk}. Please upgrade to a version that satisfies: ${latestSdk}."`;
+const cliUpdateAvailable = `"✨ A newer version of the Xata CLI is now available: ${latestAvailableVersionCLI}. You are currently using version: ${semver.coerce(
+  userVersionCLI
+)}"`;
+const sdkUpdateAvailable = `"✨ A newer version of the Xata SDK is now available: ${latestAvailableVersionSDK}. You are currently using version: ${semver.coerce(
+  userVersionSDK
+)}"`;
+
+const cliError = `"Incompatible version of CLI: ${semver.coerce(
+  userVersionCLI
+)}. Please upgrade to a version that satisfies: >=${latestAvailableVersionCLI}||${specificVersionCLI}."`;
+const sdkError = `"Incompatible version of SDK: ${semver.coerce(
+  userVersionSDK
+)}. Please upgrade to a version that satisfies: ${latestAvailableVersionSDK}."`;
 
 const compatibilityFile = './compatibility.json';
 
 const compatibilityObj = {
   cli: {
-    latest: latestCli,
+    latest: latestAvailableVersionCLI,
     compatibility: [
       {
-        range: `>=${latestCli}`
+        range: `>=${latestAvailableVersionCLI}`
       },
       {
-        range: `${specificCliVersion}`
+        range: `${specificVersionCLI}`
       }
     ]
   },
   sdk: {
-    latest: latestSdk,
+    latest: latestAvailableVersionSDK,
     compatibility: [
       {
-        range: latestSdk
+        range: latestAvailableVersionSDK
       }
     ]
   }
@@ -57,7 +67,7 @@ const packageJsonObj = (withPackage: boolean) => {
     name: 'client-ts',
     dependencies: withPackage
       ? {
-          '@xata.io/client': currentSdk
+          '@xata.io/client': userVersionSDK
         }
       : {}
   };
@@ -71,7 +81,7 @@ fetchMock.mockReturnValue({
 describe('getSdkVersion', () => {
   test('returns version when @xata package', async () => {
     readFileMock.mockReturnValue(JSON.stringify(packageJsonObj(true)));
-    expect(await getSdkVersion()).toEqual(currentSdk);
+    expect(await getSdkVersion()).toEqual(userVersionSDK);
   });
   test('returns null when no @xata package', async () => {
     readFileMock.mockReturnValue(JSON.stringify(packageJsonObj(false)));
@@ -127,15 +137,15 @@ describe('checks', () => {
       readFileMock.mockReturnValue(JSON.stringify(compatibilityObj));
     });
     test('returns warn if newer package available', async () => {
-      const cliResponse = await check({ ...defaultParams, pkg: 'cli', currentVersion: currentCli });
+      const cliResponse = await check({ ...defaultParams, pkg: 'cli', currentVersion: userVersionCLI });
       expect(cliResponse.warn).toMatchInlineSnapshot(cliUpdateAvailable);
-      const sdkResponse = await check({ ...defaultParams, pkg: 'sdk', currentVersion: currentSdk });
+      const sdkResponse = await check({ ...defaultParams, pkg: 'sdk', currentVersion: userVersionSDK });
       expect(sdkResponse.warn).toMatchInlineSnapshot(sdkUpdateAvailable);
     });
     test('returns null if no newer package available', async () => {
-      const cliResponse = await check({ ...defaultParams, pkg: 'cli', currentVersion: latestCli });
+      const cliResponse = await check({ ...defaultParams, pkg: 'cli', currentVersion: latestAvailableVersionCLI });
       expect(cliResponse.warn).toBeNull();
-      const sdkResponse = await check({ ...defaultParams, pkg: 'sdk', currentVersion: latestSdk });
+      const sdkResponse = await check({ ...defaultParams, pkg: 'sdk', currentVersion: latestAvailableVersionSDK });
       expect(sdkResponse.warn).toBeNull();
     });
   });
@@ -147,13 +157,13 @@ describe('checks', () => {
       const cliResponse = await check({
         ...defaultParams,
         pkg: 'cli',
-        currentVersion: currentCli
+        currentVersion: userVersionCLI
       });
       expect(cliResponse.error).toMatchInlineSnapshot(cliError);
       const sdkResponse = await check({
         ...defaultParams,
         pkg: 'sdk',
-        currentVersion: currentSdk
+        currentVersion: userVersionSDK
       });
       expect(sdkResponse.error).toMatchInlineSnapshot(sdkError);
     });
@@ -161,20 +171,20 @@ describe('checks', () => {
       const cliResponse = await check({
         ...defaultParams,
         pkg: 'cli',
-        currentVersion: latestCli
+        currentVersion: latestAvailableVersionCLI
       });
       expect(cliResponse.error).toBeNull();
       const sdkResponse = await check({
         ...defaultParams,
         pkg: 'sdk',
-        currentVersion: latestSdk
+        currentVersion: latestAvailableVersionSDK
       });
       expect(sdkResponse.error).toBeNull();
       // Alpha versions
       const cliResponseAlpha = await check({
         ...defaultParams,
         pkg: 'cli',
-        currentVersion: alphaVersion
+        currentVersion: userVersionAlpha
       });
       expect(cliResponseAlpha.error).toBeNull();
       expect(cliResponseAlpha.warn).toBeNull();
