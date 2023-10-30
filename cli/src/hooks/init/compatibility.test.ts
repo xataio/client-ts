@@ -20,6 +20,7 @@ const currentSdk = '0.0.2';
 const latestCli = '1.0.0';
 const latestSdk = '2.0.0';
 const specificCliVersion = '0.0.8';
+const alphaVersion = `${latestCli}-alpha.v927d47c`;
 
 const cliUpdateAvailable = `"✨ A newer version of the Xata CLI is now available: ${latestCli}. You are currently using version: ${currentCli}"`;
 const sdkUpdateAvailable = `"✨ A newer version of the Xata SDK is now available: ${latestSdk}. You are currently using version: ${currentSdk}"`;
@@ -169,6 +170,14 @@ describe('checks', () => {
         currentVersion: latestSdk
       });
       expect(sdkResponse.error).toBeNull();
+      // Alpha versions
+      const cliResponseAlpha = await check({
+        ...defaultParams,
+        pkg: 'cli',
+        currentVersion: alphaVersion
+      });
+      expect(cliResponseAlpha.error).toBeNull();
+      expect(cliResponseAlpha.warn).toBeNull();
     });
   });
 });
