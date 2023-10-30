@@ -81,8 +81,7 @@ export const fetchInfo = async (params: { compatibilityUri: string; compatibilit
 const hook: Hook<'init'> = async function (_options) {
   const dir = path.join(process.cwd(), '.xata', 'version');
   const compatibilityFile = `${dir}/compatibility.json`;
-  const compatibilityUri =
-    'https://raw.githubusercontent.com/xataio/client-ts/feat/compatibility-endpoint/compatibility.json'; //'https://raw.githubusercontent.com/xataio/client-ts/main/compatibility.json';
+  const compatibilityUri = 'https://raw.githubusercontent.com/xataio/client-ts/main/compatibility.json';
 
   const displayWarning = async () => {
     const compatibilityObj: Compatibility = JSON.parse(await readFile(compatibilityFile, 'utf-8'));
