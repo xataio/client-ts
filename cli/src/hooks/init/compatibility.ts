@@ -96,7 +96,7 @@ const hook: Hook<'init'> = async function (_options) {
     const sdkVersion = await getSdkVersion();
     if (sdkVersion) {
       const sdkPkg = 'sdk';
-      const { warn, error } = await check({ ...defaultParams, pkg: sdkPkg, currentVersion: cliVersion });
+      const { warn, error } = await check({ ...defaultParams, pkg: sdkPkg, currentVersion: sdkVersion });
       if (warn) this.log(warn);
       if (error) this.error(error);
     }
