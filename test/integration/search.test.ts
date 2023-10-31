@@ -86,7 +86,10 @@ describe('search', () => {
   });
 
   test('search by tables with multiple tables', async () => {
-    const { users = [], teams = [], totalCount } = await xata.search.byTable('fruits', { tables: ['teams', 'users'] });
+    const {
+      records: { users = [], teams = [] },
+      totalCount
+    } = await xata.search.byTable('fruits', { tables: ['teams', 'users'] });
 
     expect(totalCount).toBeGreaterThan(0);
     expect(users.length).toBeGreaterThan(0);
@@ -104,7 +107,10 @@ describe('search', () => {
   });
 
   test('search by table with all tables', async () => {
-    const { users = [], teams = [], totalCount } = await xata.search.byTable('fruits');
+    const {
+      records: { users = [], teams = [] },
+      totalCount
+    } = await xata.search.byTable('fruits');
 
     expect(totalCount).toBeGreaterThan(0);
     expect(users.length).toBeGreaterThan(0);
@@ -222,9 +228,18 @@ describe('search', () => {
   });
 
   test('global search with page and offset', async () => {
-    const { users: owners = [], totalCount } = await xata.search.byTable('Owner');
-    const { users: page1 = [], totalCount: page1Count } = await xata.search.byTable('Owner', { page: { size: 1 } });
-    const { users: page2 = [], totalCount: page2Count } = await xata.search.byTable('Owner', {
+    const {
+      records: { users: owners = [] },
+      totalCount
+    } = await xata.search.byTable('Owner');
+    const {
+      records: { users: page1 = [] },
+      totalCount: page1Count
+    } = await xata.search.byTable('Owner', { page: { size: 1 } });
+    const {
+      records: { users: page2 = [] },
+      totalCount: page2Count
+    } = await xata.search.byTable('Owner', {
       page: { size: 1, offset: 1 }
     });
 

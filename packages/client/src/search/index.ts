@@ -53,11 +53,13 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
     options?: SearchOptions<Schemas, Tables>
   ) => Promise<
     TotalCount & {
-      [Model in ExtractTables<
-        Schemas,
-        Tables,
-        GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
-      >]?: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>[]>;
+      records: {
+        [Model in ExtractTables<
+          Schemas,
+          Tables,
+          GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
+        >]?: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>[]>;
+      };
     }
   >;
 };
@@ -89,21 +91,19 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
         query: string,
         options: SearchOptions<Schemas, Tables> = {}
       ) => {
-        const { records, totalCount } = await this.#search(query, options, pluginOptions);
+        const { records: rawRecords, totalCount } = await this.#search(query, options, pluginOptions);
         const schemaTables = await this.#getSchemaTables(pluginOptions);
 
-        return records.reduce(
-          (acc, record) => {
-            const { table = 'orphan' } = record.xata;
+        const records = rawRecords.reduce((acc, record) => {
+          const { table = 'orphan' } = record.xata;
 
-            const items = acc[table] ?? [];
-            // TODO: Search endpoint doesn't support column selection
-            const item = initObject(this.db, schemaTables, table, record, ['*']);
+          const items = acc[table] ?? [];
+          // TODO: Search endpoint doesn't support column selection
+          const item = initObject(this.db, schemaTables, table, record, ['*']);
 
-            return { ...acc, [table]: [...items, item] };
-          },
-          { totalCount } as any
-        );
+          return { ...acc, [table]: [...items, item] };
+        }, {} as any);
+        return { totalCount, records };
       }
     };
   }

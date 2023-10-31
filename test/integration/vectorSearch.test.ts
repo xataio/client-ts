@@ -55,6 +55,7 @@ describe('search', () => {
   test('with size', async () => {
     const { records: results, totalCount } = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { size: 2 });
 
+    // The total count may be higher than the size
     expect(totalCount).toEqual(4);
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r1']);
   });
