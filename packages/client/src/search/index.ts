@@ -1,4 +1,4 @@
-import { getBranchDetails, searchBranch } from '../api';
+import { Responses, getBranchDetails, searchBranch } from '../api';
 import { FuzzinessExpression, HighlightExpression, PrefixExpression, SearchPageConfig, Table } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
@@ -28,32 +28,38 @@ export type SearchOptions<Schemas extends Record<string, BaseData>, Tables exten
   page?: SearchPageConfig;
 };
 
+export type TotalCount = Pick<Responses.SearchResponse, 'totalCount'>;
+
 export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
   all: <Tables extends StringKeys<Schemas>>(
     query: string,
     options?: SearchOptions<Schemas, Tables>
   ) => Promise<
-    Values<{
-      [Model in ExtractTables<
-        Schemas,
-        Tables,
-        GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
-      >]: {
-        table: Model;
-        record: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>>;
-      };
-    }>[]
+    TotalCount & {
+      records: Values<{
+        [Model in ExtractTables<
+          Schemas,
+          Tables,
+          GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
+        >]: {
+          table: Model;
+          record: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>>;
+        };
+      }>[];
+    }
   >;
   byTable: <Tables extends StringKeys<Schemas>>(
     query: string,
     options?: SearchOptions<Schemas, Tables>
-  ) => Promise<{
-    [Model in ExtractTables<
-      Schemas,
-      Tables,
-      GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
-    >]?: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>[]>;
-  }>;
+  ) => Promise<
+    TotalCount & {
+      [Model in ExtractTables<
+        Schemas,
+        Tables,
+        GetArrayInnerType<NonNullable<NonNullable<typeof options>['tables']>>
+      >]?: Awaited<SearchXataRecord<SelectedPick<Schemas[Model] & XataRecord, ['*']>>[]>;
+    }
+  >;
 };
 
 export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
@@ -67,32 +73,37 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
   build(pluginOptions: XataPluginOptions): SearchPluginResult<Schemas> {
     return {
       all: async <Tables extends StringKeys<Schemas>>(query: string, options: SearchOptions<Schemas, Tables> = {}) => {
-        const records = await this.#search(query, options, pluginOptions);
+        const { records, totalCount } = await this.#search(query, options, pluginOptions);
         const schemaTables = await this.#getSchemaTables(pluginOptions);
 
-        return records.map((record) => {
-          const { table = 'orphan' } = record.xata;
-
-          // TODO: Search endpoint doesn't support column selection
-          return { table, record: initObject(this.db, schemaTables, table, record, ['*']) } as any;
-        });
+        return {
+          totalCount,
+          records: records.map((record) => {
+            const { table = 'orphan' } = record.xata;
+            // TODO: Search endpoint doesn't support column selection
+            return { table, record: initObject(this.db, schemaTables, table, record, ['*']) } as any;
+          })
+        };
       },
       byTable: async <Tables extends StringKeys<Schemas>>(
         query: string,
         options: SearchOptions<Schemas, Tables> = {}
       ) => {
-        const records = await this.#search(query, options, pluginOptions);
+        const { records, totalCount } = await this.#search(query, options, pluginOptions);
         const schemaTables = await this.#getSchemaTables(pluginOptions);
 
-        return records.reduce((acc, record) => {
-          const { table = 'orphan' } = record.xata;
+        return records.reduce(
+          (acc, record) => {
+            const { table = 'orphan' } = record.xata;
 
-          const items = acc[table] ?? [];
-          // TODO: Search endpoint doesn't support column selection
-          const item = initObject(this.db, schemaTables, table, record, ['*']);
+            const items = acc[table] ?? [];
+            // TODO: Search endpoint doesn't support column selection
+            const item = initObject(this.db, schemaTables, table, record, ['*']);
 
-          return { ...acc, [table]: [...items, item] };
-        }, {} as any);
+            return { ...acc, [table]: [...items, item] };
+          },
+          { totalCount } as any
+        );
       }
     };
   }
@@ -104,14 +115,14 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
   ) {
     const { tables, fuzziness, highlight, prefix, page } = options ?? {};
 
-    const { records } = await searchBranch({
+    const { records, totalCount } = await searchBranch({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
       // @ts-ignore https://github.com/xataio/client-ts/issues/313
       body: { tables, query, fuzziness, prefix, highlight, page },
       ...pluginOptions
     });
 
-    return records;
+    return { records, totalCount };
   }
 
   async #getSchemaTables(pluginOptions: XataPluginOptions): Promise<Table[]> {
