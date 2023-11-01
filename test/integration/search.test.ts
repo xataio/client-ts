@@ -60,32 +60,38 @@ afterEach(async (ctx) => {
 
 describe('search', () => {
   test('search in table', async () => {
-    const owners = await xata.db.users.search('Owner');
-    expect(owners.length).toBeGreaterThan(0);
+    const { records, totalCount } = await xata.db.users.search('Owner');
+    expect(totalCount).toBe(2);
+    expect(records.length).toBeGreaterThan(0);
 
-    expect(owners.length).toBe(2);
-    expect(owners[0].id).toBeDefined();
-    expect(owners[0].full_name?.includes('Owner')).toBeTruthy();
-    expect(owners[0].read).toBeDefined();
-    expect(owners[0].getMetadata().score).toBeDefined();
-    expect(owners[0].getMetadata().table).toBe('users');
+    expect(records.length).toBe(2);
+    expect(records[0].id).toBeDefined();
+    expect(records[0].full_name?.includes('Owner')).toBeTruthy();
+    expect(records[0].read).toBeDefined();
+    expect(records[0].getMetadata().score).toBeDefined();
+    expect(records[0].getMetadata().table).toBe('users');
   });
 
   test('search in table with filtering', async () => {
-    const owners = await xata.db.users.search('Owner', {
+    const { records, totalCount } = await xata.db.users.search('Owner', {
       filter: { full_name: 'Owner of team animals' }
     });
 
-    expect(owners.length).toBe(1);
-    expect(owners[0].id).toBeDefined();
-    expect(owners[0].full_name?.includes('Owner of team animals')).toBeTruthy();
-    expect(owners[0].read).toBeDefined();
-    expect(owners[0].getMetadata().score).toBeDefined();
+    expect(totalCount).toBe(1);
+    expect(records.length).toBe(1);
+    expect(records[0].id).toBeDefined();
+    expect(records[0].full_name?.includes('Owner of team animals')).toBeTruthy();
+    expect(records[0].read).toBeDefined();
+    expect(records[0].getMetadata().score).toBeDefined();
   });
 
   test('search by tables with multiple tables', async () => {
-    const { users = [], teams = [] } = await xata.search.byTable('fruits', { tables: ['teams', 'users'] });
+    const {
+      records: { users = [], teams = [] },
+      totalCount
+    } = await xata.search.byTable('fruits', { tables: ['teams', 'users'] });
 
+    expect(totalCount).toBeGreaterThan(0);
     expect(users.length).toBeGreaterThan(0);
     expect(teams.length).toBeGreaterThan(0);
 
@@ -101,8 +107,12 @@ describe('search', () => {
   });
 
   test('search by table with all tables', async () => {
-    const { users = [], teams = [] } = await xata.search.byTable('fruits');
+    const {
+      records: { users = [], teams = [] },
+      totalCount
+    } = await xata.search.byTable('fruits');
 
+    expect(totalCount).toBeGreaterThan(0);
     expect(users.length).toBeGreaterThan(0);
     expect(teams.length).toBeGreaterThan(0);
 
@@ -118,9 +128,11 @@ describe('search', () => {
   });
 
   test('search all with multiple tables', async () => {
-    const results = await xata.search.all('fruits', { tables: ['teams', 'users'] });
+    const { records, totalCount } = await xata.search.all('fruits', { tables: ['teams', 'users'] });
+    expect(records).toBeDefined();
 
-    for (const result of results) {
+    expect(totalCount).toBeGreaterThan(0);
+    for (const result of records) {
       if (result.table === 'teams') {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
@@ -138,9 +150,11 @@ describe('search', () => {
   });
 
   test('search all with one table', async () => {
-    const results = await xata.search.all('fruits', { tables: ['teams'] });
+    const { records, totalCount } = await xata.search.all('fruits', { tables: ['teams'] });
+    expect(records).toBeDefined();
 
-    for (const result of results) {
+    expect(totalCount).toBeGreaterThan(0);
+    for (const result of records) {
       expect(result.record.id).toBeDefined();
       expect(result.record.read).toBeDefined();
       expect(result.record.name?.includes('fruits')).toBeTruthy();
@@ -152,9 +166,11 @@ describe('search', () => {
   });
 
   test('search all with all tables', async () => {
-    const results = await xata.search.all('fruits');
+    const { records, totalCount } = await xata.search.all('fruits');
+    expect(records).toBeDefined();
 
-    for (const result of results) {
+    expect(totalCount).toBeGreaterThan(0);
+    for (const result of records) {
       if (result.table === 'teams') {
         expect(result.record.id).toBeDefined();
         expect(result.record.read).toBeDefined();
@@ -175,26 +191,33 @@ describe('search', () => {
   });
 
   test('search all with filters', async () => {
-    const results = await xata.search.all('fruits', {
+    const { records, totalCount } = await xata.search.all('fruits', {
       tables: [{ table: 'teams', filter: { name: 'Team fruits' } }]
     });
+    expect(records).toBeDefined();
 
-    expect(results.length).toBe(1);
-    expect(results[0].table).toBe('teams');
+    expect(totalCount).toBe(1);
+    expect(records.length).toBe(1);
+    expect(records[0].table).toBe('teams');
 
-    if (results[0].table === 'teams') {
-      expect(results[0].record.id).toBeDefined();
-      expect(results[0].record.read).toBeDefined();
-      expect(results[0].record.name?.includes('fruits')).toBeTruthy();
-      expect(results[0].record.getMetadata().score).toBeDefined();
+    if (records[0].table === 'teams') {
+      expect(records[0].record.id).toBeDefined();
+      expect(records[0].record.read).toBeDefined();
+      expect(records[0].record.name?.includes('fruits')).toBeTruthy();
+      expect(records[0].record.getMetadata().score).toBeDefined();
     }
   });
 
   test('search with page and offset', async () => {
-    const owners = await xata.db.users.search('Owner');
-    const page1 = await xata.db.users.search('Owner', { page: { size: 1 } });
-    const page2 = await xata.db.users.search('Owner', { page: { size: 1, offset: 1 } });
+    const { records: owners, totalCount } = await xata.db.users.search('Owner');
+    const { records: page1, totalCount: page1Count } = await xata.db.users.search('Owner', { page: { size: 1 } });
+    const { records: page2, totalCount: page2Count } = await xata.db.users.search('Owner', {
+      page: { size: 1, offset: 1 }
+    });
 
+    expect(totalCount).toBe(2);
+    expect(page1Count).toBe(2);
+    expect(page2Count).toBe(2);
     expect(page1.length).toBe(1);
     expect(page2.length).toBe(1);
 
@@ -205,10 +228,24 @@ describe('search', () => {
   });
 
   test('global search with page and offset', async () => {
-    const { users: owners = [] } = await xata.search.byTable('Owner');
-    const { users: page1 = [] } = await xata.search.byTable('Owner', { page: { size: 1 } });
-    const { users: page2 = [] } = await xata.search.byTable('Owner', { page: { size: 1, offset: 1 } });
+    const {
+      records: { users: owners = [] },
+      totalCount
+    } = await xata.search.byTable('Owner');
+    const {
+      records: { users: page1 = [] },
+      totalCount: page1Count
+    } = await xata.search.byTable('Owner', { page: { size: 1 } });
+    const {
+      records: { users: page2 = [] },
+      totalCount: page2Count
+    } = await xata.search.byTable('Owner', {
+      page: { size: 1, offset: 1 }
+    });
 
+    expect(totalCount).toBe(2);
+    expect(page1Count).toBe(2);
+    expect(page2Count).toBe(2);
     expect(page1.length).toBe(1);
     expect(page2.length).toBe(1);
 
