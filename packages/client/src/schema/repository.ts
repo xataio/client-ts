@@ -27,7 +27,7 @@ import {
   TransactionOperation
 } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
-import { SearchXataRecord } from '../search';
+import { SearchXataRecord, TotalCount } from '../search';
 import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
 import { chunk, compact, isDefined, isNumber, isObject, isString, promiseMap } from '../util/lang';
@@ -748,7 +748,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       page?: SearchPageConfig;
       target?: TargetColumn<Record>[];
     }
-  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
+  ): Promise<{ records: SearchXataRecord<SelectedPick<Record, ['*']>>[] } & TotalCount>;
 
   /**
    * Search for vectors in the table.
@@ -777,7 +777,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       size?: number;
       filter?: Filter<Record>;
     }
-  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
+  ): Promise<{ records: SearchXataRecord<SelectedPick<Record, ['*']>>[] } & TotalCount>;
 
   /**
    * Aggregates records in the table.
@@ -1761,7 +1761,7 @@ export class RestRepository<Record extends XataRecord>
     } = {}
   ) {
     return this.#trace('search', async () => {
-      const { records } = await searchTable({
+      const { records, totalCount } = await searchTable({
         pathParams: {
           workspace: '{workspaceId}',
           dbBranchName: '{dbBranch}',
@@ -1784,7 +1784,10 @@ export class RestRepository<Record extends XataRecord>
       const schemaTables = await this.#getSchemaTables();
 
       // TODO - Column selection not supported by search endpoint yet
-      return records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any;
+      return {
+        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any,
+        totalCount
+      };
     });
   }
 
@@ -1798,9 +1801,9 @@ export class RestRepository<Record extends XataRecord>
           filter?: Filter<Record> | undefined;
         }
       | undefined
-  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]> {
+  ): Promise<{ records: SearchXataRecord<SelectedPick<Record, ['*']>>[] } & TotalCount> {
     return this.#trace('vectorSearch', async () => {
-      const { records } = await vectorSearchTable({
+      const { records, totalCount } = await vectorSearchTable({
         pathParams: {
           workspace: '{workspaceId}',
           dbBranchName: '{dbBranch}',
@@ -1820,7 +1823,10 @@ export class RestRepository<Record extends XataRecord>
       const schemaTables = await this.#getSchemaTables();
 
       // TODO - Column selection not supported by search endpoint yet
-      return records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any;
+      return {
+        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])),
+        totalCount
+      } as any;
     });
   }
 
