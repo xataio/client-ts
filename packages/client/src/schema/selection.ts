@@ -95,7 +95,9 @@ export type SelectedPick<O extends XataRecord, Key extends SelectableColumnWithO
   >;
 
 // Public: Utility type to get the value of a column at a given path
-export type ValueAtColumn<Object, Key> = Key extends '*'
+export type ValueAtColumn<Object, Key, RecursivePath extends any[] = []> = RecursivePath['length'] extends MAX_RECURSION
+  ? never
+  : Key extends '*'
   ? Values<Object> // Alias for any property
   : Key extends 'id'
   ? string // Alias for id (not in schema)
@@ -113,7 +115,7 @@ export type ValueAtColumn<Object, Key> = Key extends '*'
         NonNullable<Object[K]> extends infer Item
           ? Item extends Record<string, any>
             ? V extends SelectableColumn<Item>
-              ? { V: ValueAtColumn<Item, V> }
+              ? { V: ValueAtColumn<Item, V, [...RecursivePath, Item]> }
               : never
             : Object[K]
           : never
