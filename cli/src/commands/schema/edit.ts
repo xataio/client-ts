@@ -406,7 +406,7 @@ vectorDimension: \${vectorDimension}
       name: column?.name || '',
       type: column?.type || '',
       link: isColumnAdded ? '' : column?.link?.table,
-      vectorDimension: column?.vector?.dimension ? `${column?.vector?.dimension}` : '',
+      vectorDimension: column?.vector?.dimension ? `${column?.vector?.dimension}` : undefined,
       notNull: column?.notNull ? 'true' : 'false',
       defaultValue: column?.defaultValue || '',
       unique: column?.unique ? 'true' : 'false',
@@ -863,7 +863,7 @@ function parseDefaultValue(type: string, val?: string): string | undefined {
   const num = String(val).length > 0 ? +val : undefined;
 
   if (['text', 'string'].includes(type)) {
-    return String(val);
+    return val === '' ? undefined : String(val);
   } else if (type === 'int') {
     return Number.isSafeInteger(num) && val !== '' ? String(num) : undefined;
   } else if (type === 'float') {
