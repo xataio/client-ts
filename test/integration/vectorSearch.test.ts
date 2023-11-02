@@ -39,59 +39,70 @@ afterEach(async (ctx) => {
 
 describe('search', () => {
   test('search 1 2 3 4', async () => {
-    const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4]);
+    const { records: results, totalCount } = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4]);
 
+    expect(totalCount).toEqual(4);
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r1', 'r2', 'r3']);
   });
 
   test('search 0.4 0.3 0.2 0.1', async () => {
-    const results = await xata.db.users.vectorSearch('vector', [0.4, 0.3, 0.2, 0.1]);
+    const { records: results, totalCount } = await xata.db.users.vectorSearch('vector', [0.4, 0.3, 0.2, 0.1]);
 
+    expect(totalCount).toEqual(4);
     expect(results.map((r) => r.full_name)).toEqual(['r2', 'r3', 'r4', 'r1']);
   });
 
   test('with size', async () => {
-    const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { size: 2 });
+    const { records: results, totalCount } = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { size: 2 });
 
+    // The total count may be higher than the size
+    expect(totalCount).toEqual(4);
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r1']);
   });
 
   test('with filter', async () => {
-    const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
+    const { records: results, totalCount } = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
       filter: { full_name: { $any: ['r3', 'r4'] } }
     });
 
+    expect(totalCount).toEqual(2);
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r3']);
   });
 
   test('euclidean', async () => {
-    const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { similarityFunction: 'l1' });
+    const { records: results, totalCount } = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
+      similarityFunction: 'l1'
+    });
 
+    expect(totalCount).toEqual(4);
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r2', 'r1', 'r3']);
   });
 
   test('larger size', async () => {
-    const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { size: 100 });
+    const { records: results, totalCount } = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], { size: 100 });
 
+    expect(totalCount).toEqual(4);
     expect(results.map((r) => r.full_name)).toEqual(['r4', 'r1', 'r2', 'r3']);
   });
 
   test('with filter and size', async () => {
-    const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
+    const { records: results, totalCount } = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
       filter: { full_name: { $any: ['r3', 'r4'] } },
       size: 1
     });
 
+    expect(totalCount).toEqual(2);
     expect(results.map((r) => r.full_name)).toEqual(['r4']);
   });
 
   test('with filter and size and spaceFunction', async () => {
-    const results = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
+    const { records: results, totalCount } = await xata.db.users.vectorSearch('vector', [1, 2, 3, 4], {
       filter: { full_name: { $any: ['r3', 'r4'] } },
       size: 1,
       similarityFunction: 'l1'
     });
 
+    expect(totalCount).toEqual(2);
     expect(results.map((r) => r.full_name)).toEqual(['r4']);
   });
 });
