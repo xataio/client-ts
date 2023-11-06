@@ -47,7 +47,6 @@ jobs:
         run: pnpm build
 
       - name: Create Release Pull Request or Publish to npm
-        id: release
         uses: changesets/action@v1
         with:
           title: Release tracking
