@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/kysely",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
