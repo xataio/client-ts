@@ -132,6 +132,13 @@ export type CreateBranchRequestBody = {
    * Select the branch to fork from. Defaults to 'main'
    */
   from?: string;
+  /**
+   * Select the dedicated cluster to create on. Defaults to 'xata-cloud'
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
   metadata?: Schemas.BranchMetadata;
 };
 
