@@ -52,13 +52,7 @@ jobs:
         with:
           title: Release tracking
           publish: npx changeset publish
+          version: node ./scripts/changeset-version.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Versions
-        if: ${{ steps.release.outputs.published == 'true' }}
-        run: |
-          touch .env
-          echo PUBLISHED_PACKAGES=${{ steps.versions.outputs.publishedPackages }} >> .env
-          pnpm changeset-version

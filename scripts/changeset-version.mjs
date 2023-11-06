@@ -1,9 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
+// Exec npx changeset version
+
 //[{"name": "@xx/xx", "version": "1.2.0"}, {"name": "@xx/xy", "version": "0.8.9"}]
 const packageNames = ["@xata.io/client", "@xata.io/cli"]
-const packages = JSON.parse(process.env.PUBLISHED_PACKAGES).filter(pkg => packageNames.includes(pkg.name));
+const packages = JSON.parse(versions).filter(pkg => packageNames.includes(pkg.name));
 
 const compatibilityPath = path.join(process.cwd(), 'compatibility.json');
 const compatibility = fs.readFileSync(compatibilityPath, 'utf8');
