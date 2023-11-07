@@ -1,5 +1,15 @@
 # @xata.io/client
 
+## 0.27.0
+
+### Minor Changes
+
+- [#1232](https://github.com/xataio/client-ts/pull/1232) [`d282d18f`](https://github.com/xataio/client-ts/commit/d282d18f025094e0729ade6009b34fc0d34ebbba) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add support for totalCount on search responses
+
+### Patch Changes
+
+- [#1235](https://github.com/xataio/client-ts/pull/1235) [`19c5dd47`](https://github.com/xataio/client-ts/commit/19c5dd47e3a032fcb19d990527b8faaa9326d97d) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Fix excessive depth on summarize
+
 ## 0.26.9
 
 ### Patch Changes

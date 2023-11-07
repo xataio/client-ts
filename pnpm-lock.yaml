@@ -367,7 +367,7 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0
       '@xata.io/client':
-        specifier: ^0.26.9
+        specifier: ^0.27.0
         version: link:../client
       any-date-parser:
         specifier: ^1.5.4
