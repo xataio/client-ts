@@ -11,22 +11,36 @@ async function main() {
   const cli = `@xata.io/cli@${process.env.CANARY_VERSION}`;
 
   const workspaceUrl = 'https://{workspaceId}.{region}.staging-xata.dev'
-    .replace('{workspaceId}', process.env.XATA_WORKSPACE)
+    .replace('{workspaceId}', 'process.env.XATA_WORKSPACE')
     .replace('{region}', 'eu-west-1');
   const databaseUrl = `${workspaceUrl}/db/${process.env.XATA_DATABASE_URL}`;
 
-  const download = new Promise((resolve) => {
-    const command = exec(`npx -y ${cli} init -h`);
-    command.stdout?.on('data', (data) => {
-      console.log(data);
-      resolve('done');
+  const download = (retry = 0) =>
+    new Promise((resolve) => {
+      let downloadError = '';
+      const command = exec(`npx -y ${cli} init -h`);
+      command.stdout?.on('data', (data) => {
+        console.log(data);
+        resolve('done');
+      });
+      command.stderr?.on('data', (data) => {
+        downloadError += data;
+      });
+      command.stderr?.on('end', async () => {
+        if (downloadError) {
+          if (retry < 3) {
+            const nextTry = retry + 1;
+            console.log(`Could not download npm package, retrying... Attempt: ${nextTry}`);
+            await new Promise((resolve) => setTimeout(resolve, 1000 * 5 * nextTry));
+            download(nextTry);
+          } else {
+            console.log(downloadError);
+            throw new Error(`Failed to download canary`);
+          }
+        }
+      });
     });
-    command.stderr?.on('data', (data) => {
-      console.log(data);
-      throw new Error('Failed to download canary');
-    });
-  });
-  await download;
+  await download();
 
   const init = new Promise((resolve) => {
     const command = exec(`npx ${cli} init -y --db ${databaseUrl} --force`);
