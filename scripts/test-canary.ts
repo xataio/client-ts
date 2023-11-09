@@ -16,7 +16,8 @@ async function main() {
       resolve('done');
     });
     command.stderr?.on('data', (data) => {
-      throw data;
+      console.log(data);
+      throw new Error('Failed to download canary');
     });
   });
   await download;
@@ -28,7 +29,8 @@ async function main() {
       resolve('done');
     });
     command.stderr?.on('data', (data) => {
-      throw data;
+      console.log(data);
+      throw new Error('Failed to init');
     });
   });
   await init;
@@ -40,7 +42,8 @@ async function main() {
       resolve('done');
     });
     command.stderr?.on('data', (data) => {
-      throw data;
+      console.log(data);
+      throw new Error('Failed to pull schema');
     });
   });
   await schemaPull;
