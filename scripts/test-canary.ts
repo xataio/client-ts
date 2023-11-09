@@ -10,13 +10,6 @@ async function main() {
 
   const cli = `@xata.io/cli@${process.env.CANARY_VERSION}`;
 
-  const databaseUrl = process.env.XATA_DATABASE_URL.replace('{workspaceId}', process.env.XATA_WORKSPACE).replace(
-    '{region}',
-    'eu-west-1'
-  );
-
-  console.log('database url', databaseUrl);
-
   const download = (retry = 0) =>
     new Promise((resolve) => {
       let downloadError = '';
@@ -45,7 +38,7 @@ async function main() {
   await download();
 
   const init = new Promise((resolve) => {
-    const command = exec(`npx ${cli} init -y --db ${databaseUrl} --force`);
+    const command = exec(`npx ${cli} init -y --force`);
     command.stdout?.on('data', (data) => {
       console.log(data);
       resolve('done');
@@ -58,7 +51,7 @@ async function main() {
   await init;
 
   const schemaPull = new Promise((resolve) => {
-    const command = exec(`npx ${cli} pull ${process.env.XATA_BRANCH} -y --db ${databaseUrl}`);
+    const command = exec(`npx ${cli} pull ${process.env.XATA_BRANCH} -y`);
     command.stdout?.on('data', (data) => {
       console.log(data);
       resolve('done');
