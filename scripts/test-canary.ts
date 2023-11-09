@@ -23,7 +23,7 @@ async function main() {
       });
       command.stderr?.on('end', async () => {
         if (downloadError) {
-          if (retry < 3) {
+          if (retry < 8) {
             const nextTry = retry + 1;
             console.log(`Could not download npm package, retrying... Attempt: ${nextTry}`);
             await new Promise((resolve) => setTimeout(resolve, 1000 * 5 * nextTry));
