@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.14.4
+
+### Patch Changes
+
+- [#1245](https://github.com/xataio/client-ts/pull/1245) [`82ff1d81`](https://github.com/xataio/client-ts/commit/82ff1d81d437d21deaf274478075ea02ab558063) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix problem with `tslib` dependency
+
 ## 0.14.3
 
 ### Patch Changes
