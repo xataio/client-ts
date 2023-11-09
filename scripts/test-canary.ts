@@ -29,6 +29,7 @@ async function main() {
         //or
         reject(error);
       }
+      console.log('successfully initialized');
       resolve('done');
     });
   });
@@ -36,12 +37,13 @@ async function main() {
   await init;
 
   const schemaPull = new Promise((resolve, reject) => {
-    exec(`npx ${cli} pull ${process.env.XATA_BRANCH} --db ${process.env.XATA_DATABASE_URL}`, async (error) => {
+    exec(`npx ${cli} pull -badflag ${process.env.XATA_BRANCH} --db ${process.env.XATA_DATABASE_URL}`, async (error) => {
       if (error) {
         console.log('error is:', error);
         //or
         reject(error);
       }
+      console.log('successfully pulled migrations');
       resolve('done');
     });
   });
