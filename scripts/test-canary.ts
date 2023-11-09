@@ -22,7 +22,7 @@ async function main() {
   await download;
 
   const init = new Promise((resolve) => {
-    const command = exec(`npx ${cli} init --db ${process.env.XATA_DATABASE_URL} --force`);
+    const command = exec(`npx ${cli} init -y --db ${process.env.XATA_DATABASE_URL} --force`);
     command.stdout?.on('data', (data) => {
       console.log(data);
       resolve('done');
@@ -34,7 +34,7 @@ async function main() {
   await init;
 
   const schemaPull = new Promise((resolve) => {
-    const command = exec(`npx ${cli} pull ${process.env.XATA_BRANCH} --db ${process.env.XATA_DATABASE_URL}`);
+    const command = exec(`npx ${cli} pull ${process.env.XATA_BRANCH} -y --db ${process.env.XATA_DATABASE_URL}`);
     command.stdout?.on('data', (data) => {
       console.log(data);
       resolve('done');
