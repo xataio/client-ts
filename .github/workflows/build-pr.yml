@@ -157,6 +157,15 @@ jobs:
             ```
             npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
+      - name: E2E Canary test
+        if: ${{ steps.version.outputs.TAG }}
+        run: pnpm run test:canary
+        env:
+          XATA_DATABASE_URL: ${{ secrets.INTEGRATION_TEST_DATABASE_URL }}
+          XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
+          XATA_BRANCH: ${{ secrets.INTEGRATION_TEST_BRANCH }}
+          XATA_WORKSPACE: ${{ secrets.INTEGRATION_TEST_WORKSPACE }}
+          CANARY_VERSION: ${{ steps.version.outputs.TAG }}
 
   test:
     runs-on: ubuntu-latest

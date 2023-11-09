@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest",
+    "test:canary": "tsx ./scripts/test-canary.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky install",
@@ -65,6 +66,7 @@
     "rollup-plugin-strip-code": "^0.2.7",
     "size-limit": "^10.0.2",
     "ts-node": "^10.9.1",
+    "tsx": "^4.0.0",
     "turbo": "^1.10.16",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
