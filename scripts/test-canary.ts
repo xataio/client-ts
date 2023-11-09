@@ -10,10 +10,12 @@ async function main() {
 
   const cli = `@xata.io/cli@${process.env.CANARY_VERSION}`;
 
-  const workspaceUrl = 'https://{workspaceId}.{region}.staging-xata.dev'
-    .replace('{workspaceId}', 'process.env.XATA_WORKSPACE')
-    .replace('{region}', 'eu-west-1');
-  const databaseUrl = `${workspaceUrl}/db/${process.env.XATA_DATABASE_URL}`;
+  const databaseUrl = process.env.XATA_DATABASE_URL.replace('{workspaceId}', process.env.XATA_WORKSPACE).replace(
+    '{region}',
+    'eu-west-1'
+  );
+
+  console.log('database url', databaseUrl);
 
   const download = (retry = 0) =>
     new Promise((resolve) => {
