@@ -404,6 +404,19 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
 
+  packages/pgroll:
+    dependencies:
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+    devDependencies:
+      tsx:
+        specifier: ^4.1.2
+        version: 4.1.2
+      zod-to-json-schema:
+        specifier: ^3.21.4
+        version: 3.21.4(zod@3.22.4)
+
   packages/plugin-client-cache:
     dependencies:
       '@xata.io/client':
@@ -15385,13 +15398,11 @@ packages:
     dependencies:
       buffer-from: 1.1.2
       source-map: 0.6.1
-    dev: false
 
   /source-map@0.6.1:
     resolution:
       { integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g== }
     engines: { node: '>=0.10.0' }
-    dev: false
 
   /sourcemap-codec@1.4.8:
     resolution:
@@ -16049,6 +16060,19 @@ packages:
       tslib: 1.14.1
       typescript: 5.2.2
     dev: false
+
+  /tsx@4.1.2:
+    resolution:
+      { integrity: sha512-1spM1bFV6MP2s4tO4tDC7g52fsaFdtEWdO4GfGdqi20qUgPbnAJqixOyIAvCSx1DDj3YIUB4CD06owTWUsOAuQ== }
+    engines: { node: '>=18.0.0' }
+    hasBin: true
+    dependencies:
+      esbuild: 0.18.20
+      get-tsconfig: 4.7.2
+      source-map-support: 0.5.21
+    optionalDependencies:
+      fsevents: 2.3.3
+    dev: true
 
   /tty-table@4.2.1:
     resolution:
@@ -17279,6 +17303,15 @@ packages:
       compress-commons: 5.0.1
       readable-stream: 3.6.2
     dev: false
+
+  /zod-to-json-schema@3.21.4(zod@3.22.4):
+    resolution:
+      { integrity: sha512-fjUZh4nQ1s6HMccgIeE0VP4QG/YRGPmyjO9sAh890aQKPEk3nqbfUXhMFaC+Dr5KvYBm8BCyvfpZf2jY9aGSsw== }
+    peerDependencies:
+      zod: ^3.21.4
+    dependencies:
+      zod: 3.22.4
+    dev: true
 
   /zod@3.22.4:
     resolution:

@@ -1,0 +1,367 @@
+{
+  "$ref": "#/definitions/Migration",
+  "definitions": {
+    "Migration": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "create_table": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "pk": {
+                              "type": "boolean"
+                            },
+                            "unique": {
+                              "type": "boolean"
+                            },
+                            "nullable": {
+                              "type": "boolean"
+                            },
+                            "default": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["name", "type"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "references": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "table": {
+                            "type": "string"
+                          },
+                          "column": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "check": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "constraint": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": ["name", "columns"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["create_table"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "add_column": {
+                    "type": "object",
+                    "properties": {
+                      "table": {
+                        "type": "string"
+                      },
+                      "up": {
+                        "type": "string"
+                      },
+                      "column": {
+                        "$ref": "#/definitions/Migration/properties/operations/items/anyOf/0/properties/create_table/properties/columns/items"
+                      }
+                    },
+                    "required": ["table", "up", "column"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["add_column"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "rename_table": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string"
+                      },
+                      "to": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["from", "to"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["rename_table"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "sql": {
+                    "type": "object",
+                    "properties": {
+                      "up": {
+                        "type": "string"
+                      },
+                      "down": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["up", "down"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["sql"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "drop_table": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["name"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["drop_table"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "drop_column": {
+                    "type": "object",
+                    "properties": {
+                      "table": {
+                        "type": "string"
+                      },
+                      "column": {
+                        "type": "string"
+                      },
+                      "down": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["table", "column", "down"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["drop_column"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "create_index": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "table": {
+                        "type": "string"
+                      },
+                      "columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": ["name", "table", "columns"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["create_index"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "drop_index": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["name"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["drop_index"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "alter_column": {
+                    "type": "object",
+                    "properties": {
+                      "table": {
+                        "type": "string"
+                      },
+                      "column": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "up": {
+                        "type": "string"
+                      },
+                      "down": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "constraint": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["name", "constraint"],
+                        "additionalProperties": false
+                      },
+                      "nullable": {
+                        "type": "boolean"
+                      },
+                      "check": {
+                        "$ref": "#/definitions/Migration/properties/operations/items/anyOf/8/properties/alter_column/properties/unique"
+                      },
+                      "references": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "table": {
+                            "type": "string"
+                          },
+                          "column": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["name", "table", "column"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": ["table", "column", "name", "type", "up", "down"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["alter_column"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "set_replica_identity": {
+                    "type": "object",
+                    "properties": {
+                      "table": {
+                        "type": "string"
+                      },
+                      "identity": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string"
+                          },
+                          "index": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["type", "index"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": ["table", "identity"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["set_replica_identity"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "drop_constraint": {
+                    "type": "object",
+                    "properties": {
+                      "table": {
+                        "type": "string"
+                      },
+                      "column": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "up": {
+                        "type": "string"
+                      },
+                      "down": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["table", "column", "name", "up", "down"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["drop_constraint"],
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      },
+      "required": ["name", "operations"],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
