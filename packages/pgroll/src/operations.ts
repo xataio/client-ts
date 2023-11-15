@@ -152,3 +152,35 @@ export const dropConstraintOperation = z.object({
     down: z.string()
   })
 });
+
+export type Operation = z.infer<typeof operation>;
+
+export const operation = z.union([
+  createTableOperation,
+  addColumnOperation,
+  renameTableOperation,
+  sqlOperation,
+  dropTableOperation,
+  dropColumnOperation,
+  createIndexOperation,
+  dropIndexOperation,
+  alterColumnOperation,
+  setReplicaIdentityOperation,
+  dropConstraintOperation
+]);
+
+export const operationTypes = [
+  'create_table',
+  'add_column',
+  'rename_table',
+  'sql',
+  'drop_table',
+  'drop_column',
+  'create_index',
+  'drop_index',
+  'alter_column',
+  'set_replica_identity',
+  'drop_constraint'
+] as const;
+
+export type OperationType = (typeof operationTypes)[number];
