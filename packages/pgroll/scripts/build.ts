@@ -1,6 +1,5 @@
-import { migration } from '../src';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { generateJSONSchema } from '../src';
 import fs from 'fs';
 
-const jsonSchema = zodToJsonSchema(migration, 'Migration');
+const jsonSchema = generateJSONSchema();
 fs.writeFileSync('pgroll.schema.json', JSON.stringify(jsonSchema, null, 2));

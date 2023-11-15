@@ -409,13 +409,13 @@ importers:
       zod:
         specifier: ^3.22.4
         version: 3.22.4
+      zod-to-json-schema:
+        specifier: ^3.21.4
+        version: 3.21.4(zod@3.22.4)
     devDependencies:
       tsx:
         specifier: ^4.1.2
         version: 4.1.2
-      zod-to-json-schema:
-        specifier: ^3.21.4
-        version: 3.21.4(zod@3.22.4)
 
   packages/plugin-client-cache:
     dependencies:
@@ -17311,7 +17311,7 @@ packages:
       zod: ^3.21.4
     dependencies:
       zod: 3.22.4
-    dev: true
+    dev: false
 
   /zod@3.22.4:
     resolution:
