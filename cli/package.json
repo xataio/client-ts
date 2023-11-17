@@ -50,7 +50,6 @@
     "lodash.compact": "^3.0.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "miniflare": "=2.14.0",
     "node-fetch": "^3.3.2",
     "open": "^9.1.0",
     "prompts": "^2.4.2",
@@ -112,9 +111,6 @@
       },
       "workspaces": {
         "description": "Create, list or delete workspaces"
-      },
-      "workers": {
-        "description": "Run and compile Xata Workers"
       }
     },
     "additionalHelpFlags": [
