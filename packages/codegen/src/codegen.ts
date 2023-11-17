@@ -362,7 +362,3 @@ function emitDeclarations(code: string) {
 
   return files.get('index.d.ts');
 }
-
-function compact<T>(array: (T | undefined | null)[]): T[] {
-  return array.filter((item) => item !== undefined && item !== null) as T[];
-}
