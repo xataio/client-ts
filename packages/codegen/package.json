@@ -39,7 +39,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/pluralize": "^0.0.32",
+    "@types/pluralize": "^0.0.33",
     "@types/prettier": "^2.7.3"
   }
 }
