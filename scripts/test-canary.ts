@@ -16,6 +16,21 @@ async function main() {
   const region = 'us-east-1';
   const dir = path.join(__dirname, 'throwaway');
   const file = path.join(dir, 'test.ts');
+  const schemaFile = path.join(dir, 'schema.json');
+
+  const schemaContent = `{
+      "tables": [
+        {
+          "name": "teams",
+          "columns": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+  }`;
 
   const fullyQualifiedEndpoint = `https://${process.env.XATA_WORKSPACE}.${region}.xata.sh/db/${databaseName}`;
 
@@ -81,8 +96,17 @@ async function main() {
     console.log('Pulled schema', result.stdout);
   };
 
+  const schemaPush = async () => {
+    await exec(`echo '${schemaContent}' > ${schemaFile}`);
+    const result = await exec(`npx ${cli} push main --db ${fullyQualifiedEndpoint} -y`);
+    if (result.stderr) {
+      throw new Error(`Failed to push schema: ${result.stderr}`);
+    }
+    console.log('Pushed schema', result.stdout);
+  };
+
   const createBranch = async () => {
-    const result = await exec(`npx ${cli} branch create tester`);
+    const result = await exec(`npx ${cli} branch create tester -y`);
     if (result.stderr) {
       throw new Error(`Failed to create branch: ${result.stderr}`);
     }
@@ -95,14 +119,6 @@ async function main() {
       throw new Error(`Failed to delete branch: ${result.stderr}`);
     }
     console.log('Deleted branch', result.stdout);
-  };
-
-  const schemaPush = async () => {
-    const result = await exec(`npx ${cli} push main --db ${fullyQualifiedEndpoint} -y`);
-    if (result.stderr) {
-      throw new Error(`Failed to push schema: ${result.stderr}`);
-    }
-    console.log('Pushed schema', result.stdout);
   };
 
   try {
