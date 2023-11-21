@@ -112,7 +112,7 @@ async function main() {
   };
 
   const deleteBranch = async () => {
-    const result = await exec(`npx ${cli} branch delete tester -f`);
+    const result = await exec(`npx ${cli} branch delete tester --db ${fullyQualifiedEndpoint} -f`);
     if (result.stderr) {
       throw new Error(`Failed to delete branch: ${result.stderr}`);
     }
