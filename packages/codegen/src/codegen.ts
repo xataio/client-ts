@@ -248,7 +248,7 @@ export async function generate({
   const xataClient = sourceFile.getClass('XataClient');
 
   if (!xataClient) {
-    sourceFile.addClass({
+    const xataClientClass = sourceFile.addClass({
       name: 'XataClient',
       extends: 'DatabaseClient<DatabaseSchema>',
       isExported: true,
@@ -269,6 +269,18 @@ export async function generate({
           statements: `super({ ...defaultOptions, ...options }, tables);`
         }
       ]
+    });
+
+    xataClientClass.addMethod({
+      isStatic: true,
+      name: 'fromEnv',
+      parameters: [{ name: 'env', type: 'Record<string, string>' }],
+      returnType: 'XataClient',
+      statements: `return new XataClient({
+        databaseUrl: env.XATA_DATABASE_URL,
+        apiKey: env.XATA_API_KEY,
+        branch: env.XATA_BRANCH
+      });`
     });
   } else {
     // noop: we don't want to overwrite their constructor
