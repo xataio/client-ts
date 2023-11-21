@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/pgroll",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Migration tool for PostgreSQL",
   "type": "module",
   "main": "./dist/index.cjs",
