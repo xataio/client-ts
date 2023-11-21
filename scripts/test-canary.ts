@@ -78,16 +78,6 @@ async function main() {
     console.log('Initialized database', result.stdout);
   };
 
-  const deleteDatabase = async () => {
-    const result = await exec(
-      `cd ${dir} && npx ${cli} dbs delete ${databaseName} --no-input -f --workspace ${process.env.XATA_WORKSPACE}`
-    );
-    if (result.stderr) {
-      throw new Error(`Failed to delete database: ${result.stderr}`);
-    }
-    console.log('Deleted database', result.stdout);
-  };
-
   const schemaPull = async () => {
     const result = await exec(`npx ${cli} pull main --no-input --db ${fullyQualifiedEndpoint} -f`);
     if (result.stderr) {
@@ -97,7 +87,6 @@ async function main() {
   };
 
   const schemaPush = async () => {
-    await exec(`echo '${schemaContent}' > ${schemaFile}`);
     const result = await exec(`npx ${cli} push main --db ${fullyQualifiedEndpoint} -y`);
     if (result.stderr) {
       throw new Error(`Failed to push schema: ${result.stderr}`);
@@ -105,8 +94,17 @@ async function main() {
     console.log('Pushed schema', result.stdout);
   };
 
+  const schemaUpload = async () => {
+    await exec(`echo '${schemaContent}' > ${schemaFile}`);
+    const result = await exec(`npx ${cli} schema upload ${schemaFile} --db ${fullyQualifiedEndpoint} -y`);
+    if (result.stderr) {
+      throw new Error(`Failed to upload schema: ${result.stderr}`);
+    }
+    console.log('Uploaded schema', result.stdout);
+  };
+
   const createBranch = async () => {
-    const result = await exec(`npx ${cli} branch create tester -y`);
+    const result = await exec(`npx ${cli} branch create tester --db ${fullyQualifiedEndpoint}`);
     if (result.stderr) {
       throw new Error(`Failed to create branch: ${result.stderr}`);
     }
@@ -121,6 +119,16 @@ async function main() {
     console.log('Deleted branch', result.stdout);
   };
 
+  const deleteDatabase = async () => {
+    const result = await exec(
+      `cd ${dir} && npx ${cli} dbs delete ${databaseName} --no-input -f --workspace ${process.env.XATA_WORKSPACE}`
+    );
+    if (result.stderr) {
+      throw new Error(`Failed to delete database: ${result.stderr}`);
+    }
+    console.log('Deleted database', result.stdout);
+  };
+
   try {
     await makeDir();
     await download();
@@ -128,6 +136,7 @@ async function main() {
     await init();
     await schemaPull();
     await schemaPush();
+    await schemaUpload();
     await createBranch();
     await deleteBranch();
     await deleteDatabase();
