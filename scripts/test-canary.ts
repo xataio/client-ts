@@ -1,69 +1,106 @@
-import { exec } from 'child_process';
+import { exec as execRaw } from 'child_process';
+import { randomUUID } from 'crypto';
+import path from 'path';
+import * as util from 'util';
+const exec = util.promisify(execRaw);
 
 async function main() {
   if (!process.env.CANARY_VERSION) throw new Error('CANARY_VERSION is not set');
-  if (!process.env.XATA_DATABASE_URL) throw new Error('XATA_DATABASE_URL is not set');
-  if (!process.env.XATA_BRANCH) throw new Error('XATA_BRANCH is not set');
   if (!process.env.XATA_WORKSPACE) throw new Error('XATA_WORKSPACE is not set');
 
   console.log(`Running canary test for ${process.env.CANARY_VERSION}`);
 
   const cli = `@xata.io/cli@${process.env.CANARY_VERSION}`;
 
-  const download = (retry = 0) =>
-    new Promise((resolve) => {
-      let downloadError = '';
-      const command = exec(`npx -y ${cli} init -h`);
-      command.stdout?.on('data', (data) => {
-        console.log(data);
-        resolve('done');
-      });
-      command.stderr?.on('data', (data) => {
-        downloadError += data;
-      });
-      command.stderr?.on('end', async () => {
-        if (downloadError) {
-          if (retry < 8) {
-            const nextTry = retry + 1;
-            console.log(`Could not download npm package, retrying... Attempt: ${nextTry}`);
-            await new Promise((resolve) => setTimeout(resolve, 1000 * 5 * nextTry));
-            download(nextTry);
-          } else {
-            console.log(downloadError);
-            throw new Error(`Failed to download canary`);
-          }
-        }
-      });
-    });
-  await download();
+  const databaseName = `canary_${randomUUID()}`;
+  const region = 'us-east-1';
+  const dir = path.join(__dirname, 'throwaway');
+  const file = path.join(dir, 'test.ts');
 
-  const init = new Promise((resolve) => {
-    const command = exec(`npx ${cli} init -y --force`);
-    command.stdout?.on('data', (data) => {
-      console.log(data);
-      resolve('done');
-    });
-    command.stderr?.on('data', (data) => {
-      console.log(data);
-      throw new Error('Failed to init');
-    });
-  });
-  await init;
+  const fullyQualifiedEndpoint = `https://${process.env.XATA_WORKSPACE}.${region}.xata.sh/db/${databaseName}`;
 
-  const schemaPull = new Promise((resolve) => {
-    const command = exec(`npx ${cli} pull ${process.env.XATA_BRANCH} -y`);
-    command.stdout?.on('data', (data) => {
-      console.log(data);
-      resolve('done');
-    });
-    command.stderr?.on('data', (data) => {
-      console.log(data);
-      throw new Error('Failed to pull schema');
-    });
-  });
-  await schemaPull;
+  const makeDir = async () => {
+    await exec(`rm -rf ${dir}`);
+    const result = await exec(`mkdir ${dir}`);
+    if (result.stderr) {
+      throw new Error(`Failed to make dir: ${result.stderr}`);
+    }
+    console.log('Made dir', result.stdout);
+  };
 
-  console.log(`Completed successfully`);
+  const download = async (retry = 0) => {
+    try {
+      const result = await exec(`cd ${dir} && npm install -g ${cli}`);
+      console.log('Downloaded npm package', result.stdout);
+      return result;
+    } catch (e) {
+      if (retry < 8) {
+        const nextTry = retry + 1;
+        console.log(`Could not download npm package, retrying... ${e}. Attempt: ${nextTry}`);
+        await new Promise((resolve) => setTimeout(resolve, 1000 * 5 * nextTry));
+        await download(nextTry);
+      }
+      throw e;
+    }
+  };
+
+  const create = async () => {
+    const result = await exec(
+      `cd ${dir} && npx ${cli} dbs create ${databaseName} --workspace ${process.env.XATA_WORKSPACE} --region ${region}`
+    );
+    if (result.stderr.includes('Error:')) {
+      throw new Error(`Failed to create database: ${result.stderr}`);
+    }
+    console.log('Created database', result.stdout);
+  };
+
+  const init = async () => {
+    const result = await exec(`cd ${dir} && npx ${cli} init --db ${fullyQualifiedEndpoint} --codegen ${file} --force`);
+    // Warnings go to stderr
+    if (result.stderr.includes('Error:')) {
+      throw new Error(`Failed to init: ${result.stderr}`);
+    }
+    console.log('Initialized database', result.stdout);
+  };
+
+  const deleteDatabase = async () => {
+    const result = await exec(
+      `cd ${dir} && npx ${cli} dbs delete ${databaseName} --no-input -f --workspace ${process.env.XATA_WORKSPACE}`
+    );
+    if (result.stderr) {
+      throw new Error(`Failed to delete database: ${result.stderr}`);
+    }
+    console.log('Deleted database', result.stdout);
+  };
+
+  const schemaPull = async () => {
+    const result = await exec(`npx ${cli} pull main`);
+    if (result.stderr) {
+      throw new Error(`Failed to pull schema: ${result.stderr}`);
+    }
+    console.log('Pulled schema', result.stdout);
+  };
+
+  const schemaPush = async () => {
+    const result = await exec(`npx ${cli} push main`);
+    if (result.stderr) {
+      throw new Error(`Failed to push schema: ${result.stderr}`);
+    }
+    console.log('Pushed schema', result.stdout);
+  };
+
+  try {
+    await makeDir();
+    await download();
+    await create();
+    await init();
+    await schemaPull();
+    await schemaPush();
+    await deleteDatabase();
+  } catch (e) {
+    await deleteDatabase();
+    throw e;
+  }
 }
 
 main();
