@@ -98,7 +98,7 @@ async function main() {
   };
 
   const schemaPush = async () => {
-    const result = await exec(`npx ${cli} push main`);
+    const result = await exec(`npx ${cli} push main --db ${fullyQualifiedEndpoint} -y`);
     if (result.stderr) {
       throw new Error(`Failed to push schema: ${result.stderr}`);
     }
