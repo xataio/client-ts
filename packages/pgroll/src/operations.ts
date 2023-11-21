@@ -53,7 +53,7 @@ export type AddColumnOperation = z.infer<typeof addColumnOperation>;
 export const addColumnOperation = z.object({
   add_column: z.object({
     table: z.string(),
-    up: z.string(),
+    up: z.string().optional(),
     column: columnDefinition
   })
 });
