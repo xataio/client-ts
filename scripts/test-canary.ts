@@ -96,7 +96,7 @@ async function main() {
 
   const schemaUpload = async () => {
     await exec(`echo '${schemaContent}' > ${schemaFile}`);
-    const result = await exec(`npx ${cli} schema upload ${schemaFile} --db ${fullyQualifiedEndpoint} -y`);
+    const result = await exec(`npx ${cli} schema upload ${schemaFile} --db ${fullyQualifiedEndpoint} -b main -y`);
     if (result.stderr) {
       throw new Error(`Failed to upload schema: ${result.stderr}`);
     }
