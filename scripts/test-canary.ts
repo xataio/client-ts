@@ -74,11 +74,27 @@ async function main() {
   };
 
   const schemaPull = async () => {
-    const result = await exec(`npx ${cli} pull main`);
+    const result = await exec(`npx ${cli} pull main --no-input --db ${fullyQualifiedEndpoint} -f`);
     if (result.stderr) {
       throw new Error(`Failed to pull schema: ${result.stderr}`);
     }
     console.log('Pulled schema', result.stdout);
+  };
+
+  const createBranch = async () => {
+    const result = await exec(`npx ${cli} branch create tester`);
+    if (result.stderr) {
+      throw new Error(`Failed to create branch: ${result.stderr}`);
+    }
+    console.log('Created branch', result.stdout);
+  };
+
+  const deleteBranch = async () => {
+    const result = await exec(`npx ${cli} branch delete tester -f`);
+    if (result.stderr) {
+      throw new Error(`Failed to delete branch: ${result.stderr}`);
+    }
+    console.log('Deleted branch', result.stdout);
   };
 
   const schemaPush = async () => {
@@ -96,6 +112,8 @@ async function main() {
     await init();
     await schemaPull();
     await schemaPush();
+    await createBranch();
+    await deleteBranch();
     await deleteDatabase();
   } catch (e) {
     await deleteDatabase();
