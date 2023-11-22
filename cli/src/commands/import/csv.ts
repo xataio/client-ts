@@ -4,9 +4,23 @@ import { Column } from '@xata.io/codegen';
 import { importColumnTypes } from '@xata.io/importer';
 import { open, writeFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
+import { enumFlag } from '../../utils/oclif.js';
 
 const ERROR_CONSOLE_LOG_LIMIT = 200;
 const ERROR_LOG_FILE = 'errors.log';
+
+const bufferEncodings: BufferEncoding[] = [
+  'ascii',
+  'utf8',
+  'utf16le',
+  'ucs2',
+  'ucs-2',
+  'base64',
+  'base64url',
+  'latin1',
+  'binary',
+  'hex'
+];
 
 export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
@@ -54,6 +68,10 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     'null-value': Flags.string({
       description: 'Value to use for null values',
       multiple: true
+    }),
+    encoding: enumFlag<BufferEncoding>({
+      description: 'The encoding to use when reading the file',
+      options: bufferEncodings
     })
   };
 
@@ -76,7 +94,8 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       'max-rows': limit,
       delimiter,
       'delimiters-to-guess': delimitersToGuess,
-      'null-value': nullValues
+      'null-value': nullValues,
+      encoding = 'utf8'
     } = flags;
     const header = !noHeader;
     const flagColumns = flagsToColumns(flags);
@@ -90,7 +109,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       limit
     };
 
-    const getFileStream = async () => (await open(file, 'r')).createReadStream();
+    const getFileStream = async () => (await open(file, 'r')).createReadStream({ encoding });
     const { workspace, region, database, branch } = await this.parseDatabase();
     const xata = await this.getXataClient();
 
