@@ -158,7 +158,7 @@ jobs:
             npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
       - name: Canary build E2E test
-        if: ${{ steps.version.outputs.TAG }}
+        if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         run: pnpm run test:canary
         env:
           XATA_API_KEY: ${{ secrets.INTEGRATION_TEST_API_KEY }}
