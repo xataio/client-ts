@@ -13,7 +13,7 @@ async function main() {
   const cli = `@xata.io/cli@${process.env.CANARY_VERSION}`;
 
   const databaseName = `canary_${randomUUID()}`;
-  const region = 'us-east-1';
+  const region = process.env.XATA_REGION || 'us-east-1';
   const dir = path.join(__dirname, 'throwaway');
   const file = path.join(dir, 'test.ts');
   const schemaFile = path.join(dir, 'schema.json');
@@ -139,10 +139,8 @@ async function main() {
     await schemaUpload();
     await createBranch();
     await deleteBranch();
+  } finally {
     await deleteDatabase();
-  } catch (e) {
-    await deleteDatabase();
-    throw e;
   }
 }
 

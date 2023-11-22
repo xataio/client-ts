@@ -157,7 +157,7 @@ jobs:
             ```
             npx @xata.io/cli@${{ steps.version.outputs.TAG }}
             ```
-      - name: E2E Canary test
+      - name: Canary build E2E test
         if: ${{ steps.version.outputs.TAG }}
         run: pnpm run test:canary
         env:
