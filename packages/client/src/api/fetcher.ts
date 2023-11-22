@@ -1,6 +1,6 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
-import { compact, compactObject, isDefined, isObject, isString } from '../util/lang';
+import { compact, compactObject, isBlob, isDefined, isObject, isString } from '../util/lang';
 import { fetchEventSource } from '../util/sse';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -102,7 +102,7 @@ async function parseBody<T>(body?: T, headers?: Record<string, unknown>): Promis
   if (!isDefined(body)) return undefined;
 
   // If body is a blob or has a text() method, we don't need to do anything
-  if (body instanceof Blob || typeof (body as any).text === 'function') {
+  if (isBlob(body) || typeof (body as any).text === 'function') {
     return body;
   }
 
@@ -119,7 +119,7 @@ const defaultClientID = generateUUID();
 export async function fetch<
   TData,
   TError extends ErrorWrapper<{ status: unknown; payload: PossibleErrors }>,
-  TBody extends Record<string, unknown> | Blob | undefined | null,
+  TBody extends Record<string, unknown> | Record<string, unknown>[] | Blob | undefined | null,
   THeaders extends Record<string, unknown>,
   TQueryParams extends Record<string, unknown>,
   TPathParams extends Partial<Record<string, string | number>>
@@ -195,7 +195,8 @@ export async function fetch<
         [TraceAttributes.HTTP_REQUEST_ID]: requestId,
         [TraceAttributes.HTTP_STATUS_CODE]: response.status,
         [TraceAttributes.HTTP_HOST]: host,
-        [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', '')
+        [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', ''),
+        [TraceAttributes.CLOUDFLARE_RAY_ID]: response.headers?.get('cf-ray') ?? undefined
       });
 
       const message = response.headers?.get('x-xata-message');

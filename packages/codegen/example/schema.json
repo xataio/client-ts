@@ -50,6 +50,10 @@
           ]
         },
         {
+          "name": "config",
+          "type": "json"
+        },
+        {
           "name": "owner",
           "type": "link",
           "link": {

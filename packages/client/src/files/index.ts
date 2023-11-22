@@ -3,15 +3,17 @@ import { FileResponse } from '../api/dataPlaneSchemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { ColumnsByValue, XataArrayFile, XataFile } from '../schema';
 import { BaseData, XataRecord } from '../schema/record';
+import { isBlob } from '../util/lang';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
-export type BinaryFile = string | Blob | ArrayBuffer;
+export type BinaryFile = string | Blob | ArrayBuffer | XataFile | Promise<XataFile>;
 
 export type FilesPluginResult<Schemas extends Record<string, BaseData>> = {
   download: <Tables extends StringKeys<Schemas>>(location: DownloadDestination<Schemas, Tables>) => Promise<Blob>;
   upload: <Tables extends StringKeys<Schemas>>(
     location: UploadDestination<Schemas, Tables>,
-    file: BinaryFile
+    file: BinaryFile,
+    options?: { mediaType?: string }
   ) => Promise<FileResponse>;
   delete: <Tables extends StringKeys<Schemas>>(location: DownloadDestination<Schemas, Tables>) => Promise<FileResponse>;
 };
@@ -66,9 +68,15 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
           rawResponse: true
         });
       },
-      upload: async (location: Record<string, string | undefined>, file: BinaryFile) => {
+      upload: async (
+        location: Record<string, string | undefined>,
+        file: BinaryFile,
+        options?: { mediaType?: string }
+      ) => {
         const { table, record, column, fileId = '' } = location ?? {};
-        const contentType = getContentType(file);
+        const resolvedFile = await file;
+        const contentType = options?.mediaType || getContentType(resolvedFile);
+        const body = resolvedFile instanceof XataFile ? resolvedFile.toBlob() : (resolvedFile as Blob);
 
         return await putFileItem({
           ...pluginOptions,
@@ -81,7 +89,7 @@ export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends Xat
             columnName: column ?? '',
             fileId
           },
-          body: file as Blob,
+          body,
           headers: { 'Content-Type': contentType }
         });
       },
@@ -110,7 +118,12 @@ function getContentType(file: BinaryFile): string {
     return 'text/plain';
   }
 
-  if (file instanceof Blob) {
+  // Check for XataFile
+  if ('mediaType' in file) {
+    return file.mediaType;
+  }
+
+  if (isBlob(file)) {
     return file.type;
   }
 

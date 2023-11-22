@@ -122,7 +122,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     this.log(`Generated Xata code to ./${relative(process.cwd(), output)}`);
   }
 
-  static async runIfConfigured(projectConfig?: ProjectConfig) {
-    if (projectConfig?.codegen?.output) return Codegen.run([]);
+  static async runIfConfigured(projectConfig?: ProjectConfig, flags?: any[]) {
+    if (projectConfig?.codegen?.output) return Codegen.run(flags ?? []);
   }
 }

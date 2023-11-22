@@ -8,6 +8,50 @@ import { dataPlaneFetch, DataPlaneFetcherExtraProps } from './dataPlaneFetcher';
 import type * as Schemas from './dataPlaneSchemas';
 import type * as Responses from './dataPlaneResponses';
 
+export type ApplyMigrationPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type ApplyMigrationError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type ApplyMigrationRequestBody = {
+  [key: string]: any;
+}[];
+
+export type ApplyMigrationVariables = {
+  body?: ApplyMigrationRequestBody;
+  pathParams: ApplyMigrationPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Applies a pgroll migration to the specified database.
+ */
+export const applyMigration = (variables: ApplyMigrationVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<undefined, ApplyMigrationError, ApplyMigrationRequestBody, {}, {}, ApplyMigrationPathParams>({
+    url: '/db/{dbBranchName}/pgroll/apply',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type GetBranchListPathParams = {
   /**
    * The Database Name
@@ -132,6 +176,13 @@ export type CreateBranchRequestBody = {
    * Select the branch to fork from. Defaults to 'main'
    */
   from?: string;
+  /**
+   * Select the dedicated cluster to create on. Defaults to 'xata-cloud'
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
   metadata?: Schemas.BranchMetadata;
 };
 
@@ -194,6 +245,46 @@ export const deleteBranch = (variables: DeleteBranchVariables, signal?: AbortSig
   dataPlaneFetch<DeleteBranchResponse, DeleteBranchError, undefined, {}, {}, DeleteBranchPathParams>({
     url: '/db/{dbBranchName}',
     method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type GetSchemaPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type GetSchemaError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetSchemaResponse = {
+  schema: Record<string, any>;
+};
+
+export type GetSchemaVariables = {
+  pathParams: GetSchemaPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const getSchema = (variables: GetSchemaVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<GetSchemaResponse, GetSchemaError, undefined, {}, {}, GetSchemaPathParams>({
+    url: '/db/{dbBranchName}/schema',
+    method: 'get',
     ...variables,
     signal
   });
@@ -4370,6 +4461,7 @@ export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
 
 export const operationsByTag = {
   branch: {
+    applyMigration,
     getBranchList,
     getBranchDetails,
     createBranch,
@@ -4384,6 +4476,7 @@ export const operationsByTag = {
     resolveBranch
   },
   migrations: {
+    getSchema,
     getBranchMigrationHistory,
     getBranchMigrationPlan,
     executeBranchMigrationPlan,

@@ -10,7 +10,8 @@ export default class BranchCreate extends BaseCommand<typeof BranchCreate> {
     ...this.commonFlags,
     ...this.databaseURLFlag,
     from: Flags.string({
-      description: 'Branch name to branch off from'
+      description: 'Branch name to branch off from',
+      default: 'main'
     })
   };
 
@@ -30,12 +31,17 @@ export default class BranchCreate extends BaseCommand<typeof BranchCreate> {
 
     const { from } = flags;
 
-    const result = await xata.api.branches.createBranch({ workspace, region, database, branch, from });
+    try {
+      const result = await xata.api.branches.createBranch({ workspace, region, database, branch, from });
 
-    if (this.jsonEnabled()) return result;
+      if (this.jsonEnabled()) return result;
 
-    const message = `Branch ${branch} successfully created`;
-
-    this.success(message);
+      const message = `Branch ${branch} successfully created`;
+      this.success(message);
+    } catch (err) {
+      err instanceof Error
+        ? this.error(`${err.message.includes('Unexpected token < in JSON') ? 'Failed to create branch' : err.message}`)
+        : this.error(String(err));
+    }
   }
 }

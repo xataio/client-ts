@@ -50,6 +50,21 @@ describe('branches create', () => {
     expect(fetchMock.mock.calls[0][1].method).toEqual('PUT');
   });
 
+  test('fails if the request times out', async () => {
+    fetchMock.mockReturnValue({
+      ok: false,
+      json: async () => {
+        throw new Error('Unexpected token < in JSON at position 0');
+      }
+    });
+
+    const config = await Config.load();
+    const command = new BranchCreate(['featureA'], config);
+    command.projectConfig = { databaseURL: 'https://test-1234.eu-west-1.xata.sh/db/test' };
+
+    await expect(command.run()).rejects.toThrow('Failed to create branch');
+  });
+
   test.each([[false], [true]])('performs the creation with JSON enabled = %o', async (json) => {
     fetchMock.mockReturnValue({
       ok: true,

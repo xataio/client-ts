@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { describe, expect, test } from 'vitest';
@@ -14,7 +13,7 @@ if (host === null) {
   );
 }
 
-const api = new XataApiClient({ fetch, apiKey: process.env.XATA_API_KEY, host });
+const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY, host });
 const region = process.env.XATA_REGION || 'eu-west-1';
 
 const getWorkspaceName = () => `sdk-integration-api-client-${Math.random().toString(36).substr(2, 9)}`;
@@ -29,7 +28,7 @@ describe('API Client Integration Tests', () => {
     expect(newApiKey.name).toBe(`${workspaceName}-key`);
     expect(newApiKey.key).toBeDefined();
 
-    const newApi = new XataApiClient({ fetch, apiKey: newApiKey.key, host });
+    const newApi = new XataApiClient({ apiKey: newApiKey.key, host });
 
     const { id: workspace, name } = await newApi.workspaces.createWorkspace({
       data: { name: workspaceName, slug: `${workspaceName}-slug` }

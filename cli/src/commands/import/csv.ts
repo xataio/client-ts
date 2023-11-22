@@ -25,8 +25,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     ...BaseCommand.forceFlag('Update the database schema if necessary without asking'),
     branch: this.branchFlag,
     table: Flags.string({
-      description: 'The table where the CSV file will be imported to',
-      required: true
+      description: 'The table where the CSV file will be imported to'
     }),
     types: Flags.string({
       description: 'Column types separated by commas'
@@ -65,8 +64,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   async run(): Promise<void> {
     const { args, flags } = await this.parseCommand();
     const { file } = args;
+    const defaultTable = file
+      .replace(/^.*[\\/]/, '')
+      .replace(/\.[^/.]+$/, '')
+      .replace(/[^a-zA-Z0-9-_~]/g, '');
     const {
-      table,
+      table = defaultTable,
       'no-header': noHeader,
       create,
       'batch-size': batchSize = 1000,
@@ -76,14 +79,14 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       'null-value': nullValues
     } = flags;
     const header = !noHeader;
-    let columns = flagsToColumns(flags);
+    const flagColumns = flagsToColumns(flags);
 
     const csvOptions = {
       delimiter,
       delimitersToGuess: delimitersToGuess ? splitCommas(delimitersToGuess) : undefined,
       header,
       nullValues,
-      columns,
+      columns: flagColumns,
       limit
     };
 
@@ -104,12 +107,8 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     if (!parseResults.success) {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }
-    if (!columns) {
-      columns = parseResults.columns;
-    }
-    if (!columns) {
-      throw new Error('No columns found');
-    }
+
+    const { columns } = parseResults;
     await this.migrateSchema({ table, columns, create });
 
     let importSuccessCount = 0;
@@ -126,13 +125,21 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
           throw new Error('Failed to parse CSV file');
         }
         const batchRows = parseResults.data.map(({ data }) => data);
-        const dbBranchName = `${database}:${branch}`;
         const importResult = await xata.import.importBatch(
-          // @ts-ignore
-          { dbBranchName: dbBranchName, region, workspace: workspace, database },
+          { workspace, region, database, branch },
           { columns: parseResults.columns, table, batchRows }
         );
-        importSuccessCount += importResult.successful.results.length;
+
+        await xata.import.importFiles(
+          { database, branch, region, workspace: workspace },
+          {
+            table,
+            ids: importResult.ids,
+            files: parseResults.data.map(({ files }) => files)
+          }
+        );
+
+        importSuccessCount += importResult.ids.length;
         if (importResult.errors) {
           const formattedErrors = importResult.errors.map(
             (error) => `${error.error}. Record: ${JSON.stringify(error.row)}`
@@ -143,6 +150,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
           }
           errors.push(...formattedErrors);
         }
+
         progress = Math.max(progress, meta.estimatedProgress);
         this.info(
           `${importSuccessCount} rows successfully imported ${errors.length} errors. ${Math.ceil(

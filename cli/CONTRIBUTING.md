@@ -17,3 +17,7 @@ alias xatadev="$XATA_CLIENT_TS/cli/bin/dev.js"
 alias xatadevbuild="(cd $XATA_CLIENT_TS && pnpm build) && $XATA_CLIENT_TS/cli/bin/run.js"
 
 then: `xatadev status` or `xatadevbuild status`
+
+To run the CLI against a different profile, you can use:
+
+`./cli/bin/dev.js auth login --profile staging --host staging` where host values can be prod, staging, dev, and controlPlaneUrl, dataPlaneUrl (comma delimited for ephemeral instances or localhost docker)

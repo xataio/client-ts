@@ -22,6 +22,7 @@ const tables = [
           { name: 'labels', type: 'multiple' }
         ]
       },
+      { name: 'config', type: 'json' },
       { name: 'owner', type: 'link', link: { table: 'users' } }
     ],
     revLinks: [{ table: 'users', column: 'team' }]

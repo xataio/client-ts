@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/drizzle",
-  "version": "0.0.2",
+  "version": "0.0.10",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "ava": "^5.3.1",
-    "drizzle-orm": "^0.28.5",
+    "drizzle-orm": "^0.29.0",
     "tsx": "^3.12.7",
     "uuid": "^9.0.0"
   },
