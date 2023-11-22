@@ -21,7 +21,7 @@ import { XataClient } from './driver';
 import { mapResultRow } from './utils';
 
 type QueryResult<T = Record<string, unknown>> = {
-  records: T[];
+  rows: T[];
   warning?: string;
 };
 
@@ -60,10 +60,12 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
       params
     });
 
+    console.debug('execute', { statement: this.query.statement, params, result: records.length, warning });
+
     // FIXME: This is a hack, we should be able to get the fields from the query but SELECT * fails
     const fields =
       this.fields ??
-      Object.keys(records[0]!).map(
+      Object.keys(records[0] ?? {}).map(
         (key) =>
           ({
             path: [key],
@@ -146,11 +148,21 @@ export class XataSession<
 
   async query(query: string, params: unknown[]): Promise<QueryResult> {
     this.logger.logQuery(query, params);
-    return await this.client.sql({ statement: query, params });
+    const result = await this.client.sql<Record<string, unknown>>({ statement: query, params });
+
+    return {
+      rows: result.records,
+      warning: result.warning
+    };
   }
 
   async queryObjects<T extends Record<string, unknown>>(query: string, params: unknown[]): Promise<QueryResult<T>> {
-    return this.client.sql({ statement: query, params });
+    const result = await this.client.sql<T>({ statement: query, params });
+
+    return {
+      rows: result.records,
+      warning: result.warning
+    };
   }
 
   override async transaction<T>(
