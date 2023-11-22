@@ -45,7 +45,7 @@ async function main() {
 
   const download = async (retry = 0) => {
     try {
-      const result = await exec(`cd ${dir} && npm install -g ${cli}`);
+      const result = await exec(`cd ${dir} && npm cache clean --force && npm install -g ${cli}`);
       console.log('Downloaded npm package', result.stdout);
       return result;
     } catch (e) {
