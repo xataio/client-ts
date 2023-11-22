@@ -65,7 +65,6 @@ export async function setUpTestEnvironment(
     );
   }
 
-  // @ts-expect-error - Fetch doesn't appear in globalThis yet
   const fetch = vi.fn(envFetch ?? globalThis.fetch);
 
   const { trace, tracer } = await setupTracing();

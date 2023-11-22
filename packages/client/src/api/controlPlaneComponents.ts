@@ -494,6 +494,7 @@ export type GetWorkspacesListResponse = {
     name: string;
     slug: string;
     role: Schemas.Role;
+    plan: Schemas.WorkspacePlan;
   }[];
 };
 

@@ -33,7 +33,7 @@ export type DataPlaneFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> 
 export const dataPlaneFetch = async <
   TData,
   TError extends ErrorWrapper<{ status: unknown; payload: PossibleErrors }>,
-  TBody extends Record<string, unknown> | Blob | undefined | null,
+  TBody extends Record<string, unknown> | Record<string, unknown>[] | Blob | undefined | null,
   THeaders extends Record<string, unknown>,
   TQueryParams extends Record<string, unknown>,
   TPathParams extends Partial<Record<string, string | number>>
