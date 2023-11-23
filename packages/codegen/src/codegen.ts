@@ -15,7 +15,6 @@ export type GenerateOptions = {
   javascriptTarget?: JavascriptTarget;
   branch?: string;
   workspace?: string;
-  workersBuildId?: string;
   existingCode?: string;
 };
 
@@ -51,13 +50,9 @@ export async function generate({
   language,
   moduleType,
   javascriptTarget,
-  workspace,
-  workersBuildId,
   schema,
   existingCode
 }: GenerateOptions) {
-  const includeWorkers = workspace !== undefined && workersBuildId !== undefined;
-
   // For now don't read external fs or tsconfig.json
   const project = new Project({
     useInMemoryFileSystem: true,
@@ -70,7 +65,7 @@ export async function generate({
   const sourceFile = project.createSourceFile('xata.ts', existingCode);
 
   const packageName = moduleType === 'deno' ? 'npm:@xata.io/client@latest' : '@xata.io/client';
-  const packageImports = compact(['buildClient', includeWorkers ? 'buildWorkerRunner' : undefined]);
+  const packageImports = ['buildClient'];
   const typeImports = ['BaseClientOptions', 'SchemaInference', 'XataRecord'];
 
   const importDeclarations = sourceFile
@@ -314,26 +309,6 @@ export async function generate({
     // noop: we don't want to overwrite their instance getter
   }
 
-  // Add Xata Workers
-  if (includeWorkers) {
-    const xataWorker = sourceFile.getVariableDeclaration('xataWorker');
-    const xataWorkerContent = `
-      buildWorkerRunner<XataClient>(${JSON.stringify({ workspace, worker: workersBuildId })})`;
-
-    if (!xataWorker) {
-      sourceFile.addVariableStatement({
-        declarationKind: VariableDeclarationKind.Const,
-        declarations: [{ name: 'xataWorker', initializer: xataWorkerContent }],
-        isExported: true,
-        leadingTrivia:
-          language === 'javascript' ? `\n/** @type { import('@xata.io/client').WorkerRunner<XataClient> } */\n` : '\n',
-        trailingTrivia: '\n'
-      });
-    } else {
-      xataWorker.setInitializer(xataWorkerContent);
-    }
-  }
-
   sourceFile.saveSync();
   project.emitSync();
 
@@ -386,8 +361,4 @@ function emitDeclarations(code: string) {
   program.emit(undefined, (fileName, data) => files.set(fileName, data), undefined, true);
 
   return files.get('index.d.ts');
-}
-
-function compact<T>(array: (T | undefined | null)[]): T[] {
-  return array.filter((item) => item !== undefined && item !== null) as T[];
 }
