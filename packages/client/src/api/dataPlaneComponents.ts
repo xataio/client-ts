@@ -52,6 +52,42 @@ export const applyMigration = (variables: ApplyMigrationVariables, signal?: Abor
     signal
   });
 
+export type PgRollStatusPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type PgRollStatusError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PgRollStatusVariables = {
+  pathParams: PgRollStatusPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const pgRollStatus = (variables: PgRollStatusVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.PgRollStatusResponse, PgRollStatusError, undefined, {}, {}, PgRollStatusPathParams>({
+    url: '/db/{dbBranchName}/pgroll/status',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type GetBranchListPathParams = {
   /**
    * The Database Name
@@ -4462,6 +4498,7 @@ export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
 export const operationsByTag = {
   branch: {
     applyMigration,
+    pgRollStatus,
     getBranchList,
     getBranchDetails,
     createBranch,
