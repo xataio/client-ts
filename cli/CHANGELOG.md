@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.14.5
+
+### Patch Changes
+
+- [#1257](https://github.com/xataio/client-ts/pull/1257) [`25921ab6`](https://github.com/xataio/client-ts/commit/25921ab6ea28db8f1c87d53e247a1438555a42f0) Thanks [@richardgill](https://github.com/richardgill)! - CLI import: Added encoding flag, switch to utf8 by default. Fixes some obscure encoding issues.
+
 ## 0.14.4
 
 ### Patch Changes

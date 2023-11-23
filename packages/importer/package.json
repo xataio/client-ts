@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
-    "@faker-js/faker": "^8.2.0",
+    "@faker-js/faker": "^8.3.1",
     "@xata.io/client": "^0.27.0",
     "any-date-parser": "^1.5.4",
     "json5": "^2.2.3",
@@ -40,9 +40,9 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/lodash.chunk": "^4.2.8",
-    "@types/lodash.pick": "^4.4.8",
-    "@types/papaparse": "^5.3.10",
+    "@types/lodash.chunk": "^4.2.9",
+    "@types/lodash.pick": "^4.4.9",
+    "@types/papaparse": "^5.3.11",
     "lodash": "^4.17.21"
   }
 }

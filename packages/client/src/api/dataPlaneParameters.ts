@@ -5,9 +5,9 @@
  */
 import type * as Schemas from './dataPlaneSchemas';
 
-export type DBNameParam = Schemas.DBName;
-
 export type DBBranchNameParam = Schemas.DBBranchName;
+
+export type DBNameParam = Schemas.DBName;
 
 export type MigrationRequestNumberParam = Schemas.MigrationRequestNumber;
 

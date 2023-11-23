@@ -96,6 +96,8 @@ export type WorkspaceID = string;
  */
 export type Role = 'owner' | 'maintainer';
 
+export type WorkspacePlan = 'free' | 'pro';
+
 export type WorkspaceMeta = {
   name: string;
   slug?: string;
@@ -104,7 +106,7 @@ export type WorkspaceMeta = {
 export type Workspace = WorkspaceMeta & {
   id: WorkspaceID;
   memberCount: number;
-  plan: 'free' | 'pro';
+  plan: WorkspacePlan;
 };
 
 export type WorkspaceMember = {
