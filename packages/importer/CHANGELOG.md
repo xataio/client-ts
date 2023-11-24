@@ -1,5 +1,21 @@
 # @xata.io/importer
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`19c5dd47`](https://github.com/xataio/client-ts/commit/19c5dd47e3a032fcb19d990527b8faaa9326d97d), [`d282d18f`](https://github.com/xataio/client-ts/commit/d282d18f025094e0729ade6009b34fc0d34ebbba)]:
+  - @xata.io/client@0.27.0
+
+## 1.1.1
+
+### Patch Changes
+
+- [#1208](https://github.com/xataio/client-ts/pull/1208) [`9865f127`](https://github.com/xataio/client-ts/commit/9865f1276ffc75f7beeee69b62c7bce6af8568c8) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for importing vectors
+
+- Updated dependencies [[`fa2883b0`](https://github.com/xataio/client-ts/commit/fa2883b0639e48d68097401bf515c8cb95df5b4b), [`c04faece`](https://github.com/xataio/client-ts/commit/c04faece8830699d978e03c89f29e383e479e824), [`cb45cc9f`](https://github.com/xataio/client-ts/commit/cb45cc9f6829e1b555762e656cc1b0b2e977aaf9)]:
+  - @xata.io/client@0.26.8
+
 ## 1.1.0
 
 ### Minor Changes

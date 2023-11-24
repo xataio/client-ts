@@ -1,5 +1,47 @@
 # @xata.io/cli
 
+## 0.14.5
+
+### Patch Changes
+
+- [#1257](https://github.com/xataio/client-ts/pull/1257) [`25921ab6`](https://github.com/xataio/client-ts/commit/25921ab6ea28db8f1c87d53e247a1438555a42f0) Thanks [@richardgill](https://github.com/richardgill)! - CLI import: Added encoding flag, switch to utf8 by default. Fixes some obscure encoding issues.
+
+## 0.14.4
+
+### Patch Changes
+
+- [#1245](https://github.com/xataio/client-ts/pull/1245) [`82ff1d81`](https://github.com/xataio/client-ts/commit/82ff1d81d437d21deaf274478075ea02ab558063) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix problem with `tslib` dependency
+
+## 0.14.3
+
+### Patch Changes
+
+- [#1231](https://github.com/xataio/client-ts/pull/1231) [`786fc78c`](https://github.com/xataio/client-ts/commit/786fc78caae4a8057cd92cf7875ba510cc293a13) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - fix: column renaming errors
+
+- Updated dependencies [[`19c5dd47`](https://github.com/xataio/client-ts/commit/19c5dd47e3a032fcb19d990527b8faaa9326d97d), [`d282d18f`](https://github.com/xataio/client-ts/commit/d282d18f025094e0729ade6009b34fc0d34ebbba)]:
+  - @xata.io/client@0.27.0
+  - @xata.io/codegen@0.27.0
+  - @xata.io/importer@1.1.2
+
+## 0.14.2
+
+### Patch Changes
+
+- Updated dependencies [[`302798e8`](https://github.com/xataio/client-ts/commit/302798e8d210c89f420a5c927e0f836a27dbaed9)]:
+  - @xata.io/client@0.26.9
+  - @xata.io/codegen@0.26.9
+
+## 0.14.1
+
+### Patch Changes
+
+- [#1210](https://github.com/xataio/client-ts/pull/1210) [`05fd69d8`](https://github.com/xataio/client-ts/commit/05fd69d8d86791f32617a068924fc770e38ee9a6) Thanks [@andrew-farries](https://github.com/andrew-farries)! - Make `branch create` default to branch from `main`
+
+- Updated dependencies [[`fa2883b0`](https://github.com/xataio/client-ts/commit/fa2883b0639e48d68097401bf515c8cb95df5b4b), [`c04faece`](https://github.com/xataio/client-ts/commit/c04faece8830699d978e03c89f29e383e479e824), [`cb45cc9f`](https://github.com/xataio/client-ts/commit/cb45cc9f6829e1b555762e656cc1b0b2e977aaf9), [`9865f127`](https://github.com/xataio/client-ts/commit/9865f1276ffc75f7beeee69b62c7bce6af8568c8)]:
+  - @xata.io/client@0.26.8
+  - @xata.io/importer@1.1.1
+  - @xata.io/codegen@0.26.8
+
 ## 0.14.0
 
 ### Minor Changes

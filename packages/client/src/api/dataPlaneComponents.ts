@@ -8,6 +8,86 @@ import { dataPlaneFetch, DataPlaneFetcherExtraProps } from './dataPlaneFetcher';
 import type * as Schemas from './dataPlaneSchemas';
 import type * as Responses from './dataPlaneResponses';
 
+export type ApplyMigrationPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type ApplyMigrationError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type ApplyMigrationRequestBody = {
+  [key: string]: any;
+}[];
+
+export type ApplyMigrationVariables = {
+  body?: ApplyMigrationRequestBody;
+  pathParams: ApplyMigrationPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Applies a pgroll migration to the specified database.
+ */
+export const applyMigration = (variables: ApplyMigrationVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<undefined, ApplyMigrationError, ApplyMigrationRequestBody, {}, {}, ApplyMigrationPathParams>({
+    url: '/db/{dbBranchName}/pgroll/apply',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type PgRollStatusPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type PgRollStatusError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PgRollStatusVariables = {
+  pathParams: PgRollStatusPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const pgRollStatus = (variables: PgRollStatusVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.PgRollStatusResponse, PgRollStatusError, undefined, {}, {}, PgRollStatusPathParams>({
+    url: '/db/{dbBranchName}/pgroll/status',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type GetBranchListPathParams = {
   /**
    * The Database Name
@@ -132,6 +212,13 @@ export type CreateBranchRequestBody = {
    * Select the branch to fork from. Defaults to 'main'
    */
   from?: string;
+  /**
+   * Select the dedicated cluster to create on. Defaults to 'xata-cloud'
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
   metadata?: Schemas.BranchMetadata;
 };
 
@@ -4410,6 +4497,8 @@ export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
 
 export const operationsByTag = {
   branch: {
+    applyMigration,
+    pgRollStatus,
     getBranchList,
     getBranchDetails,
     createBranch,

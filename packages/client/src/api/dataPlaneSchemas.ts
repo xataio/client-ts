@@ -4,6 +4,28 @@
  * @version 1.0
  */
 /**
+ * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+ *
+ * @maxLength 511
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+:[a-zA-Z0-9_\-~]+
+ */
+export type DBBranchName = string;
+
+export type PgRollMigrationStatus = 'no migrations' | 'in progress' | 'complete';
+
+export type PgRollStatusResponse = {
+  /**
+   * The status of the most recent migration
+   */
+  status: PgRollMigrationStatus;
+  /**
+   * The name of the most recent version
+   */
+  version: string;
+};
+
+/**
  * @maxLength 255
  * @minLength 1
  * @pattern [a-zA-Z0-9_\-~]+
@@ -25,15 +47,6 @@ export type ListBranchesResponse = {
   databaseName: string;
   branches: Branch[];
 };
-
-/**
- * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
- *
- * @maxLength 511
- * @minLength 1
- * @pattern [a-zA-Z0-9_\-~]+:[a-zA-Z0-9_\-~]+
- */
-export type DBBranchName = string;
 
 /**
  * @maxLength 255
