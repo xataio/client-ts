@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/importer",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Importer for xata.io",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -29,8 +29,8 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
-    "@faker-js/faker": "^8.2.0",
-    "@xata.io/client": "^0.26.9",
+    "@faker-js/faker": "^8.3.1",
+    "@xata.io/client": "^0.27.0",
     "any-date-parser": "^1.5.4",
     "json5": "^2.2.3",
     "lodash.chunk": "^4.2.0",
@@ -40,9 +40,9 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/lodash.chunk": "^4.2.8",
-    "@types/lodash.pick": "^4.4.8",
-    "@types/papaparse": "^5.3.10",
+    "@types/lodash.chunk": "^4.2.9",
+    "@types/lodash.pick": "^4.4.9",
+    "@types/papaparse": "^5.3.14",
     "lodash": "^4.17.21"
   }
 }

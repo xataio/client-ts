@@ -1,5 +1,12 @@
 # @xata.io/netlify
 
+## 0.1.20
+
+### Patch Changes
+
+- Updated dependencies [[`19c5dd47`](https://github.com/xataio/client-ts/commit/19c5dd47e3a032fcb19d990527b8faaa9326d97d), [`d282d18f`](https://github.com/xataio/client-ts/commit/d282d18f025094e0729ade6009b34fc0d34ebbba)]:
+  - @xata.io/client@0.27.0
+
 ## 0.1.19
 
 ### Patch Changes

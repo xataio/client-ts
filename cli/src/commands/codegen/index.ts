@@ -58,7 +58,6 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     const output = flags.output || this.projectConfig?.codegen?.output;
     const moduleType = this.projectConfig?.codegen?.moduleType;
     const javascriptTarget = flags['javascript-output-target'] || this.projectConfig?.codegen?.javascriptTarget;
-    const workersBuildId = flags['worker-id'] || this.projectConfig?.codegen?.workersBuildId;
 
     if (!output) {
       return this.error(
@@ -105,8 +104,6 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
       moduleType,
       javascriptTarget,
       branch: codegenBranch,
-      workspace,
-      workersBuildId,
       existingCode
     });
 

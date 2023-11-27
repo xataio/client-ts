@@ -112,5 +112,13 @@ export type AggResponse = {
 
 export type SQLResponse = {
   records?: Schemas.SQLRecord[];
+  /**
+   * Name of the column and its PostgreSQL type
+   */
+  columns?: Record<string, any>;
+  /**
+   * Number of selected columns
+   */
+  total?: number;
   warning?: string;
 };

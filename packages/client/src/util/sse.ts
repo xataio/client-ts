@@ -267,7 +267,6 @@ export function fetchEventSource(
       resolve(); // don't waste time constructing/logging errors
     });
 
-    // @ts-expect-error: TS doesn't know about a global fetch
     const fetchImpl = inputFetch ?? fetch;
     const onopen = inputOnOpen ?? defaultOnOpen;
     async function create() {

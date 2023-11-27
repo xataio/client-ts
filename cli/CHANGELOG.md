@@ -1,5 +1,28 @@
 # @xata.io/cli
 
+## 0.14.5
+
+### Patch Changes
+
+- [#1257](https://github.com/xataio/client-ts/pull/1257) [`25921ab6`](https://github.com/xataio/client-ts/commit/25921ab6ea28db8f1c87d53e247a1438555a42f0) Thanks [@richardgill](https://github.com/richardgill)! - CLI import: Added encoding flag, switch to utf8 by default. Fixes some obscure encoding issues.
+
+## 0.14.4
+
+### Patch Changes
+
+- [#1245](https://github.com/xataio/client-ts/pull/1245) [`82ff1d81`](https://github.com/xataio/client-ts/commit/82ff1d81d437d21deaf274478075ea02ab558063) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix problem with `tslib` dependency
+
+## 0.14.3
+
+### Patch Changes
+
+- [#1231](https://github.com/xataio/client-ts/pull/1231) [`786fc78c`](https://github.com/xataio/client-ts/commit/786fc78caae4a8057cd92cf7875ba510cc293a13) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - fix: column renaming errors
+
+- Updated dependencies [[`19c5dd47`](https://github.com/xataio/client-ts/commit/19c5dd47e3a032fcb19d990527b8faaa9326d97d), [`d282d18f`](https://github.com/xataio/client-ts/commit/d282d18f025094e0729ade6009b34fc0d34ebbba)]:
+  - @xata.io/client@0.27.0
+  - @xata.io/codegen@0.27.0
+  - @xata.io/importer@1.1.2
+
 ## 0.14.2
 
 ### Patch Changes
