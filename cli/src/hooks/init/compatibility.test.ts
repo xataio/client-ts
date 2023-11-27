@@ -31,10 +31,10 @@ const sdkUpdateAvailable = `"✨ A newer version of the Xata SDK is now availabl
   userVersionSDK
 )}"`;
 
-const cliError = `"Incompatible version of CLI: ${semver.coerce(
+const cliError = `"Incompatible version of @xata.io/cli: ${semver.coerce(
   userVersionCLI
 )}. Please upgrade to a version that satisfies: >=${latestAvailableVersionCLI}||${specificVersionCLI}."`;
-const sdkError = `"Incompatible version of SDK: ${semver.coerce(
+const sdkError = `"Incompatible version of @xata.io/client: ${semver.coerce(
   userVersionSDK
 )}. Please upgrade to a version that satisfies: ${latestAvailableVersionSDK}."`;
 

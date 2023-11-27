@@ -18,12 +18,10 @@ export const check = async ({ pkg, version, compat }: { pkg: Package; version: s
 
   return {
     warn: updateAvailable
-      ? `✨ A newer version of the Xata ${pkg.toUpperCase()} is now available: ${
-          compat[pkg].latest
-        }. You are currently using version: ${currentVersion}`
+      ? `✨ A newer version of the Xata ${pkg} is now available: ${compat[pkg].latest}. You are currently using version: ${currentVersion}`
       : null,
     error: !semverCompatible
-      ? `Incompatible version of ${pkg.toUpperCase()}: ${currentVersion}. Please upgrade to a version that satisfies: ${compatibleRange}.`
+      ? `Incompatible version of ${pkg}: ${currentVersion}. Please upgrade to a version that satisfies: ${compatibleRange}.`
       : null
   };
 };
