@@ -261,9 +261,14 @@ describe(
 );
 
 async function waitForSearchIndexing(): Promise<void> {
-  const { aggs: teamAggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
-  const { aggs: userAggs } = await xata.db.users.aggregate({ total: { count: '*' } });
-  if (teams === undefined || teamAggs.total !== teams.length || userAggs.total !== users.length) {
+  try {
+    const { aggs: teamAggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
+    const { aggs: userAggs } = await xata.db.users.aggregate({ total: { count: '*' } });
+    if (teams === undefined || teamAggs.total !== teams.length || userAggs.total !== users.length) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return waitForSearchIndexing();
+    }
+  } catch (error) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return waitForSearchIndexing();
   }

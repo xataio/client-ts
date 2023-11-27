@@ -358,8 +358,13 @@ describe(
 );
 
 async function waitForSearchIndexing(): Promise<void> {
-  const { aggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
-  if (aggs.total !== teams.length) {
+  try {
+    const { aggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
+    if (aggs.total !== teams.length) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return waitForSearchIndexing();
+    }
+  } catch (error) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return waitForSearchIndexing();
   }
