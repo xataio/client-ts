@@ -1,160 +1,128 @@
-import { ColumnTypeEnum, type ColumnType, JsonNullMarker } from '@prisma/driver-adapter-utils';
-import { Schemas } from '@xata.io/client';
+import { type ColumnType, ColumnTypeEnum } from '@prisma/driver-adapter-utils';
 
-// According to https://xata.io/docs/sdk/sql/overview
-export function xataToColumnTypeEnum(column: Schemas.Column) {
-  switch (column.type) {
-    case 'string':
-    case 'text':
-    case 'email':
-    case 'link':
-      return ScalarColumnType.TEXT;
+export function fieldToColumnType(fieldType: string): ColumnType {
+  switch (fieldType) {
     case 'bool':
-      return ScalarColumnType.BOOL;
-    case 'int':
-      return ScalarColumnType.INT;
-    case 'float':
-      return ScalarColumnType.FLOAT;
-    case 'datetime':
-      return ScalarColumnType.DATE;
-    case 'multiple':
-      return ScalarColumnType.TEXT_ARRAY;
+      return ColumnTypeEnum.Boolean;
+    case 'bytea':
+      return ColumnTypeEnum.Bytes;
+    case 'char':
+      return ColumnTypeEnum.Text;
+    case 'int8':
+      return ColumnTypeEnum.Int64;
+    case 'int2':
+      return ColumnTypeEnum.Int32;
+    case 'int4':
+      return ColumnTypeEnum.Int32;
+    case 'regproc':
+      return ColumnTypeEnum.Text;
+    case 'text':
+      return ColumnTypeEnum.Text;
+    case 'oid':
+      return ColumnTypeEnum.Int64;
+    case 'tid':
+      return ColumnTypeEnum.Text;
+    case 'xid':
+      return ColumnTypeEnum.Text;
+    case 'cid':
+      return ColumnTypeEnum.Text;
     case 'json':
-      return ScalarColumnType.JSONB;
-    case 'file[]':
-    case 'file':
-    case 'object':
-    case 'vector':
-      throw new Error(`Unsupported column type: ${column.type}`);
-  }
-}
-
-const ScalarColumnType = {
-  TEXT: ColumnTypeEnum.Text,
-  BOOL: ColumnTypeEnum.Boolean,
-  INT: ColumnTypeEnum.Int64,
-  FLOAT: ColumnTypeEnum.Double,
-  DATE: ColumnTypeEnum.DateTime,
-  TEXT_ARRAY: ColumnTypeEnum.TextArray,
-  JSONB: ColumnTypeEnum.Json
-};
-
-/**
- * PostgreSQL array column types.
- */
-const ArrayColumnType = {
-  BOOL_ARRAY: 1000,
-  BYTEA_ARRAY: 1001,
-  BPCHAR_ARRAY: 1014,
-  CHAR_ARRAY: 1002,
-  DATE_ARRAY: 1182,
-  FLOAT4_ARRAY: 1021,
-  FLOAT8_ARRAY: 1022,
-  INT2_ARRAY: 1005,
-  INT4_ARRAY: 1007,
-  JSONB_ARRAY: 3807,
-  JSON_ARRAY: 199,
-  MONEY_ARRAY: 791,
-  NUMERIC_ARRAY: 1231,
-  TEXT_ARRAY: 1009,
-  TIMESTAMP_ARRAY: 1115,
-  TIME_ARRAY: 1183,
-  UUID_ARRAY: 2951,
-  VARCHAR_ARRAY: 1015,
-  XML_ARRAY: 143
-};
-
-/**
- * This is a simplification of quaint's value inference logic. Take a look at quaint's conversion.rs
- * module to see how other attributes of the field packet such as the field length are used to infer
- * the correct quaint::Value variant.
- */
-export function fieldToColumnType(fieldTypeId: number): ColumnType {
-  switch (fieldTypeId) {
-    case ArrayColumnType.INT2_ARRAY:
-    case ArrayColumnType.INT4_ARRAY:
-      return ColumnTypeEnum.Int32Array;
-    case ArrayColumnType.FLOAT4_ARRAY:
-      return ColumnTypeEnum.FloatArray;
-    case ArrayColumnType.FLOAT8_ARRAY:
-      return ColumnTypeEnum.DoubleArray;
-    case ArrayColumnType.NUMERIC_ARRAY:
-    case ArrayColumnType.MONEY_ARRAY:
-      return ColumnTypeEnum.NumericArray;
-    case ArrayColumnType.BOOL_ARRAY:
-      return ColumnTypeEnum.BooleanArray;
-    case ArrayColumnType.CHAR_ARRAY:
-      return ColumnTypeEnum.CharArray;
-    case ArrayColumnType.TEXT_ARRAY:
-    case ArrayColumnType.VARCHAR_ARRAY:
-    case ArrayColumnType.BPCHAR_ARRAY:
-    case ArrayColumnType.XML_ARRAY:
-      return ColumnTypeEnum.TextArray;
-    case ArrayColumnType.DATE_ARRAY:
-      return ColumnTypeEnum.DateArray;
-    case ArrayColumnType.TIME_ARRAY:
-      return ColumnTypeEnum.TimeArray;
-    case ArrayColumnType.TIMESTAMP_ARRAY:
-      return ColumnTypeEnum.DateTimeArray;
-    case ArrayColumnType.JSON_ARRAY:
-    case ArrayColumnType.JSONB_ARRAY:
-      return ColumnTypeEnum.JsonArray;
-    case ArrayColumnType.BYTEA_ARRAY:
-      return ColumnTypeEnum.BytesArray;
-    case ArrayColumnType.UUID_ARRAY:
-      return ColumnTypeEnum.UuidArray;
-    case ScalarColumnType.TEXT:
-      return ScalarColumnType.TEXT;
-    case ScalarColumnType.BOOL:
-      return ScalarColumnType.BOOL;
-    case ScalarColumnType.INT:
-      return ScalarColumnType.INT;
-    case ScalarColumnType.FLOAT:
-      return ScalarColumnType.FLOAT;
-    case ScalarColumnType.DATE:
-      return ScalarColumnType.DATE;
-    case ScalarColumnType.JSONB:
-      return ScalarColumnType.JSONB;
+      return ColumnTypeEnum.Json;
+    case 'xml':
+      return ColumnTypeEnum.Text;
+    case 'pg_node_tree':
+      return ColumnTypeEnum.Text;
+    case 'smgr':
+      return ColumnTypeEnum.Text;
+    case 'path':
+      return ColumnTypeEnum.Text;
+    case 'polygon':
+      return ColumnTypeEnum.Text;
+    case 'cidr':
+      return ColumnTypeEnum.Text;
+    case 'float4':
+      return ColumnTypeEnum.Float;
+    case 'float8':
+      return ColumnTypeEnum.Double;
+    case 'abstime':
+      return ColumnTypeEnum.Text;
+    case 'reltime':
+      return ColumnTypeEnum.Text;
+    case 'tinterval':
+      return ColumnTypeEnum.Text;
+    case 'circle':
+      return ColumnTypeEnum.Text;
+    case 'macaddr8':
+      return ColumnTypeEnum.Text;
+    case 'money':
+      return ColumnTypeEnum.Numeric;
+    case 'macaddr':
+      return ColumnTypeEnum.Text;
+    case 'inet':
+      return ColumnTypeEnum.Text;
+    case 'aclitem':
+      return ColumnTypeEnum.Text;
+    case 'bpchar':
+      return ColumnTypeEnum.Text;
+    case 'varchar':
+      return ColumnTypeEnum.Text;
+    case 'date':
+      return ColumnTypeEnum.Date;
+    case 'time':
+      return ColumnTypeEnum.Time;
+    case 'timestamp':
+      return ColumnTypeEnum.DateTime;
+    case 'timestamptz':
+      return ColumnTypeEnum.DateTime;
+    case 'interval':
+      return ColumnTypeEnum.Text;
+    case 'timetz':
+      return ColumnTypeEnum.Time;
+    case 'bit':
+      return ColumnTypeEnum.Text;
+    case 'varbit':
+      return ColumnTypeEnum.Text;
+    case 'numeric':
+      return ColumnTypeEnum.Numeric;
+    case 'refcursor':
+      return ColumnTypeEnum.Text;
+    case 'regprocedure':
+      return ColumnTypeEnum.Text;
+    case 'regoper':
+      return ColumnTypeEnum.Text;
+    case 'regoperator':
+      return ColumnTypeEnum.Text;
+    case 'regclass':
+      return ColumnTypeEnum.Text;
+    case 'regtype':
+      return ColumnTypeEnum.Text;
+    case 'uuid':
+      return ColumnTypeEnum.Uuid;
+    case 'txid_snapshot':
+      return ColumnTypeEnum.Text;
+    case 'pg_lsn':
+      return ColumnTypeEnum.Text;
+    case 'pg_ndistinct':
+      return ColumnTypeEnum.Text;
+    case 'pg_dependencies':
+      return ColumnTypeEnum.Text;
+    case 'tsvector':
+      return ColumnTypeEnum.Text;
+    case 'tsquery':
+      return ColumnTypeEnum.Text;
+    case 'gtsvector':
+      return ColumnTypeEnum.Text;
+    case 'regconfig':
+      return ColumnTypeEnum.Text;
+    case 'regdictionary':
+      return ColumnTypeEnum.Text;
+    case 'jsonb':
+      return ColumnTypeEnum.Json;
+    case 'regnamespace':
+      return ColumnTypeEnum.Text;
+    case 'regrole':
+      return ColumnTypeEnum.Text;
     default:
-      if (fieldTypeId >= 10000) {
-        // Postgres Custom Types
-        return ColumnTypeEnum.Enum;
-      }
-      throw new Error(`Unsupported column type: ${fieldTypeId}`);
+      return ColumnTypeEnum.Text;
   }
-}
-
-/**
- * JsonNull are stored in JSON strings as the string "null", distinguishable from
- * the `null` value which is used by the driver to represent the database NULL.
- * By default, JSON and JSONB columns use JSON.parse to parse a JSON column value
- * and this will lead to serde_json::Value::Null in Rust, which will be interpreted
- * as DbNull.
- *
- * By converting "null" to JsonNullMarker, we can signal JsonNull in Rust side and
- * convert it to QuaintValue::Json(Some(Null)).
- */
-function convertJson(json: string): unknown {
-  return json === 'null' ? JsonNullMarker : JSON.parse(json);
-}
-
-/**
- * Convert bytes to a JSON-encodable representation since we can't
- * currently send a parsed Buffer or ArrayBuffer across JS to Rust
- * boundary.
- */
-function convertBytes(serializedBytes: string): number[] {
-  const buffer = Buffer.from(serializedBytes, 'hex');
-  return encodeBuffer(buffer);
-}
-
-/**
- * TODO:
- * 1. Check if using base64 would be more efficient than this encoding.
- * 2. Consider the possibility of eliminating re-encoding altogether
- *    and passing bytea hex format to the engine if that can be aligned
- *    with other adapter flavours.
- */
-function encodeBuffer(buffer: Buffer) {
-  return Array.from(new Uint8Array(buffer));
 }

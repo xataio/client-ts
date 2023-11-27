@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/prisma",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -22,9 +22,12 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@xata.io/client": "workspace:*",
-    "@prisma/driver-adapter-utils": "^5.4.2"
+    "@prisma/driver-adapter-utils": "^5.4.2",
+    "@xata.io/client": "workspace:*"
   },
-  "devDependencies": {},
-  "peerDependencies": {}
+  "devDependencies": {
+    "@prisma/client": "^5.6.0",
+    "prisma": "^5.6.0",
+    "superjson": "^2.2.1"
+  }
 }
