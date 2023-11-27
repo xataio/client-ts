@@ -32,6 +32,14 @@
           "type": "email"
         },
         {
+          "name": "plan",
+          "type": "string"
+        },
+        {
+          "name": "dark",
+          "type": "bool"
+        },
+        {
           "name": "settings",
           "type": "object",
           "columns": [
@@ -89,6 +97,14 @@
           "type": "file[]"
         },
         {
+          "name": "plan",
+          "type": "string"
+        },
+        {
+          "name": "dark",
+          "type": "bool"
+        },
+        {
           "name": "settings",
           "type": "object",
           "columns": [
@@ -123,6 +139,14 @@
         {
           "name": "birthDate",
           "type": "datetime"
+        },
+        {
+          "name": "street",
+          "type": "string"
+        },
+        {
+          "name": "zipcode",
+          "type": "int"
         },
         {
           "name": "address",
