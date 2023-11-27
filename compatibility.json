@@ -1,5 +1,5 @@
 {
-  "cli": {
+  "@xata.io/cli": {
     "latest": "0.14.2",
     "compatibility": [
       {
@@ -7,7 +7,7 @@
       }
     ]
   },
-  "sdk": {
+  "@xata.io/client": {
     "latest": "0.26.9",
     "compatibility": [
       {
