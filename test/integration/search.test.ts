@@ -261,10 +261,21 @@ describe(
 );
 
 async function waitForSearchIndexing(): Promise<void> {
-  const { aggs: teamAggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
-  const { aggs: userAggs } = await xata.db.users.aggregate({ total: { count: '*' } });
-  if (teams === undefined || teamAggs.total !== teams.length || userAggs.total !== users.length) {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    return waitForSearchIndexing();
+  try {
+    const { aggs: teamAggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
+    const { aggs: userAggs } = await xata.db.users.aggregate({ total: { count: '*' } });
+    if (teams !== undefined && teamAggs.total === teams.length && userAggs.total === users.length) {
+      return;
+    }
+  } catch (error) {
+    if (isHttpError(error) && String(error.status).startsWith('5')) {
+      throw error;
+    }
   }
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  return waitForSearchIndexing();
+}
+
+function isHttpError(error: any): error is Error & { status?: number } {
+  return typeof error === 'object' && typeof error.status === 'number';
 }
