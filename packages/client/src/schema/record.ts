@@ -16,7 +16,8 @@ export const RecordColumnTypes = [
   'datetime',
   'vector',
   'file[]',
-  'file'
+  'file',
+  'json'
 ] as const;
 
 export type Identifier = string;
@@ -201,10 +202,18 @@ export type EditableData<O extends XataRecord> = Identifiable &
     >
   >;
 
-type JSONDataFields<T> = T extends XataRecord
-  ? string
+type JSONDataFile = {
+  [K in keyof XataFile]: XataFile[K] extends Function ? never : XataFile[K];
+};
+
+type JSONDataFields<T> = T extends XataFile
+  ? JSONDataFile
+  : NonNullable<T> extends XataFile
+  ? JSONDataFile | null | undefined
+  : T extends XataRecord
+  ? JSONData<T>
   : NonNullable<T> extends XataRecord
-  ? string | null | undefined
+  ? JSONData<T> | null | undefined
   : T extends Date
   ? string
   : NonNullable<T> extends Date

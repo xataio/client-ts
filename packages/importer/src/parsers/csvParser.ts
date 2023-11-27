@@ -64,14 +64,14 @@ const dataForColumns = (data: unknown[], columns: ParseCsvOptions['columns']) =>
   );
 };
 
-export const papaResultToJson = (
+export const papaResultToJson = async (
   { data, errors }: CSV.ParseResult<unknown>,
   options: ParseCsvOptions,
   startIndex = 0
-): ParseResults => {
+): Promise<ParseResults> => {
   const parseWarnings = errors.map((error) => error.message);
 
-  const jsonResults = parseJson(
+  const jsonResults = await parseJson(
     {
       ...options,
       data: dataForColumns(data, options.columns)

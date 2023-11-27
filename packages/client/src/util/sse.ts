@@ -26,7 +26,7 @@ export interface EventSourceMessage {
  * @param onChunk A function that will be called on each new byte chunk in the stream.
  * @returns {Promise<void>} A promise that will be resolved when the stream closes.
  */
-async function getBytes(stream: ReadableStream<Uint8Array>, onChunk: (arr: Uint8Array) => void) {
+async function getBytes(stream: any, onChunk: (arr: Uint8Array) => void) {
   const reader = stream.getReader();
   let result;
   while (!(result = await reader.read()).done) {
@@ -192,7 +192,6 @@ function newMessage(): EventSourceMessage {
 
 export const EventStreamContentType = 'text/event-stream';
 
-const DefaultRetryInterval = 1000;
 const LastEventId = 'last-event-id';
 
 export interface FetchEventSourceInit extends RequestInit {

@@ -1,6 +1,6 @@
 import { TraceAttributes, TraceFunction } from '../schema/tracing';
 import { ApiRequestPool, FetchImpl } from '../util/fetch';
-import { compact, compactObject, isDefined, isString } from '../util/lang';
+import { compact, compactObject, isBlob, isDefined, isObject, isString } from '../util/lang';
 import { fetchEventSource } from '../util/sse';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -98,11 +98,16 @@ function hostHeader(url: string): { Host?: string } {
   return groups?.host ? { Host: groups.host } : {};
 }
 
-function parseBody<T>(body?: T, headers?: Record<string, unknown>): any {
+async function parseBody<T>(body?: T, headers?: Record<string, unknown>): Promise<any> {
   if (!isDefined(body)) return undefined;
 
+  // If body is a blob or has a text() method, we don't need to do anything
+  if (isBlob(body) || typeof (body as any).text === 'function') {
+    return body;
+  }
+
   const { 'Content-Type': contentType } = headers ?? {};
-  if (String(contentType).toLowerCase() === 'application/json') {
+  if (String(contentType).toLowerCase() === 'application/json' && isObject(body)) {
     return JSON.stringify(body);
   }
 
@@ -114,7 +119,7 @@ const defaultClientID = generateUUID();
 export async function fetch<
   TData,
   TError extends ErrorWrapper<{ status: unknown; payload: PossibleErrors }>,
-  TBody extends Record<string, unknown> | Blob | undefined | null,
+  TBody extends Record<string, unknown> | Record<string, unknown>[] | Blob | undefined | null,
   THeaders extends Record<string, unknown>,
   TQueryParams extends Record<string, unknown>,
   TPathParams extends Partial<Record<string, string | number>>
@@ -178,7 +183,7 @@ export async function fetch<
       const response = await pool.request(url, {
         ...fetchOptions,
         method: method.toUpperCase(),
-        body: parseBody(body, headers),
+        body: await parseBody(body, headers),
         headers,
         signal
       });
@@ -190,7 +195,8 @@ export async function fetch<
         [TraceAttributes.HTTP_REQUEST_ID]: requestId,
         [TraceAttributes.HTTP_STATUS_CODE]: response.status,
         [TraceAttributes.HTTP_HOST]: host,
-        [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', '')
+        [TraceAttributes.HTTP_SCHEME]: protocol?.replace(':', ''),
+        [TraceAttributes.CLOUDFLARE_RAY_ID]: response.headers?.get('cf-ray') ?? undefined
       });
 
       const message = response.headers?.get('x-xata-message');

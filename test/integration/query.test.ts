@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } fr
 import {
   BaseClient,
   contains,
+  iContains,
   includesAll,
   includesNone,
   isXataRecord,
@@ -89,10 +90,15 @@ describe('integration tests', () => {
 
   test('operator filter', async () => {
     const teams = await xata.db.teams.filter('name', contains('fruits')).getAll({ sort: ['name'] });
+    const teams2 = await xata.db.teams.filter('name', iContains('FRUITS')).getAll({ sort: ['name'] });
 
     expect(teams).toHaveLength(2);
     expect(teams[0].name).toBe('Mixed team fruits & animals');
     expect(teams[1].name).toBe('Team fruits');
+
+    expect(teams2).toHaveLength(2);
+    expect(teams2[0].name).toBe('Mixed team fruits & animals');
+    expect(teams2[1].name).toBe('Team fruits');
   });
 
   test('operator filter on multiple column', async () => {
@@ -595,14 +601,14 @@ describe('integration tests', () => {
   test('Pagination size limit', async () => {
     expect(xata.db.users.getPaginated({ pagination: { size: PAGINATION_MAX_SIZE + 1 } })).rejects.toHaveProperty(
       'message',
-      'page size exceeds max limit of 200'
+      'page size exceeds max limit of 1000'
     );
   });
 
   test('Pagination offset limit', async () => {
     expect(xata.db.users.getPaginated({ pagination: { offset: PAGINATION_MAX_OFFSET + 1 } })).rejects.toHaveProperty(
       'message',
-      'page offset must not exceed 800'
+      'page offset must not exceed 49000'
     );
   });
 

@@ -1,5 +1,156 @@
 # @xata.io/cli
 
+## 0.15.0
+
+### Minor Changes
+
+- [#1251](https://github.com/xataio/client-ts/pull/1251) [`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove Xata Workers support
+
+### Patch Changes
+
+- [#1212](https://github.com/xataio/client-ts/pull/1212) [`1348a7fa`](https://github.com/xataio/client-ts/commit/1348a7fa973d8ad008f925297a479f26d231efec) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - feat: compatibility endpoint
+
+- Updated dependencies [[`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05)]:
+  - @xata.io/client@0.28.0
+  - @xata.io/codegen@0.28.0
+  - @xata.io/importer@1.1.3
+
+## 0.14.5
+
+### Patch Changes
+
+- [#1257](https://github.com/xataio/client-ts/pull/1257) [`25921ab6`](https://github.com/xataio/client-ts/commit/25921ab6ea28db8f1c87d53e247a1438555a42f0) Thanks [@richardgill](https://github.com/richardgill)! - CLI import: Added encoding flag, switch to utf8 by default. Fixes some obscure encoding issues.
+
+## 0.14.4
+
+### Patch Changes
+
+- [#1245](https://github.com/xataio/client-ts/pull/1245) [`82ff1d81`](https://github.com/xataio/client-ts/commit/82ff1d81d437d21deaf274478075ea02ab558063) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix problem with `tslib` dependency
+
+## 0.14.3
+
+### Patch Changes
+
+- [#1231](https://github.com/xataio/client-ts/pull/1231) [`786fc78c`](https://github.com/xataio/client-ts/commit/786fc78caae4a8057cd92cf7875ba510cc293a13) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - fix: column renaming errors
+
+- Updated dependencies [[`19c5dd47`](https://github.com/xataio/client-ts/commit/19c5dd47e3a032fcb19d990527b8faaa9326d97d), [`d282d18f`](https://github.com/xataio/client-ts/commit/d282d18f025094e0729ade6009b34fc0d34ebbba)]:
+  - @xata.io/client@0.27.0
+  - @xata.io/codegen@0.27.0
+  - @xata.io/importer@1.1.2
+
+## 0.14.2
+
+### Patch Changes
+
+- Updated dependencies [[`302798e8`](https://github.com/xataio/client-ts/commit/302798e8d210c89f420a5c927e0f836a27dbaed9)]:
+  - @xata.io/client@0.26.9
+  - @xata.io/codegen@0.26.9
+
+## 0.14.1
+
+### Patch Changes
+
+- [#1210](https://github.com/xataio/client-ts/pull/1210) [`05fd69d8`](https://github.com/xataio/client-ts/commit/05fd69d8d86791f32617a068924fc770e38ee9a6) Thanks [@andrew-farries](https://github.com/andrew-farries)! - Make `branch create` default to branch from `main`
+
+- Updated dependencies [[`fa2883b0`](https://github.com/xataio/client-ts/commit/fa2883b0639e48d68097401bf515c8cb95df5b4b), [`c04faece`](https://github.com/xataio/client-ts/commit/c04faece8830699d978e03c89f29e383e479e824), [`cb45cc9f`](https://github.com/xataio/client-ts/commit/cb45cc9f6829e1b555762e656cc1b0b2e977aaf9), [`9865f127`](https://github.com/xataio/client-ts/commit/9865f1276ffc75f7beeee69b62c7bce6af8568c8)]:
+  - @xata.io/client@0.26.8
+  - @xata.io/importer@1.1.1
+  - @xata.io/codegen@0.26.8
+
+## 0.14.0
+
+### Minor Changes
+
+- [#1190](https://github.com/xataio/client-ts/pull/1190) [`e77644b5`](https://github.com/xataio/client-ts/commit/e77644b560ad02ce6085bc083b07105ae6dddff4) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add support for importing single and multiple files (remote and local) via pathname in CSV column
+
+### Patch Changes
+
+- Updated dependencies [[`652db16b`](https://github.com/xataio/client-ts/commit/652db16b40e507be06ff662e2ffe7a5161f56100), [`0e1c50de`](https://github.com/xataio/client-ts/commit/0e1c50de5850db2dfbbdfff9d66eda3bf1322836), [`d093d363`](https://github.com/xataio/client-ts/commit/d093d363a51fc23c8513d51600bb3b31bbc45334), [`e77644b5`](https://github.com/xataio/client-ts/commit/e77644b560ad02ce6085bc083b07105ae6dddff4)]:
+  - @xata.io/importer@1.1.0
+  - @xata.io/client@0.26.7
+  - @xata.io/codegen@0.26.7
+
+## 0.13.14
+
+### Patch Changes
+
+- Updated dependencies [[`c155c91e`](https://github.com/xataio/client-ts/commit/c155c91e9d5e8125ff07d5f530b0e66d153b3bb9), [`3330c9cf`](https://github.com/xataio/client-ts/commit/3330c9cf8d8db18b8e355a576e4afd589b6152bf), [`a738816d`](https://github.com/xataio/client-ts/commit/a738816d355f4415b0622bb5a23b4154f9855177)]:
+  - @xata.io/codegen@0.26.6
+  - @xata.io/client@0.26.6
+
+## 0.13.13
+
+### Patch Changes
+
+- [#1168](https://github.com/xataio/client-ts/pull/1168) [`5daf6972`](https://github.com/xataio/client-ts/commit/5daf69721602755c8e785484679159d51489003a) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add skip code generation flag to pull command
+
+- [#1173](https://github.com/xataio/client-ts/pull/1173) [`c2885adf`](https://github.com/xataio/client-ts/commit/c2885adf710d0dc603be3fe50ed14a18362b3283) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add ability to interactively select branch on xata init when main branch does not exist
+
+## 0.13.12
+
+### Patch Changes
+
+- [#1169](https://github.com/xataio/client-ts/pull/1169) [`641809d4`](https://github.com/xataio/client-ts/commit/641809d4317dc356c538e7a49deb93d30bc34f82) Thanks [@y-71](https://github.com/y-71)! - Support for the bun package manager
+
+## 0.13.11
+
+### Patch Changes
+
+- Updated dependencies [[`b9b9058f`](https://github.com/xataio/client-ts/commit/b9b9058f0bc81b660da45318c27191a62f041f21)]:
+  - @xata.io/client@0.26.5
+  - @xata.io/codegen@0.26.5
+
+## 0.13.10
+
+### Patch Changes
+
+- Updated dependencies [[`7166797c`](https://github.com/xataio/client-ts/commit/7166797c28839198d20a9115d0414cebc2fed39b), [`b85df75f`](https://github.com/xataio/client-ts/commit/b85df75f2f466762a8b3d9824c9292c7e3db03fd)]:
+  - @xata.io/client@0.26.4
+  - @xata.io/codegen@0.26.4
+
+## 0.13.9
+
+### Patch Changes
+
+- [#1144](https://github.com/xataio/client-ts/pull/1144) [`4910dce2`](https://github.com/xataio/client-ts/commit/4910dce29d3cc17d13aadf32e4eb476ffb571fad) Thanks [@SferaDev](https://github.com/SferaDev)! - Support for JSON and Revlinks
+
+- Updated dependencies [[`4910dce2`](https://github.com/xataio/client-ts/commit/4910dce29d3cc17d13aadf32e4eb476ffb571fad)]:
+  - @xata.io/client@0.26.3
+  - @xata.io/codegen@0.26.3
+
+## 0.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`22fccb51`](https://github.com/xataio/client-ts/commit/22fccb51709749c319897702c15749b74ce4b820)]:
+  - @xata.io/client@0.26.2
+  - @xata.io/codegen@0.26.2
+
+## 0.13.7
+
+### Patch Changes
+
+- Updated dependencies [[`922e6e54`](https://github.com/xataio/client-ts/commit/922e6e54e8b31641770a36b6b4ff8f4fa65d304d), [`13f6f3e4`](https://github.com/xataio/client-ts/commit/13f6f3e4b1a2f925d50a5380b62ef1057f5c3893), [`f02fc165`](https://github.com/xataio/client-ts/commit/f02fc165bf6558e4377eb9f8e1d0f4222f004c70)]:
+  - @xata.io/client@0.26.1
+  - @xata.io/codegen@0.26.1
+
+## 0.13.6
+
+### Patch Changes
+
+- Updated dependencies [[`6ec862f8`](https://github.com/xataio/client-ts/commit/6ec862f8f799eb692f62be79dd0b613b83a34780), [`0c0149ad`](https://github.com/xataio/client-ts/commit/0c0149ad1ee3f7c0fe9d31030552b022c907edb0)]:
+  - @xata.io/client@0.26.0
+  - @xata.io/codegen@0.26.0
+  - @xata.io/importer@1.0.3
+
+## 0.13.5
+
+### Patch Changes
+
+- Updated dependencies [[`3b9e1984`](https://github.com/xataio/client-ts/commit/3b9e1984329cd0e9f885f6af4155cc85ab61ba41)]:
+  - @xata.io/client@0.25.3
+  - @xata.io/codegen@0.25.3
+
 ## 0.13.4
 
 ### Patch Changes

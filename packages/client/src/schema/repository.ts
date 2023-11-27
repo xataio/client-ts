@@ -27,10 +27,10 @@ import {
   TransactionOperation
 } from '../api/schemas';
 import { XataPluginOptions } from '../plugins';
-import { SearchXataRecord } from '../search';
+import { SearchXataRecord, TotalCount } from '../search';
 import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
-import { chunk, compact, isDefined, isNumber, isObject, isString, isStringArray, promiseMap } from '../util/lang';
+import { chunk, compact, isDefined, isNumber, isObject, isString, promiseMap } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -39,10 +39,17 @@ import { AskOptions, AskResult } from './ask';
 import { CacheImpl } from './cache';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter } from './filters';
+import { parseJson, stringifyJson } from './json';
 import { Page } from './pagination';
 import { Query } from './query';
 import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
-import { ColumnsByValue, SelectableColumn, SelectedPick } from './selection';
+import {
+  ColumnsByValue,
+  SelectableColumn,
+  SelectableColumnWithObjectNotation,
+  SelectedPick,
+  isValidSelectableColumns
+} from './selection';
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
@@ -741,7 +748,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       page?: SearchPageConfig;
       target?: TargetColumn<Record>[];
     }
-  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
+  ): Promise<{ records: SearchXataRecord<SelectedPick<Record, ['*']>>[] } & TotalCount>;
 
   /**
    * Search for vectors in the table.
@@ -770,7 +777,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
       size?: number;
       filter?: Filter<Record>;
     }
-  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]>;
+  ): Promise<{ records: SearchXataRecord<SelectedPick<Record, ['*']>>[] } & TotalCount>;
 
   /**
    * Aggregates records in the table.
@@ -895,7 +902,7 @@ export class RestRepository<Record extends XataRecord>
 
         const ids = await this.#insertRecords(a, { ifVersion, createOnly: true });
 
-        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
         const result = await this.read(ids as string[], columns);
@@ -906,7 +913,7 @@ export class RestRepository<Record extends XataRecord>
       if (isString(a) && isObject(b)) {
         if (a === '') throw new Error("The id can't be empty");
 
-        const columns = isStringArray(c) ? c : undefined;
+        const columns = isValidSelectableColumns(c) ? c : undefined;
         return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: true, ifVersion });
       }
 
@@ -914,13 +921,13 @@ export class RestRepository<Record extends XataRecord>
       if (isObject(a) && isString(a.id)) {
         if (a.id === '') throw new Error("The id can't be empty");
 
-        const columns = isStringArray(b) ? b : undefined;
+        const columns = isValidSelectableColumns(b) ? b : undefined;
         return await this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: true, ifVersion });
       }
 
       // Create one record without id
       if (isObject(a)) {
-        const columns = isStringArray(b) ? b : undefined;
+        const columns = isValidSelectableColumns(b) ? b : undefined;
         return this.#insertRecordWithoutId(a, columns);
       }
 
@@ -1041,7 +1048,7 @@ export class RestRepository<Record extends XataRecord>
     | null
   > {
     return this.#trace('read', async () => {
-      const columns = isStringArray(b) ? b : ['*' as const];
+      const columns = isValidSelectableColumns(b) ? b : ['*' as const];
 
       // Read many records
       if (Array.isArray(a)) {
@@ -1077,7 +1084,13 @@ export class RestRepository<Record extends XataRecord>
           });
 
           const schemaTables = await this.#getSchemaTables();
-          return initObject(this.#db, schemaTables, this.#table, response, columns);
+          return initObject<Record>(
+            this.#db,
+            schemaTables,
+            this.#table,
+            response,
+            columns as SelectableColumn<Record>[]
+          ) as any;
         } catch (e) {
           if (isObject(e) && e.status === 404) {
             return null;
@@ -1204,7 +1217,7 @@ export class RestRepository<Record extends XataRecord>
           upsert: false
         });
 
-        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
         const result = await this.read(a, columns);
@@ -1214,13 +1227,13 @@ export class RestRepository<Record extends XataRecord>
       try {
         // Update one record with id as param
         if (isString(a) && isObject(b)) {
-          const columns = isStringArray(c) ? c : undefined;
+          const columns = isValidSelectableColumns(c) ? c : undefined;
           return await this.#updateRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
         }
 
         // Update one record with id as property
         if (isObject(a) && isString(a.id)) {
-          const columns = isStringArray(b) ? b : undefined;
+          const columns = isValidSelectableColumns(b) ? b : undefined;
           return await this.#updateRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
         }
       } catch (error: any) {
@@ -1421,7 +1434,7 @@ export class RestRepository<Record extends XataRecord>
           upsert: true
         });
 
-        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
         const result = await this.read(a, columns);
@@ -1432,7 +1445,7 @@ export class RestRepository<Record extends XataRecord>
       if (isString(a) && isObject(b)) {
         if (a === '') throw new Error("The id can't be empty");
 
-        const columns = isStringArray(c) ? c : undefined;
+        const columns = isValidSelectableColumns(c) ? c : undefined;
         return await this.#upsertRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
       }
 
@@ -1440,7 +1453,7 @@ export class RestRepository<Record extends XataRecord>
       if (isObject(a) && isString(a.id)) {
         if (a.id === '') throw new Error("The id can't be empty");
 
-        const columns = isStringArray(c) ? c : undefined;
+        const columns = isValidSelectableColumns(c) ? c : undefined;
         return await this.#upsertRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
       }
 
@@ -1530,7 +1543,7 @@ export class RestRepository<Record extends XataRecord>
 
         const ids = await this.#insertRecords(a, { ifVersion, createOnly: false });
 
-        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
         const result = await this.read(ids as string[], columns);
@@ -1541,7 +1554,7 @@ export class RestRepository<Record extends XataRecord>
       if (isString(a) && isObject(b)) {
         if (a === '') throw new Error("The id can't be empty");
 
-        const columns = isStringArray(c) ? c : undefined;
+        const columns = isValidSelectableColumns(c) ? c : undefined;
         return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: false, ifVersion });
       }
 
@@ -1549,7 +1562,7 @@ export class RestRepository<Record extends XataRecord>
       if (isObject(a) && isString(a.id)) {
         if (a.id === '') throw new Error("The id can't be empty");
 
-        const columns = isStringArray(c) ? c : undefined;
+        const columns = isValidSelectableColumns(c) ? c : undefined;
         return await this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: false, ifVersion });
       }
 
@@ -1610,7 +1623,7 @@ export class RestRepository<Record extends XataRecord>
           throw new Error('Invalid arguments for delete method');
         });
 
-        const columns = isStringArray(b) ? b : (['*'] as K[]);
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
         const result = await this.read(a as any, columns);
@@ -1748,7 +1761,7 @@ export class RestRepository<Record extends XataRecord>
     } = {}
   ) {
     return this.#trace('search', async () => {
-      const { records } = await searchTable({
+      const { records, totalCount } = await searchTable({
         pathParams: {
           workspace: '{workspaceId}',
           dbBranchName: '{dbBranch}',
@@ -1771,7 +1784,10 @@ export class RestRepository<Record extends XataRecord>
       const schemaTables = await this.#getSchemaTables();
 
       // TODO - Column selection not supported by search endpoint yet
-      return records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any;
+      return {
+        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any,
+        totalCount
+      };
     });
   }
 
@@ -1785,9 +1801,9 @@ export class RestRepository<Record extends XataRecord>
           filter?: Filter<Record> | undefined;
         }
       | undefined
-  ): Promise<SearchXataRecord<SelectedPick<Record, ['*']>>[]> {
+  ): Promise<{ records: SearchXataRecord<SelectedPick<Record, ['*']>>[] } & TotalCount> {
     return this.#trace('vectorSearch', async () => {
-      const { records } = await vectorSearchTable({
+      const { records, totalCount } = await vectorSearchTable({
         pathParams: {
           workspace: '{workspaceId}',
           dbBranchName: '{dbBranch}',
@@ -1807,7 +1823,10 @@ export class RestRepository<Record extends XataRecord>
       const schemaTables = await this.#getSchemaTables();
 
       // TODO - Column selection not supported by search endpoint yet
-      return records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any;
+      return {
+        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])),
+        totalCount
+      } as any;
     });
   }
 
@@ -1858,7 +1877,13 @@ export class RestRepository<Record extends XataRecord>
 
       const schemaTables = await this.#getSchemaTables();
       const records = objects.map((record) =>
-        initObject<Result>(this.#db, schemaTables, this.#table, record, data.columns ?? ['*'])
+        initObject<Result>(
+          this.#db,
+          schemaTables,
+          this.#table,
+          record,
+          (data.columns as SelectableColumn<Result>[]) ?? ['*']
+        )
       );
       await this.#setCacheQuery(query, meta, records);
 
@@ -1884,7 +1909,7 @@ export class RestRepository<Record extends XataRecord>
         body: {
           filter: cleanFilter(data.filter),
           sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
-          columns: data.columns,
+          columns: data.columns as SelectableColumn<Record>[],
           consistency: data.consistency,
           page: data.pagination?.size !== undefined ? { size: data.pagination?.size } : undefined,
           summaries,
@@ -1892,8 +1917,13 @@ export class RestRepository<Record extends XataRecord>
         },
         ...this.#getFetchProps()
       });
-
-      return result;
+      const schemaTables = await this.#getSchemaTables();
+      return {
+        ...result,
+        summaries: result.summaries.map((summary) =>
+          initObject(this.#db, schemaTables, this.#table, summary, data.columns ?? [])
+        )
+      };
     });
   }
 
@@ -1992,6 +2022,9 @@ export class RestRepository<Record extends XataRecord>
         case 'file[]':
           result[key] = await promiseMap(value as InputXataFile[], (item) => parseInputFileEntry(item));
           break;
+        case 'json':
+          result[key] = stringifyJson(value as any);
+          break;
         default:
           result[key] = value;
       }
@@ -2001,23 +2034,12 @@ export class RestRepository<Record extends XataRecord>
   }
 }
 
-const removeLinksFromObject = (object: any): Schemas.DataInputRecord => {
-  return Object.entries(object).reduce((acc, [key, value]) => {
-    // Ignore internal properties
-    if (key === 'xata') return acc;
-
-    // Transform links to identifier
-    // TODO: This is quite weak, we have better ways to identify links
-    return { ...acc, [key]: isIdentifiable(value) ? value.id : value };
-  }, {});
-};
-
 export const initObject = <T>(
   db: Record<string, Repository<any>>,
   schemaTables: Schemas.Table[],
   table: string,
   object: Record<string, any>,
-  selectedColumns: string[]
+  selectedColumns: SelectableColumn<T>[] | SelectableColumnWithObjectNotation<T>[]
 ) => {
   const data: Dictionary<unknown> = {};
   const { xata, ...rest } = object ?? {};
@@ -2050,12 +2072,12 @@ export const initObject = <T>(
         if (!linkTable) {
           console.error(`Failed to parse link for field ${column.name}`);
         } else if (isObject(value)) {
-          const selectedLinkColumns = selectedColumns.reduce((acc, item) => {
+          const selectedLinkColumns = (selectedColumns as string[]).reduce((acc, item) => {
             if (item === column.name) {
               return [...acc, '*'];
             }
 
-            if (item.startsWith(`${column.name}.`)) {
+            if (isString(item) && item.startsWith(`${column.name}.`)) {
               const [, ...path] = item.split('.');
               return [...acc, path.join('.')];
             }
@@ -2063,7 +2085,13 @@ export const initObject = <T>(
             return acc;
           }, [] as string[]);
 
-          data[column.name] = initObject(db, schemaTables, linkTable, value, selectedLinkColumns);
+          data[column.name] = initObject(
+            db,
+            schemaTables,
+            linkTable,
+            value,
+            selectedLinkColumns as SelectableColumn<unknown>[]
+          );
         } else {
           data[column.name] = null;
         }
@@ -2076,6 +2104,9 @@ export const initObject = <T>(
       case 'file[]':
         data[column.name] = (value as XataArrayFile[])?.map((item) => new XataFile(item)) ?? null;
         break;
+      case 'json':
+        data[column.name] = parseJson(value as string);
+        break;
       default:
         data[column.name] = value ?? null;
 
@@ -2087,7 +2118,6 @@ export const initObject = <T>(
   }
 
   const record = { ...data };
-  const serializable = { xata, ...removeLinksFromObject(data) };
   const metadata =
     xata !== undefined
       ? { ...xata, createdAt: new Date(xata.createdAt), updatedAt: new Date(xata.updatedAt) }
@@ -2098,14 +2128,14 @@ export const initObject = <T>(
   };
 
   record.update = function (data: any, b?: any, c?: any) {
-    const columns = isStringArray(b) ? b : ['*'];
+    const columns = isValidSelectableColumns(b) ? b : ['*'];
     const ifVersion = parseIfVersion(b, c);
 
     return db[table].update(record['id'] as string, data, columns, { ifVersion });
   };
 
   record.replace = function (data: any, b?: any, c?: any) {
-    const columns = isStringArray(b) ? b : ['*'];
+    const columns = isValidSelectableColumns(b) ? b : ['*'];
     const ifVersion = parseIfVersion(b, c);
 
     return db[table].createOrReplace(record['id'] as string, data, columns, { ifVersion });
@@ -2115,17 +2145,20 @@ export const initObject = <T>(
     return db[table].delete(record['id'] as string);
   };
 
-  record.xata = Object.freeze(metadata);
+  if (metadata !== undefined) {
+    record.xata = Object.freeze(metadata);
+  }
+
   record.getMetadata = function () {
     return record.xata;
   };
 
   record.toSerializable = function () {
-    return JSON.parse(JSON.stringify(serializable));
+    return JSON.parse(JSON.stringify(record));
   };
 
   record.toString = function () {
-    return JSON.stringify(serializable);
+    return JSON.stringify(record);
   };
 
   for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerializable', 'toString']) {
@@ -2143,12 +2176,15 @@ function extractId(value: any): Identifier | undefined {
   return undefined;
 }
 
-function isValidColumn(columns: string[], column: Schemas.Column) {
+function isValidColumn(
+  columns: SelectableColumn<any>[] | SelectableColumnWithObjectNotation<any>[],
+  column: Schemas.Column
+) {
   // Every column alias
   if (columns.includes('*')) return true;
 
   // Match column name and all its children (foo, foo.bar, foo.bar.baz)
-  return columns.filter((item) => item.startsWith(column.name)).length > 0;
+  return columns.filter((item) => isString(item) && item.startsWith(column.name)).length > 0;
 }
 
 function parseIfVersion(...args: any[]): number | undefined {

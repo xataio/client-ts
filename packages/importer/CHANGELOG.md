@@ -1,5 +1,51 @@
 # @xata.io/importer
 
+## 1.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05)]:
+  - @xata.io/client@0.28.0
+
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`19c5dd47`](https://github.com/xataio/client-ts/commit/19c5dd47e3a032fcb19d990527b8faaa9326d97d), [`d282d18f`](https://github.com/xataio/client-ts/commit/d282d18f025094e0729ade6009b34fc0d34ebbba)]:
+  - @xata.io/client@0.27.0
+
+## 1.1.1
+
+### Patch Changes
+
+- [#1208](https://github.com/xataio/client-ts/pull/1208) [`9865f127`](https://github.com/xataio/client-ts/commit/9865f1276ffc75f7beeee69b62c7bce6af8568c8) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for importing vectors
+
+- Updated dependencies [[`fa2883b0`](https://github.com/xataio/client-ts/commit/fa2883b0639e48d68097401bf515c8cb95df5b4b), [`c04faece`](https://github.com/xataio/client-ts/commit/c04faece8830699d978e03c89f29e383e479e824), [`cb45cc9f`](https://github.com/xataio/client-ts/commit/cb45cc9f6829e1b555762e656cc1b0b2e977aaf9)]:
+  - @xata.io/client@0.26.8
+
+## 1.1.0
+
+### Minor Changes
+
+- [#1190](https://github.com/xataio/client-ts/pull/1190) [`e77644b5`](https://github.com/xataio/client-ts/commit/e77644b560ad02ce6085bc083b07105ae6dddff4) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add support for importing single and multiple files (remote and local) via pathname in CSV column
+
+### Patch Changes
+
+- [#1199](https://github.com/xataio/client-ts/pull/1199) [`652db16b`](https://github.com/xataio/client-ts/commit/652db16b40e507be06ff662e2ffe7a5161f56100) Thanks [@richardgill](https://github.com/richardgill)! - Importer bug fixes
+
+  - Bug fix where CSV chunks of certain sizes caused stackoverflow in some browsers
+  - Better error handling if CSV batch parsing fails
+
+- Updated dependencies [[`0e1c50de`](https://github.com/xataio/client-ts/commit/0e1c50de5850db2dfbbdfff9d66eda3bf1322836), [`d093d363`](https://github.com/xataio/client-ts/commit/d093d363a51fc23c8513d51600bb3b31bbc45334)]:
+  - @xata.io/client@0.26.7
+
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [[`6ec862f8`](https://github.com/xataio/client-ts/commit/6ec862f8f799eb692f62be79dd0b613b83a34780), [`0c0149ad`](https://github.com/xataio/client-ts/commit/0c0149ad1ee3f7c0fe9d31030552b022c907edb0)]:
+  - @xata.io/client@0.26.0
+
 ## 1.0.2
 
 ### Patch Changes

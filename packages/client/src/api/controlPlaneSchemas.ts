@@ -96,6 +96,8 @@ export type WorkspaceID = string;
  */
 export type Role = 'owner' | 'maintainer';
 
+export type WorkspacePlan = 'free' | 'pro';
+
 export type WorkspaceMeta = {
   name: string;
   slug?: string;
@@ -104,7 +106,7 @@ export type WorkspaceMeta = {
 export type Workspace = WorkspaceMeta & {
   id: WorkspaceID;
   memberCount: number;
-  plan: 'free' | 'pro';
+  plan: WorkspacePlan;
 };
 
 export type WorkspaceMember = {
@@ -144,6 +146,182 @@ export type WorkspaceMembers = {
  * @pattern ^ik_[a-zA-Z0-9]+
  */
 export type InviteKey = string;
+
+/**
+ * @x-internal true
+ * @pattern [a-zA-Z0-9_-~:]+
+ */
+export type ClusterID = string;
+
+/**
+ * @x-internal true
+ */
+export type ClusterShortMetadata = {
+  id: ClusterID;
+  state: string;
+  region: string;
+  name: string;
+  /**
+   * @format int64
+   */
+  branches: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type ListClustersResponse = {
+  clusters: ClusterShortMetadata[];
+};
+
+/**
+ * @x-internal true
+ */
+export type AutoscalingConfig = {
+  /**
+   * @format double
+   * @default 2
+   */
+  minCapacity?: number;
+  /**
+   * @format double
+   * @default 16
+   */
+  maxCapacity?: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type WeeklyTimeWindow = {
+  day: 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+  /**
+   * @maximum 24
+   * @minimum 0
+   */
+  hour: number;
+  /**
+   * @maximum 60
+   * @minimum 0
+   */
+  minute: number;
+  /**
+   * @format float
+   * @maximum 23.5
+   * @minimum 0.5
+   */
+  duration: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type DailyTimeWindow = {
+  /**
+   * @maximum 24
+   * @minimum 0
+   */
+  hour: number;
+  /**
+   * @maximum 60
+   * @minimum 0
+   */
+  minute: number;
+  /**
+   * @format float
+   */
+  duration: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type MaintenanceConfig = {
+  /**
+   * @default false
+   */
+  autoMinorVersionUpgrade?: boolean;
+  /**
+   * @default false
+   */
+  applyImmediately?: boolean;
+  maintenanceWindow?: WeeklyTimeWindow;
+  backupWindow?: DailyTimeWindow;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterConfiguration = {
+  engineVersion: string;
+  instanceType: string;
+  /**
+   * @format int64
+   */
+  replicas?: number;
+  /**
+   * @default false
+   */
+  deletionProtection?: boolean;
+  autoscaling?: AutoscalingConfig;
+  maintenance?: MaintenanceConfig;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterCreateDetails = {
+  /**
+   * @minLength 1
+   */
+  region: string;
+  /**
+   * @maxLength 63
+   * @minLength 1
+   * @pattern [a-zA-Z0-9_-~:]+
+   */
+  name: string;
+  configuration: ClusterConfiguration;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterResponse = {
+  state: string;
+  clusterID: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterMetadata = {
+  id: ClusterID;
+  state: string;
+  region: string;
+  name: string;
+  /**
+   * @format int64
+   */
+  branches: number;
+  configuration?: ClusterConfiguration;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterUpdateDetails = {
+  id: ClusterID;
+  /**
+   * @maxLength 63
+   * @minLength 1
+   * @pattern [a-zA-Z0-9_-~:]+
+   */
+  name?: string;
+  configuration?: ClusterConfiguration;
+  state?: string;
+  region?: string;
+};
 
 /**
  * Metadata of databases

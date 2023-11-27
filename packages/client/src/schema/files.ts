@@ -1,63 +1,75 @@
 import { InputFileEntry } from '../api/schemas';
 import { ImageTransformations, transformImage } from '../files/transformations';
 import { compactObject, isDefined } from '../util/lang';
+import { StringKeys } from '../util/types';
 import { Identifiable, InputXataFile } from './record';
 
 export type XataFileEditableFields = Partial<Pick<XataArrayFile, keyof InputFileEntry>>;
+export type XataFileFields = Partial<
+  Pick<
+    XataArrayFile,
+    { [K in StringKeys<XataArrayFile>]: XataArrayFile[K] extends Function ? never : K }[keyof XataArrayFile]
+  >
+>;
 
 export class XataFile {
   /**
-   * Name of this file.
+   * Identifier of the file.
    */
-  public name?: string;
+  public id?: string;
   /**
-   * Media type of this file.
+   * Name of the file.
+   */
+  public name: string;
+  /**
+   * Media type of the file.
    */
   public mediaType: string;
   /**
-   * Base64 encoded content of this file.
+   * Base64 encoded content of the file.
    */
   public base64Content?: string;
   /**
-   * Whether to enable public url for this file.
+   * Whether to enable public url for the file.
    */
-  public enablePublicUrl?: boolean;
+  public enablePublicUrl: boolean;
   /**
    * Timeout for the signed url.
    */
-  public signedUrlTimeout?: number;
+  public signedUrlTimeout: number;
   /**
-   * Size of this file.
+   * Size of the file.
    */
   public size?: number;
   /**
-   * Version of this file.
+   * Version of the file.
    */
-  public version?: number;
+  public version: number;
   /**
-   * Url of this file.
+   * Url of the file.
    */
-  public url?: string;
+  public url: string;
   /**
-   * Signed url of this file.
+   * Signed url of the file.
    */
   public signedUrl?: string;
   /**
-   * Attributes of this file.
+   * Attributes of the file.
    */
-  public attributes?: Record<string, unknown>;
+  public attributes: Record<string, any>;
 
   constructor(file: Partial<XataFile>) {
-    this.name = file.name;
+    this.id = file.id;
+    this.name = file.name || '';
     this.mediaType = file.mediaType || 'application/octet-stream';
     this.base64Content = file.base64Content;
-    this.enablePublicUrl = file.enablePublicUrl;
-    this.signedUrlTimeout = file.signedUrlTimeout;
-    this.size = file.size;
-    this.version = file.version;
-    this.url = file.url;
+    this.enablePublicUrl = file.enablePublicUrl ?? false;
+    this.signedUrlTimeout = file.signedUrlTimeout ?? 300;
+    this.size = file.size ?? 0;
+    this.version = file.version ?? 1;
+    this.url = file.url || '';
     this.signedUrl = file.signedUrl;
-    this.attributes = file.attributes;
+    this.attributes = file.attributes || {};
   }
 
   static fromBuffer(buffer: Buffer, options: XataFileEditableFields = {}): XataFile {
@@ -127,9 +139,14 @@ export class XataFile {
       throw new Error(`File content is not available, please select property "base64Content" when querying the file`);
     }
 
-    const arrayBuffer = this.toArrayBuffer();
-    // @ts-ignore - Blob and ArrayBuffer might not be type compatible
-    return new Blob([arrayBuffer], { type: this.mediaType });
+    const binary = atob(this.base64Content);
+    const uint8Array = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+      uint8Array[i] = binary.charCodeAt(i);
+    }
+
+    return new Blob([uint8Array], { type: this.mediaType });
   }
 
   static fromString(string: string, options: XataFileEditableFields = {}): XataFile {
@@ -159,8 +176,10 @@ export class XataFile {
 
   public transform(...options: ImageTransformations[]) {
     return {
-      url: transformImage(this.url, options),
-      signedUrl: transformImage(this.signedUrl, options)
+      url: transformImage(this.url, ...options),
+      signedUrl: transformImage(this.signedUrl, ...options),
+      metadataUrl: transformImage(this.url, ...options, { format: 'json' }),
+      metadataSignedUrl: transformImage(this.signedUrl, ...options, { format: 'json' })
     };
   }
 }
@@ -171,5 +190,13 @@ export const parseInputFileEntry = async (entry: InputXataFile): Promise<InputFi
   if (!isDefined(entry)) return null;
 
   const { id, name, mediaType, base64Content, enablePublicUrl, signedUrlTimeout } = await entry;
-  return compactObject({ id, name, mediaType, base64Content, enablePublicUrl, signedUrlTimeout });
+  return compactObject({
+    id,
+    // Name cannot be an empty string in our API
+    name: name ? name : undefined,
+    mediaType,
+    base64Content,
+    enablePublicUrl,
+    signedUrlTimeout
+  });
 };

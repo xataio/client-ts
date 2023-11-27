@@ -1,5 +1,105 @@
 # @xata.io/client
 
+## 0.28.0
+
+### Minor Changes
+
+- [#1251](https://github.com/xataio/client-ts/pull/1251) [`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove Xata Workers support
+
+## 0.27.0
+
+### Minor Changes
+
+- [#1232](https://github.com/xataio/client-ts/pull/1232) [`d282d18f`](https://github.com/xataio/client-ts/commit/d282d18f025094e0729ade6009b34fc0d34ebbba) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add support for totalCount on search responses
+
+### Patch Changes
+
+- [#1235](https://github.com/xataio/client-ts/pull/1235) [`19c5dd47`](https://github.com/xataio/client-ts/commit/19c5dd47e3a032fcb19d990527b8faaa9326d97d) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Fix excessive depth on summarize
+
+## 0.26.9
+
+### Patch Changes
+
+- [#1224](https://github.com/xataio/client-ts/pull/1224) [`302798e8`](https://github.com/xataio/client-ts/commit/302798e8d210c89f420a5c927e0f836a27dbaed9) Thanks [@SferaDev](https://github.com/SferaDev)! - Export transaction types
+
+## 0.26.8
+
+### Patch Changes
+
+- [#1222](https://github.com/xataio/client-ts/pull/1222) [`fa2883b0`](https://github.com/xataio/client-ts/commit/fa2883b0639e48d68097401bf515c8cb95df5b4b) Thanks [@SferaDev](https://github.com/SferaDev)! - Increase recursion for circular references to 3
+
+- [#1216](https://github.com/xataio/client-ts/pull/1216) [`c04faece`](https://github.com/xataio/client-ts/commit/c04faece8830699d978e03c89f29e383e479e824) Thanks [@SferaDev](https://github.com/SferaDev)! - Support binary upload of XataFile
+
+- [#1217](https://github.com/xataio/client-ts/pull/1217) [`cb45cc9f`](https://github.com/xataio/client-ts/commit/cb45cc9f6829e1b555762e656cc1b0b2e977aaf9) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - JSON responses for JSON fields in summarize API
+
+## 0.26.7
+
+### Patch Changes
+
+- [#1205](https://github.com/xataio/client-ts/pull/1205) [`0e1c50de`](https://github.com/xataio/client-ts/commit/0e1c50de5850db2dfbbdfff9d66eda3bf1322836) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add optional mediaType override to binary file API
+
+- [#1203](https://github.com/xataio/client-ts/pull/1203) [`d093d363`](https://github.com/xataio/client-ts/commit/d093d363a51fc23c8513d51600bb3b31bbc45334) Thanks [@SferaDev](https://github.com/SferaDev)! - [Attachments] Fix column selection
+
+## 0.26.6
+
+### Patch Changes
+
+- [#1180](https://github.com/xataio/client-ts/pull/1180) [`3330c9cf`](https://github.com/xataio/client-ts/commit/3330c9cf8d8db18b8e355a576e4afd589b6152bf) Thanks [@SferaDev](https://github.com/SferaDev)! - Support expanded links in `toSerialized`
+
+- [#1191](https://github.com/xataio/client-ts/pull/1191) [`a738816d`](https://github.com/xataio/client-ts/commit/a738816d355f4415b0622bb5a23b4154f9855177) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for `percentiles` aggregation
+
+## 0.26.5
+
+### Patch Changes
+
+- [#1166](https://github.com/xataio/client-ts/pull/1166) [`b9b9058f`](https://github.com/xataio/client-ts/commit/b9b9058f0bc81b660da45318c27191a62f041f21) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix error with Node 16
+
+## 0.26.4
+
+### Patch Changes
+
+- [#1160](https://github.com/xataio/client-ts/pull/1160) [`7166797c`](https://github.com/xataio/client-ts/commit/7166797c28839198d20a9115d0414cebc2fed39b) Thanks [@SferaDev](https://github.com/SferaDev)! - [Files] Return file id on array
+
+- [#1156](https://github.com/xataio/client-ts/pull/1156) [`b85df75f`](https://github.com/xataio/client-ts/commit/b85df75f2f466762a8b3d9824c9292c7e3db03fd) Thanks [@SferaDev](https://github.com/SferaDev)! - [Files] Add download transformation
+
+## 0.26.3
+
+### Patch Changes
+
+- [#1144](https://github.com/xataio/client-ts/pull/1144) [`4910dce2`](https://github.com/xataio/client-ts/commit/4910dce29d3cc17d13aadf32e4eb476ffb571fad) Thanks [@SferaDev](https://github.com/SferaDev)! - Support for JSON and Revlinks
+
+## 0.26.2
+
+### Patch Changes
+
+- [#1147](https://github.com/xataio/client-ts/pull/1147) [`22fccb51`](https://github.com/xataio/client-ts/commit/22fccb51709749c319897702c15749b74ce4b820) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose metadataSignedUrl
+
+## 0.26.1
+
+### Patch Changes
+
+- [#1139](https://github.com/xataio/client-ts/pull/1139) [`922e6e54`](https://github.com/xataio/client-ts/commit/922e6e54e8b31641770a36b6b4ff8f4fa65d304d) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix scenario with merging existing transformations
+
+- [#1140](https://github.com/xataio/client-ts/pull/1140) [`13f6f3e4`](https://github.com/xataio/client-ts/commit/13f6f3e4b1a2f925d50a5380b62ef1057f5c3893) Thanks [@SferaDev](https://github.com/SferaDev)! - Add metadata url for transformations
+
+- [#1136](https://github.com/xataio/client-ts/pull/1136) [`f02fc165`](https://github.com/xataio/client-ts/commit/f02fc165bf6558e4377eb9f8e1d0f4222f004c70) Thanks [@SferaDev](https://github.com/SferaDev)! - Fixes for Blob files in binary APIs
+
+## 0.26.0
+
+### Minor Changes
+
+- [#893](https://github.com/xataio/client-ts/pull/893) [`6ec862f8`](https://github.com/xataio/client-ts/commit/6ec862f8f799eb692f62be79dd0b613b83a34780) Thanks [@SferaDev](https://github.com/SferaDev)! - Add SQL plugin
+
+### Patch Changes
+
+- [#1134](https://github.com/xataio/client-ts/pull/1134) [`0c0149ad`](https://github.com/xataio/client-ts/commit/0c0149ad1ee3f7c0fe9d31030552b022c907edb0) Thanks [@SferaDev](https://github.com/SferaDev)! - Make transformImage accept object-shaped parameters
+
+## 0.25.3
+
+### Patch Changes
+
+- [#1131](https://github.com/xataio/client-ts/pull/1131) [`3b9e1984`](https://github.com/xataio/client-ts/commit/3b9e1984329cd0e9f885f6af4155cc85ab61ba41) Thanks [@xata-bot](https://github.com/xata-bot)! - Add json type for columns
+
 ## 0.25.2
 
 ### Patch Changes

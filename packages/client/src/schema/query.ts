@@ -2,7 +2,7 @@ import { Schemas } from '../api';
 import { FilterExpression } from '../api/schemas';
 import { compact, isDefined, isObject, isString, isStringArray, toBase64 } from '../util/lang';
 import { Dictionary, OmitBy, RequiredBy, SingleOrArray } from '../util/types';
-import { Filter } from './filters';
+import { Filter, FilterColumns, FilterValueAtColumn, JSONFilterColumns } from './filters';
 import {
   CursorNavigationOptions,
   OffsetNavigationOptions,
@@ -16,12 +16,12 @@ import {
 } from './pagination';
 import { XataRecord } from './record';
 import { RestRepository } from './repository';
-import { ColumnsByValue, SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
-import { SortDirection, SortFilter } from './sorting';
+import { SelectableColumn, SelectableColumnWithObjectNotation, SelectedPick } from './selection';
+import { SortColumns, SortDirection, SortFilter } from './sorting';
 import { SummarizeExpression, SummarizeParams, SummarizeResult } from './summarize';
 
 type BaseOptions<T extends XataRecord> = {
-  columns?: SelectableColumn<T>[];
+  columns?: SelectableColumnWithObjectNotation<T>[];
   consistency?: 'strong' | 'eventual';
   cache?: number;
   fetchOptions?: Record<string, unknown>;
@@ -158,9 +158,9 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param value The value to filter.
    * @returns A new Query object.
    */
-  filter<F extends SelectableColumn<Record>>(
+  filter<F extends FilterColumns<Record> | JSONFilterColumns<Record>>(
     column: F,
-    value: Filter<NonNullable<ValueAtColumn<Record, F>>>
+    value: FilterValueAtColumn<Record, F>
   ): Query<Record, Result>;
 
   /**
@@ -215,9 +215,9 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param direction The direction. Either ascending or descending.
    * @returns A new Query object.
    */
-  sort<F extends ColumnsByValue<Record, any>>(column: F, direction: SortDirection): Query<Record, Result>;
+  sort<F extends SortColumns<Record>>(column: F, direction: SortDirection): Query<Record, Result>;
   sort(column: '*', direction: 'random'): Query<Record, Result>;
-  sort<F extends ColumnsByValue<Record, any>>(column: F): Query<Record, Result>;
+  sort<F extends SortColumns<Record>>(column: F): Query<Record, Result>;
   sort(column: string, direction = 'asc'): Query<Record, Result> {
     const originalSort = [this.#data.sort ?? []].flat() as SortFilter<Record, any>[];
     const sort = [...originalSort, { column, direction }];
@@ -229,7 +229,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param columns Array of column names to be returned by the query.
    * @returns A new Query object.
    */
-  select<K extends SelectableColumn<Record>>(columns: K[]) {
+  select<K extends SelectableColumnWithObjectNotation<Record>>(columns: K[]) {
     return new Query<Record, SelectedPick<Record, typeof columns>>(
       this.#repository,
       this.#table,

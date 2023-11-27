@@ -1,5 +1,12 @@
 import { isDefined } from '../util/lang';
 
+// Example of private URLs
+// https://us-west-2.xata.sh/file/id?verify=mrkusp0000000vd3i4bgi51glgk73f33g2uvibuc35kqne5ckiohoflsekv56f0r
+// https://us-west-2.xata.sh/transform/rotate=90/file/id?verify=mrkusp0000000vd3i4bgi51glgk73f33g2uvibuc35kqne5ckiohoflsekv56f0r
+// Example of public URLs
+// https://us-west-2.storage.xata.sh/id
+// https://us-west-2.storage.xata.sh/transform/rotate=90/id
+
 export interface ImageTransformations {
   /**
    * Whether to preserve animation frames from input files. Default is true.
@@ -42,6 +49,11 @@ export interface ImageTransformations {
    * ignored.
    */
   contrast?: number;
+  /**
+   * Download file. Forces browser to download the image.
+   * Value is used for the download file name. Extension is optional.
+   */
+  download?: string;
   /**
    * Device Pixel Ratio. Default 1. Multiplier for width/height that makes it
    * easier to specify higher-DPI sizes in <img srcset>.
@@ -155,7 +167,7 @@ export interface ImageTransformations {
   width?: number;
 }
 
-function buildTransformString(transformations: ImageTransformations[]): string {
+export function buildTransformString(transformations: ImageTransformations[]): string {
   return transformations
     .flatMap((t) =>
       Object.entries(t).map(([key, value]) => {
@@ -177,11 +189,23 @@ function buildTransformString(transformations: ImageTransformations[]): string {
     .join(',');
 }
 
-export function transformImage(url: string | undefined, transformations: ImageTransformations[]) {
+export function transformImage(url: string, ...transformations: ImageTransformations[]): string;
+export function transformImage(url: string | undefined, ...transformations: ImageTransformations[]): string | undefined;
+export function transformImage(url: string | undefined, ...transformations: ImageTransformations[]) {
   if (!isDefined(url)) return undefined;
 
-  const transformationsString = buildTransformString(transformations);
+  const newTransformations = buildTransformString(transformations);
 
   const { hostname, pathname, search } = new URL(url);
-  return `https://${hostname}/transform/${transformationsString}${pathname}${search}`;
+
+  // If pathname includes transform, we need to remove them
+  const pathParts = pathname.split('/');
+  const transformIndex = pathParts.findIndex((part) => part === 'transform');
+  const removedItems = transformIndex >= 0 ? pathParts.splice(transformIndex, 2) : [];
+
+  // Build the new URL parts
+  const transform = `/transform/${[removedItems[1], newTransformations].filter(isDefined).join(',')}`;
+  const path = pathParts.join('/');
+
+  return `https://${hostname}${transform}${path}${search}`;
 }

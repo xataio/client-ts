@@ -50,6 +50,10 @@ declare const tables: readonly [
         ];
       },
       {
+        readonly name: 'config';
+        readonly type: 'json';
+      },
+      {
         readonly name: 'owner';
         readonly type: 'link';
         readonly link: {

@@ -3,7 +3,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { BaseClient, BaseClientOptions } from '..';
 import { server } from '../../../../test/mock_server';
-import realFetch from 'cross-fetch';
+import { Response } from '../util/fetch';
 
 interface User {
   id: string;
@@ -19,7 +19,8 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
     xataAgentExtra
   } = options;
 
-  const fetch = vi.fn(realFetch);
+  // @ts-expect-error - Fetch doesn't appear in globalThis yet
+  const fetch = vi.fn(globalThis.realFetch);
   const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra }, [
     {
       name: 'users',

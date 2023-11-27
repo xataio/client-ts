@@ -4,6 +4,35 @@
  * @version 1.0
  */
 /**
+ * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+ *
+ * @maxLength 511
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+:[a-zA-Z0-9_\-~]+
+ */
+export type DBBranchName = string;
+
+export type PgRollApplyMigrationResponse = {
+  /**
+   * The id of the applied migration
+   */
+  migrationID: string;
+};
+
+export type PgRollMigrationStatus = 'no migrations' | 'in progress' | 'complete';
+
+export type PgRollStatusResponse = {
+  /**
+   * The status of the most recent migration
+   */
+  status: PgRollMigrationStatus;
+  /**
+   * The name of the most recent version
+   */
+  version: string;
+};
+
+/**
  * @maxLength 255
  * @minLength 1
  * @pattern [a-zA-Z0-9_\-~]+
@@ -25,15 +54,6 @@ export type ListBranchesResponse = {
   databaseName: string;
   branches: Branch[];
 };
-
-/**
- * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
- *
- * @maxLength 511
- * @minLength 1
- * @pattern [a-zA-Z0-9_\-~]+:[a-zA-Z0-9_\-~]+
- */
-export type DBBranchName = string;
 
 /**
  * @maxLength 255
@@ -103,7 +123,8 @@ export type Column = {
     | 'datetime'
     | 'vector'
     | 'file[]'
-    | 'file';
+    | 'file'
+    | 'json';
   link?: ColumnLink;
   vector?: ColumnVector;
   file?: ColumnFile;
@@ -256,9 +277,11 @@ export type FilterPredicateOp = {
   $gt?: FilterRangeValue;
   $ge?: FilterRangeValue;
   $contains?: string;
+  $iContains?: string;
   $startsWith?: string;
   $endsWith?: string;
   $pattern?: string;
+  $iPattern?: string;
 };
 
 /**
@@ -1206,6 +1229,17 @@ export type AverageAgg = {
 };
 
 /**
+ * Calculate given percentiles of the numeric values in a particular column.
+ */
+export type PercentilesAgg = {
+  /**
+   * The column on which to compute the average. Must be a numeric type.
+   */
+  column: string;
+  percentiles: number[];
+};
+
+/**
  * Count the number of distinct values in a particular column.
  */
 export type UniqueCountAgg = {
@@ -1331,6 +1365,9 @@ export type AggExpression =
       average?: AverageAgg;
     }
   | {
+      percentiles?: PercentilesAgg;
+    }
+  | {
       uniqueCount?: UniqueCountAgg;
     }
   | {
@@ -1346,12 +1383,16 @@ export type AggExpression =
 export type AggResponse =
   | (number | null)
   | {
-      values: ({
-        $key: string | number;
-        $count: number;
-      } & {
-        [key: string]: AggResponse;
-      })[];
+      values:
+        | ({
+            $key: string | number;
+            $count: number;
+          } & {
+            [key: string]: AggResponse;
+          })[]
+        | {
+            [key: string]: number;
+          };
     };
 
 /**

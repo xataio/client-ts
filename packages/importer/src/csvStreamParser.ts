@@ -18,8 +18,8 @@ export const parseCsvStream = async ({ fileStream, parserOptions }: ParseCsvStre
   return new Promise((resolve, reject) => {
     Papa.parse(fileStream, {
       ...parseCsvOptionsToPapaOptions(parserOptions),
-      complete: (papaResults) => {
-        const results = papaResultToJson(papaResults, parserOptions);
+      complete: async (papaResults) => {
+        const results = await papaResultToJson(papaResults, parserOptions);
         resolve({ results, meta: { estimatedProgress: 1, rowIndex: 0, ...metaToParseMeta(papaResults.meta) } });
       },
       error: (error) => reject(error)
@@ -45,52 +45,67 @@ export const parseCsvStreamBatches = async ({
       ...parseCsvOptionsToPapaOptions(parserOptions),
       chunkSize: CHUNK_SIZE,
       chunk: async (result: ParseResult<unknown>, parser: Parser) => {
-        if (!chunk) {
-          chunk = result;
-        } else {
-          chunk.data.push(...result.data);
-          chunk.meta = result.meta; // overwrite meta to be latest meta
-          chunk.errors.push(...result.errors);
-        }
-        const oldRowCount = rowCount;
-        rowCount += result.data.length;
-        averageCursorPerRow = result.meta.cursor / rowCount;
+        try {
+          if (!chunk) {
+            chunk = result;
+          } else {
+            // cannot use push(...result.data) because stack size might be exceeded https://stackoverflow.com/a/61740952
+            for (const item of result.data) {
+              chunk.data.push(item);
+            }
+            chunk.meta = result.meta; // overwrite meta to be latest meta
+            for (const error of result.errors) {
+              chunk.errors.push(error);
+            }
+          }
+          const oldRowCount = rowCount;
+          rowCount += result.data.length;
+          averageCursorPerRow = result.meta.cursor / rowCount;
 
-        // Only stop papaparse from parsing the file if we have enough data to process
-        if (chunk.data.length >= batchRowCount * batchSizeMin) {
-          parser.pause();
-          chunk = await processPapaChunk({
-            papaChunk: chunk,
-            parser,
-            parserOptions,
-            batchRowCount,
-            averageCursorPerRow,
-            fileSizeBytes,
-            batchSizeMin,
-            concurrentBatchMax,
-            onBatch,
-            startRowIndex: lastChunkProcessedRowCount
-          });
-          lastChunkProcessedRowCount = oldRowCount;
-          parser.resume();
+          // Only stop papaparse from parsing the file if we have enough data to process
+          if (chunk.data.length >= batchRowCount * batchSizeMin) {
+            parser.pause();
+            chunk = await processPapaChunk({
+              papaChunk: chunk,
+              parser,
+              parserOptions,
+              batchRowCount,
+              averageCursorPerRow,
+              fileSizeBytes,
+              batchSizeMin,
+              concurrentBatchMax,
+              onBatch,
+              startRowIndex: lastChunkProcessedRowCount
+            });
+            lastChunkProcessedRowCount = oldRowCount;
+            parser.resume();
+          }
+        } catch (error) {
+          reject(error);
+          // abort after reject to avoid `complete` callback being called
+          parser.abort();
         }
       },
       complete: async () => {
-        if (chunk) {
-          await processPapaChunk({
-            papaChunk: chunk,
-            parserOptions,
-            batchRowCount,
-            averageCursorPerRow,
-            fileSizeBytes,
-            batchSizeMin,
-            concurrentBatchMax,
-            onBatch,
-            forceFinish: true,
-            startRowIndex: rowCount - chunk.data.length
-          });
+        try {
+          if (chunk) {
+            await processPapaChunk({
+              papaChunk: chunk,
+              parserOptions,
+              batchRowCount,
+              averageCursorPerRow,
+              fileSizeBytes,
+              batchSizeMin,
+              concurrentBatchMax,
+              onBatch,
+              forceFinish: true,
+              startRowIndex: rowCount - chunk.data.length
+            });
+          }
+          resolve();
+        } catch (error) {
+          reject(error);
         }
-        resolve();
       },
       error: (error) => reject(error)
     });
@@ -116,7 +131,7 @@ const processBatch = async ({
   fileSizeEstimateBytes: number;
   startRowIndex: number;
 }) => {
-  const results = papaResultToJson({ data, errors, meta: meta }, parserOptions, startRowIndex);
+  const results = await papaResultToJson({ data, errors, meta: meta }, parserOptions, startRowIndex);
   const estimatedProgress = meta.cursor / fileSizeEstimateBytes;
 
   try {

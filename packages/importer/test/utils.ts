@@ -1,6 +1,5 @@
 import { buildClient } from '@xata.io/client';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
 import { join } from 'path';
 import { XataImportPlugin } from '../src/plugin';
 import { ToBoolean } from '../src/types';
@@ -23,5 +22,5 @@ export const getXataClientWithPlugin = () => {
     import: new XataImportPlugin()
   });
 
-  return new XataClient({ fetch, apiKey: 'xau_test123', databaseURL: 'https://something.com' });
+  return new XataClient({ apiKey: 'xau_test123', databaseURL: 'https://something.com' });
 };

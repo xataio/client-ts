@@ -5,7 +5,6 @@ import { detectResources, envDetector } from '@opentelemetry/resources';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import realFetch from 'cross-fetch';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { File, Mock, Suite, TestContext, vi } from 'vitest';
@@ -15,8 +14,6 @@ import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
 import { schema } from '../mock_data';
-// @ts-expect-error - no types available
-import { withHar } from 'node-fetch-har';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -68,13 +65,7 @@ export async function setUpTestEnvironment(
     );
   }
 
-  const fetchToUse = envFetch ?? realFetch;
-  const fetchWithHar = process.env.XATA_DEBUG
-    ? withHar(fetchToUse, {
-        onHarEntry: (entry: string) => console.log('HAR', JSON.stringify(entry))
-      })
-    : fetchToUse;
-  const fetch = vi.fn(fetchWithHar);
+  const fetch = vi.fn(envFetch ?? globalThis.fetch);
 
   const { trace, tracer } = await setupTracing();
 

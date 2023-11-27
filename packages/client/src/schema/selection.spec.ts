@@ -3,6 +3,7 @@
 import { test } from 'vitest';
 import { XataRecord } from './record';
 import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
+import { XataFile } from './files';
 
 interface Team {
   name: string;
@@ -18,6 +19,7 @@ interface User {
   address?: { street?: string | null; zipcode?: number | null } | null;
   team?: TeamRecord | null;
   date?: Date | null;
+  file?: XataFile | null;
   partner: UserRecord;
   settings?: {
     theme?: 'light' | 'dark';
@@ -279,6 +281,13 @@ function test8(user: SelectedPick<UserRecord, ['partner.*', 'team.*']>) {
   // @ts-expect-error
   user.partner = null;
   user.team = null;
+}
+
+function test9(user: SelectedPick<UserRecord, ['file.*', 'partner.file.base64Content', 'partner.file.signedUrl']>) {
+  user.file?.base64Content;
+  user.file?.signedUrl;
+  user.partner.file?.base64Content;
+  user.partner.file?.signedUrl;
 }
 
 test('fake test', () => {
