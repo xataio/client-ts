@@ -13,6 +13,8 @@ const tables = [
       { name: 'rating', type: 'float' },
       { name: 'founded_date', type: 'datetime' },
       { name: 'email', type: 'email' },
+      { name: 'plan', type: 'string' },
+      { name: 'dark', type: 'bool' },
       {
         name: 'settings',
         type: 'object',
@@ -34,6 +36,8 @@ const tables = [
       { name: 'name', type: 'string' },
       { name: 'photo', type: 'file' },
       { name: 'attachments', type: 'file[]' },
+      { name: 'plan', type: 'string' },
+      { name: 'dark', type: 'bool' },
       {
         name: 'settings',
         type: 'object',
@@ -52,6 +56,8 @@ const tables = [
       { name: 'index', type: 'int' },
       { name: 'rating', type: 'float' },
       { name: 'birthDate', type: 'datetime' },
+      { name: 'street', type: 'string' },
+      { name: 'zipcode', type: 'int' },
       {
         name: 'address',
         type: 'object',

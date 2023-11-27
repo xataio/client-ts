@@ -32,6 +32,14 @@ declare const tables: readonly [
         readonly type: 'email';
       },
       {
+        readonly name: 'plan';
+        readonly type: 'string';
+      },
+      {
+        readonly name: 'dark';
+        readonly type: 'bool';
+      },
+      {
         readonly name: 'settings';
         readonly type: 'object';
         readonly columns: readonly [
@@ -89,6 +97,14 @@ declare const tables: readonly [
         readonly type: 'file[]';
       },
       {
+        readonly name: 'plan';
+        readonly type: 'string';
+      },
+      {
+        readonly name: 'dark';
+        readonly type: 'bool';
+      },
+      {
         readonly name: 'settings';
         readonly type: 'object';
         readonly columns: readonly [
@@ -123,6 +139,14 @@ declare const tables: readonly [
       {
         readonly name: 'birthDate';
         readonly type: 'datetime';
+      },
+      {
+        readonly name: 'street';
+        readonly type: 'string';
+      },
+      {
+        readonly name: 'zipcode';
+        readonly type: 'int';
       },
       {
         readonly name: 'address';
