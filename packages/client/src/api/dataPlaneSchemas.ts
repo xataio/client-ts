@@ -12,6 +12,13 @@
  */
 export type DBBranchName = string;
 
+export type PgRollApplyMigrationResponse = {
+  /**
+   * The id of the applied migration
+   */
+  migrationID: string;
+};
+
 export type PgRollMigrationStatus = 'no migrations' | 'in progress' | 'complete';
 
 export type PgRollStatusResponse = {
