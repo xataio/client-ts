@@ -40,8 +40,8 @@ const sdkError = `"Incompatible version of SDK: ${semver.coerce(
 
 const compatibilityFile = './compatibility.json';
 
-const compatibilityObj = {
-  cli: {
+const compat = {
+  '@xata.io/cli': {
     latest: latestAvailableVersionCLI,
     compatibility: [
       {
@@ -52,7 +52,7 @@ const compatibilityObj = {
       }
     ]
   },
-  sdk: {
+  '@xata.io/client': {
     latest: latestAvailableVersionSDK,
     compatibility: [
       {
@@ -73,16 +73,14 @@ const packageJsonObj = (withPackage: boolean) => {
   };
 };
 
-fetchMock.mockReturnValue({
-  ok: true,
-  json: async () => compatibilityObj
-});
+fetchMock.mockReturnValue({ ok: true, json: async () => compat });
 
 describe('getSdkVersion', () => {
   test('returns version when @xata package', async () => {
     readFileMock.mockReturnValue(JSON.stringify(packageJsonObj(true)));
     expect(await getSdkVersion()).toEqual(userVersionSDK);
   });
+
   test('returns null when no @xata package', async () => {
     readFileMock.mockReturnValue(JSON.stringify(packageJsonObj(false)));
     expect(await getSdkVersion()).toEqual(null);
@@ -90,39 +88,46 @@ describe('getSdkVersion', () => {
 });
 
 describe('fetchInfo', () => {
-  const fetchInfoParams = {
-    compatibilityFile,
-    compatibilityUri: ''
-  };
+  const fetchInfoParams = { file: compatibilityFile, url: '' };
+
   describe('refreshes', () => {
     beforeEach(() => {
-      readFileMock.mockReturnValue(JSON.stringify(compatibilityObj));
+      readFileMock.mockReturnValue(JSON.stringify(compat));
       writeFileMock.mockReturnValue(undefined);
     });
+
     test('when no files exist', async () => {
       statMock.mockRejectedValue(undefined);
+
       await fetchInfo(fetchInfoParams);
       expect(writeFileMock).toHaveBeenCalledTimes(1);
     });
+
     test('when file is stale', async () => {
       const yesterday = new Date().getDate() - ONE_DAY + 1000;
       statMock.mockReturnValue({ mtime: new Date(yesterday) });
+
       await fetchInfo(fetchInfoParams);
       expect(writeFileMock).toHaveBeenCalledTimes(1);
     });
+
     test('when problem fetching, no file writes', async () => {
       fetchMock.mockReturnValue({
         ok: false
       });
+
       const yesterday = new Date().getDate() - ONE_DAY + 1000;
       statMock.mockReturnValue({ mtime: new Date(yesterday) });
+
       await fetchInfo(fetchInfoParams);
       expect(writeFileMock).not.toHaveBeenCalled();
     });
   });
+
   describe('does not refresh', () => {
     test('if file is not stale', async () => {
       statMock.mockReturnValue({ mtime: new Date() });
+
       await fetchInfo(fetchInfoParams);
       expect(fetchMock).not.toHaveBeenCalled();
       expect(writeFileMock).not.toHaveBeenCalled();
@@ -131,61 +136,50 @@ describe('fetchInfo', () => {
 });
 
 describe('checks', () => {
-  const defaultParams = { compatibilityObj };
   describe('latest', () => {
     beforeEach(() => {
-      readFileMock.mockReturnValue(JSON.stringify(compatibilityObj));
+      readFileMock.mockReturnValue(JSON.stringify(compat));
     });
+
     test('returns warn if newer package available', async () => {
-      const cliResponse = await check({ ...defaultParams, pkg: 'cli', currentVersion: userVersionCLI });
+      const cliResponse = await check({ compat, pkg: '@xata.io/cli', version: userVersionCLI });
       expect(cliResponse.warn).toMatchInlineSnapshot(cliUpdateAvailable);
-      const sdkResponse = await check({ ...defaultParams, pkg: 'sdk', currentVersion: userVersionSDK });
+
+      const sdkResponse = await check({ compat, pkg: '@xata.io/client', version: userVersionSDK });
       expect(sdkResponse.warn).toMatchInlineSnapshot(sdkUpdateAvailable);
     });
+
     test('returns null if no newer package available', async () => {
-      const cliResponse = await check({ ...defaultParams, pkg: 'cli', currentVersion: latestAvailableVersionCLI });
+      const cliResponse = await check({ compat, pkg: '@xata.io/cli', version: latestAvailableVersionCLI });
       expect(cliResponse.warn).toBeNull();
-      const sdkResponse = await check({ ...defaultParams, pkg: 'sdk', currentVersion: latestAvailableVersionSDK });
+
+      const sdkResponse = await check({ compat, pkg: '@xata.io/client', version: latestAvailableVersionSDK });
       expect(sdkResponse.warn).toBeNull();
     });
   });
+
   describe('compatibility', () => {
     beforeEach(() => {
-      readFileMock.mockReturnValue(JSON.stringify(compatibilityObj));
+      readFileMock.mockReturnValue(JSON.stringify(compat));
     });
+
     test('returns error if not compatible', async () => {
-      const cliResponse = await check({
-        ...defaultParams,
-        pkg: 'cli',
-        currentVersion: userVersionCLI
-      });
+      const cliResponse = await check({ compat, pkg: '@xata.io/cli', version: userVersionCLI });
       expect(cliResponse.error).toMatchInlineSnapshot(cliError);
-      const sdkResponse = await check({
-        ...defaultParams,
-        pkg: 'sdk',
-        currentVersion: userVersionSDK
-      });
+
+      const sdkResponse = await check({ compat, pkg: '@xata.io/client', version: userVersionSDK });
       expect(sdkResponse.error).toMatchInlineSnapshot(sdkError);
     });
+
     test('returns null if compatible', async () => {
-      const cliResponse = await check({
-        ...defaultParams,
-        pkg: 'cli',
-        currentVersion: latestAvailableVersionCLI
-      });
+      const cliResponse = await check({ compat, pkg: '@xata.io/cli', version: latestAvailableVersionCLI });
       expect(cliResponse.error).toBeNull();
-      const sdkResponse = await check({
-        ...defaultParams,
-        pkg: 'sdk',
-        currentVersion: latestAvailableVersionSDK
-      });
+
+      const sdkResponse = await check({ compat, pkg: '@xata.io/client', version: latestAvailableVersionSDK });
       expect(sdkResponse.error).toBeNull();
+
       // Alpha versions
-      const cliResponseAlpha = await check({
-        ...defaultParams,
-        pkg: 'cli',
-        currentVersion: userVersionAlpha
-      });
+      const cliResponseAlpha = await check({ compat, pkg: '@xata.io/cli', version: userVersionAlpha });
       expect(cliResponseAlpha.error).toBeNull();
       expect(cliResponseAlpha.warn).toBeNull();
     });
