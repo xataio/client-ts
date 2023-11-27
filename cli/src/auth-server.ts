@@ -89,7 +89,7 @@ export function generateURL({ port, publicKey, domain }: { port: number; publicK
     .replace('-----END PUBLIC KEY-----', '');
 
   const url = new URL(`${domain}/integrations/oauth/authorize`);
-  url.searchParams.set('client_id', 'kav7lscnhp0k5a608rg58fjf6g');
+  url.searchParams.set('client_id', 'b7msdmpun91q33vpihpk3vs39g');
   url.searchParams.set('redirect_uri', serverRedirect);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('scope', 'admin:all');
