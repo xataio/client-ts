@@ -119,7 +119,13 @@ async function waitForSearchIndexing(): Promise<void> {
       return waitForSearchIndexing();
     }
   } catch (error) {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    return waitForSearchIndexing();
+    if (isHttpError(error) && !String(error.status).startsWith('5')) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return waitForSearchIndexing();
+    }
   }
+}
+
+function isHttpError(error: any): error is Error & { status?: number } {
+  return typeof error === 'object' && typeof error.status === 'number';
 }
