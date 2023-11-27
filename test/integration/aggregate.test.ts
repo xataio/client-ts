@@ -360,16 +360,16 @@ describe(
 async function waitForSearchIndexing(): Promise<void> {
   try {
     const { aggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
-    if (aggs.total !== teams.length) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      return waitForSearchIndexing();
+    if (aggs.total === teams.length) {
+      return;
     }
   } catch (error) {
-    if (isHttpError(error) && !String(error.status).startsWith('4')) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      return waitForSearchIndexing();
+    if (isHttpError(error) && String(error.status).startsWith('5')) {
+      throw error;
     }
   }
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  return waitForSearchIndexing();
 }
 
 function isHttpError(error: any): error is Error & { status?: number } {
