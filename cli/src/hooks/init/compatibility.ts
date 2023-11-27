@@ -6,30 +6,20 @@ import fetch from 'node-fetch';
 
 export const ONE_DAY = 1000 * 60 * 60 * 24 * 1;
 
-export type Packages = 'cli' | 'sdk';
-export type Compatibility = {
-  [key in Packages]: {
-    latest: string;
-    compatibility: { range: string }[];
-  };
-};
+export type Package = '@xata.io/cli' | '@xata.io/client';
+export type Compatibility = Record<Package, { latest: string; compatibility: { range: string }[] }>;
 export type PackageJson = { dependencies: Record<string, string> };
 
-export const check = async (params: {
-  pkg: 'cli' | 'sdk';
-  currentVersion: string;
-  compatibilityObj: Compatibility;
-}) => {
-  const { pkg, compatibilityObj } = params;
-  const currentVersion = semver.coerce(params.currentVersion)?.version as string;
-  const updateAvailable = semver.lt(currentVersion, compatibilityObj[pkg].latest);
-  const compatibleRange = compatibilityObj[pkg].compatibility.map((v) => v.range).join('||');
+export const check = async ({ pkg, version, compat }: { pkg: Package; version: string; compat: Compatibility }) => {
+  const currentVersion = semver.coerce(version)?.version as string;
+  const updateAvailable = semver.lt(currentVersion, compat[pkg].latest);
+  const compatibleRange = compat[pkg].compatibility.map((v) => v.range).join('||');
   const semverCompatible = semver.satisfies(currentVersion, compatibleRange);
 
   return {
     warn: updateAvailable
       ? `✨ A newer version of the Xata ${pkg.toUpperCase()} is now available: ${
-          compatibilityObj[pkg].latest
+          compat[pkg].latest
         }. You are currently using version: ${currentVersion}`
       : null,
     error: !semverCompatible
@@ -40,39 +30,39 @@ export const check = async (params: {
 
 export const getSdkVersion = async (): Promise<null | string> => {
   const packageJson: PackageJson = JSON.parse(await readFile(`${path.join(process.cwd())}/package.json`, 'utf-8'));
-  return packageJson && packageJson.dependencies && packageJson.dependencies['@xata.io/client']
-    ? packageJson.dependencies['@xata.io/client']
-    : null;
+  return packageJson?.dependencies?.['@xata.io/client'] ? packageJson.dependencies['@xata.io/client'] : null;
 };
 
-export const fetchInfo = async (params: { compatibilityUri: string; compatibilityFile: string }) => {
-  const { compatibilityUri, compatibilityFile } = params;
+export const fetchInfo = async ({ url, file }: { url: string; file: string }) => {
   let shouldRefresh = true;
+
   try {
     // Latest time of one of the files should be enough
-    const statResult = await stat(compatibilityFile);
+    const statResult = await stat(file);
     const lastModified = new Date(statResult.mtime);
     // Last param is the number of days - we fetch new package info if the file is older than 1 day
     const staleAt = new Date(lastModified.valueOf() + ONE_DAY);
     shouldRefresh = new Date() > staleAt;
-  } catch (_e) {
+  } catch (error) {
     // Do nothing
   }
+
   if (shouldRefresh) {
     try {
-      const latestCompatibilityResponse = await fetch(compatibilityUri);
+      const latestCompatibilityResponse = await fetch(url);
       if (!latestCompatibilityResponse.ok) return;
       const body = await latestCompatibilityResponse.json();
-      if (!(body as Compatibility).cli) return;
+      if (!(body as Compatibility)['@xata.io/cli']) return;
+
       try {
-        await writeFile(compatibilityFile, JSON.stringify(body));
-      } catch (e) {
-        if ((e as any).code === 'ENOENT') {
-          await mkdir(path.dirname(compatibilityFile), { recursive: true });
-          await writeFile(compatibilityFile, JSON.stringify(body));
+        await writeFile(file, JSON.stringify(body));
+      } catch (error: any) {
+        if (error.code === 'ENOENT') {
+          await mkdir(path.dirname(file), { recursive: true });
+          await writeFile(file, JSON.stringify(body));
         }
       }
-    } catch (_e) {
+    } catch (error) {
       // Do nothing
     }
   }
@@ -84,25 +74,23 @@ const hook: Hook<'init'> = async function (_options) {
   const compatibilityUri = 'https://raw.githubusercontent.com/xataio/client-ts/main/compatibility.json';
 
   const displayWarning = async () => {
-    const compatibilityObj: Compatibility = JSON.parse(await readFile(compatibilityFile, 'utf-8'));
-    const defaultParams = { compatibilityObj };
+    const compat: Compatibility = JSON.parse(await readFile(compatibilityFile, 'utf-8'));
 
-    const cliPkg = 'cli';
-    const cliVersion = this.config.version;
-    const { warn, error } = await check({ ...defaultParams, pkg: cliPkg, currentVersion: cliVersion });
-    if (warn) this.log(warn);
-    if (error) this.error(error);
+    const checks = [
+      { pkg: '@xata.io/cli', version: this.config.version },
+      { pkg: '@xata.io/client', version: await getSdkVersion() }
+    ] as const;
 
-    const sdkVersion = await getSdkVersion();
-    if (sdkVersion) {
-      const sdkPkg = 'sdk';
-      const { warn, error } = await check({ ...defaultParams, pkg: sdkPkg, currentVersion: sdkVersion });
+    for (const { pkg, version } of checks) {
+      if (!version) continue;
+
+      const { warn, error } = await check({ pkg, version, compat });
       if (warn) this.log(warn);
       if (error) this.error(error);
     }
   };
 
-  await fetchInfo({ compatibilityFile, compatibilityUri });
+  await fetchInfo({ file: compatibilityFile, url: compatibilityUri });
   await displayWarning();
 };
 
