@@ -24,10 +24,10 @@ const userVersionCLI = '~0.0.1';
 const userVersionSDK = '^0.0.2';
 const userVersionAlpha = `${latestAvailableVersionCLI}-alpha.v927d47c`;
 
-const cliUpdateAvailable = `"✨ A newer version of the Xata CLI is now available: ${latestAvailableVersionCLI}. You are currently using version: ${semver.coerce(
+const cliUpdateAvailable = `"✨ A newer version of @xata.io/cli is now available: ${latestAvailableVersionCLI}. You are currently using version: ${semver.coerce(
   userVersionCLI
 )}"`;
-const sdkUpdateAvailable = `"✨ A newer version of the Xata SDK is now available: ${latestAvailableVersionSDK}. You are currently using version: ${semver.coerce(
+const sdkUpdateAvailable = `"✨ A newer version of @xata.io/client is now available: ${latestAvailableVersionSDK}. You are currently using version: ${semver.coerce(
   userVersionSDK
 )}"`;
 
