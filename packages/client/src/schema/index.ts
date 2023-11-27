@@ -27,12 +27,9 @@ export type SchemaPluginResult<Schemas extends Record<string, XataRecord>> = {
 
 export class SchemaPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   #tables: Record<string, Repository<any>> = {};
-  #schemaTables?: Table[];
 
-  constructor(schemaTables?: Table[]) {
+  constructor() {
     super();
-
-    this.#schemaTables = schemaTables;
   }
 
   build(pluginOptions: XataPluginOptions): SchemaPluginResult<Schemas> {
@@ -42,7 +39,7 @@ export class SchemaPlugin<Schemas extends Record<string, XataRecord>> extends Xa
         get: (_target, table) => {
           if (!isString(table)) throw new Error('Invalid table name');
           if (this.#tables[table] === undefined) {
-            this.#tables[table] = new RestRepository({ db, pluginOptions, table, schemaTables: this.#schemaTables });
+            this.#tables[table] = new RestRepository({ db, pluginOptions, table, schemaTables: pluginOptions.tables });
           }
 
           return this.#tables[table];
@@ -51,9 +48,9 @@ export class SchemaPlugin<Schemas extends Record<string, XataRecord>> extends Xa
     );
 
     // Inject generated tables for shell to auto-complete
-    const tableNames = this.#schemaTables?.map(({ name }) => name) ?? [];
+    const tableNames = pluginOptions.tables?.map(({ name }) => name) ?? [];
     for (const table of tableNames) {
-      db[table] = new RestRepository({ db, pluginOptions, table, schemaTables: this.#schemaTables });
+      db[table] = new RestRepository({ db, pluginOptions, table, schemaTables: pluginOptions.tables });
     }
 
     return db;
