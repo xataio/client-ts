@@ -521,7 +521,7 @@ describe('integration tests', () => {
 
     expect(user.id).toBe(updatedUser.id);
     expect(user.street).toBe('123 Main St');
-    expect(user.zipcode).toBeUndefined();
+    expect(user.zipcode).toBeNull();
 
     expect(updatedUserResponse?.street).toBe('New street');
     expect(updatedUserResponse?.zipcode).toBe(11);

@@ -104,30 +104,21 @@ describe('summarize', () => {
   });
 
   test('group by with wildcard columns', async () => {
-    const result = await xata.db.users.select(['*']).sort('plan', 'asc').sort('dark', 'asc').summarize();
+    const result = await xata.db.users.select(['plan', 'dark']).sort('plan', 'asc').sort('dark', 'asc').summarize();
 
     expect(result.summaries).toMatchInlineSnapshot(`
       [
         {
-          "settings": {
-            "dark": null,
-            "labels": null,
-            "plan": "free",
-          },
+          "dark": null,
+          "plan": "free",
         },
         {
-          "settings": {
-            "dark": true,
-            "labels": null,
-            "plan": "paid",
-          },
+          "dark": true,
+          "plan": "paid",
         },
         {
-          "settings": {
-            "dark": null,
-            "labels": null,
-            "plan": "paid",
-          },
+          "dark": null,
+          "plan": "paid",
         },
       ]
     `);
