@@ -25,12 +25,13 @@ beforeAll(async (ctx) => {
       name: 'A',
       index: 10,
       rating: 10.5,
-      settings: { plan: 'paid', dark: true },
+      plan: 'paid',
+      dark: true,
       pet: pet1.id,
       account_value: 5
     },
-    { full_name: 'B', name: 'B', index: 10, rating: 10.5, settings: { plan: 'free' }, pet: pet2.id, account_value: 3 },
-    { full_name: 'C', name: 'C', index: 30, rating: 40.0, settings: { plan: 'paid' }, pet: pet3.id }
+    { full_name: 'B', name: 'B', index: 10, rating: 10.5, plan: 'free', pet: pet2.id, account_value: 3 },
+    { full_name: 'C', name: 'C', index: 30, rating: 40.0, plan: 'paid', pet: pet3.id }
   ]);
 });
 
@@ -103,50 +104,37 @@ describe('summarize', () => {
   });
 
   test('group by with wildcard columns', async () => {
-    const result = await xata.db.users
-      .select(['settings.*'])
-      .sort('settings.plan', 'asc')
-      .sort('settings.dark', 'asc')
-      .summarize();
+    const result = await xata.db.users.select(['plan', 'dark']).sort('plan', 'asc').sort('dark', 'asc').summarize();
 
     expect(result.summaries).toMatchInlineSnapshot(`
       [
         {
-          "settings": {
-            "dark": null,
-            "labels": null,
-            "plan": "free",
-          },
+          "dark": null,
+          "plan": "free",
         },
         {
-          "settings": {
-            "dark": true,
-            "labels": null,
-            "plan": "paid",
-          },
+          "dark": true,
+          "plan": "paid",
         },
         {
-          "settings": {
-            "dark": null,
-            "labels": null,
-            "plan": "paid",
-          },
+          "dark": null,
+          "plan": "paid",
         },
       ]
     `);
 
     expect(result.summaries.length).toBe(3);
-    expect(result.summaries[0].settings?.plan).toBe('free');
-    expect(result.summaries[0].settings?.dark).toBe(null);
-    expect(result.summaries[1].settings?.plan).toBe('paid');
-    expect(result.summaries[1].settings?.dark).toBe(true);
-    expect(result.summaries[2].settings?.plan).toBe('paid');
-    expect(result.summaries[2].settings?.dark).toBe(null);
+    expect(result.summaries[0].plan).toBe('free');
+    expect(result.summaries[0].dark).toBe(null);
+    expect(result.summaries[1].plan).toBe('paid');
+    expect(result.summaries[1].dark).toBe(true);
+    expect(result.summaries[2].plan).toBe('paid');
+    expect(result.summaries[2].dark).toBe(null);
   });
 
   test('group by with a link', async () => {
     const result = await xata.db.users
-      .select(['name', 'settings.plan', 'pet.type', 'pet.num_legs'])
+      .select(['name', 'plan', 'pet.type', 'pet.num_legs'])
       .summarize({ sort: [{ column: 'name', direction: 'asc' }] });
 
     expect(result.summaries).toMatchInlineSnapshot(`
@@ -157,9 +145,7 @@ describe('summarize', () => {
             "num_legs": 4,
             "type": "dog",
           },
-          "settings": {
-            "plan": "paid",
-          },
+          "plan": "paid",
         },
         {
           "name": "B",
@@ -167,9 +153,7 @@ describe('summarize', () => {
             "num_legs": 4,
             "type": "cat",
           },
-          "settings": {
-            "plan": "free",
-          },
+          "plan": "free",
         },
         {
           "name": "C",
@@ -177,24 +161,22 @@ describe('summarize', () => {
             "num_legs": 3,
             "type": "dog",
           },
-          "settings": {
-            "plan": "paid",
-          },
+          "plan": "paid",
         },
       ]
     `);
 
     expect(result.summaries.length).toBe(3);
     expect(result.summaries[0].name).toBe('A');
-    expect(result.summaries[0].settings?.plan).toBe('paid');
+    expect(result.summaries[0].plan).toBe('paid');
     expect(result.summaries[0].pet?.type).toBe('dog');
     expect(result.summaries[0].pet?.num_legs).toBeCloseTo(4);
     expect(result.summaries[1].name).toBe('B');
-    expect(result.summaries[1].settings?.plan).toBe('free');
+    expect(result.summaries[1].plan).toBe('free');
     expect(result.summaries[1].pet?.type).toBe('cat');
     expect(result.summaries[1].pet?.num_legs).toBeCloseTo(4);
     expect(result.summaries[2].name).toBe('C');
-    expect(result.summaries[2].settings?.plan).toBe('paid');
+    expect(result.summaries[2].plan).toBe('paid');
     expect(result.summaries[2].pet?.type).toBe('dog');
     expect(result.summaries[2].pet?.num_legs).toBeCloseTo(3);
   });
@@ -204,7 +186,7 @@ describe('summarize', () => {
       summaries: {
         all: { count: '*' },
         col: { count: 'name' },
-        obj_with_null: { count: 'settings.dark' },
+        obj_with_null: { count: 'dark' },
         link: { count: 'pet.type' }
       }
     });
@@ -337,7 +319,7 @@ describe('summarize', () => {
   test('count with sort on group and count', async () => {
     const result = await xata.db.users.summarize({
       columns: ['pet.name'],
-      summaries: { dark_set: { count: 'settings.dark' } },
+      summaries: { dark_set: { count: 'dark' } },
       sort: [
         { column: 'dark_set', direction: 'desc' },
         { column: 'pet.name', direction: 'asc' }
@@ -478,7 +460,7 @@ describe('summarize', () => {
   test('filter should create joins', async () => {
     const result = await xata.db.users.summarize({
       columns: ['name'],
-      summaries: { dark_set: { count: 'settings.dark' } },
+      summaries: { dark_set: { count: 'dark' } },
       sort: [{ dark_set: 'desc' }],
       filter: { 'pet.name': 'Toffee' }
     });
@@ -501,7 +483,7 @@ describe('summarize', () => {
     const result = await xata.db.users.summarize({
       columns: ['pet.name'],
       summaries: {
-        dark_set: { count: 'settings.dark' },
+        dark_set: { count: 'dark' },
         min_legs: { min: 'pet.num_legs' },
         max_legs: { max: 'pet.num_legs' },
         sum_index: { sum: 'index' },
@@ -548,7 +530,7 @@ describe('summarize', () => {
       summaries: {
         // count
         test_count_all: { count: '*' },
-        test_count: { count: 'settings.dark' },
+        test_count: { count: 'dark' },
         test_count_linked: { count: 'pet.num_legs' },
         // min
         test_min_int: { min: 'pet.num_legs' },

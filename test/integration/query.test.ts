@@ -246,14 +246,14 @@ describe('integration tests', () => {
   });
 
   test('filter on object', async () => {
-    const users = await xata.db.users.filter({ address: { zipcode: 100 } }).getAll();
+    const users = await xata.db.users.filter({ zipcode: 100 }).getAll();
 
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
   });
 
   test('filter on object with operator', async () => {
-    const users = await xata.db.users.filter({ address: { zipcode: lt(150) } }).getAll();
+    const users = await xata.db.users.filter({ zipcode: lt(150) }).getAll();
 
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
@@ -485,17 +485,13 @@ describe('integration tests', () => {
     expect(user?.id).toBeDefined();
     expect(user?.full_name).toBeDefined();
     expect(user?.email).toBeDefined();
-    //@ts-expect-error
-    expect(user?.address).not.toBeDefined();
   });
 
   test('returns null to links that do not exist', async () => {
     const user = await xata.db.users.create({
       full_name: 'John Doe',
       email: 'john@doe.com',
-      address: {
-        street: '123 Main St'
-      }
+      street: '123 Main St'
     });
 
     const records = await xata.db.users.filter('id', user.id).select(['*', 'team.*']).getAll();
@@ -503,7 +499,7 @@ describe('integration tests', () => {
     expect(records).toHaveLength(1);
     expect(records[0].id).toBe(user.id);
     expect(records[0].full_name).toBe('John Doe');
-    expect(records[0].address?.street).toBe('123 Main St');
+    expect(records[0].street).toBe('123 Main St');
     expect(records[0].team).toBeNull();
 
     await user.delete();
@@ -513,14 +509,10 @@ describe('integration tests', () => {
     const user = await xata.db.users.create({
       full_name: 'John Doe',
       email: 'john@doe.com',
-      address: {
-        street: '123 Main St'
-      }
+      street: '123 Main St'
     });
 
-    const updatedUserResponse = await xata.db.users.update(user.id, {
-      address: { street: 'New street', zipcode: 11 }
-    });
+    const updatedUserResponse = await xata.db.users.update(user.id, { street: 'New street', zipcode: 11 });
 
     const updatedUser = await xata.db.users.filter({ id: user.id }).getFirst();
     if (!updatedUser) throw new Error('No user found');
@@ -528,15 +520,15 @@ describe('integration tests', () => {
     await user.delete();
 
     expect(user.id).toBe(updatedUser.id);
-    expect(user.address?.street).toBe('123 Main St');
-    expect(user.address?.zipcode).toBeUndefined();
+    expect(user.street).toBe('123 Main St');
+    expect(user.zipcode).toBeNull();
 
-    expect(updatedUserResponse?.address?.street).toBe('New street');
-    expect(updatedUserResponse?.address?.zipcode).toBe(11);
+    expect(updatedUserResponse?.street).toBe('New street');
+    expect(updatedUserResponse?.zipcode).toBe(11);
     expect(updatedUserResponse?.full_name).toBe(user.full_name);
 
-    expect(updatedUser.address?.street).toBe('New street');
-    expect(updatedUser.address?.zipcode).toBe(11);
+    expect(updatedUser.street).toBe('New street');
+    expect(updatedUser.zipcode).toBe(11);
     expect(updatedUser.full_name).toBe(user.full_name);
   });
 
@@ -544,28 +536,24 @@ describe('integration tests', () => {
     const user = await xata.db.users.create({
       full_name: 'John Doe 2',
       email: 'john2@doe.com',
-      address: {
-        street: '456 Main St'
-      }
+      street: '456 Main St'
     });
 
-    const updatedUserResponse = await user.update({
-      address: { street: 'New street 2', zipcode: 22 }
-    });
+    const updatedUserResponse = await user.update({ street: 'New street 2', zipcode: 22 });
 
     const updatedUser = await xata.db.users.filter({ id: user.id }).getFirst();
     if (!updatedUser) throw new Error('No user found');
 
     await user.delete();
 
-    expect(user.address?.street).not.toBe('New street 2');
+    expect(user.street).not.toBe('New street 2');
 
-    expect(updatedUserResponse?.address?.street).toBe('New street 2');
-    expect(updatedUserResponse?.address?.zipcode).toBe(22);
+    expect(updatedUserResponse?.street).toBe('New street 2');
+    expect(updatedUserResponse?.zipcode).toBe(22);
     expect(updatedUserResponse?.full_name).toBe(user.full_name);
 
-    expect(updatedUser.address?.street).toBe('New street 2');
-    expect(updatedUser.address?.zipcode).toBe(22);
+    expect(updatedUser.street).toBe('New street 2');
+    expect(updatedUser.zipcode).toBe(22);
     expect(updatedUser.full_name).toBe(user.full_name);
   });
 
