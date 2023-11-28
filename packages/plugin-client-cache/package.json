@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/plugin-client-cache",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",

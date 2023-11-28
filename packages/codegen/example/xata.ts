@@ -13,15 +13,8 @@ const tables = [
       { name: 'rating', type: 'float' },
       { name: 'founded_date', type: 'datetime' },
       { name: 'email', type: 'email' },
-      {
-        name: 'settings',
-        type: 'object',
-        columns: [
-          { name: 'plan', type: 'string' },
-          { name: 'dark', type: 'bool' },
-          { name: 'labels', type: 'multiple' }
-        ]
-      },
+      { name: 'plan', type: 'string' },
+      { name: 'dark', type: 'bool' },
       { name: 'config', type: 'json' },
       { name: 'owner', type: 'link', link: { table: 'users' } }
     ],
@@ -34,15 +27,8 @@ const tables = [
       { name: 'name', type: 'string' },
       { name: 'photo', type: 'file' },
       { name: 'attachments', type: 'file[]' },
-      {
-        name: 'settings',
-        type: 'object',
-        columns: [
-          { name: 'plan', type: 'string' },
-          { name: 'dark', type: 'bool' },
-          { name: 'labels', type: 'multiple' }
-        ]
-      },
+      { name: 'plan', type: 'string' },
+      { name: 'dark', type: 'bool' },
       {
         name: 'full_name',
         type: 'string',
@@ -52,14 +38,8 @@ const tables = [
       { name: 'index', type: 'int' },
       { name: 'rating', type: 'float' },
       { name: 'birthDate', type: 'datetime' },
-      {
-        name: 'address',
-        type: 'object',
-        columns: [
-          { name: 'street', type: 'string' },
-          { name: 'zipcode', type: 'int' }
-        ]
-      },
+      { name: 'street', type: 'string' },
+      { name: 'zipcode', type: 'int' },
       { name: 'team', type: 'link', link: { table: 'teams' } },
       { name: 'pet', type: 'link', link: { table: 'pets' } },
       { name: 'account_value', type: 'int' },

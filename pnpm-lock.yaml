@@ -160,6 +160,9 @@ importers:
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
+      '@types/semver':
+        specifier: ^7.5.6
+        version: 7.5.6
       '@xata.io/client':
         specifier: workspace:*
         version: link:../packages/client
@@ -220,6 +223,9 @@ importers:
       relaxed-json:
         specifier: ^1.0.3
         version: 1.0.3
+      semver:
+        specifier: ^7.5.4
+        version: 7.5.4
       text-table:
         specifier: ^0.2.0
         version: 0.2.0
@@ -325,7 +331,7 @@ importers:
         specifier: ^8.3.1
         version: 8.3.1
       '@xata.io/client':
-        specifier: ^0.27.0
+        specifier: ^0.28.0
         version: link:../client
       any-date-parser:
         specifier: ^1.5.4
@@ -356,8 +362,8 @@ importers:
         specifier: ^4.4.9
         version: 4.4.9
       '@types/papaparse':
-        specifier: ^5.3.13
-        version: 5.3.13
+        specifier: ^5.3.14
+        version: 5.3.14
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -5508,9 +5514,9 @@ packages:
     resolution:
       { integrity: sha512-lqa4UEhhv/2sjjIQgjX8B+RBjj47eo0mzGasklVJ78UKGQY1r0VpB9XHDaZZO9qzEFDdy4MrXLuEaSmPrPSe/A== }
 
-  /@types/papaparse@5.3.13:
+  /@types/papaparse@5.3.14:
     resolution:
-      { integrity: sha512-tYSlZI3tIdBHXea8fZHcmwbsd1mSUikdMUyqpqj0Zzfu2GTGUSHEKmcnBg699WJ8UnxG31rXD4b1mLGPOAxS2w== }
+      { integrity: sha512-LxJ4iEFcpqc6METwp9f6BV6VVc43m6MfH0VqFosHvrUgfXiFe6ww7R3itkOQ+TCK6Y+Iv/+RnnvtRZnkc5Kc9g== }
     dependencies:
       '@types/node': 20.10.0
     dev: true
@@ -5554,6 +5560,10 @@ packages:
     resolution:
       { integrity: sha512-OxepLK9EuNEIPxWNME+C6WwbRAOOI2o2BaQEGzz5Lu2e4Z5eDnEo+/aVEDMIXywoJitJ7xWd641wrGLZdtwRyw== }
     dev: true
+
+  /@types/semver@7.5.6:
+    resolution:
+      { integrity: sha512-dn1l8LaMea/IjDoHNd9J52uBbInB796CDffS6VdIxvqYCPSG0V0DzHp76GpaWnlhg88uYyPbXCDIowa86ybd5A== }
 
   /@types/shimmer@1.0.3:
     resolution:
@@ -5757,7 +5767,7 @@ packages:
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@8.54.0)
       '@types/json-schema': 7.0.13
-      '@types/semver': 7.5.3
+      '@types/semver': 7.5.6
       '@typescript-eslint/scope-manager': 6.12.0
       '@typescript-eslint/types': 6.12.0
       '@typescript-eslint/typescript-estree': 6.12.0(typescript@5.3.2)
@@ -9236,6 +9246,7 @@ packages:
   /file-uri-to-path@1.0.0:
     resolution:
       { integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw== }
+    requiresBuild: true
     dev: false
 
   /filelist@1.0.4:
@@ -10119,6 +10130,7 @@ packages:
     resolution:
       { integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw== }
     engines: { node: '>=0.10.0' }
+    requiresBuild: true
     dependencies:
       safer-buffer: 2.1.2
     dev: true
@@ -12202,6 +12214,7 @@ packages:
   /nan@2.18.0:
     resolution:
       { integrity: sha512-W7tfG7vMOGtD30sHoZSSc/JVYiyDPEyQVso/Zz+/uQd0B0L46gtC+pHha5FFMRpil6fm/AoEcRWyOVi4+E/f8w== }
+    requiresBuild: true
     dev: false
     optional: true
 

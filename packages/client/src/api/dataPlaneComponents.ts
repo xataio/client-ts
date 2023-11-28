@@ -45,12 +45,14 @@ export type ApplyMigrationVariables = {
  * Applies a pgroll migration to the specified database.
  */
 export const applyMigration = (variables: ApplyMigrationVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, ApplyMigrationError, ApplyMigrationRequestBody, {}, {}, ApplyMigrationPathParams>({
-    url: '/db/{dbBranchName}/pgroll/apply',
-    method: 'post',
-    ...variables,
-    signal
-  });
+  dataPlaneFetch<
+    Schemas.PgRollApplyMigrationResponse,
+    ApplyMigrationError,
+    ApplyMigrationRequestBody,
+    {},
+    {},
+    ApplyMigrationPathParams
+  >({ url: '/db/{dbBranchName}/pgroll/apply', method: 'post', ...variables, signal });
 
 export type PgRollStatusPathParams = {
   /**
