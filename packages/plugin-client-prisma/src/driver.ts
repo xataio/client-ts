@@ -63,7 +63,7 @@ export class PrismaXataHTTP extends XataQueryable implements DriverAdapter {
 
   override async performIO(query: Query): Promise<Result<PerformIOResult>> {
     const { sql, args: values } = query;
-    return ok(await this.xata.sql(sql, values, { arrayMode: true, fullResults: true }));
+    return ok(await this.xata.sql(sql, values));
   }
 
   startTransaction(): Promise<Result<Transaction>> {
