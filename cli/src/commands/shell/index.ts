@@ -33,7 +33,7 @@ export default class Shell extends BaseCommand<typeof Shell> {
   async run(): Promise<void> {
     const { flags } = await this.parseCommand();
     const profile = await this.getProfile();
-    const apiKey = profile?.apiKey;
+    const apiKey = profile?.token;
     if (!apiKey) {
       this.error('No API key found. Either use the XATA_API_KEY environment variable or run `xata auth login`');
     }

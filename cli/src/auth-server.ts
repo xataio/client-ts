@@ -6,11 +6,32 @@ import { AddressInfo } from 'net';
 import open from 'open';
 import path, { dirname } from 'path';
 import url, { fileURLToPath } from 'url';
+import { z } from 'zod';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export function handler(publicKey: string, privateKey: string, passphrase: string, callback: (apiKey: string) => void) {
+const ResponseSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  expires: z.string()
+});
+
+type OAuthResponse = z.infer<typeof ResponseSchema>;
+
+export function handler({
+  domain,
+  publicKey,
+  privateKey,
+  passphrase,
+  callback
+}: {
+  domain: string;
+  publicKey: string;
+  privateKey: string;
+  passphrase: string;
+  callback: (response: OAuthResponse) => void;
+}) {
   return (req: http.IncomingMessage, res: http.ServerResponse) => {
     try {
       if (req.method !== 'GET') {
@@ -22,7 +43,7 @@ export function handler(publicKey: string, privateKey: string, passphrase: strin
       if (parsedURL.pathname === '/new') {
         const port = req.socket.localPort ?? 80;
         res.writeHead(302, {
-          location: generateURL(port, publicKey)
+          location: generateURL({ port, publicKey, domain })
         });
         res.end();
         return;
@@ -37,12 +58,12 @@ export function handler(publicKey: string, privateKey: string, passphrase: strin
         return res.end('Missing key parameter');
       }
       const privKey = crypto.createPrivateKey({ key: privateKey, passphrase });
-      const apiKey = crypto
+      const response = crypto
         .privateDecrypt(privKey, Buffer.from(String(parsedURL.query.key).replace(/ /g, '+'), 'base64'))
         .toString('utf8');
       renderSuccessPage(req, res, String(parsedURL.query['color-mode']));
       req.destroy();
-      callback(apiKey);
+      callback(ResponseSchema.parse(JSON.parse(response)));
     } catch (err) {
       res.writeHead(500);
       res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
@@ -50,7 +71,7 @@ export function handler(publicKey: string, privateKey: string, passphrase: strin
   };
 }
 
-function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse, colorMode: string) {
+function renderSuccessPage(_req: http.IncomingMessage, res: http.ServerResponse, colorMode: string) {
   res.writeHead(200, {
     'Content-Type': 'text/html'
   });
@@ -58,17 +79,24 @@ function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse, 
   res.end(html.replace('data-color-mode=""', `data-color-mode="${colorMode}"`));
 }
 
-export function generateURL(port: number, publicKey: string) {
+export function generateURL({ port, publicKey, domain }: { port: number; publicKey: string; domain: string }) {
+  const name = 'Xata CLI';
+  const serverRedirect = `${domain}/api/integrations/cli/callback`;
+  const cliRedirect = `http://localhost:${port}`;
   const pub = publicKey
     .replace(/\n/g, '')
     .replace('-----BEGIN PUBLIC KEY-----', '')
     .replace('-----END PUBLIC KEY-----', '');
-  const name = 'Xata CLI';
-  const redirect = `http://localhost:${port}`;
-  const url = new URL('https://app.xata.io/new-api-key');
-  url.searchParams.append('pub', pub);
-  url.searchParams.append('name', name);
-  url.searchParams.append('redirect', redirect);
+
+  const url = new URL(`${domain}/integrations/oauth/authorize`);
+  url.searchParams.set('client_id', 'b7msdmpun91q33vpihpk3vs39g');
+  url.searchParams.set('redirect_uri', serverRedirect);
+  url.searchParams.set('response_type', 'code');
+  url.searchParams.set('scope', 'admin:all');
+  url.searchParams.set(
+    'state',
+    Buffer.from(JSON.stringify({ name, pub, cliRedirect, serverRedirect })).toString('base64')
+  );
   return url.toString();
 }
 
@@ -90,19 +118,25 @@ export function generateKeys() {
   return { publicKey, privateKey, passphrase };
 }
 
-export async function createAPIKeyThroughWebUI() {
+export async function loginWithWebUI(domain: string) {
   const { publicKey, privateKey, passphrase } = generateKeys();
 
-  return new Promise<string>((resolve) => {
+  return new Promise<OAuthResponse>((resolve) => {
     const server = http.createServer(
-      handler(publicKey, privateKey, passphrase, (apiKey) => {
-        resolve(apiKey);
-        server.close();
+      handler({
+        domain,
+        publicKey,
+        privateKey,
+        passphrase,
+        callback: (credentials) => {
+          resolve(credentials);
+          server.close();
+        }
       })
     );
     server.listen(() => {
       const { port } = server.address() as AddressInfo;
-      const openURL = generateURL(port, publicKey);
+      const openURL = generateURL({ port, publicKey, domain });
       console.log(
         `We are opening your default browser. If your browser doesn't open automatically, please copy and paste the following URL into your browser: ${chalk.bold(
           `http://localhost:${port}/new`
@@ -111,4 +145,18 @@ export async function createAPIKeyThroughWebUI() {
       open(openURL).catch(console.error);
     });
   });
+}
+
+export async function refreshAccessToken(domain: string, refreshToken: string) {
+  const response = await fetch(`${domain}/api/integrations/cli/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to refresh access token: ${response.status} ${response.statusText}`);
+  }
+
+  return ResponseSchema.parse(await response.json());
 }

@@ -1,12 +1,13 @@
 import { Command, Flags, Interfaces } from '@oclif/core';
 import {
+  Schemas,
+  XataApiPlugin,
   buildClient,
   getAPIKey,
   getBranch,
   getHostUrl,
-  parseWorkspacesUrlParts,
-  Schemas,
-  XataApiPlugin
+  parseProviderString,
+  parseWorkspacesUrlParts
 } from '@xata.io/client';
 import { XataImportPlugin } from '@xata.io/importer';
 import ansiRegex from 'ansi-regex';
@@ -22,14 +23,14 @@ import prompts from 'prompts';
 import table from 'text-table';
 import which from 'which';
 import { ZodError } from 'zod';
-import { createAPIKeyThroughWebUI } from './auth-server.js';
-import { partialProjectConfig, ProjectConfig } from './config.js';
+import { loginWithWebUI, refreshAccessToken } from './auth-server.js';
+import { ProjectConfig, partialProjectConfig } from './config.js';
 import {
-  buildProfile,
+  Profile,
   credentialsFilePath,
   getEnvProfileName,
-  Profile,
-  readCredentialsDictionary
+  readCredentialsDictionary,
+  saveCredentials
 } from './credentials.js';
 import { reportBugURL } from './utils.js';
 
@@ -39,6 +40,8 @@ export class XataClient extends buildClient({
 }) {}
 
 export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
+
+const ACCESS_TOKEN_EXPIRATION_THRESHOLD = 15 * 24 * 60 * 60 * 1000; // 15 days
 
 const moduleName = 'xata';
 const commonFlagsHelpGroup = 'Common';
@@ -188,33 +191,57 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
   }
 
-  async getProfile({ ignoreEnv = false }: { ignoreEnv?: boolean } = {}): Promise<Profile> {
+  async getProfile({
+    ignoreEnv = false,
+    profileName
+  }: { ignoreEnv?: boolean; profileName?: string } = {}): Promise<Profile> {
     const { flags } = await this.parseCommand();
-    const profileName = flags.profile || getEnvProfileName();
+    const name = profileName || flags.profile || getEnvProfileName();
+    const defaultWeb = process.env.XATA_WEB_URL ?? 'https://app.xata.io';
+    const defaultHost = parseProviderString(process.env.XATA_API_PROVIDER) ?? 'production';
 
     const apiKey = getAPIKey();
-    const useEnv = !ignoreEnv || profileName === 'default';
-    if (useEnv && apiKey) return buildProfile({ name: 'default', apiKey });
+    const useEnv = !ignoreEnv || name === 'default';
+    if (useEnv && apiKey) {
+      return { name, web: defaultWeb, host: defaultHost, token: apiKey };
+    }
 
     const credentials = await readCredentialsDictionary();
-    const credential = credentials[profileName];
+    const credential = credentials[name];
     if (credential?.apiKey) this.apiKeyLocation = 'profile';
-    return buildProfile({ ...credential, name: profileName });
+
+    // Check if the token is valid, if not, refresh it
+    let token: string | undefined;
+    if (
+      credential?.expiresAt &&
+      credential?.refreshToken &&
+      new Date(credential.expiresAt).getTime() - Date.now() < ACCESS_TOKEN_EXPIRATION_THRESHOLD
+    ) {
+      const refresh = await refreshAccessToken(credential.web ?? defaultWeb, credential.refreshToken);
+      await saveCredentials(name, {
+        ...credential,
+        accessToken: refresh.accessToken,
+        refreshToken: refresh.refreshToken,
+        expiresAt: refresh.expires
+      });
+
+      token = refresh.accessToken;
+    } else if (credential?.accessToken) {
+      token = credential.accessToken;
+    }
+
+    return {
+      name,
+      web: credential?.web ?? defaultWeb,
+      host: parseProviderString(credential?.api) ?? defaultHost,
+      token: token ?? credential?.apiKey ?? ''
+    };
   }
 
   async getXataClient({ profile }: { profile?: Profile } = {}) {
     if (this.#xataClient) return this.#xataClient;
 
-    const { apiKey, host } = profile ?? (await this.getProfile());
-
-    if (!apiKey) {
-      this.error('Could not instantiate Xata client. No API key found.', {
-        suggestions: [
-          'Run `xata auth login`',
-          'Configure a project with `xata init --db=https://{workspace}.{region}.xata.sh/db/{database}`'
-        ]
-      });
-    }
+    const { token, host } = profile ?? (await this.getProfile());
 
     const { flags } = await this.parseCommand();
     const databaseURL = flags.db ?? 'https://{workspace}.{region}.xata.sh/db/{database}';
@@ -223,7 +250,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     this.#xataClient = new XataClient({
       databaseURL,
       branch,
-      apiKey,
+      apiKey: token,
       fetch,
       host,
       clientName: 'cli',
@@ -256,7 +283,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     this.log(`${chalk.greenBright('✔')} ${message}`);
   }
 
-  async verifyAPIKey(profile: Profile) {
+  async verifyProfile(profile: Profile) {
     this.info('Checking access to the API...');
     const xata = await this.getXataClient({ profile });
     try {
@@ -538,29 +565,11 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
   }
 
-  async obtainKey() {
-    const { decision } = await this.prompt({
-      type: 'select',
-      name: 'decision',
-      message: 'Do you want to use an existing API key or create a new API key?',
-      choices: [
-        { title: 'Create a new API key in browser', value: 'create' },
-        { title: 'Use an existing API key', value: 'existing' }
-      ]
-    });
-    if (!decision) this.exit(2);
+  async obtainKey(web?: string) {
+    const currentProfile = await this.getProfile();
+    const domain = web || currentProfile?.web || 'https://app.xata.io';
 
-    if (decision === 'create') {
-      return createAPIKeyThroughWebUI();
-    } else if (decision === 'existing') {
-      const { key } = await this.prompt({
-        type: 'password',
-        name: 'key',
-        message: 'Existing API key:'
-      });
-      if (!key) this.exit(2);
-      return key;
-    }
+    return await loginWithWebUI(domain);
   }
 
   async deploySchema(workspace: string, region: string, database: string, branch: string, schema: Schemas.Schema) {
