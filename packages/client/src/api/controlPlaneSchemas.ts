@@ -344,6 +344,10 @@ export type DatabaseMetadata = {
    */
   newMigrations?: boolean;
   /**
+   * @x-internal true
+   */
+  defaultClusterID?: string;
+  /**
    * Metadata about the database for display in Xata user interfaces
    */
   ui?: {
