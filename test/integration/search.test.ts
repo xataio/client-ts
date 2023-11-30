@@ -270,6 +270,6 @@ async function waitForSearchIndexing(): Promise<void> {
   } catch (error) {
     // do nothing
   }
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 8000));
   return waitForSearchIndexing();
 }
