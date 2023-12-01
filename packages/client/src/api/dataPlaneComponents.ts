@@ -4434,6 +4434,54 @@ export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal)
     signal
   });
 
+export type FileUploadPathParams = {
+  /**
+   * The File Access Identifier
+   */
+  fileId: Schemas.FileAccessID;
+  workspace: string;
+  region: string;
+};
+
+export type FileUploadQueryParams = {
+  /**
+   * File access signature
+   */
+  verify?: Schemas.FileSignature;
+};
+
+export type FileUploadError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type FileUploadVariables = {
+  body?: Blob;
+  pathParams: FileUploadPathParams;
+  queryParams?: FileUploadQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Upload file using an upload url
+ */
+export const fileUpload = (variables: FileUploadVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, FileUploadError, Blob, {}, FileUploadQueryParams, FileUploadPathParams>({
+    url: '/file/{fileId}',
+    method: 'put',
+    ...variables,
+    signal
+  });
+
 export type SqlQueryPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -4559,7 +4607,7 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, deleteFile, fileAccess },
+  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, deleteFile, fileAccess, fileUpload },
   searchAndFilter: {
     queryTable,
     searchBranch,

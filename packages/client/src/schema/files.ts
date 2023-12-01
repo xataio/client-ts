@@ -34,9 +34,13 @@ export class XataFile {
    */
   public enablePublicUrl: boolean;
   /**
-   * Timeout for the signed url.
+   * Timeout for the signed url in seconds. Default: 60 seconds (1 minute).
    */
-  public signedUrlTimeout: number;
+  public signedUrlTimeout?: number;
+  /**
+   * Time to live for upload URLs in seconds. Default: 86400 seconds (24 hours).
+   */
+  public uploadUrlTimeout?: number;
   /**
    * Size of the file.
    */
@@ -50,9 +54,13 @@ export class XataFile {
    */
   public url: string;
   /**
-   * Signed url of the file.
+   * Signed url of the file (if requested, a temporary signed url will be returned).
    */
   public signedUrl?: string;
+  /**
+   * Upload url of the file (if requested, a temporary upload url will be returned).
+   */
+  public uploadUrl?: string;
   /**
    * Attributes of the file.
    */
@@ -64,11 +72,13 @@ export class XataFile {
     this.mediaType = file.mediaType || 'application/octet-stream';
     this.base64Content = file.base64Content;
     this.enablePublicUrl = file.enablePublicUrl ?? false;
-    this.signedUrlTimeout = file.signedUrlTimeout ?? 300;
+    this.signedUrlTimeout = file.signedUrlTimeout;
+    this.uploadUrlTimeout = file.uploadUrlTimeout;
     this.size = file.size ?? 0;
     this.version = file.version ?? 1;
     this.url = file.url || '';
     this.signedUrl = file.signedUrl;
+    this.uploadUrl = file.uploadUrl;
     this.attributes = file.attributes || {};
   }
 
@@ -189,7 +199,7 @@ export type XataArrayFile = Identifiable & XataFile;
 export const parseInputFileEntry = async (entry: InputXataFile): Promise<InputFileEntry | null> => {
   if (!isDefined(entry)) return null;
 
-  const { id, name, mediaType, base64Content, enablePublicUrl, signedUrlTimeout } = await entry;
+  const { id, name, mediaType, base64Content, enablePublicUrl, signedUrlTimeout, uploadUrlTimeout } = await entry;
   return compactObject({
     id,
     // Name cannot be an empty string in our API
@@ -197,6 +207,7 @@ export const parseInputFileEntry = async (entry: InputXataFile): Promise<InputFi
     mediaType,
     base64Content,
     enablePublicUrl,
-    signedUrlTimeout
+    signedUrlTimeout,
+    uploadUrlTimeout
   });
 };
