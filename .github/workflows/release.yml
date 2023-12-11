@@ -51,6 +51,7 @@ jobs:
         with:
           title: Release tracking
           publish: npx changeset publish
+          version: node ./scripts/changeset-version.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

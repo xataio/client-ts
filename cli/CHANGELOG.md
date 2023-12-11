@@ -1,5 +1,26 @@
 # @xata.io/cli
 
+## 0.15.0
+
+### Minor Changes
+
+- [#1251](https://github.com/xataio/client-ts/pull/1251) [`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove Xata Workers support
+
+### Patch Changes
+
+- [#1212](https://github.com/xataio/client-ts/pull/1212) [`1348a7fa`](https://github.com/xataio/client-ts/commit/1348a7fa973d8ad008f925297a479f26d231efec) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - feat: compatibility endpoint
+
+- Updated dependencies [[`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05)]:
+  - @xata.io/client@0.28.0
+  - @xata.io/codegen@0.28.0
+  - @xata.io/importer@1.1.3
+
+## 0.14.5
+
+### Patch Changes
+
+- [#1257](https://github.com/xataio/client-ts/pull/1257) [`25921ab6`](https://github.com/xataio/client-ts/commit/25921ab6ea28db8f1c87d53e247a1438555a42f0) Thanks [@richardgill](https://github.com/richardgill)! - CLI import: Added encoding flag, switch to utf8 by default. Fixes some obscure encoding issues.
+
 ## 0.14.4
 
 ### Patch Changes

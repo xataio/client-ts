@@ -494,6 +494,7 @@ export type GetWorkspacesListResponse = {
     name: string;
     slug: string;
     role: Schemas.Role;
+    plan: Schemas.WorkspacePlan;
   }[];
 };
 
@@ -1290,7 +1291,7 @@ export type CreateDatabaseRequestBody = {
    */
   region: string;
   /**
-   * The dedicated cluster where branches from this database will be created. Defaults to 'xata-cloud'.
+   * The dedicated cluster where branches from this database will be created. Defaults to 'shared-cluster'.
    *
    * @minLength 1
    * @x-internal true
@@ -1441,6 +1442,13 @@ export type UpdateDatabaseMetadataRequestBody = {
      */
     color?: string;
   };
+  /**
+   * The dedicated cluster where branches from this database will be created. Defaults to 'shared-cluster'.
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  defaultClusterID?: string;
 };
 
 export type UpdateDatabaseMetadataVariables = {

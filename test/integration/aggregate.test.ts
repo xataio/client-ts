@@ -9,11 +9,8 @@ const teams = [
   {
     name: 'r1',
     email: 'r1+1@a.com',
-    settings: {
-      plan: 'free',
-      dark: true,
-      labels: ['label1', 'label2']
-    },
+    plan: 'free',
+    dark: true,
     description: 'longer text goes here',
     index: 6,
     rating: 1,
@@ -22,11 +19,8 @@ const teams = [
   {
     name: 'r1',
     email: 'r1+2@a.com',
-    settings: {
-      plan: 'free',
-      dark: false,
-      labels: ['label1', 'label2']
-    },
+    plan: 'free',
+    dark: false,
     description: 'longer text goes here',
     index: 8,
     rating: 2.2,
@@ -35,11 +29,8 @@ const teams = [
   {
     name: 'r2',
     email: 'r2+1@b.com',
-    settings: {
-      plan: 'paid',
-      dark: true,
-      labels: ['label2', 'label3']
-    },
+    plan: 'paid',
+    dark: true,
     description: 'longer text goes here',
     index: 3,
     rating: 3.1,
@@ -48,11 +39,8 @@ const teams = [
   {
     name: 'r2',
     email: 'r2+2@b.com',
-    settings: {
-      plan: 'paid',
-      dark: false,
-      labels: ['label2', 'label3']
-    },
+    plan: 'paid',
+    dark: false,
     description: 'longer text goes here',
     index: 2,
     rating: 4,
@@ -61,11 +49,8 @@ const teams = [
   {
     name: 'r3',
     email: 'r3@b.com',
-    settings: {
-      plan: 'free',
-      dark: true,
-      labels: ['label5', 'label6']
-    },
+    plan: 'free',
+    dark: true,
     description: 'longer text goes here',
     index: 12,
     rating: 5.3,
@@ -122,7 +107,7 @@ describe(
           total: { count: '*' },
           unique: { uniqueCount: { column: 'name' } }
         },
-        { 'settings.plan': 'free' }
+        { plan: 'free' }
       );
 
       expect(result.aggs.total).toBeCloseTo(3);
@@ -131,8 +116,8 @@ describe(
 
     test('counts with filters', async () => {
       const result = await xata.db.teams.aggregate({
-        freeCount: { count: { filter: { 'settings.plan': 'free' } } },
-        paidCount: { count: { filter: { 'settings.plan': 'paid' } } }
+        freeCount: { count: { filter: { plan: 'free' } } },
+        paidCount: { count: { filter: { plan: 'paid' } } }
       });
 
       expect(result.aggs.freeCount).toBeCloseTo(3);
@@ -373,9 +358,14 @@ describe(
 );
 
 async function waitForSearchIndexing(): Promise<void> {
-  const { aggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
-  if (aggs.total !== teams.length) {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    return waitForSearchIndexing();
+  try {
+    const { aggs } = await xata.db.teams.aggregate({ total: { count: '*' } });
+    if (aggs.total === teams.length) {
+      return;
+    }
+  } catch (error) {
+    // do nothing
   }
+  await new Promise((resolve) => setTimeout(resolve, 8000));
+  return waitForSearchIndexing();
 }
