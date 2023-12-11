@@ -12,6 +12,9 @@ export default class Login extends BaseCommand<typeof Login> {
     ...BaseCommand.forceFlag('Overwrite existing credentials if they exist'),
     host: Flags.string({
       description: 'Xata API host provider'
+    }),
+    'api-key': Flags.string({
+      description: 'Xata API key to use for authentication'
     })
   };
 
@@ -39,7 +42,7 @@ export default class Login extends BaseCommand<typeof Login> {
       this.error('Invalid host provider, expected either "production", "staging" or "{apiUrl},{workspacesUrl}"');
     }
 
-    const key = await this.obtainKey();
+    const key = flags['api-key'] ?? (await this.obtainKey());
 
     await this.verifyAPIKey({ ...profile, apiKey: key, host });
 
