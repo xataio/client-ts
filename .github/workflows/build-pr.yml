@@ -36,7 +36,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Set build version
-        run: echo "TAG=0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "TAG=0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         id: version
 
       - name: Check secrets exist
