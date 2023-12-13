@@ -169,6 +169,8 @@ export const operation = z.union([
   dropConstraintOperation
 ]);
 
+export const operations = z.array(operation);
+
 export const operationTypes = [
   'create_table',
   'add_column',
