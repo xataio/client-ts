@@ -72,7 +72,10 @@
         },
         {
           "name": "photo",
-          "type": "file"
+          "type": "file",
+          "file": {
+            "defaultPublicAccess": true
+          }
         },
         {
           "name": "attachments",
