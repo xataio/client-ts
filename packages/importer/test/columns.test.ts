@@ -340,17 +340,17 @@ const coerceTestCases: {
     type: 'file',
     expected: {
       value: {
-        attributes: {},
+        attributes: undefined,
         base64Content: 'aGVsbG8gd29ybGQ=',
-        enablePublicUrl: false,
+        enablePublicUrl: undefined,
         id: undefined,
-        mediaType: 'application/octet-stream',
-        name: '',
+        mediaType: '',
+        name: undefined,
         signedUrl: undefined,
-        signedUrlTimeout: 300,
-        size: 0,
-        url: '',
-        version: 1
+        signedUrlTimeout: undefined,
+        size: undefined,
+        url: undefined,
+        version: undefined
       },
       isError: false
     },
@@ -366,30 +366,30 @@ const coerceTestCases: {
     expected: {
       value: [
         {
-          attributes: {},
+          attributes: undefined,
           base64Content: 'aGVsbG8gd29ybGQ=',
-          enablePublicUrl: false,
+          enablePublicUrl: undefined,
           id: undefined,
-          mediaType: 'application/octet-stream',
-          name: '',
+          mediaType: '',
+          name: undefined,
           signedUrl: undefined,
-          signedUrlTimeout: 300,
-          size: 0,
-          url: '',
-          version: 1
+          signedUrlTimeout: undefined,
+          size: undefined,
+          url: undefined,
+          version: undefined
         },
         {
-          attributes: {},
+          attributes: undefined,
           base64Content: 'aGVsbG8gd29ybGQ=',
-          enablePublicUrl: false,
+          enablePublicUrl: undefined,
           id: undefined,
-          mediaType: 'application/octet-stream',
-          name: '',
+          mediaType: '',
+          name: undefined,
           signedUrl: undefined,
-          signedUrlTimeout: 300,
-          size: 0,
-          url: '',
-          version: 1
+          signedUrlTimeout: undefined,
+          size: undefined,
+          url: undefined,
+          version: undefined
         }
       ],
       isError: false
@@ -405,17 +405,17 @@ const coerceTestCases: {
     type: 'file',
     expected: {
       value: {
-        attributes: {},
+        attributes: undefined,
         base64Content: 'aGVsbG8gd29ybGQ=',
-        enablePublicUrl: false,
+        enablePublicUrl: undefined,
         id: undefined,
         mediaType: 'application/octet-stream',
         name: 'test.txt',
         signedUrl: undefined,
-        signedUrlTimeout: 300,
-        size: 0,
-        url: '',
-        version: 1
+        signedUrlTimeout: undefined,
+        size: undefined,
+        url: undefined,
+        version: undefined
       },
       isError: false
     }
@@ -426,30 +426,30 @@ const coerceTestCases: {
     expected: {
       value: [
         {
-          attributes: {},
+          attributes: undefined,
           base64Content: 'aGVsbG8gd29ybGQ=',
-          enablePublicUrl: false,
+          enablePublicUrl: undefined,
           id: undefined,
           mediaType: 'application/octet-stream',
           name: 'test.txt',
           signedUrl: undefined,
-          signedUrlTimeout: 300,
-          size: 0,
-          url: '',
-          version: 1
+          signedUrlTimeout: undefined,
+          size: undefined,
+          url: undefined,
+          version: undefined
         },
         {
-          attributes: {},
+          attributes: undefined,
           base64Content: 'aGVsbG8gd29ybGQ=',
-          enablePublicUrl: false,
+          enablePublicUrl: undefined,
           id: undefined,
           mediaType: 'application/octet-stream',
           name: 'test.txt',
           signedUrl: undefined,
-          signedUrlTimeout: 300,
-          size: 0,
-          url: '',
-          version: 1
+          signedUrlTimeout: undefined,
+          size: undefined,
+          url: undefined,
+          version: undefined
         }
       ],
       isError: false
@@ -460,17 +460,17 @@ const coerceTestCases: {
     type: 'file',
     expected: {
       value: {
-        attributes: {},
+        attributes: undefined,
         base64Content: 'aGVsbG8gd29ybGQ=',
-        enablePublicUrl: false,
+        enablePublicUrl: undefined,
         id: undefined,
         mediaType: 'text/plain',
-        name: '',
+        name: undefined,
         signedUrl: undefined,
-        signedUrlTimeout: 300,
-        size: 0,
-        url: '',
-        version: 1
+        signedUrlTimeout: undefined,
+        size: undefined,
+        url: undefined,
+        version: undefined
       },
       isError: false
     },
@@ -486,43 +486,43 @@ const coerceTestCases: {
     expected: {
       value: [
         {
-          attributes: {},
+          attributes: undefined,
           base64Content: 'aGVsbG8gd29ybGQ=',
-          enablePublicUrl: false,
+          enablePublicUrl: undefined,
           id: undefined,
           mediaType: 'text/plain',
-          name: '',
+          name: undefined,
           signedUrl: undefined,
-          signedUrlTimeout: 300,
-          size: 0,
-          url: '',
-          version: 1
+          signedUrlTimeout: undefined,
+          size: undefined,
+          url: undefined,
+          version: undefined
         },
         {
-          attributes: {},
+          attributes: undefined,
           base64Content: 'aGVsbG8gd29ybGQ=',
-          enablePublicUrl: false,
+          enablePublicUrl: undefined,
           id: undefined,
           mediaType: 'application/octet-stream',
           name: 'test.txt',
           signedUrl: undefined,
-          signedUrlTimeout: 300,
-          size: 0,
-          url: '',
-          version: 1
+          signedUrlTimeout: undefined,
+          size: undefined,
+          url: undefined,
+          version: undefined
         },
         {
-          attributes: {},
+          attributes: undefined,
           base64Content: 'aGVsbG8gd29ybGQ=',
-          enablePublicUrl: false,
+          enablePublicUrl: undefined,
           id: undefined,
-          mediaType: 'application/octet-stream',
-          name: '',
+          mediaType: '',
+          name: undefined,
           signedUrl: undefined,
-          signedUrlTimeout: 300,
-          size: 0,
-          url: '',
-          version: 1
+          signedUrlTimeout: undefined,
+          size: undefined,
+          url: undefined,
+          version: undefined
         }
       ],
       isError: false
