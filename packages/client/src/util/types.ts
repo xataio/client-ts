@@ -65,3 +65,7 @@ type Narrowable = string | number | bigint | boolean;
 type Try<A1, A2, Catch = never> = A1 extends A2 ? A1 : Catch;
 
 export type Narrow<A> = Try<A, [], NarrowRaw<A>>;
+
+export type RequiredKeys<T> = {
+  [K in keyof T]-?: {} extends Pick<T, K> ? never : K;
+}[keyof T];
