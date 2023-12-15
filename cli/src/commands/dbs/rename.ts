@@ -43,7 +43,7 @@ export default class DatabasesRename extends BaseCommand<typeof DatabasesRename>
     if (!confirm) return this.exit(1);
     if (confirm !== database) return this.error('The database name did not match');
 
-    await xata.api.database.renameDatabase({ workspace, database, newName });
+    await xata.api.databases.renameDatabase({ workspaceId: workspace, dbName: database, newName });
 
     if (this.jsonEnabled()) return {};
 

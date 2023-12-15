@@ -22,7 +22,7 @@ describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace with new apiKey', async () => {
     const workspaceName = getWorkspaceName();
 
-    const newApiKey = await api.authentication.createUserAPIKey({ name: `${workspaceName}-key` });
+    const newApiKey = await api.authentication.createUserAPIKey({ keyName: `${workspaceName}-key` });
 
     expect(newApiKey).toBeDefined();
     expect(newApiKey.name).toBe(`${workspaceName}-key`);
@@ -31,7 +31,8 @@ describe('API Client Integration Tests', () => {
     const newApi = new XataApiClient({ apiKey: newApiKey.key, host });
 
     const { id: workspace, name } = await newApi.workspaces.createWorkspace({
-      data: { name: workspaceName, slug: `${workspaceName}-slug` }
+      name: workspaceName,
+      slug: `${workspaceName}-slug`
     });
 
     await waitForReplication(newApi, workspace);
@@ -39,33 +40,32 @@ describe('API Client Integration Tests', () => {
     expect(workspace).toBeDefined();
     expect(name).toBe(workspaceName);
 
-    const foo = await newApi.workspaces.getWorkspace({ workspace });
+    const foo = await newApi.workspaces.getWorkspace({ workspaceId: workspace });
 
     expect(foo.id).toBe(workspace);
     expect(foo.slug).toBe(`${workspaceName}-slug`);
 
-    const bar = await newApi.workspaces.getWorkspace({ workspace });
+    const bar = await newApi.workspaces.getWorkspace({ workspaceId: workspace });
 
     expect(bar.id).toBe(workspace);
     expect(bar.slug).toBe(`${workspaceName}-slug`);
 
-    const { databaseName: database } = await newApi.database.createDatabase({
-      workspace,
-      database: `data-${workspace}`,
-      data: { region }
+    const { databaseName: database } = await newApi.databases.createDatabase({
+      workspaceId: workspace,
+      dbName: `data-${workspace}`,
+      region
     });
 
     await waitForReplication(newApi, workspace, database);
 
-    await newApi.branches.createBranch({ workspace, region, database, branch: 'branch' });
-    await newApi.tables.createTable({ workspace, region, database, branch: 'branch', table: 'table' });
-    await newApi.tables.setTableSchema({
+    await newApi.branch.createBranch({ workspace, region, dbBranchName: `${database}:branch` });
+    await newApi.table.createTable({ workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' });
+    await newApi.table.setTableSchema({
       workspace,
       region,
-      database,
-      branch: 'branch',
-      table: 'table',
-      schema: { columns: [{ name: 'email', type: 'string' }] }
+      dbBranchName: `${database}:branch`,
+      tableName: 'table',
+      columns: [{ name: 'email', type: 'string' }]
     });
 
     const { id } = await newApi.records.insertRecord({
@@ -80,10 +80,9 @@ describe('API Client Integration Tests', () => {
     const record = await newApi.records.getRecord({
       workspace,
       region,
-      database,
-      branch: 'branch',
-      table: 'table',
-      id
+      dbBranchName: `${database}:branch`,
+      tableName: 'table',
+      recordId: id
     });
 
     expect(record.id).toBeDefined();
@@ -94,9 +93,8 @@ describe('API Client Integration Tests', () => {
     const search = await newApi.searchAndFilter.searchTable({
       workspace,
       region,
-      database,
-      branch: 'branch',
-      table: 'table',
+      dbBranchName: `${database}:branch`,
+      tableName: 'table',
       query: 'example'
     });
 
@@ -106,16 +104,15 @@ describe('API Client Integration Tests', () => {
     const failedSearch = await newApi.searchAndFilter.searchTable({
       workspace,
       region,
-      database,
-      branch: 'branch',
-      table: 'table',
+      dbBranchName: `${database}:branch`,
+      tableName: 'table',
       query: 'random'
     });
 
     expect(failedSearch.totalCount).toEqual(0);
     expect(failedSearch.records).toEqual([]);
 
-    await api.authentication.deleteUserAPIKey({ name: newApiKey.name });
+    await api.authentication.deleteUserAPIKey({ keyName: newApiKey.name });
 
     await waitFailInReplication(newApi, workspace, database);
 
@@ -123,25 +120,24 @@ describe('API Client Integration Tests', () => {
       newApi.records.getRecord({
         workspace,
         region,
-        database,
-        branch: 'branch',
-        table: 'table',
-        id
+        dbBranchName: `${database}:branch`,
+        tableName: 'table',
+        recordId: id
       })
     ).rejects.toHaveProperty('message');
 
-    await api.workspaces.deleteWorkspace({ workspace });
+    await api.workspaces.deleteWorkspace({ workspaceId: workspace });
 
-    await expect(api.workspaces.getWorkspace({ workspace })).rejects.toHaveProperty('message');
+    await expect(api.workspaces.getWorkspace({ workspaceId: workspace })).rejects.toHaveProperty('message');
   });
 });
 
 async function waitForReplication(api: XataApiClient, workspace: string, database?: string): Promise<void> {
   try {
     if (database === undefined) {
-      await api.database.getDatabaseList({ workspace });
+      await api.databases.getDatabaseList({ workspaceId: workspace });
     } else {
-      await api.branches.getBranchList({ workspace, database, region });
+      await api.branch.getBranchList({ workspace, region, dbName: database });
     }
   } catch (error) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -151,7 +147,7 @@ async function waitForReplication(api: XataApiClient, workspace: string, databas
 
 async function waitFailInReplication(api: XataApiClient, workspace: string, database: string): Promise<void> {
   try {
-    await api.branches.getBranchList({ workspace, database, region });
+    await api.branch.getBranchList({ workspace, region, dbName: database });
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return await waitFailInReplication(api, workspace, database);
@@ -164,10 +160,9 @@ async function waitForSearchIndexing(api: XataApiClient, workspace: string, data
   try {
     const { aggs } = await api.searchAndFilter.aggregateTable({
       workspace,
-      database,
       region,
-      branch: 'branch',
-      table: 'table',
+      dbBranchName: `${database}:branch`,
+      tableName: 'table',
       aggs: { total: { count: '*' } }
     });
 
