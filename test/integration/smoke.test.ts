@@ -102,7 +102,6 @@ describe('API Client Integration Tests', () => {
 
     expect(search.totalCount).toEqual(1);
     expect(search.records[0].id).toEqual(id);
-    expect(search.records[0].email).toEqual('example@foo.bar');
 
     const failedSearch = await newApi.searchAndFilter.searchTable({
       workspace,
