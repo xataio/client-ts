@@ -73,10 +73,10 @@ export async function setUpTestEnvironment(
   const id = Date.now().toString(36);
 
   const api = new XataApiClient({ apiKey, fetch, host, clientName: 'sdk-tests' });
-  const { databaseName: database } = await api.database.createDatabase({
-    workspace,
-    database: `sdk-integration-test-${prefix}-${id}`,
-    data: { region },
+  const { databaseName: database } = await api.databases.createDatabase({
+    workspaceId: workspace,
+    dbName: `sdk-integration-test-${prefix}-${id}`,
+    region,
     headers: { 'X-Xata-Files': 'true' }
   });
 
@@ -95,12 +95,11 @@ export async function setUpTestEnvironment(
   const { edits } = await api.migrations.compareBranchWithUserSchema({
     workspace,
     region,
-    database,
-    branch: 'main',
+    dbBranchName: `${database}:main`,
     schema
   });
 
-  await api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch: 'main', edits });
+  await api.migrations.applyBranchSchemaEdit({ workspace, region, dbBranchName: `${database}:main`, edits });
 
   let span: Span | undefined;
 
@@ -110,7 +109,7 @@ export async function setUpTestEnvironment(
     },
     afterAll: async () => {
       try {
-        await api.database.deleteDatabase({ workspace, database });
+        await api.databases.deleteDatabase({ workspaceId: workspace, dbName: database });
       } catch (e) {
         // Ignore error, delete database during ES snapshot fails
         console.error('Delete database failed', e);

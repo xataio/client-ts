@@ -18,12 +18,17 @@ export interface XataApiClientOptions {
   xataAgentExtra?: Record<string, string>;
 }
 
+// Props that can be passed to any API method
+type UserProps = {
+  headers?: Record<string, unknown>;
+};
+
 type XataApiProxy = {
   [Tag in keyof typeof operationsByTag]: {
     [Method in keyof (typeof operationsByTag)[Tag]]: (typeof operationsByTag)[Tag][Method] extends infer Operation extends (
       ...args: any
     ) => any
-      ? Omit<Parameters<Operation>[0], keyof ApiExtraProps> extends infer Params
+      ? Omit<Parameters<Operation>[0], keyof ApiExtraProps> & UserProps extends infer Params
         ? RequiredKeys<Params> extends never
           ? (params?: FlattenObject<Params>) => ReturnType<Operation>
           : (params: FlattenObject<Params>) => ReturnType<Operation>
