@@ -32,12 +32,7 @@ export default class BranchCreate extends BaseCommand<typeof BranchCreate> {
     const { from } = flags;
 
     try {
-      const result = await xata.api.branch.createBranch({
-        workspace,
-        region,
-        dbBranchName: `${database}:${branch}`,
-        from
-      });
+      const result = await xata.api.branches.createBranch({ workspace, region, database, branch, from });
 
       if (this.jsonEnabled()) return result;
 

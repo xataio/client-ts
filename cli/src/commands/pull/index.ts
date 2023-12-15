@@ -45,7 +45,8 @@ export default class Pull extends BaseCommand<typeof Pull> {
     const { logs } = await xata.api.migrations.getBranchSchemaHistory({
       workspace,
       region,
-      dbBranchName: `${database}:${branch}`,
+      database,
+      branch,
       // TODO: Fix pagination in the API to start from last known migration and not from the beginning
       // Also paginate until we get all migrations
       page: { size: 200 }

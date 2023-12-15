@@ -29,11 +29,7 @@ export default class RandomData extends BaseCommand<typeof RandomData> {
 
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
-    const branchDetails = await xata.api.branch.getBranchDetails({
-      workspace,
-      region,
-      dbBranchName: `${database}:${branch}`
-    });
+    const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
     if (!branchDetails) {
       this.error('Could not resolve the current branch');
     }
@@ -57,9 +53,10 @@ export default class RandomData extends BaseCommand<typeof RandomData> {
       await xata.api.records.bulkInsertTableRecords({
         workspace,
         region,
-        dbBranchName: `${database}:${branch}`,
-        tableName: table.name,
-        records: records as any[]
+        database,
+        branch,
+        table: table.name,
+        records
       });
 
       this.info(

@@ -22,8 +22,8 @@ export default class DatabasesDelete extends BaseCommand<typeof DatabasesDelete>
 
   async run(): Promise<void | unknown> {
     const { args, flags } = await this.parseCommand();
-    const workspaceId = flags.workspace || (await this.getWorkspace());
-    const dbName = args.database || (await this.getDatabase(workspaceId, { allowCreate: false })).name;
+    const workspace = flags.workspace || (await this.getWorkspace());
+    const database = args.database || (await this.getDatabase(workspace, { allowCreate: false })).name;
 
     const xata = await this.getXataClient();
 
@@ -31,18 +31,18 @@ export default class DatabasesDelete extends BaseCommand<typeof DatabasesDelete>
       {
         type: 'text',
         name: 'confirm',
-        message: `Are you sure you want to delete database ${dbName} in the ${workspaceId} workspace?\nPlease type ${dbName} to confirm:\n`,
+        message: `Are you sure you want to delete database ${database} in the ${workspace} workspace?\nPlease type ${database} to confirm:\n`,
         initial: false
       },
-      flags.force ? dbName : undefined
+      flags.force ? database : undefined
     );
     if (!confirm) return this.exit(1);
-    if (confirm !== dbName) return this.error('The database name did not match');
+    if (confirm !== database) return this.error('The database name did not match');
 
-    await xata.api.databases.deleteDatabase({ workspaceId, dbName });
+    await xata.api.database.deleteDatabase({ workspace, database });
 
     if (this.jsonEnabled()) return {};
 
-    this.success(`Database ${workspaceId}/${dbName} successfully deleted`);
+    this.success(`Database ${workspace}/${database} successfully deleted`);
   }
 }
