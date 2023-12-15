@@ -23,8 +23,8 @@ export default class DatabasesRename extends BaseCommand<typeof DatabasesRename>
 
   async run(): Promise<void | unknown> {
     const { args, flags } = await this.parseCommand();
-    const workspace = flags.workspace || (await this.getWorkspace());
-    const database = args.database || (await this.getDatabase(workspace, { allowCreate: false })).name;
+    const workspaceId = flags.workspace || (await this.getWorkspace());
+    const dbName = args.database || (await this.getDatabase(workspaceId, { allowCreate: false })).name;
     const newName =
       args.newName ||
       (await this.prompt({ type: 'text', name: 'newName', message: 'Enter the new database name' })).newName;
@@ -35,18 +35,18 @@ export default class DatabasesRename extends BaseCommand<typeof DatabasesRename>
       {
         type: 'text',
         name: 'confirm',
-        message: `Renaming the database from ${database} to ${newName} will also change your endpoint URL. This will require code changes in your application.\nPlease type: ${database} to confirm:\n`,
+        message: `Renaming the database from ${dbName} to ${newName} will also change your endpoint URL. This will require code changes in your application.\nPlease type: ${dbName} to confirm:\n`,
         initial: false
       },
-      flags.force ? database : undefined
+      flags.force ? dbName : undefined
     );
     if (!confirm) return this.exit(1);
-    if (confirm !== database) return this.error('The database name did not match');
+    if (confirm !== dbName) return this.error('The database name did not match');
 
-    await xata.api.database.renameDatabase({ workspace, database, newName });
+    await xata.api.databases.renameDatabase({ workspaceId, dbName, newName });
 
     if (this.jsonEnabled()) return {};
 
-    this.success(`Database ${workspace}/${database} successfully renamed to ${workspace}/${newName}`);
+    this.success(`Database ${workspaceId}/${dbName} successfully renamed to ${workspaceId}/${newName}`);
   }
 }

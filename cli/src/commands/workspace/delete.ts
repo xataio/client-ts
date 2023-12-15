@@ -20,7 +20,7 @@ export default class WorkspaceDelete extends BaseCommand<typeof WorkspaceDelete>
 
   async run(): Promise<void | unknown> {
     const { flags } = await this.parseCommand();
-    const workspace = flags.workspace || (await this.getWorkspace());
+    const workspaceId = flags.workspace || (await this.getWorkspace());
 
     const xata = await this.getXataClient();
 
@@ -28,17 +28,17 @@ export default class WorkspaceDelete extends BaseCommand<typeof WorkspaceDelete>
       {
         type: 'text',
         name: 'confirm',
-        message: `Are you sure you want to delete the ${workspace} workspace? Please type ${workspace} to confirm`
+        message: `Are you sure you want to delete the ${workspaceId} workspace? Please type ${workspaceId} to confirm`
       },
-      flags.force ? workspace : undefined
+      flags.force ? workspaceId : undefined
     );
     if (!confirm) return this.exit(1);
-    if (confirm !== workspace) return this.error('The workspace name did not match');
+    if (confirm !== workspaceId) return this.error('The workspace name did not match');
 
-    await xata.api.workspaces.deleteWorkspace({ workspace });
+    await xata.api.workspaces.deleteWorkspace({ workspaceId });
 
     if (this.jsonEnabled()) return {};
 
-    this.success(`Workspace ${workspace} successfully deleted`);
+    this.success(`Workspace ${workspaceId} successfully deleted`);
   }
 }

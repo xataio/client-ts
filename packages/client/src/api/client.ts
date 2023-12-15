@@ -1,7 +1,7 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
 import { getAPIKey } from '../util/environment';
 import { FetchImpl, getFetchImplementation } from '../util/fetch';
-import { RequiredKeys } from '../util/types';
+import { FlattenObject, RequiredKeys } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { operationsByTag } from './components';
 import type { FetcherExtraProps } from './fetcher';
@@ -17,6 +17,20 @@ export interface XataApiClientOptions {
   clientName?: string;
   xataAgentExtra?: Record<string, string>;
 }
+
+type XataApiProxy = {
+  [Tag in keyof typeof operationsByTag]: {
+    [Method in keyof (typeof operationsByTag)[Tag]]: (typeof operationsByTag)[Tag][Method] extends infer Operation extends (
+      ...args: any
+    ) => any
+      ? Omit<Parameters<Operation>[0], keyof ApiExtraProps> extends infer Params
+        ? RequiredKeys<Params> extends never
+          ? (params?: FlattenObject<Params>) => ReturnType<Operation>
+          : (params: FlattenObject<Params>) => ReturnType<Operation>
+        : never
+      : never;
+  };
+};
 
 const buildApiClient = () =>
   class {
@@ -66,20 +80,6 @@ const buildApiClient = () =>
         }
       });
     }
-  } as unknown as {
-    new (options?: XataApiClientOptions): {
-      [Tag in keyof typeof operationsByTag]: {
-        [Method in keyof (typeof operationsByTag)[Tag]]: (typeof operationsByTag)[Tag][Method] extends infer Operation extends (
-          ...args: any
-        ) => any
-          ? Omit<Parameters<Operation>[0], keyof ApiExtraProps> extends infer Params
-            ? RequiredKeys<Params> extends never
-              ? (params?: Params) => ReturnType<Operation>
-              : (params: Params) => ReturnType<Operation>
-            : never
-          : never;
-      };
-    };
-  };
+  } as unknown as { new (options?: XataApiClientOptions): XataApiProxy };
 
 export class XataApiClient extends buildApiClient() {}

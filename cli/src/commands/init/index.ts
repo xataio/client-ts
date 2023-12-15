@@ -187,7 +187,7 @@ export default class Init extends BaseCommand<typeof Init> {
     if (this.projectConfig?.codegen?.output) {
       const { schema: currentSchema } = await (
         await this.getXataClient()
-      ).api.branches.getBranchDetails({ workspace, database, region, branch });
+      ).api.branch.getBranchDetails({ workspace, region, dbBranchName: `${database}:${branch}` });
 
       const hasTables = currentSchema?.tables && currentSchema?.tables.length > 0;
       const hasColumns = currentSchema?.tables.some((t) => t.columns.length > 0);
@@ -428,13 +428,13 @@ export default class Init extends BaseCommand<typeof Init> {
   }
 
   // New API keys need to be replicated until can be used in a particular region/database
-  async waitUntilAPIKeyIsValid(workspace: string, region: string, database: string) {
+  async waitUntilAPIKeyIsValid(workspace: string, region: string, dbName: string) {
     const xata = await this.getXataClient();
     const maxRetries = 10;
     let retries = 0;
     while (retries++ < maxRetries) {
       try {
-        await xata.api.branches.getBranchList({ workspace, region, database });
+        await xata.api.branch.getBranchList({ workspace, region, dbName });
         return;
       } catch (err) {
         if (err instanceof Error && err.message.includes('Invalid API key')) {
