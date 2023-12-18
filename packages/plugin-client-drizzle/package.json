@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/drizzle",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
