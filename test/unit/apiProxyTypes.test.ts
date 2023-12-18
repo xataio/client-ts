@@ -11,20 +11,20 @@ beforeAll(async () => {
 });
 
 describe('API Proxy types', () => {
-  test('returns functions for all defined operation methods', async () => {
-    for (const operation of Object.keys(operationsByTag)) {
-      const operationInNamespace = operationsByTag[operation as keyof typeof operationsByTag];
-      for (const method of Object.keys(operationInNamespace)) {
-        expect(operationInNamespace[method as keyof typeof operationInNamespace]).toBeInstanceOf(Function);
+  test('returns functions for all defined namespace methods', async () => {
+    for (const namespace of Object.keys(operationsByTag)) {
+      const operationsInNamespace = operationsByTag[namespace as keyof typeof operationsByTag];
+      for (const operation of Object.keys(operationsInNamespace)) {
+        expect(operationsInNamespace[operation as keyof typeof operationsInNamespace]).toBeInstanceOf(Function);
       }
     }
   });
-  test('returns undefined for undefined operations', async () => {
+  test('returns undefined for undefined namespaces', async () => {
     // @ts-ignore
-    expect(xata.undefinedOperation).toBeUndefined();
+    expect(xata.undefinedNamespace).toBeUndefined();
   });
-  test('returns undefined for undefined operation methods', async () => {
+  test('returns undefined for undefined namespace operations', async () => {
     // @ts-ignore
-    expect(xata.authentication.undefinedOperation).toBeUndefined();
+    expect(xata.authentication.undefinedMethod).toBeUndefined();
   });
 });
