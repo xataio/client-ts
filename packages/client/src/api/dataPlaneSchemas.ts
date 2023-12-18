@@ -37,6 +37,36 @@ export type PgRollStatusResponse = {
  * @minLength 1
  * @pattern [a-zA-Z0-9_\-~]+
  */
+export type PgRollMigrationJobID = string;
+
+export type PgRollJobType = 'apply' | 'start' | 'complete' | 'rollback';
+
+export type PgRollJobStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+
+export type PgRollJobStatusResponse = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+  /**
+   * The type of the migration job
+   */
+  type: PgRollJobType;
+  /**
+   * The status of the migration job
+   */
+  status: PgRollJobStatus;
+  /**
+   * The error message associated with the migration job
+   */
+  error?: string;
+};
+
+/**
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
 export type DBName = string;
 
 /**

@@ -7,6 +7,8 @@ import type * as Schemas from './dataPlaneSchemas';
 
 export type DBBranchNameParam = Schemas.DBBranchName;
 
+export type PgRollMigrationJobIDParam = Schemas.PgRollMigrationJobID;
+
 export type DBNameParam = Schemas.DBName;
 
 export type MigrationRequestNumberParam = Schemas.MigrationRequestNumber;
