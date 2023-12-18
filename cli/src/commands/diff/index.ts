@@ -39,17 +39,24 @@ export default class Diff extends BaseCommand<typeof Diff> {
     const apiRequest =
       args.branch && args.base
         ? xata.api.migrations.compareBranchSchemas({
-            workspace,
-            region,
-            dbBranchName: `${database}:${args.branch}`,
-            branchName: args.base
+            pathParams: {
+              workspace,
+              region,
+              dbBranchName: `${database}:${args.branch}`,
+              branchName: args.base
+            },
+            body: {}
           })
         : xata.api.migrations.compareBranchWithUserSchema({
-            workspace,
-            region,
-            dbBranchName: `${database}:${branch}`,
-            schema: { tables: [] },
-            schemaOperations
+            pathParams: {
+              workspace,
+              region,
+              dbBranchName: `${database}:${branch}`
+            },
+            body: {
+              schema: { tables: [] },
+              schemaOperations
+            }
           });
 
     const {

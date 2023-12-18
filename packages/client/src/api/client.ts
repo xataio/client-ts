@@ -29,8 +29,8 @@ type XataApiProxy = {
     ) => any
       ? Omit<Parameters<Operation>[0], keyof ApiExtraProps> extends infer Params
         ? RequiredKeys<Params> extends never
-          ? (params?: FlattenObject<Params> & UserProps) => ReturnType<Operation>
-          : (params: FlattenObject<Params> & UserProps) => ReturnType<Operation>
+          ? (params?: Params & UserProps) => ReturnType<Operation>
+          : (params: Params & UserProps) => ReturnType<Operation>
         : never
       : never;
   };

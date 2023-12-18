@@ -23,9 +23,11 @@ export default class SchemaDump extends BaseCommand<typeof SchemaDump> {
 
     const xata = await this.getXataClient();
     const branchDetails = await xata.api.branch.getBranchDetails({
-      workspace,
-      region,
-      dbBranchName: `${database}:${branch}`
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`
+      }
     });
     if (!branchDetails) return this.error('Could not resolve the current branch');
     if (!flags.file) {

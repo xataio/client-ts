@@ -211,9 +211,11 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.parseDatabase();
     const { schema: existingSchema } = await xata.api.branch.getBranchDetails({
-      workspace,
-      region,
-      dbBranchName: `${database}:${branch}`
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:${branch}`
+      }
     });
 
     const newSchema = {
@@ -224,10 +226,14 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     };
 
     const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
-      workspace,
-      region,
-      dbBranchName: `${database}:main`,
-      schema: newSchema
+      pathParams: {
+        workspace,
+        region,
+        dbBranchName: `${database}:main`
+      },
+      body: {
+        schema: newSchema
+      }
     });
     if (edits.operations.length > 0) {
       const destructiveOperations = edits.operations
@@ -269,10 +275,14 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       }
 
       await xata.api.migrations.applyBranchSchemaEdit({
-        workspace,
-        region,
-        dbBranchName: `${database}:${branch}`,
-        edits
+        pathParams: {
+          workspace,
+          region,
+          dbBranchName: `${database}:${branch}`
+        },
+        body: {
+          edits
+        }
       });
     }
   }
