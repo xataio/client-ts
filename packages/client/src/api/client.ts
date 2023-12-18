@@ -1,7 +1,7 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
 import { getAPIKey } from '../util/environment';
 import { FetchImpl, getFetchImplementation } from '../util/fetch';
-import { FlattenObject, RequiredKeys } from '../util/types';
+import { RequiredKeys } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { operationsByTag } from './components';
 import type { FetcherExtraProps } from './fetcher';
