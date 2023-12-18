@@ -377,6 +377,9 @@ importers:
         specifier: ^3.21.4
         version: 3.22.3(zod@3.22.4)
     devDependencies:
+      ts-morph:
+        specifier: ^21.0.1
+        version: 21.0.1
       tsx:
         specifier: ^4.1.2
         version: 4.6.2
@@ -5295,7 +5298,6 @@ packages:
       minimatch: 9.0.3
       mkdirp: 3.0.1
       path-browserify: 1.0.1
-    dev: false
 
   /@tsconfig/node10@1.0.9:
     resolution:
@@ -7383,7 +7385,6 @@ packages:
   /code-block-writer@12.0.0:
     resolution:
       { integrity: sha512-q4dMFMlXtKR3XNBHyMHt/3pwYNA69EDk00lloMOaaUMKPUXBw6lpXtbu3MMVG6/uOihGnRDOlkyqsONEUj60+w== }
-    dev: false
 
   /code-excerpt@3.0.0:
     resolution:
@@ -12168,7 +12169,6 @@ packages:
       { integrity: sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg== }
     engines: { node: '>=10' }
     hasBin: true
-    dev: false
 
   /mlly@1.4.2:
     resolution:
@@ -13506,7 +13506,6 @@ packages:
   /path-browserify@1.0.1:
     resolution:
       { integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g== }
-    dev: false
 
   /path-case@3.0.4:
     resolution:
@@ -15679,7 +15678,6 @@ packages:
     dependencies:
       '@ts-morph/common': 0.22.0
       code-block-writer: 12.0.0
-    dev: false
 
   /ts-node@10.9.2(@types/node@20.10.5)(typescript@5.3.3):
     resolution:

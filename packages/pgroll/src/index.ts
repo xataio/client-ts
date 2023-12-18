@@ -1,3 +1,2 @@
-export * from './operations';
-export * from './migration';
+export * from './types';
 export * from './json-schema';
