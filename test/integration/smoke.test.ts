@@ -88,7 +88,7 @@ describe('API Client Integration Tests', () => {
         tableName: 'table'
       },
       body: {
-        record: { email: 'example@foo.bar' }
+        email: 'example@foo.bar'
       }
     });
 
