@@ -74,9 +74,11 @@ export async function setUpTestEnvironment(
 
   const api = new XataApiClient({ apiKey, fetch, host, clientName: 'sdk-tests' });
   const { databaseName: database } = await api.databases.createDatabase({
-    workspaceId: workspace,
-    dbName: `sdk-integration-test-${prefix}-${id}`,
-    region,
+    pathParams: {
+      workspaceId: workspace,
+      dbName: `sdk-integration-test-${prefix}-${id}`
+    },
+    body: { region },
     headers: { 'X-Xata-Files': 'true' }
   });
 
@@ -93,13 +95,20 @@ export async function setUpTestEnvironment(
   };
 
   const { edits } = await api.migrations.compareBranchWithUserSchema({
-    workspace,
-    region,
-    dbBranchName: `${database}:main`,
-    schema
+    pathParams: {
+      workspace,
+      region,
+      dbBranchName: `${database}:main`
+    },
+    body: {
+      schema
+    }
   });
 
-  await api.migrations.applyBranchSchemaEdit({ workspace, region, dbBranchName: `${database}:main`, edits });
+  await api.migrations.applyBranchSchemaEdit({
+    pathParams: { workspace, region, dbBranchName: `${database}:main` },
+    body: { edits }
+  });
 
   let span: Span | undefined;
 
@@ -109,7 +118,7 @@ export async function setUpTestEnvironment(
     },
     afterAll: async () => {
       try {
-        await api.databases.deleteDatabase({ workspaceId: workspace, dbName: database });
+        await api.databases.deleteDatabase({ pathParams: { workspaceId: workspace, dbName: database } });
       } catch (e) {
         // Ignore error, delete database during ES snapshot fails
         console.error('Delete database failed', e);
