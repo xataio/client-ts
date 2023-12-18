@@ -64,6 +64,13 @@ export type DateTime = string;
 
 export type Branch = {
   name: string;
+  /**
+   * The cluster where this branch resides. Value of 'shared-cluster' for branches in shared clusters
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
   createdAt: DateTime;
 };
 
@@ -177,6 +184,13 @@ export type DBBranch = {
   branchName: BranchName;
   createdAt: DateTime;
   id: string;
+  /**
+   * The cluster where this branch resides. Value of 'shared-cluster' for branches in shared clusters
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
   version: number;
   lastMigrationID: string;
   metadata?: BranchMetadata;
