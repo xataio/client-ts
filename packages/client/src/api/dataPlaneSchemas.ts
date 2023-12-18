@@ -14,30 +14,10 @@ export type DBBranchName = string;
 
 export type PgRollApplyMigrationResponse = {
   /**
-   * The id of the applied migration
+   * The id of the migration job
    */
-  migrationID: string;
+  jobID: string;
 };
-
-export type PgRollMigrationStatus = 'no migrations' | 'in progress' | 'complete';
-
-export type PgRollStatusResponse = {
-  /**
-   * The status of the most recent migration
-   */
-  status: PgRollMigrationStatus;
-  /**
-   * The name of the most recent version
-   */
-  version: string;
-};
-
-/**
- * @maxLength 255
- * @minLength 1
- * @pattern [a-zA-Z0-9_\-~]+
- */
-export type PgRollMigrationJobID = string;
 
 export type PgRollJobType = 'apply' | 'start' | 'complete' | 'rollback';
 
@@ -61,6 +41,13 @@ export type PgRollJobStatusResponse = {
    */
   error?: string;
 };
+
+/**
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type PgRollMigrationJobID = string;
 
 /**
  * @maxLength 255
