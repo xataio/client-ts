@@ -83,7 +83,7 @@ export type PgRollStatusVariables = {
 } & DataPlaneFetcherExtraProps;
 
 export const pgRollStatus = (variables: PgRollStatusVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.PgRollStatusResponse, PgRollStatusError, undefined, {}, {}, PgRollStatusPathParams>({
+  dataPlaneFetch<Schemas.PgRollJobStatusResponse, PgRollStatusError, undefined, {}, {}, PgRollStatusPathParams>({
     url: '/db/{dbBranchName}/pgroll/status',
     method: 'get',
     ...variables,
