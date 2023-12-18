@@ -25,6 +25,6 @@ describe('API Proxy types', () => {
   });
   test('returns undefined for undefined namespace operations', () => {
     // @ts-ignore
-    expect(xata.authentication.undefinedMethod).toBeUndefined();
+    expect(xata.authentication.undefinedOperation).toBeUndefined();
   });
 });
