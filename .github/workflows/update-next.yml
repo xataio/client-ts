@@ -1,0 +1,37 @@
+name: Update next branch with latest main
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  update-next:
+    name: Update next branch with latest main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # This makes the whole repo to be checked out
+          fetch-depth: 0
+          # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
+          persist-credentials: false
+
+      - name: Configure
+        run: |
+          git config user.email "system@xata.io"
+          git config user.name "Xata"
+
+      - name: Rebase next branch with latest main
+        run: |
+          git checkout next
+          git rebase main
+
+      - name: Push
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GIT_TOKEN }}
+          branch: next
+          force: true
