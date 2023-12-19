@@ -6,6 +6,13 @@ import { execSync } from 'child_process';
 // Run "npx changeset version" to update the versions in the monorepo
 execSync('npx changeset version', { stdio: 'inherit' });
 
+// Check if we're on the main branch, if not, skip updating compatibility.json
+const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+if (branch !== 'main') {
+  console.log('Not on master, skipping compatibility.json update');
+  process.exit(0);
+}
+
 const compatibilityPath = path.join(process.cwd(), 'compatibility.json');
 const compatibilityData = fs.readFileSync(compatibilityPath, 'utf8');
 const compatibility = JSON.parse(compatibilityData);
