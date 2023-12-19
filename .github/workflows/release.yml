@@ -49,6 +49,8 @@ jobs:
 
       - name: Update next channel
         if: github.ref_name == 'next'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
         run: |
           npx changeset version
           npx changeset publish
