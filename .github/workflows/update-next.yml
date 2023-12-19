@@ -25,4 +25,4 @@ jobs:
         run: |
           git checkout origin/next
           git rebase origin/main
-          git push origin HEAD:next
+          git push origin HEAD:next -f
