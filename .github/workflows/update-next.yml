@@ -12,7 +12,9 @@ jobs:
     name: Update next branch with latest main
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configure
         run: |
@@ -21,6 +23,6 @@ jobs:
 
       - name: Rebase next branch with latest main
         run: |
-          git checkout next
-          git rebase main
-          git push origin next
+          git checkout origin/next
+          git rebase origin/main
+          git push origin HEAD:next
