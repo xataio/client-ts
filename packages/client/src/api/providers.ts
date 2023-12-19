@@ -29,7 +29,7 @@ const providers: Record<HostAliases, ProviderBuilder> = {
   }
 };
 
-export function isHostProviderAlias(alias: HostProvider | string): alias is HostAliases {
+export function isHostProviderAlias(alias?: HostProvider | string): alias is HostAliases {
   return isString(alias) && Object.keys(providers).includes(alias);
 }
 
@@ -52,16 +52,17 @@ export function buildProviderString(provider: HostProvider): string {
   return `${provider.main},${provider.workspaces}`;
 }
 
-export function parseWorkspacesUrlParts(url: string): { workspace: string; region: string } | null {
+export function parseWorkspacesUrlParts(url: string): { workspace: string; region: string; host: HostAliases } | null {
   if (!isString(url)) return null;
 
-  const regex = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh.*/;
-  const regexDev = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev.*/;
-  const regexStaging = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev.*/;
-  const regexProdTesting = /(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.tech.*/;
+  const matches = {
+    production: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh.*/),
+    staging: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev.*/),
+    dev: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev.*/)
+  };
 
-  const match = url.match(regex) || url.match(regexDev) || url.match(regexStaging) || url.match(regexProdTesting);
-  if (!match) return null;
+  const [host, match] = Object.entries(matches).find(([, match]) => match !== null) ?? [];
+  if (!isHostProviderAlias(host) || !match) return null;
 
-  return { workspace: match[1], region: match[2] };
+  return { workspace: match[1], region: match[2], host };
 }
