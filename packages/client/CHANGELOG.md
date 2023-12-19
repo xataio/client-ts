@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.28.2
+
+### Patch Changes
+
+- [#1288](https://github.com/xataio/client-ts/pull/1288) [`c9178e1`](https://github.com/xataio/client-ts/commit/c9178e1e3f2268513e78dcfce396a99a8fca5dfb) Thanks [@SferaDev](https://github.com/SferaDev)! - Update read to use `ReadonlyArray<Identifier>`
+
 ## 0.28.1
 
 ### Patch Changes
