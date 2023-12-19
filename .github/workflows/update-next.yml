@@ -14,7 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # This makes the whole repo to be checked out
           fetch-depth: 0
+          # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
+          persist-credentials: false
+          token: ${{ secrets.GIT_TOKEN }}
 
       - name: Configure
         run: |
