@@ -1,5 +1,27 @@
 # @xata.io/cli
 
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies [[`c9178e1`](https://github.com/xataio/client-ts/commit/c9178e1e3f2268513e78dcfce396a99a8fca5dfb)]:
+  - @xata.io/client@0.28.2
+  - @xata.io/codegen@0.28.2
+
+## 0.15.2
+
+### Patch Changes
+
+- Updated dependencies [[`9a7e3f5`](https://github.com/xataio/client-ts/commit/9a7e3f5029e53efc6750e9c86bab936427788209)]:
+  - @xata.io/client@0.28.1
+  - @xata.io/codegen@0.28.1
+
+## 0.15.1
+
+### Patch Changes
+
+- [#1277](https://github.com/xataio/client-ts/pull/1277) [`f999833a`](https://github.com/xataio/client-ts/commit/f999833a787a7db4a733eaa395ca1f71101e74ea) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing api key on auth login
+
 ## 0.15.0
 
 ### Minor Changes

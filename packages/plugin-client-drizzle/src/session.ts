@@ -78,8 +78,17 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
       );
 
     if (warning) console.warn(warning);
-
-    const rows = records.map((record) => fields.map((field) => record[field.path.join('.')]));
+    const internalColumnNames = ['xata.version', 'xata.createdAt', 'xata.updatedAt', 'xata.deletedAt'];
+    const rows = records.map((record) =>
+      fields.map((field) => {
+        const pathAsString = field.path.join('.');
+        if (internalColumnNames.includes(pathAsString)) {
+          const [namespaceXata, namespaceColumn]: [string, string] = pathAsString.split('.');
+          return (record[namespaceXata] as Record<string, any>)[namespaceColumn];
+        }
+        return record[pathAsString];
+      })
+    );
 
     if (this.customResultMapper) {
       return this.customResultMapper(rows);

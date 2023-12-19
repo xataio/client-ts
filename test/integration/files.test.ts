@@ -55,6 +55,10 @@ describe('file support', () => {
     expect(record.photo?.size).toBeGreaterThan(0);
     expect(record.photo?.toBlob()).toBeInstanceOf(Blob);
     expect(record.photo?.toString()).toBe('hello');
+
+    // Check for default public access (photo is public by default, attachments are not)
+    expect(record.attachments?.[0]?.enablePublicUrl).toBe(false);
+    expect(record.photo?.enablePublicUrl).toBe(true);
   });
 
   test('create file with binary endpoint JSON and mediaType override', async () => {

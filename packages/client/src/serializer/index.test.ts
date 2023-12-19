@@ -8,7 +8,7 @@ describe('simple cache', () => {
     const json = serialize(original);
 
     expect(json).toMatchInlineSnapshot(
-      '"{\\"__\\":\\"Object\\",\\"a\\":1,\\"b\\":2,\\"c\\":{\\"__\\":\\"Date\\",\\"___\\":\\"2022-01-01T00:00:00.000Z\\"},\\"d\\":{\\"__\\":\\"Object\\",\\"foo\\":{\\"__\\":\\"Object\\",\\"bar\\":false}},\\"e\\":1.8}"'
+      `"{"__":"Object","a":1,"b":2,"c":{"__":"Date","___":"2022-01-01T00:00:00.000Z"},"d":{"__":"Object","foo":{"__":"Object","bar":false}},"e":1.8}"`
     );
 
     const data = deserialize<any>(json);

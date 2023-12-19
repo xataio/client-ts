@@ -27,7 +27,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.6.5
+          version: 8
 
       - name: Setup node
         uses: actions/setup-node@v3
@@ -36,7 +36,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Set build version
-        run: echo "TAG=0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "TAG=0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         id: version
 
       - name: Check secrets exist
@@ -185,7 +185,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.6.5
+          version: 8
 
       - name: Use Node.js ${{ steps.nvm.outputs.NVMRC }}
         uses: actions/setup-node@v3

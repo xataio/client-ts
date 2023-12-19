@@ -14,23 +14,40 @@ export type DBBranchName = string;
 
 export type PgRollApplyMigrationResponse = {
   /**
-   * The id of the applied migration
+   * The id of the migration job
    */
-  migrationID: string;
+  jobID: string;
 };
 
-export type PgRollMigrationStatus = 'no migrations' | 'in progress' | 'complete';
+export type PgRollJobType = 'apply' | 'start' | 'complete' | 'rollback';
 
-export type PgRollStatusResponse = {
+export type PgRollJobStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+
+export type PgRollJobStatusResponse = {
   /**
-   * The status of the most recent migration
+   * The id of the migration job
    */
-  status: PgRollMigrationStatus;
+  jobID: string;
   /**
-   * The name of the most recent version
+   * The type of the migration job
    */
-  version: string;
+  type: PgRollJobType;
+  /**
+   * The status of the migration job
+   */
+  status: PgRollJobStatus;
+  /**
+   * The error message associated with the migration job
+   */
+  error?: string;
 };
+
+/**
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type PgRollMigrationJobID = string;
 
 /**
  * @maxLength 255
@@ -47,6 +64,13 @@ export type DateTime = string;
 
 export type Branch = {
   name: string;
+  /**
+   * The cluster where this branch resides. Value of 'shared-cluster' for branches in shared clusters
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
   createdAt: DateTime;
 };
 
@@ -160,6 +184,13 @@ export type DBBranch = {
   branchName: BranchName;
   createdAt: DateTime;
   id: string;
+  /**
+   * The cluster where this branch resides. Value of 'shared-cluster' for branches in shared clusters
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
   version: number;
   lastMigrationID: string;
   metadata?: BranchMetadata;

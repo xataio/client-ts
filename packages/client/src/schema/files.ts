@@ -20,11 +20,11 @@ export class XataFile {
   /**
    * Name of the file.
    */
-  public name: string;
+  public name?: string;
   /**
    * Media type of the file.
    */
-  public mediaType: string;
+  public mediaType?: string;
   /**
    * Base64 encoded content of the file.
    */
@@ -32,7 +32,7 @@ export class XataFile {
   /**
    * Whether to enable public url for the file.
    */
-  public enablePublicUrl: boolean;
+  public enablePublicUrl?: boolean;
   /**
    * Timeout for the signed url in seconds. Default: 60 seconds (1 minute).
    */
@@ -48,11 +48,11 @@ export class XataFile {
   /**
    * Version of the file.
    */
-  public version: number;
+  public version?: number;
   /**
    * Url of the file.
    */
-  public url: string;
+  public url?: string;
   /**
    * Signed url of the file (if requested, a temporary signed url will be returned).
    */
@@ -64,22 +64,22 @@ export class XataFile {
   /**
    * Attributes of the file.
    */
-  public attributes: Record<string, any>;
+  public attributes?: Record<string, any>;
 
   constructor(file: Partial<XataFile>) {
     this.id = file.id;
-    this.name = file.name || '';
-    this.mediaType = file.mediaType || 'application/octet-stream';
+    this.name = file.name;
+    this.mediaType = file.mediaType;
     this.base64Content = file.base64Content;
-    this.enablePublicUrl = file.enablePublicUrl ?? false;
+    this.enablePublicUrl = file.enablePublicUrl;
     this.signedUrlTimeout = file.signedUrlTimeout;
     this.uploadUrlTimeout = file.uploadUrlTimeout;
-    this.size = file.size ?? 0;
-    this.version = file.version ?? 1;
-    this.url = file.url || '';
+    this.size = file.size;
+    this.version = file.version;
+    this.url = file.url;
     this.signedUrl = file.signedUrl;
     this.uploadUrl = file.uploadUrl;
-    this.attributes = file.attributes || {};
+    this.attributes = file.attributes;
   }
 
   static fromBuffer(buffer: Buffer, options: XataFileEditableFields = {}): XataFile {
