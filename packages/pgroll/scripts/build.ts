@@ -151,10 +151,14 @@ async function main() {
 
   // Create a TypeScript project
   const project = new Project({ compilerOptions: { target: ScriptTarget.ESNext } });
-  const file = project.createSourceFile('types.ts', '', { overwrite: true });
+  const schemaFile = project.createSourceFile('schema.ts', '', { overwrite: true });
+  const typesFile = project.createSourceFile('types.ts', '', { overwrite: true });
+
+  // Write the JSON schema to a file
+  schemaFile.addStatements(`export const schema = ${JSON.stringify(response, null, 2)} as const;`);
 
   // Add import statements
-  file.addImportDeclaration({ moduleSpecifier: 'zod', namedImports: ['z'] });
+  typesFile.addImportDeclaration({ moduleSpecifier: 'zod', namedImports: ['z'] });
 
   // Topologically sort the schema definitions
   const statements = topologicalSort(Object.entries(schema.$defs)).map(([name, definition]) => [
@@ -165,9 +169,9 @@ async function main() {
   // Generate TypeScript code for each definition
   for (const [name, statement] of statements) {
     // Add a type alias for the Zod type
-    file.addTypeAlias({ name, type: `z.infer<typeof ${name}Definition>`, isExported: true });
+    typesFile.addTypeAlias({ name, type: `z.infer<typeof ${name}Definition>`, isExported: true });
     // Add a variable statement for the Zod schema
-    file.addVariableStatement({
+    typesFile.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
       declarations: [{ name: `${name}Definition`, initializer: statement }],
       isExported: true
@@ -175,7 +179,7 @@ async function main() {
   }
 
   // Add a type alias for the OperationType
-  file.addTypeAlias({
+  typesFile.addTypeAlias({
     name: 'OperationType',
     type: `(typeof operationTypes)[number]`,
     isExported: true
@@ -183,7 +187,7 @@ async function main() {
 
   // Extract operation types from the schema and add a variable statement
   const operationTypes = (schema.$defs['PgRollOperation'] as any).anyOf.flatMap((def) => Object.keys(def.properties));
-  file.addVariableStatement({
+  typesFile.addVariableStatement({
     declarationKind: VariableDeclarationKind.Const,
     declarations: [
       {
@@ -195,7 +199,8 @@ async function main() {
   });
 
   // Write the generated TypeScript code to a file
-  await fs.writeFile('src/types.ts', prettier.format(file.getFullText(), { parser: 'typescript' }));
+  await fs.writeFile('src/schema.ts', prettier.format(schemaFile.getFullText(), { parser: 'typescript' }));
+  await fs.writeFile('src/types.ts', prettier.format(typesFile.getFullText(), { parser: 'typescript' }));
 }
 
 main();
