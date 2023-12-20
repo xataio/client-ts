@@ -1,5 +1,5 @@
 ---
-"@xata.io/drizzle": patch
+'@xata.io/drizzle': patch
 ---
 
 fix: drizzle internal columns
