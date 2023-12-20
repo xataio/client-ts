@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.28.3
+
+### Patch Changes
+
+- [#1304](https://github.com/xataio/client-ts/pull/1304) [`b7f3ec9`](https://github.com/xataio/client-ts/commit/b7f3ec9eabe3642929131e244bd774f4d3134482) Thanks [@SferaDev](https://github.com/SferaDev)! - Rewrite upload url path
+
 ## 0.28.2
 
 ### Patch Changes
