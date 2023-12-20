@@ -158,8 +158,8 @@ describe('file support', () => {
     const upload1 = await fetch(result.photo?.uploadUrl ?? '', { method: 'PUT', body: png });
     const upload2 = await fetch(result.attachments?.[0]?.uploadUrl ?? '', { method: 'PUT', body: csv });
 
-    expect(upload1.status).toBe(200);
-    expect(upload2.status).toBe(200);
+    expect(upload1.status).toBe(201);
+    expect(upload2.status).toBe(201);
 
     const user = await xata.db.users.read(result.id, [
       '*',
