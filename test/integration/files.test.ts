@@ -146,8 +146,8 @@ describe('file support', () => {
     const result = await xata.db.users.create(
       {
         name: 'Test',
-        photo: { name: 'pic.png' },
-        attachments: [{ name: 'hello.csv', mediaType: 'text/csv' }]
+        photo: { name: 'pic.png', base64Content: '' },
+        attachments: [{ name: 'hello.csv', mediaType: 'text/csv', base64Content: '' }]
       },
       ['*', 'photo.uploadUrl', 'attachments.uploadUrl']
     );
