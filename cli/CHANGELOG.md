@@ -1,5 +1,15 @@
 # @xata.io/cli
 
+## 0.15.4
+
+### Patch Changes
+
+- [#1294](https://github.com/xataio/client-ts/pull/1294) [`c4aa170`](https://github.com/xataio/client-ts/commit/c4aa1708c25385d2d95161b11a0cf00b26c4733c) Thanks [@snide](https://github.com/snide)! - Clean up API success page
+
+- Updated dependencies [[`b7f3ec9`](https://github.com/xataio/client-ts/commit/b7f3ec9eabe3642929131e244bd774f4d3134482)]:
+  - @xata.io/client@0.28.3
+  - @xata.io/codegen@0.28.3
+
 ## 0.15.3
 
 ### Patch Changes
