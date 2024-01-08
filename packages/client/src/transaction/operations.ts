@@ -1,4 +1,4 @@
-import { BaseData, EditableData, XataRecord } from '../schema';
+import { BaseData, EditableData, SelectableColumn, XataRecord } from '../schema';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
 export type TransactionOperation<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> =
@@ -20,6 +20,13 @@ export type TransactionOperation<Schemas extends Record<string, BaseData>, Table
       delete: Values<{
         [Model in GetArrayInnerType<NonNullable<Tables[]>>]: { table: Model } & DeleteTransactionOperation;
       }>;
+    }
+  | {
+      get: Values<{
+        [Model in GetArrayInnerType<NonNullable<Tables[]>>]: { table: Model } & GetTransactionOperation<
+          Schemas[Model] & XataRecord
+        >;
+      }>;
     };
 
 export type InsertTransactionOperation<O extends XataRecord> = {
@@ -40,6 +47,11 @@ export type DeleteTransactionOperation = {
   failIfMissing?: boolean;
 };
 
+export type GetTransactionOperation<O extends XataRecord> = {
+  id: string;
+  columns?: SelectableColumn<O>[];
+};
+
 type TransactionOperationSingleResult<
   Schema extends Record<string, BaseData>,
   Table extends StringKeys<Schema>,
@@ -52,6 +64,9 @@ type TransactionOperationSingleResult<
   ? { operation: 'update'; id: Id; rows: number }
   : Operation extends { delete: { table: Table } }
   ? { operation: 'delete'; rows: number }
+  : Operation extends { get: { table: Table } }
+  ? // TODO: This is still not correct, we need to get the type of the columns
+    { operation: 'get'; columns: Table }
   : never;
 
 type TransactionOperationResults<
