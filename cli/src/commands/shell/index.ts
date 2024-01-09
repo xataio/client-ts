@@ -45,7 +45,9 @@ export default class Shell extends BaseCommand<typeof Shell> {
     const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
     try {
       const xata = await this.getXataClient();
-      const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
+      const branchDetails = await xata.api.branch.getBranchDetails({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+      });
       const { schema } = branchDetails;
 
       const { javascript } = await generate({ language: 'javascript', databaseURL, schema });
