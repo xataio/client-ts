@@ -182,7 +182,7 @@ async function waitFailInReplication(
 
     console.log(`Waiting for delete API key replication to finish... (${iteration})`);
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    return await waitFailInReplication(api, workspace, database);
+    return await waitFailInReplication(api, workspace, database, iteration + 1);
   } catch (error) {
     // Do nothing, we expect to fail
   }
@@ -211,5 +211,5 @@ async function waitForSearchIndexing(
 
   console.log(`Waiting for search indexing to finish... (${iteration})`);
   await new Promise((resolve) => setTimeout(resolve, 8000));
-  return waitForSearchIndexing(api, workspace, database);
+  return waitForSearchIndexing(api, workspace, database, iteration + 1);
 }
