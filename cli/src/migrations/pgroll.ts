@@ -79,10 +79,14 @@ export async function getBranchDetailsWithPgRoll(
   xata: XataClient,
   { workspace, region, database, branch }: { workspace: string; region: string; database: string; branch: string }
 ): Promise<Schemas.DBBranch> {
-  const details = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
+  const details = await xata.api.branch.getBranchDetails({
+    pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+  });
 
   if (isBranchPgRollEnabled(details)) {
-    const pgroll = await xata.api.migrations.getSchema({ workspace, region, database, branch });
+    const pgroll = await xata.api.migrations.getSchema({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+    });
 
     return {
       ...details,

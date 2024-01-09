@@ -2,6 +2,7 @@ import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { getLocalMigrationFiles } from '../../migrations/files.js';
 import { buildMigrationDiff } from '../../utils/diff.js';
+import compact from 'lodash.compact';
 
 export default class Diff extends BaseCommand<typeof Diff> {
   static description = 'Compare two local or remote branches';
@@ -34,24 +35,17 @@ export default class Diff extends BaseCommand<typeof Diff> {
     this.info(`Diff command is experimental, use with caution`);
 
     const localMigrationFiles = await getLocalMigrationFiles();
-    const schemaOperations = localMigrationFiles.flatMap((migrationFile) => migrationFile.operations);
+    const schemaOperations = compact(localMigrationFiles.flatMap((migrationFile) => migrationFile.operations));
 
     const apiRequest =
       args.branch && args.base
         ? xata.api.migrations.compareBranchSchemas({
-            workspace,
-            region,
-            database,
-            branch: args.branch,
-            compare: args.base
+            pathParams: { workspace, region, dbBranchName: `${database}:${args.branch}`, branchName: args.base },
+            body: {}
           })
         : xata.api.migrations.compareBranchWithUserSchema({
-            workspace,
-            region,
-            database,
-            branch,
-            schema: { tables: [] },
-            schemaOperations: schemaOperations as any
+            pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+            body: { schema: { tables: [] }, schemaOperations }
           });
 
     const {
