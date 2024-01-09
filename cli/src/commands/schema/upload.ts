@@ -34,11 +34,7 @@ export default class UploadSchema extends BaseCommand<typeof UploadSchema> {
 
     if (flags['create-only']) {
       const { schema } = await xata.api.branch.getBranchDetails({
-        pathParams: {
-          workspace,
-          region,
-          dbBranchName: `${database}:${branch}`
-        }
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
       });
       if (schema.tables.length > 0) {
         this.info(
@@ -54,14 +50,8 @@ export default class UploadSchema extends BaseCommand<typeof UploadSchema> {
     }
 
     const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:${branch}`
-      },
-      body: {
-        schema
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { schema }
     });
 
     if (edits.operations.length === 0) {
@@ -81,14 +71,8 @@ export default class UploadSchema extends BaseCommand<typeof UploadSchema> {
     if (!confirm) return this.exit(1);
 
     await xata.api.migrations.applyBranchSchemaEdit({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:${branch}`
-      },
-      body: {
-        edits
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { edits }
     });
   }
 }

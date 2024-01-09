@@ -31,10 +31,7 @@ describe('API Client Integration Tests', () => {
     const newApi = new XataApiClient({ apiKey: newApiKey.key, host });
 
     const { id: workspace, name } = await newApi.workspaces.createWorkspace({
-      body: {
-        name: workspaceName,
-        slug: `${workspaceName}-slug`
-      }
+      body: { name: workspaceName, slug: `${workspaceName}-slug` }
     });
 
     await waitForReplication(newApi, workspace);
@@ -53,53 +50,30 @@ describe('API Client Integration Tests', () => {
     expect(bar.slug).toBe(`${workspaceName}-slug`);
 
     const { databaseName: database } = await newApi.databases.createDatabase({
-      pathParams: {
-        workspaceId: workspace,
-        dbName: `data-${workspace}`
-      },
-      body: {
-        region
-      }
+      pathParams: { workspaceId: workspace, dbName: `data-${workspace}` },
+      body: { region }
     });
 
     await waitForReplication(newApi, workspace, database);
 
-    await newApi.branch.createBranch({ pathParams: { workspace, region, dbBranchName: `${database}:branch` } });
+    await newApi.branch.createBranch({
+      pathParams: { workspace, region, dbBranchName: `${database}:branch` }
+    });
     await newApi.table.createTable({
       pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' }
     });
     await newApi.table.setTableSchema({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:branch`,
-        tableName: 'table'
-      },
-      body: {
-        columns: [{ name: 'email', type: 'string' }]
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },
+      body: { columns: [{ name: 'email', type: 'string' }] }
     });
 
     const { id } = await newApi.records.insertRecord({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:branch`,
-        tableName: 'table'
-      },
-      body: {
-        email: 'example@foo.bar'
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },
+      body: { email: 'example@foo.bar' }
     });
 
     const record = await newApi.records.getRecord({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:branch`,
-        tableName: 'table',
-        recordId: id
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table', recordId: id }
     });
 
     expect(record.id).toBeDefined();
@@ -108,30 +82,16 @@ describe('API Client Integration Tests', () => {
     await waitForSearchIndexing(newApi, workspace, database);
 
     const search = await newApi.searchAndFilter.searchTable({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:branch`,
-        tableName: 'table'
-      },
-      body: {
-        query: 'example'
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },
+      body: { query: 'example' }
     });
 
     expect(search.totalCount).toEqual(1);
     expect(search.records[0].id).toEqual(id);
 
     const failedSearch = await newApi.searchAndFilter.searchTable({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:branch`,
-        tableName: 'table'
-      },
-      body: {
-        query: 'random'
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },
+      body: { query: 'random' }
     });
 
     expect(failedSearch.totalCount).toEqual(0);
@@ -143,13 +103,7 @@ describe('API Client Integration Tests', () => {
 
     await expect(
       newApi.records.getRecord({
-        pathParams: {
-          workspace,
-          region,
-          dbBranchName: `${database}:branch`,
-          tableName: 'table',
-          recordId: id
-        }
+        pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table', recordId: id }
       })
     ).rejects.toHaveProperty('message');
 
@@ -188,15 +142,8 @@ async function waitFailInReplication(api: XataApiClient, workspace: string, data
 async function waitForSearchIndexing(api: XataApiClient, workspace: string, database: string): Promise<void> {
   try {
     const { aggs } = await api.searchAndFilter.aggregateTable({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:branch`,
-        tableName: 'table'
-      },
-      body: {
-        aggs: { total: { count: '*' } }
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },
+      body: { aggs: { total: { count: '*' } } }
     });
 
     if (aggs?.total === 1) return;

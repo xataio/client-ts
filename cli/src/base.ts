@@ -576,14 +576,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   async deploySchema(workspace: string, region: string, database: string, branch: string, schema: Schemas.Schema) {
     const xata = await this.getXataClient();
     const compare = await xata.api.migrations.compareBranchWithUserSchema({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:${branch}`
-      },
-      body: {
-        schema
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { schema }
     });
 
     if (compare.edits.operations.length === 0) {
@@ -601,14 +595,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       if (!confirm) return this.exit(1);
 
       await xata.api.migrations.applyBranchSchemaEdit({
-        pathParams: {
-          workspace,
-          region,
-          dbBranchName: `${database}:${branch}`
-        },
-        body: {
-          edits: compare.edits
-        }
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+        body: { edits: compare.edits }
       });
     }
   }

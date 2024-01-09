@@ -74,10 +74,7 @@ export async function setUpTestEnvironment(
 
   const api = new XataApiClient({ apiKey, fetch, host, clientName: 'sdk-tests' });
   const { databaseName: database } = await api.databases.createDatabase({
-    pathParams: {
-      workspaceId: workspace,
-      dbName: `sdk-integration-test-${prefix}-${id}`
-    },
+    pathParams: { workspaceId: workspace, dbName: `sdk-integration-test-${prefix}-${id}` },
     body: { region },
     headers: { 'X-Xata-Files': 'true' }
   });
@@ -95,14 +92,8 @@ export async function setUpTestEnvironment(
   };
 
   const { edits } = await api.migrations.compareBranchWithUserSchema({
-    pathParams: {
-      workspace,
-      region,
-      dbBranchName: `${database}:main`
-    },
-    body: {
-      schema
-    }
+    pathParams: { workspace, region, dbBranchName: `${database}:main` },
+    body: { schema }
   });
 
   await api.migrations.applyBranchSchemaEdit({

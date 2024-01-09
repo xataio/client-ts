@@ -605,15 +605,8 @@ describe('integration tests', () => {
       pathParams: { workspace, region, dbBranchName: `${database}:main`, tableName: 'planes' }
     });
     await api.table.setTableSchema({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:main`,
-        tableName: 'planes'
-      },
-      body: {
-        columns: [{ name: 'name', type: 'string' }]
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:main`, tableName: 'planes' },
+      body: { columns: [{ name: 'name', type: 'string' }] }
     });
 
     const planes = Array.from({ length: PAGINATION_DEFAULT_SIZE + 50 }, (_, index) => ({ name: `Plane ${index}` }));

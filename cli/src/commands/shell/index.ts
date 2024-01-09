@@ -46,11 +46,7 @@ export default class Shell extends BaseCommand<typeof Shell> {
     try {
       const xata = await this.getXataClient();
       const branchDetails = await xata.api.branch.getBranchDetails({
-        pathParams: {
-          workspace,
-          region,
-          dbBranchName: `${database}:${branch}`
-        }
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
       });
       const { schema } = branchDetails;
 

@@ -88,11 +88,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
       flags.branch
     );
     const branchDetails = await xata.api.branch.getBranchDetails({
-      pathParams: {
-        workspace,
-        region,
-        dbBranchName: `${database}:${branch}`
-      }
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
     });
     const { schema } = branchDetails;
 
