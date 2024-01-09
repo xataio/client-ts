@@ -807,11 +807,8 @@ vectorDimension: \${vectorDimension}
     }
 
     await xata.api.migrations.applyBranchSchemaEdit({
-      workspace,
-      region,
-      database,
-      branch,
-      edits
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: { edits }
     });
 
     this.success('Migration completed!');
