@@ -32,7 +32,7 @@ It is possible to run the `xata` CLI against `localhost` (Docker) environments, 
 xata auth login --profile local --host http://localhost:6001,http://08lcul.dev.localhost:6001
 ```
 
-where `08lcul` is your local workspace id.
+where `08lcul` is your local workspace id and `dev` is the name of your local region.
 
 2. Initalize the CLI, specifying the `local` profile:
 
