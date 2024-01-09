@@ -51,19 +51,18 @@ export default class Push extends BaseCommand<typeof Push> {
     let logs: (Schemas.MigrationHistoryItem | Schemas.Commit)[] = [];
     let cursor = undefined;
     if (isBranchPgRollEnabled(details)) {
-      do {
-        const { migrations, cursor: newCursor } = await xata.api.migrations.getMigrationHistory({
-          pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-          queryParams: { cursor, limit: 200 }
-        });
-
-        logs = logs.concat(migrations);
-        cursor = newCursor;
-      } while (cursor !== undefined);
+      const { migrations } = await xata.api.branch.pgRollMigrationHistory({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+      });
+      logs = migrations;
     } else {
       const data = await xata.api.migrations.getBranchSchemaHistory({
         pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-        body: { page: { size: 200 } }
+        body: {
+          // TODO: Fix pagination in the API to start from last known migration and not from the beginning
+          // Also paginate until we get all migrations
+          page: { size: 200 }
+        }
       });
       logs = data.logs;
     }
@@ -106,12 +105,9 @@ export default class Push extends BaseCommand<typeof Push> {
         .flatMap((migration) => PgRollMigrationDefinition.parse(migration));
       for (const migration of migrationsToPush) {
         try {
-          const { jobID } = await xata.api.branches.applyMigration({
-            workspace,
-            region,
-            database,
-            branch,
-            migration: migration as any
+          await xata.api.branch.applyMigration({
+            pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+            body: migration
           });
 
           await waitForMigrationToFinish(xata.api, workspace, region, database, branch, jobID);
@@ -123,11 +119,8 @@ export default class Push extends BaseCommand<typeof Push> {
     } else {
       // TODO: Check for errors and print them
       await xata.api.migrations.pushBranchMigrations({
-        workspace,
-        region,
-        database,
-        branch,
-        migrations: newMigrations as Schemas.MigrationObject[]
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+        body: { migrations: newMigrations as Schemas.MigrationObject[] }
       });
     }
 

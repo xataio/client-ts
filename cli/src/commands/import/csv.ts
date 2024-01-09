@@ -246,6 +246,24 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.parseDatabase();
     const { schema: existingSchema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
+    const newSchema = {
+      tables: [
+        ...existingSchema.tables.filter((t) => t.name !== table),
+        { name: table, columns: columns.filter((c) => c.name !== 'id') }
+      ]
+    };
+
+    const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
+      pathParams: { workspace, region, dbBranchName: `${database}:main` },
+      body: { schema: newSchema }
+    });
+    if (edits.operations.length > 0) {
+      const destructiveOperations = edits.operations
+        .map((op) => {
+          if (!('removeColumn' in op)) return undefined;
+          return op.removeColumn.column;
+        })
+        .filter((x) => x !== undefined);
 
     if (this.pgrollEnabled) {
       const { edits } = compareSchemas(
@@ -376,6 +394,11 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         }
         await xata.api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits });
       }
+
+      await xata.api.migrations.applyBranchSchemaEdit({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+        body: { edits }
+      });
     }
   }
 }
