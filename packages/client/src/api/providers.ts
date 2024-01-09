@@ -63,7 +63,7 @@ export function parseWorkspacesUrlParts(url: string): { workspace: string; regio
     production: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh.*/),
     staging: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev.*/),
     dev: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev.*/),
-    local: url.match(/(?:https?:\/\/)?([^.]+)\.localhost:(\d+)/)
+    local: url.match(/(?:https?:\/\/)?([^.]+)(?:\.([^.]+))\.localhost:(\d+)/)
   };
 
   const [host, match] = Object.entries(matches).find(([, match]) => match !== null) ?? [];
