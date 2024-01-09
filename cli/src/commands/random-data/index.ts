@@ -52,12 +52,8 @@ export default class RandomData extends BaseCommand<typeof RandomData> {
       const records = generateRandomData(table, totalRecords);
 
       await xata.api.records.bulkInsertTableRecords({
-        workspace,
-        region,
-        database,
-        branch,
-        table: table.name,
-        records
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, tableName: table.name },
+        body: { records: records as any[] }
       });
 
       this.info(
