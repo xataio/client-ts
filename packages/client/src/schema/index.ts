@@ -29,13 +29,13 @@ export class SchemaPlugin<Schemas extends Record<string, XataRecord>> extends Xa
   #tables: Record<string, Repository<any>> = {};
   #schemaTables?: Table[];
 
-  constructor(schemaTables?: Table[]) {
+  constructor() {
     super();
-
-    this.#schemaTables = schemaTables;
   }
 
   build(pluginOptions: XataPluginOptions): SchemaPluginResult<Schemas> {
+    this.#schemaTables = pluginOptions.tables;
+
     const db: any = new Proxy(
       {},
       {

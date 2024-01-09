@@ -67,12 +67,13 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
 export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   #schemaTables?: Table[];
 
-  constructor(private db: SchemaPluginResult<Schemas>, schemaTables?: Table[]) {
+  constructor(private db: SchemaPluginResult<Schemas>) {
     super();
-    this.#schemaTables = schemaTables;
   }
 
   build(pluginOptions: XataPluginOptions): SearchPluginResult<Schemas> {
+    this.#schemaTables = pluginOptions.tables;
+
     return {
       all: async <Tables extends StringKeys<Schemas>>(query: string, options: SearchOptions<Schemas, Tables> = {}) => {
         const { records, totalCount } = await this.#search(query, options, pluginOptions);
