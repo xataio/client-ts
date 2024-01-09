@@ -210,24 +210,20 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   }): Promise<void> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.parseDatabase();
-    const { schema: existingSchema } = await xata.api.branches.getBranchDetails({
-      workspace,
-      region,
-      database,
-      branch
+    const { schema: existingSchema } = await xata.api.branch.getBranchDetails({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
     });
+
     const newSchema = {
       tables: [
         ...existingSchema.tables.filter((t) => t.name !== table),
         { name: table, columns: columns.filter((c) => c.name !== 'id') }
       ]
     };
+
     const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
-      workspace,
-      region,
-      database,
-      branch: 'main',
-      schema: newSchema
+      pathParams: { workspace, region, dbBranchName: `${database}:main` },
+      body: { schema: newSchema }
     });
     if (edits.operations.length > 0) {
       const destructiveOperations = edits.operations
@@ -267,7 +263,11 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       if (!applyMigrations) {
         process.exit(1);
       }
-      await xata.api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch, edits });
+
+      await xata.api.migrations.applyBranchSchemaEdit({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+        body: { edits }
+      });
     }
   }
 }
