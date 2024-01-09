@@ -69,6 +69,5 @@ export function parseWorkspacesUrlParts(url: string): { workspace: string; regio
   const [host, match] = Object.entries(matches).find(([, match]) => match !== null) ?? [];
   if (!isHostProviderAlias(host) || !match) return null;
 
-  const region = host === 'local' ? 'dev' : match[2];
-  return { workspace: match[1], region, host };
+  return { workspace: match[1], region: match[2], host };
 }
