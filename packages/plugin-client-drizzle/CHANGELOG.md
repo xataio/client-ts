@@ -1,5 +1,21 @@
 # @xata.io/drizzle
 
+## 0.0.14
+
+### Patch Changes
+
+- [#1302](https://github.com/xataio/client-ts/pull/1302) [`181e3e3`](https://github.com/xataio/client-ts/commit/181e3e3c578334351050ccfdc1d4d9134e2a859c) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - fix: drizzle internal columns
+
+- Updated dependencies [[`b7f3ec9`](https://github.com/xataio/client-ts/commit/b7f3ec9eabe3642929131e244bd774f4d3134482)]:
+  - @xata.io/client@0.28.3
+
+## 0.0.13
+
+### Patch Changes
+
+- Updated dependencies [[`c9178e1`](https://github.com/xataio/client-ts/commit/c9178e1e3f2268513e78dcfce396a99a8fca5dfb)]:
+  - @xata.io/client@0.28.2
+
 ## 0.0.12
 
 ### Patch Changes

@@ -839,6 +839,10 @@ export type InputFileEntry = {
    * Time to live for signed URLs
    */
   signedUrlTimeout?: number;
+  /**
+   * Time to live for upload URLs
+   */
+  uploadUrlTimeout?: number;
 };
 
 /**
@@ -870,6 +874,10 @@ export type InputFile = {
    * Time to live for signed URLs
    */
   signedUrlTimeout?: number;
+  /**
+   * Time to live for upload URLs
+   */
+  uploadUrlTimeout?: number;
 };
 
 /**
