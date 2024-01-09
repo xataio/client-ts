@@ -29,7 +29,7 @@ const providers: Record<HostAliases, ProviderBuilder> = {
   },
   local: {
     main: 'http://localhost:6001',
-    workspaces: 'http://{workspaceId}.localhost:6001'
+    workspaces: 'http://{workspaceId}.{region}.localhost:6001'
   }
 };
 
