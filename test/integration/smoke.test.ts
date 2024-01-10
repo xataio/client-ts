@@ -150,12 +150,7 @@ describe('API Client Integration Tests', () => {
   });
 });
 
-async function waitForReplication(
-  api: XataApiClient,
-  workspace: string,
-  database?: string,
-  iteration = 0
-): Promise<void> {
+async function waitForReplication(api: XataApiClient, workspace: string, database?: string): Promise<void> {
   try {
     if (database === undefined) {
       await api.database.getDatabaseList({ workspace });
@@ -163,24 +158,17 @@ async function waitForReplication(
       await api.branches.getBranchList({ workspace, database, region });
     }
   } catch (error) {
-    console.log(
-      `Waiting for create ${database === undefined ? 'API key' : 'database'} replication to finish... (${iteration})`
-    );
+    console.log(`Waiting for create ${database === undefined ? 'API key' : 'database'} replication to finish...`);
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    return await waitForReplication(api, workspace, database, iteration + 1);
+    return await waitForReplication(api, workspace, database);
   }
 }
 
-async function waitFailInReplication(
-  api: XataApiClient,
-  workspace: string,
-  database: string,
-  iteration = 0
-): Promise<void> {
+async function waitFailInReplication(api: XataApiClient, workspace: string, database: string): Promise<void> {
   try {
     await api.branches.getBranchList({ workspace, database, region });
 
-    console.log(`Waiting for delete API key replication to finish... (${iteration})`);
+    console.log(`Waiting for delete API key replication to finish...`);
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return await waitFailInReplication(api, workspace, database);
   } catch (error) {
@@ -188,12 +176,7 @@ async function waitFailInReplication(
   }
 }
 
-async function waitForSearchIndexing(
-  api: XataApiClient,
-  workspace: string,
-  database: string,
-  iteration = 0
-): Promise<void> {
+async function waitForSearchIndexing(api: XataApiClient, workspace: string, database: string): Promise<void> {
   try {
     const { aggs } = await api.searchAndFilter.aggregateTable({
       workspace,
@@ -209,7 +192,7 @@ async function waitForSearchIndexing(
     // do nothing
   }
 
-  console.log(`Waiting for search indexing to finish... (${iteration})`);
+  console.log(`Waiting for search indexing to finish...`);
   await new Promise((resolve) => setTimeout(resolve, 8000));
   return waitForSearchIndexing(api, workspace, database);
 }
