@@ -49,6 +49,44 @@ export type PgRollJobStatusResponse = {
  */
 export type PgRollMigrationJobID = string;
 
+export type PgRollMigrationType = 'pgroll' | 'inferred';
+
+export type PgRollMigrationHistoryItem = {
+  /**
+   * The name of the migration
+   */
+  name: string;
+  /**
+   * The pgroll migration that was applied
+   */
+  migration: string;
+  /**
+   * The timestamp at which the migration was started
+   *
+   * @format date-time
+   */
+  startedAt: string;
+  /**
+   * The name of the parent migration, if any
+   */
+  parent?: string;
+  /**
+   * Whether the migration is completed or not
+   */
+  done: boolean;
+  /**
+   * The type of the migration
+   */
+  migrationType: PgRollMigrationType;
+};
+
+export type PgRollMigrationHistoryResponse = {
+  /**
+   * The migrations that have been applied to the branch
+   */
+  migrations: PgRollMigrationHistoryItem[];
+};
+
 /**
  * @maxLength 255
  * @minLength 1

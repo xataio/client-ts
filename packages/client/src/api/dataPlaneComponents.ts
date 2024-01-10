@@ -130,6 +130,44 @@ export const pgRollJobStatus = (variables: PgRollJobStatusVariables, signal?: Ab
     signal
   });
 
+export type PgRollMigrationHistoryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type PgRollMigrationHistoryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PgRollMigrationHistoryVariables = {
+  pathParams: PgRollMigrationHistoryPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const pgRollMigrationHistory = (variables: PgRollMigrationHistoryVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.PgRollMigrationHistoryResponse,
+    PgRollMigrationHistoryError,
+    undefined,
+    {},
+    {},
+    PgRollMigrationHistoryPathParams
+  >({ url: '/db/{dbBranchName}/pgroll/migrations', method: 'get', ...variables, signal });
+
 export type GetBranchListPathParams = {
   /**
    * The Database Name
@@ -4590,6 +4628,7 @@ export const operationsByTag = {
     applyMigration,
     pgRollStatus,
     pgRollJobStatus,
+    pgRollMigrationHistory,
     getBranchList,
     getBranchDetails,
     createBranch,
