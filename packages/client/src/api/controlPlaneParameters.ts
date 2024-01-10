@@ -19,6 +19,10 @@ export type UserIDParam = Schemas.UserID;
 
 export type WorkspaceIDParam = Schemas.WorkspaceID;
 
+export type PageSizeParam = Schemas.PageSize;
+
+export type PageTokenParam = Schemas.PageToken;
+
 export type ClusterIDParam = Schemas.ClusterID;
 
 export type DBNameParam = Schemas.DBName;
