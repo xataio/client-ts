@@ -322,13 +322,6 @@ describe('combined transactions', () => {
       { get: { table: 'teams', id: 'i2', columns: ['id', 'index', 'name'] } }
     ]);
 
-    response.results[5]?.operation;
-    //                    ^?
-    response.results[6]?.operation;
-    //                    ^?
-    response.results[6]?.columns;
-    //                    ^?
-
     expect(response.results).toEqual([
       { operation: 'insert', id: 'i3', rows: 1, columns: {} },
       { operation: 'update', id: 'i0', rows: 1, columns: {} },

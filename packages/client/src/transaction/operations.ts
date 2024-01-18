@@ -1,4 +1,4 @@
-import { BaseData, EditableData, SelectableColumn, XataRecord } from '../schema';
+import { BaseData, EditableData, SelectableColumn, SelectedPick, XataRecord } from '../schema';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
 export type TransactionOperation<Schemas extends Record<string, BaseData>, Tables extends StringKeys<Schemas>> =
@@ -54,19 +54,18 @@ export type GetTransactionOperation<O extends XataRecord> = {
 
 type TransactionOperationSingleResult<
   Schema extends Record<string, BaseData>,
-  Table extends StringKeys<Schema>,
-  Operation extends TransactionOperation<Schema, Table>
-> = Operation extends { insert: { table: Table; record: { id: infer Id } } }
+  Tables extends StringKeys<Schema>,
+  Operation extends TransactionOperation<Schema, Tables>
+> = Operation extends { insert: { table: Tables; record: { id: infer Id } } }
   ? { operation: 'insert'; id: Id; rows: number }
-  : Operation extends { insert: { table: Table } }
+  : Operation extends { insert: { table: Tables } }
   ? { operation: 'insert'; id: string; rows: number }
-  : Operation extends { update: { table: Table; id: infer Id } }
+  : Operation extends { update: { table: Tables; id: infer Id } }
   ? { operation: 'update'; id: Id; rows: number }
-  : Operation extends { delete: { table: Table } }
+  : Operation extends { delete: { table: Tables } }
   ? { operation: 'delete'; rows: number }
-  : Operation extends { get: { table: Table } }
-  ? // TODO: This is still not correct, we need to get the type of the columns
-    { operation: 'get'; columns: Table }
+  : Operation extends { get: { table: infer Table extends Tables } }
+  ? { operation: 'get'; columns: SelectedPick<Schema[Table] & XataRecord, ['*']> }
   : never;
 
 type TransactionOperationResults<
