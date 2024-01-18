@@ -1,7 +1,7 @@
 {
-  "name": "@xata.io/importer",
-  "version": "1.1.3",
-  "description": "Importer for xata.io",
+  "name": "@xata.io/pgroll",
+  "version": "0.4.4",
+  "description": "Migration tool for PostgreSQL",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -14,6 +14,7 @@
     }
   },
   "scripts": {
+    "generate": "tsx scripts/build.ts",
     "build": "rimraf dist && rollup -c",
     "tsc": "tsc --noEmit"
   },
@@ -29,20 +30,11 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
-    "@faker-js/faker": "^8.3.1",
-    "@xata.io/client": "^0.28.3",
-    "any-date-parser": "^1.5.4",
-    "json5": "^2.2.3",
-    "lodash.chunk": "^4.2.0",
-    "lodash.pick": "^4.4.0",
-    "p-queue": "^8.0.1",
-    "papaparse": "^5.4.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
-    "@types/lodash.chunk": "^4.2.9",
-    "@types/lodash.pick": "^4.4.9",
-    "@types/papaparse": "^5.3.14",
-    "lodash": "^4.17.21"
+    "ts-morph": "^21.0.1",
+    "tsx": "^4.7.0"
   }
 }

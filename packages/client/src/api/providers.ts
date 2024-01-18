@@ -1,6 +1,6 @@
 import { isObject, isString } from '../util/lang';
 
-type HostAliases = 'production' | 'staging' | 'dev';
+type HostAliases = 'production' | 'staging' | 'dev' | 'local';
 type ProviderBuilder = { main: string; workspaces: string };
 export type HostProvider = HostAliases | ProviderBuilder;
 
@@ -26,6 +26,10 @@ const providers: Record<HostAliases, ProviderBuilder> = {
   dev: {
     main: 'https://api.dev-xata.dev',
     workspaces: 'https://{workspaceId}.{region}.dev-xata.dev'
+  },
+  local: {
+    main: 'http://localhost:6001',
+    workspaces: 'http://{workspaceId}.{region}.localhost:6001'
   }
 };
 
@@ -58,7 +62,8 @@ export function parseWorkspacesUrlParts(url: string): { workspace: string; regio
   const matches = {
     production: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh.*/),
     staging: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev.*/),
-    dev: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev.*/)
+    dev: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev.*/),
+    local: url.match(/(?:https?:\/\/)?([^.]+)(?:\.([^.]+))\.localhost:(\d+)/)
   };
 
   const [host, match] = Object.entries(matches).find(([, match]) => match !== null) ?? [];

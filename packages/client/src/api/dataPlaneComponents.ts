@@ -130,6 +130,44 @@ export const pgRollJobStatus = (variables: PgRollJobStatusVariables, signal?: Ab
     signal
   });
 
+export type PgRollMigrationHistoryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type PgRollMigrationHistoryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PgRollMigrationHistoryVariables = {
+  pathParams: PgRollMigrationHistoryPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const pgRollMigrationHistory = (variables: PgRollMigrationHistoryVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.PgRollMigrationHistoryResponse,
+    PgRollMigrationHistoryError,
+    undefined,
+    {},
+    {},
+    PgRollMigrationHistoryPathParams
+  >({ url: '/db/{dbBranchName}/pgroll/migrations', method: 'get', ...variables, signal });
+
 export type GetBranchListPathParams = {
   /**
    * The Database Name
@@ -2739,7 +2777,7 @@ export type InsertRecordWithIDVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * By default, IDs are auto-generated when data is insterted into Xata. Sending a request to this endpoint allows us to insert a record with a pre-existing ID, bypassing the default automatic ID generation.
+ * By default, IDs are auto-generated when data is inserted into Xata. Sending a request to this endpoint allows us to insert a record with a pre-existing ID, bypassing the default automatic ID generation.
  */
 export const insertRecordWithID = (variables: InsertRecordWithIDVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
@@ -4412,7 +4450,7 @@ export type AggregateTableVariables = {
  * While the summary endpoint is served from a transactional store and the results are strongly
  * consistent, the aggregate endpoint is served from our columnar store and the results are
  * only eventually consistent. On the other hand, the aggregate endpoint uses a
- * store that is more appropiate for analytics, makes use of approximative algorithms
+ * store that is more appropriate for analytics, makes use of approximation algorithms
  * (e.g for cardinality), and is generally faster and can do more complex aggregations.
  *
  * For usage, see the [API Guide](https://xata.io/docs/api-guide/aggregate).
@@ -4590,6 +4628,7 @@ export const operationsByTag = {
     applyMigration,
     pgRollStatus,
     pgRollJobStatus,
+    pgRollMigrationHistory,
     getBranchList,
     getBranchDetails,
     createBranch,
