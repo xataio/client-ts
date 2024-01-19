@@ -47,3 +47,12 @@ export const migrationFile = z.object({
   checksum: z.string(),
   operations: z.array(migrationOperation)
 }) satisfies z.ZodType<Schemas.MigrationObject>;
+
+export const pgRollMigrationsFile = z.object({
+  name: z.string(),
+  migration: z.string(),
+  startedAt: z.string(),
+  parent: z.string().optional(),
+  done: z.boolean(),
+  migrationType: z.enum(['pgroll', 'inferred']) satisfies z.ZodType<Schemas.PgRollMigrationType>
+}) satisfies z.ZodType<Schemas.PgRollMigrationHistoryItem>;

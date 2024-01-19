@@ -8,6 +8,7 @@ import {
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
 import Codegen from '../codegen/index.js';
+import { isPgRollEnabled, isPgRollMigration, migrationsNotPgRollFormat } from '../../migrations/pgroll.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
   static description = 'Pull changes from remote Xata branch and regenerate code';
@@ -34,7 +35,6 @@ export default class Pull extends BaseCommand<typeof Pull> {
 
   async run() {
     const { args, flags } = await this.parseCommand();
-
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(
       flags.db,
@@ -42,21 +42,40 @@ export default class Pull extends BaseCommand<typeof Pull> {
       true
     );
 
-    const { logs } = await xata.api.migrations.getBranchSchemaHistory({
-      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: {
-        // TODO: Fix pagination in the API to start from last known migration and not from the beginning
-        // Also paginate until we get all migrations
-        page: { size: 200 }
-      }
+    const details = await xata.api.branch.getBranchDetails({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
     });
+
+    let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
+    if (isPgRollEnabled(details)) {
+      const { migrations } = await xata.api.branch.pgRollMigrationHistory({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+      });
+      logs = migrations;
+    } else {
+      const data = await xata.api.migrations.getBranchSchemaHistory({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+        body: {
+          // TODO: Fix pagination in the API to start from last known migration and not from the beginning
+          // Also paginate until we get all migrations
+          page: { size: 200 }
+        }
+      });
+      logs = data.logs;
+    }
 
     if (flags.force) {
       await removeLocalMigrations();
     }
 
-    const localMigrationFiles = await getLocalMigrationFiles();
+    const localMigrationFiles = await getLocalMigrationFiles(isPgRollEnabled(details));
 
+    if (isPgRollEnabled(details) && !migrationsNotPgRollFormat(localMigrationFiles)) {
+      // - create a tmp directory
+      // - just write all the files
+      // - delete the original migrations folder
+      // maybe get rid of the ledger file
+    }
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
     await writeLocalMigrationFiles(newMigrations);
 
@@ -74,11 +93,17 @@ export default class Pull extends BaseCommand<typeof Pull> {
   }
 
   getNewMigrations(
-    localMigrationFiles: Schemas.MigrationObject[],
-    remoteMigrationFiles: Schemas.MigrationObject[]
-  ): Schemas.MigrationObject[] {
+    localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[],
+    remoteMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]
+  ): Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] {
     const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
-      if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
+      const remoteIdentifier = isPgRollMigration(remoteMigration) ? remoteMigration.name : remoteMigration.id;
+      const localItem = localMigrationFiles[index + 1];
+      if (!localItem) {
+        return index;
+      }
+      const localIdentifier = localItem && isPgRollMigration(localItem) ? localItem.name : localItem.id;
+      if (remoteIdentifier === localIdentifier) {
         return index + 1;
       }
 
