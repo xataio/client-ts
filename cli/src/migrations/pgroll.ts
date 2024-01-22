@@ -1,8 +1,8 @@
 import { Schemas } from '@xata.io/client';
-import { migrationsDir, readMigrationsDir } from './files.js';
+import { migrationsDir, readMigrationsDir } from './files';
 import path from 'path';
-import { safeJSONParse, safeReadFile } from '../utils/files.js';
-import { pgRollMigrationsFile } from './schema.js';
+import { safeJSONParse, safeReadFile } from '../utils/files';
+import { pgRollMigrationsFile } from './schema';
 
 export const isBranchPgRoll = (details: Schemas.DBBranch) => {
   // @ts-expect-error TODO: Fix this when api is finalized
