@@ -268,9 +268,21 @@ describe('pull', () => {
       );
       fetchMock.mockImplementation(fetchImplementationPgRollTwo);
       await command.run();
+      expect(log).not.toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('Successfully pulled 2 migrations from main branch');
     });
-    test.skip('overrwrites all old migrations if they are in the wrong format', async () => {});
+    test('overrwrites all old migrations if they are in the wrong format', async () => {
+      const config = await Config.load();
+      const command = new Pull(['main'], config);
+      const log = vi.spyOn(command, 'log');
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigration.id as unknown as Dirent]);
+      vi.spyOn(fs, 'readFile').mockReturnValueOnce(JSON.stringify(staticMigration) as unknown as Promise<string>);
+      vi.spyOn(fs, 'readFile').mockReturnValueOnce(staticMigration.id as unknown as Promise<string>);
+      fetchMock.mockImplementation(fetchImplementationPgRoll);
+      await command.run();
+      expect(log).toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
+      expect(log).toHaveBeenCalledWith('Successfully pulled 1 migrations from main branch');
+    });
     test('does not create migrations locally if they already exist locally', async () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
@@ -286,6 +298,7 @@ describe('pull', () => {
       );
       fetchMock.mockImplementation(fetchImplementationPgRoll);
       await command.run();
+      expect(log).not.toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('No new migrations to pull from main branch');
     });
   });

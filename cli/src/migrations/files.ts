@@ -31,7 +31,7 @@ async function readMigrationsDir() {
 }
 
 export async function getLocalMigrationFiles(
-  pgRollEnabled: boolean
+  pgRollEnabled: boolean = false
 ): Promise<Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]> {
   const files = await readMigrationsDir();
   const ledger = await getLedger();
@@ -58,7 +58,7 @@ export async function getLocalMigrationFiles(
       ? pgRollMigrationsFile.safeParse(safeJSONParse(fileContents))
       : migrationFile.safeParse(safeJSONParse(fileContents));
     if (!result.success) {
-      throw new Error(`Failed to parse migration file ${filePath}: ${result.error}`);
+      throw new TypeError(`Failed to parse migration file ${filePath}: ${result.error}`);
     }
 
     // TODO fix

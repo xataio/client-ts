@@ -43,7 +43,11 @@ export default class Push extends BaseCommand<typeof Push> {
 
     const localMigrationFiles = await getLocalMigrationFiles();
 
-    const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
+    // TODO remove type assertion
+    const newMigrations = this.getNewMigrations(
+      localMigrationFiles as Schemas.MigrationObject[],
+      commitToMigrationFile(logs) as Schemas.MigrationObject[]
+    );
 
     if (newMigrations.length === 0) {
       this.log('No new migrations to push');

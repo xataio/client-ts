@@ -2,6 +2,7 @@ import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { getLocalMigrationFiles } from '../../migrations/files.js';
 import { buildMigrationDiff } from '../../utils/diff.js';
+import { Schemas } from '@xata.io/client';
 
 export default class Diff extends BaseCommand<typeof Diff> {
   static description = 'Compare two local or remote branches';
@@ -34,7 +35,10 @@ export default class Diff extends BaseCommand<typeof Diff> {
     this.info(`Diff command is experimental, use with caution`);
 
     const localMigrationFiles = await getLocalMigrationFiles();
-    const schemaOperations = localMigrationFiles.flatMap((migrationFile) => migrationFile.operations);
+    // TODO decide what to do about this command for pgroll enabled branches and then fix type assertion
+    const schemaOperations = localMigrationFiles.flatMap(
+      (migrationFile) => (migrationFile as Schemas.MigrationObject).operations
+    );
 
     const apiRequest =
       args.branch && args.base

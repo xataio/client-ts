@@ -68,14 +68,15 @@ export default class Pull extends BaseCommand<typeof Pull> {
       await removeLocalMigrations();
     }
 
-    const localMigrationFiles = await getLocalMigrationFiles(isPgRollEnabled(details));
-
-    if (isPgRollEnabled(details) && !migrationsNotPgRollFormat(localMigrationFiles)) {
-      // - create a tmp directory
-      // - just write all the files
-      // - delete the original migrations folder
-      // maybe get rid of the ledger file
+    let localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] = [];
+    try {
+      localMigrationFiles = await getLocalMigrationFiles(isPgRollEnabled(details));
+    } catch (e) {
+      if (e instanceof TypeError && isPgRollEnabled(details) && migrationsNotPgRollFormat(localMigrationFiles)) {
+        this.log(`Converting existing migrations to pgroll format from ${branch} branch`);
+      }
     }
+
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
     await writeLocalMigrationFiles(newMigrations);
 
