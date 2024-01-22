@@ -71,11 +71,13 @@ export default class Pull extends BaseCommand<typeof Pull> {
     let localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] = [];
     try {
       localMigrationFiles = await getLocalMigrationFiles(isPgRollEnabled(details));
-    } catch (e) {
-      if (e instanceof TypeError && isPgRollEnabled(details) && migrationsNotPgRollFormat(localMigrationFiles)) {
+    } catch (error) {
+      if (error instanceof TypeError && isPgRollEnabled(details) && migrationsNotPgRollFormat(localMigrationFiles)) {
         await removeLocalMigrations();
         localMigrationFiles = await getLocalMigrationFiles(isPgRollEnabled(details));
         this.log(`Converting existing migrations to pgroll format from ${branch} branch`);
+      } else {
+        throw error;
       }
     }
 

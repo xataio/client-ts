@@ -271,11 +271,13 @@ describe('pull', () => {
       expect(log).not.toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('Successfully pulled 2 migrations from main branch');
     });
-    test('overrwrites all old migrations if they are in the wrong format', async () => {
+    test('overwrites all old migrations if they are in the wrong format', async () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigration.id as unknown as Dirent]);
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => {
+        throw new Error('');
+      });
       vi.spyOn(fs, 'readFile').mockReturnValueOnce(JSON.stringify(staticMigration) as unknown as Promise<string>);
       vi.spyOn(fs, 'readFile').mockReturnValueOnce(staticMigration.id as unknown as Promise<string>);
       fetchMock.mockImplementation(fetchImplementationPgRoll);
