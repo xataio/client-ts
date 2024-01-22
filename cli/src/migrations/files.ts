@@ -30,6 +30,21 @@ async function readMigrationsDir() {
   }
 }
 
+export async function isPgRollFormat() {
+  const files = await readMigrationsDir();
+  for (const file of files) {
+    if (file === '.ledger') continue;
+
+    const filePath = path.join(migrationsDir, file);
+    const fileContents = await safeReadFile(filePath);
+    const result = pgRollMigrationsFile.safeParse(safeJSONParse(fileContents));
+    if (!result.success) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export async function getLocalMigrationFiles(
   pgRollEnabled: boolean = false
 ): Promise<Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]> {

@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto';
 import { Schemas } from '@xata.io/client';
 import * as fs from 'fs/promises';
 import { Dirent } from 'fs';
+import { isPgRollFormat } from '../../migrations/files.js';
 
 vi.mock('prompts');
 vi.mock('node-fetch');
@@ -257,29 +258,45 @@ describe('pull', () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [
-        staticMigrationPgRoll.migrations[0]?.name as unknown as Dirent
-      ]);
-      vi.spyOn(fs, 'readFile').mockReturnValueOnce(
-        JSON.stringify(staticMigrationPgRoll.migrations[0]) as unknown as Promise<string>
+      vi.spyOn(fs, 'readdir').mockImplementation(
+        async () => [staticMigrationPgRoll.migrations[0]?.name] as unknown as Dirent[]
       );
-      vi.spyOn(fs, 'readFile').mockReturnValueOnce(
-        staticMigrationPgRoll.migrations[0]?.name as unknown as Promise<string>
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRoll.migrations[0] as unknown as Promise<string>)
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(
+        async () => staticMigrationPgRoll.migrations[0]?.name as unknown as Promise<string>
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRoll.migrations[0] as unknown as Promise<string>)
       );
       fetchMock.mockImplementation(fetchImplementationPgRollTwo);
       await command.run();
       expect(log).not.toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('Successfully pulled 2 migrations from main branch');
     });
+    test('isPgRollFormat helper', async () => {
+      vi.spyOn(fs, 'readdir').mockImplementationOnce(
+        async () => [staticMigrationPgRoll.migrations[0]?.name] as unknown as Dirent[]
+      );
+      // content of ledger file
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(
+        async () => staticMigrationPgRoll.migrations[0]?.name as unknown as Promise<string>
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(
+        async () => JSON.stringify(staticMigrationPgRoll.migrations[0]) as unknown as Promise<string>
+      );
+      expect(await isPgRollFormat()).toBe(true);
+    });
     test('overwrites all old migrations if they are in the wrong format', async () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => {
-        throw new Error('');
-      });
-      vi.spyOn(fs, 'readFile').mockReturnValueOnce(JSON.stringify(staticMigration) as unknown as Promise<string>);
-      vi.spyOn(fs, 'readFile').mockReturnValueOnce(staticMigration.id as unknown as Promise<string>);
+      // migrations directory
+      vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [] as unknown as Dirent[]);
+      vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [staticMigration.id] as unknown as Dirent[]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => '' as unknown as Promise<string>);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigration.id as unknown as Promise<string>);
       fetchMock.mockImplementation(fetchImplementationPgRoll);
       await command.run();
       expect(log).toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
@@ -289,14 +306,17 @@ describe('pull', () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [
-        staticMigrationPgRoll.migrations[0]?.name as unknown as Dirent
-      ]);
-      vi.spyOn(fs, 'readFile').mockReturnValueOnce(
-        JSON.stringify(staticMigrationPgRoll.migrations[0]) as unknown as Promise<string>
+      vi.spyOn(fs, 'readdir').mockImplementation(
+        async () => [staticMigrationPgRoll.migrations[0]?.name] as unknown as Dirent[]
       );
-      vi.spyOn(fs, 'readFile').mockReturnValueOnce(
-        staticMigrationPgRoll.migrations[0]?.name as unknown as Promise<string>
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRoll.migrations[0] as unknown as Promise<string>)
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(
+        () => staticMigrationPgRoll.migrations[0]?.name as unknown as Promise<string>
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRoll.migrations[0] as unknown as Promise<string>)
       );
       fetchMock.mockImplementation(fetchImplementationPgRoll);
       await command.run();

@@ -4,11 +4,12 @@ import { BaseCommand } from '../../base.js';
 import {
   commitToMigrationFile,
   getLocalMigrationFiles,
+  isPgRollFormat,
   removeLocalMigrations,
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
 import Codegen from '../codegen/index.js';
-import { isPgRollEnabled, isPgRollMigration, migrationsNotPgRollFormat } from '../../migrations/pgroll.js';
+import { isPgRollEnabled, isPgRollMigration } from '../../migrations/pgroll.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
   static description = 'Pull changes from remote Xata branch and regenerate code';
@@ -68,18 +69,13 @@ export default class Pull extends BaseCommand<typeof Pull> {
       await removeLocalMigrations();
     }
 
-    let localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] = [];
-    try {
-      localMigrationFiles = await getLocalMigrationFiles(isPgRollEnabled(details));
-    } catch (error) {
-      if (error instanceof TypeError && isPgRollEnabled(details) && migrationsNotPgRollFormat(localMigrationFiles)) {
-        await removeLocalMigrations();
-        localMigrationFiles = await getLocalMigrationFiles(isPgRollEnabled(details));
-        this.log(`Converting existing migrations to pgroll format from ${branch} branch`);
-      } else {
-        throw error;
-      }
+    if (isPgRollEnabled(details) && !(await isPgRollFormat())) {
+      this.log(`Converting existing migrations to pgroll format from ${branch} branch`);
+      await removeLocalMigrations();
     }
+
+    const localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] =
+      await getLocalMigrationFiles(isPgRollEnabled(details));
 
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
     await writeLocalMigrationFiles(newMigrations);
