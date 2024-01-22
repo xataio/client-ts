@@ -73,6 +73,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
       localMigrationFiles = await getLocalMigrationFiles(isPgRollEnabled(details));
     } catch (e) {
       if (e instanceof TypeError && isPgRollEnabled(details) && migrationsNotPgRollFormat(localMigrationFiles)) {
+        this.log('error occured during parsing of local migrations', e);
         this.log(`Converting existing migrations to pgroll format from ${branch} branch`);
       }
     }
