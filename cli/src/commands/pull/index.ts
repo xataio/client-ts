@@ -4,12 +4,11 @@ import { BaseCommand } from '../../base.js';
 import {
   commitToMigrationFile,
   getLocalMigrationFiles,
-  allMigrationsPgRollFormat,
   removeLocalMigrations,
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
 import Codegen from '../codegen/index.js';
-import { isBranchPgRollEnabled, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
+import { allMigrationsPgRollFormat, isBranchPgRollEnabled, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
   static description = 'Pull changes from remote Xata branch and regenerate code';

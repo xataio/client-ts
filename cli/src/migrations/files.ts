@@ -5,7 +5,7 @@ import { migrationFile, pgRollMigrationsFile } from './schema.js';
 import { safeJSONParse, safeReadFile } from '../utils/files.js';
 import { isMigrationPgRollFormat } from './pgroll.js';
 
-const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
+export const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
 const ledgerFile = path.join(migrationsDir, '.ledger');
 
 async function getLedger() {
@@ -16,7 +16,7 @@ async function getLedger() {
   return ledger.split('\n').filter((item) => item.trim() !== '');
 }
 
-async function readMigrationsDir() {
+export async function readMigrationsDir() {
   try {
     await mkdir(migrationsDir, { recursive: true });
   } catch (e) {
@@ -28,21 +28,6 @@ async function readMigrationsDir() {
   } catch (e) {
     return [];
   }
-}
-
-export async function allMigrationsPgRollFormat() {
-  const files = await readMigrationsDir();
-  for (const file of files) {
-    if (file === '.ledger') continue;
-
-    const filePath = path.join(migrationsDir, file);
-    const fileContents = await safeReadFile(filePath);
-    const result = pgRollMigrationsFile.safeParse(safeJSONParse(fileContents));
-    if (!result.success) {
-      return false;
-    }
-  }
-  return true;
 }
 
 export async function getLocalMigrationFiles(
@@ -73,7 +58,7 @@ export async function getLocalMigrationFiles(
       ? pgRollMigrationsFile.safeParse(safeJSONParse(fileContents))
       : migrationFile.safeParse(safeJSONParse(fileContents));
     if (!result.success) {
-      throw new TypeError(`Failed to parse migration file ${filePath}: ${result.error}`);
+      throw new Error(`Failed to parse migration file ${filePath}: ${result.error}`);
     }
 
     migrations.push(result.data as any);

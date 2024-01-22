@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 import { Schemas } from '@xata.io/client';
 import * as fs from 'fs/promises';
 import { Dirent } from 'fs';
-import { allMigrationsPgRollFormat } from '../../migrations/files.js';
+import { allMigrationsPgRollFormat } from '../../migrations/pgroll.js';
 
 vi.mock('prompts');
 vi.mock('node-fetch');
@@ -264,7 +264,6 @@ describe('pull', () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
-      // migrations directory
       vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [] as unknown as Dirent[]);
       vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [staticMigrationId] as unknown as Dirent[]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => '');
