@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 import { Schemas } from '@xata.io/client';
 import * as fs from 'fs/promises';
 import { Dirent } from 'fs';
-import { isPgRollFormat } from '../../migrations/files.js';
+import { allMigrationsPgRollFormat } from '../../migrations/pgroll.js';
 
 vi.mock('prompts');
 vi.mock('node-fetch');
@@ -254,11 +254,11 @@ describe('pull', () => {
       expect(log).not.toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('Successfully pulled 2 migrations from main branch');
     });
-    test('isPgRollFormat helper', async () => {
+    test('allMigrationsPgRollFormat helper', async () => {
       vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [staticMigrationPgRollName] as unknown as Dirent[]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
-      expect(await isPgRollFormat()).toBe(true);
+      expect(await allMigrationsPgRollFormat()).toBe(true);
     });
     test('overwrites all old migrations if they are in the wrong format', async () => {
       const config = await Config.load();

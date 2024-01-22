@@ -4,12 +4,11 @@ import { BaseCommand } from '../../base.js';
 import {
   commitToMigrationFile,
   getLocalMigrationFiles,
-  isPgRollFormat,
   removeLocalMigrations,
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
 import Codegen from '../codegen/index.js';
-import { isPgRollEnabled, isPgRollMigration } from '../../migrations/pgroll.js';
+import { isBranchPgRoll, allMigrationsPgRollFormat, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
   static description = 'Pull changes from remote Xata branch and regenerate code';
@@ -48,7 +47,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
     });
 
     let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
-    if (isPgRollEnabled(details)) {
+    if (isBranchPgRoll(details)) {
       const { migrations } = await xata.api.branch.pgRollMigrationHistory({
         pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
       });
@@ -69,13 +68,13 @@ export default class Pull extends BaseCommand<typeof Pull> {
       await removeLocalMigrations();
     }
 
-    if (isPgRollEnabled(details) && !(await isPgRollFormat())) {
+    if (isBranchPgRoll(details) && !(await allMigrationsPgRollFormat())) {
       this.log(`Converting existing migrations to pgroll format from ${branch} branch`);
       await removeLocalMigrations();
     }
 
     const localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] =
-      await getLocalMigrationFiles(isPgRollEnabled(details));
+      await getLocalMigrationFiles(isBranchPgRoll(details));
 
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
     await writeLocalMigrationFiles(newMigrations);
@@ -98,12 +97,12 @@ export default class Pull extends BaseCommand<typeof Pull> {
     remoteMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]
   ): Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] {
     const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
-      const remoteIdentifier = isPgRollMigration(remoteMigration) ? remoteMigration.name : remoteMigration.id;
+      const remoteIdentifier = isMigrationPgRollFormat(remoteMigration) ? remoteMigration.name : remoteMigration.id;
       const localItem = localMigrationFiles[index + 1];
       if (!localItem) {
         return index;
       }
-      const localIdentifier = localItem && isPgRollMigration(localItem) ? localItem.name : localItem.id;
+      const localIdentifier = localItem && isMigrationPgRollFormat(localItem) ? localItem.name : localItem.id;
       if (remoteIdentifier === localIdentifier) {
         return index + 1;
       }

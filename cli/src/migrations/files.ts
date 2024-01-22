@@ -3,10 +3,10 @@ import { mkdir, readdir, rm, writeFile } from 'fs/promises';
 import path from 'path';
 import { migrationFile, pgRollMigrationsFile } from './schema.js';
 import { safeJSONParse, safeReadFile } from '../utils/files.js';
-import { isPgRollMigration } from './pgroll.js';
+import { isMigrationPgRollFormat } from './pgroll.js';
 
-const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
-const ledgerFile = path.join(migrationsDir, '.ledger');
+export const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
+export const ledgerFile = path.join(migrationsDir, '.ledger');
 
 async function getLedger() {
   const ledger = await safeReadFile(ledgerFile, 'utf8');
@@ -16,7 +16,7 @@ async function getLedger() {
   return ledger.split('\n').filter((item) => item.trim() !== '');
 }
 
-async function readMigrationsDir() {
+export async function readMigrationsDir() {
   try {
     await mkdir(migrationsDir, { recursive: true });
   } catch (e) {
@@ -28,21 +28,6 @@ async function readMigrationsDir() {
   } catch (e) {
     return [];
   }
-}
-
-export async function isPgRollFormat() {
-  const files = await readMigrationsDir();
-  for (const file of files) {
-    if (file === '.ledger') continue;
-
-    const filePath = path.join(migrationsDir, file);
-    const fileContents = await safeReadFile(filePath);
-    const result = pgRollMigrationsFile.safeParse(safeJSONParse(fileContents));
-    if (!result.success) {
-      return false;
-    }
-  }
-  return true;
 }
 
 export async function getLocalMigrationFiles(
@@ -69,16 +54,17 @@ export async function getLocalMigrationFiles(
     if (entry === '') continue;
     const filePath = path.join(migrationsDir, `${entry}.json`);
     const fileContents = await safeReadFile(filePath);
-    const result = pgRollEnabled
-      ? pgRollMigrationsFile.safeParse(safeJSONParse(fileContents))
-      : migrationFile.safeParse(safeJSONParse(fileContents));
-    if (!result.success) {
-      throw new TypeError(`Failed to parse migration file ${filePath}: ${result.error}`);
+    let result;
+    if (pgRollEnabled) {
+      result = pgRollMigrationsFile.safeParse(safeJSONParse(fileContents));
+    } else {
+      result = migrationFile.safeParse(safeJSONParse(fileContents));
+    }
+    if (!result?.success) {
+      throw new TypeError(`Failed to parse migration file ${filePath}: ${result?.error}`);
     }
 
-    // TODO fix
-    // @ts-expect-error
-    migrations.push(result.data);
+    migrations.push(result?.data as any);
   }
 
   return migrations;
@@ -91,7 +77,7 @@ export async function writeLocalMigrationFiles(
 
   for (const file of files) {
     let name;
-    if (isPgRollMigration(file)) {
+    if (isMigrationPgRollFormat(file)) {
       name = file.name;
     } else {
       // Checksums start with a version `1:` prefix, so we need to remove that
@@ -118,23 +104,22 @@ export function commitToMigrationFile(
   logs: Schemas.Commit[] | Schemas.PgRollMigrationHistoryItem[]
 ): Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] {
   // Schema history comes in reverse order, so we need to reverse it
-  // TODO fix
-  // @ts-expect-error
-  return logs.reverse().map((log) => {
-    return isPgRollMigration(log)
-      ? {
-          name: log.name,
-          migration: log.migration,
-          startedAt: log.startedAt,
-          parent: log.parent,
-          done: log.done,
-          migrationType: log.migrationType
-        }
-      : {
-          id: log.id,
-          parentID: log.parentID,
-          checksum: log.checksum,
-          operations: log.operations
-        };
-  });
+  return logs.reverse().map(
+    (log) =>
+      (isMigrationPgRollFormat(log)
+        ? {
+            name: log.name,
+            migration: log.migration,
+            startedAt: log.startedAt,
+            parent: log.parent,
+            done: log.done,
+            migrationType: log.migrationType
+          }
+        : {
+            id: log.id,
+            parentID: log.parentID,
+            checksum: log.checksum,
+            operations: log.operations
+          }) as any
+  );
 }
