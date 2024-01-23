@@ -135,6 +135,70 @@ const fetchSingle = (url: string, request: any) => {
   }
 };
 
+const staticMigrationPgRollName = 'mig_cmkjcdrj7c92neg7lnmg';
+const staticMigrationPgRollResponse = {
+  migrations: [
+    {
+      done: false,
+      migration: `{"name": ${staticMigrationPgRollName}, "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
+      migrationType: 'pgroll',
+      name: staticMigrationPgRollName,
+      parent: 'mig_cmkjccmg1th0of00f5n0',
+      startedAt: '2024-01-18T14:31:20.795975Z'
+    }
+  ]
+};
+
+const staticMigrationPgRollTwoName = 'mig_abcdcdrj7c92neg7lefg';
+const staticMigrationPgRollTwo = {
+  done: false,
+  migration: `{"name": ${staticMigrationPgRollTwoName}, "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
+  migrationType: 'pgroll',
+  name: staticMigrationPgRollTwoName,
+  parent: 'mig_cmkjccmg1th0of00f5n0',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
+
+const pgrollFetchSingle = (url: string, request: any) => {
+  if (url === `${baseUrl}` && request.method === 'GET') {
+    return {
+      ok: true,
+      json: async () => ({
+        usePgRoll: true,
+        schema: { tables: [{ name: 'table1', columns: [{ name: 'a', type: 'string' }] }] }
+      })
+    };
+  } else if (url === `${baseUrl}/pgroll/migrations` && request.method === 'GET') {
+    return {
+      ok: true,
+      json: async () => staticMigrationPgRollResponse
+    };
+  } else {
+    return baseFetch(url, request);
+  }
+};
+
+const pgrollFetchEmpty = (url: string, request: any) => {
+  if (url === `${baseUrl}` && request.method === 'GET') {
+    return {
+      ok: true,
+      json: async () => ({
+        usePgRoll: true,
+        schema: { tables: [{ name: 'table1', columns: [{ name: 'a', type: 'string' }] }] }
+      })
+    };
+  } else if (url === `${baseUrl}/pgroll/migrations` && request.method === 'GET') {
+    return {
+      ok: true,
+      json: async () => ({
+        migrations: []
+      })
+    };
+  } else {
+    return baseFetch(url, request);
+  }
+};
+
 promptsMock.mockReturnValue({ confirm: true, database: 'db1', workspace: 'test-1234' });
 
 describe('push', () => {
@@ -150,7 +214,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
-    test('combines new remote migrations with existing remote migrations', async () => {
+    test('combines new local migrations with existing remote migrations', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
       const log = vi.spyOn(command, 'log');
@@ -173,6 +237,77 @@ describe('push', () => {
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigration));
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationId);
       fetchMock.mockImplementation(fetchSingle);
+      await command.run();
+      expect(log).toHaveBeenCalledWith('No new migrations to push');
+    });
+  });
+  describe('for Xata 2.0 branches', () => {
+    test('prompts user to run a xata pull -f if there current migrations are not in pgroll format', async () => {
+      const config = await Config.load();
+      const command = new Push(['main'], config);
+      const log = vi.spyOn(command, 'log');
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationId as unknown as Dirent]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigration));
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationId);
+      fetchMock.mockImplementation(pgrollFetchSingle);
+      await command.run();
+      expect(log).toHaveBeenCalledWith('Please run xata pull -f to convert all migrations to pgroll format');
+    });
+    test('pushes migrations remotely if there are none', async () => {
+      const config = await Config.load();
+      const command = new Push(['main'], config);
+      const log = vi.spyOn(command, 'log');
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationPgRollName as unknown as Dirent]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+      );
+      fetchMock.mockImplementation(pgrollFetchEmpty);
+      await command.run();
+      expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
+    });
+    test('combines new local migrations with existing remote migrations', async () => {
+      const config = await Config.load();
+      const command = new Push(['main'], config);
+      const log = vi.spyOn(command, 'log');
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [
+        staticMigrationPgRollName as unknown as Dirent,
+        staticMigrationPgRollTwoName as unknown as Dirent
+      ]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(
+        async () => staticMigrationPgRollName + '\n' + staticMigrationPgRollTwoName
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollTwo));
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(
+        async () => staticMigrationPgRollName + '\n' + staticMigrationPgRollTwoName
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollTwo));
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+      );
+      fetchMock.mockImplementation(pgrollFetchSingle);
+      await command.run();
+      expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
+    });
+    test('does not push migrations remote if they already exist', async () => {
+      const config = await Config.load();
+      const command = new Push(['main'], config);
+      const log = vi.spyOn(command, 'log');
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationPgRollName as unknown as Dirent]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+      );
+      fetchMock.mockImplementation(pgrollFetchSingle);
       await command.run();
       expect(log).toHaveBeenCalledWith('No new migrations to push');
     });

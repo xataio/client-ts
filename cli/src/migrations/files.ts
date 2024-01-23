@@ -10,6 +10,7 @@ const ledgerFile = path.join(migrationsDir, '.ledger');
 
 async function getLedger() {
   const ledger = await safeReadFile(ledgerFile, 'utf8');
+
   if (!ledger) return [];
 
   // Split by newlines and filter out empty lines
@@ -54,6 +55,7 @@ export async function getLocalMigrationFiles(
     if (entry === '') continue;
     const filePath = path.join(migrationsDir, `${entry}.json`);
     const fileContents = await safeReadFile(filePath);
+
     const result = pgRollEnabled
       ? pgRollMigrationsFile.safeParse(safeJSONParse(fileContents))
       : migrationFile.safeParse(safeJSONParse(fileContents));
@@ -122,3 +124,23 @@ export function commitToMigrationFile(
           }) as any
   );
 }
+
+export const getLastCommonIndex = (
+  localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[],
+  remoteMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]
+) => {
+  const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
+    const remoteIdentifier = isMigrationPgRollFormat(remoteMigration) ? remoteMigration.name : remoteMigration.id;
+    const localItem = localMigrationFiles[index + 1];
+    if (!localItem) {
+      return index;
+    }
+    const localIdentifier = localItem && isMigrationPgRollFormat(localItem) ? localItem.name : localItem.id;
+    if (remoteIdentifier === localIdentifier) {
+      return index + 1;
+    }
+
+    return index;
+  }, -1);
+  return lastCommonMigrationIndex;
+};

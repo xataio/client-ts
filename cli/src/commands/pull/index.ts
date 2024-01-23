@@ -3,6 +3,7 @@ import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
 import {
   commitToMigrationFile,
+  getLastCommonIndex,
   getLocalMigrationFiles,
   removeLocalMigrations,
   writeLocalMigrationFiles
@@ -96,19 +97,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
     localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[],
     remoteMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]
   ): Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] {
-    const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
-      const remoteIdentifier = isMigrationPgRollFormat(remoteMigration) ? remoteMigration.name : remoteMigration.id;
-      const localItem = localMigrationFiles[index + 1];
-      if (!localItem) {
-        return index;
-      }
-      const localIdentifier = localItem && isMigrationPgRollFormat(localItem) ? localItem.name : localItem.id;
-      if (remoteIdentifier === localIdentifier) {
-        return index + 1;
-      }
-
-      return index;
-    }, -1);
+    const lastCommonMigrationIndex = getLastCommonIndex(localMigrationFiles, remoteMigrationFiles);
 
     // TODO: Validate that the migrations are in the same order (for previous history)
 
