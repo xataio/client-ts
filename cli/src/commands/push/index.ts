@@ -57,7 +57,7 @@ export default class Push extends BaseCommand<typeof Push> {
 
     const localMigrationFiles = await getLocalMigrationFiles(isBranchPgRollEnabled(details));
 
-    // TODO remove type assertion
+    // TODO remove assertion after complete pgroll migration
     const newMigrations = this.getNewMigrations(
       localMigrationFiles as Schemas.MigrationObject[],
       commitToMigrationFile(logs) as Schemas.MigrationObject[]
