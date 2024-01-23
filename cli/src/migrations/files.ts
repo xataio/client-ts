@@ -61,6 +61,7 @@ export async function getLocalMigrationFiles(
       throw new Error(`Failed to parse migration file ${filePath}: ${result.error}`);
     }
 
+    // TODO remove assertion after complete pgroll migration
     migrations.push(result.data as any);
   }
 
@@ -117,6 +118,7 @@ export function commitToMigrationFile(
             parentID: log.parentID,
             checksum: log.checksum,
             operations: log.operations
+            // TODO remove assertion after complete pgroll migration
           }) as any
   );
 }

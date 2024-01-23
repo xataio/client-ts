@@ -35,7 +35,7 @@ export default class Diff extends BaseCommand<typeof Diff> {
     this.info(`Diff command is experimental, use with caution`);
 
     const localMigrationFiles = await getLocalMigrationFiles();
-    // TODO decide what to do about this command for pgroll enabled branches and then fix type assertion
+    // TODO remove assertion after complete pgroll migration
     const schemaOperations = localMigrationFiles.flatMap(
       (migrationFile) => (migrationFile as Schemas.MigrationObject).operations
     );
