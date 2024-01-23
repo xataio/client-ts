@@ -1,12 +1,7 @@
 import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
-import {
-  commitToMigrationFile,
-  getLastCommonIndex,
-  getLocalMigrationFiles,
-  removeLocalMigrations
-} from '../../migrations/files.js';
+import { commitToMigrationFile, getLastCommonIndex, getLocalMigrationFiles } from '../../migrations/files.js';
 import { allMigrationsPgRollFormat, isBranchPgRollEnabled, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
 
 export default class Push extends BaseCommand<typeof Push> {
