@@ -97,6 +97,10 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Exit pre-mode if set
+        continue-on-error: true
+        run: npx changeset pre exit
+
       - name: Publish build
         if: ${{ steps.secrets.outputs.exist == 'true' && github.event_name == 'pull_request' }}
         env:
