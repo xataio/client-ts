@@ -116,6 +116,7 @@ jobs:
 
           EOF
 
+          npx changeset pre exit
           npx changeset version --snapshot ${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}
           npx changeset publish --tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-git-tag
 
