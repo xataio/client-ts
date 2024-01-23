@@ -2,6 +2,7 @@ import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
 import { commitToMigrationFile, getLocalMigrationFiles } from '../../migrations/files.js';
+import { isBranchPgRollEnabled, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
 
 export default class Push extends BaseCommand<typeof Push> {
   static description = 'Push local changes to a remote Xata branch';
@@ -32,16 +33,29 @@ export default class Push extends BaseCommand<typeof Push> {
       true
     );
 
-    const { logs } = await xata.api.migrations.getBranchSchemaHistory({
-      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: {
-        // TODO: Fix pagination in the API to start from last known migration and not from the beginning
-        // Also paginate until we get all migrations
-        page: { size: 200 }
-      }
+    const details = await xata.api.branch.getBranchDetails({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
     });
 
-    const localMigrationFiles = await getLocalMigrationFiles();
+    let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
+    if (isBranchPgRollEnabled(details)) {
+      const { migrations } = await xata.api.branch.pgRollMigrationHistory({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+      });
+      logs = migrations;
+    } else {
+      const data = await xata.api.migrations.getBranchSchemaHistory({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+        body: {
+          // TODO: Fix pagination in the API to start from last known migration and not from the beginning
+          // Also paginate until we get all migrations
+          page: { size: 200 }
+        }
+      });
+      logs = data.logs;
+    }
+
+    const localMigrationFiles = await getLocalMigrationFiles(isBranchPgRollEnabled(details));
 
     // TODO remove type assertion
     const newMigrations = this.getNewMigrations(
@@ -55,7 +69,7 @@ export default class Push extends BaseCommand<typeof Push> {
     }
 
     newMigrations.forEach((migration) => {
-      this.log(`  ${migration.id}`);
+      isMigrationPgRollFormat(migration) ? this.log(`  ${migration.name}`) : this.log(`  ${migration.id}`);
     });
 
     if (flags['dry-run']) {
@@ -72,11 +86,19 @@ export default class Push extends BaseCommand<typeof Push> {
 
     if (!confirm) return this.exit(1);
 
-    // TODO: Check for errors and print them
-    await xata.api.migrations.pushBranchMigrations({
-      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: { migrations: newMigrations }
-    });
+    if (isBranchPgRollEnabled(details)) {
+      //use async endpoint
+      await xata.api.branch.applyMigration({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+        body: [...(newMigrations as Schemas.PgRollMigrationHistoryItem[])]
+      });
+    } else {
+      // TODO: Check for errors and print them
+      await xata.api.migrations.pushBranchMigrations({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+        body: { migrations: newMigrations as Schemas.MigrationObject[] }
+      });
+    }
 
     this.log(`Pushed ${newMigrations.length} migrations to ${branch}`);
   }
@@ -84,7 +106,7 @@ export default class Push extends BaseCommand<typeof Push> {
   getNewMigrations(
     localMigrationFiles: Schemas.MigrationObject[],
     remoteMigrationFiles: Schemas.MigrationObject[]
-  ): Schemas.MigrationObject[] {
+  ): Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] {
     if (localMigrationFiles.length === 0 && remoteMigrationFiles.length > 0) {
       this.log('There are new migrations on the remote branch. Please run `xata pull` to get the latest migrations.');
       this.exit(0);
