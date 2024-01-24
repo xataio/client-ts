@@ -3,6 +3,7 @@ import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
 import { commitToMigrationFile, getLastCommonIndex, getLocalMigrationFiles } from '../../migrations/files.js';
 import { allMigrationsPgRollFormat, isBranchPgRollEnabled, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
+import { pgRollMigrationHistoryObject } from '../../migrations/schema.js';
 
 export default class Push extends BaseCommand<typeof Push> {
   static description = 'Push local changes to a remote Xata branch';
@@ -88,10 +89,21 @@ export default class Push extends BaseCommand<typeof Push> {
     if (!confirm) return this.exit(1);
 
     if (isBranchPgRollEnabled(details)) {
-      await xata.api.branch.applyMigration({
-        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-        body: [...(newMigrations as Schemas.PgRollMigrationHistoryItem[])]
-      });
+      const migrationsToPush = (newMigrations as Schemas.PgRollMigrationHistoryItem[])
+        .map(({ migration }) => migration)
+        .flatMap((migration) => pgRollMigrationHistoryObject.parse(JSON.parse(migration)));
+      for (const migration of migrationsToPush) {
+        try {
+          await xata.api.branch.applyMigration({
+            pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+            // @ts-expect-error TODO remove when types updated
+            body: migration
+          });
+        } catch (e) {
+          this.log(`Failed to push ${migration} with ${e}. Stopping.`);
+          this.exit(1);
+        }
+      }
     } else {
       // TODO: Check for errors and print them
       await xata.api.migrations.pushBranchMigrations({

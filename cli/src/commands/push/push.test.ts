@@ -140,7 +140,7 @@ const staticMigrationPgRollResponse = {
   migrations: [
     {
       done: false,
-      migration: `{"name": ${staticMigrationPgRollName}, "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
+      migration: `{"name": "${staticMigrationPgRollName}", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
       migrationType: 'pgroll',
       name: staticMigrationPgRollName,
       parent: 'mig_cmkjccmg1th0of00f5n0',
@@ -152,7 +152,7 @@ const staticMigrationPgRollResponse = {
 const staticMigrationPgRollTwoName = 'mig_abcdcdrj7c92neg7lefg';
 const staticMigrationPgRollTwo = {
   done: false,
-  migration: `{"name": ${staticMigrationPgRollTwoName}, "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
+  migration: `{"name": "${staticMigrationPgRollTwoName}", "operations": [{"drop_column": {"up": "", "table": "tester", "column": "Firstname"}}]}`,
   migrationType: 'pgroll',
   name: staticMigrationPgRollTwoName,
   parent: 'mig_cmkjccmg1th0of00f5n0',
