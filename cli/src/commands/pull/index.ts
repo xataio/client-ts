@@ -69,7 +69,14 @@ export default class Pull extends BaseCommand<typeof Pull> {
       await removeLocalMigrations();
     }
 
-    if (isBranchPgRollEnabled(details) && !(await allMigrationsPgRollFormat())) {
+    if (!flags.force && isBranchPgRollEnabled(details) && !(await allMigrationsPgRollFormat())) {
+      const { confirm } = await this.prompt({
+        type: 'confirm',
+        name: 'confirm',
+        message: `Your local migration files need reformatting. A one time rewrite is required to continue. Proceed?`,
+        initial: true
+      });
+      if (!confirm) return this.exit(1);
       this.log(`Converting existing migrations to pgroll format from ${branch} branch`);
       await removeLocalMigrations();
     }
