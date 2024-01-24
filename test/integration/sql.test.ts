@@ -27,7 +27,7 @@ afterEach(async (ctx) => {
 });
 
 describe('SQL proxy', () => {
-  test.skip('read single team with id', async () => {
+  test('read single team with id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
     const { records, warning } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE id = ${team.id}`;
@@ -38,10 +38,10 @@ describe('SQL proxy', () => {
     expect(records[0].name).toBe('Team ships');
   });
 
-  test.skip('read multiple teams ', async () => {
+  test('read multiple teams ', async () => {
     const teams = await xata.db.teams.create([{ name: '[A] Cars' }, { name: '[A] Planes' }]);
 
-    const { records, warning } = await xata.sql<TeamsRecord>("SELECT * FROM teams WHERE name LIKE '[A] %'");
+    const { records, warning } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE name LIKE '[A] %'`;
 
     expect(warning).toBeUndefined();
     expect(records).toHaveLength(2);
@@ -55,7 +55,7 @@ describe('SQL proxy', () => {
     expect(record2?.name).toBe('[A] Planes');
   });
 
-  test.skip('create team', async () => {
+  test('create team', async () => {
     const { records, warning } = await xata.sql<TeamsRecord>({
       statement: `INSERT INTO teams (name) VALUES ($1) RETURNING *`,
       params: ['Team ships 2']
@@ -68,5 +68,12 @@ describe('SQL proxy', () => {
     const team = await xata.db.teams.read(records[0].id);
     expect(team).toBeDefined();
     expect(team?.name).toBe('Team ships 2');
+  });
+
+  test("calling xata.sql as a function throws an error because it's not safe", async () => {
+    // @ts-expect-error - Testing invalid usage
+    await expect(xata.sql('SELECT * FROM teams')).rejects.toThrow(
+      'Calling `xata.sql` as a function is not safe. Make sure to use it as a tagged template or with an object.'
+    );
   });
 });
