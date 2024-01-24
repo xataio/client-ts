@@ -68,8 +68,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
       await removeLocalMigrations();
     }
 
-    if (isBranchPgRollEnabled(details) && !(await allMigrationsPgRollFormat())) {
-      console.log('enabled and bad format.......');
+    if (!flags.force && isBranchPgRollEnabled(details) && !(await allMigrationsPgRollFormat())) {
       const { confirm } = await this.prompt({
         type: 'confirm',
         name: 'confirm',
