@@ -193,10 +193,10 @@ const pgrollFetchMultiple = (url: string, request: any) => {
     return baseFetch(url, request);
   }
 };
-promptsMock.mockReturnValue({ workspace: 'test-1234', database: 'db1' });
 
 describe('pull', () => {
   describe('for Xata 1.0 branches', () => {
+    promptsMock.mockReturnValue({ workspace: 'test-1234', database: 'db1' });
     test('creates migrations locally if they do not yet exist', async () => {
       const config = await Config.load();
       const command = new Pull(['--force', 'main'], config);
@@ -238,6 +238,7 @@ describe('pull', () => {
       vi.spyOn(fs, 'readdir').mockImplementation(async () => []);
       vi.spyOn(fs, 'readFile').mockImplementation(async () => '');
       fetchMock.mockImplementation(pgrollFetchSingle);
+      promptsMock.mockReturnValueOnce({ workspace: 'test-1234', database: 'db1' });
       await command.run();
       expect(log).toHaveBeenCalledWith('Successfully pulled 1 migrations from main branch');
     });
@@ -250,15 +251,10 @@ describe('pull', () => {
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
       fetchMock.mockImplementation(pgrollFetchMultiple);
+      promptsMock.mockReturnValueOnce({ workspace: 'test-1234', database: 'db1' });
       await command.run();
       expect(log).not.toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('Successfully pulled 2 migrations from main branch');
-    });
-    test('allMigrationsPgRollFormat helper', async () => {
-      vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [staticMigrationPgRollName] as unknown as Dirent[]);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
-      expect(await allMigrationsPgRollFormat()).toBe(true);
     });
     test('overwrites all old migrations if they are in the wrong format', async () => {
       const config = await Config.load();
@@ -269,6 +265,8 @@ describe('pull', () => {
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => '');
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationId);
       fetchMock.mockImplementation(pgrollFetchSingle);
+      promptsMock.mockReturnValueOnce({ workspace: 'test-1234', database: 'db1' });
+      promptsMock.mockReturnValueOnce({ confirm: true });
       await command.run();
       expect(log).toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('Successfully pulled 1 migrations from main branch');
@@ -282,9 +280,17 @@ describe('pull', () => {
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
       fetchMock.mockImplementation(pgrollFetchSingle);
+      promptsMock.mockReturnValueOnce({ workspace: 'test-1234', database: 'db1' });
+      promptsMock.mockReturnValueOnce({ confirm: true });
       await command.run();
       expect(log).not.toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('No new migrations to pull from main branch');
+    });
+    test('allMigrationsPgRollFormat helper', async () => {
+      vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [staticMigrationPgRollName] as unknown as Dirent[]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
+      expect(await allMigrationsPgRollFormat()).toBe(true);
     });
   });
 });
