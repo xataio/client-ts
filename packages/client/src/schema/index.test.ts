@@ -81,7 +81,7 @@ describe('client options', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+        "body": "{"page":{"size":1},"columns":["*"]}",
         "method": "POST",
         "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
       }
@@ -113,7 +113,7 @@ describe('request', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+        "body": "{"page":{"size":1},"columns":["*"]}",
         "method": "POST",
         "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
       }
@@ -143,7 +143,7 @@ describe('request', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
+        "body": "{"page":{"size":20},"columns":["*"]}",
         "method": "POST",
         "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
       }
@@ -291,7 +291,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
+            "body": "{"page":{"size":20},"columns":["*"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
@@ -311,7 +311,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"filter\\":{\\"$all\\":[{\\"name\\":\\"foo\\"}]},\\"page\\":{\\"size\\":20},\\"columns\\":[\\"*\\"]}",
+            "body": "{"filter":{"$all":[{"name":"foo"}]},"page":{"size":20},"columns":["*"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
@@ -339,7 +339,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+            "body": "{"page":{"size":1},"columns":["*"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
@@ -364,7 +364,7 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{\\"page\\":{\\"size\\":1},\\"columns\\":[\\"*\\"]}",
+            "body": "{"page":{"size":1},"columns":["*"]}",
             "method": "POST",
             "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
           },
@@ -434,7 +434,7 @@ describe('Repository.update', () => {
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": "{\\"name\\":\\"Ada\\"}",
+          "body": "{"name":"Ada"}",
           "method": "PATCH",
           "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
         },
@@ -493,7 +493,7 @@ describe('create', () => {
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": "{\\"name\\":\\"Ada\\"}",
+          "body": "{"name":"Ada"}",
           "method": "POST",
           "url": "https://mock.xata.sh/db/xata:main/tables/users/data?columns=*",
         },

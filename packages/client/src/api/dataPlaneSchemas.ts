@@ -12,6 +12,81 @@
  */
 export type DBBranchName = string;
 
+export type PgRollApplyMigrationResponse = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+};
+
+export type PgRollJobType = 'apply' | 'start' | 'complete' | 'rollback';
+
+export type PgRollJobStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+
+export type PgRollJobStatusResponse = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+  /**
+   * The type of the migration job
+   */
+  type: PgRollJobType;
+  /**
+   * The status of the migration job
+   */
+  status: PgRollJobStatus;
+  /**
+   * The error message associated with the migration job
+   */
+  error?: string;
+};
+
+/**
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type PgRollMigrationJobID = string;
+
+export type PgRollMigrationType = 'pgroll' | 'inferred';
+
+export type PgRollMigrationHistoryItem = {
+  /**
+   * The name of the migration
+   */
+  name: string;
+  /**
+   * The pgroll migration that was applied
+   */
+  migration: string;
+  /**
+   * The timestamp at which the migration was started
+   *
+   * @format date-time
+   */
+  startedAt: string;
+  /**
+   * The name of the parent migration, if any
+   */
+  parent?: string;
+  /**
+   * Whether the migration is completed or not
+   */
+  done: boolean;
+  /**
+   * The type of the migration
+   */
+  migrationType: PgRollMigrationType;
+};
+
+export type PgRollMigrationHistoryResponse = {
+  /**
+   * The migrations that have been applied to the branch
+   */
+  migrations: PgRollMigrationHistoryItem[];
+};
+
 /**
  * @maxLength 255
  * @minLength 1
@@ -27,6 +102,13 @@ export type DateTime = string;
 
 export type Branch = {
   name: string;
+  /**
+   * The cluster where this branch resides. Value of 'shared-cluster' for branches in shared clusters
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
   createdAt: DateTime;
 };
 
@@ -140,6 +222,13 @@ export type DBBranch = {
   branchName: BranchName;
   createdAt: DateTime;
   id: string;
+  /**
+   * The cluster where this branch resides. Value of 'shared-cluster' for branches in shared clusters
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
   version: number;
   lastMigrationID: string;
   metadata?: BranchMetadata;
@@ -788,6 +877,10 @@ export type InputFileEntry = {
    * Time to live for signed URLs
    */
   signedUrlTimeout?: number;
+  /**
+   * Time to live for upload URLs
+   */
+  uploadUrlTimeout?: number;
 };
 
 /**
@@ -819,6 +912,10 @@ export type InputFile = {
    * Time to live for signed URLs
    */
   signedUrlTimeout?: number;
+  /**
+   * Time to live for upload URLs
+   */
+  uploadUrlTimeout?: number;
 };
 
 /**

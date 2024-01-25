@@ -1,5 +1,58 @@
 # @xata.io/cli
 
+## 0.15.4
+
+### Patch Changes
+
+- [#1294](https://github.com/xataio/client-ts/pull/1294) [`c4aa170`](https://github.com/xataio/client-ts/commit/c4aa1708c25385d2d95161b11a0cf00b26c4733c) Thanks [@snide](https://github.com/snide)! - Clean up API success page
+
+- Updated dependencies [[`b7f3ec9`](https://github.com/xataio/client-ts/commit/b7f3ec9eabe3642929131e244bd774f4d3134482)]:
+  - @xata.io/client@0.28.3
+  - @xata.io/codegen@0.28.3
+
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies [[`c9178e1`](https://github.com/xataio/client-ts/commit/c9178e1e3f2268513e78dcfce396a99a8fca5dfb)]:
+  - @xata.io/client@0.28.2
+  - @xata.io/codegen@0.28.2
+
+## 0.15.2
+
+### Patch Changes
+
+- Updated dependencies [[`9a7e3f5`](https://github.com/xataio/client-ts/commit/9a7e3f5029e53efc6750e9c86bab936427788209)]:
+  - @xata.io/client@0.28.1
+  - @xata.io/codegen@0.28.1
+
+## 0.15.1
+
+### Patch Changes
+
+- [#1277](https://github.com/xataio/client-ts/pull/1277) [`f999833a`](https://github.com/xataio/client-ts/commit/f999833a787a7db4a733eaa395ca1f71101e74ea) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing api key on auth login
+
+## 0.15.0
+
+### Minor Changes
+
+- [#1251](https://github.com/xataio/client-ts/pull/1251) [`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove Xata Workers support
+
+### Patch Changes
+
+- [#1212](https://github.com/xataio/client-ts/pull/1212) [`1348a7fa`](https://github.com/xataio/client-ts/commit/1348a7fa973d8ad008f925297a479f26d231efec) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - feat: compatibility endpoint
+
+- Updated dependencies [[`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05)]:
+  - @xata.io/client@0.28.0
+  - @xata.io/codegen@0.28.0
+  - @xata.io/importer@1.1.3
+
+## 0.14.5
+
+### Patch Changes
+
+- [#1257](https://github.com/xataio/client-ts/pull/1257) [`25921ab6`](https://github.com/xataio/client-ts/commit/25921ab6ea28db8f1c87d53e247a1438555a42f0) Thanks [@richardgill](https://github.com/richardgill)! - CLI import: Added encoding flag, switch to utf8 by default. Fixes some obscure encoding issues.
+
 ## 0.14.4
 
 ### Patch Changes

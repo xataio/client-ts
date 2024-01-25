@@ -30,6 +30,7 @@ afterEach(async (ctx) => {
 const file = new Blob(['hello'], { type: 'text/plain' });
 const json = new Blob([JSON.stringify({ hello: 'world' })], { type: 'application/json' });
 const csv = new Blob([['hello', 'world'].join(',')], { type: 'text/csv' });
+const png = new Blob(['hello'], { type: 'image/png' });
 
 describe('file support', () => {
   test('create file with record', async () => {
@@ -54,6 +55,10 @@ describe('file support', () => {
     expect(record.photo?.size).toBeGreaterThan(0);
     expect(record.photo?.toBlob()).toBeInstanceOf(Blob);
     expect(record.photo?.toString()).toBe('hello');
+
+    // Check for default public access (photo is public by default, attachments are not)
+    expect(record.attachments?.[0]?.enablePublicUrl).toBe(false);
+    expect(record.photo?.enablePublicUrl).toBe(true);
   });
 
   test('create file with binary endpoint JSON and mediaType override', async () => {
@@ -135,5 +140,43 @@ describe('file support', () => {
     expect(attachment).toBeInstanceOf(Blob);
     const content = await attachment?.text();
     expect(content).toBe('hello,world');
+  });
+
+  test('create XataFile with upload signed url', async () => {
+    const result = await xata.db.users.create(
+      {
+        name: 'Test',
+        photo: { name: 'pic.png', base64Content: '' },
+        attachments: [{ name: 'hello.csv', mediaType: 'text/csv', base64Content: '' }]
+      },
+      ['*', 'photo.uploadUrl', 'attachments.uploadUrl']
+    );
+
+    expect(result.photo?.uploadUrl).toBeDefined();
+    expect(result.attachments?.[0]?.uploadUrl).toBeDefined();
+
+    const upload1 = await fetch(result.photo?.uploadUrl ?? '', { method: 'PUT', body: png });
+    const upload2 = await fetch(result.attachments?.[0]?.uploadUrl ?? '', { method: 'PUT', body: csv });
+
+    expect(upload1.status).toBe(201);
+    expect(upload2.status).toBe(201);
+
+    const user = await xata.db.users.read(result.id, [
+      '*',
+      'photo.*',
+      'photo.base64Content',
+      'attachments.*',
+      'attachments.base64Content'
+    ]);
+
+    expect(user?.photo?.base64Content).toBeDefined();
+    expect(user?.photo?.mediaType).toBe('image/png');
+    expect(user?.photo?.toBlob()).toBeInstanceOf(Blob);
+    expect(user?.photo?.toString()).toBe('hello');
+
+    expect(user?.attachments?.[0]?.base64Content).toBeDefined();
+    expect(user?.attachments?.[0]?.mediaType).toBe('text/csv');
+    expect(user?.attachments?.[0]?.toBlob()).toBeInstanceOf(Blob);
+    expect(user?.attachments?.[0]?.toString()).toBe('hello,world');
   });
 });

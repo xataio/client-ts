@@ -39,37 +39,29 @@ const fruits = [
 export const ownerFruits = {
   full_name: 'Owner of team fruits',
   email: 'owner.fruits@example.com',
-  address: {
-    street: 'Main Street',
-    zipcode: 100
-  }
+  street: 'Main Street',
+  zipcode: 100
 };
 
 export const ownerAnimals = {
   full_name: 'Owner of team animals',
   email: 'owner.animals@example.com',
-  address: {
-    street: 'Elm Street',
-    zipcode: 200
-  }
+  street: 'Elm Street',
+  zipcode: 200
 };
 
 export const animalUsers = animals.map((animal) => ({
   full_name: animal,
   email: `${animal.toLowerCase().replace(' ', '_')}@zoo.example.com`,
-  address: {
-    street: 'Zoo Plaza',
-    zipcode: 200
-  }
+  street: 'Zoo Plaza',
+  zipcode: 200
 }));
 
 export const fruitUsers = fruits.map((fruit) => ({
   full_name: fruit,
   email: `${fruit.toLowerCase().replace(' ', '_')}@macedonia.example.com`,
-  address: {
-    street: 'Grocery Street',
-    zipcode: 200
-  }
+  street: 'Grocery Street',
+  zipcode: 200
 }));
 
 export const mockUsers = [ownerFruits, ownerAnimals, ...animalUsers, ...fruitUsers];

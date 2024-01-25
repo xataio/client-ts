@@ -148,6 +148,24 @@ export type WorkspaceMembers = {
 export type InviteKey = string;
 
 /**
+ * Page size.
+ *
+ * @x-internal true
+ * @default 25
+ * @minimum 0
+ */
+export type PageSize = number;
+
+/**
+ * Page token
+ *
+ * @x-internal true
+ * @maxLength 255
+ * @minLength 24
+ */
+export type PageToken = string;
+
+/**
  * @x-internal true
  * @pattern [a-zA-Z0-9_-~:]+
  */
@@ -170,8 +188,18 @@ export type ClusterShortMetadata = {
 /**
  * @x-internal true
  */
+export type PageResponse = {
+  size: number;
+  hasMore: boolean;
+  token?: string;
+};
+
+/**
+ * @x-internal true
+ */
 export type ListClustersResponse = {
   clusters: ClusterShortMetadata[];
+  page: PageResponse;
 };
 
 /**
@@ -343,6 +371,10 @@ export type DatabaseMetadata = {
    * @x-internal true
    */
   newMigrations?: boolean;
+  /**
+   * @x-internal true
+   */
+  defaultClusterID?: string;
   /**
    * Metadata about the database for display in Xata user interfaces
    */

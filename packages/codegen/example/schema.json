@@ -32,22 +32,12 @@
           "type": "email"
         },
         {
-          "name": "settings",
-          "type": "object",
-          "columns": [
-            {
-              "name": "plan",
-              "type": "string"
-            },
-            {
-              "name": "dark",
-              "type": "bool"
-            },
-            {
-              "name": "labels",
-              "type": "multiple"
-            }
-          ]
+          "name": "plan",
+          "type": "string"
+        },
+        {
+          "name": "dark",
+          "type": "bool"
         },
         {
           "name": "config",
@@ -82,29 +72,22 @@
         },
         {
           "name": "photo",
-          "type": "file"
+          "type": "file",
+          "file": {
+            "defaultPublicAccess": true
+          }
         },
         {
           "name": "attachments",
           "type": "file[]"
         },
         {
-          "name": "settings",
-          "type": "object",
-          "columns": [
-            {
-              "name": "plan",
-              "type": "string"
-            },
-            {
-              "name": "dark",
-              "type": "bool"
-            },
-            {
-              "name": "labels",
-              "type": "multiple"
-            }
-          ]
+          "name": "plan",
+          "type": "string"
+        },
+        {
+          "name": "dark",
+          "type": "bool"
         },
         {
           "name": "full_name",
@@ -125,18 +108,12 @@
           "type": "datetime"
         },
         {
-          "name": "address",
-          "type": "object",
-          "columns": [
-            {
-              "name": "street",
-              "type": "string"
-            },
-            {
-              "name": "zipcode",
-              "type": "int"
-            }
-          ]
+          "name": "street",
+          "type": "string"
+        },
+        {
+          "name": "zipcode",
+          "type": "int"
         },
         {
           "name": "team",

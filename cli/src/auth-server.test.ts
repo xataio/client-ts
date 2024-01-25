@@ -135,7 +135,7 @@ describe('handler', () => {
     expect(res.writeHead).toHaveBeenCalledWith(200, {
       'Content-Type': 'text/html'
     });
-    expect(end.mock.calls[0][0]).toContain('Congratulations, you are all set!');
+    expect(end.mock.calls[0][0]).toContain('Installation of the CLI is now complete');
     expect(req.destroy).toHaveBeenCalled();
     expect(callback).toHaveBeenCalledWith(apiKey);
   });

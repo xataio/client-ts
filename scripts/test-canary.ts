@@ -54,8 +54,9 @@ async function main() {
         console.log(`Could not download npm package, retrying... ${e}. Attempt: ${nextTry}`);
         await new Promise((resolve) => setTimeout(resolve, 1000 * 10 * nextTry));
         await download(nextTry);
+      } else {
+        throw e;
       }
-      throw e;
     }
   };
 

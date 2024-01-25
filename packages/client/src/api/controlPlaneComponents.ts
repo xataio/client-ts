@@ -1065,6 +1065,17 @@ export type ListClustersPathParams = {
   workspaceId: Schemas.WorkspaceID;
 };
 
+export type ListClustersQueryParams = {
+  /**
+   * Page size
+   */
+  page?: Schemas.PageSize;
+  /**
+   * Page token
+   */
+  token?: Schemas.PageToken;
+};
+
 export type ListClustersError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -1078,18 +1089,21 @@ export type ListClustersError = Fetcher.ErrorWrapper<
 
 export type ListClustersVariables = {
   pathParams: ListClustersPathParams;
+  queryParams?: ListClustersQueryParams;
 } & ControlPlaneFetcherExtraProps;
 
 /**
  * List all clusters available in your Workspace.
  */
 export const listClusters = (variables: ListClustersVariables, signal?: AbortSignal) =>
-  controlPlaneFetch<Schemas.ListClustersResponse, ListClustersError, undefined, {}, {}, ListClustersPathParams>({
-    url: '/workspaces/{workspaceId}/clusters',
-    method: 'get',
-    ...variables,
-    signal
-  });
+  controlPlaneFetch<
+    Schemas.ListClustersResponse,
+    ListClustersError,
+    undefined,
+    {},
+    ListClustersQueryParams,
+    ListClustersPathParams
+  >({ url: '/workspaces/{workspaceId}/clusters', method: 'get', ...variables, signal });
 
 export type CreateClusterPathParams = {
   /**
@@ -1291,7 +1305,7 @@ export type CreateDatabaseRequestBody = {
    */
   region: string;
   /**
-   * The dedicated cluster where branches from this database will be created. Defaults to 'xata-cloud'.
+   * The dedicated cluster where branches from this database will be created. Defaults to 'shared-cluster'.
    *
    * @minLength 1
    * @x-internal true
@@ -1442,6 +1456,13 @@ export type UpdateDatabaseMetadataRequestBody = {
      */
     color?: string;
   };
+  /**
+   * The dedicated cluster where branches from this database will be created. Defaults to 'shared-cluster'.
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  defaultClusterID?: string;
 };
 
 export type UpdateDatabaseMetadataVariables = {
