@@ -157,7 +157,9 @@ export const coerceValue = async (
       return isEmail(value) ? { value: String(value).trim(), isError: false } : { value: null, isError: true };
     }
     case 'int': {
-      return isInteger(value) ? { value: parseInt(String(value), 10), isError: false } : { value: null, isError: true };
+      return isInteger(value) || isFloat(value)
+        ? { value: parseInt(String(value), 10), isError: false }
+        : { value: null, isError: true };
     }
     case 'float': {
       return isFloat(value) ? { value: parseFloat(String(value)), isError: false } : { value: null, isError: true };
