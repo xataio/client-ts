@@ -96,7 +96,6 @@ export default class Push extends BaseCommand<typeof Push> {
         try {
           await xata.api.branch.applyMigration({
             pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-            // @ts-expect-error TODO remove when types updated
             body: migration
           });
         } catch (e) {

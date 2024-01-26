@@ -18,7 +18,6 @@ function buildColumnType(column: Schemas.Column) {
     case 'datetime':
       return date(column.name);
     case 'multiple':
-    case 'object':
     case 'vector':
     case 'file[]':
     case 'file':
