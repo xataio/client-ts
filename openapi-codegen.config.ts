@@ -43,6 +43,8 @@ export default defineConfig({
         to: '#/components/schemas/XataRecord'
       });
 
+      context.openAPIDocument = removeDeprecatedObjectType({ openAPIDocument: context.openAPIDocument });
+
       // Inject path param in all requests (for now, this should be server url variables)
       context.openAPIDocument = addPathParam({
         openAPIDocument: context.openAPIDocument,
@@ -90,3 +92,34 @@ const isDraft = (operation: unknown) => {
 
   return operation['x-draft'] === true;
 };
+
+function removeDeprecatedObjectType({ openAPIDocument }: { openAPIDocument: Context['openAPIDocument'] }) {
+  const schemas = Object.fromEntries(
+    Object.entries(openAPIDocument.components.schemas).map(([schemaName, schema]) => {
+      if (schemaName === 'Column') {
+        console.log('schema', schema, schema.properties.type.enum);
+
+        const updatedSchema = {
+          ...schema,
+          properties: {
+            ...schema.properties,
+            type: {
+              ...schema.properties.type,
+              // Remove `object` type from enum
+              enum: schema.properties.type.enum.filter((item) => item !== 'object')
+            }
+          }
+        };
+
+        // Remove `columns` property
+        delete updatedSchema.properties['columns'];
+
+        return [schemaName, updatedSchema];
+      }
+
+      return [schemaName, schema];
+    })
+  );
+
+  return { ...openAPIDocument, components: { ...openAPIDocument.components, schemas } };
+}
