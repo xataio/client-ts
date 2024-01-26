@@ -181,7 +181,6 @@ export type Column = {
     | 'email'
     | 'multiple'
     | 'link'
-    | 'object'
     | 'datetime'
     | 'vector'
     | 'file[]'
@@ -194,7 +193,6 @@ export type Column = {
   notNull?: boolean;
   defaultValue?: string;
   unique?: boolean;
-  columns?: Column[];
 };
 
 export type RevLink = {

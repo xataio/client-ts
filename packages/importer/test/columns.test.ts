@@ -282,6 +282,9 @@ const coerceTestCases: {
 }[] = [
   { input: '1', type: 'int', expected: { value: 1, isError: false } },
   { input: ' 1 ', type: 'int', expected: { value: 1, isError: false } },
+  { input: '1.0', type: 'int', expected: { value: 1, isError: false } },
+  { input: '1.123', type: 'int', expected: { value: 1, isError: false } },
+  { input: '-1.123', type: 'int', expected: { value: -1, isError: false } },
   { input: '1', type: 'float', expected: { value: 1.0, isError: false } },
   { input: '1000', type: 'float', expected: { value: 1000, isError: false } },
   { input: '1.1', type: 'float', expected: { value: 1.1, isError: false } },
@@ -785,6 +788,11 @@ const coerceRowsTestCases: {
     rows: [{ col: '1' }, { col: '-2' }],
     columns: [{ name: 'col', type: 'int' }],
     expected: [{ col: { value: 1, isError: false } }, { col: { value: -2, isError: false } }]
+  },
+  {
+    rows: [{ col: '1.1' }, { col: '-1.1' }],
+    columns: [{ name: 'col', type: 'int' }],
+    expected: [{ col: { value: 1, isError: false } }, { col: { value: -1, isError: false } }]
   },
   {
     rows: [{ col: '1.0' }],

@@ -1,5 +1,16 @@
 # @xata.io/cli
 
+## 0.15.5
+
+### Patch Changes
+
+- [#1309](https://github.com/xataio/client-ts/pull/1309) [`adc961b`](https://github.com/xataio/client-ts/commit/adc961b886b789010e6512c17cb2377eceab665a) Thanks [@andrew-farries](https://github.com/andrew-farries)! - Add CLI support for running against local development environments
+
+- Updated dependencies [[`3a8e0a7`](https://github.com/xataio/client-ts/commit/3a8e0a7f96d225f9ecf0ea72945ef618a5b353d6), [`adc961b`](https://github.com/xataio/client-ts/commit/adc961b886b789010e6512c17cb2377eceab665a), [`6031a9d`](https://github.com/xataio/client-ts/commit/6031a9de63c264b7db5b031bb1795258c2bf8150)]:
+  - @xata.io/importer@1.1.4
+  - @xata.io/client@0.28.4
+  - @xata.io/codegen@0.28.4
+
 ## 0.15.4
 
 ### Patch Changes

@@ -29,11 +29,6 @@ export type FilterValueAtColumn<Record, F> = NonNullable<ValueAtColumn<Record, F
        "$is":  "value",
        "$any": [ "value1", "value2" ],
     },
-    "settings.plan": {"$any": ["free", "paid"]},
-    "settings.plan": "free",
-    "settings": {
-      "plan": "free"
-    },
   }
 }
 */
@@ -84,8 +79,8 @@ type ValueTypeFilters<T> = T | T extends string
 {
   "filter": {
       "$any": {
-        "settings.dark": true,
-        "settings.plan": "free"
+        "dark": true,
+        "plan": "free"
       }
   },
 }
@@ -107,7 +102,7 @@ type AggregatorFilter<T> = {
 
 /**
  * Existance filter
- * Example: { filter: { $exists: "settings" } }
+ * Example: { filter: { $exists: "dark" } }
  */
 export type ExistanceFilter<Record> = {
   [key in '$exists' | '$notExists']?: FilterColumns<Record>;

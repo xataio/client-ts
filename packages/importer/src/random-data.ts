@@ -31,8 +31,6 @@ function randomData(column: Schemas.Column) {
       return rand(1, 10000) / rand(1, 100);
     case 'bool':
       return rand(0, 1) === 1;
-    case 'object':
-      return randomRecord(column.columns || []);
     case 'multiple':
       return faker.word.words(rand(1, 3)).split(' ');
     case 'string':

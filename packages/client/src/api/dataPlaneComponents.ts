@@ -33,11 +33,17 @@ export type ApplyMigrationError = Fetcher.ErrorWrapper<
 >;
 
 export type ApplyMigrationRequestBody = {
-  [key: string]: any;
-}[];
+  /**
+   * Migration name
+   */
+  name?: string;
+  operations: {
+    [key: string]: any;
+  }[];
+};
 
 export type ApplyMigrationVariables = {
-  body?: ApplyMigrationRequestBody;
+  body: ApplyMigrationRequestBody;
   pathParams: ApplyMigrationPathParams;
 } & DataPlaneFetcherExtraProps;
 
