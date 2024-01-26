@@ -13,7 +13,6 @@ export type BaseSchema = {
         notNull?: boolean;
       }
     | { name: string; type: 'link'; link: { table: string } }
-    | { name: string; type: 'object'; columns: { name: string; type: string }[] }
   )[];
 };
 
@@ -45,20 +44,19 @@ type PropertyType<Tables, Properties, PropertyName extends PropertyKey> = Proper
       name: string;
       type: infer Type;
       link?: { table: infer LinkedTable };
-      columns?: infer ObjectColumns;
       notNull?: infer NotNull;
     }
     ? NotNull extends true
       ? {
-          [K in PropertyName]: InnerType<Type, ObjectColumns, Tables, LinkedTable>;
+          [K in PropertyName]: InnerType<Type, Tables, LinkedTable>;
         }
       : {
-          [K in PropertyName]?: InnerType<Type, ObjectColumns, Tables, LinkedTable> | null;
+          [K in PropertyName]?: InnerType<Type, Tables, LinkedTable> | null;
         }
     : never
   : never;
 
-type InnerType<Type, ObjectColumns, Tables, LinkedTable> = Type extends 'string' | 'text' | 'email'
+type InnerType<Type, Tables, LinkedTable> = Type extends 'string' | 'text' | 'email'
   ? string
   : Type extends 'int' | 'float'
   ? number
@@ -76,14 +74,6 @@ type InnerType<Type, ObjectColumns, Tables, LinkedTable> = Type extends 'string'
   ? XataArrayFile[]
   : Type extends 'json'
   ? JSONValue<any>
-  : Type extends 'object'
-  ? ObjectColumns extends readonly unknown[]
-    ? ObjectColumns[number] extends { name: string; type: string }
-      ? UnionToIntersection<
-          Values<{ [K in ObjectColumns[number]['name']]: PropertyType<Tables, ObjectColumns[number], K> }>
-        >
-      : never
-    : never
   : Type extends 'link'
   ? TableType<Tables, LinkedTable> & XataRecord
   : never;
