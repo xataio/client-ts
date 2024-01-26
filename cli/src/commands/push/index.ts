@@ -96,7 +96,7 @@ export default class Push extends BaseCommand<typeof Push> {
         try {
           await xata.api.branch.applyMigration({
             pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-            body: migration
+            body: { operations: migration }
           });
         } catch (e) {
           this.log(`Failed to push ${migration} with ${e}. Stopping.`);
