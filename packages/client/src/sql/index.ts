@@ -15,7 +15,7 @@ export type SQLPluginResult = <T>(
   ...parameters: any[]
 ) => Promise<{
   records: T[];
-  columns: Record<string, any> | undefined;
+  columns?: Record<string, { type_name: string }>;
   warning?: string;
 }>;
 
