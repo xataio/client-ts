@@ -1,5 +1,14 @@
 # @xata.io/importer
 
+## 1.1.4
+
+### Patch Changes
+
+- [#1330](https://github.com/xataio/client-ts/pull/1330) [`3a8e0a7`](https://github.com/xataio/client-ts/commit/3a8e0a7f96d225f9ecf0ea72945ef618a5b353d6) Thanks [@richardgill](https://github.com/richardgill)! - Importer: Allow coerce floats to int
+
+- Updated dependencies [[`adc961b`](https://github.com/xataio/client-ts/commit/adc961b886b789010e6512c17cb2377eceab665a), [`6031a9d`](https://github.com/xataio/client-ts/commit/6031a9de63c264b7db5b031bb1795258c2bf8150)]:
+  - @xata.io/client@0.28.4
+
 ## 1.1.3
 
 ### Patch Changes
