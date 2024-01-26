@@ -64,9 +64,11 @@ type TransactionOperationSingleResult<
   ? { operation: 'update'; id: Id; rows: number }
   : Operation extends { delete: { table: Tables } }
   ? { operation: 'delete'; rows: number }
-  : Operation extends { get: { table: infer Table extends Tables } }
-  ? // TODO: Column inference is lost in this case. We should fix this in the future.
-    { operation: 'get'; columns: SelectedPick<Schema[Table] & XataRecord, ['*']> }
+  : Operation extends { get: { table: infer Table } }
+  ? Table extends Tables
+    ? // TODO: Column inference is lost in this case. We should fix this in the future.
+      { operation: 'get'; columns: SelectedPick<Schema[Table] & XataRecord, ['*']> }
+    : never
   : never;
 
 type TransactionOperationResults<
