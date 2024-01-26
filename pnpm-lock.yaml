@@ -331,7 +331,7 @@ importers:
         specifier: ^8.3.1
         version: 8.3.1
       '@xata.io/client':
-        specifier: ^0.28.3
+        specifier: ^0.28.4
         version: link:../client
       any-date-parser:
         specifier: ^1.5.4

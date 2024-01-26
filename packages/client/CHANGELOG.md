@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.28.4
+
+### Patch Changes
+
+- [#1309](https://github.com/xataio/client-ts/pull/1309) [`adc961b`](https://github.com/xataio/client-ts/commit/adc961b886b789010e6512c17cb2377eceab665a) Thanks [@andrew-farries](https://github.com/andrew-farries)! - Add CLI support for running against local development environments
+
+- [#1312](https://github.com/xataio/client-ts/pull/1312) [`6031a9d`](https://github.com/xataio/client-ts/commit/6031a9de63c264b7db5b031bb1795258c2bf8150) Thanks [@SferaDev](https://github.com/SferaDev)! - Add get to transactions
+
 ## 0.28.3
 
 ### Patch Changes

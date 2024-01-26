@@ -12,11 +12,8 @@ type Record = XataRecord & {
   test: string;
   labels?: string[];
   age: number;
-  settings: {
-    plan: string;
-    dark: boolean;
-    labels?: string[];
-  };
+  plan: string;
+  dark: boolean;
 };
 
 // Single column with implicit is
@@ -43,45 +40,30 @@ const isNegInt: Filter<Record> = { number: -42 };
 // Is float
 const isFloat: Filter<Record> = { number: 3.14 };
 
-//  with dots
-const withDots: Filter<Record> = { 'settings.plan': 'free' };
-
-// Nested columns
-const nestedColumns: Filter<Record> = { settings: { plan: 'free' } };
-
-// Nested columns array
-const nestedColumnsArray: Filter<Record> = { settings: [{ dark: false }, { plan: 'free' }] };
-
-// Nested columns any
-const nestedColumnsAny: Filter<Record> = { settings: { $any: [{ plan: 'free' }, { plan: 'trial' }] } };
-
-// Nested columns any value
-const nestedColumnsAnyValue: Filter<Record> = { settings: { plan: { $any: ['free', 'trial'] } } };
-
 // Or with $any
-const orWithAny: Filter<Record> = { 'settings.plan': { $any: ['free', 'paid'] } };
+const orWithAny: Filter<Record> = { plan: { $any: ['free', 'paid'] } };
 
 // Multiple columns implicit and
-const multipleColumnsImplicitAnd: Filter<Record> = { 'settings.dark': true, 'settings.plan': 'free' };
+const multipleColumnsImplicitAnd: Filter<Record> = { dark: true, plan: 'free' };
 
 // Explicit $all with multi-key filter list
 const explicitAllWithMultiKeyFilterList: Filter<Record> = {
-  $all: { 'settings.dark': true, 'settings.plan': 'free' }
+  $all: { dark: true, plan: 'free' }
 };
 
 // Explicit $all with filter list
 const explicitAllWithFilterList: Filter<Record> = {
-  $all: [{ 'settings.dark': true }, { 'settings.plan': 'free' }]
+  $all: [{ dark: true }, { plan: 'free' }]
 };
 
 // Explicit $any with multi-key filter list
 const explicitAnyWithMultiKeyFilterList: Filter<Record> = {
-  $all: { 'settings.dark': true, 'settings.plan': 'free' }
+  $all: { dark: true, plan: 'free' }
 };
 
 // Explicit $any with filter list
 const explicitAnyWithFilterList: Filter<Record> = {
-  $any: [{ 'settings.dark': true }, { 'settings.plan': 'free' }]
+  $any: [{ dark: true }, { plan: 'free' }]
 };
 
 // $any with multiple values
@@ -97,14 +79,14 @@ const existsFilter: Filter<Record> = { $exists: 'test' };
 const notExistsFilter: Filter<Record> = { $notExists: 'test' };
 
 // Exists with all
-const existsWithAll: Filter<Record> = { $all: [{ $exists: 'settings' }, { $exists: 'name' }] };
+const existsWithAll: Filter<Record> = { $all: [{ $exists: 'test' }, { $exists: 'name' }] };
 
 // Nest any with not
-const nestAnyWithNot: Filter<Record> = { $not: { $any: { 'settings.dark': true, 'settings.plan': 'free' } } };
+const nestAnyWithNot: Filter<Record> = { $not: { $any: { dark: true, plan: 'free' } } };
 
 // Mix $all and $any with extra keys
 const mixAllAndAnyWithExtraKeys: Filter<Record> = {
-  $all: { $any: { 'settings.dark': false, 'settings.plan': 'free' }, name: 'r1' }
+  $all: { $any: { dark: false, plan: 'free' }, name: 'r1' }
 };
 
 // Range query with less first
@@ -161,46 +143,36 @@ const simpleIncludesNone: Filter<Record> = { labels: { $includesNone: 'test' } }
 // @ts-expect-error
 const existsValueMustBeStringNotInt: Filter<Record> = { $exists: 42 };
 
-// Exists value must be string not objct
-// @ts-expect-error
-const existsValueMustBeStringNotObject: Filter<Record> = { $exists: { field: 'settings.unknown' } };
-
 // Filter by one column
 const filterByOneColumn: Filter<Record> = { name: 'r1' };
 
 // Filter with the $is operator
 const filterWithTheIsOperator: Filter<Record> = { name: { $is: 'r1' } };
 
-// Filter with dot notation
-const filterWithDotNotation: Filter<Record> = { 'settings.plan': 'free' };
-
-// Filter with nested object
-const filterWithNestedObject: Filter<Record> = { 'settings.plan': { $is: 'free' } };
-
 // Filter with $any operation
-const filterWithAnyOperation: Filter<Record> = { 'settings.plan': { $any: ['free', 'paid'] } };
+const filterWithAnyOperation: Filter<Record> = { plan: { $any: ['free', 'paid'] } };
 
 // Filter with and operations
-const filterWithAndOperations: Filter<Record> = { 'settings.dark': true, 'settings.plan': 'free' };
+const filterWithAndOperations: Filter<Record> = { dark: true, plan: 'free' };
 
 // Filter with both and and any operations
 const filterWithBothAndAndAnyOperations: Filter<Record> = {
-  $any: { 'settings.dark': true, 'settings.plan': 'free' }
+  $any: { dark: true, plan: 'free' }
 };
 
 // Filter with both and and any operations in array
 const filterWithBothAndAndAnyOperationsInArray: Filter<Record> = { $any: [{ name: 'r1' }, { name: 'r2' }] };
 
 // Filter with exists operation
-const filterWithExistsOperation: Filter<Record> = { $exists: 'settings' };
+const filterWithExistsOperation: Filter<Record> = { $exists: 'dark' };
 
 // Filter with exists, and and any operations
 const filterWithExistsAndAndAnyOperations: Filter<Record> = {
-  $all: [{ $exists: 'settings' }, { $exists: 'name' }]
+  $all: [{ $exists: 'dark' }, { $exists: 'name' }]
 };
 
 // Filter with not exists operation
-const filterWithNotExistsOperation: Filter<Record> = { $notExists: 'settings' };
+const filterWithNotExistsOperation: Filter<Record> = { $notExists: 'plan' };
 
 // Filter with partial match
 const filterWithPartialMatch: Filter<Record> = { name: { $contains: 'value' } };
@@ -236,7 +208,7 @@ const filterWithArraysComplexNegations: Filter<Record> = {
 
 // Filters with $includesAll
 const filtersWithIncludesAll: Filter<Record> = {
-  'settings.labels': {
+  labels: {
     $includesAll: [{ $contains: 'label' }]
   }
 };
@@ -244,14 +216,6 @@ const filtersWithIncludesAll: Filter<Record> = {
 // Filter with invalid property type
 // @ts-expect-error
 const filterWithInvalidPropertyType: Filter<Record> = { name: 42 };
-
-// Filter with invalid dot notation property type
-// @ts-expect-error
-const filterWithInvalidNestedPropertyType: Filter<Record> = { 'settings.plan': 42 };
-
-// Filter with invalid nested object property type
-// @ts-expect-error
-const filterWithInvalidNestedObjectPropertyType: Filter<Record> = { settings: { plan: 42 } };
 
 // Filter with invalid property $is type
 // @ts-expect-error
@@ -263,7 +227,7 @@ const filterWithWildcardIsNotAllowed: Filter<Record> = { '*': { $is: 'foo' } };
 
 // Filter with link wildcard is not allowed
 // @ts-expect-error
-const filterWithLinkWildcardIsNotAllowed: Filter<Record> = { 'settings.*': { $is: 'foo' } };
+const filterWithLinkWildcardIsNotAllowed: Filter<Record> = { 'owner.*': { $is: 'foo' } };
 
 // Filter on internal column is allowed
 const filterOnInternalColumnIsAllowed: Filter<Record> = { 'xata.version': { $is: 4 } };

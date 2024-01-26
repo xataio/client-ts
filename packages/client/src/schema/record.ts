@@ -12,7 +12,6 @@ export const RecordColumnTypes = [
   'email',
   'multiple',
   'link',
-  'object',
   'datetime',
   'vector',
   'file[]',

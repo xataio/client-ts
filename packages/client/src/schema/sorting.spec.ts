@@ -11,11 +11,6 @@ type Record = XataRecord & {
   test: string;
   labels?: string[];
   age: number;
-  settings: {
-    plan: string;
-    dark: boolean;
-    labels?: string[];
-  };
 };
 
 // Simple sorting
