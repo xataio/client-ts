@@ -80,7 +80,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
       await removeLocalMigrations();
     }
 
-    const localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] =
+    const localMigrationFiles: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] =
       await getLocalMigrationFiles(isBranchPgRollEnabled(details));
 
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
@@ -100,9 +100,9 @@ export default class Pull extends BaseCommand<typeof Pull> {
   }
 
   getNewMigrations(
-    localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[],
-    remoteMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]
-  ): Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] {
+    localMigrationFiles: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[],
+    remoteMigrationFiles: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[]
+  ): (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] {
     const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
       const remoteIdentifier = isMigrationPgRollFormat(remoteMigration) ? remoteMigration.name : remoteMigration.id;
       const localItem = localMigrationFiles[index + 1];
