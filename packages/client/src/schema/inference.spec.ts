@@ -32,13 +32,8 @@ function simpleTeam(team: SchemaInference<typeof tables>['teams'] & XataRecord) 
 function simpleUser(user: SchemaInference<typeof tables>['users'] & XataRecord) {
   user.full_name.startsWith('a');
 
-  user.address?.zipcode;
-  user.address?.zipcode?.toString();
-
   user.getMetadata();
   user.team?.getMetadata();
-
-  user.address = { street: '' };
 
   user.json?.foo;
   user.json?.[0];
