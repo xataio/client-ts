@@ -2,4 +2,4 @@
 '@xata.io/client': patch
 ---
 
-Fix untagged scenario
+Fix untagged scenario for SQL function
