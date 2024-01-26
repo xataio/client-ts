@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/plugin-client-opentelemetry",
-  "version": "0.2.38",
+  "version": "0.2.39",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
