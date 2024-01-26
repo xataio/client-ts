@@ -95,18 +95,16 @@ const isDraft = (operation: unknown) => {
 
 function removeDeprecatedObjectType({ openAPIDocument }: { openAPIDocument: Context['openAPIDocument'] }) {
   const schemas = Object.fromEntries(
-    Object.entries(openAPIDocument.components.schemas).map(([schemaName, schema]) => {
+    Object.entries(openAPIDocument.components?.schemas ?? {}).map(([schemaName, schema]) => {
       if (schemaName === 'Column') {
-        console.log('schema', schema, schema.properties.type.enum);
-
         const updatedSchema = {
           ...schema,
           properties: {
-            ...schema.properties,
+            ...(schema as any).properties,
             type: {
-              ...schema.properties.type,
+              ...(schema as any).properties.type,
               // Remove `object` type from enum
-              enum: schema.properties.type.enum.filter((item) => item !== 'object')
+              enum: (schema as any).properties.type.enum.filter((item: string) => item !== 'object')
             }
           }
         };
