@@ -15,6 +15,7 @@ export type SQLPluginResult = <T>(
   ...parameters: any[]
 ) => Promise<{
   records: T[];
+  columns: Record<string, any> | undefined;
   warning?: string;
 }>;
 
@@ -23,13 +24,13 @@ export class SQLPlugin extends XataPlugin {
     return async <T>(param1: SQLQuery, ...param2: any[]) => {
       const { statement, params, consistency } = prepareParams(param1, param2);
 
-      const { records, warning } = await sqlQuery({
+      const { records, warning, columns } = await sqlQuery({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
         body: { statement, params, consistency },
         ...pluginOptions
       });
 
-      return { records: records as T[], warning };
+      return { records: records as T[], warning, columns };
     };
   }
 }

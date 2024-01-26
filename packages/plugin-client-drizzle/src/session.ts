@@ -22,6 +22,7 @@ import { mapResultRow } from './utils';
 
 type QueryResult<T = Record<string, unknown>> = {
   records: T[];
+  columns: Record<string, any> | undefined;
   warning?: string;
 };
 
@@ -55,7 +56,11 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
 
     this.logger.logQuery(this.query.statement, params);
 
-    const { records = [], warning } = await this.client.sql<Record<string, unknown>>({
+    const {
+      records = [],
+      warning,
+      columns = {}
+    } = await this.client.sql<Record<string, unknown>>({
       statement: this.query.statement,
       params
     });
