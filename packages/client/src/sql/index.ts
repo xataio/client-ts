@@ -14,7 +14,7 @@ export type SQLQueryParams<T = any[]> = {
    * });
    * ```
    *
-   * Be careful when using this with user input and use prepared statements to avoid SQL injection.
+   * Be careful when using this with user input and use parametrized statements to avoid SQL injection.
    */
   statement: string;
   /**
