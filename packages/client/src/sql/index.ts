@@ -11,17 +11,16 @@ export type SQLQueryParams<T = any[]> = {
 
 export type SQLQuery = TemplateStringsArray | SQLQueryParams;
 
-type SQLTemplateQuery = <T>(
-  query: SQLQuery,
-  ...parameters: any[]
-) => Promise<{
+export type SQLQueryResult<T> = {
   records: T[];
   columns?: Record<string, { type_name: string }>;
   warning?: string;
-}>;
+};
+
+type SQLTemplateQuery = <T>(query: SQLQuery, ...parameters: any[]) => Promise<SQLQueryResult<T>>;
 
 export type SQLPluginResult = SQLTemplateQuery & {
-  rawUnsafeQuery: <T>(query: SQLQuery | string, ...parameters: any[]) => Promise<{ records: T[]; warning?: string }>;
+  rawUnsafeQuery: <T>(query: SQLQuery | string, ...parameters: any[]) => Promise<SQLQueryResult<T>>;
 };
 
 export class SQLPlugin extends XataPlugin {
