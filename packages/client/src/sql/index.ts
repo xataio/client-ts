@@ -67,6 +67,7 @@ export class SQLPlugin extends XataPlugin {
 }
 
 function isTemplateStringsArray(strings: unknown): strings is TemplateStringsArray {
+  // @ts-ignore TS prior to 4.9 don't have this type
   return Array.isArray(strings) && 'raw' in strings && Array.isArray(strings.raw);
 }
 
