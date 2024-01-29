@@ -21,7 +21,7 @@ type SQLTemplateQuery = <T>(
 }>;
 
 export type SQLPluginResult = SQLTemplateQuery & {
-  rawQuery: <T>(query: SQLQuery | string, ...parameters: any[]) => Promise<{ records: T[]; warning?: string }>;
+  rawUnsafeQuery: <T>(query: SQLQuery | string, ...parameters: any[]) => Promise<{ records: T[]; warning?: string }>;
 };
 
 export class SQLPlugin extends XataPlugin {
@@ -48,9 +48,9 @@ export class SQLPlugin extends XataPlugin {
       return await query<T>(param1, ...param2);
     };
 
-    result.rawQuery = query;
+    result.rawUnsafeQuery = query;
 
-    return result as unknown as SQLPluginResult;
+    return result;
   }
 }
 

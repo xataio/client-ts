@@ -237,7 +237,7 @@ describe('SQL proxy', () => {
 
   test("calling xata.sql.rawQuery without prepared statement works but it's not safe", async () => {
     const order = 'ASC';
-    const { records } = await xata.sql.rawQuery<TeamsRecord>(`SELECT * FROM teams ORDER BY name ${order}`);
+    const { records } = await xata.sql.rawUnsafeQuery<TeamsRecord>(`SELECT * FROM teams ORDER BY name ${order}`);
     expect(records).toBeDefined();
   });
 });
