@@ -224,7 +224,7 @@ describe('SQL proxy', () => {
   test("calling xata.sql as a function throws an error because it's not safe", async () => {
     // @ts-expect-error - Testing invalid usage
     await expect(xata.sql('SELECT * FROM teams')).rejects.toThrow(
-      'Calling `xata.sql` as a function is not safe. Make sure to use it as a tagged template or with an object.'
+      'Invalid usage of `xata.sql`. Please use it as a tagged template or with an object. If you need to bypass prepared statement protection, use `xata.sql.rawUnsafeQuery`.'
     );
   });
 
