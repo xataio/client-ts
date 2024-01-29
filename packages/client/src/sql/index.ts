@@ -11,7 +11,7 @@ export type SQLQueryParams<T = any[]> = {
 
 export type SQLQuery = TemplateStringsArray | SQLQueryParams;
 
-export type SQLPluginResult = <T>(
+type SQLTemplateQuery = <T>(
   query: SQLQuery,
   ...parameters: any[]
 ) => Promise<{
@@ -20,16 +20,14 @@ export type SQLPluginResult = <T>(
   warning?: string;
 }>;
 
+export type SQLPluginResult = SQLTemplateQuery & {
+  rawQuery: <T>(query: SQLQuery | string, ...parameters: any[]) => Promise<{ records: T[]; warning?: string }>;
+};
+
 export class SQLPlugin extends XataPlugin {
   build(pluginOptions: XataPluginOptions): SQLPluginResult {
-    return async <T>(param1: SQLQuery, ...param2: any[]) => {
-      if (!isParamsObject(param1) && (!isTemplateStringsArray(param1) || !Array.isArray(param2))) {
-        throw new Error(
-          'Calling `xata.sql` as a function is not safe. Make sure to use it as a tagged template or with an object.'
-        );
-      }
-
-      const { statement, params, consistency } = prepareParams(param1, param2);
+    const query = async <T>(query: SQLQuery | string, ...parameters: any[]) => {
+      const { statement, params, consistency } = prepareParams(query, parameters);
 
       const { records, warning, columns } = await sqlQuery({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
@@ -39,6 +37,20 @@ export class SQLPlugin extends XataPlugin {
 
       return { records: records as T[], warning, columns };
     };
+
+    const result = async <T>(param1: SQLQuery, ...param2: any[]) => {
+      if (!isParamsObject(param1) && (!isTemplateStringsArray(param1) || !Array.isArray(param2))) {
+        throw new Error(
+          'Calling `xata.sql` as a function is not safe. Make sure to use it as a tagged template or with an object.'
+        );
+      }
+
+      return await query<T>(param1, ...param2);
+    };
+
+    result.rawQuery = query;
+
+    return result as unknown as SQLPluginResult;
   }
 }
 

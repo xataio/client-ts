@@ -227,4 +227,17 @@ describe('SQL proxy', () => {
       'Calling `xata.sql` as a function is not safe. Make sure to use it as a tagged template or with an object.'
     );
   });
+
+  test('calling xata.sql with invalid prepared statement', async () => {
+    const order = 'ASC';
+    await expect(xata.sql<TeamsRecord>`SELECT * FROM teams ORDER BY name ${order}`).rejects.toThrow(
+      'invalid SQL: unused parameters: used 0 of 1 parameters'
+    );
+  });
+
+  test("calling xata.sql.rawQuery without prepared statement works but it's not safe", async () => {
+    const order = 'ASC';
+    const { records } = await xata.sql.rawQuery<TeamsRecord>(`SELECT * FROM teams ORDER BY name ${order}`);
+    expect(records).toBeDefined();
+  });
 });
