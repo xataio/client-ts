@@ -224,7 +224,7 @@ describe('SQL proxy', () => {
   test("calling xata.sql as a function throws an error because it's not safe", async () => {
     // @ts-expect-error - Testing invalid usage
     await expect(xata.sql('SELECT * FROM teams')).rejects.toThrow(
-      'Invalid usage of `xata.sql`. Please use it as a tagged template or with an object. If you need to bypass prepared statement protection, use `xata.sql.rawUnsafeQuery`.'
+      'Invalid usage of `xata.sql`. Please use it as a tagged template or with an object.'
     );
   });
 
@@ -235,9 +235,11 @@ describe('SQL proxy', () => {
     );
   });
 
-  test("calling xata.sql.rawQuery without prepared statement works but it's not safe", async () => {
+  test("calling xata.sql with invalid prepared statement doesn't throw an error when bypassing prepared statement protection", async () => {
     const order = 'ASC';
-    const { records } = await xata.sql.rawUnsafeQuery<TeamsRecord>(`SELECT * FROM teams ORDER BY name ${order}`);
+    const { records } = await xata.sql<TeamsRecord>({
+      statement: `SELECT * FROM teams ORDER BY name ${order}`
+    });
     expect(records).toBeDefined();
   });
 });

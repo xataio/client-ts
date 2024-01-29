@@ -4,28 +4,55 @@ import { isObject } from '../util/lang';
 import { prepareParams } from './parameters';
 
 export type SQLQueryParams<T = any[]> = {
+  /**
+   * The SQL statement to execute.
+   * @example
+   * ```ts
+   * const { records } = await xata.sql<TeamsRecord>({
+   *  statement: `SELECT * FROM teams WHERE name = $1`,
+   *  params: ['A name']
+   * });
+   * ```
+   *
+   * Be careful when using this with user input and use prepared statements to avoid SQL injection.
+   */
   statement: string;
+  /**
+   * The parameters to pass to the SQL statement.
+   */
   params?: T;
+  /**
+   * The consistency level to use when executing the query.
+   */
   consistency?: 'strong' | 'eventual';
 };
 
 export type SQLQuery = TemplateStringsArray | SQLQueryParams;
 
 export type SQLQueryResult<T> = {
+  /**
+   * The records returned by the query.
+   */
   records: T[];
+  /**
+   * The columns metadata returned by the query.
+   */
   columns?: Record<string, { type_name: string }>;
+  /**
+   * Optional warning message returned by the query.
+   */
   warning?: string;
 };
 
-type SQLTemplateQuery = <T>(query: SQLQuery, ...parameters: any[]) => Promise<SQLQueryResult<T>>;
-
-export type SQLPluginResult = SQLTemplateQuery & {
-  rawUnsafeQuery: <T>(query: SQLQuery | string, ...parameters: any[]) => Promise<SQLQueryResult<T>>;
-};
+export type SQLPluginResult = <T>(query: SQLQuery, ...parameters: any[]) => Promise<SQLQueryResult<T>>;
 
 export class SQLPlugin extends XataPlugin {
   build(pluginOptions: XataPluginOptions): SQLPluginResult {
-    const query = async <T>(query: SQLQuery | string, ...parameters: any[]) => {
+    return async <T>(query: SQLQuery, ...parameters: any[]) => {
+      if (!isParamsObject(query) && (!isTemplateStringsArray(query) || !Array.isArray(parameters))) {
+        throw new Error('Invalid usage of `xata.sql`. Please use it as a tagged template or with an object.');
+      }
+
       const { statement, params, consistency } = prepareParams(query, parameters);
 
       const { records, warning, columns } = await sqlQuery({
@@ -36,26 +63,6 @@ export class SQLPlugin extends XataPlugin {
 
       return { records: records as T[], warning, columns };
     };
-
-    const result = async <T>(param1: SQLQuery, ...param2: any[]) => {
-      if (!isParamsObject(param1) && (!isTemplateStringsArray(param1) || !Array.isArray(param2))) {
-        throw new Error(
-          'Invalid usage of `xata.sql`. Please use it as a tagged template or with an object. If you need to bypass prepared statement protection, use `xata.sql.rawUnsafeQuery`.'
-        );
-      }
-
-      return await query<T>(param1, ...param2);
-    };
-
-    result.rawUnsafeQuery = async <T>(param1: SQLQuery | string, ...param2: any[]) => {
-      console.warn(
-        'Calling `xata.sql.rawQuery` does not guarantee SQL injection protection. Make sure to use it as a tagged template or with an object.'
-      );
-
-      return await query<T>(param1, ...param2);
-    };
-
-    return result;
   }
 }
 
