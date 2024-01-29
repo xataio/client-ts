@@ -40,14 +40,20 @@ export class SQLPlugin extends XataPlugin {
     const result = async <T>(param1: SQLQuery, ...param2: any[]) => {
       if (!isParamsObject(param1) && (!isTemplateStringsArray(param1) || !Array.isArray(param2))) {
         throw new Error(
-          'Calling `xata.sql` as a function is not safe. Make sure to use it as a tagged template or with an object.'
+          'Invalid usage of `xata.sql`. Please use it as a tagged template or with an object. If you need to bypass prepared statement protection, use `xata.sql.rawUnsafeQuery`.'
         );
       }
 
       return await query<T>(param1, ...param2);
     };
 
-    result.rawUnsafeQuery = query;
+    result.rawUnsafeQuery = async <T>(param1: SQLQuery | string, ...param2: any[]) => {
+      console.warn(
+        'Calling `xata.sql.rawQuery` does not guarantee SQL injection protection. Make sure to use it as a tagged template or with an object.'
+      );
+
+      return await query<T>(param1, ...param2);
+    };
 
     return result;
   }
