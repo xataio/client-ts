@@ -5,6 +5,7 @@ import { fetchEventSource } from '../util/sse';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { FetcherError, PossibleErrors } from './errors';
+import { parseWorkspacesUrlParts } from './providers';
 
 const pool = new ApiRequestPool();
 
@@ -62,12 +63,14 @@ export type FetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
 } & FetcherExtraProps;
 
 function buildBaseUrl({
+  method,
   endpoint,
   path,
   workspacesApiUrl,
   apiUrl,
   pathParams = {}
 }: {
+  method: string;
   endpoint: 'controlPlane' | 'dataPlane';
   path: string;
   workspacesApiUrl: string | WorkspaceApiUrlBuilder;
@@ -75,7 +78,30 @@ function buildBaseUrl({
   pathParams?: Partial<Record<string, string | number>>;
 }): string {
   if (endpoint === 'dataPlane') {
-    const url = isString(workspacesApiUrl) ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
+    let url = isString(workspacesApiUrl) ? `${workspacesApiUrl}${path}` : workspacesApiUrl(path, pathParams);
+
+    // Special case, for file uploads, we have a different subdomain
+    // TODO: We should re-use OpenAPI spec to determine this via servers variables
+    if (
+      method.toUpperCase() === 'PUT' &&
+      [
+        '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file',
+        '/db/{dbBranchName}/tables/{tableName}/data/{recordId}/column/{columnName}/file/{fileId}'
+      ].includes(path)
+    ) {
+      const { host } = parseWorkspacesUrlParts(url) ?? {};
+      switch (host) {
+        case 'production':
+          url = url.replace('xata.sh', 'upload.xata.sh');
+          break;
+        case 'staging':
+          url = url.replace('staging-xata.dev', 'upload.staging-xata.dev');
+          break;
+        case 'dev':
+          url = url.replace('dev-xata.dev', 'upload.dev-xata.dev');
+          break;
+      }
+    }
 
     const urlWithWorkspace = isString(pathParams.workspace)
       ? url.replace('{workspaceId}', String(pathParams.workspace))
@@ -149,12 +175,14 @@ export async function fetch<
   return await trace(
     `${method.toUpperCase()} ${path}`,
     async ({ setAttributes }) => {
-      const baseUrl = buildBaseUrl({ endpoint, path, workspacesApiUrl, pathParams, apiUrl });
+      const baseUrl = buildBaseUrl({ method, endpoint, path, workspacesApiUrl, pathParams, apiUrl });
       const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
       // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts
       // So, instead, we use localhost without subdomains, but will add a Host header
-      const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\./, 'http://') : fullUrl;
+      // We remove two subdomains because we need be able to resolve localhost URLs like
+      // http://ws-id.dev.localhost
+      const url = fullUrl.includes('localhost') ? fullUrl.replace(/^[^.]+\.[^.]+\./, 'http://') : fullUrl;
       setAttributes({
         [TraceAttributes.HTTP_URL]: url,
         [TraceAttributes.HTTP_TARGET]: resolveUrl(path, queryParams, pathParams)
@@ -261,7 +289,7 @@ export function fetchSSERequest<
     onError?: (error: TError) => void;
     onClose?: () => void;
   }): void {
-  const baseUrl = buildBaseUrl({ endpoint, path, workspacesApiUrl, pathParams, apiUrl });
+  const baseUrl = buildBaseUrl({ method, endpoint, path, workspacesApiUrl, pathParams, apiUrl });
   const fullUrl = resolveUrl(baseUrl, queryParams, pathParams);
 
   // Node.js on localhost won't resolve localhost subdomains unless mapped in /etc/hosts

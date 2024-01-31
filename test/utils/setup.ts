@@ -118,7 +118,7 @@ export async function setUpTestEnvironment(
       span?.end();
     },
     beforeEach: async (ctx: TestContext) => {
-      ctx.span = tracer?.startSpan(ctx.meta.name, { attributes: { [TraceAttributes.KIND]: 'test-case' } });
+      ctx.span = tracer?.startSpan(ctx.task.name, { attributes: { [TraceAttributes.KIND]: 'test-case' } });
     },
     afterEach: async (ctx: TestContext) => {
       ctx.span?.end();

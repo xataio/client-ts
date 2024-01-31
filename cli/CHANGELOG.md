@@ -1,5 +1,74 @@
 # @xata.io/cli
 
+## 0.15.6
+
+### Patch Changes
+
+- [#1329](https://github.com/xataio/client-ts/pull/1329) [`0ec026a`](https://github.com/xataio/client-ts/commit/0ec026a92bdb1a405cb9d90cb1d506ff159f98e8) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Remove object column type
+
+- Updated dependencies [[`0ec026a`](https://github.com/xataio/client-ts/commit/0ec026a92bdb1a405cb9d90cb1d506ff159f98e8), [`6414bd3`](https://github.com/xataio/client-ts/commit/6414bd3d8bdb84961e68968df4b0b025503f0d72), [`27773df`](https://github.com/xataio/client-ts/commit/27773df5addf0013d1a7238ac490904e7aad2334)]:
+  - @xata.io/client@0.29.0
+  - @xata.io/importer@1.1.5
+  - @xata.io/codegen@0.29.0
+
+## 0.15.5
+
+### Patch Changes
+
+- [#1309](https://github.com/xataio/client-ts/pull/1309) [`adc961b`](https://github.com/xataio/client-ts/commit/adc961b886b789010e6512c17cb2377eceab665a) Thanks [@andrew-farries](https://github.com/andrew-farries)! - Add CLI support for running against local development environments
+
+- Updated dependencies [[`3a8e0a7`](https://github.com/xataio/client-ts/commit/3a8e0a7f96d225f9ecf0ea72945ef618a5b353d6), [`adc961b`](https://github.com/xataio/client-ts/commit/adc961b886b789010e6512c17cb2377eceab665a), [`6031a9d`](https://github.com/xataio/client-ts/commit/6031a9de63c264b7db5b031bb1795258c2bf8150)]:
+  - @xata.io/importer@1.1.4
+  - @xata.io/client@0.28.4
+  - @xata.io/codegen@0.28.4
+
+## 0.15.4
+
+### Patch Changes
+
+- [#1294](https://github.com/xataio/client-ts/pull/1294) [`c4aa170`](https://github.com/xataio/client-ts/commit/c4aa1708c25385d2d95161b11a0cf00b26c4733c) Thanks [@snide](https://github.com/snide)! - Clean up API success page
+
+- Updated dependencies [[`b7f3ec9`](https://github.com/xataio/client-ts/commit/b7f3ec9eabe3642929131e244bd774f4d3134482)]:
+  - @xata.io/client@0.28.3
+  - @xata.io/codegen@0.28.3
+
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies [[`c9178e1`](https://github.com/xataio/client-ts/commit/c9178e1e3f2268513e78dcfce396a99a8fca5dfb)]:
+  - @xata.io/client@0.28.2
+  - @xata.io/codegen@0.28.2
+
+## 0.15.2
+
+### Patch Changes
+
+- Updated dependencies [[`9a7e3f5`](https://github.com/xataio/client-ts/commit/9a7e3f5029e53efc6750e9c86bab936427788209)]:
+  - @xata.io/client@0.28.1
+  - @xata.io/codegen@0.28.1
+
+## 0.15.1
+
+### Patch Changes
+
+- [#1277](https://github.com/xataio/client-ts/pull/1277) [`f999833a`](https://github.com/xataio/client-ts/commit/f999833a787a7db4a733eaa395ca1f71101e74ea) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow passing api key on auth login
+
+## 0.15.0
+
+### Minor Changes
+
+- [#1251](https://github.com/xataio/client-ts/pull/1251) [`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove Xata Workers support
+
+### Patch Changes
+
+- [#1212](https://github.com/xataio/client-ts/pull/1212) [`1348a7fa`](https://github.com/xataio/client-ts/commit/1348a7fa973d8ad008f925297a479f26d231efec) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - feat: compatibility endpoint
+
+- Updated dependencies [[`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05)]:
+  - @xata.io/client@0.28.0
+  - @xata.io/codegen@0.28.0
+  - @xata.io/importer@1.1.3
+
 ## 0.14.5
 
 ### Patch Changes

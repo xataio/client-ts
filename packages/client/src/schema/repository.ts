@@ -156,7 +156,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
   abstract read<K extends SelectableColumn<Record>>(
-    ids: Identifier[],
+    ids: ReadonlyArray<Identifier>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
 
@@ -165,7 +165,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @param ids The unique ids array.
    * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
-  abstract read(ids: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  abstract read(ids: ReadonlyArray<Identifier>): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
 
   /**
    * Queries a single record from the table by the id in the object.
@@ -231,7 +231,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @throws If one or more records could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<Record>>(
-    ids: Identifier[],
+    ids: ReadonlyArray<Identifier>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
 
@@ -241,7 +241,7 @@ export abstract class Repository<Record extends XataRecord> extends Query<
    * @returns The persisted records for the given ids in order.
    * @throws If one or more records could not be found.
    */
-  abstract readOrThrow(ids: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  abstract readOrThrow(ids: ReadonlyArray<Identifier>): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
 
   /**
    * Queries a single record from the table by the id in the object.
@@ -1023,10 +1023,10 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, typeof columns> | null>>;
   async read(id: string): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
   async read<K extends SelectableColumn<Record>>(
-    ids: Identifier[],
+    ids: ReadonlyArray<Identifier>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
-  async read(ids: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  async read(ids: ReadonlyArray<Identifier>): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async read<K extends SelectableColumn<Record>>(
     object: Identifiable,
     columns: K[]
@@ -1038,7 +1038,7 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
   async read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
   async read<K extends SelectableColumn<Record>>(
-    a: Identifier | Identifier[] | Identifiable | Identifiable[],
+    a: Identifier | ReadonlyArray<Identifier> | Identifiable | Identifiable[],
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
@@ -1110,10 +1110,10 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async readOrThrow(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async readOrThrow<K extends SelectableColumn<Record>>(
-    ids: Identifier[],
+    ids: ReadonlyArray<Identifier>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
-  async readOrThrow(ids: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async readOrThrow(ids: ReadonlyArray<Identifier>): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
   async readOrThrow<K extends SelectableColumn<Record>>(
     object: Identifiable,
     columns: K[]
@@ -1125,7 +1125,7 @@ export class RestRepository<Record extends XataRecord>
   ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
   async readOrThrow(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
   async readOrThrow<K extends SelectableColumn<Record>>(
-    a: Identifier | Identifier[] | Identifiable | Identifiable[],
+    a: Identifier | ReadonlyArray<Identifier> | Identifiable | Identifiable[],
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>

@@ -15,6 +15,12 @@ export type Column = {
   vector?: {
     dimension: number;
   };
+  file?: {
+    defaultPublicAccess?: boolean;
+  };
+  'file[]'?: {
+    defaultPublicAccess?: boolean;
+  };
   columns?: Column[];
 };
 
@@ -34,6 +40,16 @@ export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
     vector: z
       .object({
         dimension: z.number()
+      })
+      .optional(),
+    file: z
+      .object({
+        defaultPublicAccess: z.boolean().optional()
+      })
+      .optional(),
+    'file[]': z
+      .object({
+        defaultPublicAccess: z.boolean().optional()
       })
       .optional(),
     columns: z.array(columnSchema).optional()

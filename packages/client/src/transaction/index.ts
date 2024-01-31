@@ -13,9 +13,7 @@ export type TransactionPluginResult<Schemas extends Record<string, XataRecord>> 
 export class TransactionPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
   build(pluginOptions: XataPluginOptions): TransactionPluginResult<Schemas> {
     return {
-      run: async <Tables extends StringKeys<Schemas>, Operations extends TransactionOperation<Schemas, Tables>[]>(
-        operations: Narrow<Operations>
-      ) => {
+      run: async (operations: any) => {
         const response = await branchTransaction({
           pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
           body: { operations: operations as any },

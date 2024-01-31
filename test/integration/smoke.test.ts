@@ -39,6 +39,8 @@ describe('API Client Integration Tests', () => {
     expect(workspace).toBeDefined();
     expect(name).toBe(workspaceName);
 
+    console.log('Created workspace', workspace);
+
     const foo = await newApi.workspaces.getWorkspace({ workspace });
 
     expect(foo.id).toBe(workspace);
@@ -57,6 +59,8 @@ describe('API Client Integration Tests', () => {
 
     await waitForReplication(newApi, workspace, database);
 
+    console.log('Created database', database);
+
     await newApi.branches.createBranch({ workspace, region, database, branch: 'branch' });
     await newApi.tables.createTable({ workspace, region, database, branch: 'branch', table: 'table' });
     await newApi.tables.setTableSchema({
@@ -68,6 +72,8 @@ describe('API Client Integration Tests', () => {
       schema: { columns: [{ name: 'email', type: 'string' }] }
     });
 
+    console.log('Created branch, table and schema');
+
     const { id } = await newApi.records.insertRecord({
       workspace,
       region,
@@ -76,6 +82,8 @@ describe('API Client Integration Tests', () => {
       table: 'table',
       record: { email: 'example@foo.bar' }
     });
+
+    console.log('Created record', id);
 
     const record = await newApi.records.getRecord({
       workspace,
@@ -88,6 +96,34 @@ describe('API Client Integration Tests', () => {
 
     expect(record.id).toBeDefined();
     expect(record.email).toEqual('example@foo.bar');
+
+    await waitForSearchIndexing(newApi, workspace, database);
+
+    const search = await newApi.searchAndFilter.searchTable({
+      workspace,
+      region,
+      database,
+      branch: 'branch',
+      table: 'table',
+      query: 'example'
+    });
+
+    expect(search.totalCount).toEqual(1);
+    expect(search.records[0].id).toEqual(id);
+
+    const failedSearch = await newApi.searchAndFilter.searchTable({
+      workspace,
+      region,
+      database,
+      branch: 'branch',
+      table: 'table',
+      query: 'random'
+    });
+
+    expect(failedSearch.totalCount).toEqual(0);
+    expect(failedSearch.records).toEqual([]);
+
+    console.log('Tested search successfully');
 
     await api.authentication.deleteUserAPIKey({ name: newApiKey.name });
 
@@ -104,54 +140,13 @@ describe('API Client Integration Tests', () => {
       })
     ).rejects.toHaveProperty('message');
 
+    console.log('Deleted API key, record is no longer accessible');
+
     await api.workspaces.deleteWorkspace({ workspace });
 
     await expect(api.workspaces.getWorkspace({ workspace })).rejects.toHaveProperty('message');
-  });
 
-  test('Create workspace with database, branch, table and records', async () => {
-    const workspaceName = getWorkspaceName();
-
-    const { id: workspace } = await api.workspaces.createWorkspace({
-      data: { name: workspaceName, slug: workspaceName }
-    });
-
-    await waitForReplication(api, workspace);
-
-    const { databaseName: database } = await api.database.createDatabase({
-      workspace,
-      database: `data-${workspace}`,
-      data: { region }
-    });
-
-    await waitForReplication(api, workspace, database);
-
-    await api.branches.createBranch({ workspace, region, database, branch: 'branch' });
-    await api.tables.createTable({ workspace, region, database, branch: 'branch', table: 'table' });
-    await api.tables.setTableSchema({
-      workspace,
-      region,
-      database,
-      branch: 'branch',
-      table: 'table',
-      schema: { columns: [{ name: 'email', type: 'string' }] }
-    });
-
-    const { id } = await api.records.insertRecord({
-      workspace,
-      region,
-      database,
-      branch: 'branch',
-      table: 'table',
-      record: { email: 'example@foo.bar' }
-    });
-
-    const record = await api.records.getRecord({ workspace, region, database, branch: 'branch', table: 'table', id });
-
-    expect(record.id).toBeDefined();
-    expect(record.email).toEqual('example@foo.bar');
-
-    await api.workspaces.deleteWorkspace({ workspace });
+    console.log('Deleted workspace, workspace is no longer accessible');
   });
 });
 
@@ -163,6 +158,7 @@ async function waitForReplication(api: XataApiClient, workspace: string, databas
       await api.branches.getBranchList({ workspace, database, region });
     }
   } catch (error) {
+    console.log(`Waiting for create ${database === undefined ? 'API key' : 'database'} replication to finish...`);
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return await waitForReplication(api, workspace, database);
   }
@@ -172,9 +168,31 @@ async function waitFailInReplication(api: XataApiClient, workspace: string, data
   try {
     await api.branches.getBranchList({ workspace, database, region });
 
+    console.log(`Waiting for delete API key replication to finish...`);
     await new Promise((resolve) => setTimeout(resolve, 2000));
     return await waitFailInReplication(api, workspace, database);
   } catch (error) {
     // Do nothing, we expect to fail
   }
+}
+
+async function waitForSearchIndexing(api: XataApiClient, workspace: string, database: string): Promise<void> {
+  try {
+    const { aggs } = await api.searchAndFilter.aggregateTable({
+      workspace,
+      database,
+      region,
+      branch: 'branch',
+      table: 'table',
+      aggs: { total: { count: '*' } }
+    });
+
+    if (aggs?.total === 1) return;
+  } catch (error) {
+    // do nothing
+  }
+
+  console.log(`Waiting for search indexing to finish...`);
+  await new Promise((resolve) => setTimeout(resolve, 8000));
+  return waitForSearchIndexing(api, workspace, database);
 }

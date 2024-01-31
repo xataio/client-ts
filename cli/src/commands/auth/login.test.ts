@@ -148,4 +148,35 @@ describe('auth login', () => {
       }
     );
   });
+
+  test("login with a provided API key and host provider and don't prompt for anything", async () => {
+    const config = await Config.load();
+    const command = new Login(['--api-key=foobar', '--host=production'], config);
+    vi.spyOn(command, 'log').mockReturnValue(undefined); // silence output
+
+    const readFile = vi.spyOn(fs, 'readFile').mockImplementation(() => {
+      throw new Error('ENOENT');
+    });
+
+    fetchMock.mockReturnValue({
+      ok: true,
+      json: async () => ({})
+    });
+
+    await command.run();
+
+    expect(readFile).toHaveBeenCalledWith(credentialsFilePath, 'utf-8');
+    expect(promptsMock).not.toHaveBeenCalled();
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://api.xata.io/workspaces');
+    expect(fetchMock.mock.calls[0][1].method).toEqual('GET');
+
+    expect(fs.mkdir).toHaveBeenCalledWith(dirname(credentialsFilePath), { recursive: true });
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      credentialsFilePath,
+      ini.stringify({ default: { apiKey: 'foobar', api: 'production' } }),
+      {
+        mode: 0o600
+      }
+    );
+  });
 });

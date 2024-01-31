@@ -119,7 +119,7 @@ function getContentType(file: BinaryFile): string {
   }
 
   // Check for XataFile
-  if ('mediaType' in file) {
+  if ('mediaType' in file && file.mediaType !== undefined) {
     return file.mediaType;
   }
 

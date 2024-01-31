@@ -16,31 +16,10 @@ type TeamRecord = Team & XataRecord;
 interface User {
   email?: string | null;
   full_name: string;
-  address?: { street?: string | null; zipcode?: number | null } | null;
   team?: TeamRecord | null;
   date?: Date | null;
   file?: XataFile | null;
   partner: UserRecord;
-  settings?: {
-    theme?: 'light' | 'dark';
-    language?: 'en' | 'de' | 'fr';
-    signin?: {
-      email?: string | null;
-      github?: string | null;
-    };
-  } | null;
-  nonNullable: {
-    nested: {
-      value: number;
-      deep: {
-        depths: {
-          of: {
-            numbers: number[];
-          };
-        };
-      };
-    };
-  };
 }
 
 type UserRecord = User & XataRecord;
@@ -48,21 +27,12 @@ type UserRecord = User & XataRecord;
 //                              SelectableColumn<O>                            //
 // --------------------------------------------------------------------------- //
 
-const validTeamColumns: SelectableColumn<TeamRecord>[] = [
-  '*',
-  'id',
-  'name',
-  'owner.*',
-  'owner.address.*',
-  'owner.address',
-  'owner.address.street',
-  'owner.date'
-];
+const validTeamColumns: SelectableColumn<TeamRecord>[] = ['*', 'id', 'name', 'owner.*', 'owner.date'];
 
 // @ts-expect-error
 const invalidFullNameTeamColumn: SelectableColumn<Team> = 'full_name';
 // @ts-expect-error
-const invalidPartialTeamColumn: SelectableColumn<Team> = 'owner.address.';
+const invalidPartialTeamColumn: SelectableColumn<Team> = 'owner.full_name.';
 // @ts-expect-error
 const invalidDeleteTeamColumn: SelectableColumn<Team> = 'owner.delete';
 // @ts-expect-error
@@ -77,8 +47,6 @@ const internalUpdatedAtColumns: SelectableColumn<Team> = 'xata.updatedAt';
 const linkVersionColumns: SelectableColumn<Team> = 'owner.xata.version';
 const linkCreatedAtColumns: SelectableColumn<Team> = 'owner.xata.createdAt';
 const linkUpdatedAtColumns: SelectableColumn<Team> = 'owner.xata.updatedAt';
-// @ts-expect-error
-const invalidInternalVersionColumnInObject: SelectableColumn<Team> = 'owner.settings.xata.version';
 
 //                              ValueAtColumn<O, P>                            //
 // --------------------------------------------------------------------------- //
@@ -94,7 +62,6 @@ function test1(user: SelectedPick<UserRecord, ['*']>) {
   user.id;
   user.read();
   user.full_name;
-  user.address?.street;
 
   user.xata.version;
   user.xata.createdAt;
@@ -171,86 +138,13 @@ function test3(user: SelectedPick<UserRecord, ['team.owner.*']>) {
   user.team?.owner?.full_name;
 }
 
-function test4(user: SelectedPick<UserRecord, ['team.owner.address']>) {
-  user.id;
-  user.read();
-  // @ts-expect-error
-  user.full_name;
-  user.team?.id;
-  user.team?.read();
-  // @ts-expect-error
-  user.team?.name;
-  user.team?.owner?.id;
-  user.team?.owner?.read();
-  // @ts-expect-error
-  user.team?.owner?.full_name;
-  user.team?.owner?.address;
-  user.team?.owner?.address?.street;
-  user.team?.owner?.address?.zipcode;
-}
-
-function test5(user: SelectedPick<UserRecord, ['settings', 'nonNullable']>) {
-  user.id;
-  user.read();
-  // @ts-expect-error
-  user.full_name;
-  user.settings;
-  user.settings?.theme;
-  user.settings?.language;
-  user.settings?.signin;
-  user.settings?.signin?.email;
-  user.settings?.signin?.github;
-  // @ts-expect-error
-  user.settings?.id;
-  // @ts-expect-error
-  user.settings?.read();
-  // @ts-expect-error
-  user.settings?.signin?.id;
-  user.settings = null;
-  user.nonNullable.nested.value = 2;
-  // @ts-expect-error
-  user.nonNullable = null;
-  // @ts-expect-error
-  user.nonNullable.nested.value = null;
-}
-
-function test6(user: SelectedPick<UserRecord, ['settings.*', 'nonNullable.*']>) {
-  user.id;
-  user.read();
-  // @ts-expect-error
-  user.full_name;
-  user.settings;
-  user.settings?.theme;
-  user.settings?.language;
-  user.settings?.signin;
-  user.settings?.signin?.email;
-  user.settings?.signin?.github;
-  // @ts-expect-error
-  user.settings?.id;
-  // @ts-expect-error
-  user.settings?.read();
-  // @ts-expect-error
-  user.settings?.signin?.id;
-  user.nonNullable.nested.value = 2;
-  user.nonNullable.nested.deep.depths.of.numbers = [1, 2, 3];
-  // @ts-expect-error
-  user.nonNullable.nested.deep.depths.of.numbers = 'invalid-string';
-
-  user.settings = null;
-  // @ts-expect-error
-  user.nonNullable = null;
-  // @ts-expect-error
-  user.nonNullable.nested.value = null;
-}
-
-function test7(user: SelectedPick<UserRecord, ['partner', 'team']>) {
+function test4(user: SelectedPick<UserRecord, ['partner', 'team']>) {
   user.partner;
   user.partner.id;
   user.partner.read();
   user.partner.full_name;
   // @ts-expect-error
   user.partner.full_name = null;
-  user.partner.address;
   // @ts-expect-error
   user.team.id;
   user.team?.id;
@@ -263,14 +157,13 @@ function test7(user: SelectedPick<UserRecord, ['partner', 'team']>) {
   user.team = null;
 }
 
-function test8(user: SelectedPick<UserRecord, ['partner.*', 'team.*']>) {
+function test5(user: SelectedPick<UserRecord, ['partner.*', 'team.*']>) {
   user.partner;
   user.partner.id;
   user.partner.read();
   user.partner.full_name;
   // @ts-expect-error
   user.partner.full_name = null;
-  user.partner.address;
   // @ts-expect-error
   user.team.id;
   user.team?.id;
@@ -283,7 +176,7 @@ function test8(user: SelectedPick<UserRecord, ['partner.*', 'team.*']>) {
   user.team = null;
 }
 
-function test9(user: SelectedPick<UserRecord, ['file.*', 'partner.file.base64Content', 'partner.file.signedUrl']>) {
+function test6(user: SelectedPick<UserRecord, ['file.*', 'partner.file.base64Content', 'partner.file.signedUrl']>) {
   user.file?.base64Content;
   user.file?.signedUrl;
   user.partner.file?.base64Content;

@@ -33,11 +33,17 @@ export type ApplyMigrationError = Fetcher.ErrorWrapper<
 >;
 
 export type ApplyMigrationRequestBody = {
-  [key: string]: any;
-}[];
+  /**
+   * Migration name
+   */
+  name?: string;
+  operations: {
+    [key: string]: any;
+  }[];
+};
 
 export type ApplyMigrationVariables = {
-  body?: ApplyMigrationRequestBody;
+  body: ApplyMigrationRequestBody;
   pathParams: ApplyMigrationPathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -45,12 +51,14 @@ export type ApplyMigrationVariables = {
  * Applies a pgroll migration to the specified database.
  */
 export const applyMigration = (variables: ApplyMigrationVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<undefined, ApplyMigrationError, ApplyMigrationRequestBody, {}, {}, ApplyMigrationPathParams>({
-    url: '/db/{dbBranchName}/pgroll/apply',
-    method: 'post',
-    ...variables,
-    signal
-  });
+  dataPlaneFetch<
+    Schemas.PgRollApplyMigrationResponse,
+    ApplyMigrationError,
+    ApplyMigrationRequestBody,
+    {},
+    {},
+    ApplyMigrationPathParams
+  >({ url: '/db/{dbBranchName}/pgroll/apply', method: 'post', ...variables, signal });
 
 export type PgRollStatusPathParams = {
   /**
@@ -81,12 +89,90 @@ export type PgRollStatusVariables = {
 } & DataPlaneFetcherExtraProps;
 
 export const pgRollStatus = (variables: PgRollStatusVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.PgRollStatusResponse, PgRollStatusError, undefined, {}, {}, PgRollStatusPathParams>({
+  dataPlaneFetch<Schemas.PgRollJobStatusResponse, PgRollStatusError, undefined, {}, {}, PgRollStatusPathParams>({
     url: '/db/{dbBranchName}/pgroll/status',
     method: 'get',
     ...variables,
     signal
   });
+
+export type PgRollJobStatusPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The id of the migration job
+   */
+  jobId: Schemas.PgRollMigrationJobID;
+  workspace: string;
+  region: string;
+};
+
+export type PgRollJobStatusError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PgRollJobStatusVariables = {
+  pathParams: PgRollJobStatusPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const pgRollJobStatus = (variables: PgRollJobStatusVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.PgRollJobStatusResponse, PgRollJobStatusError, undefined, {}, {}, PgRollJobStatusPathParams>({
+    url: '/db/{dbBranchName}/pgroll/jobs/{jobId}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type PgRollMigrationHistoryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type PgRollMigrationHistoryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type PgRollMigrationHistoryVariables = {
+  pathParams: PgRollMigrationHistoryPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const pgRollMigrationHistory = (variables: PgRollMigrationHistoryVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.PgRollMigrationHistoryResponse,
+    PgRollMigrationHistoryError,
+    undefined,
+    {},
+    {},
+    PgRollMigrationHistoryPathParams
+  >({ url: '/db/{dbBranchName}/pgroll/migrations', method: 'get', ...variables, signal });
 
 export type GetBranchListPathParams = {
   /**
@@ -2697,7 +2783,7 @@ export type InsertRecordWithIDVariables = {
 } & DataPlaneFetcherExtraProps;
 
 /**
- * By default, IDs are auto-generated when data is insterted into Xata. Sending a request to this endpoint allows us to insert a record with a pre-existing ID, bypassing the default automatic ID generation.
+ * By default, IDs are auto-generated when data is inserted into Xata. Sending a request to this endpoint allows us to insert a record with a pre-existing ID, bypassing the default automatic ID generation.
  */
 export const insertRecordWithID = (variables: InsertRecordWithIDVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
@@ -4370,7 +4456,7 @@ export type AggregateTableVariables = {
  * While the summary endpoint is served from a transactional store and the results are strongly
  * consistent, the aggregate endpoint is served from our columnar store and the results are
  * only eventually consistent. On the other hand, the aggregate endpoint uses a
- * store that is more appropiate for analytics, makes use of approximative algorithms
+ * store that is more appropriate for analytics, makes use of approximation algorithms
  * (e.g for cardinality), and is generally faster and can do more complex aggregations.
  *
  * For usage, see the [API Guide](https://xata.io/docs/api-guide/aggregate).
@@ -4428,6 +4514,54 @@ export const fileAccess = (variables: FileAccessVariables, signal?: AbortSignal)
   dataPlaneFetch<Blob, FileAccessError, undefined, {}, FileAccessQueryParams, FileAccessPathParams>({
     url: '/file/{fileId}',
     method: 'get',
+    ...variables,
+    signal
+  });
+
+export type FileUploadPathParams = {
+  /**
+   * The File Access Identifier
+   */
+  fileId: Schemas.FileAccessID;
+  workspace: string;
+  region: string;
+};
+
+export type FileUploadQueryParams = {
+  /**
+   * File access signature
+   */
+  verify?: Schemas.FileSignature;
+};
+
+export type FileUploadError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type FileUploadVariables = {
+  body?: Blob;
+  pathParams: FileUploadPathParams;
+  queryParams?: FileUploadQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Upload file using an upload url
+ */
+export const fileUpload = (variables: FileUploadVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.PutFileResponse, FileUploadError, Blob, {}, FileUploadQueryParams, FileUploadPathParams>({
+    url: '/file/{fileId}',
+    method: 'put',
     ...variables,
     signal
   });
@@ -4499,6 +4633,8 @@ export const operationsByTag = {
   branch: {
     applyMigration,
     pgRollStatus,
+    pgRollJobStatus,
+    pgRollMigrationHistory,
     getBranchList,
     getBranchDetails,
     createBranch,
@@ -4557,7 +4693,7 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, deleteFile, fileAccess },
+  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, deleteFile, fileAccess, fileUpload },
   searchAndFilter: {
     queryTable,
     searchBranch,

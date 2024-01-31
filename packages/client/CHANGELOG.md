@@ -1,5 +1,49 @@
 # @xata.io/client
 
+## 0.29.0
+
+### Minor Changes
+
+- [#1329](https://github.com/xataio/client-ts/pull/1329) [`0ec026a`](https://github.com/xataio/client-ts/commit/0ec026a92bdb1a405cb9d90cb1d506ff159f98e8) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Remove object column type
+
+### Patch Changes
+
+- [#1334](https://github.com/xataio/client-ts/pull/1334) [`6414bd3`](https://github.com/xataio/client-ts/commit/6414bd3d8bdb84961e68968df4b0b025503f0d72) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose columns in SQL query
+
+- [#1328](https://github.com/xataio/client-ts/pull/1328) [`27773df`](https://github.com/xataio/client-ts/commit/27773df5addf0013d1a7238ac490904e7aad2334) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix untagged scenario for SQL function
+
+## 0.28.4
+
+### Patch Changes
+
+- [#1309](https://github.com/xataio/client-ts/pull/1309) [`adc961b`](https://github.com/xataio/client-ts/commit/adc961b886b789010e6512c17cb2377eceab665a) Thanks [@andrew-farries](https://github.com/andrew-farries)! - Add CLI support for running against local development environments
+
+- [#1312](https://github.com/xataio/client-ts/pull/1312) [`6031a9d`](https://github.com/xataio/client-ts/commit/6031a9de63c264b7db5b031bb1795258c2bf8150) Thanks [@SferaDev](https://github.com/SferaDev)! - Add get to transactions
+
+## 0.28.3
+
+### Patch Changes
+
+- [#1304](https://github.com/xataio/client-ts/pull/1304) [`b7f3ec9`](https://github.com/xataio/client-ts/commit/b7f3ec9eabe3642929131e244bd774f4d3134482) Thanks [@SferaDev](https://github.com/SferaDev)! - Rewrite upload url path
+
+## 0.28.2
+
+### Patch Changes
+
+- [#1288](https://github.com/xataio/client-ts/pull/1288) [`c9178e1`](https://github.com/xataio/client-ts/commit/c9178e1e3f2268513e78dcfce396a99a8fca5dfb) Thanks [@SferaDev](https://github.com/SferaDev)! - Update read to use `ReadonlyArray<Identifier>`
+
+## 0.28.1
+
+### Patch Changes
+
+- [#1281](https://github.com/xataio/client-ts/pull/1281) [`9a7e3f5`](https://github.com/xataio/client-ts/commit/9a7e3f5029e53efc6750e9c86bab936427788209) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix issue with default public access
+
+## 0.28.0
+
+### Minor Changes
+
+- [#1251](https://github.com/xataio/client-ts/pull/1251) [`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove Xata Workers support
+
 ## 0.27.0
 
 ### Minor Changes

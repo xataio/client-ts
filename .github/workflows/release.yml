@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - next
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -32,7 +33,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.6.5
+          version: 8
 
       - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
         uses: actions/setup-node@v3
@@ -46,11 +47,21 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Update next channel
+        if: github.ref_name == 'next'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+        run: |
+          npx changeset version
+          npx changeset publish
+
       - name: Create Release Pull Request or Publish to npm
         uses: changesets/action@v1
+        if: github.ref_name == 'main'
         with:
           title: Release tracking
           publish: npx changeset publish
+          version: node ./scripts/changeset-version.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

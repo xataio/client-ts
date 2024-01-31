@@ -1,0 +1,40 @@
+{
+  "name": "@xata.io/pgroll",
+  "version": "0.4.4",
+  "description": "Migration tool for PostgreSQL",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "generate": "tsx scripts/build.ts",
+    "build": "rimraf dist && rollup -c",
+    "tsc": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xataio/client-ts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/xataio/client-ts/issues"
+  },
+  "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
+  "dependencies": {
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.4"
+  },
+  "devDependencies": {
+    "ts-morph": "^21.0.1",
+    "tsx": "^4.7.0"
+  }
+}

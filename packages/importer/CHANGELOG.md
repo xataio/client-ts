@@ -1,5 +1,30 @@
 # @xata.io/importer
 
+## 1.1.5
+
+### Patch Changes
+
+- [#1329](https://github.com/xataio/client-ts/pull/1329) [`0ec026a`](https://github.com/xataio/client-ts/commit/0ec026a92bdb1a405cb9d90cb1d506ff159f98e8) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Remove object column type
+
+- Updated dependencies [[`0ec026a`](https://github.com/xataio/client-ts/commit/0ec026a92bdb1a405cb9d90cb1d506ff159f98e8), [`6414bd3`](https://github.com/xataio/client-ts/commit/6414bd3d8bdb84961e68968df4b0b025503f0d72), [`27773df`](https://github.com/xataio/client-ts/commit/27773df5addf0013d1a7238ac490904e7aad2334)]:
+  - @xata.io/client@0.29.0
+
+## 1.1.4
+
+### Patch Changes
+
+- [#1330](https://github.com/xataio/client-ts/pull/1330) [`3a8e0a7`](https://github.com/xataio/client-ts/commit/3a8e0a7f96d225f9ecf0ea72945ef618a5b353d6) Thanks [@richardgill](https://github.com/richardgill)! - Importer: Allow coerce floats to int
+
+- Updated dependencies [[`adc961b`](https://github.com/xataio/client-ts/commit/adc961b886b789010e6512c17cb2377eceab665a), [`6031a9d`](https://github.com/xataio/client-ts/commit/6031a9de63c264b7db5b031bb1795258c2bf8150)]:
+  - @xata.io/client@0.28.4
+
+## 1.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`e97d1999`](https://github.com/xataio/client-ts/commit/e97d1999f3c25f149213ceca81958e1674624e05)]:
+  - @xata.io/client@0.28.0
+
 ## 1.1.2
 
 ### Patch Changes
