@@ -2,13 +2,14 @@ import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
 import {
+  LocalMigrationFile,
   commitToMigrationFile,
   getLocalMigrationFiles,
   removeLocalMigrations,
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
-import Codegen from '../codegen/index.js';
 import { allMigrationsPgRollFormat, isBranchPgRollEnabled, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
+import Codegen from '../codegen/index.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
   static description = 'Pull changes from remote Xata branch and regenerate code';
@@ -87,8 +88,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
       await removeLocalMigrations();
     }
 
-    const localMigrationFiles: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] =
-      await getLocalMigrationFiles(isBranchPgRollEnabled(details));
+    const localMigrationFiles: LocalMigrationFile[] = await getLocalMigrationFiles(isBranchPgRollEnabled(details));
 
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
     await writeLocalMigrationFiles(newMigrations);
@@ -107,9 +107,9 @@ export default class Pull extends BaseCommand<typeof Pull> {
   }
 
   getNewMigrations(
-    localMigrationFiles: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[],
-    remoteMigrationFiles: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[]
-  ): (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] {
+    localMigrationFiles: LocalMigrationFile[],
+    remoteMigrationFiles: LocalMigrationFile[]
+  ): LocalMigrationFile[] {
     const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
       const remoteIdentifier = isMigrationPgRollFormat(remoteMigration) ? remoteMigration.name : remoteMigration.id;
       const localItem = localMigrationFiles[index + 1];

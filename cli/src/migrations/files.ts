@@ -30,9 +30,10 @@ export async function readMigrationsDir() {
   }
 }
 
-export async function getLocalMigrationFiles(
-  pgRollEnabled: boolean = false
-): Promise<(Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[]> {
+type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (x: infer R) => any ? R : never;
+export type LocalMigrationFile = UnionToIntersection<Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem>;
+
+export async function getLocalMigrationFiles(pgRollEnabled: boolean = false): Promise<LocalMigrationFile[]> {
   const files = await readMigrationsDir();
   const ledger = await getLedger();
   // Error out if there are any files that are not in the ledger
@@ -47,7 +48,7 @@ export async function getLocalMigrationFiles(
     }
   }
 
-  const migrations: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] = [];
+  const migrations: LocalMigrationFile[] = [];
 
   for (const entry of ledger) {
     // Ignore empty lines in ledger file
@@ -61,16 +62,13 @@ export async function getLocalMigrationFiles(
       throw new Error(`Failed to parse migration file ${filePath}: ${result.error}`);
     }
 
-    // TODO remove assertion after complete pgroll migration
-    migrations.push(result.data as any);
+    migrations.push(result.data);
   }
 
   return migrations;
 }
 
-export async function writeLocalMigrationFiles(
-  files: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[]
-) {
+export async function writeLocalMigrationFiles(files: LocalMigrationFile[]) {
   const ledger = await getLedger();
 
   for (const file of files) {
@@ -100,25 +98,23 @@ export async function removeLocalMigrations() {
 
 export function commitToMigrationFile(
   logs: Schemas.Commit[] | Schemas.PgRollMigrationHistoryItem[]
-): (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] {
+): LocalMigrationFile[] {
   // Schema history comes in reverse order, so we need to reverse it
-  return logs.reverse().map(
-    (log) =>
-      (isMigrationPgRollFormat(log)
-        ? {
-            name: log.name,
-            migration: log.migration,
-            startedAt: log.startedAt,
-            parent: log.parent,
-            done: log.done,
-            migrationType: log.migrationType
-          }
-        : {
-            id: log.id,
-            parentID: log.parentID,
-            checksum: log.checksum,
-            operations: log.operations
-            // TODO remove assertion after complete pgroll migration
-          }) as any
+  return logs.reverse().map((log) =>
+    isMigrationPgRollFormat(log)
+      ? {
+          name: log.name,
+          migration: log.migration,
+          startedAt: log.startedAt,
+          parent: log.parent,
+          done: log.done,
+          migrationType: log.migrationType
+        }
+      : {
+          id: log.id,
+          parentID: log.parentID,
+          checksum: log.checksum,
+          operations: log.operations
+        }
   );
 }

@@ -51,8 +51,7 @@ export default class Rebase extends BaseCommand<typeof Rebase> {
 
     const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
       const localFile = localMigrationFiles[index + 1];
-      // TODO remove assertion after complete pgroll migration
-      if ((remoteMigration as Schemas.MigrationObject).id === (localFile as Schemas.MigrationObject)?.id) {
+      if (remoteMigration.id === localFile?.id) {
         return index + 1;
       }
 
@@ -66,7 +65,6 @@ export default class Rebase extends BaseCommand<typeof Rebase> {
     // TODO: Check if there are any conflicts
 
     await removeLocalMigrations();
-    // TODO remove assertion after complete pgroll migration
-    await writeLocalMigrationFiles(newMigrationFiles as Schemas.MigrationObject[]);
+    await writeLocalMigrationFiles(newMigrationFiles);
   }
 }
