@@ -22,9 +22,11 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@xata.io/client": "workspace:*"
+    "@xata.io/client": "workspace:*",
+    "pg": "^8.11.3"
   },
   "devDependencies": {
+    "@types/pg": "^8.11.0",
     "drizzle-orm": "^0.29.3"
   },
   "peerDependencies": {

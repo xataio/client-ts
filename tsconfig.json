@@ -16,5 +16,5 @@
     "noEmit": false,
     "outDir": "dist"
   },
-  "include": ["test", "./jest/jest.d.ts"]
+  "include": ["test", "./jest/jest.d.ts", "packages/plugin-client-drizzle/test/drizzle.test.ts"]
 }
