@@ -1,5 +1,5 @@
-import { Responses, getBranchDetails, searchBranch } from '../api';
-import { FuzzinessExpression, HighlightExpression, PrefixExpression, SearchPageConfig, Table } from '../api/schemas';
+import { Responses, searchBranch } from '../api';
+import { FuzzinessExpression, HighlightExpression, PrefixExpression, SearchPageConfig } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';

@@ -1,21 +1,20 @@
-import { Table } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isString } from '../util/lang';
 import { XataRecord } from './record';
 import { Repository, RestRepository } from './repository';
 
+export * from './ask';
 export * from './cache';
+export { XataFile } from './files';
+export type { XataArrayFile } from './files';
 export * from './inference';
 export * from './operators';
 export * from './pagination';
 export { Query } from './query';
-export { isIdentifiable, isXataRecord, RecordColumnTypes } from './record';
-export type { BaseData, EditableData, Identifiable, Link, XataRecord, JSONData } from './record';
-export { XataFile } from './files';
-export type { XataArrayFile } from './files';
+export { RecordColumnTypes, isIdentifiable, isXataRecord } from './record';
+export type { BaseData, EditableData, Identifiable, JSONData, Link, XataRecord } from './record';
 export { Repository, RestRepository } from './repository';
 export * from './selection';
-export * from './ask';
 
 export type SchemaDefinition = {
   table: string;
