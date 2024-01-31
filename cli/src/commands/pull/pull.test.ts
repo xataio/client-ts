@@ -102,6 +102,7 @@ const fetchMultiple = (url: string, request: any) => {
     return baseFetch(url, request);
   }
 };
+
 const fetchSingle = (url: string, request: any) => {
   if (url === `${baseUrl}/schema/history` && request.method === 'POST') {
     return {
@@ -197,6 +198,7 @@ const pgrollFetchMultiple = (url: string, request: any) => {
 describe('pull', () => {
   describe('for Xata 1.0 branches', () => {
     promptsMock.mockReturnValue({ workspace: 'test-1234', database: 'db1' });
+
     test('creates migrations locally if they do not yet exist', async () => {
       const config = await Config.load();
       const command = new Pull(['--force', 'main'], config);
@@ -207,6 +209,7 @@ describe('pull', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Successfully pulled 1 migrations from main branch');
     });
+
     test('combines new remote migrations with existing local migrations', async () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
@@ -218,6 +221,7 @@ describe('pull', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Successfully pulled 1 migrations from main branch');
     });
+
     test('does not create migrations locally if they already exist locally', async () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
@@ -230,6 +234,7 @@ describe('pull', () => {
       expect(log).toHaveBeenCalledWith('No new migrations to pull from main branch');
     });
   });
+
   describe('for Xata 2.0 branches', () => {
     test('creates migrations locally if they do not yet exist', async () => {
       const config = await Config.load();
@@ -242,6 +247,7 @@ describe('pull', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Successfully pulled 1 migrations from main branch');
     });
+
     test('combines new remote migrations with existing local migrations when they are both in the correct format', async () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
@@ -256,6 +262,7 @@ describe('pull', () => {
       expect(log).not.toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('Successfully pulled 2 migrations from main branch');
     });
+
     test('overwrites all old migrations if they are in the wrong format', async () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
@@ -271,6 +278,7 @@ describe('pull', () => {
       expect(log).toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('Successfully pulled 1 migrations from main branch');
     });
+
     test('does not create migrations locally if they already exist locally', async () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
@@ -286,6 +294,7 @@ describe('pull', () => {
       expect(log).not.toHaveBeenCalledWith('Converting existing migrations to pgroll format from main branch');
       expect(log).toHaveBeenCalledWith('No new migrations to pull from main branch');
     });
+
     test('allMigrationsPgRollFormat helper', async () => {
       vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [staticMigrationPgRollName] as unknown as Dirent[]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);

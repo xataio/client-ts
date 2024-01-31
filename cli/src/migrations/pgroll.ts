@@ -81,6 +81,7 @@ export async function getBranchDetailsWithPgRoll(
     const pgroll = await xata.api.migrations.getSchema({ workspace, region, database, branch });
 
     return {
+      ...details,
       branchName: branch,
       createdAt: new Date().toISOString(),
       databaseName: database,

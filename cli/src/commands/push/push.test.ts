@@ -214,6 +214,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
+
     test('combines new local migrations with existing remote migrations', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
@@ -229,6 +230,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
+
     test('does not push migrations rempte if they already exist', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
@@ -241,6 +243,7 @@ describe('push', () => {
       expect(log).toHaveBeenCalledWith('No new migrations to push');
     });
   });
+
   describe('for Xata 2.0 branches', () => {
     test('prompts user to run a xata pull -f if there current migrations are not in pgroll format', async () => {
       const config = await Config.load();
@@ -253,6 +256,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Please run xata pull -f to convert all migrations to pgroll format');
     });
+
     test('pushes migrations remotely if there are none', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
@@ -269,6 +273,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
+
     test('combines new local migrations with existing remote migrations', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
@@ -295,6 +300,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
+
     test('does not push migrations remote if they already exist', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
