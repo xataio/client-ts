@@ -37,29 +37,32 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   class {
     #options: SafeOptions;
 
+    schema: Schemas.Schema;
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
     transactions: TransactionPluginResult<any>;
     sql: SQLPluginResult;
     files: FilesPluginResult<any>;
 
-    constructor(options: BaseClientOptions = {}, schemaTables?: Schemas.Table[]) {
+    constructor(options: BaseClientOptions = {}, tables: Schemas.Table[]) {
       const safeOptions = this.#parseOptions(options);
       this.#options = safeOptions;
 
       const pluginOptions: XataPluginOptions = {
         ...this.#getFetchProps(safeOptions),
         cache: safeOptions.cache,
-        host: safeOptions.host
+        host: safeOptions.host,
+        tables
       };
 
-      const db = new SchemaPlugin(schemaTables).build(pluginOptions);
-      const search = new SearchPlugin(db, schemaTables).build(pluginOptions);
+      const db = new SchemaPlugin().build(pluginOptions);
+      const search = new SearchPlugin(db).build(pluginOptions);
       const transactions = new TransactionPlugin().build(pluginOptions);
       const sql = new SQLPlugin().build(pluginOptions);
       const files = new FilesPlugin().build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
+      this.schema = { tables };
       this.db = db;
       this.search = search;
       this.transactions = transactions;

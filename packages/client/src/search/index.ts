@@ -1,5 +1,5 @@
-import { Responses, getBranchDetails, searchBranch } from '../api';
-import { FuzzinessExpression, HighlightExpression, PrefixExpression, SearchPageConfig, Table } from '../api/schemas';
+import { Responses, searchBranch } from '../api';
+import { FuzzinessExpression, HighlightExpression, PrefixExpression, SearchPageConfig } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';
@@ -65,25 +65,21 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
 };
 
 export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
-  #schemaTables?: Table[];
-
-  constructor(private db: SchemaPluginResult<Schemas>, schemaTables?: Table[]) {
+  constructor(private db: SchemaPluginResult<Schemas>) {
     super();
-    this.#schemaTables = schemaTables;
   }
 
   build(pluginOptions: XataPluginOptions): SearchPluginResult<Schemas> {
     return {
       all: async <Tables extends StringKeys<Schemas>>(query: string, options: SearchOptions<Schemas, Tables> = {}) => {
         const { records, totalCount } = await this.#search(query, options, pluginOptions);
-        const schemaTables = await this.#getSchemaTables(pluginOptions);
 
         return {
           totalCount,
           records: records.map((record) => {
             const { table = 'orphan' } = record.xata;
             // TODO: Search endpoint doesn't support column selection
-            return { table, record: initObject(this.db, schemaTables, table, record, ['*']) } as any;
+            return { table, record: initObject(this.db, pluginOptions.tables, table, record, ['*']) } as any;
           })
         };
       },
@@ -92,14 +88,13 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
         options: SearchOptions<Schemas, Tables> = {}
       ) => {
         const { records: rawRecords, totalCount } = await this.#search(query, options, pluginOptions);
-        const schemaTables = await this.#getSchemaTables(pluginOptions);
 
         const records = rawRecords.reduce((acc, record) => {
           const { table = 'orphan' } = record.xata;
 
           const items = acc[table] ?? [];
           // TODO: Search endpoint doesn't support column selection
-          const item = initObject(this.db, schemaTables, table, record, ['*']);
+          const item = initObject(this.db, pluginOptions.tables, table, record, ['*']);
 
           return { ...acc, [table]: [...items, item] };
         }, {} as any);
@@ -117,24 +112,12 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
 
     const { records, totalCount } = await searchBranch({
       pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-      // @ts-ignore https://github.com/xataio/client-ts/issues/313
+      // @ts-expect-error Filter properties do not match inferred type
       body: { tables, query, fuzziness, prefix, highlight, page },
       ...pluginOptions
     });
 
     return { records, totalCount };
-  }
-
-  async #getSchemaTables(pluginOptions: XataPluginOptions): Promise<Table[]> {
-    if (this.#schemaTables) return this.#schemaTables;
-
-    const { schema } = await getBranchDetails({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-      ...pluginOptions
-    });
-
-    this.#schemaTables = schema.tables;
-    return schema.tables;
   }
 }
 
