@@ -51,7 +51,7 @@ export default class Diff extends BaseCommand<typeof Diff> {
             database,
             branch,
             schema: { tables: [] },
-            schemaOperations
+            schemaOperations: schemaOperations as any
           });
 
     const {
