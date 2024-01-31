@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Flags } from '@oclif/core';
-import { getBranchDetails, Schemas } from '@xata.io/client';
+import { Schemas } from '@xata.io/client';
 import { parseSchemaFile } from '@xata.io/codegen';
 import { isValidEmail } from '@xata.io/importer';
 import chalk from 'chalk';
@@ -10,6 +10,7 @@ import { readFile, writeFile } from 'fs/promises';
 import tmp from 'tmp';
 import which from 'which';
 import { BaseCommand } from '../../base.js';
+import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
 import { isNil, reportBugURL } from '../../utils.js';
 import Codegen from '../codegen/index.js';
 import Pull from '../pull/index.js';
@@ -17,7 +18,7 @@ import Pull from '../pull/index.js';
 // The enquirer library has type definitions but they are very poor
 const { Select, Snippet, Confirm } = enquirer as any;
 
-type Schema = Awaited<ReturnType<typeof getBranchDetails>>['schema'];
+type Schema = Schemas.Schema;
 type Table = Schema['tables'][0];
 type Column = Table['columns'][0];
 
@@ -145,7 +146,7 @@ Beware that this can lead to ${chalk.bold(
     this.branch = branch;
 
     const xata = await this.getXataClient();
-    const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
+    const branchDetails = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
     if (!branchDetails) this.error('Could not get the schema from the current branch');
 
     if (flags.source) {

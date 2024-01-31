@@ -1824,6 +1824,23 @@ class MigrationsApi {
       ...this.extraProps
     });
   }
+
+  public getSchema({
+    workspace,
+    region,
+    database,
+    branch
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+  }): Promise<Components.GetSchemaResponse> {
+    return operationsByTag.migrations.getSchema({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      ...this.extraProps
+    });
+  }
 }
 
 class DatabaseApi {

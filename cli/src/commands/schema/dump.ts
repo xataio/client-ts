@@ -2,6 +2,7 @@ import { Flags, ux } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { writeFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
+import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
 
 export default class SchemaDump extends BaseCommand<typeof SchemaDump> {
   static description = 'Dump the schema as a JSON file';
@@ -22,7 +23,7 @@ export default class SchemaDump extends BaseCommand<typeof SchemaDump> {
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
 
     const xata = await this.getXataClient();
-    const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
+    const branchDetails = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
     if (!branchDetails) return this.error('Could not resolve the current branch');
     if (!flags.file) {
       ux.styledJSON(branchDetails.schema);

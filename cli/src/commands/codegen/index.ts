@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
 import { BaseCommand } from '../../base.js';
 import { ProjectConfig } from '../../config.js';
+import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
 
 export const languages: Record<string, 'javascript' | 'typescript'> = {
   '.js': 'javascript',
@@ -87,8 +88,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
       flags.db,
       flags.branch
     );
-    const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
-    const { schema } = branchDetails;
+    const { schema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
     const codegenBranch = flags['inject-branch'] ? branch : undefined;
 

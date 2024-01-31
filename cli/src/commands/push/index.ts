@@ -7,7 +7,12 @@ import {
   getLastCommonIndex,
   getLocalMigrationFiles
 } from '../../migrations/files.js';
-import { allMigrationsPgRollFormat, isBranchPgRollEnabled, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
+import {
+  allMigrationsPgRollFormat,
+  getBranchDetailsWithPgRoll,
+  isBranchPgRollEnabled,
+  isMigrationPgRollFormat
+} from '../../migrations/pgroll.js';
 import { pgRollMigrationHistoryObject } from '../../migrations/schema.js';
 
 export default class Push extends BaseCommand<typeof Push> {
@@ -39,12 +44,7 @@ export default class Push extends BaseCommand<typeof Push> {
       true
     );
 
-    const details = await xata.api.branches.getBranchDetails({
-      workspace,
-      region,
-      database,
-      branch
-    });
+    const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
     let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
     if (isBranchPgRollEnabled(details)) {

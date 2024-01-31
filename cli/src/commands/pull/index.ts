@@ -10,7 +10,11 @@ import {
   removeLocalMigrations,
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
-import { allMigrationsPgRollFormat, isBranchPgRollEnabled } from '../../migrations/pgroll.js';
+import {
+  allMigrationsPgRollFormat,
+  getBranchDetailsWithPgRoll,
+  isBranchPgRollEnabled
+} from '../../migrations/pgroll.js';
 import Codegen from '../codegen/index.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
@@ -46,12 +50,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
       true
     );
 
-    const details = await xata.api.branches.getBranchDetails({
-      workspace,
-      region,
-      database,
-      branch
-    });
+    const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
     let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
     if (isBranchPgRollEnabled(details)) {

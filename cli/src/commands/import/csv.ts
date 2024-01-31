@@ -5,6 +5,7 @@ import { importColumnTypes } from '@xata.io/importer';
 import { open, writeFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
 import { enumFlag } from '../../utils/oclif.js';
+import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
 
 const ERROR_CONSOLE_LOG_LIMIT = 200;
 const ERROR_LOG_FILE = 'errors.log';
@@ -210,12 +211,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   }): Promise<void> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.parseDatabase();
-    const { schema: existingSchema } = await xata.api.branches.getBranchDetails({
-      workspace,
-      region,
-      database,
-      branch
-    });
+    const { schema: existingSchema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
     const newSchema = {
       tables: [
         ...existingSchema.tables.filter((t) => t.name !== table),

@@ -13,6 +13,7 @@ import repl from 'repl';
 import { fileURLToPath } from 'url';
 import util from 'util';
 import { BaseCommand } from '../../base.js';
+import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -45,7 +46,7 @@ export default class Shell extends BaseCommand<typeof Shell> {
     const tempFile = path.join(__dirname, `xata-${Date.now()}.mjs`);
     try {
       const xata = await this.getXataClient();
-      const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
+      const branchDetails = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
       const { schema } = branchDetails;
 
       const { javascript } = await generate({ language: 'javascript', databaseURL, schema });

@@ -1,6 +1,7 @@
 import { Args, Flags } from '@oclif/core';
 import { readFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
+import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
 
 export default class UploadSchema extends BaseCommand<typeof UploadSchema> {
   static description = 'Apply a schema to the current database from file';
@@ -33,7 +34,7 @@ export default class UploadSchema extends BaseCommand<typeof UploadSchema> {
     const xata = await this.getXataClient();
 
     if (flags['create-only']) {
-      const { schema } = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
+      const { schema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
       if (schema.tables.length > 0) {
         this.info(
           'Schema already exists. `xata schema upload --init` will only initialize the schema if it does not already exist.'
