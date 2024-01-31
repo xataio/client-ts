@@ -37,6 +37,7 @@ export type LocalMigrationFile =
 export async function getLocalMigrationFiles(pgRollEnabled: boolean = false): Promise<LocalMigrationFile[]> {
   const files = await readMigrationsDir();
   const ledger = await getLedger();
+
   // Error out if there are any files that are not in the ledger
   for (const file of files) {
     if (file === '.ledger') continue;
@@ -63,6 +64,7 @@ export async function getLocalMigrationFiles(pgRollEnabled: boolean = false): Pr
       throw new Error(`Failed to parse migration file ${filePath}: ${result.error}`);
     }
 
+    // TODO: Remove type assertion when old migrations are removed
     migrations.push(result.data as LocalMigrationFile);
   }
 
@@ -79,8 +81,10 @@ export async function writeLocalMigrationFiles(files: LocalMigrationFile[]) {
 
     const filePath = path.join(migrationsDir, `${name}.json`);
     await writeFile(filePath, JSON.stringify(file, null, 2) + '\n', 'utf8');
+
     ledger.push(name);
   }
+
   await writeFile(ledgerFile, ledger.join('\n') + '\n', 'utf8');
 }
 
