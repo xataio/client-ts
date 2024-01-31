@@ -47,7 +47,77 @@ const baseFetch = (url: string, request: any) => {
       ok: true,
       json: async () => ({ schema: { tables: [{ name: 'table1', columns: [{ name: 'a', type: 'string' }] }] } })
     };
+  } else if (url === `https://test-1234.us-east-1.xata.sh/db/db1:main/schema` && request.method === 'GET') {
+    return {
+      ok: true,
+      json: async () => ({
+        schema: {
+          name: 'bb_hmtsb6hnd552p1rencda7oo3eg_3hae5b',
+          tables: {
+            table1: {
+              oid: '747164',
+              name: 'table1',
+              comment: '',
+              columns: {
+                a: {
+                  name: 'a',
+                  type: 'string',
+                  default: null,
+                  nullable: true,
+                  unique: false,
+                  comment: ''
+                },
+                _createdat: {
+                  name: '_createdat',
+                  type: 'timestamptz',
+                  default: 'now()',
+                  nullable: false,
+                  unique: false,
+                  comment: ''
+                },
+                _id: {
+                  name: '_id',
+                  type: 'text',
+                  default: null,
+                  nullable: false,
+                  unique: true,
+                  comment: ''
+                },
+                _updatedat: {
+                  name: '_updatedat',
+                  type: 'timestamptz',
+                  default: 'now()',
+                  nullable: false,
+                  unique: false,
+                  comment: ''
+                },
+                _version: {
+                  name: '_version',
+                  type: 'integer',
+                  default: '0',
+                  nullable: false,
+                  unique: false,
+                  comment: ''
+                }
+              },
+              indexes: {
+                'bb_hmtsb6hnd552p1rencda7oo3eg_3hae5b._pgroll_new_foo_pkey': {
+                  name: 'bb_hmtsb6hnd552p1rencda7oo3eg_3hae5b._pgroll_new_foo_pkey',
+                  unique: true,
+                  columns: ['_id']
+                }
+              },
+              primaryKey: ['_id'],
+              foreignKeys: null,
+              checkConstraints: null,
+              uniqueConstraints: null
+            }
+          }
+        }
+      })
+    };
   }
+
   throw new Error(`Unexpected fetch request: ${url} ${request.method}`);
 };
 
