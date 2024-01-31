@@ -26,7 +26,7 @@ export default class WorkspaceCreate extends BaseCommand<typeof WorkspaceCreate>
 
     const xata = await this.getXataClient();
 
-    const result = await xata.api.workspaces.createWorkspace({ body: { name: workspace } });
+    const result = await xata.api.workspaces.createWorkspace({ data: { name: workspace } });
 
     if (this.jsonEnabled()) return result;
 

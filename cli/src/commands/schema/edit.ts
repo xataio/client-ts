@@ -145,9 +145,7 @@ Beware that this can lead to ${chalk.bold(
     this.branch = branch;
 
     const xata = await this.getXataClient();
-    const branchDetails = await xata.api.branch.getBranchDetails({
-      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
-    });
+    const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
     if (!branchDetails) this.error('Could not get the schema from the current branch');
 
     if (flags.source) {
@@ -808,8 +806,11 @@ vectorDimension: \${vectorDimension}
     }
 
     await xata.api.migrations.applyBranchSchemaEdit({
-      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: { edits }
+      workspace,
+      region,
+      database,
+      branch,
+      edits
     });
 
     this.success('Migration completed!');
