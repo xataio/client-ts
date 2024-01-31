@@ -70,7 +70,7 @@ export default class Push extends BaseCommand<typeof Push> {
 
     const localMigrationFiles = await getLocalMigrationFiles(isBranchPgRollEnabled(details));
 
-    const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
+    const newMigrations = this.getNewMigrations(localMigrationFiles as any, commitToMigrationFile(logs));
 
     if (newMigrations.length === 0) {
       this.log('No new migrations to push');

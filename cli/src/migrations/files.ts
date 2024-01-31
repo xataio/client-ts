@@ -33,7 +33,7 @@ export async function readMigrationsDir() {
 
 export async function getLocalMigrationFiles(
   pgRollEnabled: boolean = false
-): Promise<Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]> {
+): Promise<(Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[]> {
   const files = await readMigrationsDir();
   const ledger = await getLedger();
   // Error out if there are any files that are not in the ledger
@@ -48,7 +48,7 @@ export async function getLocalMigrationFiles(
     }
   }
 
-  const migrations: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] = [];
+  const migrations: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] = [];
 
   for (const entry of ledger) {
     // Ignore empty lines in ledger file
@@ -71,7 +71,7 @@ export async function getLocalMigrationFiles(
 }
 
 export async function writeLocalMigrationFiles(
-  files: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]
+  files: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[]
 ) {
   const ledger = await getLedger();
 
@@ -102,7 +102,7 @@ export async function removeLocalMigrations() {
 
 export function commitToMigrationFile(
   logs: Schemas.Commit[] | Schemas.PgRollMigrationHistoryItem[]
-): Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] {
+): (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] {
   // Schema history comes in reverse order, so we need to reverse it
   return logs.reverse().map(
     (log) =>

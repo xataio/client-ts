@@ -9,7 +9,7 @@ import {
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
 import Codegen from '../codegen/index.js';
-import { allMigrationsPgRollFormat, isBranchPgRollEnabled } from '../../migrations/pgroll.js';
+import { allMigrationsPgRollFormat, isBranchPgRollEnabled, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
 
 export default class Pull extends BaseCommand<typeof Pull> {
   static description = 'Pull changes from remote Xata branch and regenerate code';
@@ -88,7 +88,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
       await removeLocalMigrations();
     }
 
-    const localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] =
+    const localMigrationFiles: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] =
       await getLocalMigrationFiles(isBranchPgRollEnabled(details));
 
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
@@ -108,10 +108,22 @@ export default class Pull extends BaseCommand<typeof Pull> {
   }
 
   getNewMigrations(
-    localMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[],
-    remoteMigrationFiles: Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[]
-  ): Schemas.MigrationObject[] | Schemas.PgRollMigrationHistoryItem[] {
-    const lastCommonMigrationIndex = getLastCommonIndex(localMigrationFiles, remoteMigrationFiles);
+    localMigrationFiles: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[],
+    remoteMigrationFiles: (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[]
+  ): (Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem)[] {
+    const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
+      const remoteIdentifier = isMigrationPgRollFormat(remoteMigration) ? remoteMigration.name : remoteMigration.id;
+      const localItem = localMigrationFiles[index + 1];
+      if (!localItem) {
+        return index;
+      }
+      const localIdentifier = localItem && isMigrationPgRollFormat(localItem) ? localItem.name : localItem.id;
+      if (remoteIdentifier === localIdentifier) {
+        return index + 1;
+      }
+
+      return index;
+    }, -1);
 
     // TODO: Validate that the migrations are in the same order (for previous history)
 
