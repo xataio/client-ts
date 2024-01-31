@@ -1,7 +1,14 @@
 import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
-import { LocalMigrationFile, commitToMigrationFile, getLocalMigrationFiles } from '../../migrations/files.js';
+import {
+  LocalMigrationFile,
+  commitToMigrationFile,
+  getLastCommonIndex,
+  getLocalMigrationFiles
+} from '../../migrations/files.js';
+import { allMigrationsPgRollFormat, isBranchPgRollEnabled, isMigrationPgRollFormat } from '../../migrations/pgroll.js';
+import { pgRollMigrationHistoryObject } from '../../migrations/schema.js';
 
 export default class Push extends BaseCommand<typeof Push> {
   static description = 'Push local changes to a remote Xata branch';
@@ -32,17 +39,41 @@ export default class Push extends BaseCommand<typeof Push> {
       true
     );
 
-    const { logs } = await xata.api.migrations.getBranchSchemaHistory({
+    const details = await xata.api.branches.getBranchDetails({
       workspace,
       region,
       database,
-      branch,
-      // TODO: Fix pagination in the API to start from last known migration and not from the beginning
-      // Also paginate until we get all migrations
-      page: { size: 200 }
+      branch
     });
 
-    const localMigrationFiles = await getLocalMigrationFiles();
+    let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
+    if (isBranchPgRollEnabled(details)) {
+      const { migrations } = await xata.api.branches.pgRollMigrationHistory({
+        workspace,
+        region,
+        database,
+        branch
+      });
+      logs = migrations;
+    } else {
+      const data = await xata.api.migrations.getBranchSchemaHistory({
+        workspace,
+        region,
+        database,
+        branch,
+        // TODO: Fix pagination in the API to start from last known migration and not from the beginning
+        // Also paginate until we get all migrations
+        page: { size: 200 }
+      });
+      logs = data.logs;
+    }
+
+    if (isBranchPgRollEnabled(details) && !(await allMigrationsPgRollFormat())) {
+      this.log(`Please run xata pull -f to convert all migrations to pgroll format`);
+      return;
+    }
+
+    const localMigrationFiles = await getLocalMigrationFiles(isBranchPgRollEnabled(details));
 
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
 
@@ -52,7 +83,7 @@ export default class Push extends BaseCommand<typeof Push> {
     }
 
     newMigrations.forEach((migration) => {
-      this.log(`  ${migration.id}`);
+      isMigrationPgRollFormat(migration) ? this.log(`  ${migration.name}`) : this.log(`  ${migration.id}`);
     });
 
     if (flags['dry-run']) {
@@ -69,14 +100,34 @@ export default class Push extends BaseCommand<typeof Push> {
 
     if (!confirm) return this.exit(1);
 
-    // TODO: Check for errors and print them
-    await xata.api.migrations.pushBranchMigrations({
-      workspace,
-      region,
-      database,
-      branch,
-      migrations: newMigrations as any
-    });
+    if (isBranchPgRollEnabled(details)) {
+      const migrationsToPush = (newMigrations as Schemas.PgRollMigrationHistoryItem[])
+        .map(({ migration }) => migration)
+        .flatMap((migration) => pgRollMigrationHistoryObject.parse(JSON.parse(migration)));
+      for (const migration of migrationsToPush) {
+        try {
+          await xata.api.branches.applyMigration({
+            workspace,
+            region,
+            database,
+            branch,
+            migration
+          });
+        } catch (e) {
+          this.log(`Failed to push ${migration} with ${e}. Stopping.`);
+          this.exit(1);
+        }
+      }
+    } else {
+      // TODO: Check for errors and print them
+      await xata.api.migrations.pushBranchMigrations({
+        workspace,
+        region,
+        database,
+        branch,
+        migrations: newMigrations as Schemas.MigrationObject[]
+      });
+    }
 
     this.log(`Pushed ${newMigrations.length} migrations to ${branch}`);
   }
@@ -90,13 +141,7 @@ export default class Push extends BaseCommand<typeof Push> {
       this.exit(0);
     }
 
-    const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
-      if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
-        return index + 1;
-      }
-
-      return index;
-    }, -1);
+    const lastCommonMigrationIndex = getLastCommonIndex(localMigrationFiles, remoteMigrationFiles);
 
     const newLocalMigrations = localMigrationFiles.slice(lastCommonMigrationIndex + 1);
     const newRemoteMigrations = remoteMigrationFiles.slice(lastCommonMigrationIndex + 1);

@@ -57,6 +57,7 @@ export async function getLocalMigrationFiles(pgRollEnabled: boolean = false): Pr
     if (entry === '') continue;
     const filePath = path.join(migrationsDir, `${entry}.json`);
     const fileContents = await safeReadFile(filePath);
+
     const result = pgRollEnabled
       ? pgRollMigrationsFile.safeParse(safeJSONParse(fileContents))
       : migrationFile.safeParse(safeJSONParse(fileContents));
@@ -122,3 +123,19 @@ export function commitToMigrationFile(
 export function getMigrationId(file?: LocalMigrationFile) {
   return file?.id ?? file?.name;
 }
+
+export const getLastCommonIndex = (
+  localMigrationFiles: LocalMigrationFile[],
+  remoteMigrationFiles: LocalMigrationFile[]
+) => {
+  return remoteMigrationFiles.reduce((index, remoteMigration) => {
+    if (
+      !!getMigrationId(remoteMigration) &&
+      getMigrationId(remoteMigration) === getMigrationId(localMigrationFiles[index + 1])
+    ) {
+      return index + 1;
+    }
+
+    return index;
+  }, -1);
+};

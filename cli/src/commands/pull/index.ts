@@ -4,6 +4,7 @@ import { BaseCommand } from '../../base.js';
 import {
   LocalMigrationFile,
   commitToMigrationFile,
+  getLastCommonIndex,
   getLocalMigrationFiles,
   getMigrationId,
   removeLocalMigrations,
@@ -112,16 +113,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
     localMigrationFiles: LocalMigrationFile[],
     remoteMigrationFiles: LocalMigrationFile[]
   ): LocalMigrationFile[] {
-    const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
-      if (
-        !!getMigrationId(remoteMigration) &&
-        getMigrationId(remoteMigration) === getMigrationId(localMigrationFiles[index + 1])
-      ) {
-        return index + 1;
-      }
-
-      return index;
-    }, -1);
+    const lastCommonMigrationIndex = getLastCommonIndex(localMigrationFiles, remoteMigrationFiles);
 
     // TODO: Validate that the migrations are in the same order (for previous history)
 
