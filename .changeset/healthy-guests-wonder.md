@@ -2,4 +2,4 @@
 '@xata.io/cli': patch
 ---
 
-support for pgroll enabled branches
+Add support for pgroll enabled branches to `xata push`
