@@ -6,7 +6,6 @@ import {
   commitToMigrationFile,
   getLastCommonIndex,
   getLocalMigrationFiles,
-  getMigrationId,
   removeLocalMigrations,
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
