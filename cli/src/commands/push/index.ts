@@ -33,12 +33,13 @@ export default class Push extends BaseCommand<typeof Push> {
     );
 
     const { logs } = await xata.api.migrations.getBranchSchemaHistory({
-      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: {
-        // TODO: Fix pagination in the API to start from last known migration and not from the beginning
-        // Also paginate until we get all migrations
-        page: { size: 200 }
-      }
+      workspace,
+      region,
+      database,
+      branch,
+      // TODO: Fix pagination in the API to start from last known migration and not from the beginning
+      // Also paginate until we get all migrations
+      page: { size: 200 }
     });
 
     const localMigrationFiles = await getLocalMigrationFiles();
@@ -73,10 +74,7 @@ export default class Push extends BaseCommand<typeof Push> {
     if (!confirm) return this.exit(1);
 
     // TODO: Check for errors and print them
-    await xata.api.migrations.pushBranchMigrations({
-      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-      body: { migrations: newMigrations }
-    });
+    await xata.api.migrations.pushBranchMigrations({ workspace, region, database, branch, migrations: newMigrations });
 
     this.log(`Pushed ${newMigrations.length} migrations to ${branch}`);
   }

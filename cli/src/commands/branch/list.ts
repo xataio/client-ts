@@ -19,7 +19,7 @@ export default class BranchList extends BaseCommand<typeof BranchList> {
     const { workspace, region, database } = await this.getParsedDatabaseURL(flags.db);
 
     const xata = await this.getXataClient();
-    const { branches } = await xata.api.branch.getBranchList({ pathParams: { workspace, region, dbName: database } });
+    const { branches } = await xata.api.branches.getBranchList({ workspace, region, database });
 
     if (this.jsonEnabled()) return branches;
 

@@ -42,24 +42,31 @@ export default class Pull extends BaseCommand<typeof Pull> {
       true
     );
 
-    const details = await xata.api.branch.getBranchDetails({
-      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+    const details = await xata.api.branches.getBranchDetails({
+      workspace,
+      region,
+      database,
+      branch
     });
 
     let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
     if (isBranchPgRollEnabled(details)) {
-      const { migrations } = await xata.api.branch.pgRollMigrationHistory({
-        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+      const { migrations } = await xata.api.branches.pgRollMigrationHistory({
+        workspace,
+        region,
+        database,
+        branch
       });
       logs = migrations;
     } else {
       const data = await xata.api.migrations.getBranchSchemaHistory({
-        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-        body: {
-          // TODO: Fix pagination in the API to start from last known migration and not from the beginning
-          // Also paginate until we get all migrations
-          page: { size: 200 }
-        }
+        workspace,
+        region,
+        database,
+        branch,
+        // TODO: Fix pagination in the API to start from last known migration and not from the beginning
+        // Also paginate until we get all migrations
+        page: { size: 200 }
       });
       logs = data.logs;
     }

@@ -601,12 +601,14 @@ describe('integration tests', () => {
   });
 
   test('Pagination default value', async () => {
-    await api.table.createTable({
-      pathParams: { workspace, region, dbBranchName: `${database}:main`, tableName: 'planes' }
-    });
-    await api.table.setTableSchema({
-      pathParams: { workspace, region, dbBranchName: `${database}:main`, tableName: 'planes' },
-      body: { columns: [{ name: 'name', type: 'string' }] }
+    await api.tables.createTable({ workspace, region, database, branch: 'main', table: 'planes' });
+    await api.tables.setTableSchema({
+      workspace,
+      region,
+      database,
+      branch: 'main',
+      table: 'planes',
+      schema: { columns: [{ name: 'name', type: 'string' }] }
     });
 
     const planes = Array.from({ length: PAGINATION_DEFAULT_SIZE + 50 }, (_, index) => ({ name: `Plane ${index}` }));

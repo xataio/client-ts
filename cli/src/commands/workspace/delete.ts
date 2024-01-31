@@ -35,7 +35,7 @@ export default class WorkspaceDelete extends BaseCommand<typeof WorkspaceDelete>
     if (!confirm) return this.exit(1);
     if (confirm !== workspace) return this.error('The workspace name did not match');
 
-    await xata.api.workspaces.deleteWorkspace({ pathParams: { workspaceId: workspace } });
+    await xata.api.workspaces.deleteWorkspace({ workspace });
 
     if (this.jsonEnabled()) return {};
 
