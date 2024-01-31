@@ -67,7 +67,7 @@ const baseFetch = (url: string, request: any) => {
                   unique: false,
                   comment: ''
                 },
-                _createdat: {
+                xata_createdat: {
                   name: '_createdat',
                   type: 'timestamptz',
                   default: 'now()',
@@ -75,7 +75,7 @@ const baseFetch = (url: string, request: any) => {
                   unique: false,
                   comment: ''
                 },
-                _id: {
+                xata_id: {
                   name: '_id',
                   type: 'text',
                   default: null,
@@ -83,7 +83,7 @@ const baseFetch = (url: string, request: any) => {
                   unique: true,
                   comment: ''
                 },
-                _updatedat: {
+                xata_updatedat: {
                   name: '_updatedat',
                   type: 'timestamptz',
                   default: 'now()',
@@ -91,7 +91,7 @@ const baseFetch = (url: string, request: any) => {
                   unique: false,
                   comment: ''
                 },
-                _version: {
+                xata_version: {
                   name: '_version',
                   type: 'integer',
                   default: '0',
@@ -100,14 +100,8 @@ const baseFetch = (url: string, request: any) => {
                   comment: ''
                 }
               },
-              indexes: {
-                'bb_hmtsb6hnd552p1rencda7oo3eg_3hae5b._pgroll_new_foo_pkey': {
-                  name: 'bb_hmtsb6hnd552p1rencda7oo3eg_3hae5b._pgroll_new_foo_pkey',
-                  unique: true,
-                  columns: ['_id']
-                }
-              },
-              primaryKey: ['_id'],
+              indexes: {},
+              primaryKey: ['xata_id'],
               foreignKeys: null,
               checkConstraints: null,
               uniqueConstraints: null
