@@ -55,7 +55,7 @@ function prepareValue(value: unknown) {
   }
 }
 
-export function prepareParams(param1: SQLQuery, param2?: any[]) {
+export function prepareParams(param1: SQLQuery | string, param2?: any[]) {
   if (isString(param1)) {
     return { statement: param1, params: param2?.map((value) => prepareValue(value)) };
   }
