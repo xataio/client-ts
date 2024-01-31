@@ -62,7 +62,71 @@ const baseFetch = (url: string, request: any) => {
         jobID: '1234'
       })
     };
+  } else if (url === `https://test-1234.us-east-1.xata.sh/db/db1:main/schema` && request.method === 'GET') {
+    return {
+      ok: true,
+      json: async () => ({
+        schema: {
+          name: 'bb_hmtsb6hnd552p1rencda7oo3eg_3hae5b',
+          tables: {
+            table1: {
+              oid: '747164',
+              name: 'table1',
+              comment: '',
+              columns: {
+                a: {
+                  name: 'a',
+                  type: 'string',
+                  default: null,
+                  nullable: true,
+                  unique: false,
+                  comment: ''
+                },
+                xata_createdat: {
+                  name: '_createdat',
+                  type: 'timestamptz',
+                  default: 'now()',
+                  nullable: false,
+                  unique: false,
+                  comment: ''
+                },
+                xata_id: {
+                  name: '_id',
+                  type: 'text',
+                  default: null,
+                  nullable: false,
+                  unique: true,
+                  comment: ''
+                },
+                xata_updatedat: {
+                  name: '_updatedat',
+                  type: 'timestamptz',
+                  default: 'now()',
+                  nullable: false,
+                  unique: false,
+                  comment: ''
+                },
+                xata_version: {
+                  name: '_version',
+                  type: 'integer',
+                  default: '0',
+                  nullable: false,
+                  unique: false,
+                  comment: ''
+                }
+              },
+              indexes: {},
+              primaryKey: ['xata_id'],
+              foreignKeys: null,
+              checkConstraints: null,
+              uniqueConstraints: null
+            }
+          }
+        }
+      })
+    };
   }
+
   throw new Error(`Unexpected fetch request: ${url} ${request.method}`);
 };
 
@@ -214,6 +278,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
+
     test('combines new local migrations with existing remote migrations', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
@@ -229,6 +294,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
+
     test('does not push migrations rempte if they already exist', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
@@ -241,6 +307,7 @@ describe('push', () => {
       expect(log).toHaveBeenCalledWith('No new migrations to push');
     });
   });
+
   describe('for Xata 2.0 branches', () => {
     test('prompts user to run a xata pull -f if there current migrations are not in pgroll format', async () => {
       const config = await Config.load();
@@ -253,6 +320,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Please run xata pull -f to convert all migrations to pgroll format');
     });
+
     test('pushes migrations remotely if there are none', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
@@ -269,6 +337,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
+
     test('combines new local migrations with existing remote migrations', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
@@ -295,6 +364,7 @@ describe('push', () => {
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
+
     test('does not push migrations remote if they already exist', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);

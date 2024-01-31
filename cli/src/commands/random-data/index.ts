@@ -3,6 +3,7 @@ import { generateRandomData } from '@xata.io/importer';
 import chalk from 'chalk';
 import { BaseCommand } from '../../base.js';
 import { pluralize } from '../../utils.js';
+import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
 
 export default class RandomData extends BaseCommand<typeof RandomData> {
   static description = 'Insert random data in the database';
@@ -29,7 +30,7 @@ export default class RandomData extends BaseCommand<typeof RandomData> {
 
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const xata = await this.getXataClient();
-    const branchDetails = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
+    const branchDetails = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
     if (!branchDetails) {
       this.error('Could not resolve the current branch');
     }
