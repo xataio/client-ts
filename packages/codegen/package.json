@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/codegen",
-  "version": "0.28.4",
+  "version": "0.29.0",
   "description": "Generates types based on a Xata.io database schema. Meant to be used with @xata.io/client",
   "type": "module",
   "main": "./dist/index.cjs",

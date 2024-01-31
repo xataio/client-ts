@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/cli",
-  "version": "0.15.5",
+  "version": "0.15.6",
   "description": "Xata.io CLI",
   "author": "Xata Inc.",
   "bin": {
@@ -22,7 +22,7 @@
     "@oclif/core": "^3.18.1",
     "@oclif/plugin-help": "^6.0.12",
     "@oclif/plugin-not-found": "^3.0.9",
-    "@oclif/plugin-plugins": "^4.1.19",
+    "@oclif/plugin-plugins": "^4.1.22",
     "@types/ini": "^4.1.0",
     "@types/prompts": "^2.4.9",
     "@types/semver": "^7.5.6",
@@ -33,9 +33,9 @@
     "chalk": "^5.3.0",
     "cosmiconfig": "^9.0.0",
     "deepmerge": "^4.3.1",
-    "dotenv": "^16.3.2",
+    "dotenv": "^16.4.1",
     "dotenv-expand": "^10.0.0",
-    "edge-runtime": "^2.5.7",
+    "edge-runtime": "^2.5.8",
     "enquirer": "^2.4.1",
     "env-editor": "^1.1.0",
     "ini": "^4.1.1",
@@ -54,7 +54,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@babel/types": "^7.23.6",
+    "@babel/types": "^7.23.9",
     "@types/babel__core": "^7.20.5",
     "@types/lodash.compact": "^3.0.9",
     "@types/lodash.get": "^4.4.9",
@@ -65,8 +65,8 @@
     "@types/which": "^3.0.3",
     "eslint": "^8.56.0",
     "eslint-config-oclif": "^5.0.0",
-    "eslint-config-oclif-typescript": "^3.0.39",
-    "oclif": "^4.3.9",
+    "eslint-config-oclif-typescript": "^3.0.41",
+    "oclif": "^4.4.2",
     "shx": "^0.3.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
