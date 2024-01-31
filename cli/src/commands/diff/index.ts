@@ -2,7 +2,6 @@ import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { getLocalMigrationFiles } from '../../migrations/files.js';
 import { buildMigrationDiff } from '../../utils/diff.js';
-import { Schemas } from '@xata.io/client';
 
 export default class Diff extends BaseCommand<typeof Diff> {
   static description = 'Compare two local or remote branches';

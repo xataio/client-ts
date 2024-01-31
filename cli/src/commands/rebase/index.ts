@@ -6,7 +6,6 @@ import {
   removeLocalMigrations,
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
-import { Schemas } from '@xata.io/client';
 
 export default class Rebase extends BaseCommand<typeof Rebase> {
   static description = 'Reapply local migrations on top of a remote branch';
@@ -50,8 +49,7 @@ export default class Rebase extends BaseCommand<typeof Rebase> {
     const localMigrationFiles = await getLocalMigrationFiles();
 
     const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
-      const localFile = localMigrationFiles[index + 1];
-      if (remoteMigration.id === localFile?.id) {
+      if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
         return index + 1;
       }
 
