@@ -2,6 +2,7 @@ import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import {
   commitToMigrationFile,
+  getLastCommonIndex,
   getLocalMigrationFiles,
   removeLocalMigrations,
   writeLocalMigrationFiles
@@ -48,13 +49,7 @@ export default class Rebase extends BaseCommand<typeof Rebase> {
     const remoteMigrationFiles = commitToMigrationFile(logs);
     const localMigrationFiles = await getLocalMigrationFiles();
 
-    const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
-      if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
-        return index + 1;
-      }
-
-      return index;
-    }, -1);
+    const lastCommonMigrationIndex = getLastCommonIndex(localMigrationFiles, remoteMigrationFiles);
 
     const migrationsToRebase = localMigrationFiles.slice(lastCommonMigrationIndex);
 

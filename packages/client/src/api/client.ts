@@ -536,6 +536,43 @@ class BranchApi {
       ...this.extraProps
     });
   }
+
+  public pgRollMigrationHistory({
+    workspace,
+    region,
+    database,
+    branch
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+  }): Promise<Schemas.PgRollMigrationHistoryResponse> {
+    return operationsByTag.branch.pgRollMigrationHistory({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      ...this.extraProps
+    });
+  }
+
+  public applyMigration({
+    workspace,
+    region,
+    database,
+    branch,
+    migration
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    migration: Schemas.Migration;
+  }): Promise<Schemas.PgRollApplyMigrationResponse> {
+    return operationsByTag.branch.applyMigration({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      body: migration,
+      ...this.extraProps
+    });
+  }
 }
 
 class TableApi {
