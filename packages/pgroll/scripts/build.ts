@@ -10,6 +10,7 @@ type Definition =
   | {
       type: 'object';
       properties: Record<string, Definition>;
+      oneOf?: unknown[];
       required?: string[];
       description?: string;
       additionalProperties?: boolean;
@@ -30,6 +31,8 @@ const DefinitionSchema: z.ZodSchema<Definition> = z.lazy(() =>
     z.object({
       type: z.literal('object'),
       properties: z.record(DefinitionSchema),
+      // TODO: Add full support for oneOf
+      oneOf: z.array(z.any()).optional(),
       required: z.array(z.string()).optional(),
       description: z.string().optional(),
       additionalProperties: z.boolean().optional()
@@ -146,7 +149,8 @@ function topologicalSort(nodes: [string, Definition][]): [string, Definition][] 
 }
 
 async function main() {
-  const response = await fetch(PGROLL_JSON_SCHEMA_URL).then((response) => response.json());
+  const url = process.env.PGROLL_JSON_SCHEMA_URL ?? PGROLL_JSON_SCHEMA_URL;
+  const response = await fetch(url).then((response) => response.json());
   const schema = JSONSchema.parse(response);
 
   // Create a TypeScript project

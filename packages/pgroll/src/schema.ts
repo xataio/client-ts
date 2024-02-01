@@ -154,7 +154,38 @@ export const schema = {
           type: 'string'
         }
       },
-      required: ['column', 'down', 'name', 'table', 'type', 'up'],
+      required: ['table', 'column'],
+      oneOf: [
+        {
+          required: ['name'],
+          not: {
+            required: ['up', 'down']
+          }
+        },
+        {
+          required: ['up', 'down'],
+          oneOf: [
+            {
+              required: ['check']
+            },
+            {
+              required: ['type']
+            },
+            {
+              required: ['nullable']
+            },
+            {
+              required: ['unique']
+            },
+            {
+              required: ['references']
+            }
+          ],
+          not: {
+            required: ['name']
+          }
+        }
+      ],
       type: 'object'
     },
     OpCreateIndex: {

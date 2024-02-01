@@ -46,14 +46,14 @@ export type OpAlterColumn = z.infer<typeof OpAlterColumnDefinition>;
 export const OpAlterColumnDefinition = z.object({
   check: CheckConstraintDefinition.optional(),
   column: z.string(),
-  down: z.string(),
-  name: z.string(),
+  down: z.string().optional(),
+  name: z.string().optional(),
   nullable: z.boolean().optional(),
   references: ForeignKeyReferenceDefinition.optional(),
   table: z.string(),
-  type: z.string(),
+  type: z.string().optional(),
   unique: UniqueConstraintDefinition.optional(),
-  up: z.string()
+  up: z.string().optional()
 });
 
 export type OpCreateIndex = z.infer<typeof OpCreateIndexDefinition>;
