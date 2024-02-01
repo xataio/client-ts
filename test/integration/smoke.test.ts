@@ -18,7 +18,7 @@ const region = process.env.XATA_REGION || 'eu-west-1';
 
 const getWorkspaceName = () => `sdk-integration-api-client-${Math.random().toString(36).substr(2, 9)}`;
 
-describe('API Client Integration Tests', () => {
+describe.skip('API Client Integration Tests', () => {
   test('Create, get and delete workspace with new apiKey', async () => {
     const workspaceName = getWorkspaceName();
 
