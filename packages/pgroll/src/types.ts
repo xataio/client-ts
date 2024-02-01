@@ -25,7 +25,8 @@ export const ColumnDefinition = z.object({
   pk: z.boolean(),
   references: ForeignKeyReferenceDefinition.optional(),
   type: z.string(),
-  unique: z.boolean()
+  unique: z.boolean(),
+  comment: z.string().optional()
 });
 
 export type OpAddColumn = z.infer<typeof OpAddColumnDefinition>;
@@ -45,14 +46,14 @@ export type OpAlterColumn = z.infer<typeof OpAlterColumnDefinition>;
 export const OpAlterColumnDefinition = z.object({
   check: CheckConstraintDefinition.optional(),
   column: z.string(),
-  down: z.string(),
-  name: z.string(),
+  down: z.string().optional(),
+  name: z.string().optional(),
   nullable: z.boolean().optional(),
   references: ForeignKeyReferenceDefinition.optional(),
   table: z.string(),
-  type: z.string(),
+  type: z.string().optional(),
   unique: UniqueConstraintDefinition.optional(),
-  up: z.string()
+  up: z.string().optional()
 });
 
 export type OpCreateIndex = z.infer<typeof OpCreateIndexDefinition>;
@@ -67,7 +68,8 @@ export type OpCreateTable = z.infer<typeof OpCreateTableDefinition>;
 
 export const OpCreateTableDefinition = z.object({
   columns: z.array(ColumnDefinition),
-  name: z.string()
+  name: z.string(),
+  comment: z.string().optional()
 });
 
 export type OpDropColumn = z.infer<typeof OpDropColumnDefinition>;
