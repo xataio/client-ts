@@ -25,7 +25,8 @@ export const ColumnDefinition = z.object({
   pk: z.boolean(),
   references: ForeignKeyReferenceDefinition.optional(),
   type: z.string(),
-  unique: z.boolean()
+  unique: z.boolean(),
+  comment: z.string().optional()
 });
 
 export type OpAddColumn = z.infer<typeof OpAddColumnDefinition>;
@@ -67,7 +68,8 @@ export type OpCreateTable = z.infer<typeof OpCreateTableDefinition>;
 
 export const OpCreateTableDefinition = z.object({
   columns: z.array(ColumnDefinition),
-  name: z.string()
+  name: z.string(),
+  comment: z.string().optional()
 });
 
 export type OpDropColumn = z.infer<typeof OpDropColumnDefinition>;

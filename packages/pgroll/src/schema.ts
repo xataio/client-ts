@@ -60,6 +60,10 @@ export const schema = {
         unique: {
           description: 'Indicates if the column values must be unique',
           type: 'boolean'
+        },
+        comment: {
+          description: 'Postgres comment for the column',
+          type: 'string'
         }
       },
       required: ['name', 'nullable', 'pk', 'type', 'unique'],
@@ -126,7 +130,7 @@ export const schema = {
           type: 'string'
         },
         nullable: {
-          description: 'Indicates if the column is nullable (for add not null constraint operation)',
+          description: 'Indicates if the column is nullable (for add/remove not null constraint operation)',
           type: 'boolean'
         },
         references: {
@@ -189,6 +193,10 @@ export const schema = {
         },
         name: {
           description: 'Name of the table',
+          type: 'string'
+        },
+        comment: {
+          description: 'Postgres comment for the table',
           type: 'string'
         }
       },
