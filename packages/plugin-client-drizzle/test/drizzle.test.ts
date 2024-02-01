@@ -83,16 +83,18 @@ const usersMigratorTable = pgTable('users12', {
 });
 
 const api = new XataApiClient({
-  apiKey: process.env['XATA_API_KEY']
+  apiKey: process.env['XATA_API_KEY'],
+  host: 'staging'
 });
 
-const workspace = '3hae5b';
+const workspace = 'liuv9i';
 const database = `drizzle-test-${Math.random().toString(36).substr(2, 9)}`;
-const region = 'us-east-1';
+const region = 'eu-west-1';
 const branch = 'main';
 
 const client = new Client({
-  connectionString: `postgres://${workspace}:${process.env['XATA_API_KEY']}@${region}.sql.xata.sh:5432/${database}:${branch}`
+  connectionString: `postgresql://${workspace}:${process.env['XATA_API_KEY']}@${region}.sql.staging-xata.dev:5432/${database}:${branch}`,
+  ssl: false
 });
 
 let db: NodePgDatabase<Record<string, never>>;
