@@ -223,7 +223,17 @@ const staticMigrationPgRollTwo = {
   startedAt: '2024-01-18T14:31:20.795975Z'
 };
 
-const pgrollFetchSingle = (url: string, request: any) => {
+const staticMigrationPgRollThreeName = 'mig_xbcdcdrj7c92neg7lefx';
+const staticMigrationPgRollThree = {
+  done: false,
+  migration: `{"name": "${staticMigrationPgRollThreeName}", "operations": [{"drop_column": {"up": "", "table": "tester", "column": "Firstname"}}]}`,
+  migrationType: 'inferred',
+  name: staticMigrationPgRollThreeName,
+  parent: 'mig_cmkjccmg1th0of00f5n0',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
+
+const pgrollFetchSingle = (url: string, request: any, type: 'inferred' | 'pgroll' = 'pgroll') => {
   if (url === `${baseUrl}` && request.method === 'GET') {
     return {
       ok: true,
@@ -235,7 +245,8 @@ const pgrollFetchSingle = (url: string, request: any) => {
   } else if (url === `${baseUrl}/pgroll/migrations` && request.method === 'GET') {
     return {
       ok: true,
-      json: async () => staticMigrationPgRollResponse
+      json: async () =>
+        type === 'inferred' ? { migrations: [staticMigrationPgRollThree] } : staticMigrationPgRollResponse
     };
   } else {
     return baseFetch(url, request);
@@ -295,7 +306,7 @@ describe('push', () => {
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
     });
 
-    test('does not push migrations rempte if they already exist', async () => {
+    test('does not push migrations remote if they already exist', async () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
       const log = vi.spyOn(command, 'log');
@@ -380,6 +391,44 @@ describe('push', () => {
       fetchMock.mockImplementation(pgrollFetchSingle);
       await command.run();
       expect(log).toHaveBeenCalledWith('No new migrations to push');
+    });
+
+    describe('inferred migration format', () => {
+      test('combines new local migrations with existing remote migrations', async () => {
+        const config = await Config.load();
+        const command = new Push(['main'], config);
+        const log = vi.spyOn(command, 'log');
+        vi.spyOn(fs, 'readdir').mockImplementation(async () => [
+          staticMigrationPgRollName as unknown as Dirent,
+          staticMigrationPgRollThreeName as unknown as Dirent
+        ]);
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(
+          async () => staticMigrationPgRollName + '\n' + staticMigrationPgRollThreeName
+        );
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(
+          async () => staticMigrationPgRollName + '\n' + staticMigrationPgRollThreeName
+        );
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
+        fetchMock.mockImplementation((req, url) => pgrollFetchSingle(req, url, 'inferred'));
+        await command.run();
+        expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
+      });
+
+      test('does not push migrations remote if they already exist', async () => {
+        const config = await Config.load();
+        const command = new Push(['main'], config);
+        const log = vi.spyOn(command, 'log');
+        vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationPgRollThreeName as unknown as Dirent]);
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollThreeName);
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
+        fetchMock.mockImplementation((url, req) => pgrollFetchSingle(url, req, 'inferred'));
+        await command.run();
+        expect(log).toHaveBeenCalledWith('No new migrations to push');
+      });
     });
   });
 });

@@ -217,6 +217,15 @@ const pgrollFetchSingle = (url: string, request: any) => {
     return baseFetch(url, request);
   }
 };
+const pgrollInferredMigration = {
+  done: true,
+  migration:
+    '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"sql": { "up": "ALTER ALTER TABLE internal ADD test varchar(255)" }}]}',
+  migrationType: 'inferred',
+  name: 'mig_abcdcdrj7c92neg7lefg',
+  parent: 'mig_abcdcdrj7c92neg7lerr',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
 
 const pgrollFetchMultiple = (url: string, request: any) => {
   if (url === `${baseUrl}` && request.method === 'GET') {
@@ -364,6 +373,17 @@ describe('pull', () => {
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
       expect(await allMigrationsPgRollFormat()).toBe(true);
+    });
+
+    describe('inferred migration format', () => {
+      test('allMigrationsPgRollFormat helper', async () => {
+        vi.spyOn(fs, 'readdir').mockImplementationOnce(
+          async () => [pgrollInferredMigration.name] as unknown as Dirent[]
+        );
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollInferredMigration.name);
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(pgrollInferredMigration));
+        expect(await allMigrationsPgRollFormat()).toBe(true);
+      });
     });
   });
 });
