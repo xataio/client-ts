@@ -27,6 +27,60 @@ const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 const REGION = 'us-east-1';
 const baseUrl = `https://test-1234.${REGION}.xata.sh/db/db1:main`;
 
+const regularMigration1: Schemas.MigrationObject = {
+  id: 'mig_ce3lg2hp3o0em98s8r50',
+  parentID: 'mig_ce3lfvhp3o0em98s8r40',
+  checksum: '1:92d84ef84afc56e2152fd48d098d1b7ef4328217eadd5db6b3f646ac94a1a5ad',
+  operations: [
+    {
+      addColumn: {
+        column: {
+          name: 'test',
+          type: 'string'
+        },
+        table: 'test'
+      }
+    }
+  ]
+};
+
+const pgrollMigration1: Schemas.PgRollMigrationHistoryItem = {
+  done: false,
+  migration: `{"name": "mig_cmkjcdrj7c92neg7lnmg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
+  migrationType: 'pgroll',
+  name: 'mig_cmkjcdrj7c92neg7lnmg',
+  parent: 'mig_cmkjccmg1th0of00f5n0',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
+
+const pgrollMigration2: Schemas.PgRollMigrationHistoryItem = {
+  done: true,
+  migration:
+    '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"sql": { "up": "ALTER ALTER TABLE internal ADD test varchar(255)" }}]}',
+  migrationType: 'inferred',
+  name: 'mig_abcdcdrj7c92neg7lefg',
+  parent: 'mig_abcdcdrj7c92neg7lerr',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
+const pgrollMigration3: Schemas.PgRollMigrationHistoryItem = {
+  done: true,
+  migration:
+    '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',
+  migrationType: 'pgroll',
+  name: 'mig_abcdcdrj7c92neg7lefg',
+  parent: 'mig_abcdcdrj7c92neg7lerr',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
+const pgrollMigration4: Schemas.PgRollMigrationHistoryItem = {
+  done: true,
+  migration:
+    '{"name": "mig_xyzdcdrj7c92neg7lxyz", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',
+  migrationType: 'pgroll',
+  name: 'mig_xyzdcdrj7c92neg7lxyz',
+  parent: 'mig_xyzdcdrj7c92neg7lxyz',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
+
 const baseFetch = (url: string, request: any) => {
   if (url === 'https://api.xata.io/workspaces' && request.method === 'GET') {
     return {
@@ -115,23 +169,6 @@ const baseFetch = (url: string, request: any) => {
   throw new Error(`Unexpected fetch request: ${url} ${request.method}`);
 };
 
-const staticMigrationId = 'mig_ce3lg2hp3o0em98s8r50';
-const staticMigration: Schemas.MigrationObject = {
-  id: staticMigrationId,
-  parentID: 'mig_ce3lfvhp3o0em98s8r40',
-  checksum: '1:92d84ef84afc56e2152fd48d098d1b7ef4328217eadd5db6b3f646ac94a1a5ad',
-  operations: [
-    {
-      addColumn: {
-        column: {
-          name: 'test',
-          type: 'string'
-        },
-        table: 'test'
-      }
-    }
-  ]
-};
 const fetchMultiple = (url: string, request: any) => {
   if (url === `${baseUrl}/schema/history` && request.method === 'POST') {
     return {
@@ -142,7 +179,7 @@ const fetchMultiple = (url: string, request: any) => {
           more: false
         },
         logs: [
-          staticMigration,
+          regularMigration1,
           {
             id: `mig_${randomUUID()}`,
             parentID: `mig_${randomUUID()}`,
@@ -176,49 +213,12 @@ const fetchSingle = (url: string, request: any) => {
           cursor: 1,
           more: false
         },
-        logs: [staticMigration]
+        logs: [regularMigration1]
       })
     };
   } else {
     return baseFetch(url, request);
   }
-};
-
-const pgrollMigration1: Schemas.PgRollMigrationHistoryItem = {
-  done: false,
-  migration: `{"name": "mig_cmkjcdrj7c92neg7lnmg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
-  migrationType: 'pgroll',
-  name: 'mig_cmkjcdrj7c92neg7lnmg',
-  parent: 'mig_cmkjccmg1th0of00f5n0',
-  startedAt: '2024-01-18T14:31:20.795975Z'
-};
-
-const pgrollMigration2: Schemas.PgRollMigrationHistoryItem = {
-  done: true,
-  migration:
-    '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"sql": { "up": "ALTER ALTER TABLE internal ADD test varchar(255)" }}]}',
-  migrationType: 'inferred',
-  name: 'mig_abcdcdrj7c92neg7lefg',
-  parent: 'mig_abcdcdrj7c92neg7lerr',
-  startedAt: '2024-01-18T14:31:20.795975Z'
-};
-const pgrollMigration3: Schemas.PgRollMigrationHistoryItem = {
-  done: true,
-  migration:
-    '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',
-  migrationType: 'pgroll',
-  name: 'mig_abcdcdrj7c92neg7lefg',
-  parent: 'mig_abcdcdrj7c92neg7lerr',
-  startedAt: '2024-01-18T14:31:20.795975Z'
-};
-const pgrollMigration4: Schemas.PgRollMigrationHistoryItem = {
-  done: true,
-  migration:
-    '{"name": "mig_xyzdcdrj7c92neg7lxyz", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',
-  migrationType: 'pgroll',
-  name: 'mig_xyzdcdrj7c92neg7lxyz',
-  parent: 'mig_xyzdcdrj7c92neg7lxyz',
-  startedAt: '2024-01-18T14:31:20.795975Z'
 };
 
 const pgrollFetchSingle = (url: string, request: any) => {
@@ -282,9 +282,9 @@ describe('pull', () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationId as unknown as Dirent]);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigration));
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationId);
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [regularMigration1.id as unknown as Dirent]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(regularMigration1));
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => regularMigration1.id);
       fetchMock.mockImplementation(fetchMultiple);
       await command.run();
       expect(log).toHaveBeenCalledWith('Successfully pulled 1 migrations from main branch');
@@ -294,9 +294,9 @@ describe('pull', () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationId as unknown as Dirent]);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigration));
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationId);
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [regularMigration1.id as unknown as Dirent]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(regularMigration1));
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => regularMigration1.id);
       fetchMock.mockImplementation(fetchSingle);
       await command.run();
       expect(log).toHaveBeenCalledWith('No new migrations to pull from main branch');
@@ -340,9 +340,9 @@ describe('pull', () => {
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
       vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [] as unknown as Dirent[]);
-      vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [staticMigrationId] as unknown as Dirent[]);
+      vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [regularMigration1.id] as unknown as Dirent[]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => '');
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationId);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => regularMigration1.id);
       fetchMock.mockImplementation(pgrollFetchSingle);
       promptsMock.mockReturnValueOnce({ workspace: 'test-1234', database: 'db1' });
       promptsMock.mockReturnValueOnce({ confirm: true });
