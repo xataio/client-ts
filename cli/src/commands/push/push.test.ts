@@ -226,7 +226,8 @@ const staticMigrationPgRollTwo = {
 const staticMigrationPgRollThreeName = 'mig_xbcdcdrj7c92neg7lefx';
 const staticMigrationPgRollThree = {
   done: false,
-  migration: `{"name": "${staticMigrationPgRollThreeName}", "operations": [{"drop_column": {"up": "", "table": "tester", "column": "Firstname"}}]}`,
+  migration:
+    '{"name": "mig_xbcdcdrj7c92neg7lefx", "operations": [{"sql": { "up": "ALTER ALTER TABLE internal ADD test varchar(255)" }}]}',
   migrationType: 'inferred',
   name: staticMigrationPgRollThreeName,
   parent: 'mig_cmkjccmg1th0of00f5n0',
