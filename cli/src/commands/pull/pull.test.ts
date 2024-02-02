@@ -371,7 +371,7 @@ describe('pull', () => {
       expect(log).toHaveBeenCalledWith('No new migrations to pull from main branch');
     });
 
-    test.only('allMigrationsPgRollFormat helper', async () => {
+    test('allMigrationsPgRollFormat helper', async () => {
       vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [pgrollMigration1.name] as unknown as Dirent[]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration1.name);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
