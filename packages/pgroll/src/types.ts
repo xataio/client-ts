@@ -21,11 +21,11 @@ export const ColumnDefinition = z.object({
   check: CheckConstraintDefinition.optional(),
   default: z.string().optional(),
   name: z.string(),
-  nullable: z.boolean(),
-  pk: z.boolean(),
+  nullable: z.boolean().optional(),
+  pk: z.boolean().optional(),
   references: ForeignKeyReferenceDefinition.optional(),
   type: z.string(),
-  unique: z.boolean(),
+  unique: z.boolean().optional(),
   comment: z.string().optional()
 });
 

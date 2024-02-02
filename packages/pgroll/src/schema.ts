@@ -66,7 +66,7 @@ export const schema = {
           type: 'string'
         }
       },
-      required: ['name', 'nullable', 'pk', 'type', 'unique'],
+      required: ['name', 'type'],
       type: 'object'
     },
     ForeignKeyReference: {
