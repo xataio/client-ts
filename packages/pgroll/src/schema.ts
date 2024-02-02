@@ -157,12 +157,6 @@ export const schema = {
       required: ['table', 'column'],
       oneOf: [
         {
-          required: ['name'],
-          not: {
-            required: ['up', 'down']
-          }
-        },
-        {
           required: ['up', 'down'],
           oneOf: [
             {
@@ -183,6 +177,34 @@ export const schema = {
           ],
           not: {
             required: ['name']
+          }
+        },
+        {
+          required: ['name'],
+          not: {
+            anyOf: [
+              {
+                required: ['up']
+              },
+              {
+                required: ['down']
+              },
+              {
+                required: ['check']
+              },
+              {
+                required: ['type']
+              },
+              {
+                required: ['nullable']
+              },
+              {
+                required: ['unique']
+              },
+              {
+                required: ['references']
+              }
+            ]
           }
         }
       ],
@@ -450,11 +472,11 @@ export const schema = {
           description: 'Raw SQL operation',
           additionalProperties: false,
           properties: {
-            raw_sql: {
+            sql: {
               $ref: '#/$defs/OpRawSQL'
             }
           },
-          required: ['raw_sql']
+          required: ['sql']
         },
         {
           type: 'object',
