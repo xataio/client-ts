@@ -137,7 +137,7 @@ export const PgRollOperationDefinition = z.union([
   z.object({ drop_constraint: OpDropConstraintDefinition }),
   z.object({ drop_index: OpDropIndexDefinition }),
   z.object({ drop_table: OpDropTableDefinition }),
-  z.object({ raw_sql: OpRawSQLDefinition }),
+  z.object({ sql: OpRawSQLDefinition }),
   z.object({ rename_table: OpRenameTableDefinition }),
   z.object({ set_replica_identity: OpSetReplicaIdentityDefinition })
 ]);
@@ -164,7 +164,7 @@ export const operationTypes = [
   'drop_constraint',
   'drop_index',
   'drop_table',
-  'raw_sql',
+  'sql',
   'rename_table',
   'set_replica_identity'
 ] as const;
