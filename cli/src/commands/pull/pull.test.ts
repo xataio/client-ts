@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 import { Schemas } from '@xata.io/client';
 import * as fs from 'fs/promises';
 import { Dirent } from 'fs';
-import { allMigrationsPgRollFormat } from '../../migrations/pgroll.js';
+import { allMigrationsPgRollFormat, hydrateMigrationObject } from '../../migrations/pgroll.js';
 
 vi.mock('prompts');
 vi.mock('node-fetch');
@@ -184,20 +184,42 @@ const fetchSingle = (url: string, request: any) => {
   }
 };
 
-const staticMigrationPgRollName = 'mig_cmkjcdrj7c92neg7lnmg';
-const staticMigrationPgRollResponse = {
-  migrations: [
-    {
-      done: false,
-      migration: `{"name": ${staticMigrationPgRollName}, "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
-      migrationType: 'pgroll',
-      name: staticMigrationPgRollName,
-      parent: 'mig_cmkjccmg1th0of00f5n0',
-      startedAt: '2024-01-18T14:31:20.795975Z'
-    }
-  ]
+const pgrollMigration1: Schemas.PgRollMigrationHistoryItem = {
+  done: false,
+  migration: `{"name": "mig_cmkjcdrj7c92neg7lnmg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
+  migrationType: 'pgroll',
+  name: 'mig_cmkjcdrj7c92neg7lnmg',
+  parent: 'mig_cmkjccmg1th0of00f5n0',
+  startedAt: '2024-01-18T14:31:20.795975Z'
 };
-const staticMigrationPgRoll = staticMigrationPgRollResponse.migrations[0];
+
+const pgrollMigration2: Schemas.PgRollMigrationHistoryItem = {
+  done: true,
+  migration:
+    '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"sql": { "up": "ALTER ALTER TABLE internal ADD test varchar(255)" }}]}',
+  migrationType: 'inferred',
+  name: 'mig_abcdcdrj7c92neg7lefg',
+  parent: 'mig_abcdcdrj7c92neg7lerr',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
+const pgrollMigration3: Schemas.PgRollMigrationHistoryItem = {
+  done: true,
+  migration:
+    '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',
+  migrationType: 'pgroll',
+  name: 'mig_abcdcdrj7c92neg7lefg',
+  parent: 'mig_abcdcdrj7c92neg7lerr',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
+const pgrollMigration4: Schemas.PgRollMigrationHistoryItem = {
+  done: true,
+  migration:
+    '{"name": "mig_xyzdcdrj7c92neg7lxyz", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',
+  migrationType: 'pgroll',
+  name: 'mig_xyzdcdrj7c92neg7lxyz',
+  parent: 'mig_xyzdcdrj7c92neg7lxyz',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
 
 const pgrollFetchSingle = (url: string, request: any) => {
   if (url === `${baseUrl}` && request.method === 'GET') {
@@ -211,20 +233,13 @@ const pgrollFetchSingle = (url: string, request: any) => {
   } else if (url === `${baseUrl}/pgroll/migrations` && request.method === 'GET') {
     return {
       ok: true,
-      json: async () => staticMigrationPgRollResponse
+      json: async () => ({
+        migrations: [pgrollMigration1]
+      })
     };
   } else {
     return baseFetch(url, request);
   }
-};
-const pgrollInferredMigration = {
-  done: true,
-  migration:
-    '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"sql": { "up": "ALTER ALTER TABLE internal ADD test varchar(255)" }}]}',
-  migrationType: 'inferred',
-  name: 'mig_abcdcdrj7c92neg7lefg',
-  parent: 'mig_abcdcdrj7c92neg7lerr',
-  startedAt: '2024-01-18T14:31:20.795975Z'
 };
 
 const pgrollFetchMultiple = (url: string, request: any) => {
@@ -240,27 +255,7 @@ const pgrollFetchMultiple = (url: string, request: any) => {
     return {
       ok: true,
       json: async () => ({
-        migrations: [
-          staticMigrationPgRoll,
-          {
-            done: true,
-            migration:
-              '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',
-            migrationType: 'pgroll',
-            name: 'mig_abcdcdrj7c92neg7lefg',
-            parent: 'mig_abcdcdrj7c92neg7lerr',
-            startedAt: '2024-01-18T14:31:20.795975Z'
-          },
-          {
-            done: true,
-            migration:
-              '{"name": "mig_xyzdcdrj7c92neg7lxyz", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',
-            migrationType: 'pgroll',
-            name: 'mig_xyzdcdrj7c92neg7lxyz',
-            parent: 'mig_xyzdcdrj7c92neg7lxyz',
-            startedAt: '2024-01-18T14:31:20.795975Z'
-          }
-        ]
+        migrations: [pgrollMigration1, pgrollMigration3, pgrollMigration4]
       })
     };
   } else {
@@ -325,10 +320,14 @@ describe('pull', () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationPgRollName] as unknown as Dirent[]);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [pgrollMigration1.name] as unknown as Dirent[]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration1.name);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
+      );
       fetchMock.mockImplementation(pgrollFetchMultiple);
       promptsMock.mockReturnValueOnce({ workspace: 'test-1234', database: 'db1' });
       await command.run();
@@ -356,10 +355,14 @@ describe('pull', () => {
       const config = await Config.load();
       const command = new Pull(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationPgRollName] as unknown as Dirent[]);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [pgrollMigration1.name] as unknown as Dirent[]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration1.name);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
+      );
       fetchMock.mockImplementation(pgrollFetchSingle);
       promptsMock.mockReturnValueOnce({ workspace: 'test-1234', database: 'db1' });
       promptsMock.mockReturnValueOnce({ confirm: true });
@@ -368,20 +371,22 @@ describe('pull', () => {
       expect(log).toHaveBeenCalledWith('No new migrations to pull from main branch');
     });
 
-    test('allMigrationsPgRollFormat helper', async () => {
-      vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [staticMigrationPgRollName] as unknown as Dirent[]);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRoll));
+    test.only('allMigrationsPgRollFormat helper', async () => {
+      vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [pgrollMigration1.name] as unknown as Dirent[]);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration1.name);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
+      );
       expect(await allMigrationsPgRollFormat()).toBe(true);
     });
 
     describe('inferred migration format', () => {
       test('allMigrationsPgRollFormat helper', async () => {
-        vi.spyOn(fs, 'readdir').mockImplementationOnce(
-          async () => [pgrollInferredMigration.name] as unknown as Dirent[]
+        vi.spyOn(fs, 'readdir').mockImplementationOnce(async () => [pgrollMigration2.name] as unknown as Dirent[]);
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration2.name);
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+          JSON.stringify(hydrateMigrationObject(pgrollMigration2))
         );
-        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollInferredMigration.name);
-        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(pgrollInferredMigration));
         expect(await allMigrationsPgRollFormat()).toBe(true);
       });
     });

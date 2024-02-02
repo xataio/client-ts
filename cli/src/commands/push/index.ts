@@ -13,7 +13,7 @@ import {
   isBranchPgRollEnabled,
   isMigrationPgRollFormat
 } from '../../migrations/pgroll.js';
-import { pgRollMigrationHistoryObject } from '../../migrations/schema.js';
+import { LocalMigrationFilePgroll, pgRollMigrationHistoryObject } from '../../migrations/schema.js';
 
 export default class Push extends BaseCommand<typeof Push> {
   static description = 'Push local changes to a remote Xata branch';
@@ -101,9 +101,9 @@ export default class Push extends BaseCommand<typeof Push> {
     if (!confirm) return this.exit(1);
 
     if (isBranchPgRollEnabled(details)) {
-      const migrationsToPush = (newMigrations as Schemas.PgRollMigrationHistoryItem[])
+      const migrationsToPush = (newMigrations as LocalMigrationFilePgroll[])
         .map(({ migration }) => migration)
-        .flatMap((migration) => pgRollMigrationHistoryObject.parse(JSON.parse(migration)));
+        .flatMap((migration) => pgRollMigrationHistoryObject.parse(migration));
       for (const migration of migrationsToPush) {
         try {
           await xata.api.branches.applyMigration({

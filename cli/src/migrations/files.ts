@@ -2,8 +2,8 @@ import { Schemas } from '@xata.io/client';
 import { mkdir, readdir, rm, writeFile } from 'fs/promises';
 import path from 'path';
 import { safeJSONParse, safeReadFile } from '../utils/files.js';
-import { isMigrationPgRollFormat } from './pgroll.js';
-import { migrationFile, pgRollMigrationsFile } from './schema.js';
+import { hydrateMigrationObject, isMigrationPgRollFormat } from './pgroll.js';
+import { LocalMigrationFilePgroll, migrationFile, pgRollMigrationsFile } from './schema.js';
 
 export const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
 const ledgerFile = path.join(migrationsDir, '.ledger');
@@ -32,7 +32,7 @@ export async function readMigrationsDir() {
 
 export type LocalMigrationFile =
   | Schemas.MigrationObject
-  | (Schemas.PgRollMigrationHistoryItem & { id?: never; checksum?: never; operations?: never[] });
+  | (LocalMigrationFilePgroll & { id?: never; checksum?: never; operations?: never[] });
 
 export async function getLocalMigrationFiles(pgRollEnabled: boolean = false): Promise<LocalMigrationFile[]> {
   const files = await readMigrationsDir();
@@ -105,7 +105,7 @@ export function commitToMigrationFile(
     isMigrationPgRollFormat(log)
       ? {
           name: log.name,
-          migration: log.migration,
+          migration: hydrateMigrationObject(log).migration,
           startedAt: log.startedAt,
           parent: log.parent,
           done: log.done,

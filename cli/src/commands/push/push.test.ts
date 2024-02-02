@@ -8,6 +8,7 @@ import { Schemas } from '@xata.io/client';
 import * as fs from 'fs/promises';
 import { Dirent } from 'fs';
 import Push from './index.js';
+import { hydrateMigrationObject } from '../../migrations/pgroll.js';
 
 vi.mock('prompts');
 vi.mock('node-fetch');
@@ -25,6 +26,40 @@ const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 
 const REGION = 'us-east-1';
 const baseUrl = `https://test-1234.${REGION}.xata.sh/db/db1:main`;
+
+const staticMigration: Schemas.MigrationObject = {
+  id: 'mig_ce3lg2hp3o0em98s8r50',
+  parentID: 'mig_ce3lfvhp3o0em98s8r40',
+  checksum: '1:92d84ef84afc56e2152fd48d098d1b7ef4328217eadd5db6b3f646ac94a1a5ad',
+  operations: [
+    {
+      addColumn: {
+        column: {
+          name: 'test',
+          type: 'string'
+        },
+        table: 'test'
+      }
+    }
+  ]
+};
+
+const staticMigrationTwo = {
+  id: `mig_${randomUUID()}`,
+  parentID: `mig_${randomUUID()}`,
+  checksum: `1:${randomUUID()}`,
+  operations: [
+    {
+      addColumn: {
+        column: {
+          name: 'test',
+          type: 'string'
+        },
+        table: 'test'
+      }
+    }
+  ]
+} as Schemas.MigrationObject;
 
 const baseFetch = (url: string, request: any) => {
   if (url === 'https://api.xata.io/workspaces' && request.method === 'GET') {
@@ -50,7 +85,7 @@ const baseFetch = (url: string, request: any) => {
     return {
       ok: true,
       json: async () => ({
-        migrationID: staticMigrationId,
+        migrationID: staticMigration.id,
         parentMigrationID: staticMigration.parentID,
         status: 'completed'
       })
@@ -130,41 +165,6 @@ const baseFetch = (url: string, request: any) => {
   throw new Error(`Unexpected fetch request: ${url} ${request.method}`);
 };
 
-const staticMigrationId = 'mig_ce3lg2hp3o0em98s8r50';
-const staticMigration: Schemas.MigrationObject = {
-  id: staticMigrationId,
-  parentID: 'mig_ce3lfvhp3o0em98s8r40',
-  checksum: '1:92d84ef84afc56e2152fd48d098d1b7ef4328217eadd5db6b3f646ac94a1a5ad',
-  operations: [
-    {
-      addColumn: {
-        column: {
-          name: 'test',
-          type: 'string'
-        },
-        table: 'test'
-      }
-    }
-  ]
-};
-
-const staticMigrationTwo = {
-  id: `mig_${randomUUID()}`,
-  parentID: `mig_${randomUUID()}`,
-  checksum: `1:${randomUUID()}`,
-  operations: [
-    {
-      addColumn: {
-        column: {
-          name: 'test',
-          type: 'string'
-        },
-        table: 'test'
-      }
-    }
-  ]
-} as Schemas.MigrationObject;
-
 const fetchEmpty = (url: string, request: any) => {
   if (url === `${baseUrl}/schema/history` && request.method === 'POST') {
     return {
@@ -199,37 +199,30 @@ const fetchSingle = (url: string, request: any) => {
   }
 };
 
-const staticMigrationPgRollName = 'mig_cmkjcdrj7c92neg7lnmg';
-const staticMigrationPgRollResponse = {
-  migrations: [
-    {
-      done: false,
-      migration: `{"name": "${staticMigrationPgRollName}", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
-      migrationType: 'pgroll',
-      name: staticMigrationPgRollName,
-      parent: 'mig_cmkjccmg1th0of00f5n0',
-      startedAt: '2024-01-18T14:31:20.795975Z'
-    }
-  ]
-};
-
-const staticMigrationPgRollTwoName = 'mig_abcdcdrj7c92neg7lefg';
-const staticMigrationPgRollTwo = {
+const pgrollMigration1: Schemas.PgRollMigrationHistoryItem = {
   done: false,
-  migration: `{"name": "${staticMigrationPgRollTwoName}", "operations": [{"drop_column": {"up": "", "table": "tester", "column": "Firstname"}}]}`,
+  migration: `{"name": "mig_cmkjcdrj7c92neg7lnmg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
   migrationType: 'pgroll',
-  name: staticMigrationPgRollTwoName,
+  name: 'mig_cmkjcdrj7c92neg7lnmg',
   parent: 'mig_cmkjccmg1th0of00f5n0',
   startedAt: '2024-01-18T14:31:20.795975Z'
 };
 
-const staticMigrationPgRollThreeName = 'mig_xbcdcdrj7c92neg7lefx';
-const staticMigrationPgRollThree = {
+const pgrollMigration2: Schemas.PgRollMigrationHistoryItem = {
+  done: false,
+  migration: `{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"drop_column": {"up": "", "table": "tester", "column": "Firstname"}}]}`,
+  migrationType: 'pgroll',
+  name: 'mig_abcdcdrj7c92neg7lefg',
+  parent: 'mig_cmkjccmg1th0of00f5n0',
+  startedAt: '2024-01-18T14:31:20.795975Z'
+};
+
+const pgrollMigration3: Schemas.PgRollMigrationHistoryItem = {
   done: false,
   migration:
     '{"name": "mig_xbcdcdrj7c92neg7lefx", "operations": [{"sql": { "up": "ALTER ALTER TABLE internal ADD test varchar(255)" }}]}',
   migrationType: 'inferred',
-  name: staticMigrationPgRollThreeName,
+  name: 'mig_xbcdcdrj7c92neg7lefx',
   parent: 'mig_cmkjccmg1th0of00f5n0',
   startedAt: '2024-01-18T14:31:20.795975Z'
 };
@@ -246,8 +239,7 @@ const pgrollFetchSingle = (url: string, request: any, type: 'inferred' | 'pgroll
   } else if (url === `${baseUrl}/pgroll/migrations` && request.method === 'GET') {
     return {
       ok: true,
-      json: async () =>
-        type === 'inferred' ? { migrations: [staticMigrationPgRollThree] } : staticMigrationPgRollResponse
+      json: async () => (type === 'inferred' ? { migrations: [pgrollMigration3] } : { migrations: [pgrollMigration1] })
     };
   } else {
     return baseFetch(url, request);
@@ -283,9 +275,9 @@ describe('push', () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationId as unknown as Dirent]);
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigration.id as unknown as Dirent]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigration));
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationId);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigration.id);
       fetchMock.mockImplementation(fetchEmpty);
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
@@ -297,11 +289,11 @@ describe('push', () => {
       const log = vi.spyOn(command, 'log');
       vi.spyOn(fs, 'readdir').mockImplementation(async () => [
         staticMigrationTwo.id as unknown as Dirent,
-        staticMigrationId as unknown as Dirent
+        staticMigration.id as unknown as Dirent
       ]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationTwo));
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigration));
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationTwo.id + '\n' + staticMigrationId);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationTwo.id + '\n' + staticMigration.id);
       fetchMock.mockImplementation(fetchSingle);
       await command.run();
       expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
@@ -311,9 +303,9 @@ describe('push', () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationId as unknown as Dirent]);
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigration.id as unknown as Dirent]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigration));
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationId);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigration.id);
       fetchMock.mockImplementation(fetchSingle);
       await command.run();
       expect(log).toHaveBeenCalledWith('No new migrations to push');
@@ -325,9 +317,9 @@ describe('push', () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationId as unknown as Dirent]);
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigration.id as unknown as Dirent]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigration));
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationId);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigration.id);
       fetchMock.mockImplementation(pgrollFetchSingle);
       await command.run();
       expect(log).toHaveBeenCalledWith('Please run xata pull -f to convert all migrations to pgroll format');
@@ -337,13 +329,13 @@ describe('push', () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationPgRollName as unknown as Dirent]);
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [pgrollMigration1.name as unknown as Dirent]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
-        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
       );
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration1.name);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
-        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
       );
       fetchMock.mockImplementation(pgrollFetchEmpty);
       await command.run();
@@ -355,22 +347,22 @@ describe('push', () => {
       const command = new Push(['main'], config);
       const log = vi.spyOn(command, 'log');
       vi.spyOn(fs, 'readdir').mockImplementation(async () => [
-        staticMigrationPgRollName as unknown as Dirent,
-        staticMigrationPgRollTwoName as unknown as Dirent
+        pgrollMigration1.name as unknown as Dirent,
+        pgrollMigration2.name as unknown as Dirent
       ]);
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(
-        async () => staticMigrationPgRollName + '\n' + staticMigrationPgRollTwoName
-      );
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollTwo));
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration1.name + '\n' + pgrollMigration2.name);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
-        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+        JSON.stringify(hydrateMigrationObject(pgrollMigration2))
       );
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(
-        async () => staticMigrationPgRollName + '\n' + staticMigrationPgRollTwoName
-      );
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollTwo));
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
-        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration1.name + '\n' + pgrollMigration2.name);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(hydrateMigrationObject(pgrollMigration2))
+      );
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
       );
       fetchMock.mockImplementation(pgrollFetchSingle);
       await command.run();
@@ -381,13 +373,13 @@ describe('push', () => {
       const config = await Config.load();
       const command = new Push(['main'], config);
       const log = vi.spyOn(command, 'log');
-      vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationPgRollName as unknown as Dirent]);
+      vi.spyOn(fs, 'readdir').mockImplementation(async () => [pgrollMigration1.name as unknown as Dirent]);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
-        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
       );
-      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollName);
+      vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration1.name);
       vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
-        JSON.stringify(staticMigrationPgRollResponse.migrations[0])
+        JSON.stringify(hydrateMigrationObject(pgrollMigration1))
       );
       fetchMock.mockImplementation(pgrollFetchSingle);
       await command.run();
@@ -400,19 +392,27 @@ describe('push', () => {
         const command = new Push(['main'], config);
         const log = vi.spyOn(command, 'log');
         vi.spyOn(fs, 'readdir').mockImplementation(async () => [
-          staticMigrationPgRollName as unknown as Dirent,
-          staticMigrationPgRollThreeName as unknown as Dirent
+          pgrollMigration1.name as unknown as Dirent,
+          pgrollMigration3.name as unknown as Dirent
         ]);
         vi.spyOn(fs, 'readFile').mockImplementationOnce(
-          async () => staticMigrationPgRollName + '\n' + staticMigrationPgRollThreeName
+          async () => pgrollMigration1.name + '\n' + pgrollMigration3.name
         );
-        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
-        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+          JSON.stringify(hydrateMigrationObject(pgrollMigration3))
+        );
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+          JSON.stringify(hydrateMigrationObject(pgrollMigration3))
+        );
         vi.spyOn(fs, 'readFile').mockImplementationOnce(
-          async () => staticMigrationPgRollName + '\n' + staticMigrationPgRollThreeName
+          async () => pgrollMigration1.name + '\n' + pgrollMigration3.name
         );
-        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
-        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+          JSON.stringify(hydrateMigrationObject(pgrollMigration3))
+        );
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+          JSON.stringify(hydrateMigrationObject(pgrollMigration3))
+        );
         fetchMock.mockImplementation((req, url) => pgrollFetchSingle(req, url, 'inferred'));
         await command.run();
         expect(log).toHaveBeenCalledWith('Pushed 1 migrations to main');
@@ -422,10 +422,14 @@ describe('push', () => {
         const config = await Config.load();
         const command = new Push(['main'], config);
         const log = vi.spyOn(command, 'log');
-        vi.spyOn(fs, 'readdir').mockImplementation(async () => [staticMigrationPgRollThreeName as unknown as Dirent]);
-        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
-        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => staticMigrationPgRollThreeName);
-        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => JSON.stringify(staticMigrationPgRollThree));
+        vi.spyOn(fs, 'readdir').mockImplementation(async () => [pgrollMigration3.name as unknown as Dirent]);
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+          JSON.stringify(hydrateMigrationObject(pgrollMigration3))
+        );
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () => pgrollMigration3.name);
+        vi.spyOn(fs, 'readFile').mockImplementationOnce(async () =>
+          JSON.stringify(hydrateMigrationObject(pgrollMigration3))
+        );
         fetchMock.mockImplementation((url, req) => pgrollFetchSingle(url, req, 'inferred'));
         await command.run();
         expect(log).toHaveBeenCalledWith('No new migrations to push');
