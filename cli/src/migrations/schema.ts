@@ -1,5 +1,6 @@
 import { Schemas } from '@xata.io/client';
 import { columnSchema } from '@xata.io/codegen';
+import { PgRollMigrationDefinition } from '@xata.io/pgroll';
 import z from 'zod';
 
 const addTable = z.object({
@@ -48,22 +49,13 @@ export const migrationFile = z.object({
   operations: z.array(migrationOperation)
 }) satisfies z.ZodType<Schemas.MigrationObject>;
 
-export const pgRollMigrationHistoryObject = z.object({
+export const migrationFilePgroll = z.object({
   name: z.string(),
-  operations: z.array(z.any())
-});
-
-export const pgRollMigrationsFile = z.object({
-  name: z.string(),
-  migration: pgRollMigrationHistoryObject,
   startedAt: z.string(),
   parent: z.string().optional(),
+  migration: PgRollMigrationDefinition,
   done: z.boolean(),
   migrationType: z.enum(['pgroll', 'inferred']) satisfies z.ZodType<Schemas.PgRollMigrationType>
-}) satisfies z.ZodType<LocalMigrationFilePgroll>;
+});
 
-export type LocalMigrationFilePgroll = {
-  [K in keyof Schemas.PgRollMigrationHistoryItem]: K extends 'migration'
-    ? z.infer<typeof pgRollMigrationHistoryObject>
-    : Schemas.PgRollMigrationHistoryItem[K];
-};
+export type MigrationFilePgroll = z.infer<typeof migrationFilePgroll>;

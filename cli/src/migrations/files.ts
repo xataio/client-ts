@@ -3,7 +3,7 @@ import { mkdir, readdir, rm, writeFile } from 'fs/promises';
 import path from 'path';
 import { safeJSONParse, safeReadFile } from '../utils/files.js';
 import { hydrateMigrationObject, isMigrationPgRollFormat } from './pgroll.js';
-import { LocalMigrationFilePgroll, migrationFile, pgRollMigrationsFile } from './schema.js';
+import { migrationFile, migrationFilePgroll, MigrationFilePgroll } from './schema.js';
 
 export const migrationsDir = path.join(process.cwd(), '.xata', 'migrations');
 const ledgerFile = path.join(migrationsDir, '.ledger');
@@ -32,7 +32,7 @@ export async function readMigrationsDir() {
 
 export type LocalMigrationFile =
   | Schemas.MigrationObject
-  | (LocalMigrationFilePgroll & { id?: never; checksum?: never; operations?: never[] });
+  | (MigrationFilePgroll & { id?: never; checksum?: never; operations?: never[] });
 
 export async function getLocalMigrationFiles(pgRollEnabled: boolean = false): Promise<LocalMigrationFile[]> {
   const files = await readMigrationsDir();
@@ -59,7 +59,7 @@ export async function getLocalMigrationFiles(pgRollEnabled: boolean = false): Pr
     const fileContents = await safeReadFile(filePath);
 
     const result = pgRollEnabled
-      ? pgRollMigrationsFile.safeParse(safeJSONParse(fileContents))
+      ? migrationFilePgroll.safeParse(safeJSONParse(fileContents))
       : migrationFile.safeParse(safeJSONParse(fileContents));
     if (!result.success) {
       throw new Error(`Failed to parse migration file ${filePath}: ${result.error}`);
@@ -103,14 +103,7 @@ export function commitToMigrationFile(
   // Schema history comes in reverse order, so we need to reverse it
   return logs.reverse().map((log) =>
     isMigrationPgRollFormat(log)
-      ? {
-          name: log.name,
-          migration: hydrateMigrationObject(log).migration,
-          startedAt: log.startedAt,
-          parent: log.parent,
-          done: log.done,
-          migrationType: log.migrationType
-        }
+      ? hydrateMigrationObject(log)
       : {
           id: log.id,
           parentID: log.parentID,

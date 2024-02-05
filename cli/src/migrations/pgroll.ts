@@ -2,7 +2,7 @@ import { Schemas } from '@xata.io/client';
 import { migrationsDir, readMigrationsDir } from './files.js';
 import path from 'path';
 import { safeJSONParse, safeReadFile } from '../utils/files.js';
-import { LocalMigrationFilePgroll, pgRollMigrationsFile } from './schema.js';
+import { migrationFilePgroll, MigrationFilePgroll } from './schema.js';
 import { XataClient } from '../base.js';
 
 export const isBranchPgRollEnabled = (details: Schemas.DBBranch) => {
@@ -11,12 +11,12 @@ export const isBranchPgRollEnabled = (details: Schemas.DBBranch) => {
 };
 
 export const isMigrationPgRollFormat = (
-  migration: Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem | LocalMigrationFilePgroll
+  migration: Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem | MigrationFilePgroll
 ): migration is Schemas.PgRollMigrationHistoryItem => {
   return 'migration' in migration;
 };
 
-export const hydrateMigrationObject = (migration: Schemas.PgRollMigrationHistoryItem): LocalMigrationFilePgroll => {
+export const hydrateMigrationObject = (migration: Schemas.PgRollMigrationHistoryItem): MigrationFilePgroll => {
   return { ...migration, migration: JSON.parse(migration.migration) };
 };
 
@@ -27,7 +27,7 @@ export async function allMigrationsPgRollFormat() {
 
     const filePath = path.join(migrationsDir, file);
     const fileContents = await safeReadFile(filePath);
-    const result = pgRollMigrationsFile.safeParse(safeJSONParse(fileContents));
+    const result = migrationFilePgroll.safeParse(safeJSONParse(fileContents));
     if (!result.success) {
       return false;
     }
