@@ -112,8 +112,8 @@ export default class Push extends BaseCommand<typeof Push> {
             region,
             database,
             branch,
-            // TODO remove assertion
-            migration: migration as any
+            // @ts-expect-error Backend API spec doesn't know all pgroll migrations yet
+            migration
           });
         } catch (e) {
           this.log(`Failed to push ${migration} with ${e}. Stopping.`);
