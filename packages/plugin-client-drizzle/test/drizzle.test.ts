@@ -18,7 +18,7 @@ const api = new XataApiClient({
   host: 'staging'
 });
 
-const workspace = process.env['XATA_WORKSPACE']!;
+const workspace = (process.env['XATA_WORKSPACE'] ?? '')?.split('-').pop() ?? '';
 const database = `drizzle-test-${Math.random().toString(36).substr(2, 9)}`;
 const region = 'eu-west-1';
 const branch = 'main';
