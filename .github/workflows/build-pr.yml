@@ -111,6 +111,9 @@ jobs:
           '@xata.io/plugin-client-opentelemetry': patch
           '@xata.io/plugin-client-cloudflare': patch
           '@xata.io/plugin-client-cache': patch
+          '@xata.io/drizzle': patch
+          '@xata.io/kysely': patch
+          '@xata.io/pgroll': patch
           '@xata.io/importer': patch
           '@xata.io/codegen': patch
           '@xata.io/client': patch
