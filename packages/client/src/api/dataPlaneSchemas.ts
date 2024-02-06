@@ -236,6 +236,59 @@ export type DBBranch = {
 
 export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
+/**
+ * @x-go-type schema.Schema
+ */
+export type PgRollSchema = {
+  name: string;
+  tables: {
+    [key: string]: {
+      oid: string;
+      name: string;
+      comment: string;
+      columns: {
+        [key: string]: {
+          name: string;
+          type: string;
+          ['default']: string | null;
+          nullable: boolean;
+          unique: boolean;
+          comment: string;
+        };
+      };
+      indexes: {
+        [key: string]: {
+          name: string;
+          unique: boolean;
+          columns: string[];
+        };
+      };
+      primaryKey: string[];
+      foreignKeys: {
+        [key: string]: {
+          name: string;
+          columns: string[];
+          referencedTable: string;
+          referencedColumns: string[];
+        };
+      };
+      checkConstraints: {
+        [key: string]: {
+          name: string;
+          columns: string[];
+          definition: string;
+        };
+      };
+      uniqueConstraints: {
+        [key: string]: {
+          name: string;
+          columns: string[];
+        };
+      };
+    };
+  };
+};
+
 export type BranchWithCopyID = {
   branchName: BranchName;
   dbBranchID: string;
