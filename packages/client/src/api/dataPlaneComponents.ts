@@ -396,7 +396,7 @@ export type GetSchemaError = Fetcher.ErrorWrapper<
 >;
 
 export type GetSchemaResponse = {
-  schema: Record<string, any>;
+  schema: Schemas.PgRollSchema;
 };
 
 export type GetSchemaVariables = {
