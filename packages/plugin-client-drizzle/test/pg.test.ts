@@ -152,7 +152,7 @@ afterEach(async (ctx) => {
   await api.branches.deleteBranch({ workspace, database, region, branch: ctx.branch });
 });
 
-describe('Drizzle ORM', () => {
+describe.concurrent('Drizzle ORM', () => {
   /*
 	[Find Many] One relation users+posts
 */
