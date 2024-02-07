@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, expect, expectTypeOf, test } from 'vit
 import { drizzle, type XataDatabase } from '../src/pg';
 import * as schema from './schema';
 import { HostProvider, parseProviderString, XataApiClient } from '@xata.io/client';
+import { describe } from 'node:test';
 
 const { usersTable, postsTable, commentsTable, usersToGroupsTable, groupsTable } = schema;
 
@@ -62,41 +63,12 @@ beforeAll(async () => {
     headers: { 'X-Features': 'feat-pgroll-migrations=1' }
   });
 
-  const sleep = 250;
-  let timeLeft = 5000;
-  let connected = false;
-  let lastError: unknown | undefined;
-  do {
-    try {
-      client = new Client({ connectionString });
-      await client.connect();
-      connected = true;
-      break;
-    } catch (e) {
-      lastError = e;
-      await new Promise((resolve) => setTimeout(resolve, sleep));
-      timeLeft -= sleep;
-    }
-  } while (timeLeft > 0);
-  if (!connected) {
-    console.error('Cannot connect to Postgres');
-    await client?.end().catch(console.error);
-    throw lastError;
-  }
+  client = new Client({ connectionString });
+  await client.connect();
+
   db = drizzle(client, { schema, logger: ENABLE_LOGGING });
-});
 
-afterAll(async () => {
-  await client?.end().catch(console.error);
-});
-
-beforeEach(async (ctx) => {
-  ctx.db = db;
-  ctx.client = client;
-
-  await ctx.db.execute(sql`drop schema public cascade`);
-  await ctx.db.execute(sql`create schema public`);
-  await ctx.db.execute(
+  await db.execute(
     sql`
 			CREATE TABLE "users" (
 				"id" serial PRIMARY KEY NOT NULL,
@@ -106,7 +78,7 @@ beforeEach(async (ctx) => {
 			);
 		`
   );
-  await ctx.db.execute(
+  await db.execute(
     sql`
 			CREATE TABLE IF NOT EXISTS "groups" (
 				"id" serial PRIMARY KEY NOT NULL,
@@ -115,7 +87,7 @@ beforeEach(async (ctx) => {
 			);
 		`
   );
-  await ctx.db.execute(
+  await db.execute(
     sql`
 			CREATE TABLE IF NOT EXISTS "users_to_groups" (
 				"id" serial PRIMARY KEY NOT NULL,
@@ -124,7 +96,7 @@ beforeEach(async (ctx) => {
 			);
 		`
   );
-  await ctx.db.execute(
+  await db.execute(
     sql`
 			CREATE TABLE IF NOT EXISTS "posts" (
 				"id" serial PRIMARY KEY NOT NULL,
@@ -134,7 +106,7 @@ beforeEach(async (ctx) => {
 			);
 		`
   );
-  await ctx.db.execute(
+  await db.execute(
     sql`
 			CREATE TABLE IF NOT EXISTS "comments" (
 				"id" serial PRIMARY KEY NOT NULL,
@@ -145,7 +117,7 @@ beforeEach(async (ctx) => {
 			);
 		`
   );
-  await ctx.db.execute(
+  await db.execute(
     sql`
 			CREATE TABLE IF NOT EXISTS "comment_likes" (
 				"id" serial PRIMARY KEY NOT NULL,
@@ -155,13 +127,38 @@ beforeEach(async (ctx) => {
 			);
 		`
   );
+
+  // TODO: There's a bug with schema not available after creating the database
+  client = new Client({ connectionString });
+  await client.connect();
+
+  db = drizzle(client, { schema, logger: ENABLE_LOGGING });
+});
+
+afterAll(async () => {
+  // TODO: There is a bug on connection close
+  //await client?.end().catch(console.error);
+
+  await api.database.deleteDatabase({ workspace, database });
+});
+
+beforeEach(async (ctx) => {
+  ctx.db = db;
+  ctx.client = client;
+
+  await db.execute(sql`DELETE FROM "users"`);
+  await db.execute(sql`DELETE FROM "groups"`);
+  await db.execute(sql`DELETE FROM "users_to_groups"`);
+  await db.execute(sql`DELETE FROM "posts"`);
+  await db.execute(sql`DELETE FROM "comments"`);
+  await db.execute(sql`DELETE FROM "comment_likes"`);
 });
 
 /*
 	[Find Many] One relation users+posts
 */
 
-test('[Find Many] Get users with posts', async (t) => {
+test.sequential('[Find Many] Get users with posts', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -227,7 +224,7 @@ test('[Find Many] Get users with posts', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + limit posts', async (t) => {
+test.sequential('[Find Many] Get users with posts + limit posts', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -302,7 +299,7 @@ test('[Find Many] Get users with posts + limit posts', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + limit posts and users', async (t) => {
+test.sequential('[Find Many] Get users with posts + limit posts and users', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -369,7 +366,7 @@ test('[Find Many] Get users with posts + limit posts and users', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + custom fields', async (t) => {
+test.sequential('[Find Many] Get users with posts + custom fields', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -474,7 +471,7 @@ test('[Find Many] Get users with posts + custom fields', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + custom fields + limits', async (t) => {
+test.sequential('[Find Many] Get users with posts + custom fields + limits', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -534,7 +531,7 @@ test('[Find Many] Get users with posts + custom fields + limits', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + orderBy', async (t) => {
+test.sequential('[Find Many] Get users with posts + orderBy', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -630,7 +627,7 @@ test('[Find Many] Get users with posts + orderBy', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + where', async (t) => {
+test.sequential('[Find Many] Get users with posts + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -682,7 +679,7 @@ test('[Find Many] Get users with posts + where', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + where + partial', async (t) => {
+test.sequential('[Find Many] Get users with posts + where + partial', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -736,61 +733,64 @@ test('[Find Many] Get users with posts + where + partial', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + where + partial. Did not select posts id, but used it in where', async (t) => {
-  const { db: db } = t;
+test.sequential(
+  '[Find Many] Get users with posts + where + partial. Did not select posts id, but used it in where',
+  async (t) => {
+    const { db: db } = t;
 
-  await db.insert(usersTable).values([
-    { id: 1, name: 'Dan' },
-    { id: 2, name: 'Andrew' },
-    { id: 3, name: 'Alex' }
-  ]);
+    await db.insert(usersTable).values([
+      { id: 1, name: 'Dan' },
+      { id: 2, name: 'Andrew' },
+      { id: 3, name: 'Alex' }
+    ]);
 
-  await db.insert(postsTable).values([
-    { ownerId: 1, content: 'Post1' },
-    { ownerId: 1, content: 'Post1.1' },
-    { ownerId: 2, content: 'Post2' },
-    { ownerId: 3, content: 'Post3' }
-  ]);
+    await db.insert(postsTable).values([
+      { ownerId: 1, content: 'Post1' },
+      { ownerId: 1, content: 'Post1.1' },
+      { ownerId: 2, content: 'Post2' },
+      { ownerId: 3, content: 'Post3' }
+    ]);
 
-  const usersWithPosts = await db.query.usersTable.findMany({
-    columns: {
-      id: true,
-      name: true
-    },
-    with: {
-      posts: {
-        columns: {
-          id: true,
-          content: true
-        },
-        where: ({ id }, { eq }) => eq(id, 1)
-      }
-    },
-    where: ({ id }, { eq }) => eq(id, 1)
-  });
+    const usersWithPosts = await db.query.usersTable.findMany({
+      columns: {
+        id: true,
+        name: true
+      },
+      with: {
+        posts: {
+          columns: {
+            id: true,
+            content: true
+          },
+          where: ({ id }, { eq }) => eq(id, 1)
+        }
+      },
+      where: ({ id }, { eq }) => eq(id, 1)
+    });
 
-  expectTypeOf(usersWithPosts).toEqualTypeOf<
-    {
-      id: number;
-      name: string;
-      posts: {
+    expectTypeOf(usersWithPosts).toEqualTypeOf<
+      {
         id: number;
-        content: string;
-      }[];
-    }[]
-  >();
+        name: string;
+        posts: {
+          id: number;
+          content: string;
+        }[];
+      }[]
+    >();
 
-  expect(usersWithPosts.length).eq(1);
-  expect(usersWithPosts[0]?.posts.length).eq(1);
+    expect(usersWithPosts.length).eq(1);
+    expect(usersWithPosts[0]?.posts.length).eq(1);
 
-  expect(usersWithPosts[0]).toEqual({
-    id: 1,
-    name: 'Dan',
-    posts: [{ id: 1, content: 'Post1' }]
-  });
-});
+    expect(usersWithPosts[0]).toEqual({
+      id: 1,
+      name: 'Dan',
+      posts: [{ id: 1, content: 'Post1' }]
+    });
+  }
+);
 
-test('[Find Many] Get users with posts + where + partial(true + false)', async (t) => {
+test.sequential('[Find Many] Get users with posts + where + partial(true + false)', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -841,7 +841,7 @@ test('[Find Many] Get users with posts + where + partial(true + false)', async (
   });
 });
 
-test('[Find Many] Get users with posts + where + partial(false)', async (t) => {
+test.sequential('[Find Many] Get users with posts + where + partial(false)', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -896,7 +896,7 @@ test('[Find Many] Get users with posts + where + partial(false)', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts in transaction', async (t) => {
+test.sequential('[Find Many] Get users with posts in transaction', async (t) => {
   const { db: db } = t;
 
   let usersWithPosts: {
@@ -963,7 +963,7 @@ test('[Find Many] Get users with posts in transaction', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts in rollbacked transaction', async (t) => {
+test.sequential('[Find Many] Get users with posts in rollbacked transaction', async (t) => {
   const { db: db } = t;
 
   let usersWithPosts: {
@@ -1026,7 +1026,7 @@ test('[Find Many] Get users with posts in rollbacked transaction', async (t) => 
 });
 
 // select only custom
-test('[Find Many] Get only custom fields', async (t) => {
+test.sequential('[Find Many] Get only custom fields', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1104,7 +1104,7 @@ test('[Find Many] Get only custom fields', async (t) => {
   });
 });
 
-test('[Find Many] Get only custom fields + where', async (t) => {
+test.sequential('[Find Many] Get only custom fields + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1158,7 +1158,7 @@ test('[Find Many] Get only custom fields + where', async (t) => {
   });
 });
 
-test('[Find Many] Get only custom fields + where + limit', async (t) => {
+test.sequential('[Find Many] Get only custom fields + where + limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1213,7 +1213,7 @@ test('[Find Many] Get only custom fields + where + limit', async (t) => {
   });
 });
 
-test('[Find Many] Get only custom fields + where + orderBy', async (t) => {
+test.sequential('[Find Many] Get only custom fields + where + orderBy', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1269,7 +1269,7 @@ test('[Find Many] Get only custom fields + where + orderBy', async (t) => {
 });
 
 // select only custom find one
-test('[Find One] Get only custom fields', async (t) => {
+test.sequential('[Find One] Get only custom fields', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1327,7 +1327,7 @@ test('[Find One] Get only custom fields', async (t) => {
   });
 });
 
-test('[Find One] Get only custom fields + where', async (t) => {
+test.sequential('[Find One] Get only custom fields + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1381,7 +1381,7 @@ test('[Find One] Get only custom fields + where', async (t) => {
   });
 });
 
-test('[Find One] Get only custom fields + where + limit', async (t) => {
+test.sequential('[Find One] Get only custom fields + where + limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1436,7 +1436,7 @@ test('[Find One] Get only custom fields + where + limit', async (t) => {
   });
 });
 
-test('[Find One] Get only custom fields + where + orderBy', async (t) => {
+test.sequential('[Find One] Get only custom fields + where + orderBy', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1492,7 +1492,7 @@ test('[Find One] Get only custom fields + where + orderBy', async (t) => {
 });
 
 // columns {}
-test('[Find Many] Get select {}', async (t) => {
+test.sequential('[Find Many] Get select {}', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1513,7 +1513,7 @@ test('[Find Many] Get select {}', async (t) => {
 });
 
 // columns {}
-test('[Find One] Get select {}', async (t) => {
+test.sequential('[Find One] Get select {}', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1530,7 +1530,7 @@ test('[Find One] Get select {}', async (t) => {
 });
 
 // deep select {}
-test('[Find Many] Get deep select {}', async (t) => {
+test.sequential('[Find Many] Get deep select {}', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1562,7 +1562,7 @@ test('[Find Many] Get deep select {}', async (t) => {
 });
 
 // deep select {}
-test('[Find One] Get deep select {}', async (t) => {
+test.sequential('[Find One] Get deep select {}', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1592,7 +1592,7 @@ test('[Find One] Get deep select {}', async (t) => {
 /*
 	Prepared statements for users+posts
 */
-test('[Find Many] Get users with posts + prepared limit', async (t) => {
+test.sequential('[Find Many] Get users with posts + prepared limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1666,7 +1666,7 @@ test('[Find Many] Get users with posts + prepared limit', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + prepared limit + offset', async (t) => {
+test.sequential('[Find Many] Get users with posts + prepared limit + offset', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1734,7 +1734,7 @@ test('[Find Many] Get users with posts + prepared limit + offset', async (t) => 
   });
 });
 
-test('[Find Many] Get users with posts + prepared where', async (t) => {
+test.sequential('[Find Many] Get users with posts + prepared where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1790,7 +1790,7 @@ test('[Find Many] Get users with posts + prepared where', async (t) => {
   });
 });
 
-test('[Find Many] Get users with posts + prepared + limit + offset + where', async (t) => {
+test.sequential('[Find Many] Get users with posts + prepared + limit + offset + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1856,7 +1856,7 @@ test('[Find Many] Get users with posts + prepared + limit + offset + where', asy
 	[Find One] One relation users+posts
 */
 
-test('[Find One] Get users with posts', async (t) => {
+test.sequential('[Find One] Get users with posts', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1904,7 +1904,7 @@ test('[Find One] Get users with posts', async (t) => {
   });
 });
 
-test('[Find One] Get users with posts + limit posts', async (t) => {
+test.sequential('[Find One] Get users with posts + limit posts', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -1958,7 +1958,7 @@ test('[Find One] Get users with posts + limit posts', async (t) => {
   });
 });
 
-test('[Find One] Get users with posts no results found', async (t) => {
+test.sequential('[Find One] Get users with posts no results found', async (t) => {
   const { db: db } = t;
 
   const usersWithPosts = await db.query.usersTable.findFirst({
@@ -1988,7 +1988,7 @@ test('[Find One] Get users with posts no results found', async (t) => {
   expect(usersWithPosts).toBeUndefined();
 });
 
-test('[Find One] Get users with posts + limit posts and users', async (t) => {
+test.sequential('[Find One] Get users with posts + limit posts and users', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2042,7 +2042,7 @@ test('[Find One] Get users with posts + limit posts and users', async (t) => {
   });
 });
 
-test('[Find One] Get users with posts + custom fields', async (t) => {
+test.sequential('[Find One] Get users with posts + custom fields', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2108,7 +2108,7 @@ test('[Find One] Get users with posts + custom fields', async (t) => {
   });
 });
 
-test('[Find One] Get users with posts + custom fields + limits', async (t) => {
+test.sequential('[Find One] Get users with posts + custom fields + limits', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2167,7 +2167,7 @@ test('[Find One] Get users with posts + custom fields + limits', async (t) => {
   });
 });
 
-test('[Find One] Get users with posts + orderBy', async (t) => {
+test.sequential('[Find One] Get users with posts + orderBy', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2230,7 +2230,7 @@ test('[Find One] Get users with posts + orderBy', async (t) => {
   });
 });
 
-test('[Find One] Get users with posts + where', async (t) => {
+test.sequential('[Find One] Get users with posts + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2282,7 +2282,7 @@ test('[Find One] Get users with posts + where', async (t) => {
   });
 });
 
-test('[Find One] Get users with posts + where + partial', async (t) => {
+test.sequential('[Find One] Get users with posts + where + partial', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2336,61 +2336,64 @@ test('[Find One] Get users with posts + where + partial', async (t) => {
   });
 });
 
-test('[Find One] Get users with posts + where + partial. Did not select posts id, but used it in where', async (t) => {
-  const { db: db } = t;
+test.sequential(
+  '[Find One] Get users with posts + where + partial. Did not select posts id, but used it in where',
+  async (t) => {
+    const { db: db } = t;
 
-  await db.insert(usersTable).values([
-    { id: 1, name: 'Dan' },
-    { id: 2, name: 'Andrew' },
-    { id: 3, name: 'Alex' }
-  ]);
+    await db.insert(usersTable).values([
+      { id: 1, name: 'Dan' },
+      { id: 2, name: 'Andrew' },
+      { id: 3, name: 'Alex' }
+    ]);
 
-  await db.insert(postsTable).values([
-    { ownerId: 1, content: 'Post1' },
-    { ownerId: 1, content: 'Post1.1' },
-    { ownerId: 2, content: 'Post2' },
-    { ownerId: 3, content: 'Post3' }
-  ]);
+    await db.insert(postsTable).values([
+      { ownerId: 1, content: 'Post1' },
+      { ownerId: 1, content: 'Post1.1' },
+      { ownerId: 2, content: 'Post2' },
+      { ownerId: 3, content: 'Post3' }
+    ]);
 
-  const usersWithPosts = await db.query.usersTable.findFirst({
-    columns: {
-      id: true,
-      name: true
-    },
-    with: {
-      posts: {
-        columns: {
-          id: true,
-          content: true
-        },
-        where: ({ id }, { eq }) => eq(id, 1)
-      }
-    },
-    where: ({ id }, { eq }) => eq(id, 1)
-  });
-
-  expectTypeOf(usersWithPosts).toEqualTypeOf<
-    | {
-        id: number;
-        name: string;
+    const usersWithPosts = await db.query.usersTable.findFirst({
+      columns: {
+        id: true,
+        name: true
+      },
+      with: {
         posts: {
+          columns: {
+            id: true,
+            content: true
+          },
+          where: ({ id }, { eq }) => eq(id, 1)
+        }
+      },
+      where: ({ id }, { eq }) => eq(id, 1)
+    });
+
+    expectTypeOf(usersWithPosts).toEqualTypeOf<
+      | {
           id: number;
-          content: string;
-        }[];
-      }
-    | undefined
-  >();
+          name: string;
+          posts: {
+            id: number;
+            content: string;
+          }[];
+        }
+      | undefined
+    >();
 
-  expect(usersWithPosts!.posts.length).eq(1);
+    expect(usersWithPosts!.posts.length).eq(1);
 
-  expect(usersWithPosts).toEqual({
-    id: 1,
-    name: 'Dan',
-    posts: [{ id: 1, content: 'Post1' }]
-  });
-});
+    expect(usersWithPosts).toEqual({
+      id: 1,
+      name: 'Dan',
+      posts: [{ id: 1, content: 'Post1' }]
+    });
+  }
+);
 
-test('[Find One] Get users with posts + where + partial(true + false)', async (t) => {
+test.sequential('[Find One] Get users with posts + where + partial(true + false)', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2441,7 +2444,7 @@ test('[Find One] Get users with posts + where + partial(true + false)', async (t
   });
 });
 
-test('[Find One] Get users with posts + where + partial(false)', async (t) => {
+test.sequential('[Find One] Get users with posts + where + partial(false)', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2500,7 +2503,7 @@ test('[Find One] Get users with posts + where + partial(false)', async (t) => {
 	One relation users+users. Self referencing
 */
 
-test('Get user with invitee', async (t) => {
+test.sequential('Get user with invitee', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2569,7 +2572,7 @@ test('Get user with invitee', async (t) => {
   });
 });
 
-test('Get user + limit with invitee', async (t) => {
+test.sequential('Get user + limit with invitee', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2623,7 +2626,7 @@ test('Get user + limit with invitee', async (t) => {
   });
 });
 
-test('Get user with invitee and custom fields', async (t) => {
+test.sequential('Get user with invitee and custom fields', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2701,7 +2704,7 @@ test('Get user with invitee and custom fields', async (t) => {
   });
 });
 
-test('Get user with invitee and custom fields + limits', async (t) => {
+test.sequential('Get user with invitee and custom fields + limits', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2771,7 +2774,7 @@ test('Get user with invitee and custom fields + limits', async (t) => {
   });
 });
 
-test('Get user with invitee + order by', async (t) => {
+test.sequential('Get user with invitee + order by', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2839,7 +2842,7 @@ test('Get user with invitee + order by', async (t) => {
   });
 });
 
-test('Get user with invitee + where', async (t) => {
+test.sequential('Get user with invitee + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2891,7 +2894,7 @@ test('Get user with invitee + where', async (t) => {
   });
 });
 
-test('Get user with invitee + where + partial', async (t) => {
+test.sequential('Get user with invitee + where + partial', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -2944,56 +2947,59 @@ test('Get user with invitee + where + partial', async (t) => {
   });
 });
 
-test('Get user with invitee + where + partial.  Did not select users id, but used it in where', async (t) => {
-  const { db: db } = t;
+test.sequential(
+  'Get user with invitee + where + partial.  Did not select users id, but used it in where',
+  async (t) => {
+    const { db: db } = t;
 
-  await db.insert(usersTable).values([
-    { id: 1, name: 'Dan' },
-    { id: 2, name: 'Andrew' },
-    { id: 3, name: 'Alex', invitedBy: 1 },
-    { id: 4, name: 'John', invitedBy: 2 }
-  ]);
+    await db.insert(usersTable).values([
+      { id: 1, name: 'Dan' },
+      { id: 2, name: 'Andrew' },
+      { id: 3, name: 'Alex', invitedBy: 1 },
+      { id: 4, name: 'John', invitedBy: 2 }
+    ]);
 
-  const usersWithInvitee = await db.query.usersTable.findMany({
-    where: (users, { eq, or }) => or(eq(users.id, 3), eq(users.id, 4)),
-    columns: {
-      name: true
-    },
-    with: {
-      invitee: {
-        columns: {
-          id: true,
-          name: true
+    const usersWithInvitee = await db.query.usersTable.findMany({
+      where: (users, { eq, or }) => or(eq(users.id, 3), eq(users.id, 4)),
+      columns: {
+        name: true
+      },
+      with: {
+        invitee: {
+          columns: {
+            id: true,
+            name: true
+          }
         }
       }
-    }
-  });
+    });
 
-  expectTypeOf(usersWithInvitee).toEqualTypeOf<
-    {
-      name: string;
-      invitee: {
-        id: number;
+    expectTypeOf(usersWithInvitee).toEqualTypeOf<
+      {
         name: string;
-      } | null;
-    }[]
-  >();
+        invitee: {
+          id: number;
+          name: string;
+        } | null;
+      }[]
+    >();
 
-  expect(usersWithInvitee.length).eq(2);
-  expect(usersWithInvitee[0]?.invitee).not.toBeNull();
-  expect(usersWithInvitee[1]?.invitee).not.toBeNull();
+    expect(usersWithInvitee.length).eq(2);
+    expect(usersWithInvitee[0]?.invitee).not.toBeNull();
+    expect(usersWithInvitee[1]?.invitee).not.toBeNull();
 
-  expect(usersWithInvitee).toContainEqual({
-    name: 'Alex',
-    invitee: { id: 1, name: 'Dan' }
-  });
-  expect(usersWithInvitee).toContainEqual({
-    name: 'John',
-    invitee: { id: 2, name: 'Andrew' }
-  });
-});
+    expect(usersWithInvitee).toContainEqual({
+      name: 'Alex',
+      invitee: { id: 1, name: 'Dan' }
+    });
+    expect(usersWithInvitee).toContainEqual({
+      name: 'John',
+      invitee: { id: 2, name: 'Andrew' }
+    });
+  }
+);
 
-test('Get user with invitee + where + partial(true+false)', async (t) => {
+test.sequential('Get user with invitee + where + partial(true+false)', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3048,7 +3054,7 @@ test('Get user with invitee + where + partial(true+false)', async (t) => {
   });
 });
 
-test('Get user with invitee + where + partial(false)', async (t) => {
+test.sequential('Get user with invitee + where + partial(false)', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3107,7 +3113,7 @@ test('Get user with invitee + where + partial(false)', async (t) => {
 	Two first-level relations users+users and users+posts
 */
 
-test('Get user with invitee and posts', async (t) => {
+test.sequential('Get user with invitee and posts', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3193,7 +3199,7 @@ test('Get user with invitee and posts', async (t) => {
   });
 });
 
-test('Get user with invitee and posts + limit posts and users', async (t) => {
+test.sequential('Get user with invitee and posts + limit posts and users', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3276,7 +3282,7 @@ test('Get user with invitee and posts + limit posts and users', async (t) => {
   });
 });
 
-test('Get user with invitee and posts + limits + custom fields in each', async (t) => {
+test.sequential('Get user with invitee and posts + limits + custom fields in each', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3368,7 +3374,7 @@ test('Get user with invitee and posts + limits + custom fields in each', async (
   });
 });
 
-test('Get user with invitee and posts + custom fields in each', async (t) => {
+test.sequential('Get user with invitee and posts + custom fields in each', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3496,7 +3502,7 @@ test('Get user with invitee and posts + custom fields in each', async (t) => {
   });
 });
 
-test('Get user with invitee and posts + orderBy', async (t) => {
+test.sequential('Get user with invitee and posts + orderBy', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3609,7 +3615,7 @@ test('Get user with invitee and posts + orderBy', async (t) => {
   });
 });
 
-test('Get user with invitee and posts + where', async (t) => {
+test.sequential('Get user with invitee and posts + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3679,7 +3685,7 @@ test('Get user with invitee and posts + where', async (t) => {
   });
 });
 
-test('Get user with invitee and posts + limit posts and users + where', async (t) => {
+test.sequential('Get user with invitee and posts + limit posts and users + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3741,7 +3747,7 @@ test('Get user with invitee and posts + limit posts and users + where', async (t
   });
 });
 
-test('Get user with invitee and posts + orderBy + where + custom', async (t) => {
+test.sequential('Get user with invitee and posts + orderBy + where + custom', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3830,7 +3836,7 @@ test('Get user with invitee and posts + orderBy + where + custom', async (t) => 
   });
 });
 
-test('Get user with invitee and posts + orderBy + where + partial + custom', async (t) => {
+test.sequential('Get user with invitee and posts + orderBy + where + partial + custom', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -3930,7 +3936,7 @@ test('Get user with invitee and posts + orderBy + where + partial + custom', asy
 	One two-level relation users+posts+comments
 */
 
-test('Get user with posts and posts with comments', async (t) => {
+test.sequential('Get user with posts and posts with comments', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4091,7 +4097,7 @@ test('Get user with posts and posts with comments', async (t) => {
 	One three-level relation users+posts+comments+comment_owner
 */
 
-test('Get user with posts and posts with comments and comments with owner', async (t) => {
+test.sequential('Get user with posts and posts with comments and comments with owner', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4241,7 +4247,7 @@ test('Get user with posts and posts with comments and comments with owner', asyn
 	Users+users_to_groups+groups
 */
 
-test('[Find Many] Get users with groups', async (t) => {
+test.sequential('[Find Many] Get users with groups', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4354,7 +4360,7 @@ test('[Find Many] Get users with groups', async (t) => {
   });
 });
 
-test('[Find Many] Get groups with users', async (t) => {
+test.sequential('[Find Many] Get groups with users', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4468,7 +4474,7 @@ test('[Find Many] Get groups with users', async (t) => {
   });
 });
 
-test('[Find Many] Get users with groups + limit', async (t) => {
+test.sequential('[Find Many] Get users with groups + limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4559,7 +4565,7 @@ test('[Find Many] Get users with groups + limit', async (t) => {
   });
 });
 
-test('[Find Many] Get groups with users + limit', async (t) => {
+test.sequential('[Find Many] Get groups with users + limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4650,7 +4656,7 @@ test('[Find Many] Get groups with users + limit', async (t) => {
   });
 });
 
-test('[Find Many] Get users with groups + limit + where', async (t) => {
+test.sequential('[Find Many] Get users with groups + limit + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4725,7 +4731,7 @@ test('[Find Many] Get users with groups + limit + where', async (t) => {
   });
 });
 
-test('[Find Many] Get groups with users + limit + where', async (t) => {
+test.sequential('[Find Many] Get groups with users + limit + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4801,7 +4807,7 @@ test('[Find Many] Get groups with users + limit + where', async (t) => {
   });
 });
 
-test('[Find Many] Get users with groups + where', async (t) => {
+test.sequential('[Find Many] Get users with groups + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4884,7 +4890,7 @@ test('[Find Many] Get users with groups + where', async (t) => {
   });
 });
 
-test('[Find Many] Get groups with users + where', async (t) => {
+test.sequential('[Find Many] Get groups with users + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -4966,7 +4972,7 @@ test('[Find Many] Get groups with users + where', async (t) => {
   });
 });
 
-test('[Find Many] Get users with groups + orderBy', async (t) => {
+test.sequential('[Find Many] Get users with groups + orderBy', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5079,7 +5085,7 @@ test('[Find Many] Get users with groups + orderBy', async (t) => {
   });
 });
 
-test('[Find Many] Get groups with users + orderBy', async (t) => {
+test.sequential('[Find Many] Get groups with users + orderBy', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5193,7 +5199,7 @@ test('[Find Many] Get groups with users + orderBy', async (t) => {
   });
 });
 
-test('[Find Many] Get users with groups + orderBy + limit', async (t) => {
+test.sequential('[Find Many] Get users with groups + orderBy + limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5290,7 +5296,7 @@ test('[Find Many] Get users with groups + orderBy + limit', async (t) => {
 	Users+users_to_groups+groups
 */
 
-test('[Find One] Get users with groups', async (t) => {
+test.sequential('[Find One] Get users with groups', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5359,7 +5365,7 @@ test('[Find One] Get users with groups', async (t) => {
   });
 });
 
-test('[Find One] Get groups with users', async (t) => {
+test.sequential('[Find One] Get groups with users', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5428,7 +5434,7 @@ test('[Find One] Get groups with users', async (t) => {
   });
 });
 
-test('[Find One] Get users with groups + limit', async (t) => {
+test.sequential('[Find One] Get users with groups + limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5498,7 +5504,7 @@ test('[Find One] Get users with groups + limit', async (t) => {
   });
 });
 
-test('[Find One] Get groups with users + limit', async (t) => {
+test.sequential('[Find One] Get groups with users + limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5568,7 +5574,7 @@ test('[Find One] Get groups with users + limit', async (t) => {
   });
 });
 
-test('[Find One] Get users with groups + limit + where', async (t) => {
+test.sequential('[Find One] Get users with groups + limit + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5639,7 +5645,7 @@ test('[Find One] Get users with groups + limit + where', async (t) => {
   });
 });
 
-test('[Find One] Get groups with users + limit + where', async (t) => {
+test.sequential('[Find One] Get groups with users + limit + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5711,7 +5717,7 @@ test('[Find One] Get groups with users + limit + where', async (t) => {
   });
 });
 
-test('[Find One] Get users with groups + where', async (t) => {
+test.sequential('[Find One] Get users with groups + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5774,7 +5780,7 @@ test('[Find One] Get users with groups + where', async (t) => {
   });
 });
 
-test('[Find One] Get groups with users + where', async (t) => {
+test.sequential('[Find One] Get groups with users + where', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5845,7 +5851,7 @@ test('[Find One] Get groups with users + where', async (t) => {
   });
 });
 
-test('[Find One] Get users with groups + orderBy', async (t) => {
+test.sequential('[Find One] Get users with groups + orderBy', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5923,7 +5929,7 @@ test('[Find One] Get users with groups + orderBy', async (t) => {
   });
 });
 
-test('[Find One] Get groups with users + orderBy', async (t) => {
+test.sequential('[Find One] Get groups with users + orderBy', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -5994,7 +6000,7 @@ test('[Find One] Get groups with users + orderBy', async (t) => {
   });
 });
 
-test('[Find One] Get users with groups + orderBy + limit', async (t) => {
+test.sequential('[Find One] Get users with groups + orderBy + limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -6066,7 +6072,7 @@ test('[Find One] Get users with groups + orderBy + limit', async (t) => {
   });
 });
 
-test('Get groups with users + orderBy + limit', async (t) => {
+test.sequential('Get groups with users + orderBy + limit', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -6157,7 +6163,7 @@ test('Get groups with users + orderBy + limit', async (t) => {
   });
 });
 
-test('Get users with groups + custom', async (t) => {
+test.sequential('Get users with groups + custom', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -6286,7 +6292,7 @@ test('Get users with groups + custom', async (t) => {
   });
 });
 
-test('Get groups with users + custom', async (t) => {
+test.sequential('Get groups with users + custom', async (t) => {
   const { db: db } = t;
 
   await db.insert(usersTable).values([
@@ -6416,7 +6422,7 @@ test('Get groups with users + custom', async (t) => {
   });
 });
 
-test('.toSQL()', () => {
+test.sequential('.toSQL()', () => {
   const query = db.query.usersTable.findFirst().toSQL();
 
   expect(query).toHaveProperty('sql', expect.any(String));
