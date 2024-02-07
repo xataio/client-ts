@@ -1,24 +1,22 @@
+import { HostProvider, parseProviderString, XataApiClient } from '@xata.io/client';
 import 'dotenv/config';
 import { desc, eq, gt, gte, or, placeholder, sql, TransactionRollbackError } from 'drizzle-orm';
 import { Client } from 'pg';
-import { afterAll, beforeAll, beforeEach, describe, expect, expectTypeOf, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expectTypeOf, test } from 'vitest';
 import { drizzle, type XataDatabase } from '../src/pg';
 import * as schema from './schema';
-import { HostProvider, parseProviderString, XataApiClient } from '@xata.io/client';
 
 const { usersTable, postsTable, commentsTable, usersToGroupsTable, groupsTable } = schema;
 
-const ENABLE_LOGGING = false;
+const ENABLE_LOGGING = true;
 
 declare module 'vitest' {
   export interface TestContext {
     db: XataDatabase<typeof schema>;
     client: Client;
+    branch: string;
   }
 }
-
-let db: XataDatabase<typeof schema>;
-let client: Client;
 
 const apiKey = process.env.XATA_API_KEY ?? '';
 if (apiKey === '') throw new Error('XATA_API_KEY environment variable is not set');
@@ -31,7 +29,6 @@ const region = process.env.XATA_REGION || 'eu-west-1';
 const host = parseProviderString(process.env.XATA_API_PROVIDER) ?? 'production';
 
 const database = `drizzle-test-${Math.random().toString(36).substring(7)}`;
-const branch = process.env['XATA_BRANCH'] || 'main';
 
 const api = new XataApiClient({ apiKey, host, clientName: 'sdk-tests' });
 
@@ -51,21 +48,23 @@ function getDomain(host: HostProvider) {
 }
 
 beforeAll(async () => {
-  const connectionString = `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(
-    host
-  )}:5432/${database}:${branch}`;
-
   await api.database.createDatabase({
     workspace,
     database,
-    data: { region, branchName: branch },
+    data: { region, branchName: 'main' },
     headers: { 'X-Features': 'feat-pgroll-migrations=1' }
   });
 
-  client = new Client({ connectionString });
-  await client.connect();
+  await waitForReplication();
 
-  db = drizzle(client, { schema, logger: ENABLE_LOGGING });
+  const client = new Client({
+    connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:main`
+  });
+  const start = Date.now();
+  await client.connect();
+  console.log('Connected to database in', Date.now() - start, 'ms');
+
+  const db = drizzle(client, { schema, logger: ENABLE_LOGGING });
 
   await db.execute(
     sql`
@@ -127,53 +126,49 @@ beforeAll(async () => {
 		`
   );
 
-  // TODO: There's a bug with schema not available after creating the database
-  client = new Client({ connectionString });
-  await client.connect();
-
-  db = drizzle(client, { schema, logger: ENABLE_LOGGING });
+  await client.end();
 });
 
 afterAll(async () => {
-  // TODO: There is a bug on connection close
-  //await client?.end().catch(console.error);
-
   await api.database.deleteDatabase({ workspace, database });
 });
 
 beforeEach(async (ctx) => {
-  ctx.db = db;
-  ctx.client = client;
+  ctx.branch = `test-${Math.random().toString(36).substring(7)}`;
+  await api.branches.createBranch({ workspace, database, region, branch: ctx.branch, from: 'main' });
 
-  await db.execute(sql`DELETE FROM "comment_likes"`);
-  await db.execute(sql`DELETE FROM "comments"`);
-  await db.execute(sql`DELETE FROM "posts"`);
-  await db.execute(sql`DELETE FROM "users_to_groups"`);
-  await db.execute(sql`DELETE FROM "groups"`);
-  await db.execute(sql`DELETE FROM "users"`);
+  ctx.client = new Client({
+    connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:${
+      ctx.branch
+    }`
+  });
+  ctx.db = drizzle(ctx.client, { schema, logger: ENABLE_LOGGING });
 });
 
-describe.sequential('Drizzle ORM', () => {
+afterEach(async (ctx) => {
+  await ctx.client.end();
+  await api.branches.deleteBranch({ workspace, database, region, branch: ctx.branch });
+});
+
+describe('Drizzle ORM', () => {
   /*
 	[Find Many] One relation users+posts
 */
 
-  test('[Find Many] Get users with posts', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       with: {
         posts: true
       }
@@ -196,26 +191,26 @@ describe.sequential('Drizzle ORM', () => {
 
     usersWithPosts.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(usersWithPosts.length).eq(3);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
-    expect(usersWithPosts[1]?.posts.length).eq(1);
-    expect(usersWithPosts[2]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(3);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts[1]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts[2]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
       invitedBy: null,
       posts: [{ id: 1, ownerId: 1, content: 'Post1', createdAt: usersWithPosts[0]?.posts[0]?.createdAt }]
     });
-    expect(usersWithPosts[1]).toEqual({
+    ctx.expect(usersWithPosts[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
       invitedBy: null,
       posts: [{ id: 2, ownerId: 2, content: 'Post2', createdAt: usersWithPosts[1]?.posts[0]?.createdAt }]
     });
-    expect(usersWithPosts[2]).toEqual({
+    ctx.expect(usersWithPosts[2]).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -224,16 +219,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + limit posts', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + limit posts', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -243,7 +236,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       with: {
         posts: {
           limit: 1
@@ -271,26 +264,26 @@ describe.sequential('Drizzle ORM', () => {
     usersWithPosts[1]?.posts.sort((a, b) => (a.id > b.id ? 1 : -1));
     usersWithPosts[2]?.posts.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(usersWithPosts.length).eq(3);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
-    expect(usersWithPosts[1]?.posts.length).eq(1);
-    expect(usersWithPosts[2]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(3);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts[1]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts[2]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
       invitedBy: null,
       posts: [{ id: 1, ownerId: 1, content: 'Post1', createdAt: usersWithPosts[0]?.posts[0]?.createdAt }]
     });
-    expect(usersWithPosts[1]).toEqual({
+    ctx.expect(usersWithPosts[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
       invitedBy: null,
       posts: [{ id: 4, ownerId: 2, content: 'Post2', createdAt: usersWithPosts[1]?.posts[0]?.createdAt }]
     });
-    expect(usersWithPosts[2]).toEqual({
+    ctx.expect(usersWithPosts[2]).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -299,16 +292,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + limit posts and users', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + limit posts and users', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -318,7 +309,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       limit: 2,
       with: {
         posts: {
@@ -346,18 +337,18 @@ describe.sequential('Drizzle ORM', () => {
     usersWithPosts[0]?.posts.sort((a, b) => (a.id > b.id ? 1 : -1));
     usersWithPosts[1]?.posts.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(usersWithPosts.length).eq(2);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
-    expect(usersWithPosts[1]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(2);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts[1]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
       invitedBy: null,
       posts: [{ id: 1, ownerId: 1, content: 'Post1', createdAt: usersWithPosts[0]?.posts[0]?.createdAt }]
     });
-    expect(usersWithPosts[1]).toEqual({
+    ctx.expect(usersWithPosts[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -366,16 +357,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + custom fields', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + custom fields', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -385,7 +374,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       with: {
         posts: true
       },
@@ -415,12 +404,12 @@ describe.sequential('Drizzle ORM', () => {
     usersWithPosts[1]?.posts.sort((a, b) => (a.id > b.id ? 1 : -1));
     usersWithPosts[2]?.posts.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(usersWithPosts.length).toEqual(3);
-    expect(usersWithPosts[0]?.posts.length).toEqual(3);
-    expect(usersWithPosts[1]?.posts.length).toEqual(2);
-    expect(usersWithPosts[2]?.posts.length).toEqual(2);
+    ctx.expect(usersWithPosts.length).toEqual(3);
+    ctx.expect(usersWithPosts[0]?.posts.length).toEqual(3);
+    ctx.expect(usersWithPosts[1]?.posts.length).toEqual(2);
+    ctx.expect(usersWithPosts[2]?.posts.length).toEqual(2);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -437,7 +426,7 @@ describe.sequential('Drizzle ORM', () => {
         { id: 3, ownerId: 1, content: 'Post1.3', createdAt: usersWithPosts[0]?.posts[2]?.createdAt }
       ]
     });
-    expect(usersWithPosts[1]).toEqual({
+    ctx.expect(usersWithPosts[1]).toEqual({
       id: 2,
       name: 'Andrew',
       lowerName: 'andrew',
@@ -453,7 +442,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(usersWithPosts[2]).toEqual({
+    ctx.expect(usersWithPosts[2]).toEqual({
       id: 3,
       name: 'Alex',
       lowerName: 'alex',
@@ -471,16 +460,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + custom fields + limits', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + custom fields + limits', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -490,7 +477,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       limit: 1,
       with: {
         posts: {
@@ -518,10 +505,10 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).toEqual(1);
-    expect(usersWithPosts[0]?.posts.length).toEqual(1);
+    ctx.expect(usersWithPosts.length).toEqual(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).toEqual(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       lowerName: 'dan',
@@ -531,16 +518,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + orderBy', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + orderBy', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: '1' },
       { ownerId: 1, content: '2' },
       { ownerId: 1, content: '3' },
@@ -550,7 +535,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: '7' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       with: {
         posts: {
           orderBy: (postsTable, { desc }) => [desc(postsTable.content)]
@@ -574,12 +559,12 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(3);
-    expect(usersWithPosts[0]?.posts.length).eq(2);
-    expect(usersWithPosts[1]?.posts.length).eq(2);
-    expect(usersWithPosts[2]?.posts.length).eq(3);
+    ctx.expect(usersWithPosts.length).eq(3);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(2);
+    ctx.expect(usersWithPosts[1]?.posts.length).eq(2);
+    ctx.expect(usersWithPosts[2]?.posts.length).eq(3);
 
-    expect(usersWithPosts[2]).toEqual({
+    ctx.expect(usersWithPosts[2]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -595,7 +580,7 @@ describe.sequential('Drizzle ORM', () => {
         { id: 1, ownerId: 1, content: '1', createdAt: usersWithPosts[2]?.posts[0]?.createdAt }
       ]
     });
-    expect(usersWithPosts[1]).toEqual({
+    ctx.expect(usersWithPosts[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -610,7 +595,7 @@ describe.sequential('Drizzle ORM', () => {
         { id: 4, ownerId: 2, content: '4', createdAt: usersWithPosts[1]?.posts[0]?.createdAt }
       ]
     });
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -627,23 +612,21 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       where: ({ id }, { eq }) => eq(id, 1),
       with: {
         posts: {
@@ -667,10 +650,10 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(1);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -679,23 +662,21 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + where + partial', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + where + partial', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       columns: {
         id: true,
         name: true
@@ -723,33 +704,31 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(1);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       posts: [{ id: 1, content: 'Post1' }]
     });
   });
 
-  test('[Find Many] Get users with posts + where + partial. Did not select posts id, but used it in where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + where + partial. Did not select posts id, but used it in where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       columns: {
         id: true,
         name: true
@@ -777,33 +756,31 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(1);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       posts: [{ id: 1, content: 'Post1' }]
     });
   });
 
-  test('[Find Many] Get users with posts + where + partial(true + false)', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + where + partial(true + false)', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       columns: {
         id: true,
         name: false
@@ -829,32 +806,30 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(1);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       posts: [{ id: 1 }]
     });
   });
 
-  test('[Find Many] Get users with posts + where + partial(false)', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + where + partial(false)', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       columns: {
         name: false
       },
@@ -882,10 +857,10 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(1);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       verified: false,
       invitedBy: null,
@@ -893,9 +868,7 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts in transaction', async (t) => {
-    const { db: db } = t;
-
+  test('[Find Many] Get users with posts in transaction', async (ctx) => {
     let usersWithPosts: {
       id: number;
       name: string;
@@ -909,7 +882,7 @@ describe.sequential('Drizzle ORM', () => {
       }[];
     }[] = [];
 
-    await db.transaction(async (tx) => {
+    await ctx.db.transaction(async (tx) => {
       await tx.insert(usersTable).values([
         { id: 1, name: 'Dan' },
         { id: 2, name: 'Andrew' },
@@ -948,10 +921,10 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(1);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -960,9 +933,7 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts in rollbacked transaction', async (t) => {
-    const { db: db } = t;
-
+  test('[Find Many] Get users with posts in rollbacked transaction', async (ctx) => {
     let usersWithPosts: {
       id: number;
       name: string;
@@ -976,33 +947,35 @@ describe.sequential('Drizzle ORM', () => {
       }[];
     }[] = [];
 
-    await expect(
-      db.transaction(async (tx) => {
-        await tx.insert(usersTable).values([
-          { id: 1, name: 'Dan' },
-          { id: 2, name: 'Andrew' },
-          { id: 3, name: 'Alex' }
-        ]);
+    await ctx
+      .expect(
+        ctx.db.transaction(async (tx) => {
+          await tx.insert(usersTable).values([
+            { id: 1, name: 'Dan' },
+            { id: 2, name: 'Andrew' },
+            { id: 3, name: 'Alex' }
+          ]);
 
-        await tx.insert(postsTable).values([
-          { ownerId: 1, content: 'Post1' },
-          { ownerId: 1, content: 'Post1.1' },
-          { ownerId: 2, content: 'Post2' },
-          { ownerId: 3, content: 'Post3' }
-        ]);
+          await tx.insert(postsTable).values([
+            { ownerId: 1, content: 'Post1' },
+            { ownerId: 1, content: 'Post1.1' },
+            { ownerId: 2, content: 'Post2' },
+            { ownerId: 3, content: 'Post3' }
+          ]);
 
-        tx.rollback();
+          tx.rollback();
 
-        usersWithPosts = await tx.query.usersTable.findMany({
-          where: ({ id }, { eq }) => eq(id, 1),
-          with: {
-            posts: {
-              where: ({ id }, { eq }) => eq(id, 1)
+          usersWithPosts = await tx.query.usersTable.findMany({
+            where: ({ id }, { eq }) => eq(id, 1),
+            with: {
+              posts: {
+                where: ({ id }, { eq }) => eq(id, 1)
+              }
             }
-          }
-        });
-      })
-    ).rejects.toThrowError(new TransactionRollbackError());
+          });
+        })
+      )
+      .rejects.toThrowError(new TransactionRollbackError());
 
     expectTypeOf(usersWithPosts).toEqualTypeOf<
       {
@@ -1019,20 +992,18 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(0);
+    ctx.expect(usersWithPosts.length).eq(0);
   });
 
   // select only custom
-  test('[Find Many] Get only custom fields', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get only custom fields', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1042,7 +1013,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       columns: {},
       with: {
         posts: {
@@ -1066,12 +1037,12 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).toEqual(3);
-    expect(usersWithPosts[0]?.posts.length).toEqual(3);
-    expect(usersWithPosts[1]?.posts.length).toEqual(2);
-    expect(usersWithPosts[2]?.posts.length).toEqual(2);
+    ctx.expect(usersWithPosts.length).toEqual(3);
+    ctx.expect(usersWithPosts[0]?.posts.length).toEqual(3);
+    ctx.expect(usersWithPosts[1]?.posts.length).toEqual(2);
+    ctx.expect(usersWithPosts[2]?.posts.length).toEqual(2);
 
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       lowerName: 'dan',
       posts: [
         { lowerName: 'post1' },
@@ -1081,7 +1052,7 @@ describe.sequential('Drizzle ORM', () => {
         { lowerName: 'post1.3' }
       ]
     });
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       lowerName: 'andrew',
       posts: [
         { lowerName: 'post2' },
@@ -1090,7 +1061,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       lowerName: 'alex',
       posts: [
         { lowerName: 'post3' },
@@ -1101,16 +1072,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get only custom fields + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get only custom fields + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1120,7 +1089,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       columns: {},
       with: {
         posts: {
@@ -1146,25 +1115,23 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).toEqual(1);
-    expect(usersWithPosts[0]?.posts.length).toEqual(2);
+    ctx.expect(usersWithPosts.length).toEqual(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).toEqual(2);
 
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       lowerName: 'dan',
       posts: [{ lowerName: 'post1.2' }, { lowerName: 'post1.3' }]
     });
   });
 
-  test('[Find Many] Get only custom fields + where + limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get only custom fields + where + limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1174,7 +1141,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       columns: {},
       with: {
         posts: {
@@ -1201,25 +1168,23 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).toEqual(1);
-    expect(usersWithPosts[0]?.posts.length).toEqual(1);
+    ctx.expect(usersWithPosts.length).toEqual(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).toEqual(1);
 
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       lowerName: 'dan',
       posts: [{ lowerName: 'post1.2' }]
     });
   });
 
-  test('[Find Many] Get only custom fields + where + orderBy', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get only custom fields + where + orderBy', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1229,7 +1194,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findMany({
+    const usersWithPosts = await ctx.db.query.usersTable.findMany({
       columns: {},
       with: {
         posts: {
@@ -1256,26 +1221,24 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).toEqual(1);
-    expect(usersWithPosts[0]?.posts.length).toEqual(2);
+    ctx.expect(usersWithPosts.length).toEqual(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).toEqual(2);
 
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       lowerName: 'dan',
       posts: [{ lowerName: 'post1.3' }, { lowerName: 'post1.2' }]
     });
   });
 
   // select only custom find one
-  test('[Find One] Get only custom fields', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get only custom fields', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1285,7 +1248,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       columns: {},
       with: {
         posts: {
@@ -1310,9 +1273,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts?.posts.length).toEqual(3);
+    ctx.expect(usersWithPosts?.posts.length).toEqual(3);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       lowerName: 'dan',
       posts: [
         { lowerName: 'post1' },
@@ -1324,16 +1287,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get only custom fields + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get only custom fields + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1343,7 +1304,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       columns: {},
       with: {
         posts: {
@@ -1370,24 +1331,22 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts?.posts.length).toEqual(2);
+    ctx.expect(usersWithPosts?.posts.length).toEqual(2);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       lowerName: 'dan',
       posts: [{ lowerName: 'post1.2' }, { lowerName: 'post1.3' }]
     });
   });
 
-  test('[Find One] Get only custom fields + where + limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get only custom fields + where + limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1397,7 +1356,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       columns: {},
       with: {
         posts: {
@@ -1425,24 +1384,22 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts?.posts.length).toEqual(1);
+    ctx.expect(usersWithPosts?.posts.length).toEqual(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       lowerName: 'dan',
       posts: [{ lowerName: 'post1.2' }]
     });
   });
 
-  test('[Find One] Get only custom fields + where + orderBy', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get only custom fields + where + orderBy', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1452,7 +1409,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       columns: {},
       with: {
         posts: {
@@ -1480,69 +1437,63 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts?.posts.length).toEqual(2);
+    ctx.expect(usersWithPosts?.posts.length).toEqual(2);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       lowerName: 'dan',
       posts: [{ lowerName: 'post1.3' }, { lowerName: 'post1.2' }]
     });
   });
 
   // columns {}
-  test('[Find Many] Get select {}', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get select {}', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    const users = await db.query.usersTable.findMany({
+    const users = await ctx.db.query.usersTable.findMany({
       columns: {}
     });
 
-    expect(users.length).toBe(3);
+    ctx.expect(users.length).toBe(3);
 
-    expect(users[0]).toEqual({});
-    expect(users[1]).toEqual({});
-    expect(users[2]).toEqual({});
+    ctx.expect(users[0]).toEqual({});
+    ctx.expect(users[1]).toEqual({});
+    ctx.expect(users[2]).toEqual({});
   });
 
   // columns {}
-  test('[Find One] Get select {}', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get select {}', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    const users = await db.query.usersTable.findFirst({
+    const users = await ctx.db.query.usersTable.findFirst({
       columns: {}
     });
 
-    expect(users).toEqual({});
+    ctx.expect(users).toEqual({});
   });
 
   // deep select {}
-  test('[Find Many] Get deep select {}', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get deep select {}', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const users = await db.query.usersTable.findMany({
+    const users = await ctx.db.query.usersTable.findMany({
       columns: {},
       with: {
         posts: {
@@ -1551,30 +1502,28 @@ describe.sequential('Drizzle ORM', () => {
       }
     });
 
-    expect(users.length).toBe(3);
+    ctx.expect(users.length).toBe(3);
 
-    expect(users[0]).toEqual({ posts: [{}] });
-    expect(users[1]).toEqual({ posts: [{}] });
-    expect(users[2]).toEqual({ posts: [{}] });
+    ctx.expect(users[0]).toEqual({ posts: [{}] });
+    ctx.expect(users[1]).toEqual({ posts: [{}] });
+    ctx.expect(users[2]).toEqual({ posts: [{}] });
   });
 
   // deep select {}
-  test('[Find One] Get deep select {}', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get deep select {}', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const users = await db.query.usersTable.findFirst({
+    const users = await ctx.db.query.usersTable.findFirst({
       columns: {},
       with: {
         posts: {
@@ -1583,22 +1532,20 @@ describe.sequential('Drizzle ORM', () => {
       }
     });
 
-    expect(users).toEqual({ posts: [{}] });
+    ctx.expect(users).toEqual({ posts: [{}] });
   });
 
   /*
 	Prepared statements for users+posts
 */
-  test('[Find Many] Get users with posts + prepared limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + prepared limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1608,7 +1555,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const prepared = db.query.usersTable
+    const prepared = ctx.db.query.usersTable
       .findMany({
         with: {
           posts: {
@@ -1635,26 +1582,26 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(3);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
-    expect(usersWithPosts[1]?.posts.length).eq(1);
-    expect(usersWithPosts[2]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(3);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts[1]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts[2]?.posts.length).eq(1);
 
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       id: 1,
       name: 'Dan',
       verified: false,
       invitedBy: null,
       posts: [{ id: 1, ownerId: 1, content: 'Post1', createdAt: usersWithPosts[0]?.posts[0]?.createdAt }]
     });
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
       invitedBy: null,
       posts: [{ id: 4, ownerId: 2, content: 'Post2', createdAt: usersWithPosts[1]?.posts[0]?.createdAt }]
     });
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -1663,16 +1610,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + prepared limit + offset', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + prepared limit + offset', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1682,7 +1627,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const prepared = db.query.usersTable
+    const prepared = ctx.db.query.usersTable
       .findMany({
         limit: placeholder('uLimit'),
         offset: placeholder('uOffset'),
@@ -1711,18 +1656,18 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(2);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
-    expect(usersWithPosts[1]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(2);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts[1]?.posts.length).eq(1);
 
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
       invitedBy: null,
       posts: [{ id: 4, ownerId: 2, content: 'Post2', createdAt: usersWithPosts[0]?.posts[0]?.createdAt }]
     });
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -1731,23 +1676,21 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + prepared where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + prepared where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const prepared = db.query.usersTable
+    const prepared = ctx.db.query.usersTable
       .findMany({
         where: ({ id }, { eq }) => eq(id, placeholder('id')),
         with: {
@@ -1775,10 +1718,10 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(1);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
 
-    expect(usersWithPosts[0]).toEqual({
+    ctx.expect(usersWithPosts[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -1787,16 +1730,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with posts + prepared + limit + offset + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with posts + prepared + limit + offset + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1806,7 +1747,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const prepared = db.query.usersTable
+    const prepared = ctx.db.query.usersTable
       .findMany({
         limit: placeholder('uLimit'),
         offset: placeholder('uOffset'),
@@ -1837,10 +1778,10 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithPosts.length).eq(1);
-    expect(usersWithPosts[0]?.posts.length).eq(1);
+    ctx.expect(usersWithPosts.length).eq(1);
+    ctx.expect(usersWithPosts[0]?.posts.length).eq(1);
 
-    expect(usersWithPosts).toContainEqual({
+    ctx.expect(usersWithPosts).toContainEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -1853,22 +1794,20 @@ describe.sequential('Drizzle ORM', () => {
 	[Find One] One relation users+posts
 */
 
-  test('[Find One] Get users with posts', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       with: {
         posts: true
       }
@@ -1890,9 +1829,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).eq(1);
+    ctx.expect(usersWithPosts!.posts.length).eq(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -1901,16 +1840,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with posts + limit posts', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + limit posts', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -1920,7 +1857,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       with: {
         posts: {
           limit: 1
@@ -1944,9 +1881,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).eq(1);
+    ctx.expect(usersWithPosts!.posts.length).eq(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -1955,10 +1892,8 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with posts no results found', async (t) => {
-    const { db: db } = t;
-
-    const usersWithPosts = await db.query.usersTable.findFirst({
+  test('[Find One] Get users with posts no results found', async (ctx) => {
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       with: {
         posts: {
           limit: 1
@@ -1982,19 +1917,17 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts).toBeUndefined();
+    ctx.expect(usersWithPosts).toBeUndefined();
   });
 
-  test('[Find One] Get users with posts + limit posts and users', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + limit posts and users', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -2004,7 +1937,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       with: {
         posts: {
           limit: 1
@@ -2028,9 +1961,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).eq(1);
+    ctx.expect(usersWithPosts!.posts.length).eq(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -2039,16 +1972,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with posts + custom fields', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + custom fields', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -2058,7 +1989,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       with: {
         posts: true
       },
@@ -2084,9 +2015,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).toEqual(3);
+    ctx.expect(usersWithPosts!.posts.length).toEqual(3);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -2105,16 +2036,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with posts + custom fields + limits', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + custom fields + limits', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.2' },
       { ownerId: 1, content: 'Post1.3' },
@@ -2124,7 +2053,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       with: {
         posts: {
           limit: 1
@@ -2152,9 +2081,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).toEqual(1);
+    ctx.expect(usersWithPosts!.posts.length).toEqual(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       name: 'Dan',
       lowerName: 'dan',
@@ -2164,16 +2093,14 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with posts + orderBy', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + orderBy', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: '1' },
       { ownerId: 1, content: '2' },
       { ownerId: 1, content: '3' },
@@ -2183,7 +2110,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: '7' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       with: {
         posts: {
           orderBy: (postsTable, { desc }) => [desc(postsTable.content)]
@@ -2208,9 +2135,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).eq(2);
+    ctx.expect(usersWithPosts!.posts.length).eq(2);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -2227,23 +2154,21 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with posts + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       where: ({ id }, { eq }) => eq(id, 1),
       with: {
         posts: {
@@ -2268,9 +2193,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).eq(1);
+    ctx.expect(usersWithPosts!.posts.length).eq(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -2279,23 +2204,21 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with posts + where + partial', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + where + partial', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       columns: {
         id: true,
         name: true
@@ -2324,32 +2247,30 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).eq(1);
+    ctx.expect(usersWithPosts!.posts.length).eq(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       name: 'Dan',
       posts: [{ id: 1, content: 'Post1' }]
     });
   });
 
-  test('[Find One] Get users with posts + where + partial. Did not select posts id, but used it in where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + where + partial. Did not select posts id, but used it in where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       columns: {
         id: true,
         name: true
@@ -2378,32 +2299,30 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).eq(1);
+    ctx.expect(usersWithPosts!.posts.length).eq(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       name: 'Dan',
       posts: [{ id: 1, content: 'Post1' }]
     });
   });
 
-  test('[Find One] Get users with posts + where + partial(true + false)', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + where + partial(true + false)', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       columns: {
         id: true,
         name: false
@@ -2430,31 +2349,29 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).eq(1);
+    ctx.expect(usersWithPosts!.posts.length).eq(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       posts: [{ id: 1 }]
     });
   });
 
-  test('[Find One] Get users with posts + where + partial(false)', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with posts + where + partial(false)', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const usersWithPosts = await db.query.usersTable.findFirst({
+    const usersWithPosts = await ctx.db.query.usersTable.findFirst({
       columns: {
         name: false
       },
@@ -2483,9 +2400,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(usersWithPosts!.posts.length).eq(1);
+    ctx.expect(usersWithPosts!.posts.length).eq(1);
 
-    expect(usersWithPosts).toEqual({
+    ctx.expect(usersWithPosts).toEqual({
       id: 1,
       verified: false,
       invitedBy: null,
@@ -2497,17 +2414,15 @@ describe.sequential('Drizzle ORM', () => {
 	One relation users+users. Self referencing
 */
 
-  test('Get user with invitee', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       with: {
         invitee: true
       }
@@ -2530,34 +2445,34 @@ describe.sequential('Drizzle ORM', () => {
 
     usersWithInvitee.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(usersWithInvitee.length).eq(4);
-    expect(usersWithInvitee[0]?.invitee).toBeNull();
-    expect(usersWithInvitee[1]?.invitee).toBeNull();
-    expect(usersWithInvitee[2]?.invitee).not.toBeNull();
-    expect(usersWithInvitee[3]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(4);
+    ctx.expect(usersWithInvitee[0]?.invitee).toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).toBeNull();
+    ctx.expect(usersWithInvitee[2]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee[3]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee[0]).toEqual({
+    ctx.expect(usersWithInvitee[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
       invitedBy: null,
       invitee: null
     });
-    expect(usersWithInvitee[1]).toEqual({
+    ctx.expect(usersWithInvitee[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
       invitedBy: null,
       invitee: null
     });
-    expect(usersWithInvitee[2]).toEqual({
+    ctx.expect(usersWithInvitee[2]).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
       invitedBy: 1,
       invitee: { id: 1, name: 'Dan', verified: false, invitedBy: null }
     });
-    expect(usersWithInvitee[3]).toEqual({
+    ctx.expect(usersWithInvitee[3]).toEqual({
       id: 4,
       name: 'John',
       verified: false,
@@ -2566,17 +2481,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user + limit with invitee', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user + limit with invitee', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew', invitedBy: 1 },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       with: {
         invitee: true
       },
@@ -2600,18 +2513,18 @@ describe.sequential('Drizzle ORM', () => {
 
     usersWithInvitee.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(usersWithInvitee.length).eq(2);
-    expect(usersWithInvitee[0]?.invitee).toBeNull();
-    expect(usersWithInvitee[1]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(2);
+    ctx.expect(usersWithInvitee[0]?.invitee).toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee[0]).toEqual({
+    ctx.expect(usersWithInvitee[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
       invitedBy: null,
       invitee: null
     });
-    expect(usersWithInvitee[1]).toEqual({
+    ctx.expect(usersWithInvitee[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -2620,17 +2533,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and custom fields', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and custom fields', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       extras: (users, { sql }) => ({ lower: sql<string>`lower(${users.name})`.as('lower_name') }),
       with: {
         invitee: {
@@ -2658,13 +2569,13 @@ describe.sequential('Drizzle ORM', () => {
 
     usersWithInvitee.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(usersWithInvitee.length).eq(4);
-    expect(usersWithInvitee[0]?.invitee).toBeNull();
-    expect(usersWithInvitee[1]?.invitee).toBeNull();
-    expect(usersWithInvitee[2]?.invitee).not.toBeNull();
-    expect(usersWithInvitee[3]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(4);
+    ctx.expect(usersWithInvitee[0]?.invitee).toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).toBeNull();
+    ctx.expect(usersWithInvitee[2]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee[3]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee[0]).toEqual({
+    ctx.expect(usersWithInvitee[0]).toEqual({
       id: 1,
       name: 'Dan',
       lower: 'dan',
@@ -2672,7 +2583,7 @@ describe.sequential('Drizzle ORM', () => {
       invitedBy: null,
       invitee: null
     });
-    expect(usersWithInvitee[1]).toEqual({
+    ctx.expect(usersWithInvitee[1]).toEqual({
       id: 2,
       name: 'Andrew',
       lower: 'andrew',
@@ -2680,7 +2591,7 @@ describe.sequential('Drizzle ORM', () => {
       invitedBy: null,
       invitee: null
     });
-    expect(usersWithInvitee[2]).toEqual({
+    ctx.expect(usersWithInvitee[2]).toEqual({
       id: 3,
       name: 'Alex',
       lower: 'alex',
@@ -2688,7 +2599,7 @@ describe.sequential('Drizzle ORM', () => {
       invitedBy: 1,
       invitee: { id: 1, name: 'Dan', lower: 'dan', verified: false, invitedBy: null }
     });
-    expect(usersWithInvitee[3]).toEqual({
+    ctx.expect(usersWithInvitee[3]).toEqual({
       id: 4,
       name: 'John',
       lower: 'john',
@@ -2698,17 +2609,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and custom fields + limits', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and custom fields + limits', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       extras: (users, { sql }) => ({ lower: sql<string>`lower(${users.name})`.as('lower_name') }),
       limit: 3,
       with: {
@@ -2737,12 +2646,12 @@ describe.sequential('Drizzle ORM', () => {
 
     usersWithInvitee.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(usersWithInvitee.length).eq(3);
-    expect(usersWithInvitee[0]?.invitee).toBeNull();
-    expect(usersWithInvitee[1]?.invitee).toBeNull();
-    expect(usersWithInvitee[2]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(3);
+    ctx.expect(usersWithInvitee[0]?.invitee).toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).toBeNull();
+    ctx.expect(usersWithInvitee[2]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee[0]).toEqual({
+    ctx.expect(usersWithInvitee[0]).toEqual({
       id: 1,
       name: 'Dan',
       lower: 'dan',
@@ -2750,7 +2659,7 @@ describe.sequential('Drizzle ORM', () => {
       invitedBy: null,
       invitee: null
     });
-    expect(usersWithInvitee[1]).toEqual({
+    ctx.expect(usersWithInvitee[1]).toEqual({
       id: 2,
       name: 'Andrew',
       lower: 'andrew',
@@ -2758,7 +2667,7 @@ describe.sequential('Drizzle ORM', () => {
       invitedBy: null,
       invitee: null
     });
-    expect(usersWithInvitee[2]).toEqual({
+    ctx.expect(usersWithInvitee[2]).toEqual({
       id: 3,
       name: 'Alex',
       lower: 'alex',
@@ -2768,17 +2677,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee + order by', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee + order by', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       orderBy: (users, { desc }) => [desc(users.id)],
       with: {
         invitee: true
@@ -2800,34 +2707,34 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithInvitee.length).eq(4);
-    expect(usersWithInvitee[3]?.invitee).toBeNull();
-    expect(usersWithInvitee[2]?.invitee).toBeNull();
-    expect(usersWithInvitee[1]?.invitee).not.toBeNull();
-    expect(usersWithInvitee[0]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(4);
+    ctx.expect(usersWithInvitee[3]?.invitee).toBeNull();
+    ctx.expect(usersWithInvitee[2]?.invitee).toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee[0]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee[3]).toEqual({
+    ctx.expect(usersWithInvitee[3]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
       invitedBy: null,
       invitee: null
     });
-    expect(usersWithInvitee[2]).toEqual({
+    ctx.expect(usersWithInvitee[2]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
       invitedBy: null,
       invitee: null
     });
-    expect(usersWithInvitee[1]).toEqual({
+    ctx.expect(usersWithInvitee[1]).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
       invitedBy: 1,
       invitee: { id: 1, name: 'Dan', verified: false, invitedBy: null }
     });
-    expect(usersWithInvitee[0]).toEqual({
+    ctx.expect(usersWithInvitee[0]).toEqual({
       id: 4,
       name: 'John',
       verified: false,
@@ -2836,17 +2743,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       where: (users, { eq, or }) => or(eq(users.id, 3), eq(users.id, 4)),
       with: {
         invitee: true
@@ -2868,18 +2773,18 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithInvitee.length).eq(2);
-    expect(usersWithInvitee[0]?.invitee).not.toBeNull();
-    expect(usersWithInvitee[1]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(2);
+    ctx.expect(usersWithInvitee[0]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       id: 3,
       name: 'Alex',
       verified: false,
       invitedBy: 1,
       invitee: { id: 1, name: 'Dan', verified: false, invitedBy: null }
     });
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       id: 4,
       name: 'John',
       verified: false,
@@ -2888,17 +2793,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee + where + partial', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee + where + partial', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       where: (users, { eq, or }) => or(eq(users.id, 3), eq(users.id, 4)),
       columns: {
         id: true,
@@ -2925,33 +2828,31 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithInvitee.length).eq(2);
-    expect(usersWithInvitee[0]?.invitee).not.toBeNull();
-    expect(usersWithInvitee[1]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(2);
+    ctx.expect(usersWithInvitee[0]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       id: 3,
       name: 'Alex',
       invitee: { id: 1, name: 'Dan' }
     });
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       id: 4,
       name: 'John',
       invitee: { id: 2, name: 'Andrew' }
     });
   });
 
-  test('Get user with invitee + where + partial.  Did not select users id, but used it in where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee + where + partial.  Did not select users id, but used it in where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       where: (users, { eq, or }) => or(eq(users.id, 3), eq(users.id, 4)),
       columns: {
         name: true
@@ -2976,31 +2877,29 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithInvitee.length).eq(2);
-    expect(usersWithInvitee[0]?.invitee).not.toBeNull();
-    expect(usersWithInvitee[1]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(2);
+    ctx.expect(usersWithInvitee[0]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       name: 'Alex',
       invitee: { id: 1, name: 'Dan' }
     });
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       name: 'John',
       invitee: { id: 2, name: 'Andrew' }
     });
   });
 
-  test('Get user with invitee + where + partial(true+false)', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee + where + partial(true+false)', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       where: (users, { eq, or }) => or(eq(users.id, 3), eq(users.id, 4)),
       columns: {
         id: true,
@@ -3029,33 +2928,31 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithInvitee.length).eq(2);
-    expect(usersWithInvitee[0]?.invitee).not.toBeNull();
-    expect(usersWithInvitee[1]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(2);
+    ctx.expect(usersWithInvitee[0]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       id: 3,
       name: 'Alex',
       invitee: { id: 1, name: 'Dan' }
     });
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       id: 4,
       name: 'John',
       invitee: { id: 2, name: 'Andrew' }
     });
   });
 
-  test('Get user with invitee + where + partial(false)', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee + where + partial(false)', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    const usersWithInvitee = await db.query.usersTable.findMany({
+    const usersWithInvitee = await ctx.db.query.usersTable.findMany({
       where: (users, { eq, or }) => or(eq(users.id, 3), eq(users.id, 4)),
       columns: {
         verified: false
@@ -3082,17 +2979,17 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(usersWithInvitee.length).eq(2);
-    expect(usersWithInvitee[0]?.invitee).not.toBeNull();
-    expect(usersWithInvitee[1]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee.length).eq(2);
+    ctx.expect(usersWithInvitee[0]?.invitee).not.toBeNull();
+    ctx.expect(usersWithInvitee[1]?.invitee).not.toBeNull();
 
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       id: 3,
       name: 'Alex',
       invitedBy: 1,
       invitee: { id: 1, verified: false, invitedBy: null }
     });
-    expect(usersWithInvitee).toContainEqual({
+    ctx.expect(usersWithInvitee).toContainEqual({
       id: 4,
       name: 'John',
       invitedBy: 2,
@@ -3104,23 +3001,21 @@ describe.sequential('Drizzle ORM', () => {
 	Two first-level relations users+users and users+posts
 */
 
-  test('Get user with invitee and posts', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and posts', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       with: {
         invitee: true,
         posts: true
@@ -3145,18 +3040,18 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).eq(4);
+    ctx.expect(response.length).eq(4);
 
-    expect(response[0]?.invitee).toBeNull();
-    expect(response[1]?.invitee).toBeNull();
-    expect(response[2]?.invitee).not.toBeNull();
-    expect(response[3]?.invitee).not.toBeNull();
+    ctx.expect(response[0]?.invitee).toBeNull();
+    ctx.expect(response[1]?.invitee).toBeNull();
+    ctx.expect(response[2]?.invitee).not.toBeNull();
+    ctx.expect(response[3]?.invitee).not.toBeNull();
 
-    expect(response[0]?.posts.length).eq(1);
-    expect(response[1]?.posts.length).eq(1);
-    expect(response[2]?.posts.length).eq(1);
+    ctx.expect(response[0]?.posts.length).eq(1);
+    ctx.expect(response[1]?.posts.length).eq(1);
+    ctx.expect(response[2]?.posts.length).eq(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -3164,7 +3059,7 @@ describe.sequential('Drizzle ORM', () => {
       invitee: null,
       posts: [{ id: 1, ownerId: 1, content: 'Post1', createdAt: response[0]?.posts[0]?.createdAt }]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -3172,7 +3067,7 @@ describe.sequential('Drizzle ORM', () => {
       invitee: null,
       posts: [{ id: 2, ownerId: 2, content: 'Post2', createdAt: response[1]?.posts[0]?.createdAt }]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -3180,7 +3075,7 @@ describe.sequential('Drizzle ORM', () => {
       invitee: { id: 1, name: 'Dan', verified: false, invitedBy: null },
       posts: [{ id: 3, ownerId: 3, content: 'Post3', createdAt: response[2]?.posts[0]?.createdAt }]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 4,
       name: 'John',
       verified: false,
@@ -3190,17 +3085,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and posts + limit posts and users', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and posts + limit posts and users', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
@@ -3209,7 +3102,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       limit: 3,
       with: {
         invitee: true,
@@ -3237,17 +3130,17 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).eq(3);
+    ctx.expect(response.length).eq(3);
 
-    expect(response[0]?.invitee).toBeNull();
-    expect(response[1]?.invitee).toBeNull();
-    expect(response[2]?.invitee).not.toBeNull();
+    ctx.expect(response[0]?.invitee).toBeNull();
+    ctx.expect(response[1]?.invitee).toBeNull();
+    ctx.expect(response[2]?.invitee).not.toBeNull();
 
-    expect(response[0]?.posts.length).eq(1);
-    expect(response[1]?.posts.length).eq(1);
-    expect(response[2]?.posts.length).eq(1);
+    ctx.expect(response[0]?.posts.length).eq(1);
+    ctx.expect(response[1]?.posts.length).eq(1);
+    ctx.expect(response[2]?.posts.length).eq(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -3255,7 +3148,7 @@ describe.sequential('Drizzle ORM', () => {
       invitee: null,
       posts: [{ id: 1, ownerId: 1, content: 'Post1', createdAt: response[0]?.posts[0]?.createdAt }]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -3263,7 +3156,7 @@ describe.sequential('Drizzle ORM', () => {
       invitee: null,
       posts: [{ id: 3, ownerId: 2, content: 'Post2', createdAt: response[1]?.posts[0]?.createdAt }]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -3273,17 +3166,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and posts + limits + custom fields in each', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and posts + limits + custom fields in each', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
@@ -3292,7 +3183,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       limit: 3,
       extras: (users, { sql }) => ({ lower: sql<string>`lower(${users.name})`.as('lower_name') }),
       with: {
@@ -3326,17 +3217,17 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).eq(3);
+    ctx.expect(response.length).eq(3);
 
-    expect(response[0]?.invitee).toBeNull();
-    expect(response[1]?.invitee).toBeNull();
-    expect(response[2]?.invitee).not.toBeNull();
+    ctx.expect(response[0]?.invitee).toBeNull();
+    ctx.expect(response[1]?.invitee).toBeNull();
+    ctx.expect(response[2]?.invitee).not.toBeNull();
 
-    expect(response[0]?.posts.length).eq(1);
-    expect(response[1]?.posts.length).eq(1);
-    expect(response[2]?.posts.length).eq(1);
+    ctx.expect(response[0]?.posts.length).eq(1);
+    ctx.expect(response[1]?.posts.length).eq(1);
+    ctx.expect(response[2]?.posts.length).eq(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Dan',
       lower: 'dan',
@@ -3345,7 +3236,7 @@ describe.sequential('Drizzle ORM', () => {
       invitee: null,
       posts: [{ id: 1, ownerId: 1, content: 'Post1', lower: 'post1', createdAt: response[0]?.posts[0]?.createdAt }]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Andrew',
       lower: 'andrew',
@@ -3354,7 +3245,7 @@ describe.sequential('Drizzle ORM', () => {
       invitee: null,
       posts: [{ id: 3, ownerId: 2, content: 'Post2', lower: 'post2', createdAt: response[1]?.posts[0]?.createdAt }]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Alex',
       lower: 'alex',
@@ -3365,17 +3256,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and posts + custom fields in each', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and posts + custom fields in each', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
@@ -3384,7 +3273,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       extras: (users, { sql }) => ({ lower: sql<string>`lower(${users.name})`.as('lower_name') }),
       with: {
         invitee: {
@@ -3416,19 +3305,19 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).eq(4);
+    ctx.expect(response.length).eq(4);
 
-    expect(response[0]?.invitee).toBeNull();
-    expect(response[1]?.invitee).toBeNull();
-    expect(response[2]?.invitee).not.toBeNull();
-    expect(response[3]?.invitee).not.toBeNull();
+    ctx.expect(response[0]?.invitee).toBeNull();
+    ctx.expect(response[1]?.invitee).toBeNull();
+    ctx.expect(response[2]?.invitee).not.toBeNull();
+    ctx.expect(response[3]?.invitee).not.toBeNull();
 
-    expect(response[0]?.posts.length).eq(2);
-    expect(response[1]?.posts.length).eq(2);
-    expect(response[2]?.posts.length).eq(2);
-    expect(response[3]?.posts.length).eq(0);
+    ctx.expect(response[0]?.posts.length).eq(2);
+    ctx.expect(response[1]?.posts.length).eq(2);
+    ctx.expect(response[2]?.posts.length).eq(2);
+    ctx.expect(response[3]?.posts.length).eq(0);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Dan',
       lower: 'dan',
@@ -3446,7 +3335,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Andrew',
       lower: 'andrew',
@@ -3464,7 +3353,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Alex',
       lower: 'alex',
@@ -3482,7 +3371,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 4,
       name: 'John',
       lower: 'john',
@@ -3493,17 +3382,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and posts + orderBy', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and posts + orderBy', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
@@ -3511,7 +3398,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       orderBy: (users, { desc }) => [desc(users.id)],
       with: {
         invitee: true,
@@ -3537,19 +3424,19 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(response.length).eq(4);
+    ctx.expect(response.length).eq(4);
 
-    expect(response[3]?.invitee).toBeNull();
-    expect(response[2]?.invitee).toBeNull();
-    expect(response[1]?.invitee).not.toBeNull();
-    expect(response[0]?.invitee).not.toBeNull();
+    ctx.expect(response[3]?.invitee).toBeNull();
+    ctx.expect(response[2]?.invitee).toBeNull();
+    ctx.expect(response[1]?.invitee).not.toBeNull();
+    ctx.expect(response[0]?.invitee).not.toBeNull();
 
-    expect(response[0]?.posts.length).eq(0);
-    expect(response[1]?.posts.length).eq(1);
-    expect(response[2]?.posts.length).eq(2);
-    expect(response[3]?.posts.length).eq(2);
+    ctx.expect(response[0]?.posts.length).eq(0);
+    ctx.expect(response[1]?.posts.length).eq(1);
+    ctx.expect(response[2]?.posts.length).eq(2);
+    ctx.expect(response[3]?.posts.length).eq(2);
 
-    expect(response[3]).toEqual({
+    ctx.expect(response[3]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -3565,7 +3452,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response[2]).toEqual({
+    ctx.expect(response[2]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -3581,7 +3468,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response[1]).toEqual({
+    ctx.expect(response[1]).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -3596,7 +3483,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response[0]).toEqual({
+    ctx.expect(response[0]).toEqual({
       id: 4,
       name: 'John',
       verified: false,
@@ -3606,23 +3493,21 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and posts + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and posts + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 2, content: 'Post2' },
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       where: (users, { eq, or }) => or(eq(users.id, 2), eq(users.id, 3)),
       with: {
         invitee: true,
@@ -3650,15 +3535,15 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).eq(2);
+    ctx.expect(response.length).eq(2);
 
-    expect(response[0]?.invitee).toBeNull();
-    expect(response[1]?.invitee).not.toBeNull();
+    ctx.expect(response[0]?.invitee).toBeNull();
+    ctx.expect(response[1]?.invitee).not.toBeNull();
 
-    expect(response[0]?.posts.length).eq(1);
-    expect(response[1]?.posts.length).eq(0);
+    ctx.expect(response[0]?.posts.length).eq(1);
+    ctx.expect(response[1]?.posts.length).eq(0);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -3666,7 +3551,7 @@ describe.sequential('Drizzle ORM', () => {
       invitee: null,
       posts: [{ id: 2, ownerId: 2, content: 'Post2', createdAt: response[0]?.posts[0]?.createdAt }]
     });
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -3676,17 +3561,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and posts + limit posts and users + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and posts + limit posts and users + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
@@ -3695,7 +3578,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3.1' }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       where: (users, { eq, or }) => or(eq(users.id, 3), eq(users.id, 4)),
       limit: 1,
       with: {
@@ -3723,12 +3606,12 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(response.length).eq(1);
+    ctx.expect(response.length).eq(1);
 
-    expect(response[0]?.invitee).not.toBeNull();
-    expect(response[0]?.posts.length).eq(1);
+    ctx.expect(response[0]?.invitee).not.toBeNull();
+    ctx.expect(response[0]?.posts.length).eq(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -3738,17 +3621,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and posts + orderBy + where + custom', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and posts + orderBy + where + custom', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
@@ -3756,7 +3637,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       orderBy: [desc(usersTable.id)],
       where: or(eq(usersTable.id, 3), eq(usersTable.id, 4)),
       extras: {
@@ -3791,15 +3672,15 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(response.length).eq(2);
+    ctx.expect(response.length).eq(2);
 
-    expect(response[1]?.invitee).not.toBeNull();
-    expect(response[0]?.invitee).not.toBeNull();
+    ctx.expect(response[1]?.invitee).not.toBeNull();
+    ctx.expect(response[0]?.invitee).not.toBeNull();
 
-    expect(response[0]?.posts.length).eq(0);
-    expect(response[1]?.posts.length).eq(1);
+    ctx.expect(response[0]?.posts.length).eq(0);
+    ctx.expect(response[1]?.posts.length).eq(1);
 
-    expect(response[1]).toEqual({
+    ctx.expect(response[1]).toEqual({
       id: 3,
       name: 'Alex',
       lower: 'alex',
@@ -3816,7 +3697,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response[0]).toEqual({
+    ctx.expect(response[0]).toEqual({
       id: 4,
       name: 'John',
       lower: 'john',
@@ -3827,17 +3708,15 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get user with invitee and posts + orderBy + where + partial + custom', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with invitee and posts + orderBy + where + partial + custom', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex', invitedBy: 1 },
       { id: 4, name: 'John', invitedBy: 2 }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { ownerId: 1, content: 'Post1' },
       { ownerId: 1, content: 'Post1.1' },
       { ownerId: 2, content: 'Post2' },
@@ -3845,7 +3724,7 @@ describe.sequential('Drizzle ORM', () => {
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       orderBy: [desc(usersTable.id)],
       where: or(eq(usersTable.id, 3), eq(usersTable.id, 4)),
       extras: {
@@ -3893,15 +3772,15 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(response.length).eq(2);
+    ctx.expect(response.length).eq(2);
 
-    expect(response[1]?.invitee).not.toBeNull();
-    expect(response[0]?.invitee).not.toBeNull();
+    ctx.expect(response[1]?.invitee).not.toBeNull();
+    ctx.expect(response[0]?.invitee).not.toBeNull();
 
-    expect(response[0]?.posts.length).eq(0);
-    expect(response[1]?.posts.length).eq(1);
+    ctx.expect(response[0]?.posts.length).eq(0);
+    ctx.expect(response[1]?.posts.length).eq(1);
 
-    expect(response[1]).toEqual({
+    ctx.expect(response[1]).toEqual({
       id: 3,
       name: 'Alex',
       lower: 'alex',
@@ -3914,7 +3793,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response[0]).toEqual({
+    ctx.expect(response[0]).toEqual({
       id: 4,
       name: 'John',
       lower: 'john',
@@ -3927,28 +3806,26 @@ describe.sequential('Drizzle ORM', () => {
 	One two-level relation users+posts+comments
 */
 
-  test('Get user with posts and posts with comments', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with posts and posts with comments', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { id: 1, ownerId: 1, content: 'Post1' },
       { id: 2, ownerId: 2, content: 'Post2' },
       { id: 3, ownerId: 3, content: 'Post3' }
     ]);
 
-    await db.insert(commentsTable).values([
+    await ctx.db.insert(commentsTable).values([
       { postId: 1, content: 'Comment1', creator: 2 },
       { postId: 2, content: 'Comment2', creator: 2 },
       { postId: 3, content: 'Comment3', creator: 3 }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       with: {
         posts: {
           with: {
@@ -3982,16 +3859,16 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).eq(3);
-    expect(response[0]?.posts.length).eq(1);
-    expect(response[1]?.posts.length).eq(1);
-    expect(response[2]?.posts.length).eq(1);
+    ctx.expect(response.length).eq(3);
+    ctx.expect(response[0]?.posts.length).eq(1);
+    ctx.expect(response[1]?.posts.length).eq(1);
+    ctx.expect(response[2]?.posts.length).eq(1);
 
-    expect(response[0]?.posts[0]?.comments.length).eq(1);
-    expect(response[1]?.posts[0]?.comments.length).eq(1);
-    expect(response[2]?.posts[0]?.comments.length).eq(1);
+    ctx.expect(response[0]?.posts[0]?.comments.length).eq(1);
+    ctx.expect(response[1]?.posts[0]?.comments.length).eq(1);
+    ctx.expect(response[2]?.posts[0]?.comments.length).eq(1);
 
-    expect(response[0]).toEqual({
+    ctx.expect(response[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -4014,7 +3891,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response[1]).toEqual({
+    ctx.expect(response[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -4037,7 +3914,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    // expect(response[2]).toEqual({
+    // ctx.expect(response[2]).toEqual({
     // 	id: 3,
     // 	name: 'Alex',
     // 	verified: false,
@@ -4088,28 +3965,26 @@ describe.sequential('Drizzle ORM', () => {
 	One three-level relation users+posts+comments+comment_owner
 */
 
-  test('Get user with posts and posts with comments and comments with owner', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get user with posts and posts with comments and comments with owner', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(postsTable).values([
+    await ctx.db.insert(postsTable).values([
       { id: 1, ownerId: 1, content: 'Post1' },
       { id: 2, ownerId: 2, content: 'Post2' },
       { id: 3, ownerId: 3, content: 'Post3' }
     ]);
 
-    await db.insert(commentsTable).values([
+    await ctx.db.insert(commentsTable).values([
       { postId: 1, content: 'Comment1', creator: 2 },
       { postId: 2, content: 'Comment2', creator: 2 },
       { postId: 3, content: 'Comment3', creator: 3 }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       with: {
         posts: {
           with: {
@@ -4153,16 +4028,16 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).eq(3);
-    expect(response[0]?.posts.length).eq(1);
-    expect(response[1]?.posts.length).eq(1);
-    expect(response[2]?.posts.length).eq(1);
+    ctx.expect(response.length).eq(3);
+    ctx.expect(response[0]?.posts.length).eq(1);
+    ctx.expect(response[1]?.posts.length).eq(1);
+    ctx.expect(response[2]?.posts.length).eq(1);
 
-    expect(response[0]?.posts[0]?.comments.length).eq(1);
-    expect(response[1]?.posts[0]?.comments.length).eq(1);
-    expect(response[2]?.posts[0]?.comments.length).eq(1);
+    ctx.expect(response[0]?.posts[0]?.comments.length).eq(1);
+    ctx.expect(response[1]?.posts[0]?.comments.length).eq(1);
+    ctx.expect(response[2]?.posts[0]?.comments.length).eq(1);
 
-    expect(response[0]).toEqual({
+    ctx.expect(response[0]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -4191,7 +4066,7 @@ describe.sequential('Drizzle ORM', () => {
         }
       ]
     });
-    expect(response[1]).toEqual({
+    ctx.expect(response[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -4238,29 +4113,27 @@ describe.sequential('Drizzle ORM', () => {
 	Users+users_to_groups+groups
 */
 
-  test('[Find Many] Get users with groups', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with groups', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       with: {
         usersToGroups: {
           columns: {},
@@ -4289,13 +4162,13 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(3);
+    ctx.expect(response.length).toEqual(3);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(1);
-    expect(response[2]?.usersToGroups.length).toEqual(2);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[2]?.usersToGroups.length).toEqual(2);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -4311,7 +4184,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -4327,7 +4200,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -4351,29 +4224,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get groups with users', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get groups with users', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findMany({
+    const response = await ctx.db.query.groupsTable.findMany({
       with: {
         usersToGroups: {
           columns: {},
@@ -4402,13 +4273,13 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(3);
+    ctx.expect(response.length).toEqual(3);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(2);
-    expect(response[2]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(2);
+    ctx.expect(response[2]?.usersToGroups.length).toEqual(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Group1',
       description: null,
@@ -4424,7 +4295,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Group2',
       description: null,
@@ -4448,7 +4319,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Group3',
       description: null,
@@ -4465,29 +4336,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with groups + limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with groups + limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 2, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       limit: 2,
       with: {
         usersToGroups: {
@@ -4518,12 +4387,12 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(2);
+    ctx.expect(response.length).toEqual(2);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -4539,7 +4408,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -4556,29 +4425,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get groups with users + limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get groups with users + limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findMany({
+    const response = await ctx.db.query.groupsTable.findMany({
       limit: 2,
       with: {
         usersToGroups: {
@@ -4609,12 +4476,12 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(2);
+    ctx.expect(response.length).toEqual(2);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Group1',
       description: null,
@@ -4630,7 +4497,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Group2',
       description: null,
@@ -4647,29 +4514,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with groups + limit + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with groups + limit + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 2, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       limit: 1,
       where: (_, { eq, or }) => or(eq(usersTable.id, 1), eq(usersTable.id, 2)),
       with: {
@@ -4701,11 +4566,11 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(1);
+    ctx.expect(response.length).toEqual(1);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -4722,29 +4587,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get groups with users + limit + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get groups with users + limit + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findMany({
+    const response = await ctx.db.query.groupsTable.findMany({
       limit: 1,
       where: gt(groupsTable.id, 1),
       with: {
@@ -4777,11 +4640,11 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(1);
+    ctx.expect(response.length).toEqual(1);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Group2',
       description: null,
@@ -4798,29 +4661,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with groups + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with groups + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 2, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       where: (_, { eq, or }) => or(eq(usersTable.id, 1), eq(usersTable.id, 2)),
       with: {
         usersToGroups: {
@@ -4851,12 +4712,12 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(2);
+    ctx.expect(response.length).toEqual(2);
 
-    expect(response[0]?.usersToGroups.length).toEqual(0);
-    expect(response[1]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(0);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -4864,7 +4725,7 @@ describe.sequential('Drizzle ORM', () => {
       usersToGroups: []
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -4881,29 +4742,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get groups with users + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get groups with users + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findMany({
+    const response = await ctx.db.query.groupsTable.findMany({
       where: gt(groupsTable.id, 1),
       with: {
         usersToGroups: {
@@ -4934,12 +4793,12 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(2);
+    ctx.expect(response.length).toEqual(2);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(0);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(0);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Group2',
       description: null,
@@ -4955,7 +4814,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Group3',
       description: null,
@@ -4963,29 +4822,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with groups + orderBy', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with groups + orderBy', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       orderBy: (users, { desc }) => [desc(users.id)],
       with: {
         usersToGroups: {
@@ -5014,13 +4871,13 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(response.length).toEqual(3);
+    ctx.expect(response.length).toEqual(3);
 
-    expect(response[0]?.usersToGroups.length).toEqual(2);
-    expect(response[1]?.usersToGroups.length).toEqual(1);
-    expect(response[2]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(2);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[2]?.usersToGroups.length).toEqual(1);
 
-    expect(response[2]).toEqual({
+    ctx.expect(response[2]).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -5036,7 +4893,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response[1]).toEqual({
+    ctx.expect(response[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -5052,7 +4909,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response[0]).toEqual({
+    ctx.expect(response[0]).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -5076,29 +4933,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get groups with users + orderBy', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get groups with users + orderBy', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findMany({
+    const response = await ctx.db.query.groupsTable.findMany({
       orderBy: [desc(groupsTable.id)],
       with: {
         usersToGroups: {
@@ -5127,13 +4982,13 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(response.length).toEqual(3);
+    ctx.expect(response.length).toEqual(3);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(2);
-    expect(response[2]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(2);
+    ctx.expect(response[2]?.usersToGroups.length).toEqual(1);
 
-    expect(response[2]).toEqual({
+    ctx.expect(response[2]).toEqual({
       id: 1,
       name: 'Group1',
       description: null,
@@ -5149,7 +5004,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response[1]).toEqual({
+    ctx.expect(response[1]).toEqual({
       id: 2,
       name: 'Group2',
       description: null,
@@ -5173,7 +5028,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response[0]).toEqual({
+    ctx.expect(response[0]).toEqual({
       id: 3,
       name: 'Group3',
       description: null,
@@ -5190,29 +5045,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find Many] Get users with groups + orderBy + limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find Many] Get users with groups + orderBy + limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       orderBy: (users, { desc }) => [desc(users.id)],
       limit: 2,
       with: {
@@ -5243,12 +5096,12 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(response.length).toEqual(2);
+    ctx.expect(response.length).toEqual(2);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(1);
 
-    expect(response[1]).toEqual({
+    ctx.expect(response[1]).toEqual({
       id: 2,
       name: 'Andrew',
       verified: false,
@@ -5264,7 +5117,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response[0]).toEqual({
+    ctx.expect(response[0]).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -5287,29 +5140,27 @@ describe.sequential('Drizzle ORM', () => {
 	Users+users_to_groups+groups
 */
 
-  test('[Find One] Get users with groups', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with groups', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findFirst({
+    const response = await ctx.db.query.usersTable.findFirst({
       with: {
         usersToGroups: {
           columns: {},
@@ -5337,9 +5188,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(1);
+    ctx.expect(response?.usersToGroups.length).toEqual(1);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -5356,29 +5207,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get groups with users', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get groups with users', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findFirst({
+    const response = await ctx.db.query.groupsTable.findFirst({
       with: {
         usersToGroups: {
           columns: {},
@@ -5406,9 +5255,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(1);
+    ctx.expect(response?.usersToGroups.length).toEqual(1);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 1,
       name: 'Group1',
       description: null,
@@ -5425,29 +5274,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with groups + limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with groups + limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 2, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findFirst({
+    const response = await ctx.db.query.usersTable.findFirst({
       with: {
         usersToGroups: {
           limit: 1,
@@ -5476,9 +5323,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(1);
+    ctx.expect(response?.usersToGroups.length).toEqual(1);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -5495,29 +5342,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get groups with users + limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get groups with users + limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findFirst({
+    const response = await ctx.db.query.groupsTable.findFirst({
       with: {
         usersToGroups: {
           limit: 1,
@@ -5546,9 +5391,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(1);
+    ctx.expect(response?.usersToGroups.length).toEqual(1);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 1,
       name: 'Group1',
       description: null,
@@ -5565,29 +5410,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with groups + limit + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with groups + limit + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 2, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findFirst({
+    const response = await ctx.db.query.usersTable.findFirst({
       where: (_, { eq, or }) => or(eq(usersTable.id, 1), eq(usersTable.id, 2)),
       with: {
         usersToGroups: {
@@ -5617,9 +5460,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(1);
+    ctx.expect(response?.usersToGroups.length).toEqual(1);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -5636,29 +5479,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get groups with users + limit + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get groups with users + limit + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findFirst({
+    const response = await ctx.db.query.groupsTable.findFirst({
       where: gt(groupsTable.id, 1),
       with: {
         usersToGroups: {
@@ -5689,9 +5530,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(1);
+    ctx.expect(response?.usersToGroups.length).toEqual(1);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 2,
       name: 'Group2',
       description: null,
@@ -5708,29 +5549,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with groups + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with groups + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 2, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findFirst({
+    const response = await ctx.db.query.usersTable.findFirst({
       where: (_, { eq, or }) => or(eq(usersTable.id, 1), eq(usersTable.id, 2)),
       with: {
         usersToGroups: {
@@ -5760,9 +5599,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(0);
+    ctx.expect(response?.usersToGroups.length).toEqual(0);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 1,
       name: 'Dan',
       verified: false,
@@ -5771,29 +5610,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get groups with users + where', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get groups with users + where', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findFirst({
+    const response = await ctx.db.query.groupsTable.findFirst({
       where: gt(groupsTable.id, 1),
       with: {
         usersToGroups: {
@@ -5823,9 +5660,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(1);
+    ctx.expect(response?.usersToGroups.length).toEqual(1);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 2,
       name: 'Group2',
       description: null,
@@ -5842,29 +5679,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with groups + orderBy', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with groups + orderBy', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findFirst({
+    const response = await ctx.db.query.usersTable.findFirst({
       orderBy: (users, { desc }) => [desc(users.id)],
       with: {
         usersToGroups: {
@@ -5894,9 +5729,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(2);
+    ctx.expect(response?.usersToGroups.length).toEqual(2);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -5920,29 +5755,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get groups with users + orderBy', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get groups with users + orderBy', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findFirst({
+    const response = await ctx.db.query.groupsTable.findFirst({
       orderBy: [desc(groupsTable.id)],
       with: {
         usersToGroups: {
@@ -5972,9 +5805,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(1);
+    ctx.expect(response?.usersToGroups.length).toEqual(1);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 3,
       name: 'Group3',
       description: null,
@@ -5991,29 +5824,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('[Find One] Get users with groups + orderBy + limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('[Find One] Get users with groups + orderBy + limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findFirst({
+    const response = await ctx.db.query.usersTable.findFirst({
       orderBy: (users, { desc }) => [desc(users.id)],
       with: {
         usersToGroups: {
@@ -6044,9 +5875,9 @@ describe.sequential('Drizzle ORM', () => {
       | undefined
     >();
 
-    expect(response?.usersToGroups.length).toEqual(1);
+    ctx.expect(response?.usersToGroups.length).toEqual(1);
 
-    expect(response).toEqual({
+    ctx.expect(response).toEqual({
       id: 3,
       name: 'Alex',
       verified: false,
@@ -6063,29 +5894,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get groups with users + orderBy + limit', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get groups with users + orderBy + limit', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findMany({
+    const response = await ctx.db.query.groupsTable.findMany({
       orderBy: [desc(groupsTable.id)],
       limit: 2,
       with: {
@@ -6116,12 +5945,12 @@ describe.sequential('Drizzle ORM', () => {
       }[]
     >();
 
-    expect(response.length).toEqual(2);
+    ctx.expect(response.length).toEqual(2);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(1);
 
-    expect(response[1]).toEqual({
+    ctx.expect(response[1]).toEqual({
       id: 2,
       name: 'Group2',
       description: null,
@@ -6137,7 +5966,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response[0]).toEqual({
+    ctx.expect(response[0]).toEqual({
       id: 3,
       name: 'Group3',
       description: null,
@@ -6154,29 +5983,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get users with groups + custom', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get users with groups + custom', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.usersTable.findMany({
+    const response = await ctx.db.query.usersTable.findMany({
       extras: {
         lower: sql<string>`lower(${usersTable.name})`.as('lower_name')
       },
@@ -6214,13 +6041,13 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(3);
+    ctx.expect(response.length).toEqual(3);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(1);
-    expect(response[2]?.usersToGroups.length).toEqual(2);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[2]?.usersToGroups.length).toEqual(2);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Dan',
       lower: 'dan',
@@ -6238,7 +6065,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Andrew',
       lower: 'andrew',
@@ -6256,7 +6083,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Alex',
       lower: 'alex',
@@ -6283,29 +6110,27 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('Get groups with users + custom', async (t) => {
-    const { db: db } = t;
-
-    await db.insert(usersTable).values([
+  test('Get groups with users + custom', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
       { id: 3, name: 'Alex' }
     ]);
 
-    await db.insert(groupsTable).values([
+    await ctx.db.insert(groupsTable).values([
       { id: 1, name: 'Group1' },
       { id: 2, name: 'Group2' },
       { id: 3, name: 'Group3' }
     ]);
 
-    await db.insert(usersToGroupsTable).values([
+    await ctx.db.insert(usersToGroupsTable).values([
       { userId: 1, groupId: 1 },
       { userId: 2, groupId: 2 },
       { userId: 3, groupId: 3 },
       { userId: 3, groupId: 2 }
     ]);
 
-    const response = await db.query.groupsTable.findMany({
+    const response = await ctx.db.query.groupsTable.findMany({
       extras: (table, { sql }) => ({
         lower: sql<string>`lower(${table.name})`.as('lower_name')
       }),
@@ -6343,13 +6168,13 @@ describe.sequential('Drizzle ORM', () => {
 
     response.sort((a, b) => (a.id > b.id ? 1 : -1));
 
-    expect(response.length).toEqual(3);
+    ctx.expect(response.length).toEqual(3);
 
-    expect(response[0]?.usersToGroups.length).toEqual(1);
-    expect(response[1]?.usersToGroups.length).toEqual(2);
-    expect(response[2]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[0]?.usersToGroups.length).toEqual(1);
+    ctx.expect(response[1]?.usersToGroups.length).toEqual(2);
+    ctx.expect(response[2]?.usersToGroups.length).toEqual(1);
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 1,
       name: 'Group1',
       lower: 'group1',
@@ -6367,7 +6192,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 2,
       name: 'Group2',
       lower: 'group2',
@@ -6394,7 +6219,7 @@ describe.sequential('Drizzle ORM', () => {
       ]
     });
 
-    expect(response).toContainEqual({
+    ctx.expect(response).toContainEqual({
       id: 3,
       name: 'Group3',
       lower: 'group3',
@@ -6413,10 +6238,20 @@ describe.sequential('Drizzle ORM', () => {
     });
   });
 
-  test('.toSQL()', () => {
-    const query = db.query.usersTable.findFirst().toSQL();
+  test('.toSQL()', (ctx) => {
+    const query = ctx.db.query.usersTable.findFirst().toSQL();
 
-    expect(query).toHaveProperty('sql', expect.any(String));
-    expect(query).toHaveProperty('params', expect.any(Array));
+    ctx.expect(query).toHaveProperty('sql', ctx.expect.any(String));
+    ctx.expect(query).toHaveProperty('params', ctx.expect.any(Array));
   });
 });
+
+async function waitForReplication(): Promise<void> {
+  try {
+    await api.branches.getBranchList({ workspace, database, region });
+  } catch (error) {
+    console.log(`Waiting for create database replication to finish...`);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    return await waitForReplication();
+  }
+}
