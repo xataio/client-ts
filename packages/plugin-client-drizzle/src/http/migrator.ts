@@ -1,8 +1,8 @@
 import { MigrationConfig, readMigrationFiles } from 'drizzle-orm/migrator';
-import { XataDatabase } from './driver';
+import { XataHttpDatabase } from './driver';
 
 export async function migrate<TSchema extends Record<string, unknown>>(
-  _db: XataDatabase<TSchema>,
+  _db: XataHttpDatabase<TSchema>,
   config: string | MigrationConfig
 ) {
   const migrations = readMigrationFiles(config);

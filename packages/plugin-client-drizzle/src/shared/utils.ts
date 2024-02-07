@@ -1,9 +1,4 @@
-import { AnyColumn, Column, DriverValueDecoder, SQL, getTableName, is } from 'drizzle-orm';
-
-type SelectedFieldsOrdered<TColumn extends Column> = {
-  path: string[];
-  field: TColumn | SQL | SQL.Aliased;
-}[];
+import { AnyColumn, Column, DriverValueDecoder, SQL, SelectedFieldsOrdered, getTableName, is } from 'drizzle-orm';
 
 export function mapResultRow<TResult>(
   columns: SelectedFieldsOrdered<AnyColumn>,
@@ -20,7 +15,7 @@ export function mapResultRow<TResult>(
     } else if (is(field, SQL)) {
       decoder = (field as any).decoder;
     } else {
-      decoder = (field as any).sql.decoder;
+      decoder = (field.sql as any).decoder;
     }
     let node = result;
     for (const [pathChunkIndex, pathChunk] of path.entries()) {
@@ -60,7 +55,3 @@ export function mapResultRow<TResult>(
 
   return result as TResult;
 }
-
-export const exhaustiveCheck = (x: never): never => {
-  throw new Error(`Unhandled discriminated union member: ${x}`);
-};

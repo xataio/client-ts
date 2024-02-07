@@ -1,23 +1,45 @@
-import { SQLPluginResult } from '@xata.io/client';
 import {
   DefaultLogger,
   DrizzleConfig,
+  Logger,
   RelationalSchemaConfig,
   TablesRelationalConfig,
   createTableRelationsHelpers,
+  entityKind,
   extractTablesRelationalConfig
 } from 'drizzle-orm';
+import type { XataClient, XataQueryResultHKT } from './session.js';
+import { XataSession } from './session.js';
 import { PgDatabase, PgDialect } from 'drizzle-orm/pg-core';
-import { XataQueryResultHKT, XataSession } from './session';
+
+export interface XataDriverOptions {
+  logger?: Logger;
+}
+
+export class XataDriver {
+  static readonly [entityKind]: string = 'XataDriver';
+
+  constructor(private client: XataClient, private dialect: PgDialect, private options: XataDriverOptions = {}) {
+    this.initMappers();
+  }
+
+  createSession(
+    schema: RelationalSchemaConfig<TablesRelationalConfig> | undefined
+  ): XataSession<Record<string, unknown>, TablesRelationalConfig> {
+    return new XataSession(this.client, this.dialect, schema, {
+      logger: this.options.logger
+    });
+  }
+
+  initMappers() {
+    // TODO: Add custom type parsers
+  }
+}
 
 export type XataDatabase<TSchema extends Record<string, unknown> = Record<string, never>> = PgDatabase<
   XataQueryResultHKT,
   TSchema
 >;
-
-export type XataClient = {
-  sql: SQLPluginResult;
-};
 
 export function drizzle<TSchema extends Record<string, unknown> = Record<string, never>>(
   client: XataClient,
@@ -41,6 +63,7 @@ export function drizzle<TSchema extends Record<string, unknown> = Record<string,
     };
   }
 
-  const session = new XataSession(client, dialect, schema, { logger });
+  const driver = new XataDriver(client, dialect, { logger });
+  const session = driver.createSession(schema);
   return new PgDatabase(dialect, session, schema) as XataDatabase<TSchema>;
 }
