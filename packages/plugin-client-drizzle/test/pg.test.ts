@@ -5,7 +5,6 @@ import { afterAll, beforeAll, beforeEach, expect, expectTypeOf, test } from 'vit
 import { drizzle, type XataDatabase } from '../src/pg';
 import * as schema from './schema';
 import { HostProvider, parseProviderString, XataApiClient } from '@xata.io/client';
-import { describe } from 'node:test';
 
 const { usersTable, postsTable, commentsTable, usersToGroupsTable, groupsTable } = schema;
 
