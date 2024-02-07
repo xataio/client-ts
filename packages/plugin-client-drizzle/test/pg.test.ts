@@ -143,6 +143,7 @@ beforeEach(async (ctx) => {
       ctx.branch
     }`
   });
+  await ctx.client.connect();
   ctx.db = drizzle(ctx.client, { schema, logger: ENABLE_LOGGING });
 });
 
