@@ -52,7 +52,7 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
 
     const { fields, client, rawQuery, query, customResultMapper } = this;
     if (!fields && !customResultMapper) {
-      return client.query(rawQuery, params);
+      return await client.query(rawQuery, params);
     }
 
     const result = await client.query(query, params);
@@ -120,7 +120,7 @@ export class XataSession<
   }
 
   async queryObjects<T extends QueryResultRow>(query: string, params: unknown[]): Promise<QueryResult<T>> {
-    return this.client.query<T>(query, params);
+    return await this.client.query<T>(query, params);
   }
 
   override async transaction<T>(
