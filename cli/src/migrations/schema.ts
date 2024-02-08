@@ -1,5 +1,6 @@
 import { Schemas } from '@xata.io/client';
 import { columnSchema } from '@xata.io/codegen';
+import { PgRollMigrationDefinition } from '@xata.io/pgroll';
 import z from 'zod';
 
 const addTable = z.object({
@@ -47,3 +48,14 @@ export const migrationFile = z.object({
   checksum: z.string(),
   operations: z.array(migrationOperation)
 }) satisfies z.ZodType<Schemas.MigrationObject>;
+
+export const migrationFilePgroll = z.object({
+  name: z.string(),
+  startedAt: z.string(),
+  parent: z.string().optional(),
+  migration: PgRollMigrationDefinition,
+  done: z.boolean(),
+  migrationType: z.enum(['pgroll', 'inferred']) satisfies z.ZodType<Schemas.PgRollMigrationType>
+});
+
+export type MigrationFilePgroll = z.infer<typeof migrationFilePgroll>;

@@ -1,7 +1,20 @@
 import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
-import { commitToMigrationFile, getLocalMigrationFiles } from '../../migrations/files.js';
+import {
+  LocalMigrationFile,
+  commitToMigrationFile,
+  getLastCommonIndex,
+  getLocalMigrationFiles
+} from '../../migrations/files.js';
+import {
+  allMigrationsPgRollFormat,
+  getBranchDetailsWithPgRoll,
+  isBranchPgRollEnabled,
+  isMigrationPgRollFormat
+} from '../../migrations/pgroll.js';
+import { MigrationFilePgroll } from '../../migrations/schema.js';
+import { PgRollMigrationDefinition } from '@xata.io/pgroll';
 
 export default class Push extends BaseCommand<typeof Push> {
   static description = 'Push local changes to a remote Xata branch';
@@ -32,17 +45,36 @@ export default class Push extends BaseCommand<typeof Push> {
       true
     );
 
-    const { logs } = await xata.api.migrations.getBranchSchemaHistory({
-      workspace,
-      region,
-      database,
-      branch,
-      // TODO: Fix pagination in the API to start from last known migration and not from the beginning
-      // Also paginate until we get all migrations
-      page: { size: 200 }
-    });
+    const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
-    const localMigrationFiles = await getLocalMigrationFiles();
+    let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
+    if (isBranchPgRollEnabled(details)) {
+      const { migrations } = await xata.api.branches.pgRollMigrationHistory({
+        workspace,
+        region,
+        database,
+        branch
+      });
+      logs = migrations;
+    } else {
+      const data = await xata.api.migrations.getBranchSchemaHistory({
+        workspace,
+        region,
+        database,
+        branch,
+        // TODO: Fix pagination in the API to start from last known migration and not from the beginning
+        // Also paginate until we get all migrations
+        page: { size: 200 }
+      });
+      logs = data.logs;
+    }
+
+    if (isBranchPgRollEnabled(details) && !(await allMigrationsPgRollFormat())) {
+      this.log(`Please run xata pull -f to convert all migrations to pgroll format`);
+      return;
+    }
+
+    const localMigrationFiles = await getLocalMigrationFiles(isBranchPgRollEnabled(details));
 
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
 
@@ -52,7 +84,7 @@ export default class Push extends BaseCommand<typeof Push> {
     }
 
     newMigrations.forEach((migration) => {
-      this.log(`  ${migration.id}`);
+      isMigrationPgRollFormat(migration) ? this.log(`  ${migration.name}`) : this.log(`  ${migration.id}`);
     });
 
     if (flags['dry-run']) {
@@ -69,28 +101,49 @@ export default class Push extends BaseCommand<typeof Push> {
 
     if (!confirm) return this.exit(1);
 
-    // TODO: Check for errors and print them
-    await xata.api.migrations.pushBranchMigrations({ workspace, region, database, branch, migrations: newMigrations });
+    if (isBranchPgRollEnabled(details)) {
+      const migrationsToPush = (newMigrations as MigrationFilePgroll[])
+        .map(({ migration }) => migration)
+        .flatMap((migration) => PgRollMigrationDefinition.parse(migration));
+      for (const migration of migrationsToPush) {
+        try {
+          await xata.api.branches.applyMigration({
+            workspace,
+            region,
+            database,
+            branch,
+            // @ts-expect-error Backend API spec doesn't know all pgroll migrations yet
+            migration
+          });
+        } catch (e) {
+          this.log(`Failed to push ${migration} with ${e}. Stopping.`);
+          this.exit(1);
+        }
+      }
+    } else {
+      // TODO: Check for errors and print them
+      await xata.api.migrations.pushBranchMigrations({
+        workspace,
+        region,
+        database,
+        branch,
+        migrations: newMigrations as Schemas.MigrationObject[]
+      });
+    }
 
     this.log(`Pushed ${newMigrations.length} migrations to ${branch}`);
   }
 
   getNewMigrations(
-    localMigrationFiles: Schemas.MigrationObject[],
-    remoteMigrationFiles: Schemas.MigrationObject[]
-  ): Schemas.MigrationObject[] {
+    localMigrationFiles: LocalMigrationFile[],
+    remoteMigrationFiles: LocalMigrationFile[]
+  ): LocalMigrationFile[] {
     if (localMigrationFiles.length === 0 && remoteMigrationFiles.length > 0) {
       this.log('There are new migrations on the remote branch. Please run `xata pull` to get the latest migrations.');
       this.exit(0);
     }
 
-    const lastCommonMigrationIndex = remoteMigrationFiles.reduce((index, remoteMigration) => {
-      if (remoteMigration.id === localMigrationFiles[index + 1]?.id) {
-        return index + 1;
-      }
-
-      return index;
-    }, -1);
+    const lastCommonMigrationIndex = getLastCommonIndex(localMigrationFiles, remoteMigrationFiles);
 
     const newLocalMigrations = localMigrationFiles.slice(lastCommonMigrationIndex + 1);
     const newRemoteMigrations = remoteMigrationFiles.slice(lastCommonMigrationIndex + 1);

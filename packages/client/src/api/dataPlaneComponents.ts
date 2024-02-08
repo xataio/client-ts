@@ -396,7 +396,7 @@ export type GetSchemaError = Fetcher.ErrorWrapper<
 >;
 
 export type GetSchemaResponse = {
-  schema: Record<string, any>;
+  schema: Schemas.PgRollSchema;
 };
 
 export type GetSchemaVariables = {
@@ -720,7 +720,7 @@ export type RemoveGitBranchesEntryPathParams = {
 
 export type RemoveGitBranchesEntryQueryParams = {
   /**
-   * The Git Branch to remove from the mapping
+   * The git branch to remove from the mapping
    */
   gitBranch: string;
 };
@@ -806,7 +806,7 @@ export type ResolveBranchVariables = {
 
 /**
  * In order to resolve the database branch, the following algorithm is used:
- * * if the `gitBranch` was provided and is found in the [git branches mapping](/api-reference/dbs/db_name/gitBranches), the associated Xata branch is returned
+ * * if the `gitBranch` was provided and is found in the [git branches mapping](/docs/api-reference/dbs/db_name/gitBranches), the associated Xata branch is returned
  * * else, if a Xata branch with the exact same name as `gitBranch` exists, return it
  * * else, if `fallbackBranch` is provided and a branch with that name exists, return it
  * * else, return the default branch of the DB (`main` or the first branch)
@@ -3106,7 +3106,7 @@ export type QueryTableVariables = {
  * }
  * ```
  *
- * For usage, see also the [API Guide](https://xata.io/docs/api-guide/get).
+ * For usage, see also the [Xata SDK documentation](https://xata.io/docs/sdk/get).
  *
  * ### Column selection
  *
@@ -4012,7 +4012,7 @@ export type SearchTableVariables = {
 /**
  * Run a free text search operation in a particular table.
  *
- * The endpoint accepts a `query` parameter that is used for the free text search and a set of structured filters (via the `filter` parameter) that are applied before the search. The `filter` parameter uses the same syntax as the [query endpoint](/api-reference/db/db_branch_name/tables/table_name/) with the following exceptions:
+ * The endpoint accepts a `query` parameter that is used for the free text search and a set of structured filters (via the `filter` parameter) that are applied before the search. The `filter` parameter uses the same syntax as the [query endpoint](/docs/api-reference/db/db_branch_name/tables/table_name/query#filtering) with the following exceptions:
  * * filters `$contains`, `$startsWith`, `$endsWith` don't work on columns of type `text`
  * * filtering on columns of type `multiple` is currently unsupported
  */
@@ -4459,7 +4459,7 @@ export type AggregateTableVariables = {
  * store that is more appropriate for analytics, makes use of approximation algorithms
  * (e.g for cardinality), and is generally faster and can do more complex aggregations.
  *
- * For usage, see the [API Guide](https://xata.io/docs/api-guide/aggregate).
+ * For usage, see the [Aggregation documentation](https://xata.io/docs/sdk/aggregate).
  */
 export const aggregateTable = (variables: AggregateTableVariables, signal?: AbortSignal) =>
   dataPlaneFetch<

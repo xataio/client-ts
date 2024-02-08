@@ -27,24 +27,125 @@ afterEach(async (ctx) => {
 });
 
 describe('SQL proxy', () => {
-  test.skip('read single team with id', async () => {
+  test('read single team with id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
-    const { records, warning } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE id = ${team.id}`;
+    const { records, warning, columns } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE id = ${team.id}`;
 
     expect(warning).toBeUndefined();
     expect(records).toHaveLength(1);
+
+    expect(columns).toMatchInlineSnapshot(`
+      {
+        "config": {
+          "type_name": "jsonb",
+        },
+        "dark": {
+          "type_name": "bool",
+        },
+        "description": {
+          "type_name": "text",
+        },
+        "email": {
+          "type_name": "text",
+        },
+        "founded_date": {
+          "type_name": "timestamptz",
+        },
+        "id": {
+          "type_name": "text",
+        },
+        "index": {
+          "type_name": "int8",
+        },
+        "labels": {
+          "type_name": "_text",
+        },
+        "name": {
+          "type_name": "text",
+        },
+        "owner": {
+          "type_name": "text",
+        },
+        "plan": {
+          "type_name": "text",
+        },
+        "rating": {
+          "type_name": "float8",
+        },
+        "xata.createdAt": {
+          "type_name": "timestamptz",
+        },
+        "xata.updatedAt": {
+          "type_name": "timestamptz",
+        },
+        "xata.version": {
+          "type_name": "int4",
+        },
+      }
+    `);
+
     expect(records[0].id).toBe(team.id);
     expect(records[0].name).toBe('Team ships');
   });
 
-  test.skip('read multiple teams ', async () => {
+  test('read multiple teams ', async () => {
     const teams = await xata.db.teams.create([{ name: '[A] Cars' }, { name: '[A] Planes' }]);
 
-    const { records, warning } = await xata.sql<TeamsRecord>("SELECT * FROM teams WHERE name LIKE '[A] %'");
+    const { records, warning, columns } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE name LIKE '[A] %'`;
 
     expect(warning).toBeUndefined();
     expect(records).toHaveLength(2);
+
+    expect(columns).toMatchInlineSnapshot(`
+      {
+        "config": {
+          "type_name": "jsonb",
+        },
+        "dark": {
+          "type_name": "bool",
+        },
+        "description": {
+          "type_name": "text",
+        },
+        "email": {
+          "type_name": "text",
+        },
+        "founded_date": {
+          "type_name": "timestamptz",
+        },
+        "id": {
+          "type_name": "text",
+        },
+        "index": {
+          "type_name": "int8",
+        },
+        "labels": {
+          "type_name": "_text",
+        },
+        "name": {
+          "type_name": "text",
+        },
+        "owner": {
+          "type_name": "text",
+        },
+        "plan": {
+          "type_name": "text",
+        },
+        "rating": {
+          "type_name": "float8",
+        },
+        "xata.createdAt": {
+          "type_name": "timestamptz",
+        },
+        "xata.updatedAt": {
+          "type_name": "timestamptz",
+        },
+        "xata.version": {
+          "type_name": "int4",
+        },
+      }
+    `);
 
     const record1 = records.find((record) => record.id === teams[0].id);
     const record2 = records.find((record) => record.id === teams[1].id);
@@ -55,11 +156,61 @@ describe('SQL proxy', () => {
     expect(record2?.name).toBe('[A] Planes');
   });
 
-  test.skip('create team', async () => {
-    const { records, warning } = await xata.sql<TeamsRecord>({
+  test('create team', async () => {
+    const { records, warning, columns } = await xata.sql<TeamsRecord>({
       statement: `INSERT INTO teams (name) VALUES ($1) RETURNING *`,
       params: ['Team ships 2']
     });
+
+    expect(columns).toMatchInlineSnapshot(`
+      {
+        "config": {
+          "type_name": "jsonb",
+        },
+        "dark": {
+          "type_name": "bool",
+        },
+        "description": {
+          "type_name": "text",
+        },
+        "email": {
+          "type_name": "text",
+        },
+        "founded_date": {
+          "type_name": "timestamptz",
+        },
+        "id": {
+          "type_name": "text",
+        },
+        "index": {
+          "type_name": "int8",
+        },
+        "labels": {
+          "type_name": "_text",
+        },
+        "name": {
+          "type_name": "text",
+        },
+        "owner": {
+          "type_name": "text",
+        },
+        "plan": {
+          "type_name": "text",
+        },
+        "rating": {
+          "type_name": "float8",
+        },
+        "xata.createdAt": {
+          "type_name": "timestamptz",
+        },
+        "xata.updatedAt": {
+          "type_name": "timestamptz",
+        },
+        "xata.version": {
+          "type_name": "int4",
+        },
+      }
+    `);
 
     expect(warning).toBeUndefined();
     expect(records).toHaveLength(1);
@@ -68,5 +219,27 @@ describe('SQL proxy', () => {
     const team = await xata.db.teams.read(records[0].id);
     expect(team).toBeDefined();
     expect(team?.name).toBe('Team ships 2');
+  });
+
+  test("calling xata.sql as a function throws an error because it's not safe", async () => {
+    // @ts-expect-error - Testing invalid usage
+    await expect(xata.sql('SELECT * FROM teams')).rejects.toThrow(
+      'Invalid usage of `xata.sql`. Please use it as a tagged template or with an object.'
+    );
+  });
+
+  test('calling xata.sql with invalid prepared statement', async () => {
+    const order = 'ASC';
+    await expect(xata.sql<TeamsRecord>`SELECT * FROM teams ORDER BY name ${order}`).rejects.toThrow(
+      'invalid SQL: unused parameters: used 0 of 1 parameters'
+    );
+  });
+
+  test("calling xata.sql with invalid prepared statement doesn't throw an error when bypassing prepared statement protection", async () => {
+    const order = 'ASC';
+    const { records } = await xata.sql<TeamsRecord>({
+      statement: `SELECT * FROM teams ORDER BY name ${order}`
+    });
+    expect(records).toBeDefined();
   });
 });

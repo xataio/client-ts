@@ -60,9 +60,13 @@ export const schema = {
         unique: {
           description: 'Indicates if the column values must be unique',
           type: 'boolean'
+        },
+        comment: {
+          description: 'Postgres comment for the column',
+          type: 'string'
         }
       },
-      required: ['name', 'nullable', 'pk', 'type', 'unique'],
+      required: ['name', 'type'],
       type: 'object'
     },
     ForeignKeyReference: {
@@ -126,7 +130,7 @@ export const schema = {
           type: 'string'
         },
         nullable: {
-          description: 'Indicates if the column is nullable (for add not null constraint operation)',
+          description: 'Indicates if the column is nullable (for add/remove not null constraint operation)',
           type: 'boolean'
         },
         references: {
@@ -150,7 +154,60 @@ export const schema = {
           type: 'string'
         }
       },
-      required: ['column', 'down', 'name', 'table', 'type', 'up'],
+      required: ['table', 'column'],
+      oneOf: [
+        {
+          required: ['up', 'down'],
+          oneOf: [
+            {
+              required: ['check']
+            },
+            {
+              required: ['type']
+            },
+            {
+              required: ['nullable']
+            },
+            {
+              required: ['unique']
+            },
+            {
+              required: ['references']
+            }
+          ],
+          not: {
+            required: ['name']
+          }
+        },
+        {
+          required: ['name'],
+          not: {
+            anyOf: [
+              {
+                required: ['up']
+              },
+              {
+                required: ['down']
+              },
+              {
+                required: ['check']
+              },
+              {
+                required: ['type']
+              },
+              {
+                required: ['nullable']
+              },
+              {
+                required: ['unique']
+              },
+              {
+                required: ['references']
+              }
+            ]
+          }
+        }
+      ],
       type: 'object'
     },
     OpCreateIndex: {
@@ -189,6 +246,10 @@ export const schema = {
         },
         name: {
           description: 'Name of the table',
+          type: 'string'
+        },
+        comment: {
+          description: 'Postgres comment for the table',
           type: 'string'
         }
       },
@@ -411,11 +472,11 @@ export const schema = {
           description: 'Raw SQL operation',
           additionalProperties: false,
           properties: {
-            raw_sql: {
+            sql: {
               $ref: '#/$defs/OpRawSQL'
             }
           },
-          required: ['raw_sql']
+          required: ['sql']
         },
         {
           type: 'object',

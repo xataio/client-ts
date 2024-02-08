@@ -21,11 +21,12 @@ export const ColumnDefinition = z.object({
   check: CheckConstraintDefinition.optional(),
   default: z.string().optional(),
   name: z.string(),
-  nullable: z.boolean(),
-  pk: z.boolean(),
+  nullable: z.boolean().optional(),
+  pk: z.boolean().optional(),
   references: ForeignKeyReferenceDefinition.optional(),
   type: z.string(),
-  unique: z.boolean()
+  unique: z.boolean().optional(),
+  comment: z.string().optional()
 });
 
 export type OpAddColumn = z.infer<typeof OpAddColumnDefinition>;
@@ -45,14 +46,14 @@ export type OpAlterColumn = z.infer<typeof OpAlterColumnDefinition>;
 export const OpAlterColumnDefinition = z.object({
   check: CheckConstraintDefinition.optional(),
   column: z.string(),
-  down: z.string(),
-  name: z.string(),
+  down: z.string().optional(),
+  name: z.string().optional(),
   nullable: z.boolean().optional(),
   references: ForeignKeyReferenceDefinition.optional(),
   table: z.string(),
-  type: z.string(),
+  type: z.string().optional(),
   unique: UniqueConstraintDefinition.optional(),
-  up: z.string()
+  up: z.string().optional()
 });
 
 export type OpCreateIndex = z.infer<typeof OpCreateIndexDefinition>;
@@ -67,7 +68,8 @@ export type OpCreateTable = z.infer<typeof OpCreateTableDefinition>;
 
 export const OpCreateTableDefinition = z.object({
   columns: z.array(ColumnDefinition),
-  name: z.string()
+  name: z.string(),
+  comment: z.string().optional()
 });
 
 export type OpDropColumn = z.infer<typeof OpDropColumnDefinition>;
@@ -135,7 +137,7 @@ export const PgRollOperationDefinition = z.union([
   z.object({ drop_constraint: OpDropConstraintDefinition }),
   z.object({ drop_index: OpDropIndexDefinition }),
   z.object({ drop_table: OpDropTableDefinition }),
-  z.object({ raw_sql: OpRawSQLDefinition }),
+  z.object({ sql: OpRawSQLDefinition }),
   z.object({ rename_table: OpRenameTableDefinition }),
   z.object({ set_replica_identity: OpSetReplicaIdentityDefinition })
 ]);
@@ -162,7 +164,7 @@ export const operationTypes = [
   'drop_constraint',
   'drop_index',
   'drop_table',
-  'raw_sql',
+  'sql',
   'rename_table',
   'set_replica_identity'
 ] as const;

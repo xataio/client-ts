@@ -236,6 +236,59 @@ export type DBBranch = {
 
 export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
+/**
+ * @x-go-type schema.Schema
+ */
+export type PgRollSchema = {
+  name: string;
+  tables: {
+    [key: string]: {
+      oid: string;
+      name: string;
+      comment: string;
+      columns: {
+        [key: string]: {
+          name: string;
+          type: string;
+          ['default']: string | null;
+          nullable: boolean;
+          unique: boolean;
+          comment: string;
+        };
+      };
+      indexes: {
+        [key: string]: {
+          name: string;
+          unique: boolean;
+          columns: string[];
+        };
+      };
+      primaryKey: string[];
+      foreignKeys: {
+        [key: string]: {
+          name: string;
+          columns: string[];
+          referencedTable: string;
+          referencedColumns: string[];
+        };
+      };
+      checkConstraints: {
+        [key: string]: {
+          name: string;
+          columns: string[];
+          definition: string;
+        };
+      };
+      uniqueConstraints: {
+        [key: string]: {
+          name: string;
+          columns: string[];
+        };
+      };
+    };
+  };
+};
+
 export type BranchWithCopyID = {
   branchName: BranchName;
   dbBranchID: string;
@@ -985,6 +1038,18 @@ export type FileResponse = {
   name: FileName;
   mediaType: MediaType;
   /**
+   * Enable public access to the file
+   */
+  enablePublicUrl: boolean;
+  /**
+   * Time to live for signed URLs
+   */
+  signedUrlTimeout: number;
+  /**
+   * Time to live for signed URLs
+   */
+  uploadUrlTimeout: number;
+  /**
    * @format int64
    */
   size: number;
@@ -992,6 +1057,24 @@ export type FileResponse = {
    * @format int64
    */
   version: number;
+  /**
+   * File access URL
+   *
+   * @format uri
+   */
+  url: string;
+  /**
+   * Signed file access URL
+   *
+   * @format uri
+   */
+  signedUrl: string;
+  /**
+   * Upload file URL
+   *
+   * @format uri
+   */
+  uploadUrl: string;
   attributes?: Record<string, any>;
 };
 
