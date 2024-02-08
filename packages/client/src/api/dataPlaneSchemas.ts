@@ -1038,6 +1038,18 @@ export type FileResponse = {
   name: FileName;
   mediaType: MediaType;
   /**
+   * Enable public access to the file
+   */
+  enablePublicUrl: boolean;
+  /**
+   * Time to live for signed URLs
+   */
+  signedUrlTimeout: number;
+  /**
+   * Time to live for signed URLs
+   */
+  uploadUrlTimeout: number;
+  /**
    * @format int64
    */
   size: number;
@@ -1045,6 +1057,24 @@ export type FileResponse = {
    * @format int64
    */
   version: number;
+  /**
+   * File access URL
+   *
+   * @format uri
+   */
+  url: string;
+  /**
+   * Signed file access URL
+   *
+   * @format uri
+   */
+  signedUrl: string;
+  /**
+   * Upload file URL
+   *
+   * @format uri
+   */
+  uploadUrl: string;
   attributes?: Record<string, any>;
 };
 
