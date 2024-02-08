@@ -4,6 +4,7 @@ import { desc, eq, gt, gte, or, placeholder, sql, TransactionRollbackError } fro
 import { Client } from 'pg';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expectTypeOf, test } from 'vitest';
 import { drizzle, type XataDatabase } from '../src/pg';
+import { migrate } from '../src/pg/migrator';
 import * as schema from './schema';
 
 const { usersTable, postsTable, commentsTable, usersToGroupsTable, groupsTable } = schema;
@@ -62,72 +63,10 @@ beforeAll(async () => {
     // Not sure why, but we are getting `error: SSL required` sometimes
     ssl: { rejectUnauthorized: false }
   });
-  const start = Date.now();
+
   await client.connect();
-  console.log('Connected to database in', Date.now() - start, 'ms');
-
   const db = drizzle(client, { schema, logger: ENABLE_LOGGING });
-
-  await db.execute(
-    sql`
-			CREATE TABLE "users" (
-				"id" serial PRIMARY KEY NOT NULL,
-				"name" text NOT NULL,
-				"verified" boolean DEFAULT false NOT NULL,
-				"invited_by" int REFERENCES "users"("id")
-			);
-		`
-  );
-  await db.execute(
-    sql`
-			CREATE TABLE IF NOT EXISTS "groups" (
-				"id" serial PRIMARY KEY NOT NULL,
-				"name" text NOT NULL,
-				"description" text
-			);
-		`
-  );
-  await db.execute(
-    sql`
-			CREATE TABLE IF NOT EXISTS "users_to_groups" (
-				"id" serial PRIMARY KEY NOT NULL,
-				"user_id" int REFERENCES "users"("id"),
-				"group_id" int REFERENCES "groups"("id")
-			);
-		`
-  );
-  await db.execute(
-    sql`
-			CREATE TABLE IF NOT EXISTS "posts" (
-				"id" serial PRIMARY KEY NOT NULL,
-				"content" text NOT NULL,
-				"owner_id" int REFERENCES "users"("id"),
-				"created_at" timestamp with time zone DEFAULT now() NOT NULL
-			);
-		`
-  );
-  await db.execute(
-    sql`
-			CREATE TABLE IF NOT EXISTS "comments" (
-				"id" serial PRIMARY KEY NOT NULL,
-				"content" text NOT NULL,
-				"creator" int REFERENCES "users"("id"),
-				"post_id" int REFERENCES "posts"("id"),
-				"created_at" timestamp with time zone DEFAULT now() NOT NULL
-			);
-		`
-  );
-  await db.execute(
-    sql`
-			CREATE TABLE IF NOT EXISTS "comment_likes" (
-				"id" serial PRIMARY KEY NOT NULL,
-				"creator" int REFERENCES "users"("id"),
-				"comment_id" int REFERENCES "comments"("id"),
-				"created_at" timestamp with time zone DEFAULT now() NOT NULL
-			);
-		`
-  );
-
+  await migrate(db, { migrationsFolder: `${__dirname}/migrations` });
   await client.end();
 });
 

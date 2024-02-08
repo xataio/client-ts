@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.11.0",
+    "drizzle-kit": "^0.20.14",
     "drizzle-orm": "^0.29.3"
   },
   "peerDependencies": {
