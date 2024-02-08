@@ -1,9 +1,10 @@
-import { HostProvider, parseProviderString, XataApiClient } from '@xata.io/client';
+import { BaseClient, HostProvider, parseProviderString, XataApiClient } from '@xata.io/client';
 import 'dotenv/config';
 import { desc, eq, gt, gte, or, placeholder, sql, TransactionRollbackError } from 'drizzle-orm';
 import { Client } from 'pg';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expectTypeOf, test } from 'vitest';
-import { drizzle, type XataDatabase } from '../src/pg';
+import { drizzle as drizzlePg, type XataDatabase } from '../src/pg';
+import { drizzle as drizzleHttp, type XataHttpDatabase } from '../src/http';
 import * as schema from './schema';
 
 const { usersTable, postsTable, commentsTable, usersToGroupsTable, groupsTable } = schema;
@@ -12,8 +13,8 @@ const ENABLE_LOGGING = true;
 
 declare module 'vitest' {
   export interface TestContext {
-    db: XataDatabase<typeof schema>;
-    client: Client;
+    db: XataDatabase<typeof schema> | XataHttpDatabase<typeof schema>;
+    client?: Client;
     branch: string;
   }
 }
@@ -62,11 +63,9 @@ beforeAll(async () => {
     // Not sure why, but we are getting `error: SSL required` sometimes
     ssl: { rejectUnauthorized: false }
   });
-  const start = Date.now();
-  await client.connect();
-  console.log('Connected to database in', Date.now() - start, 'ms');
 
-  const db = drizzle(client, { schema, logger: ENABLE_LOGGING });
+  await client.connect();
+  const db = drizzlePg(client, { schema, logger: ENABLE_LOGGING });
 
   await db.execute(
     sql`
@@ -135,27 +134,42 @@ afterAll(async () => {
   await api.database.deleteDatabase({ workspace, database });
 });
 
-beforeEach(async (ctx) => {
-  ctx.branch = `test-${Math.random().toString(36).substring(7)}`;
-  await api.branches.createBranch({ workspace, database, region, branch: ctx.branch, from: 'main' });
+describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type', ({ type }) => {
+  beforeEach(async (ctx) => {
+    ctx.branch = `test-${Math.random().toString(36).substring(7)}`;
+    await api.branches.createBranch({ workspace, database, region, branch: ctx.branch, from: 'main' });
 
-  ctx.client = new Client({
-    connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:${
-      ctx.branch
-    }`,
-    // Not sure why, but we are getting `error: SSL required` sometimes
-    ssl: { rejectUnauthorized: false }
+    if (type === 'http') {
+      const xata = new BaseClient({
+        apiKey,
+        host,
+        clientName: 'sdk-tests',
+        databaseURL: `https://${workspace}.${region}.${getDomain(host)}/db/${database}`,
+        branch: ctx.branch
+      });
+
+      ctx.db = drizzleHttp(xata, { schema, logger: ENABLE_LOGGING });
+    } else if (type === 'pg') {
+      ctx.client = new Client({
+        connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:${
+          ctx.branch
+        }`,
+        // Not sure why, but we are getting `error: SSL required` sometimes
+        ssl: { rejectUnauthorized: false }
+      });
+
+      await ctx.client.connect();
+      ctx.db = drizzlePg(ctx.client, { schema, logger: ENABLE_LOGGING });
+    } else {
+      throw new Error(`Unknown type: ${type}`);
+    }
   });
-  await ctx.client.connect();
-  ctx.db = drizzle(ctx.client, { schema, logger: ENABLE_LOGGING });
-});
 
-afterEach(async (ctx) => {
-  await ctx.client.end();
-  await api.branches.deleteBranch({ workspace, database, region, branch: ctx.branch });
-});
+  afterEach(async (ctx) => {
+    await ctx.client?.end();
+    await api.branches.deleteBranch({ workspace, database, region, branch: ctx.branch });
+  });
 
-describe.concurrent('Drizzle ORM', () => {
   /*
 	[Find Many] One relation users+posts
 */
@@ -6253,18 +6267,13 @@ describe.concurrent('Drizzle ORM', () => {
   test('Select * from users where id = 1', async (ctx) => {
     await ctx.db.insert(usersTable).values({ id: 1, name: 'Dan' });
 
-    const { rows } = await ctx.db.execute(sql`SELECT * FROM ${usersTable} WHERE id = 1`);
+    const result = await ctx.db.execute(sql`SELECT * FROM ${usersTable} WHERE id = 1`);
 
-    ctx.expect(rows).toMatchInlineSnapshot(`
-      [
-        {
-          "id": 1,
-          "invited_by": null,
-          "name": "Dan",
-          "verified": false,
-        },
-      ]
-    `);
+    const rows = (result as any).rows;
+    ctx.expect(rows[0].id).toEqual(1);
+    ctx.expect(rows[0].name).toEqual('Dan');
+    ctx.expect(rows[0].verified).toEqual(false);
+    ctx.expect(rows[0].invited_by).toEqual(null);
   });
 });
 
