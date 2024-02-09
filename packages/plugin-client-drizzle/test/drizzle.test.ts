@@ -887,7 +887,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
     });
   });
 
-  test.skip('[Find Many] Get users with posts in transaction', async (ctx) => {
+  test('[Find Many] Get users with posts in transaction', async (ctx) => {
     let usersWithPosts: {
       id: number;
       name: string;
@@ -952,7 +952,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
     });
   });
 
-  test.skip('[Find Many] Get users with posts in rollbacked transaction', async (ctx) => {
+  test('[Find Many] Get users with posts in rollbacked transaction', async (ctx) => {
     let usersWithPosts: {
       id: number;
       name: string;
@@ -1465,7 +1465,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
   });
 
   // columns {}
-  test.skip('[Find Many] Get select {}', async (ctx) => {
+  test('[Find Many] Get select {}', async (ctx) => {
     await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
@@ -1484,7 +1484,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
   });
 
   // columns {}
-  test.skip('[Find One] Get select {}', async (ctx) => {
+  test('[Find One] Get select {}', async (ctx) => {
     await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
@@ -1499,7 +1499,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
   });
 
   // deep select {}
-  test.skip('[Find Many] Get deep select {}', async (ctx) => {
+  test('[Find Many] Get deep select {}', async (ctx) => {
     await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
@@ -1529,7 +1529,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
   });
 
   // deep select {}
-  test.skip('[Find One] Get deep select {}', async (ctx) => {
+  test('[Find One] Get deep select {}', async (ctx) => {
     await ctx.db.insert(usersTable).values([
       { id: 1, name: 'Dan' },
       { id: 2, name: 'Andrew' },
