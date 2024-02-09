@@ -90,6 +90,11 @@ describe('integration tests', () => {
     const serialized = teams.toSerializable();
     expect(serialized).toHaveLength(1);
     expect(serialized[0].name).toBe('Team fruits');
+
+    const string = teams.toString();
+    expect(string).toContain('Team fruits');
+    const hydrated = JSON.parse(string);
+    expect(hydrated).toHaveLength(1);
   });
 
   test('operator filter', async () => {
@@ -746,5 +751,10 @@ describe('integration tests', () => {
     const serialized = records.toSerializable();
     expect(serialized).toHaveLength(1);
     expect(serialized[0].id).toEqual(newTeam.id);
+
+    const string = records.toString();
+    expect(string).toContain('A random real team');
+    const hydrated = JSON.parse(string);
+    expect(hydrated).toHaveLength(1);
   });
 });
