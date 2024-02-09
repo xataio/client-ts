@@ -11,8 +11,9 @@ import {
   Page,
   Paginable,
   PaginationQueryMeta,
-  RecordArray,
-  isCursorPaginationOptions
+  PageRecordArray,
+  isCursorPaginationOptions,
+  RecordArray
 } from './pagination';
 import { XataRecord } from './record';
 import { RestRepository } from './repository';
@@ -54,7 +55,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
 
   // Implements pagination
   readonly meta: PaginationQueryMeta = { page: { cursor: 'start', more: true, size: PAGINATION_DEFAULT_SIZE } };
-  readonly records: RecordArray<Result> = new RecordArray<Result>(this, []);
+  readonly records: PageRecordArray<Result> = new PageRecordArray<Result>(this, []);
 
   constructor(
     repository: RestRepository<Record> | null,
@@ -329,7 +330,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * Performs the query in the database and returns a set of results.
    * @returns An array of records from the database.
    */
-  getMany(): Promise<RecordArray<Result>>;
+  getMany(): Promise<PageRecordArray<Result>>;
 
   /**
    * Performs the query in the database and returns a set of results.
@@ -338,16 +339,16 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    */
   getMany<Options extends RequiredBy<QueryOptions<Record>, 'columns'>>(
     options: Options
-  ): Promise<RecordArray<SelectedPick<Record, (typeof options)['columns']>>>;
+  ): Promise<PageRecordArray<SelectedPick<Record, (typeof options)['columns']>>>;
 
   /**
    * Performs the query in the database and returns a set of results.
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<RecordArray<Result>>;
+  getMany(options: OmitBy<QueryOptions<Record>, 'columns'>): Promise<PageRecordArray<Result>>;
 
-  async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<RecordArray<Result>> {
+  async getMany<Result extends XataRecord>(options: QueryOptions<Record> = {}): Promise<PageRecordArray<Result>> {
     const { pagination = {}, ...rest } = options;
     const { size = PAGINATION_DEFAULT_SIZE, offset } = pagination;
     const batchSize = size <= PAGINATION_MAX_SIZE ? size : PAGINATION_MAX_SIZE;
@@ -364,10 +365,10 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
       console.trace('Calling getMany does not return all results. Paginate to get all results or call getAll.');
     }
 
-    const array = new RecordArray(page, results.slice(0, size));
+    const array = new PageRecordArray(page, results.slice(0, size));
 
     // Method overloading does not provide type inference for the return type.
-    return array as unknown as RecordArray<Result>;
+    return array as unknown as PageRecordArray<Result>;
   }
 
   /**
@@ -375,7 +376,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * Warning: If there are a large number of results, this method can have performance implications.
    * @returns An array of records from the database.
    */
-  getAll(): Promise<Result[]>;
+  getAll(): Promise<RecordArray<Result>>;
 
   /**
    * Performs the query in the database and returns all the results.
@@ -385,7 +386,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    */
   getAll<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'> & { batchSize?: number }>(
     options: Options
-  ): Promise<SelectedPick<Record, (typeof options)['columns']>[]>;
+  ): Promise<RecordArray<SelectedPick<Record, (typeof options)['columns']>>>;
 
   /**
    * Performs the query in the database and returns all the results.
@@ -393,11 +394,13 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
    * @param options Additional options to be used when performing the query.
    * @returns An array of records from the database.
    */
-  getAll(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'> & { batchSize?: number }): Promise<Result[]>;
+  getAll(
+    options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'> & { batchSize?: number }
+  ): Promise<RecordArray<Result>>;
 
   async getAll<Result extends XataRecord>(
     options: QueryOptions<Record> & { batchSize?: number } = {}
-  ): Promise<Result[]> {
+  ): Promise<RecordArray<Result>> {
     const { batchSize = PAGINATION_MAX_SIZE, ...rest } = options;
     const results = [];
 
@@ -406,7 +409,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     }
 
     // Method overloading does not provide type inference for the return type.
-    return results as unknown as Result[];
+    return new RecordArray(results) as unknown as RecordArray<Result>;
   }
 
   /**

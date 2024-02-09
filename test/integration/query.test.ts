@@ -86,6 +86,15 @@ describe('integration tests', () => {
 
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('Team fruits');
+
+    const serialized = teams.toSerializable();
+    expect(serialized).toHaveLength(1);
+    expect(serialized[0].name).toBe('Team fruits');
+
+    const string = teams.toString();
+    expect(string).toContain('Team fruits');
+    const hydrated = JSON.parse(string);
+    expect(hydrated).toHaveLength(1);
   });
 
   test('operator filter', async () => {
@@ -737,5 +746,15 @@ describe('integration tests', () => {
     const records = await xata.db.teams.filter({ id: maybeId, name: newTeam.name }).getMany();
 
     expect(records).toHaveLength(1);
+    expect(records[0].id).toEqual(newTeam.id);
+
+    const serialized = records.toSerializable();
+    expect(serialized).toHaveLength(1);
+    expect(serialized[0].id).toEqual(newTeam.id);
+
+    const string = records.toString();
+    expect(string).toContain('A random real team');
+    const hydrated = JSON.parse(string);
+    expect(hydrated).toHaveLength(1);
   });
 });

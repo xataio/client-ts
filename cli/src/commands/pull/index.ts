@@ -94,12 +94,11 @@ export default class Pull extends BaseCommand<typeof Pull> {
     const newMigrations = this.getNewMigrations(localMigrationFiles, commitToMigrationFile(logs));
     await writeLocalMigrationFiles(newMigrations);
 
-    if (newMigrations.length === 0) {
+    if (newMigrations.length > 0) {
+      this.log(`Successfully pulled ${newMigrations.length} migrations from ${branch} branch`);
+    } else {
       this.log(`No new migrations to pull from ${branch} branch`);
-      return;
     }
-
-    this.log(`Successfully pulled ${newMigrations.length} migrations from ${branch} branch`);
 
     if (this.projectConfig?.codegen && !flags['skip-code-generation']) {
       this.log(`Running codegen...`);
