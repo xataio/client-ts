@@ -6,7 +6,7 @@ export type PaginationQueryMeta = { page: { cursor: string; more: boolean; size:
 
 export interface Paginable<Record extends XataRecord, Result extends XataRecord = Record> {
   meta: PaginationQueryMeta;
-  records: RecordArray<Result>;
+  records: PageRecordArray<Result>;
 
   nextPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
   previousPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
@@ -29,12 +29,12 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
   /**
    * The set of results for this page.
    */
-  readonly records: RecordArray<Result>;
+  readonly records: PageRecordArray<Result>;
 
   constructor(query: Query<Record, Result>, meta: PaginationQueryMeta, records: Result[] = []) {
     this.#query = query;
     this.meta = meta;
-    this.records = new RecordArray(this, records);
+    this.records = new PageRecordArray(this, records);
   }
 
   /**
@@ -104,11 +104,50 @@ export function isCursorPaginationOptions(
 }
 
 export class RecordArray<Result extends XataRecord> extends Array<Result> {
+  constructor(overrideRecords?: Result[]);
+  constructor(...args: any[]) {
+    super(...RecordArray.parseConstructorParams(...args));
+  }
+
+  static parseConstructorParams(...args: any[]) {
+    // new <T>(arrayLength: number): T[]
+    if (args.length === 1 && typeof args[0] === 'number') {
+      return new Array(args[0]);
+    }
+
+    // new <T>(overrideRecords: Array | undefined): T[>]
+    if (args.length <= 1 && Array.isArray(args[0] ?? [])) {
+      const result = args[0] ?? [];
+      return new Array(...result);
+    }
+
+    // <T>(...items: T[]): T[]
+    return new Array(...args);
+  }
+
+  toArray(): Result[] {
+    return new Array(...this);
+  }
+
+  toSerializable(): JSONData<Result>[] {
+    return JSON.parse(this.toString());
+  }
+
+  toString(): string {
+    return JSON.stringify(this.toArray());
+  }
+
+  map<U>(callbackfn: (value: Result, index: number, array: Result[]) => U, thisArg?: any): U[] {
+    return this.toArray().map(callbackfn, thisArg);
+  }
+}
+
+export class PageRecordArray<Result extends XataRecord> extends Array<Result> {
   #page: Paginable<Result, Result>;
 
   constructor(page: Paginable<any, Result>, overrideRecords?: Result[]);
   constructor(...args: any[]) {
-    super(...RecordArray.parseConstructorParams(...args));
+    super(...PageRecordArray.parseConstructorParams(...args));
 
     // In the case of serialization/deserialization, the page might be lost
     this.#page = isObject(args[0]?.meta) ? args[0] : { meta: { page: { cursor: '', more: false } }, records: [] };
@@ -120,7 +159,7 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
       return new Array(args[0]);
     }
 
-    // new RecordArray<T>(page: Page, overrideRecords: Array | undefined): T[>]
+    // new <T>(page: Page, overrideRecords: Array | undefined): T[>]
     if (args.length <= 2 && isObject(args[0]?.meta) && Array.isArray(args[1] ?? [])) {
       const result = args[1] ?? args[0].records ?? [];
       return new Array(...result);
@@ -151,9 +190,9 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
    *
    * @returns A new array of objects
    */
-  async nextPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+  async nextPage(size?: number, offset?: number): Promise<PageRecordArray<Result>> {
     const newPage = await this.#page.nextPage(size, offset);
-    return new RecordArray(newPage);
+    return new PageRecordArray(newPage);
   }
 
   /**
@@ -161,9 +200,9 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
    *
    * @returns A new array of objects
    */
-  async previousPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+  async previousPage(size?: number, offset?: number): Promise<PageRecordArray<Result>> {
     const newPage = await this.#page.previousPage(size, offset);
-    return new RecordArray(newPage);
+    return new PageRecordArray(newPage);
   }
 
   /**
@@ -171,9 +210,9 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
    *
    * @returns A new array of objects
    */
-  async startPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+  async startPage(size?: number, offset?: number): Promise<PageRecordArray<Result>> {
     const newPage = await this.#page.startPage(size, offset);
-    return new RecordArray(newPage);
+    return new PageRecordArray(newPage);
   }
 
   /**
@@ -181,9 +220,9 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
    *
    * @returns A new array of objects
    */
-  async endPage(size?: number, offset?: number): Promise<RecordArray<Result>> {
+  async endPage(size?: number, offset?: number): Promise<PageRecordArray<Result>> {
     const newPage = await this.#page.endPage(size, offset);
-    return new RecordArray(newPage);
+    return new PageRecordArray(newPage);
   }
 
   /**
