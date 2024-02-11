@@ -50,14 +50,18 @@ export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends Prepar
       return client.sql({ statement: queryString, params });
     }
 
-    const result = await client.sql({ statement: queryString, params });
+    const { records, warning } = await client.sql<Record<string, unknown>>({ statement: queryString, params });
+    if (warning) console.warn(warning);
+
+    // TODO: FIXME: Order is not guaranteed and we fail to map the result to the correct fields
+    const rows = records.map((record) => Object.values(record));
 
     // @ts-expect-error joinsNotNullableMap is internal
     const joinsNotNullableMap = this.joinsNotNullableMap;
 
     return customResultMapper
-      ? customResultMapper(result.records as unknown[][])
-      : result.records.map((row) => mapResultRow<T['execute']>(fields!, row as unknown[], joinsNotNullableMap));
+      ? customResultMapper(rows as unknown[][])
+      : rows.map((row) => mapResultRow<T['execute']>(fields!, row as unknown[], joinsNotNullableMap));
   }
 
   all(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['all']> {
