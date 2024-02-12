@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/plugin-client-cloudflare",
-  "version": "0.0.41",
+  "version": "0.0.42",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
