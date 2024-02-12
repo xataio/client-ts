@@ -102,7 +102,8 @@ export type OpRawSQL = z.infer<typeof OpRawSQLDefinition>;
 
 export const OpRawSQLDefinition = z.object({
   down: z.string().optional(),
-  up: z.string()
+  up: z.string(),
+  onComplete: z.boolean().optional()
 });
 
 export type OpRenameTable = z.infer<typeof OpRenameTableDefinition>;
