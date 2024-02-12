@@ -207,6 +207,7 @@ describe(
         expect(records[0].record.read).toBeDefined();
         expect(records[0].record.name?.includes('fruits')).toBeTruthy();
         expect(records[0].record.getMetadata().score).toBeDefined();
+        expect(records[0].record.xata.highlight).toBeDefined();
       }
     });
 
