@@ -59,20 +59,14 @@ beforeAll(async () => {
 
   await waitForReplication();
 
-  const client = new Client({
-    connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:main`,
-    // Not sure why, but we are getting `error: SSL required` sometimes
-    ssl: { rejectUnauthorized: false }
-  });
-
-  await client.connect();
-  const db = drizzlePg(client, { schema, logger: ENABLE_LOGGING });
-  await migrate(db, { migrationsFolder: `${__dirname}/migrations` });
-  await client.end();
+  await migrate(
+    { workspace, region, database, branch: 'main', host, apiKey },
+    { migrationsFolder: `${__dirname}/migrations` }
+  );
 });
 
 afterAll(async () => {
-  await api.database.deleteDatabase({ workspace, database });
+  //await api.database.deleteDatabase({ workspace, database });
 });
 
 describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type', ({ type }) => {

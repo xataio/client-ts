@@ -1,14 +1,52 @@
 import { MigrationConfig, readMigrationFiles } from 'drizzle-orm/migrator';
 import type { XataDatabase } from './driver.js';
 import { sql } from 'drizzle-orm';
+import { HostProvider, XataApiClient } from '@xata.io/client';
+
+export type XataConfiguration = {
+  host?: HostProvider;
+  workspace: string;
+  region: string;
+  database: string;
+  branch: string;
+  apiKey: string;
+};
 
 export async function migrate<TSchema extends Record<string, unknown>>(
-  db: XataDatabase<TSchema>,
+  { workspace, region, database, branch, host, apiKey }: XataConfiguration,
   config: string | MigrationConfig
 ) {
+  console.log('migrate', { workspace, region, database, branch, host, apiKey, config });
   const migrations = readMigrationFiles(config);
+  console.log('migrations', migrations);
 
-  await db.execute(sql`
+  const api = new XataApiClient({ apiKey, host });
+  const history = await api.branches.pgRollMigrationHistory({ workspace, region, database, branch });
+  console.log('history', history);
+
+  const lastDbMigration = history.migrations[0];
+
+  for (const migration of migrations) {
+    if (!lastDbMigration || Number(new Date(lastDbMigration.startedAt)) < migration.folderMillis) {
+      for (const stmt of migration.sql) {
+        console.log('applying', stmt);
+        const { jobID } = await api.branches.applyMigration({
+          workspace,
+          region,
+          database,
+          branch,
+          // @ts-ignore
+          migration: { operations: [{ sql: { up: stmt } }] }
+        });
+
+        await waitForMigrationToFinish(api, workspace, region, database, branch, jobID);
+      }
+    }
+  }
+
+  throw new Error('Not implemented');
+
+  /**await db.execute(sql`
 			CREATE TABLE IF NOT EXISTS "__drizzle_migrations" (
 				id SERIAL PRIMARY KEY,
 				hash text NOT NULL,
@@ -32,5 +70,26 @@ export async function migrate<TSchema extends Record<string, unknown>>(
         );
       }
     }
-  });
+  });**/
+}
+
+async function waitForMigrationToFinish(
+  api: XataApiClient,
+  workspace: string,
+  region: string,
+  database: string,
+  branch: string,
+  jobId: string
+) {
+  const { status } = await api.branches.pgRollJobStatus({ workspace, region, database, branch, jobId });
+  if (status === 'failed') {
+    throw new Error('Migration failed');
+  }
+
+  if (status === 'completed') {
+    return;
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
 }

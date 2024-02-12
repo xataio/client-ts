@@ -573,6 +573,42 @@ class BranchApi {
       ...this.extraProps
     });
   }
+
+  public pgRollStatus({
+    workspace,
+    region,
+    database,
+    branch
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+  }): Promise<Schemas.PgRollJobStatusResponse> {
+    return operationsByTag.branch.pgRollStatus({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+      ...this.extraProps
+    });
+  }
+
+  public pgRollJobStatus({
+    workspace,
+    region,
+    database,
+    branch,
+    jobId
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    jobId: string;
+  }): Promise<Schemas.PgRollJobStatusResponse> {
+    return operationsByTag.branch.pgRollJobStatus({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, jobId },
+      ...this.extraProps
+    });
+  }
 }
 
 class TableApi {
