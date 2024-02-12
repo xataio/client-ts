@@ -1,5 +1,17 @@
 # @xata.io/client
 
+## 0.29.1
+
+### Patch Changes
+
+- [#1364](https://github.com/xataio/client-ts/pull/1364) [`d0f5d12`](https://github.com/xataio/client-ts/commit/d0f5d125e6c2f4c82f8a0a6b4a30d255c58e8326) Thanks [@SferaDev](https://github.com/SferaDev)! - Show search properties in xata metadata object
+
+- [#1263](https://github.com/xataio/client-ts/pull/1263) [`212b53d`](https://github.com/xataio/client-ts/commit/212b53d07498def0d2ed8942691eff982e448969) Thanks [@SferaDev](https://github.com/SferaDev)! - Don't attempt to retrieve tables on runtime
+
+- [#1339](https://github.com/xataio/client-ts/pull/1339) [`9fd8c42`](https://github.com/xataio/client-ts/commit/9fd8c428d71b476f1951123c6cba5e803b983e54) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow using normal commands with pgroll enabled branches
+
+- [#1361](https://github.com/xataio/client-ts/pull/1361) [`368d4aa`](https://github.com/xataio/client-ts/commit/368d4aa16cd1cc1da93a142406c5d41bbc15b082) Thanks [@SferaDev](https://github.com/SferaDev)! - Add `toSerializable` to `getAll`
+
 ## 0.29.0
 
 ### Minor Changes

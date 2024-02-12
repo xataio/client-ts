@@ -1,5 +1,19 @@
 # @xata.io/cli
 
+## 0.15.7
+
+### Patch Changes
+
+- [#1323](https://github.com/xataio/client-ts/pull/1323) [`2fc636f`](https://github.com/xataio/client-ts/commit/2fc636fc8efbe2c8cead3725d836c20b97d6a662) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add support for pgroll enabled branches to pull and push commands
+
+- [#1339](https://github.com/xataio/client-ts/pull/1339) [`9fd8c42`](https://github.com/xataio/client-ts/commit/9fd8c428d71b476f1951123c6cba5e803b983e54) Thanks [@SferaDev](https://github.com/SferaDev)! - Allow using normal commands with pgroll enabled branches
+
+- [#1358](https://github.com/xataio/client-ts/pull/1358) [`1b596ba`](https://github.com/xataio/client-ts/commit/1b596bad6327c0b871d411a8240922ca202ca09c) Thanks [@richardgill](https://github.com/richardgill)! - `xata pull <branch>` always runs codegen
+
+- Updated dependencies [[`d0f5d12`](https://github.com/xataio/client-ts/commit/d0f5d125e6c2f4c82f8a0a6b4a30d255c58e8326), [`212b53d`](https://github.com/xataio/client-ts/commit/212b53d07498def0d2ed8942691eff982e448969), [`9fd8c42`](https://github.com/xataio/client-ts/commit/9fd8c428d71b476f1951123c6cba5e803b983e54), [`368d4aa`](https://github.com/xataio/client-ts/commit/368d4aa16cd1cc1da93a142406c5d41bbc15b082)]:
+  - @xata.io/client@0.29.1
+  - @xata.io/codegen@0.29.1
+
 ## 0.15.6
 
 ### Patch Changes
