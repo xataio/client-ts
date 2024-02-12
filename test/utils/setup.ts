@@ -13,7 +13,7 @@ import { getHostUrl, parseProviderString } from '../../packages/client/src/api/p
 import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
-import { schema } from '../mock_data';
+import { pgRollMigrations, schema } from '../mock_data';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -27,6 +27,8 @@ if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is no
 const region = process.env.XATA_REGION || 'eu-west-1';
 
 const host = parseProviderString(process.env.XATA_API_PROVIDER);
+
+const enablePgRoll = process.env.XATA_PGROLL === 'enable';
 
 export type EnvironmentOptions = {
   cache?: CacheImpl;
@@ -77,7 +79,7 @@ export async function setUpTestEnvironment(
     workspace,
     database: `sdk-integration-test-${prefix}-${id}`,
     data: { region },
-    headers: { 'X-Xata-Files': 'true' }
+    headers: enablePgRoll ? { 'X-Features': 'feat-pgroll-migrations=1' } : {}
   });
 
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace).replace('{region}', region);
@@ -92,15 +94,28 @@ export async function setUpTestEnvironment(
     clientName: 'sdk-tests'
   };
 
-  const { edits } = await api.migrations.compareBranchWithUserSchema({
-    workspace,
-    region,
-    database,
-    branch: 'main',
-    schema
-  });
+  if (enablePgRoll) {
+    for (const operation of pgRollMigrations) {
+      const { jobID } = await api.branches.applyMigration({
+        workspace,
+        region,
+        database,
+        branch: 'main',
+        // @ts-expect-error Types are not updated
+        migration: { operations: [operation] }
+      });
+    }
+  } else {
+    const { edits } = await api.migrations.compareBranchWithUserSchema({
+      workspace,
+      region,
+      database,
+      branch: 'main',
+      schema
+    });
 
-  await api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch: 'main', edits });
+    await api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch: 'main', edits });
+  }
 
   let span: Span | undefined;
 
