@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
-    "@faker-js/faker": "^8.4.0",
+    "@faker-js/faker": "^8.4.1",
     "@xata.io/client": "^0.29.0",
     "any-date-parser": "^1.5.4",
     "json5": "^2.2.3",
