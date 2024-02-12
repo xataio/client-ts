@@ -104,6 +104,8 @@ export async function setUpTestEnvironment(
         // @ts-expect-error Types are not updated
         migration: { operations: [operation] }
       });
+
+      await waitForMigrationToFinish(api, workspace, region, database, 'main', jobID);
     }
   } else {
     const { edits } = await api.migrations.compareBranchWithUserSchema({
@@ -173,4 +175,25 @@ declare module 'vitest' {
   export interface TestContext {
     span?: Span;
   }
+}
+
+async function waitForMigrationToFinish(
+  api: XataApiClient,
+  workspace: string,
+  region: string,
+  database: string,
+  branch: string,
+  jobId: string
+) {
+  const { status, error } = await api.branches.pgRollJobStatus({ workspace, region, database, branch, jobId });
+  if (status === 'failed') {
+    throw new Error(`Migration failed, ${error}`);
+  }
+
+  if (status === 'completed') {
+    return;
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
 }

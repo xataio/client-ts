@@ -97,11 +97,11 @@ export const pgRollMigrations: PgRollOperation[] = [
         { name: 'labels', type: 'text[]', nullable: true },
         { name: 'index', type: 'int', nullable: true },
         { name: 'rating', type: 'float', nullable: true },
-        { name: 'founded_date', type: 'timestampz', nullable: true },
+        { name: 'founded_date', type: 'timestamptz', nullable: true },
         { name: 'email', type: 'text', nullable: true },
         { name: 'plan', type: 'text', nullable: true },
         { name: 'dark', type: 'boolean', nullable: true },
-        { name: 'config', type: 'json', nullable: true },
+        { name: 'config', type: 'jsonb', nullable: true },
         { name: 'owner', type: 'text', nullable: true }
       ]
     }
@@ -117,18 +117,18 @@ export const pgRollMigrations: PgRollOperation[] = [
         { name: 'email', type: 'text', unique: true, nullable: true },
         { name: 'name', type: 'text', nullable: true },
         // TODO: Add defaultPublicAccess: true
-        { name: 'photo', type: 'xata_file', nullable: true },
-        { name: 'attachments', type: 'xata_file_array', nullable: true },
+        { name: 'photo', type: 'xata.xata_file', nullable: true },
+        { name: 'attachments', type: 'xata.xata_file_array', nullable: true },
         { name: 'plan', type: 'text', nullable: true },
         { name: 'dark', type: 'boolean', nullable: true },
-        { name: 'full_name', type: 'text', nullable: false, default: 'John Doe' },
-        { name: 'index', type: 'int', nullable: true },
+        { name: 'full_name', type: 'text', nullable: false, default: "'John Doe'" },
+        { name: 'index', type: 'int8', nullable: true },
         { name: 'rating', type: 'float', nullable: true },
-        { name: 'birthDate', type: 'timestampz', nullable: true },
+        { name: 'birthDate', type: 'timestamptz', nullable: true },
         { name: 'street', type: 'text', nullable: true },
         { name: 'zipcode', type: 'int', nullable: true },
-        { name: 'team', type: 'string', nullable: true },
-        { name: 'pet', type: 'string', nullable: true },
+        { name: 'team', type: 'text', nullable: true },
+        { name: 'pet', type: 'text', nullable: true },
         { name: 'account_value', type: 'int', nullable: true },
         { name: 'vector', type: 'real[]', nullable: true, comment: `{"xata.search.dimension": 4}` }
       ]
@@ -138,21 +138,27 @@ export const pgRollMigrations: PgRollOperation[] = [
     alter_column: {
       table: 'users',
       column: 'team',
-      references: { name: 'fk_team_id', table: 'teams', column: 'xata_id' }
+      references: { name: 'fk_team_id', table: 'teams', column: 'xata_id' },
+      up: "''",
+      down: "''"
     }
   },
   {
     alter_column: {
       table: 'users',
       column: 'pet',
-      references: { name: 'fk_pet_id', table: 'pets', column: 'xata_id' }
+      references: { name: 'fk_pet_id', table: 'pets', column: 'xata_id' },
+      up: "''",
+      down: "''"
     }
   },
   {
     alter_column: {
       table: 'teams',
       column: 'owner',
-      references: { name: 'fk_owner_id', table: 'users', column: 'xata_id' }
+      references: { name: 'fk_owner_id', table: 'users', column: 'xata_id' },
+      up: "''",
+      down: "''"
     }
   }
 ];
