@@ -387,25 +387,6 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1
 
-  packages/plugin-client-cache:
-    dependencies:
-      '@xata.io/client':
-        specifier: workspace:*
-        version: link:../client
-    devDependencies:
-      lru-cache:
-        specifier: ^10.2.0
-        version: 10.2.0
-
-  packages/plugin-client-cloudflare:
-    dependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20240208.0
-        version: 4.20240208.0
-      '@xata.io/client':
-        specifier: workspace:*
-        version: link:../client
-
   packages/plugin-client-drizzle:
     dependencies:
       '@xata.io/client':
@@ -3256,11 +3237,6 @@ packages:
       human-id: 1.0.2
       prettier: 2.8.8
     dev: true
-
-  /@cloudflare/workers-types@4.20240208.0:
-    resolution:
-      { integrity: sha512-MVGTTjZpJu4kJONvai5SdJzWIhOJbuweVZ3goI7FNyG+JdoQH41OoB+nMhLsX626vPLZVWGPIWsiSo/WZHzgQw== }
-    dev: false
 
   /@cspotcode/source-map-support@0.8.1:
     resolution:
