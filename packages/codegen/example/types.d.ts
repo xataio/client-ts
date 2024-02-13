@@ -1,4 +1,4 @@
-import type { BaseClientOptions, SchemaInference, XataRecord } from '../../client/src';
+import type { SchemaInference, XataRecord } from '../../client/src';
 declare const tables: readonly [
   {
     readonly name: 'teams';
@@ -73,6 +73,9 @@ declare const tables: readonly [
       {
         readonly name: 'photo';
         readonly type: 'file';
+        readonly file: {
+          readonly defaultPublicAccess: true;
+        };
       },
       {
         readonly name: 'attachments';
@@ -184,7 +187,6 @@ export type DatabaseSchema = {
 };
 declare const DatabaseClient: any;
 export declare class XataClient extends DatabaseClient<DatabaseSchema> {
-  constructor(options?: BaseClientOptions);
+  constructor();
 }
-export declare const getXataClient: () => XataClient;
 export {};

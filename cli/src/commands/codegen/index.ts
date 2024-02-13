@@ -46,9 +46,6 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     }),
     'worker-id': Flags.string({
       description: 'Xata worker deployment id'
-    }),
-    'experimental-incremental-build': Flags.boolean({
-      description: 'Experimental: Keep the source code in the generated file and only update the parts that changed'
     })
   };
 
@@ -84,26 +81,15 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     }
 
     const xata = await this.getXataClient();
-    const { workspace, region, database, branch, databaseURL } = await this.getParsedDatabaseURLWithBranch(
-      flags.db,
-      flags.branch
-    );
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const { schema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
-
-    const codegenBranch = flags['inject-branch'] ? branch : undefined;
-
-    // Experimental: Keep the source code in the generated file and only update the parts that changed
-    const incrementalBuild =
-      flags['experimental-incremental-build'] ?? this.projectConfig?.experimental?.incrementalBuild ?? false;
-    const existingCode = incrementalBuild ? await readFile(output, 'utf8').catch(() => undefined) : undefined;
+    const existingCode = await readFile(output, 'utf8').catch(() => undefined);
 
     const result = await generate({
       schema,
-      databaseURL,
       language,
       moduleType,
       javascriptTarget,
-      branch: codegenBranch,
       existingCode
     });
 
