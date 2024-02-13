@@ -35,11 +35,11 @@ describe('record read', () => {
 
     expect(copy).toBeDefined();
     expect(copy?.id).toBe(team.id);
-    expect(copy?.xata.createdAt).toBeInstanceOf(Date);
+    expect(copy?.xata_createdat).toBeInstanceOf(Date);
 
     expect(definedCopy).toBeDefined();
     expect(definedCopy.id).toBe(team.id);
-    expect(definedCopy.xata.createdAt).toBeInstanceOf(Date);
+    expect(definedCopy.xata_createdat).toBeInstanceOf(Date);
   });
 
   test('read multiple teams ', async () => {

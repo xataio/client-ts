@@ -649,11 +649,11 @@ describe('integration tests', () => {
     expect(updatedUser?.team?.id).toEqual(team.id);
 
     // TODO(link.xata) @ts-expect-error
-    expect(updatedUser?.team?.xata?.version).not.toBeDefined();
+    expect(updatedUser?.team?.xata_version).not.toBeDefined();
     // TODO(link.xata) @ts-expect-error
-    expect(updatedUser?.team?.xata?.createdAt).not.toBeDefined();
+    expect(updatedUser?.team?.xata_createdat).not.toBeDefined();
     // TODO(link.xata) @ts-expect-error
-    expect(updatedUser?.team?.xata?.updatedAt).not.toBeDefined();
+    expect(updatedUser?.team?.xata_updatedat).not.toBeDefined();
 
     const response = await xata.db.teams.getFirst({ filter: { id: team.id }, columns: ['*', 'owner.*'] });
     const owner = await response?.owner?.read();
@@ -667,14 +667,9 @@ describe('integration tests', () => {
     expect(response?.owner?.id).toBe(owner?.id);
     expect(response?.owner?.full_name).toBe(owner?.full_name);
 
-    const teamMetadata = response?.owner?.getMetadata();
-    expect(teamMetadata?.createdAt).toBeInstanceOf(Date);
-    expect(teamMetadata?.updatedAt).toBeInstanceOf(Date);
-    expect(teamMetadata?.version).toBe(1);
-
-    expect(response?.owner?.xata?.createdAt).toBeInstanceOf(Date);
-    expect(response?.owner?.xata?.updatedAt).toBeInstanceOf(Date);
-    expect(response?.owner?.xata?.version).toBe(1);
+    expect(response?.owner?.xata_createdat).toBeInstanceOf(Date);
+    expect(response?.owner?.xata_updatedat).toBeInstanceOf(Date);
+    expect(response?.owner?.xata_version).toBe(1);
 
     const nestedObject = await xata.db.teams.getFirst({
       filter: { id: team.id },

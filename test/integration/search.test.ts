@@ -67,11 +67,11 @@ describe(
       expect(records.length).toBeGreaterThan(0);
 
       expect(records.length).toBe(2);
-      expect(records[0].id).toBeDefined();
+      expect(records[0].xata_id).toBeDefined();
       expect(records[0].full_name?.includes('Owner')).toBeTruthy();
       expect(records[0].read).toBeDefined();
-      expect(records[0].getMetadata().score).toBeDefined();
-      expect(records[0].getMetadata().table).toBe('users');
+      expect(records[0].xata_score).toBeDefined();
+      expect(records[0].xata_table).toBe('users');
     });
 
     test('search in table with filtering', async () => {
@@ -81,10 +81,10 @@ describe(
 
       expect(totalCount).toBe(1);
       expect(records.length).toBe(1);
-      expect(records[0].id).toBeDefined();
+      expect(records[0].xata_id).toBeDefined();
       expect(records[0].full_name?.includes('Owner of team animals')).toBeTruthy();
       expect(records[0].read).toBeDefined();
-      expect(records[0].getMetadata().score).toBeDefined();
+      expect(records[0].xata_score).toBeDefined();
     });
 
     test('search by tables with multiple tables', async () => {
@@ -97,15 +97,15 @@ describe(
       expect(users.length).toBeGreaterThan(0);
       expect(teams.length).toBeGreaterThan(0);
 
-      expect(users[0].id).toBeDefined();
+      expect(users[0].xata_id).toBeDefined();
       expect(users[0].read).toBeDefined();
       expect(users[0].full_name?.includes('fruits')).toBeTruthy();
-      expect(users[0].getMetadata().score).toBeDefined();
+      expect(users[0].xata_score).toBeDefined();
 
-      expect(teams[0].id).toBeDefined();
+      expect(teams[0].xata_id).toBeDefined();
       expect(teams[0].read).toBeDefined();
       expect(teams[0].name?.includes('fruits')).toBeTruthy();
-      expect(users[0].getMetadata().score).toBeDefined();
+      expect(users[0].xata_score).toBeDefined();
     });
 
     test('search by table with all tables', async () => {
@@ -118,15 +118,15 @@ describe(
       expect(users.length).toBeGreaterThan(0);
       expect(teams.length).toBeGreaterThan(0);
 
-      expect(users[0].id).toBeDefined();
+      expect(users[0].xata_id).toBeDefined();
       expect(users[0].read).toBeDefined();
       expect(users[0].full_name?.includes('fruits')).toBeTruthy();
-      expect(users[0].getMetadata().score).toBeDefined();
+      expect(users[0].xata_score).toBeDefined();
 
-      expect(teams[0].id).toBeDefined();
+      expect(teams[0].xata_id).toBeDefined();
       expect(teams[0].read).toBeDefined();
       expect(teams[0].name?.includes('fruits')).toBeTruthy();
-      expect(teams[0].getMetadata().score).toBeDefined();
+      expect(teams[0].xata_score).toBeDefined();
     });
 
     test('search all with multiple tables', async () => {
@@ -136,17 +136,17 @@ describe(
       expect(totalCount).toBeGreaterThan(0);
       for (const result of records) {
         if (result.table === 'teams') {
-          expect(result.record.id).toBeDefined();
+          expect(result.record.xata_id).toBeDefined();
           expect(result.record.read).toBeDefined();
           expect(result.record.name?.includes('fruits')).toBeTruthy();
-          expect(result.record.getMetadata().score).toBeDefined();
-          expect(result.record.getMetadata().table).toBe('teams');
+          expect(result.record.xata_score).toBeDefined();
+          expect(result.record.xata_table).toBe('teams');
         } else {
-          expect(result.record.id).toBeDefined();
+          expect(result.record.xata_id).toBeDefined();
           expect(result.record.read).toBeDefined();
           expect(result.record.full_name?.includes('fruits')).toBeTruthy();
-          expect(result.record.getMetadata().table).toBe('users');
-          expect(result.record.getMetadata().score).toBeDefined();
+          expect(result.record.xata_table).toBe('users');
+          expect(result.record.xata_score).toBeDefined();
         }
       }
     });
@@ -157,10 +157,10 @@ describe(
 
       expect(totalCount).toBeGreaterThan(0);
       for (const result of records) {
-        expect(result.record.id).toBeDefined();
+        expect(result.record.xata_id).toBeDefined();
         expect(result.record.read).toBeDefined();
         expect(result.record.name?.includes('fruits')).toBeTruthy();
-        expect(result.record.getMetadata().score).toBeDefined();
+        expect(result.record.xata_score).toBeDefined();
 
         //@ts-expect-error
         result.table === 'users';
@@ -174,20 +174,20 @@ describe(
       expect(totalCount).toBeGreaterThan(0);
       for (const result of records) {
         if (result.table === 'teams') {
-          expect(result.record.id).toBeDefined();
+          expect(result.record.xata_id).toBeDefined();
           expect(result.record.read).toBeDefined();
           expect(result.record.name?.includes('fruits')).toBeTruthy();
-          expect(result.record.getMetadata().score).toBeDefined();
+          expect(result.record.xata_score).toBeDefined();
         } else if (result.table === 'users') {
-          expect(result.record.id).toBeDefined();
+          expect(result.record.xata_id).toBeDefined();
           expect(result.record.read).toBeDefined();
           expect(result.record.full_name?.includes('fruits')).toBeTruthy();
-          expect(result.record.getMetadata().score).toBeDefined();
+          expect(result.record.xata_score).toBeDefined();
         } else if (result.table === 'pets') {
-          expect(result.record.id).toBeDefined();
+          expect(result.record.xata_id).toBeDefined();
           expect(result.record.read).toBeDefined();
           expect(result.record.name?.includes('fruits')).toBeTruthy();
-          expect(result.record.getMetadata().score).toBeDefined();
+          expect(result.record.xata_score).toBeDefined();
         }
       }
     });
@@ -203,11 +203,11 @@ describe(
       expect(records[0].table).toBe('teams');
 
       if (records[0].table === 'teams') {
-        expect(records[0].record.id).toBeDefined();
+        expect(records[0].record.xata_id).toBeDefined();
         expect(records[0].record.read).toBeDefined();
         expect(records[0].record.name?.includes('fruits')).toBeTruthy();
-        expect(records[0].record.getMetadata().score).toBeDefined();
-        expect(records[0].record.xata.highlight).toBeDefined();
+        expect(records[0].record.xata_score).toBeDefined();
+        expect(records[0].record.xata_highlight).toBeDefined();
       }
     });
 
@@ -224,10 +224,10 @@ describe(
       expect(page1.length).toBe(1);
       expect(page2.length).toBe(1);
 
-      expect(page1[0].id).not.toBe(page2[0].id);
+      expect(page1[0].xata_id).not.toBe(page2[0].xata_id);
 
-      expect(page1[0].id).toBe(owners[0].id);
-      expect(page2[0].id).toBe(owners[1].id);
+      expect(page1[0].xata_id).toBe(owners[0].xata_id);
+      expect(page2[0].xata_id).toBe(owners[1].xata_id);
     });
 
     test('global search with page and offset', async () => {
@@ -252,10 +252,10 @@ describe(
       expect(page1.length).toBe(1);
       expect(page2.length).toBe(1);
 
-      expect(page1[0].id).not.toBe(page2[0].id);
+      expect(page1[0].xata_id).not.toBe(page2[0].xata_id);
 
-      expect(page1[0].id).toBe(owners[0].id);
-      expect(page2[0].id).toBe(owners[1].id);
+      expect(page1[0].xata_id).toBe(owners[0].xata_id);
+      expect(page2[0].xata_id).toBe(owners[1].xata_id);
     });
   },
   { retry: 5 }

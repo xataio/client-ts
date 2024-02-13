@@ -22,7 +22,6 @@ import {
   FuzzinessExpression,
   HighlightExpression,
   PrefixExpression,
-  RecordsMetadata,
   SearchPageConfig,
   TransactionOperation
 } from '../api/schemas';
@@ -915,11 +914,14 @@ export class RestRepository<Record extends XataRecord>
       }
 
       // Create one record with id as property
-      if (isObject(a) && isString(a.id)) {
-        if (a.id === '') throw new Error("The id can't be empty");
+      if (isObject(a) && isString(a.xata_id)) {
+        if (a.xata_id === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(b) ? b : undefined;
-        return await this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: true, ifVersion });
+        return await this.#insertRecordWithId(a.xata_id, { ...a, xata_id: undefined }, columns, {
+          createOnly: true,
+          ifVersion
+        });
       }
 
       // Create one record without id
@@ -1053,11 +1055,11 @@ export class RestRepository<Record extends XataRecord>
 
         const ids = a.map((item) => extractId(item));
 
-        const finalObjects = await this.getAll({ filter: { id: { $any: compact(ids) } }, columns });
+        const finalObjects = await this.getAll({ filter: { xata_id: { $any: compact(ids) } }, columns });
 
         // Maintain order of objects
         const dictionary = finalObjects.reduce((acc, object) => {
-          acc[object.id] = object;
+          acc[object.xata_id] = object;
           return acc;
         }, {} as Dictionary<any>);
 
@@ -1206,7 +1208,7 @@ export class RestRepository<Record extends XataRecord>
         if (a.length === 0) return [];
 
         // TODO: Transaction API fails fast if one of the records is not found
-        const existing = await this.read(a, ['id']);
+        const existing = await this.read(a, ['xata_id'] as SelectableColumn<Record>[]);
         const updates = a.filter((_item, index) => existing[index] !== null);
 
         await this.#updateRecords(updates as Array<Partial<EditableData<Record>> & Identifiable>, {
@@ -1229,9 +1231,9 @@ export class RestRepository<Record extends XataRecord>
         }
 
         // Update one record with id as property
-        if (isObject(a) && isString(a.id)) {
+        if (isObject(a) && isString(a.xata_id)) {
           const columns = isValidSelectableColumns(b) ? b : undefined;
-          return await this.#updateRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
+          return await this.#updateRecordWithID(a.xata_id, { ...a, xata_id: undefined }, columns, { ifVersion });
         }
       } catch (error: any) {
         if (error.status === 422) return null;
@@ -1318,7 +1320,7 @@ export class RestRepository<Record extends XataRecord>
     if (!recordId) return null;
 
     // Ensure id is not present in the update payload
-    const { id: _id, ...record } = await this.#transformObjectToApi(object);
+    const { xata_id: _id, ...record } = await this.#transformObjectToApi(object);
 
     try {
       const response = await updateRecordWithID({
@@ -1349,9 +1351,9 @@ export class RestRepository<Record extends XataRecord>
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
     { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
   ) {
-    const operations = await promiseMap(objects, async ({ id, ...object }) => {
+    const operations = await promiseMap(objects, async ({ xata_id, ...object }) => {
       const fields = await this.#transformObjectToApi(object);
-      return { update: { table: this.#table, id, ifVersion, upsert, fields } };
+      return { update: { table: this.#table, id: xata_id, ifVersion, upsert, fields } };
     });
 
     const chunkedOperations: TransactionOperation[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
@@ -1434,7 +1436,7 @@ export class RestRepository<Record extends XataRecord>
         const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
-        const result = await this.read(a, columns);
+        const result = await this.read(a as any[], columns);
         return result;
       }
 
@@ -1447,11 +1449,11 @@ export class RestRepository<Record extends XataRecord>
       }
 
       // Create or update one record with id as property
-      if (isObject(a) && isString(a.id)) {
-        if (a.id === '') throw new Error("The id can't be empty");
+      if (isObject(a) && isString(a.xata_id)) {
+        if (a.xata_id === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
-        return await this.#upsertRecordWithID(a.id, { ...a, id: undefined }, columns, { ifVersion });
+        return await this.#upsertRecordWithID(a.xata_id, { ...a, xata_id: undefined }, columns, { ifVersion });
       }
 
       // Create with undefined id as param
@@ -1460,7 +1462,7 @@ export class RestRepository<Record extends XataRecord>
       }
 
       // Create with undefined id as property
-      if (isObject(a) && !isDefined(a.id)) {
+      if (isObject(a) && !isDefined(a.xata_id)) {
         return await this.create(a as EditableData<Record>, b as K[]);
       }
 
@@ -1470,7 +1472,7 @@ export class RestRepository<Record extends XataRecord>
 
   async #upsertRecordWithID(
     recordId: Identifier,
-    object: Omit<EditableData<Record>, 'id'>,
+    object: Omit<EditableData<Record>, 'xata_id'>,
     columns: SelectableColumn<Record>[] = ['*'],
     { ifVersion }: { ifVersion?: number }
   ) {
@@ -1556,11 +1558,14 @@ export class RestRepository<Record extends XataRecord>
       }
 
       // Create or replace one record with id as property
-      if (isObject(a) && isString(a.id)) {
-        if (a.id === '') throw new Error("The id can't be empty");
+      if (isObject(a) && isString(a.xata_id)) {
+        if (a.xata_id === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
-        return await this.#insertRecordWithId(a.id, { ...a, id: undefined }, columns, { createOnly: false, ifVersion });
+        return await this.#insertRecordWithId(a.xata_id, { ...a, xata_id: undefined }, columns, {
+          createOnly: false,
+          ifVersion
+        });
       }
 
       // Create with undefined id as param
@@ -1569,7 +1574,7 @@ export class RestRepository<Record extends XataRecord>
       }
 
       // Create with undefined id as property
-      if (isObject(a) && !isDefined(a.id)) {
+      if (isObject(a) && !isDefined(a.xata_id)) {
         return await this.create(a as EditableData<Record>, b as K[]);
       }
 
@@ -1616,7 +1621,7 @@ export class RestRepository<Record extends XataRecord>
 
         const ids = a.map((o) => {
           if (isString(o)) return o;
-          if (isString(o.id)) return o.id;
+          if (isString(o.xata_id)) return o.xata_id;
           throw new Error('Invalid arguments for delete method');
         });
 
@@ -1636,8 +1641,8 @@ export class RestRepository<Record extends XataRecord>
       }
 
       // Delete one record with id as property
-      if (isObject(a) && isString(a.id)) {
-        return this.#deleteRecord(a.id, b);
+      if (isObject(a) && isString(a.xata_id)) {
+        return this.#deleteRecord(a.xata_id, b);
       }
 
       throw new Error('Invalid arguments for delete method');
@@ -1977,13 +1982,13 @@ export class RestRepository<Record extends XataRecord>
 
     for (const [key, value] of Object.entries(object)) {
       // Ignore internal properties
-      if (key === 'xata') continue;
+      if (['xata_version', 'xata_createdat', 'xata_updatedat'].includes(key)) continue;
 
       const type = schema.columns.find((column) => column.name === key)?.type;
 
       switch (type) {
         case 'link': {
-          result[key] = isIdentifiable(value) ? value.id : value;
+          result[key] = isIdentifiable(value) ? value.xata_id : value;
           break;
         }
         case 'datetime': {
@@ -2016,8 +2021,7 @@ export const initObject = <T>(
   selectedColumns: SelectableColumn<T>[] | SelectableColumnWithObjectNotation<T>[]
 ) => {
   const data: Dictionary<unknown> = {};
-  const { xata, ...rest } = object ?? {};
-  Object.assign(data, rest);
+  Object.assign(data, { ...object });
 
   const { columns } = schemaTables.find(({ name }) => name === table) ?? {};
   if (!columns) console.error(`Table ${table} not found in schema`);
@@ -2092,39 +2096,27 @@ export const initObject = <T>(
   }
 
   const record = { ...data };
-  const metadata =
-    xata !== undefined
-      ? { ...xata, createdAt: new Date(xata.createdAt), updatedAt: new Date(xata.updatedAt) }
-      : undefined;
 
   record.read = function (columns?: any) {
-    return db[table].read(record['id'] as string, columns);
+    return db[table].read(record['xata_id'] as string, columns);
   };
 
   record.update = function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
     const ifVersion = parseIfVersion(b, c);
 
-    return db[table].update(record['id'] as string, data, columns, { ifVersion });
+    return db[table].update(record['xata_id'] as string, data, columns, { ifVersion });
   };
 
   record.replace = function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
     const ifVersion = parseIfVersion(b, c);
 
-    return db[table].createOrReplace(record['id'] as string, data, columns, { ifVersion });
+    return db[table].createOrReplace(record['xata_id'] as string, data, columns, { ifVersion });
   };
 
   record.delete = function () {
-    return db[table].delete(record['id'] as string);
-  };
-
-  if (metadata !== undefined) {
-    record.xata = Object.freeze(metadata);
-  }
-
-  record.getMetadata = function () {
-    return record.xata;
+    return db[table].delete(record['xata_id'] as string);
   };
 
   record.toSerializable = function () {
@@ -2135,7 +2127,7 @@ export const initObject = <T>(
     return JSON.stringify(record);
   };
 
-  for (const prop of ['read', 'update', 'replace', 'delete', 'getMetadata', 'toSerializable', 'toString']) {
+  for (const prop of ['read', 'update', 'replace', 'delete', 'toSerializable', 'toString']) {
     Object.defineProperty(record, prop, { enumerable: false });
   }
 
@@ -2146,7 +2138,7 @@ export const initObject = <T>(
 
 function extractId(value: any): Identifier | undefined {
   if (isString(value)) return value;
-  if (isObject(value) && isString(value.id)) return value.id;
+  if (isObject(value) && isString(value.xata_id)) return value.xata_id;
   return undefined;
 }
 

@@ -13,7 +13,7 @@ import { getHostUrl, parseProviderString } from '../../packages/client/src/api/p
 import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
-import { schema } from '../mock_data';
+import { pgRollMigrations } from '../mock_data';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -74,7 +74,7 @@ export async function setUpTestEnvironment(
   const { databaseName: database } = await api.databases.createDatabase({
     pathParams: { workspaceId: workspace, dbName: `sdk-integration-test-${prefix}-${id}` },
     body: { region },
-    headers: { 'X-Xata-Files': 'true' }
+    headers: { 'X-Features': 'feat-pgroll-migrations=1' }
   });
 
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace).replace('{region}', region);
@@ -88,15 +88,14 @@ export async function setUpTestEnvironment(
     clientName: 'sdk-tests'
   };
 
-  const { edits } = await api.migrations.compareBranchWithUserSchema({
-    pathParams: { workspace, region, dbBranchName: `${database}:main` },
-    body: { schema }
-  });
+  for (const operation of pgRollMigrations) {
+    const { jobID } = await api.branch.applyMigration({
+      pathParams: { workspace, region, dbBranchName: `${database}:main` },
+      body: { operations: [operation] }
+    });
 
-  await api.migrations.applyBranchSchemaEdit({
-    pathParams: { workspace, region, dbBranchName: `${database}:main` },
-    body: { edits }
-  });
+    await waitForMigrationToFinish(api, workspace, region, database, 'main', jobID);
+  }
 
   let span: Span | undefined;
 
@@ -154,4 +153,27 @@ declare module 'vitest' {
   export interface TestContext {
     span?: Span;
   }
+}
+
+async function waitForMigrationToFinish(
+  api: XataApiClient,
+  workspace: string,
+  region: string,
+  database: string,
+  branch: string,
+  jobId: string
+) {
+  const { status, error } = await api.branch.pgRollJobStatus({
+    pathParams: { workspace, region, dbBranchName: `${database}:main`, jobId }
+  });
+  if (status === 'failed') {
+    throw new Error(`Migration failed, ${error}`);
+  }
+
+  if (status === 'completed') {
+    return;
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
 }
