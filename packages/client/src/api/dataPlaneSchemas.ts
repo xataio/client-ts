@@ -990,45 +990,83 @@ export type DataInputRecord = {
 /**
  * Xata Table Record Metadata
  */
-export type RecordMeta = {
-  id: RecordID;
-  xata: {
-    /**
-     * The record's version. Can be used for optimistic concurrency control.
-     */
-    version: number;
-    /**
-     * The time when the record was created.
-     */
-    createdAt?: string;
-    /**
-     * The time when the record was last updated.
-     */
-    updatedAt?: string;
-    /**
-     * The record's table name. APIs that return records from multiple tables will set this field accordingly.
-     */
-    table?: string;
-    /**
-     * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
-     */
-    highlight?: {
-      [key: string]:
-        | string[]
-        | {
-            [key: string]: any;
-          };
+export type RecordMeta =
+  | {
+      id: RecordID;
+      xata: {
+        /**
+         * The record's version. Can be used for optimistic concurrency control.
+         */
+        version: number;
+        /**
+         * The time when the record was created.
+         */
+        createdAt?: string;
+        /**
+         * The time when the record was last updated.
+         */
+        updatedAt?: string;
+        /**
+         * The record's table name. APIs that return records from multiple tables will set this field accordingly.
+         */
+        table?: string;
+        /**
+         * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
+         */
+        highlight?: {
+          [key: string]:
+            | string[]
+            | {
+                [key: string]: any;
+              };
+        };
+        /**
+         * The record's relevancy score. This is returned by the search APIs.
+         */
+        score?: number;
+        /**
+         * Encoding/Decoding errors
+         */
+        warnings?: string[];
+      };
+    }
+  | {
+      xata_id: RecordID;
+      /**
+       * The record's version. Can be used for optimistic concurrency control.
+       */
+      xata_version: number;
+      /**
+       * The time when the record was created.
+       */
+      xata_createdat?: string;
+      /**
+       * The time when the record was last updated.
+       */
+      xata_updatedat?: string;
+      /**
+       * The record's table name. APIs that return records from multiple tables will set this field accordingly.
+       */
+      xata_table?: string;
+      /**
+       * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
+       */
+      xata_highlight?: {
+        [key: string]:
+          | string[]
+          | {
+              [key: string]: any;
+            };
+      };
+      /**
+       * The record's relevancy score. This is returned by the search APIs.
+       */
+      xata_score?: number;
+      /**
+       * Encoding/Decoding errors
+       */
+      xata_warnings?: string[];
     };
-    /**
-     * The record's relevancy score. This is returned by the search APIs.
-     */
-    score?: number;
-    /**
-     * Encoding/Decoding errors
-     */
-    warnings?: string[];
-  };
-};
 
 /**
  * File metadata
