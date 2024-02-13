@@ -158,15 +158,15 @@ type EditableDataFields<T> = T extends XataRecord
   ? number | NumericOperator
   : T;
 
-export type EditableData<O extends XataRecord> = Partial<
-  Identifiable &
+export type EditableData<O extends XataRecord> = Identifiable &
+  Partial<
     Omit<
       {
         [K in keyof O]: EditableDataFields<O[K]>;
       },
       keyof XataRecord
     >
->;
+  >;
 
 type JSONDataFile = {
   [K in keyof XataFile]: XataFile[K] extends Function ? never : XataFile[K];
