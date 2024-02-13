@@ -37,7 +37,6 @@
     "dotenv": "^16.4.2",
     "dotenv-expand": "^11.0.3",
     "edge-runtime": "^2.5.8",
-    "enquirer": "^2.4.1",
     "env-editor": "^1.1.0",
     "ini": "^4.1.1",
     "lodash.compact": "^3.0.1",
