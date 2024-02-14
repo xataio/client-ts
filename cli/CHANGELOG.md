@@ -1,5 +1,12 @@
 # @xata.io/cli
 
+## 0.15.8
+
+### Patch Changes
+
+- Updated dependencies [[`db01bea`](https://github.com/xataio/client-ts/commit/db01bead243bee3910895d391abe21a80b252a8f)]:
+  - @xata.io/pgroll@0.5.0
+
 ## 0.15.7
 
 ### Patch Changes
