@@ -25,9 +25,12 @@ if (apiKey === '') throw new Error('XATA_API_KEY environment variable is not set
 const workspace = (process.env.XATA_WORKSPACE ?? '').split('-').pop() ?? '';
 if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
 
-const region = process.env.XATA_REGION || 'eu-west-1';
-
 const host = parseProviderString(process.env.XATA_API_PROVIDER) ?? 'production';
+
+// TODO: Branches for pgroll only work in some regions for now
+// const region = process.env.XATA_REGION || 'us-east-1';
+const region =
+  host === 'production' ? 'us-east-1' : host === 'staging' ? 'eu-west-1' : process.env.XATA_REGION || 'us-east-1';
 
 const database = `drizzle-test-${Math.random().toString(36).substring(7)}`;
 
@@ -59,9 +62,7 @@ beforeAll(async () => {
   await waitForReplication();
 
   const client = new Client({
-    connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:main`,
-    // Not sure why, but we are getting `error: SSL required` sometimes
-    ssl: { rejectUnauthorized: false }
+    connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:main`
   });
 
   await client.connect();
@@ -153,9 +154,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
       ctx.client = new Client({
         connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:${
           ctx.branch
-        }`,
-        // Not sure why, but we are getting `error: SSL required` sometimes
-        ssl: { rejectUnauthorized: false }
+        }`
       });
 
       await ctx.client.connect();
