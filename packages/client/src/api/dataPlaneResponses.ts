@@ -57,6 +57,12 @@ export type RecordUpdateResponse =
         createdAt: string;
         updatedAt: string;
       };
+    }
+  | {
+      xata_id: string;
+      xata_version: number;
+      xata_createdat: string;
+      xata_updatedat: string;
     };
 
 export type PutFileResponse = Schemas.FileResponse;
