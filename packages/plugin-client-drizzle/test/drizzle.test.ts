@@ -1,6 +1,6 @@
 import { BaseClient, HostProvider, parseProviderString, XataApiClient } from '@xata.io/client';
 import 'dotenv/config';
-import { desc, eq, gt, gte, or, placeholder, sql, TransactionRollbackError } from 'drizzle-orm';
+import { desc, DrizzleError, eq, gt, gte, or, placeholder, sql, TransactionRollbackError } from 'drizzle-orm';
 import { Client } from 'pg';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expectTypeOf, test } from 'vitest';
 import { drizzle as drizzlePg, type XataDatabase } from '../src/pg';
@@ -1330,7 +1330,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
           columns: {},
           where: gte(postsTable.id, 2),
           extras: ({ content }) => ({
-            lowerName: sql<string>`lower(${content})`.as('content_lower')
+            contentLower: sql<string>`lower(${content})`.as('content_lower')
           })
         }
       },
@@ -1344,7 +1344,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
       | {
           lowerName: string;
           posts: {
-            lowerName: string;
+            contentLower: string;
           }[];
         }
       | undefined
@@ -1354,7 +1354,7 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
 
     ctx.expect(usersWithPosts).toEqual({
       lowerName: 'dan',
-      posts: [{ lowerName: 'post1.2' }, { lowerName: 'post1.3' }]
+      posts: [{ contentLower: 'post1.2' }, { contentLower: 'post1.3' }]
     });
   });
 
@@ -1472,15 +1472,14 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
       { id: 3, name: 'Alex' }
     ]);
 
-    const users = await ctx.db.query.usersTable.findMany({
-      columns: {}
-    });
-
-    ctx.expect(users.length).toBe(3);
-
-    ctx.expect(users[0]).toEqual({});
-    ctx.expect(users[1]).toEqual({});
-    ctx.expect(users[2]).toEqual({});
+    await ctx
+      .expect(
+        async () =>
+          await ctx.db.query.usersTable.findMany({
+            columns: {}
+          })
+      )
+      .rejects.toThrow(DrizzleError);
   });
 
   // columns {}
@@ -1491,11 +1490,14 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
       { id: 3, name: 'Alex' }
     ]);
 
-    const users = await ctx.db.query.usersTable.findFirst({
-      columns: {}
-    });
-
-    ctx.expect(users).toEqual({});
+    await ctx
+      .expect(
+        async () =>
+          await ctx.db.query.usersTable.findFirst({
+            columns: {}
+          })
+      )
+      .rejects.toThrow(DrizzleError);
   });
 
   // deep select {}
@@ -1512,20 +1514,19 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const users = await ctx.db.query.usersTable.findMany({
-      columns: {},
-      with: {
-        posts: {
-          columns: {}
-        }
-      }
-    });
-
-    ctx.expect(users.length).toBe(3);
-
-    ctx.expect(users[0]).toEqual({ posts: [{}] });
-    ctx.expect(users[1]).toEqual({ posts: [{}] });
-    ctx.expect(users[2]).toEqual({ posts: [{}] });
+    await ctx
+      .expect(
+        async () =>
+          await ctx.db.query.usersTable.findMany({
+            columns: {},
+            with: {
+              posts: {
+                columns: {}
+              }
+            }
+          })
+      )
+      .rejects.toThrow(DrizzleError);
   });
 
   // deep select {}
@@ -1542,16 +1543,19 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
       { ownerId: 3, content: 'Post3' }
     ]);
 
-    const users = await ctx.db.query.usersTable.findFirst({
-      columns: {},
-      with: {
-        posts: {
-          columns: {}
-        }
-      }
-    });
-
-    ctx.expect(users).toEqual({ posts: [{}] });
+    await ctx
+      .expect(
+        async () =>
+          await ctx.db.query.usersTable.findFirst({
+            columns: {},
+            with: {
+              posts: {
+                columns: {}
+              }
+            }
+          })
+      )
+      .rejects.toThrow(DrizzleError);
   });
 
   /*
@@ -4116,14 +4120,118 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
     });
   });
 
+  test('Get user with posts and posts with comments and comments with owner where exists', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
+      { id: 1, name: 'Dan' },
+      { id: 2, name: 'Andrew' },
+      { id: 3, name: 'Alex' }
+    ]);
+
+    await ctx.db.insert(postsTable).values([
+      { id: 1, ownerId: 1, content: 'Post1' },
+      { id: 2, ownerId: 2, content: 'Post2' },
+      { id: 3, ownerId: 3, content: 'Post3' }
+    ]);
+
+    await ctx.db.insert(commentsTable).values([
+      { postId: 1, content: 'Comment1', creator: 2 },
+      { postId: 2, content: 'Comment2', creator: 2 },
+      { postId: 3, content: 'Comment3', creator: 3 }
+    ]);
+
+    const response = await ctx.db.query.usersTable.findMany({
+      with: {
+        posts: {
+          with: {
+            comments: {
+              with: {
+                author: true
+              }
+            }
+          }
+        }
+      },
+      where: (table, { exists, eq }) =>
+        exists(
+          ctx.db
+            .select({ one: sql`1` })
+            .from(usersTable)
+            .where(eq(sql`1`, table.id))
+        )
+    });
+
+    expectTypeOf(response).toEqualTypeOf<
+      {
+        id: number;
+        name: string;
+        verified: boolean;
+        invitedBy: number | null;
+        posts: {
+          id: number;
+          content: string;
+          ownerId: number | null;
+          createdAt: Date;
+          comments: {
+            id: number;
+            content: string;
+            createdAt: Date;
+            creator: number | null;
+            postId: number | null;
+            author: {
+              id: number;
+              name: string;
+              verified: boolean;
+              invitedBy: number | null;
+            } | null;
+          }[];
+        }[];
+      }[]
+    >();
+
+    ctx.expect(response.length).eq(1);
+    ctx.expect(response[0]?.posts.length).eq(1);
+
+    ctx.expect(response[0]?.posts[0]?.comments.length).eq(1);
+
+    ctx.expect(response[0]).toEqual({
+      id: 1,
+      name: 'Dan',
+      verified: false,
+      invitedBy: null,
+      posts: [
+        {
+          id: 1,
+          ownerId: 1,
+          content: 'Post1',
+          createdAt: response[0]?.posts[0]?.createdAt,
+          comments: [
+            {
+              id: 1,
+              content: 'Comment1',
+              creator: 2,
+              author: {
+                id: 2,
+                name: 'Andrew',
+                verified: false,
+                invitedBy: null
+              },
+              postId: 1,
+              createdAt: response[0]?.posts[0]?.comments[0]?.createdAt
+            }
+          ]
+        }
+      ]
+    });
+  });
+
   /*
-	One three-level relation + 1 first-level relatioon
+	One three-level relation + 1 first-level relation
 	1. users+posts+comments+comment_owner
 	2. users+users
 */
 
   /*
-	One four-level relation users+posts+comments+coment_likes
+	One four-level relation users+posts+comments+comment_likes
 */
 
   /*
@@ -4158,9 +4266,11 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
           columns: {},
           with: {
             group: true
-          }
+          },
+          orderBy: usersToGroupsTable.userId
         }
-      }
+      },
+      orderBy: usersTable.id
     });
 
     expectTypeOf(response).toEqualTypeOf<
@@ -4224,22 +4334,22 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
       name: 'Alex',
       verified: false,
       invitedBy: null,
-      usersToGroups: [
-        {
-          group: {
-            id: 3,
-            name: 'Group3',
-            description: null
-          }
-        },
+      usersToGroups: ctx.expect.arrayContaining([
         {
           group: {
             id: 2,
             name: 'Group2',
             description: null
           }
+        },
+        {
+          group: {
+            id: 3,
+            name: 'Group3',
+            description: null
+          }
         }
-      ]
+      ])
     });
   });
 
@@ -6035,7 +6145,8 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
                 lower: sql<string>`lower(${groupsTable.name})`.as('lower_name')
               }
             }
-          }
+          },
+          orderBy: usersToGroupsTable.groupId
         }
       }
     });
@@ -6111,17 +6222,17 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
       usersToGroups: [
         {
           group: {
-            id: 3,
-            name: 'Group3',
-            lower: 'group3',
+            id: 2,
+            name: 'Group2',
+            lower: 'group2',
             description: null
           }
         },
         {
           group: {
-            id: 2,
-            name: 'Group2',
-            lower: 'group2',
+            id: 3,
+            name: 'Group3',
+            lower: 'group3',
             description: null
           }
         }
@@ -6255,6 +6366,23 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
         }
       ]
     });
+  });
+
+  test('Filter by columns not present in select', async (ctx) => {
+    await ctx.db.insert(usersTable).values([
+      { id: 1, name: 'Dan' },
+      { id: 2, name: 'Andrew' },
+      { id: 3, name: 'Alex' }
+    ]);
+
+    const response = await ctx.db.query.usersTable.findFirst({
+      columns: {
+        id: true
+      },
+      where: eq(usersTable.name, 'Dan')
+    });
+
+    ctx.expect(response).toEqual({ id: 1 });
   });
 
   test('.toSQL()', (ctx) => {
