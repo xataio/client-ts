@@ -25,6 +25,12 @@ export type XataHttpClient = {
   sql: SQLPluginResult;
 };
 
+export interface QueryResults<ArrayMode extends 'json' | 'array'> {
+  rowCount: number;
+  rows: ArrayMode extends 'array' ? any[][] : Record<string, any>[];
+  rowAsArray: ArrayMode extends 'array' ? true : false;
+}
+
 export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends PreparedQuery<T> {
   static readonly [entityKind]: string = 'XataHttpPreparedQuery';
 
@@ -47,7 +53,8 @@ export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends Prepar
 
     const { fields, client, queryString: statement, customResultMapper } = this;
     if (!fields && !customResultMapper) {
-      return client.sql({ statement, params, responseType: 'array' });
+      const result = await this.client.sql<Record<string, any>>({ statement, params });
+      return { rowCount: result.records.length, rows: result.records, rowAsArray: false };
     }
 
     const { rows, warning } = await client.sql({ statement, params, responseType: 'array' });
@@ -117,14 +124,15 @@ export class XataHttpSession<
     );
   }
 
-  async query(query: string, params: unknown[]): Promise<SQLQueryResult<unknown>> {
+  async query(query: string, params: unknown[]): Promise<QueryResults<'array'>> {
     this.logger.logQuery(query, params);
-    const result = await this.client.sql({ statement: query, params });
-    return result;
+    const result = await this.client.sql({ statement: query, params, responseType: 'array' });
+    return { rowCount: result.rows.length, rows: result.rows, rowAsArray: true };
   }
 
-  async queryObjects(query: string, params: unknown[]): Promise<SQLQueryResult<unknown>> {
-    return this.client.sql({ statement: query, params });
+  async queryObjects(query: string, params: unknown[]): Promise<QueryResults<'json'>> {
+    const result = await this.client.sql<Record<string, any>>({ statement: query, params });
+    return { rowCount: result.records.length, rows: result.records, rowAsArray: false };
   }
 
   override async transaction<T>(

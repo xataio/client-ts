@@ -111,12 +111,7 @@ export class XataSession<
 
   async query(query: string, params: unknown[]): Promise<QueryResult> {
     this.logger.logQuery(query, params);
-    const result = await this.client.query({
-      rowMode: 'array',
-      text: query,
-      values: params
-    });
-    return result;
+    return await this.client.query({ rowMode: 'array', text: query, values: params });
   }
 
   async queryObjects<T extends QueryResultRow>(query: string, params: unknown[]): Promise<QueryResult<T>> {
