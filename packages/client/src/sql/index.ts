@@ -25,11 +25,17 @@ export type SQLQueryParams<T = any[]> = {
    * The consistency level to use when executing the query.
    */
   consistency?: 'strong' | 'eventual';
+  /**
+   * The response type to use when executing the query.
+   */
+  responseType?: 'json' | 'array';
 };
 
 export type SQLQuery = TemplateStringsArray | SQLQueryParams;
 
-export type SQLQueryResult<T> = {
+type SQLResponseType = 'json' | 'array';
+
+type SQLQueryResultJSON<T> = {
   /**
    * The records returned by the query.
    */
@@ -37,31 +43,69 @@ export type SQLQueryResult<T> = {
   /**
    * The columns metadata returned by the query.
    */
-  columns?: Record<string, { type_name: string }>;
+  columns: Array<{ name: string; type: string }>;
   /**
    * Optional warning message returned by the query.
    */
   warning?: string;
 };
 
-export type SQLPluginResult = <T>(query: SQLQuery, ...parameters: any[]) => Promise<SQLQueryResult<T>>;
+type SQLQueryResultArray = {
+  /**
+   * The records returned by the query.
+   */
+  rows: any[][];
+  /**
+   * The columns metadata returned by the query.
+   */
+  columns: Array<{ name: string; type: string }>;
+  /**
+   * Optional warning message returned by the query.
+   */
+  warning?: string;
+};
+
+export type SQLQueryResult<T, Mode extends SQLResponseType = 'json'> = Mode extends 'json'
+  ? SQLQueryResultJSON<T>
+  : Mode extends 'array'
+  ? SQLQueryResultArray
+  : never;
+
+export type SQLPluginResult = <T, Query extends SQLQuery = SQLQuery>(
+  query: Query,
+  ...parameters: any[]
+) => Promise<
+  SQLQueryResult<
+    T,
+    Query extends SQLQueryParams<any>
+      ? Query['responseType'] extends SQLResponseType
+        ? NonNullable<Query['responseType']>
+        : 'json'
+      : 'json'
+  >
+>;
 
 export class SQLPlugin extends XataPlugin {
   build(pluginOptions: XataPluginOptions): SQLPluginResult {
-    return async <T>(query: SQLQuery, ...parameters: any[]) => {
+    return async (query: SQLQuery, ...parameters: any[]) => {
       if (!isParamsObject(query) && (!isTemplateStringsArray(query) || !Array.isArray(parameters))) {
         throw new Error('Invalid usage of `xata.sql`. Please use it as a tagged template or with an object.');
       }
 
       const { statement, params, consistency } = prepareParams(query, parameters);
 
-      const { records, warning, columns } = await sqlQuery({
+      const {
+        records,
+        rows,
+        warning,
+        columns = []
+      } = await sqlQuery({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
         body: { statement, params, consistency },
         ...pluginOptions
       });
 
-      return { records: records as T[], warning, columns };
+      return { records, rows, warning, columns } as any;
     };
   }
 }

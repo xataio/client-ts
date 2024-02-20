@@ -45,16 +45,13 @@ export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends Prepar
 
     this.logger.logQuery(this.queryString, params);
 
-    const { fields, client, queryString, customResultMapper } = this;
+    const { fields, client, queryString: statement, customResultMapper } = this;
     if (!fields && !customResultMapper) {
-      return client.sql({ statement: queryString, params });
+      return client.sql({ statement, params, responseType: 'array' });
     }
 
-    const { records, warning } = await client.sql<Record<string, unknown>>({ statement: queryString, params });
+    const { rows, warning } = await client.sql({ statement, params, responseType: 'array' });
     if (warning) console.warn(warning);
-
-    // TODO: FIXME: Order is not guaranteed and we fail to map the result to the correct fields
-    const rows = records.map((record) => Object.values(record));
 
     // @ts-expect-error joinsNotNullableMap is internal
     const joinsNotNullableMap = this.joinsNotNullableMap;
@@ -67,13 +64,17 @@ export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends Prepar
   all(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['all']> {
     const params = fillPlaceholders(this.params, placeholderValues);
     this.logger.logQuery(this.queryString, params);
-    return this.client.sql({ statement: this.queryString, params }).then((result) => result.records);
+    return this.client
+      .sql({ statement: this.queryString, params, responseType: 'array' })
+      .then((result) => result.rows);
   }
 
   values(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['values']> {
     const params = fillPlaceholders(this.params, placeholderValues);
     this.logger.logQuery(this.queryString, params);
-    return this.client.sql({ statement: this.queryString, params }).then((result) => result.records);
+    return this.client
+      .sql({ statement: this.queryString, params, responseType: 'array' })
+      .then((result) => result.rows);
   }
 }
 
