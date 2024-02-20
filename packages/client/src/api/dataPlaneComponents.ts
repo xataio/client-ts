@@ -4611,6 +4611,12 @@ export type SqlQueryRequestBody = {
    * @default strong
    */
   consistency?: 'strong' | 'eventual';
+  /**
+   * The response type.
+   *
+   * @default json
+   */
+  responseType?: 'json' | 'array';
 };
 
 export type SqlQueryVariables = {
