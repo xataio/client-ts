@@ -6406,10 +6406,10 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
 
 async function waitForReplication(): Promise<void> {
   try {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     await api.branches.getBranchList({ workspace, database, region });
   } catch (error) {
-    console.log(`Waiting for create database replication to finish...`);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    console.log(`Replication not ready yet, retrying...`);
     return await waitForReplication();
   }
 }
