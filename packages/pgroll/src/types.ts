@@ -102,7 +102,8 @@ export type OpRawSQL = z.infer<typeof OpRawSQLDefinition>;
 
 export const OpRawSQLDefinition = z.object({
   down: z.string().optional(),
-  up: z.string()
+  up: z.string(),
+  onComplete: z.boolean().optional()
 });
 
 export type OpRenameTable = z.infer<typeof OpRenameTableDefinition>;
@@ -149,7 +150,7 @@ export const PgRollOperationsDefinition = z.array(PgRollOperationDefinition);
 export type PgRollMigration = z.infer<typeof PgRollMigrationDefinition>;
 
 export const PgRollMigrationDefinition = z.object({
-  name: z.string(),
+  name: z.string().optional(),
   operations: PgRollOperationsDefinition
 });
 

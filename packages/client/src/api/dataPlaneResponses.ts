@@ -57,6 +57,12 @@ export type RecordUpdateResponse =
         createdAt: string;
         updatedAt: string;
       };
+    }
+  | {
+      xata_id: string;
+      xata_version: number;
+      xata_createdat: string;
+      xata_updatedat: string;
     };
 
 export type PutFileResponse = Schemas.FileResponse;
@@ -112,10 +118,14 @@ export type AggResponse = {
 
 export type SQLResponse = {
   records?: Schemas.SQLRecord[];
+  rows?: any[][];
   /**
    * Name of the column and its PostgreSQL type
    */
-  columns?: Record<string, any>;
+  columns?: {
+    name?: string;
+    type?: string;
+  }[];
   /**
    * Number of selected columns
    */

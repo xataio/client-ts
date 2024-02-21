@@ -121,7 +121,8 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
   }
 }
 
-export type SearchXataRecord<Record extends XataRecord> = Omit<Record, 'getMetadata'> & {
+export type SearchXataRecord<Record extends XataRecord> = Omit<Record, 'getMetadata' | 'xata'> & {
+  xata: XataRecordMetadata & SearchExtraProperties;
   getMetadata: () => XataRecordMetadata & SearchExtraProperties;
 };
 

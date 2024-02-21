@@ -340,9 +340,34 @@ export const schema = {
         up: {
           description: 'SQL expression for up migration',
           type: 'string'
+        },
+        onComplete: {
+          description: 'SQL expression will run on complete step (rather than on start)',
+          type: 'boolean',
+          default: false
         }
       },
       required: ['up'],
+      oneOf: [
+        {
+          required: ['down']
+        },
+        {
+          required: ['onComplete']
+        },
+        {
+          not: {
+            anyOf: [
+              {
+                required: ['down']
+              },
+              {
+                required: ['onComplete']
+              }
+            ]
+          }
+        }
+      ],
       type: 'object'
     },
     OpRenameTable: {
@@ -520,7 +545,7 @@ export const schema = {
           $ref: '#/$defs/PgRollOperations'
         }
       },
-      required: ['name', 'operations'],
+      required: ['operations'],
       type: 'object'
     },
     ReplicaIdentity: {
