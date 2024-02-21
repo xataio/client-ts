@@ -91,7 +91,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const isBrowser = typeof window !== 'undefined' && typeof Deno === 'undefined';
       if (isBrowser && !enableBrowser) {
         throw new Error(
-          'You are trying to use Xata from the browser, which is potentially a non-secure environment. https://xata.io/docs/messages/api-key-browser-error'
+          'You are trying to use Xata from the browser, which is potentially a non-secure environment. How to fix: https://xata.io/docs/messages/api-key-browser-error'
         );
       }
 
