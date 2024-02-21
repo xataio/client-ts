@@ -19,6 +19,13 @@ export type PgRollApplyMigrationResponse = {
   jobID: string;
 };
 
+/**
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type TableName = string;
+
 export type PgRollJobType = 'apply' | 'start' | 'complete' | 'rollback';
 
 export type PgRollJobStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
@@ -147,13 +154,6 @@ export type StartedFromMetadata = {
   migrationID: string;
 };
 
-/**
- * @maxLength 255
- * @minLength 1
- * @pattern [a-zA-Z0-9_\-~]+
- */
-export type TableName = string;
-
 export type ColumnLink = {
   table: string;
 };
@@ -236,15 +236,13 @@ export type DBBranch = {
 
 export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
-/**
- * @x-go-type schema.Schema
- */
 export type PgRollSchema = {
   name: string;
   tables: {
     [key: string]: {
       oid: string;
       name: string;
+      xataCompatible: boolean;
       comment: string;
       columns: {
         [key: string]: {
