@@ -60,6 +60,49 @@ export const applyMigration = (variables: ApplyMigrationVariables, signal?: Abor
     ApplyMigrationPathParams
   >({ url: '/db/{dbBranchName}/pgroll/apply', method: 'post', ...variables, signal });
 
+export type AdaptTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+  region: string;
+};
+
+export type AdaptTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type AdaptTableVariables = {
+  pathParams: AdaptTablePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Adapt a table to be used from Xata, this will add the Xata metadata fields to the table, making it accessible through the data API.
+ */
+export const adaptTable = (variables: AdaptTableVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.PgRollApplyMigrationResponse, AdaptTableError, undefined, {}, {}, AdaptTablePathParams>({
+    url: '/db/{dbBranchName}/pgroll/adapt/{tableName}',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type PgRollStatusPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -4638,6 +4681,7 @@ export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
 export const operationsByTag = {
   branch: {
     applyMigration,
+    adaptTable,
     pgRollStatus,
     pgRollJobStatus,
     pgRollMigrationHistory,
