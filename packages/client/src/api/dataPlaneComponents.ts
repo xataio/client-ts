@@ -256,6 +256,87 @@ export const getBranchList = (variables: GetBranchListVariables, signal?: AbortS
     signal
   });
 
+export type GetDatabaseSettingsPathParams = {
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+  region: string;
+};
+
+export type GetDatabaseSettingsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetDatabaseSettingsVariables = {
+  pathParams: GetDatabaseSettingsPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Get database settings
+ */
+export const getDatabaseSettings = (variables: GetDatabaseSettingsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.DatabaseSettings, GetDatabaseSettingsError, undefined, {}, {}, GetDatabaseSettingsPathParams>({
+    url: '/dbs/{dbName}/settings',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type UpdateDatabaseSettingsPathParams = {
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+  region: string;
+};
+
+export type UpdateDatabaseSettingsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateDatabaseSettingsVariables = {
+  body: Schemas.DatabaseSettings;
+  pathParams: UpdateDatabaseSettingsPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Update database settings, this endpoint can be used to disable search
+ */
+export const updateDatabaseSettings = (variables: UpdateDatabaseSettingsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.DatabaseSettings,
+    UpdateDatabaseSettingsError,
+    Schemas.DatabaseSettings,
+    {},
+    {},
+    UpdateDatabaseSettingsPathParams
+  >({ url: '/dbs/{dbName}/settings', method: 'patch', ...variables, signal });
+
 export type GetBranchDetailsPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -4698,6 +4779,7 @@ export const operationsByTag = {
     removeGitBranchesEntry,
     resolveBranch
   },
+  database: { getDatabaseSettings, updateDatabaseSettings },
   migrations: {
     getSchema,
     getBranchMigrationHistory,

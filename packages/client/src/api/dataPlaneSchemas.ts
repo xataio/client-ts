@@ -124,6 +124,10 @@ export type ListBranchesResponse = {
   branches: Branch[];
 };
 
+export type DatabaseSettings = {
+  search_enabled: boolean;
+};
+
 /**
  * @maxLength 255
  * @minLength 1
