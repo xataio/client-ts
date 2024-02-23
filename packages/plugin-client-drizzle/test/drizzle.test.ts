@@ -62,7 +62,8 @@ beforeAll(async () => {
   await waitForReplication();
 
   const client = new Client({
-    connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:main`
+    connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:main`,
+    ssl: true
   });
 
   await client.connect();
@@ -154,7 +155,8 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
       ctx.client = new Client({
         connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:${
           ctx.branch
-        }`
+        }`,
+        ssl: true
       });
 
       await ctx.client.connect();
