@@ -60,6 +60,49 @@ export const applyMigration = (variables: ApplyMigrationVariables, signal?: Abor
     ApplyMigrationPathParams
   >({ url: '/db/{dbBranchName}/pgroll/apply', method: 'post', ...variables, signal });
 
+export type AdaptTablePathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  /**
+   * The Table name
+   */
+  tableName: Schemas.TableName;
+  workspace: string;
+  region: string;
+};
+
+export type AdaptTableError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type AdaptTableVariables = {
+  pathParams: AdaptTablePathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Adapt a table to be used from Xata, this will add the Xata metadata fields to the table, making it accessible through the data API.
+ */
+export const adaptTable = (variables: AdaptTableVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.PgRollApplyMigrationResponse, AdaptTableError, undefined, {}, {}, AdaptTablePathParams>({
+    url: '/db/{dbBranchName}/pgroll/adapt/{tableName}',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type PgRollStatusPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -212,6 +255,87 @@ export const getBranchList = (variables: GetBranchListVariables, signal?: AbortS
     ...variables,
     signal
   });
+
+export type GetDatabaseSettingsPathParams = {
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+  region: string;
+};
+
+export type GetDatabaseSettingsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetDatabaseSettingsVariables = {
+  pathParams: GetDatabaseSettingsPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Get database settings
+ */
+export const getDatabaseSettings = (variables: GetDatabaseSettingsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.DatabaseSettings, GetDatabaseSettingsError, undefined, {}, {}, GetDatabaseSettingsPathParams>({
+    url: '/dbs/{dbName}/settings',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type UpdateDatabaseSettingsPathParams = {
+  /**
+   * The Database Name
+   */
+  dbName: Schemas.DBName;
+  workspace: string;
+  region: string;
+};
+
+export type UpdateDatabaseSettingsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateDatabaseSettingsVariables = {
+  body: Schemas.DatabaseSettings;
+  pathParams: UpdateDatabaseSettingsPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Update database settings, this endpoint can be used to disable search
+ */
+export const updateDatabaseSettings = (variables: UpdateDatabaseSettingsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.DatabaseSettings,
+    UpdateDatabaseSettingsError,
+    Schemas.DatabaseSettings,
+    {},
+    {},
+    UpdateDatabaseSettingsPathParams
+  >({ url: '/dbs/{dbName}/settings', method: 'patch', ...variables, signal });
 
 export type GetBranchDetailsPathParams = {
   /**
@@ -4638,6 +4762,7 @@ export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
 export const operationsByTag = {
   branch: {
     applyMigration,
+    adaptTable,
     pgRollStatus,
     pgRollJobStatus,
     pgRollMigrationHistory,
@@ -4654,6 +4779,7 @@ export const operationsByTag = {
     removeGitBranchesEntry,
     resolveBranch
   },
+  database: { getDatabaseSettings, updateDatabaseSettings },
   migrations: {
     getSchema,
     getBranchMigrationHistory,
