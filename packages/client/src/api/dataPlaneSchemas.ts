@@ -12,7 +12,7 @@
  */
 export type DBBranchName = string;
 
-export type PgRollApplyMigrationResponse = {
+export type ApplyMigrationResponse = {
   /**
    * The id of the migration job
    */
@@ -26,11 +26,11 @@ export type PgRollApplyMigrationResponse = {
  */
 export type TableName = string;
 
-export type PgRollJobType = 'apply' | 'start' | 'complete' | 'rollback';
+export type MigrationJobType = 'apply' | 'start' | 'complete' | 'rollback';
 
-export type PgRollJobStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+export type MigrationJobStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 
-export type PgRollJobStatusResponse = {
+export type MigrationJobStatusResponse = {
   /**
    * The id of the migration job
    */
@@ -38,11 +38,11 @@ export type PgRollJobStatusResponse = {
   /**
    * The type of the migration job
    */
-  type: PgRollJobType;
+  type: MigrationJobType;
   /**
    * The status of the migration job
    */
-  status: PgRollJobStatus;
+  status: MigrationJobStatus;
   /**
    * The error message associated with the migration job
    */
@@ -54,11 +54,11 @@ export type PgRollJobStatusResponse = {
  * @minLength 1
  * @pattern [a-zA-Z0-9_\-~]+
  */
-export type PgRollMigrationJobID = string;
+export type MigrationJobID = string;
 
-export type PgRollMigrationType = 'pgroll' | 'inferred';
+export type MigrationType = 'pgroll' | 'inferred';
 
-export type PgRollMigrationHistoryItem = {
+export type MigrationHistoryItem = {
   /**
    * The name of the migration
    */
@@ -84,14 +84,14 @@ export type PgRollMigrationHistoryItem = {
   /**
    * The type of the migration
    */
-  migrationType: PgRollMigrationType;
+  migrationType: MigrationType;
 };
 
-export type PgRollMigrationHistoryResponse = {
+export type MigrationHistoryResponse = {
   /**
    * The migrations that have been applied to the branch
    */
-  migrations: PgRollMigrationHistoryItem[];
+  migrations: MigrationHistoryItem[];
 };
 
 /**
@@ -240,7 +240,7 @@ export type DBBranch = {
 
 export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
-export type PgRollSchema = {
+export type BranchSchema = {
   name: string;
   tables: {
     [key: string]: {
