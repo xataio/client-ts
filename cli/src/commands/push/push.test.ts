@@ -118,7 +118,7 @@ const baseFetch = (url: string, request: any) => {
         status: 'completed'
       })
     };
-  } else if (url === `${baseUrl}/pgroll/apply` && request.method === 'POST') {
+  } else if (url === `${baseUrl}/migrations/apply` && request.method === 'POST') {
     return {
       ok: true,
       json: async () => ({
@@ -236,7 +236,7 @@ const pgrollFetchSingle = (url: string, request: any, type: 'inferred' | 'pgroll
         schema: { tables: [{ name: 'table1', columns: [{ name: 'a', type: 'string' }] }] }
       })
     };
-  } else if (url === `${baseUrl}/pgroll/migrations` && request.method === 'GET') {
+  } else if (url === `${baseUrl}/migrations/history` && request.method === 'GET') {
     return {
       ok: true,
       json: async () => (type === 'inferred' ? { migrations: [pgrollMigration3] } : { migrations: [pgrollMigration1] })
@@ -255,7 +255,7 @@ const pgrollFetchEmpty = (url: string, request: any) => {
         schema: { tables: [{ name: 'table1', columns: [{ name: 'a', type: 'string' }] }] }
       })
     };
-  } else if (url === `${baseUrl}/pgroll/migrations` && request.method === 'GET') {
+  } else if (url === `${baseUrl}/migrations/history` && request.method === 'GET') {
     return {
       ok: true,
       json: async () => ({
