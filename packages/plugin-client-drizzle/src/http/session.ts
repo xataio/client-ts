@@ -15,7 +15,7 @@ import {
   PgSession,
   PgTransaction,
   PgTransactionConfig,
-  PreparedQuery,
+  PgPreparedQuery,
   PreparedQueryConfig,
   QueryResultHKT
 } from 'drizzle-orm/pg-core';
@@ -31,7 +31,7 @@ export interface QueryResults<ArrayMode extends 'json' | 'array'> {
   rowAsArray: ArrayMode extends 'array' ? true : false;
 }
 
-export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends PreparedQuery<T> {
+export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends PgPreparedQuery<T> {
   static readonly [entityKind]: string = 'XataHttpPreparedQuery';
 
   constructor(
@@ -43,7 +43,7 @@ export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends Prepar
     private name: string | undefined,
     private customResultMapper?: (rows: unknown[][]) => T['execute']
   ) {
-    super();
+    super({ sql: queryString, params });
   }
 
   async execute(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['execute']> {
@@ -112,7 +112,7 @@ export class XataHttpSession<
     fields: SelectedFieldsOrdered<PgColumn> | undefined,
     name: string | undefined,
     customResultMapper?: (rows: unknown[][]) => T['execute']
-  ): PreparedQuery<T> {
+  ): PgPreparedQuery<T> {
     return new XataHttpPreparedQuery(
       this.client,
       query.sql,
