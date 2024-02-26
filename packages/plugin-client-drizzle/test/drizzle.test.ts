@@ -9,7 +9,7 @@ import * as schema from './schema';
 
 const { usersTable, postsTable, commentsTable, usersToGroupsTable, groupsTable } = schema;
 
-const ENABLE_LOGGING = true;
+const ENABLE_LOGGING = false;
 
 declare module 'vitest' {
   export interface TestContext {
@@ -76,7 +76,7 @@ function getDrizzleClient(type: string, branch: string) {
   }
 }
 
-describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type', ({ type }) => {
+describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({ type }) => {
   beforeAll(async () => {
     await api.database.createDatabase({
       workspace,
@@ -162,6 +162,8 @@ describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type
     await api.branches.createBranch({ workspace, database, region, branch: ctx.branch, from: 'main' });
 
     const { db, client } = getDrizzleClient(type, ctx.branch);
+    await client?.connect();
+
     ctx.db = db;
     ctx.client = client;
   });
