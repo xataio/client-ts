@@ -11,12 +11,12 @@ export const isBranchPgRollEnabled = (details: Schemas.DBBranch) => {
 };
 
 export const isMigrationPgRollFormat = (
-  migration: Schemas.MigrationObject | Schemas.PgRollMigrationHistoryItem | MigrationFilePgroll
-): migration is Schemas.PgRollMigrationHistoryItem => {
+  migration: Schemas.MigrationObject | Schemas.MigrationHistoryItem | MigrationFilePgroll
+): migration is Schemas.MigrationHistoryItem => {
   return 'migration' in migration;
 };
 
-export const hydrateMigrationObject = (migration: Schemas.PgRollMigrationHistoryItem): MigrationFilePgroll => {
+export const hydrateMigrationObject = (migration: Schemas.MigrationHistoryItem): MigrationFilePgroll => {
   return { ...migration, migration: JSON.parse(migration.migration) };
 };
 

@@ -47,7 +47,7 @@ export default class Push extends BaseCommand<typeof Push> {
 
     const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
-    let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
+    let logs: Schemas.MigrationHistoryItem[] | Schemas.Commit[] = [];
     if (isBranchPgRollEnabled(details)) {
       const { migrations } = await xata.api.branches.pgRollMigrationHistory({
         workspace,
