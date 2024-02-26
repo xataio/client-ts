@@ -51,26 +51,47 @@ function getDomain(host: HostProvider) {
   }
 }
 
-beforeAll(async () => {
-  await api.database.createDatabase({
-    workspace,
-    database,
-    data: { region, branchName: 'main' },
-    headers: { 'X-Features': 'feat-pgroll-migrations=1' }
-  });
+function getDrizzleClient(type: string, branch: string) {
+  if (type === 'http') {
+    const xata = new BaseClient({
+      apiKey,
+      host,
+      clientName: 'sdk-tests',
+      databaseURL: `https://${workspace}.${region}.${getDomain(host)}/db/${database}`,
+      branch
+    });
 
-  await waitForReplication();
+    return { db: drizzleHttp(xata, { schema, logger: ENABLE_LOGGING }) };
+  } else if (type === 'pg') {
+    const client = new Client({
+      connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(
+        host
+      )}:5432/${database}:${branch}`,
+      ssl: true
+    });
 
-  const client = new Client({
-    connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:main`,
-    ssl: true
-  });
+    return { db: drizzlePg(client, { schema, logger: ENABLE_LOGGING }), client };
+  } else {
+    throw new Error(`Unknown type: ${type}`);
+  }
+}
 
-  await client.connect();
-  const db = drizzlePg(client, { schema, logger: ENABLE_LOGGING });
+describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type', ({ type }) => {
+  beforeAll(async () => {
+    await api.database.createDatabase({
+      workspace,
+      database,
+      data: { region, branchName: 'main' },
+      headers: { 'X-Features': 'feat-pgroll-migrations=1' }
+    });
 
-  await db.execute(
-    sql`
+    await waitForReplication();
+
+    const { client, db } = getDrizzleClient(type, 'main');
+    await client?.connect();
+
+    await db.execute(
+      sql`
 			CREATE TABLE "users" (
 				"id" serial PRIMARY KEY NOT NULL,
 				"name" text NOT NULL,
@@ -78,27 +99,27 @@ beforeAll(async () => {
 				"invited_by" int REFERENCES "users"("id")
 			);
 		`
-  );
-  await db.execute(
-    sql`
+    );
+    await db.execute(
+      sql`
 			CREATE TABLE IF NOT EXISTS "groups" (
 				"id" serial PRIMARY KEY NOT NULL,
 				"name" text NOT NULL,
 				"description" text
 			);
 		`
-  );
-  await db.execute(
-    sql`
+    );
+    await db.execute(
+      sql`
 			CREATE TABLE IF NOT EXISTS "users_to_groups" (
 				"id" serial PRIMARY KEY NOT NULL,
 				"user_id" int REFERENCES "users"("id"),
 				"group_id" int REFERENCES "groups"("id")
 			);
 		`
-  );
-  await db.execute(
-    sql`
+    );
+    await db.execute(
+      sql`
 			CREATE TABLE IF NOT EXISTS "posts" (
 				"id" serial PRIMARY KEY NOT NULL,
 				"content" text NOT NULL,
@@ -106,9 +127,9 @@ beforeAll(async () => {
 				"created_at" timestamp with time zone DEFAULT now() NOT NULL
 			);
 		`
-  );
-  await db.execute(
-    sql`
+    );
+    await db.execute(
+      sql`
 			CREATE TABLE IF NOT EXISTS "comments" (
 				"id" serial PRIMARY KEY NOT NULL,
 				"content" text NOT NULL,
@@ -117,9 +138,9 @@ beforeAll(async () => {
 				"created_at" timestamp with time zone DEFAULT now() NOT NULL
 			);
 		`
-  );
-  await db.execute(
-    sql`
+    );
+    await db.execute(
+      sql`
 			CREATE TABLE IF NOT EXISTS "comment_likes" (
 				"id" serial PRIMARY KEY NOT NULL,
 				"creator" int REFERENCES "users"("id"),
@@ -127,43 +148,22 @@ beforeAll(async () => {
 				"created_at" timestamp with time zone DEFAULT now() NOT NULL
 			);
 		`
-  );
+    );
 
-  await client.end();
-});
+    await client?.end();
+  });
 
-afterAll(async () => {
-  await api.database.deleteDatabase({ workspace, database });
-});
+  afterAll(async () => {
+    await api.database.deleteDatabase({ workspace, database });
+  });
 
-describe.concurrent.each([{ type: 'pg' } /**{ type: 'http' }**/])('Drizzle $type', ({ type }) => {
   beforeEach(async (ctx) => {
     ctx.branch = `test-${Math.random().toString(36).substring(7)}`;
     await api.branches.createBranch({ workspace, database, region, branch: ctx.branch, from: 'main' });
 
-    if (type === 'http') {
-      const xata = new BaseClient({
-        apiKey,
-        host,
-        clientName: 'sdk-tests',
-        databaseURL: `https://${workspace}.${region}.${getDomain(host)}/db/${database}`,
-        branch: ctx.branch
-      });
-
-      ctx.db = drizzleHttp(xata, { schema, logger: ENABLE_LOGGING });
-    } else if (type === 'pg') {
-      ctx.client = new Client({
-        connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(host)}:5432/${database}:${
-          ctx.branch
-        }`,
-        ssl: true
-      });
-
-      await ctx.client.connect();
-      ctx.db = drizzlePg(ctx.client, { schema, logger: ENABLE_LOGGING });
-    } else {
-      throw new Error(`Unknown type: ${type}`);
-    }
+    const { db, client } = getDrizzleClient(type, ctx.branch);
+    ctx.db = db;
+    ctx.client = client;
   });
 
   afterEach(async (ctx) => {
