@@ -44,7 +44,7 @@ const regularMigration1: Schemas.MigrationObject = {
   ]
 };
 
-const pgrollMigration1: Schemas.PgRollMigrationHistoryItem = {
+const pgrollMigration1: Schemas.MigrationHistoryItem = {
   done: false,
   migration: `{"name": "mig_cmkjcdrj7c92neg7lnmg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
   migrationType: 'pgroll',
@@ -53,7 +53,7 @@ const pgrollMigration1: Schemas.PgRollMigrationHistoryItem = {
   startedAt: '2024-01-18T14:31:20.795975Z'
 };
 
-const pgrollMigration2: Schemas.PgRollMigrationHistoryItem = {
+const pgrollMigration2: Schemas.MigrationHistoryItem = {
   done: true,
   migration:
     '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"sql": { "up": "ALTER ALTER TABLE internal ADD test varchar(255)" }}]}',
@@ -62,7 +62,7 @@ const pgrollMigration2: Schemas.PgRollMigrationHistoryItem = {
   parent: 'mig_abcdcdrj7c92neg7lerr',
   startedAt: '2024-01-18T14:31:20.795975Z'
 };
-const pgrollMigration3: Schemas.PgRollMigrationHistoryItem = {
+const pgrollMigration3: Schemas.MigrationHistoryItem = {
   done: true,
   migration:
     '{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',
@@ -71,7 +71,7 @@ const pgrollMigration3: Schemas.PgRollMigrationHistoryItem = {
   parent: 'mig_abcdcdrj7c92neg7lerr',
   startedAt: '2024-01-18T14:31:20.795975Z'
 };
-const pgrollMigration4: Schemas.PgRollMigrationHistoryItem = {
+const pgrollMigration4: Schemas.MigrationHistoryItem = {
   done: true,
   migration:
     '{"name": "mig_xyzdcdrj7c92neg7lxyz", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}',

@@ -61,7 +61,7 @@ const regularMigration2: Schemas.MigrationObject = {
   ]
 };
 
-const pgrollMigration1: Schemas.PgRollMigrationHistoryItem = {
+const pgrollMigration1: Schemas.MigrationHistoryItem = {
   done: false,
   migration: `{"name": "mig_cmkjcdrj7c92neg7lnmg", "operations": [{"drop_column": {"down": "", "table": "tester", "column": "Firstname"}}]}`,
   migrationType: 'pgroll',
@@ -70,7 +70,7 @@ const pgrollMigration1: Schemas.PgRollMigrationHistoryItem = {
   startedAt: '2024-01-18T14:31:20.795975Z'
 };
 
-const pgrollMigration2: Schemas.PgRollMigrationHistoryItem = {
+const pgrollMigration2: Schemas.MigrationHistoryItem = {
   done: false,
   migration: `{"name": "mig_abcdcdrj7c92neg7lefg", "operations": [{"drop_column": {"up": "", "table": "tester", "column": "Firstname"}}]}`,
   migrationType: 'pgroll',
@@ -79,7 +79,7 @@ const pgrollMigration2: Schemas.PgRollMigrationHistoryItem = {
   startedAt: '2024-01-18T14:31:20.795975Z'
 };
 
-const pgrollMigration3: Schemas.PgRollMigrationHistoryItem = {
+const pgrollMigration3: Schemas.MigrationHistoryItem = {
   done: false,
   migration:
     '{"name": "mig_xbcdcdrj7c92neg7lefx", "operations": [{"sql": { "up": "ALTER ALTER TABLE internal ADD test varchar(255)" }}]}',
