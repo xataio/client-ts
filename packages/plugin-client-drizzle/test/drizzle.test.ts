@@ -9,7 +9,7 @@ import * as schema from './schema';
 
 const { usersTable, postsTable, commentsTable, usersToGroupsTable, groupsTable } = schema;
 
-const ENABLE_LOGGING = false;
+const ENABLE_LOGGING = true;
 
 declare module 'vitest' {
   export interface TestContext {
@@ -87,7 +87,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
 
     await waitForReplication();
 
-    const { client, db } = getDrizzleClient(type, 'main');
+    // For now, run the migrations via wire protocol
+    const { client, db } = getDrizzleClient('pg', 'main');
     await client?.connect();
 
     await db.execute(
