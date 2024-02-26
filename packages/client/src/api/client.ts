@@ -547,8 +547,8 @@ class BranchApi {
     region: string;
     database: Schemas.DBName;
     branch: Schemas.BranchName;
-  }): Promise<Schemas.PgRollMigrationHistoryResponse> {
-    return operationsByTag.branch.pgRollMigrationHistory({
+  }): Promise<Schemas.MigrationHistoryResponse> {
+    return operationsByTag.migrations.getMigrationHistory({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       ...this.extraProps
     });
@@ -566,8 +566,8 @@ class BranchApi {
     database: Schemas.DBName;
     branch: Schemas.BranchName;
     migration: Schemas.Migration;
-  }): Promise<Schemas.PgRollApplyMigrationResponse> {
-    return operationsByTag.branch.applyMigration({
+  }): Promise<Schemas.ApplyMigrationResponse> {
+    return operationsByTag.migrations.applyMigration({
       pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
       body: migration,
       ...this.extraProps
