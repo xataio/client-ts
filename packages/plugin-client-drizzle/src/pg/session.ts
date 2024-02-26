@@ -16,7 +16,7 @@ import {
   PgSession,
   PgTransaction,
   PgTransactionConfig,
-  PreparedQuery,
+  PgPreparedQuery,
   PreparedQueryConfig,
   QueryResultHKT
 } from 'drizzle-orm/pg-core';
@@ -25,11 +25,11 @@ import { mapResultRow } from '../shared/utils';
 
 export type XataClient = Pool | PoolClient | Client;
 
-export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQuery<T> {
+export class XataPreparedQuery<T extends PreparedQueryConfig> extends PgPreparedQuery<T> {
   static readonly [entityKind]: string = 'XataPreparedQuery';
 
-  private rawQuery: QueryConfig;
-  private query: QueryArrayConfig;
+  private rawQueryConfig: QueryConfig;
+  private queryConfig: QueryArrayConfig;
 
   constructor(
     private client: XataClient,
@@ -40,17 +40,17 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
     name: string | undefined,
     private customResultMapper?: (rows: unknown[][]) => T['execute']
   ) {
-    super();
-    this.rawQuery = { name, text: queryString };
-    this.query = { name, text: queryString, rowMode: 'array' };
+    super({ sql: queryString, params });
+    this.rawQueryConfig = { name, text: queryString };
+    this.queryConfig = { name, text: queryString, rowMode: 'array' };
   }
 
   async execute(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['execute']> {
     const params = fillPlaceholders(this.params, placeholderValues);
 
-    this.logger.logQuery(this.rawQuery.text, params);
+    this.logger.logQuery(this.rawQueryConfig.text, params);
 
-    const { fields, client, rawQuery, query, customResultMapper } = this;
+    const { fields, client, rawQueryConfig: rawQuery, queryConfig: query, customResultMapper } = this;
     if (!fields && !customResultMapper) {
       return await client.query(rawQuery, params);
     }
@@ -67,14 +67,14 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PreparedQu
 
   all(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['all']> {
     const params = fillPlaceholders(this.params, placeholderValues);
-    this.logger.logQuery(this.rawQuery.text, params);
-    return this.client.query(this.rawQuery, params).then((result) => result.rows);
+    this.logger.logQuery(this.rawQueryConfig.text, params);
+    return this.client.query(this.rawQueryConfig, params).then((result) => result.rows);
   }
 
   values(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['values']> {
     const params = fillPlaceholders(this.params, placeholderValues);
-    this.logger.logQuery(this.rawQuery.text, params);
-    return this.client.query(this.query, params).then((result) => result.rows);
+    this.logger.logQuery(this.rawQueryConfig.text, params);
+    return this.client.query(this.queryConfig, params).then((result) => result.rows);
   }
 }
 
@@ -105,7 +105,7 @@ export class XataSession<
     fields: SelectedFieldsOrdered<PgColumn> | undefined,
     name: string | undefined,
     customResultMapper?: (rows: unknown[][]) => T['execute']
-  ): PreparedQuery<T> {
+  ): PgPreparedQuery<T> {
     return new XataPreparedQuery(this.client, query.sql, query.params, this.logger, fields, name, customResultMapper);
   }
 
