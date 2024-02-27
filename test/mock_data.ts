@@ -116,8 +116,7 @@ export const pgRollMigrations: PgRollOperation[] = [
         { name: 'xata_updatedat', type: 'timestamptz', default: 'now()', nullable: false },
         { name: 'email', type: 'text', unique: true, nullable: true },
         { name: 'name', type: 'text', nullable: true },
-        // TODO: Add defaultPublicAccess: true
-        { name: 'photo', type: 'xata.xata_file', nullable: true },
+        { name: 'photo', type: 'xata.xata_file', nullable: true, comment: `{ "xata.file.dpa": true }` },
         { name: 'attachments', type: 'xata.xata_file_array', nullable: true },
         { name: 'plan', type: 'text', nullable: true },
         { name: 'dark', type: 'boolean', nullable: true },
@@ -130,7 +129,7 @@ export const pgRollMigrations: PgRollOperation[] = [
         { name: 'team', type: 'text', nullable: true },
         { name: 'pet', type: 'text', nullable: true },
         { name: 'account_value', type: 'int', nullable: true },
-        { name: 'vector', type: 'real[]', nullable: true, comment: `{"xata.search.dimension": 4}` }
+        { name: 'vector', type: 'real[]', nullable: true, comment: `{ "xata.search.dimension": 4 }` }
       ]
     }
   },

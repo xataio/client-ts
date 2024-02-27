@@ -89,7 +89,7 @@ export async function setUpTestEnvironment(
   };
 
   for (const operation of pgRollMigrations) {
-    const { jobID } = await api.branch.applyMigration({
+    const { jobID } = await api.migrations.applyMigration({
       pathParams: { workspace, region, dbBranchName: `${database}:main` },
       body: { operations: [operation] }
     });
@@ -163,8 +163,8 @@ async function waitForMigrationToFinish(
   branch: string,
   jobId: string
 ) {
-  const { status, error } = await api.branch.pgRollJobStatus({
-    pathParams: { workspace, region, dbBranchName: `${database}:main`, jobId }
+  const { status, error } = await api.migrations.getMigrationJobStatus({
+    pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, jobId }
   });
   if (status === 'failed') {
     throw new Error(`Migration failed, ${error}`);
