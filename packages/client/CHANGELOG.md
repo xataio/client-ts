@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.29.2
+
+### Patch Changes
+
+- [#1380](https://github.com/xataio/client-ts/pull/1380) [`e8db1cd`](https://github.com/xataio/client-ts/commit/e8db1cd394ccbed32403548bf9d09a5c3973d850) Thanks [@richardgill](https://github.com/richardgill)! - Link to our docs to explain how to resolve the 'api key in browser' error message
+
 ## 0.29.1
 
 ### Patch Changes
