@@ -37,39 +37,49 @@ describe('SQL proxy', () => {
     expect(records).toHaveLength(1);
 
     expect(columns).toMatchInlineSnapshot(`
-      {
-        "config": {
-          "type_name": "jsonb",
+      [
+        {
+          "name": "id",
+          "type": "text",
         },
-        "dark": {
-          "type_name": "bool",
+        {
+          "name": "xata.version",
+          "type": "int4",
         },
-        "description": {
-          "type_name": "text",
+        {
+          "name": "xata.createdAt",
+          "type": "timestamptz",
         },
-        "email": {
-          "type_name": "text",
+        {
+          "name": "xata.updatedAt",
+          "type": "timestamptz",
         },
-        "founded_date": {
-          "type_name": "timestamptz",
+        {
+          "name": "name",
+          "type": "text",
         },
         "index": {
           "type_name": "int4",
         },
-        "labels": {
-          "type_name": "_text",
+        {
+          "name": "index",
+          "type": "int8",
         },
-        "name": {
-          "type_name": "text",
+        {
+          "name": "rating",
+          "type": "float8",
         },
-        "owner": {
-          "type_name": "text",
+        {
+          "name": "founded_date",
+          "type": "timestamptz",
         },
-        "plan": {
-          "type_name": "text",
+        {
+          "name": "email",
+          "type": "text",
         },
-        "rating": {
-          "type_name": "float8",
+        {
+          "name": "plan",
+          "type": "text",
         },
         "xata_createdat": {
           "type_name": "timestamptz",
@@ -83,7 +93,7 @@ describe('SQL proxy', () => {
         "xata_version": {
           "type_name": "int4",
         },
-      }
+      ]
     `);
 
     expect(records[0].xata_id).toBe(team.xata_id);
@@ -99,39 +109,49 @@ describe('SQL proxy', () => {
     expect(records).toHaveLength(2);
 
     expect(columns).toMatchInlineSnapshot(`
-      {
-        "config": {
-          "type_name": "jsonb",
+      [
+        {
+          "name": "id",
+          "type": "text",
         },
-        "dark": {
-          "type_name": "bool",
+        {
+          "name": "xata.version",
+          "type": "int4",
         },
-        "description": {
-          "type_name": "text",
+        {
+          "name": "xata.createdAt",
+          "type": "timestamptz",
         },
-        "email": {
-          "type_name": "text",
+        {
+          "name": "xata.updatedAt",
+          "type": "timestamptz",
         },
-        "founded_date": {
-          "type_name": "timestamptz",
+        {
+          "name": "name",
+          "type": "text",
         },
         "index": {
           "type_name": "int4",
         },
-        "labels": {
-          "type_name": "_text",
+        {
+          "name": "index",
+          "type": "int8",
         },
-        "name": {
-          "type_name": "text",
+        {
+          "name": "rating",
+          "type": "float8",
         },
-        "owner": {
-          "type_name": "text",
+        {
+          "name": "founded_date",
+          "type": "timestamptz",
         },
-        "plan": {
-          "type_name": "text",
+        {
+          "name": "email",
+          "type": "text",
         },
-        "rating": {
-          "type_name": "float8",
+        {
+          "name": "plan",
+          "type": "text",
         },
         "xata_createdat": {
           "type_name": "timestamptz",
@@ -145,7 +165,7 @@ describe('SQL proxy', () => {
         "xata_version": {
           "type_name": "int4",
         },
-      }
+      ]
     `);
 
     const record1 = records.find((record) => record.xata_id === teams[0].xata_id);
@@ -164,39 +184,49 @@ describe('SQL proxy', () => {
     });
 
     expect(columns).toMatchInlineSnapshot(`
-      {
-        "config": {
-          "type_name": "jsonb",
+      [
+        {
+          "name": "id",
+          "type": "text",
         },
-        "dark": {
-          "type_name": "bool",
+        {
+          "name": "xata.version",
+          "type": "int4",
         },
-        "description": {
-          "type_name": "text",
+        {
+          "name": "xata.createdAt",
+          "type": "timestamptz",
         },
-        "email": {
-          "type_name": "text",
+        {
+          "name": "xata.updatedAt",
+          "type": "timestamptz",
         },
-        "founded_date": {
-          "type_name": "timestamptz",
+        {
+          "name": "name",
+          "type": "text",
         },
         "index": {
           "type_name": "int4",
         },
-        "labels": {
-          "type_name": "_text",
+        {
+          "name": "index",
+          "type": "int8",
         },
-        "name": {
-          "type_name": "text",
+        {
+          "name": "rating",
+          "type": "float8",
         },
-        "owner": {
-          "type_name": "text",
+        {
+          "name": "founded_date",
+          "type": "timestamptz",
         },
-        "plan": {
-          "type_name": "text",
+        {
+          "name": "email",
+          "type": "text",
         },
-        "rating": {
-          "type_name": "float8",
+        {
+          "name": "plan",
+          "type": "text",
         },
         "xata_createdat": {
           "type_name": "timestamptz",
@@ -210,7 +240,7 @@ describe('SQL proxy', () => {
         "xata_version": {
           "type_name": "int4",
         },
-      }
+      ]
     `);
 
     expect(warning).toBeUndefined();

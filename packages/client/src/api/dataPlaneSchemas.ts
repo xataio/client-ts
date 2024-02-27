@@ -12,18 +12,25 @@
  */
 export type DBBranchName = string;
 
-export type PgRollApplyMigrationResponse = {
+export type ApplyMigrationResponse = {
   /**
    * The id of the migration job
    */
   jobID: string;
 };
 
-export type PgRollJobType = 'apply' | 'start' | 'complete' | 'rollback';
+/**
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type TableName = string;
 
-export type PgRollJobStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+export type MigrationJobType = 'apply' | 'start' | 'complete' | 'rollback';
 
-export type PgRollJobStatusResponse = {
+export type MigrationJobStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+
+export type MigrationJobStatusResponse = {
   /**
    * The id of the migration job
    */
@@ -31,11 +38,11 @@ export type PgRollJobStatusResponse = {
   /**
    * The type of the migration job
    */
-  type: PgRollJobType;
+  type: MigrationJobType;
   /**
    * The status of the migration job
    */
-  status: PgRollJobStatus;
+  status: MigrationJobStatus;
   /**
    * The error message associated with the migration job
    */
@@ -47,11 +54,11 @@ export type PgRollJobStatusResponse = {
  * @minLength 1
  * @pattern [a-zA-Z0-9_\-~]+
  */
-export type PgRollMigrationJobID = string;
+export type MigrationJobID = string;
 
-export type PgRollMigrationType = 'pgroll' | 'inferred';
+export type MigrationType = 'pgroll' | 'inferred';
 
-export type PgRollMigrationHistoryItem = {
+export type MigrationHistoryItem = {
   /**
    * The name of the migration
    */
@@ -77,14 +84,14 @@ export type PgRollMigrationHistoryItem = {
   /**
    * The type of the migration
    */
-  migrationType: PgRollMigrationType;
+  migrationType: MigrationType;
 };
 
-export type PgRollMigrationHistoryResponse = {
+export type MigrationHistoryResponse = {
   /**
    * The migrations that have been applied to the branch
    */
-  migrations: PgRollMigrationHistoryItem[];
+  migrations: MigrationHistoryItem[];
 };
 
 /**
@@ -117,6 +124,10 @@ export type ListBranchesResponse = {
   branches: Branch[];
 };
 
+export type DatabaseSettings = {
+  search_enabled: boolean;
+};
+
 /**
  * @maxLength 255
  * @minLength 1
@@ -146,13 +157,6 @@ export type StartedFromMetadata = {
   dbBranchID: string;
   migrationID: string;
 };
-
-/**
- * @maxLength 255
- * @minLength 1
- * @pattern [a-zA-Z0-9_\-~]+
- */
-export type TableName = string;
 
 export type ColumnLink = {
   table: string;
@@ -236,15 +240,13 @@ export type DBBranch = {
 
 export type MigrationStatus = 'completed' | 'pending' | 'failed';
 
-/**
- * @x-go-type schema.Schema
- */
-export type PgRollSchema = {
+export type BranchSchema = {
   name: string;
   tables: {
     [key: string]: {
       oid: string;
       name: string;
+      xataCompatible: boolean;
       comment: string;
       columns: {
         [key: string]: {

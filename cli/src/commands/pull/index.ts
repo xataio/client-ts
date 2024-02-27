@@ -51,9 +51,9 @@ export default class Pull extends BaseCommand<typeof Pull> {
 
     const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
-    let logs: Schemas.PgRollMigrationHistoryItem[] | Schemas.Commit[] = [];
+    let logs: Schemas.MigrationHistoryItem[] | Schemas.Commit[] = [];
     if (isBranchPgRollEnabled(details)) {
-      const { migrations } = await xata.api.branch.pgRollMigrationHistory({
+      const { migrations } = await xata.api.migrations.getMigrationHistory({
         pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
       });
       logs = migrations;
