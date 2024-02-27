@@ -35,7 +35,7 @@ type UserRecord = User & XataRecord;
 //                              SelectableColumn<O>                            //
 // --------------------------------------------------------------------------- //
 
-const validTeamColumns: SelectableColumn<TeamRecord>[] = ['*', 'id', 'name', 'owner.*', 'owner.date'];
+const validTeamColumns: SelectableColumn<TeamRecord>[] = ['*', 'xata_id', 'name', 'owner.*', 'owner.date'];
 
 // @ts-expect-error
 const invalidFullNameTeamColumn: SelectableColumn<Team> = 'full_name';

@@ -151,7 +151,7 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
     >;
 
 // Private: Utility type to get object properties without XataRecord ones
-type DataProps<O> = Exclude<StringKeys<O>, StringKeys<XataRecord>>;
+type DataProps<O> = Exclude<StringKeys<O>, StringKeys<Omit<XataRecord, 'xata_id'>>>;
 
 // Private: Utility type to get the value of a column at a given path (nested object value)
 // For "foo.bar.baz" we return { foo: { bar: { baz: type } } }

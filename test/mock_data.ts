@@ -102,7 +102,7 @@ export const pgRollMigrations: PgRollOperation[] = [
         { name: 'plan', type: 'text', nullable: true },
         { name: 'dark', type: 'boolean', nullable: true },
         { name: 'config', type: 'jsonb', nullable: true },
-        { name: 'owner', type: 'text', nullable: true }
+        { name: 'owner', type: 'text', nullable: true, comment: `{ "xata.link": "users" }` }
       ]
     }
   },
@@ -126,8 +126,8 @@ export const pgRollMigrations: PgRollOperation[] = [
         { name: 'birthDate', type: 'timestamptz', nullable: true },
         { name: 'street', type: 'text', nullable: true },
         { name: 'zipcode', type: 'int', nullable: true },
-        { name: 'team', type: 'text', nullable: true },
-        { name: 'pet', type: 'text', nullable: true },
+        { name: 'team', type: 'text', nullable: true, comment: `{ "xata.link": "teams" }` },
+        { name: 'pet', type: 'text', nullable: true, comment: `{ "xata.link": "pets" }` },
         { name: 'account_value', type: 'int', nullable: true },
         { name: 'vector', type: 'real[]', nullable: true, comment: `{ "xata.search.dimension": 4 }` }
       ]
