@@ -24,9 +24,12 @@ if (apiKey === '') throw new Error('XATA_API_KEY environment variable is not set
 const workspace = process.env.XATA_WORKSPACE ?? '';
 if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
 
-const region = process.env.XATA_REGION || 'eu-west-1';
-
 const host = parseProviderString(process.env.XATA_API_PROVIDER);
+
+// TODO: Branches for pgroll only work in some regions for now
+// const region = process.env.XATA_REGION || 'us-east-1';
+const region =
+  host === 'production' ? 'us-east-1' : host === 'staging' ? 'eu-west-1' : process.env.XATA_REGION || 'us-east-1';
 
 export type EnvironmentOptions = {
   fetch?: any;
@@ -95,6 +98,14 @@ export async function setUpTestEnvironment(
     });
 
     await waitForMigrationToFinish(api, workspace, region, database, 'main', jobID);
+
+    if ('create_table' in operation) {
+      const { jobID } = await api.migrations.adaptTable({
+        pathParams: { workspace, region, dbBranchName: `${database}:main`, tableName: operation.create_table.name }
+      });
+
+      await waitForMigrationToFinish(api, workspace, region, database, 'main', jobID);
+    }
   }
 
   let span: Span | undefined;

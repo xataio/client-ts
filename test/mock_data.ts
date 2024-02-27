@@ -74,10 +74,6 @@ export const pgRollMigrations: PgRollOperation[] = [
     create_table: {
       name: 'users',
       columns: [
-        { name: 'xata_id', type: 'text', pk: true, unique: true, nullable: false },
-        { name: 'xata_version', type: 'integer', default: '0', nullable: false },
-        { name: 'xata_createdat', type: 'timestamptz', default: 'now()', nullable: false },
-        { name: 'xata_updatedat', type: 'timestamptz', default: 'now()', nullable: false },
         { name: 'email', type: 'text', unique: true, nullable: true },
         { name: 'name', type: 'text', nullable: true },
         { name: 'photo', type: 'xata.xata_file', nullable: true, comment: `{ "xata.file.dpa": true }` },
@@ -99,10 +95,6 @@ export const pgRollMigrations: PgRollOperation[] = [
     create_table: {
       name: 'teams',
       columns: [
-        { name: 'xata_id', type: 'text', pk: true, unique: true, nullable: false },
-        { name: 'xata_version', type: 'integer', default: '0', nullable: false },
-        { name: 'xata_createdat', type: 'timestamptz', default: 'now()', nullable: false },
-        { name: 'xata_updatedat', type: 'timestamptz', default: 'now()', nullable: false },
         { name: 'name', type: 'text', nullable: true },
         { name: 'description', type: 'text', nullable: true },
         { name: 'labels', type: 'text[]', nullable: true },
@@ -120,10 +112,6 @@ export const pgRollMigrations: PgRollOperation[] = [
     create_table: {
       name: 'pets',
       columns: [
-        { name: 'xata_id', type: 'text', pk: true, unique: true, nullable: false },
-        { name: 'xata_version', type: 'integer', default: '0', nullable: false },
-        { name: 'xata_createdat', type: 'timestamptz', default: 'now()', nullable: false },
-        { name: 'xata_updatedat', type: 'timestamptz', default: 'now()', nullable: false },
         { name: 'name', type: 'text', nullable: true },
         { name: 'type', type: 'text', nullable: true },
         { name: 'num_legs', type: 'int', nullable: true }
