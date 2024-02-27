@@ -936,7 +936,6 @@ export class RestRepository<Record extends XataRecord>
 
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
     const record = await this.#transformObjectToApi(object);
-    console.log('record', record);
 
     const response = await insertRecord({
       pathParams: {

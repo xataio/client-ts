@@ -329,9 +329,9 @@ describe('combined transactions', () => {
       { operation: 'update', id: 'i2', rows: 1, columns: {} },
       { operation: 'update', id: 'i2', rows: 1, columns: {} },
       { operation: 'delete', rows: 1 },
-      { operation: 'get', columns: { id: 'i0', name: 'a1', index: 0 } },
-      { operation: 'get', columns: { id: 'i1', name: 'b1', index: 1 } },
-      { operation: 'get', columns: { id: 'i2', name: 'c1.1', index: 2 } }
+      { operation: 'get', columns: { xata_id: 'i0', name: 'a1', index: 0 } },
+      { operation: 'get', columns: { xata_id: 'i1', name: 'b1', index: 1 } },
+      { operation: 'get', columns: { xata_id: 'i2', name: 'c1.1', index: 2 } }
     ]);
 
     const records = await xata.db.teams.read(['i0', 'i1', 'i2']);

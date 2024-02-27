@@ -94,8 +94,6 @@ export async function setUpTestEnvironment(
       body: { operations: [operation] }
     });
 
-    console.log('Applying migration', operation, jobID);
-
     await waitForMigrationToFinish(api, workspace, region, database, 'main', jobID);
   }
 

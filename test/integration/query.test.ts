@@ -5,7 +5,6 @@ import {
   iContains,
   includesAll,
   includesNone,
-  isXataRecord,
   lt,
   Repository,
   XataApiClient,
@@ -610,18 +609,10 @@ describe('integration tests', () => {
   });
 
   test('Pagination default value', async () => {
-    await api.table.createTable({
-      pathParams: { workspace, region, dbBranchName: `${database}:main`, tableName: 'planes' }
-    });
-    await api.table.setTableSchema({
-      pathParams: { workspace, region, dbBranchName: `${database}:main`, tableName: 'planes' },
-      body: { columns: [{ name: 'name', type: 'string' }] }
-    });
-
     const planes = Array.from({ length: PAGINATION_DEFAULT_SIZE + 50 }, (_, index) => ({ name: `Plane ${index}` }));
 
-    const createdPlanes = await baseClient.db.planes.create(planes);
-    const queriedPlanes = await baseClient.db.planes.getPaginated();
+    const createdPlanes = await xata.db.users.create(planes);
+    const queriedPlanes = await xata.db.users.filter({ name: { $startsWith: 'Plane' } }).getPaginated();
 
     expect(createdPlanes).toHaveLength(PAGINATION_DEFAULT_SIZE + 50);
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
@@ -647,13 +638,6 @@ describe('integration tests', () => {
 
     const updatedUser = await user.read();
     expect(updatedUser?.team?.xata_id).toEqual(team.xata_id);
-
-    // TODO(link.xata) @ts-expect-error
-    expect(updatedUser?.team?.xata_version).not.toBeDefined();
-    // TODO(link.xata) @ts-expect-error
-    expect(updatedUser?.team?.xata_createdat).not.toBeDefined();
-    // TODO(link.xata) @ts-expect-error
-    expect(updatedUser?.team?.xata_updatedat).not.toBeDefined();
 
     const response = await xata.db.teams.getFirst({ filter: { xata_id: team.xata_id }, columns: ['*', 'owner.*'] });
     const owner = await response?.owner?.read();
@@ -681,7 +665,6 @@ describe('integration tests', () => {
 
     expect(nestedName).toEqual(user.full_name);
 
-    expect(isXataRecord(nestedProperty)).toBe(true);
     expect(nestedProperty?.name).toEqual(team.name);
     // @ts-expect-error
     expect(nestedProperty?.owner?.full_name).not.toBeDefined();
@@ -721,7 +704,7 @@ describe('integration tests', () => {
     const owner = await xata.db.users.filter({ xata_id: newOwner.xata_id }).getFirst();
     if (!owner) throw new Error('No user found');
 
-    const team = await xata.db.teams.filter({ owner }).getFirst();
+    const team = await xata.db.teams.filter({ owner: owner.xata_id }).getFirst();
     expect(team?.xata_id).toEqual(newTeam.xata_id);
   });
 

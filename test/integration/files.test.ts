@@ -43,7 +43,7 @@ describe('file support', () => {
       ['attachments.*', 'attachments.base64Content', 'photo.*', 'photo.base64Content']
     );
 
-    expect(record.attachments?.[0]?.xata_id).toBeDefined();
+    expect(record.attachments?.[0]?.id).toBeDefined();
     expect(record.attachments?.[0]?.name).toBe('hello.txt');
     expect(record.attachments?.[0]?.base64Content).toBeDefined();
     expect(record.attachments?.[0]?.toBlob()).toBeInstanceOf(Blob);
@@ -157,6 +157,8 @@ describe('file support', () => {
 
     const upload1 = await fetch(result.photo?.uploadUrl ?? '', { method: 'PUT', body: png });
     const upload2 = await fetch(result.attachments?.[0]?.uploadUrl ?? '', { method: 'PUT', body: csv });
+
+    console.log(result.photo?.uploadUrl ?? '', result.attachments?.[0]?.uploadUrl ?? '');
 
     expect(upload1.status).toBe(201);
     expect(upload2.status).toBe(201);
