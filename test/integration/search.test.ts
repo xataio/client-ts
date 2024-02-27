@@ -28,12 +28,12 @@ beforeAll(async (ctx) => {
     {
       name: 'Team fruits',
       labels: ['apple', 'banana', 'orange'],
-      owner: ownerFruits
+      owner: ownerFruits as any
     },
     {
       name: 'Team animals',
       labels: ['monkey', 'lion', 'eagle', 'dolphin'],
-      owner: ownerAnimals
+      owner: ownerAnimals as any
     },
     {
       name: 'Mixed team fruits & animals',
