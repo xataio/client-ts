@@ -197,7 +197,10 @@ describe('record creation', () => {
   });
 
   test('create multiple with returning columns', async () => {
-    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes', labels: ['foo'] }], ['id']);
+    const teams = await xata.db.teams.create(
+      [{ name: 'Team cars' }, { name: 'Team planes', labels: ['foo'] }],
+      ['xata_id']
+    );
 
     expect(teams).toHaveLength(2);
     expect(teams[0].xata_id).toBeDefined();
@@ -221,7 +224,7 @@ describe('record creation', () => {
   });
 
   test('create single with returning columns', async () => {
-    const team = await xata.db.teams.create({ name: 'Team cars' }, ['id', 'owner']);
+    const team = await xata.db.teams.create({ name: 'Team cars' }, ['xata_id', 'owner']);
 
     expect(team).toBeDefined();
     expect(team.xata_id).toBeDefined();

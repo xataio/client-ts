@@ -172,7 +172,9 @@ type JSONDataFile = {
   [K in keyof XataFile]: XataFile[K] extends Function ? never : XataFile[K];
 };
 
-type JSONDataFields<T> = T extends XataFile
+type JSONDataFields<T> = T extends null | undefined | void
+  ? null | undefined
+  : T extends XataFile
   ? JSONDataFile
   : NonNullable<T> extends XataFile
   ? JSONDataFile | null | undefined

@@ -42,8 +42,8 @@ beforeAll(async (ctx) => {
 
   await hooks.beforeAll(ctx);
 
-  const { id: ownerAnimalsId } = await xata.db.users.create(ownerAnimals);
-  const { id: ownerFruitsId } = await xata.db.users.create(ownerFruits);
+  const { xata_id: ownerAnimalsId } = await xata.db.users.create(ownerAnimals);
+  const { xata_id: ownerFruitsId } = await xata.db.users.create(ownerFruits);
 
   const fruitsTeam = await xata.db.teams.create({
     name: 'Team fruits',
@@ -249,9 +249,9 @@ describe('integration tests', () => {
     if (!ownerAnimals) throw new Error('Could not find owner of team animals');
 
     // Regression test on filtering on nullable property
-    const team = await xata.db.teams.filter('owner.id', ownerAnimals.id).getFirst();
+    const team = await xata.db.teams.filter('owner.xata_id', ownerAnimals.xata_id).getFirst();
 
-    expect(team?.owner?.id).toEqual(ownerAnimals.id);
+    expect(team?.owner?.xata_id).toEqual(ownerAnimals.xata_id);
   });
 
   test('filter on object', async () => {
@@ -431,7 +431,7 @@ describe('integration tests', () => {
   test('get all users', async () => {
     const users = await xata.db.users.getAll();
     expect(users).toHaveLength(mockUsers.length);
-    expect(users[0].id).toBeDefined();
+    expect(users[0].xata_id).toBeDefined();
   });
 
   test('get first', async () => {
@@ -440,11 +440,11 @@ describe('integration tests', () => {
 
     expect(user).toBeDefined();
     expect(definedUser).toBeDefined();
-    expect(user?.id).toBe(definedUser.id);
+    expect(user?.xata_id).toBe(definedUser.xata_id);
   });
 
   test('get first not found', async () => {
-    const query = xata.db.users.filter('id', 'not-found');
+    const query = xata.db.users.filter('xata_id', 'not-found');
 
     const user = await query.getFirst();
 
@@ -479,7 +479,7 @@ describe('integration tests', () => {
     const user = await xata.db.users.select(['full_name']).getFirst();
 
     expect(user).toBeDefined();
-    expect(user?.id).toBeDefined();
+    expect(user?.xata_id).toBeDefined();
     expect(user?.full_name).toBeDefined();
     //@ts-expect-error
     expect(user?.email).not.toBeDefined();
@@ -491,7 +491,7 @@ describe('integration tests', () => {
     });
 
     expect(user).toBeDefined();
-    expect(user?.id).toBeDefined();
+    expect(user?.xata_id).toBeDefined();
     expect(user?.full_name).toBeDefined();
     expect(user?.email).toBeDefined();
   });
@@ -503,10 +503,10 @@ describe('integration tests', () => {
       street: '123 Main St'
     });
 
-    const records = await xata.db.users.filter('id', user.id).select(['*', 'team.*']).getAll();
+    const records = await xata.db.users.filter('xata_id', user.xata_id).select(['*', 'team.*']).getAll();
 
     expect(records).toHaveLength(1);
-    expect(records[0].id).toBe(user.id);
+    expect(records[0].xata_id).toBe(user.xata_id);
     expect(records[0].full_name).toBe('John Doe');
     expect(records[0].street).toBe('123 Main St');
     expect(records[0].team).toBeNull();
@@ -521,14 +521,14 @@ describe('integration tests', () => {
       street: '123 Main St'
     });
 
-    const updatedUserResponse = await xata.db.users.update(user.id, { street: 'New street', zipcode: 11 });
+    const updatedUserResponse = await xata.db.users.update(user.xata_id, { street: 'New street', zipcode: 11 });
 
-    const updatedUser = await xata.db.users.filter({ id: user.id }).getFirst();
+    const updatedUser = await xata.db.users.filter({ xata_id: user.xata_id }).getFirst();
     if (!updatedUser) throw new Error('No user found');
 
     await user.delete();
 
-    expect(user.id).toBe(updatedUser.id);
+    expect(user.xata_id).toBe(updatedUser.xata_id);
     expect(user.street).toBe('123 Main St');
     expect(user.zipcode).toBeNull();
 
@@ -550,7 +550,7 @@ describe('integration tests', () => {
 
     const updatedUserResponse = await user.update({ street: 'New street 2', zipcode: 22 });
 
-    const updatedUser = await xata.db.users.filter({ id: user.id }).getFirst();
+    const updatedUser = await xata.db.users.filter({ xata_id: user.xata_id }).getFirst();
     if (!updatedUser) throw new Error('No user found');
 
     await user.delete();
@@ -572,15 +572,15 @@ describe('integration tests', () => {
       email: 'john6@doe.com'
     });
 
-    const apiUser = await xata.db.users.filter({ id: user.id }).getFirst();
+    const apiUser = await xata.db.users.filter({ xata_id: user.xata_id }).getFirst();
     if (!apiUser) throw new Error('No user found');
 
     await user.delete();
 
-    expect(user.id).toBe('my-good-old-john-6');
+    expect(user.xata_id).toBe('my-good-old-john-6');
     expect(user.full_name).toBe('John Doe 6');
 
-    expect(user.id).toBe(apiUser.id);
+    expect(user.xata_id).toBe(apiUser.xata_id);
     expect(user.full_name).toBe(apiUser.full_name);
     expect(user.email).toBe(apiUser.email);
   });
@@ -646,7 +646,7 @@ describe('integration tests', () => {
     await user.update({ team });
 
     const updatedUser = await user.read();
-    expect(updatedUser?.team?.id).toEqual(team.id);
+    expect(updatedUser?.team?.xata_id).toEqual(team.xata_id);
 
     // TODO(link.xata) @ts-expect-error
     expect(updatedUser?.team?.xata_version).not.toBeDefined();
@@ -655,16 +655,16 @@ describe('integration tests', () => {
     // TODO(link.xata) @ts-expect-error
     expect(updatedUser?.team?.xata_updatedat).not.toBeDefined();
 
-    const response = await xata.db.teams.getFirst({ filter: { id: team.id }, columns: ['*', 'owner.*'] });
+    const response = await xata.db.teams.getFirst({ filter: { xata_id: team.xata_id }, columns: ['*', 'owner.*'] });
     const owner = await response?.owner?.read();
 
-    expect(response?.owner?.id).toBeDefined();
+    expect(response?.owner?.xata_id).toBeDefined();
     expect(response?.owner?.full_name).toBeDefined();
 
-    expect(owner?.id).toBeDefined();
+    expect(owner?.xata_id).toBeDefined();
     expect(owner?.full_name).toBeDefined();
 
-    expect(response?.owner?.id).toBe(owner?.id);
+    expect(response?.owner?.xata_id).toBe(owner?.xata_id);
     expect(response?.owner?.full_name).toBe(owner?.full_name);
 
     expect(response?.owner?.xata_createdat).toBeInstanceOf(Date);
@@ -672,7 +672,7 @@ describe('integration tests', () => {
     expect(response?.owner?.xata_version).toBe(1);
 
     const nestedObject = await xata.db.teams.getFirst({
-      filter: { id: team.id },
+      filter: { xata_id: team.xata_id },
       columns: ['owner.team', 'owner.full_name']
     });
 
@@ -688,7 +688,7 @@ describe('integration tests', () => {
 
     const nestedRead = await nestedProperty?.owner?.read();
 
-    expect(nestedRead?.id).toBeDefined();
+    expect(nestedRead?.xata_id).toBeDefined();
     expect(nestedRead?.full_name).toEqual(user.full_name);
   });
 
@@ -699,51 +699,51 @@ describe('integration tests', () => {
     const team = await xata.db.teams.create({ name: 'Example Team', owner });
     const updated = await team.update({ owner: owner2 });
 
-    expect(team.owner?.id).toEqual(owner.id);
-    expect(updated?.owner?.id).toEqual(owner2.id);
+    expect(team.owner?.xata_id).toEqual(owner.xata_id);
+    expect(updated?.owner?.xata_id).toEqual(owner2.xata_id);
   });
 
   test('Update link with linked object (string)', async () => {
     const owner = await xata.db.users.create({ full_name: 'Example User' });
     const owner2 = await xata.db.users.create({ full_name: 'Example User 2' });
 
-    const team = await xata.db.teams.create({ name: 'Example Team', owner: owner.id });
-    const updated = await team.update({ owner: owner2.id });
+    const team = await xata.db.teams.create({ name: 'Example Team', owner: owner.xata_id });
+    const updated = await team.update({ owner: owner2.xata_id });
 
-    expect(team.owner?.id).toEqual(owner.id);
-    expect(updated?.owner?.id).toEqual(owner2.id);
+    expect(team.owner?.xata_id).toEqual(owner.xata_id);
+    expect(updated?.owner?.xata_id).toEqual(owner2.xata_id);
   });
 
   test('Filter with null value', async () => {
     const newOwner = await xata.db.users.create({ full_name: 'Example User' });
     const newTeam = await xata.db.teams.create({ name: 'Example Team', owner: newOwner });
 
-    const owner = await xata.db.users.filter({ id: newOwner.id }).getFirst();
+    const owner = await xata.db.users.filter({ xata_id: newOwner.xata_id }).getFirst();
     if (!owner) throw new Error('No user found');
 
     const team = await xata.db.teams.filter({ owner }).getFirst();
-    expect(team?.id).toEqual(newTeam.id);
+    expect(team?.xata_id).toEqual(newTeam.xata_id);
   });
 
   test('Filter with multiple column', async () => {
     const newTeam = await xata.db.teams.create({ name: 'Example Team', labels: ['a', 'b'] });
 
     const team = await xata.db.teams.filter({ labels: newTeam.labels }).getFirst();
-    expect(team?.id).toEqual(newTeam.id);
+    expect(team?.xata_id).toEqual(newTeam.xata_id);
   });
 
   test('Partial filters should work', async () => {
     const newTeam = await xata.db.teams.create({ name: 'A random real team', labels: ['a', 'b'] });
     const maybeId = undefined;
 
-    const records = await xata.db.teams.filter({ id: maybeId, name: newTeam.name }).getMany();
+    const records = await xata.db.teams.filter({ xata_id: maybeId, name: newTeam.name }).getMany();
 
     expect(records).toHaveLength(1);
-    expect(records[0].id).toEqual(newTeam.id);
+    expect(records[0].xata_id).toEqual(newTeam.xata_id);
 
     const serialized = records.toSerializable();
     expect(serialized).toHaveLength(1);
-    expect(serialized[0].id).toEqual(newTeam.id);
+    expect(serialized[0].xata_id).toEqual(newTeam.xata_id);
 
     const string = records.toString();
     expect(string).toContain('A random real team');
