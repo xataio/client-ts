@@ -158,8 +158,6 @@ describe('file support', () => {
     const upload1 = await fetch(result.photo?.uploadUrl ?? '', { method: 'PUT', body: png });
     const upload2 = await fetch(result.attachments?.[0]?.uploadUrl ?? '', { method: 'PUT', body: csv });
 
-    console.log(result.photo?.uploadUrl ?? '', result.attachments?.[0]?.uploadUrl ?? '');
-
     expect(upload1.status).toBe(201);
     expect(upload2.status).toBe(201);
 
