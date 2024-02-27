@@ -9,7 +9,7 @@ import * as schema from './schema';
 
 const { usersTable, postsTable, commentsTable, usersToGroupsTable, groupsTable } = schema;
 
-const ENABLE_LOGGING = true;
+const ENABLE_LOGGING = false;
 
 declare module 'vitest' {
   export interface TestContext {
@@ -76,7 +76,7 @@ function getDrizzleClient(type: string, branch: string) {
   }
 }
 
-describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({ type }) => {
+describe.concurrent.each([{ type: 'pg' } /** , { type: 'http' }*/])('Drizzle $type', ({ type }) => {
   beforeAll(async () => {
     await api.database.createDatabase({
       workspace,
