@@ -416,7 +416,7 @@ describe('Repository.update', () => {
   test('updates an object successfully', async () => {
     const { fetch, users } = buildClient();
 
-    const object = { xata_id: 'rec_1234', xata: { version: 1 }, name: 'Ada' };
+    const object = { xata_id: 'rec_1234', xata_version: 1, name: 'Ada' };
     const expected = [
       { method: 'PUT', path: `/tables/users/data/${object.xata_id}`, body: object },
       { method: 'GET', path: `/tables/users/data/${object.xata_id}` }

@@ -78,8 +78,8 @@ describe('API Client Integration Tests', () => {
       body: { email: 'example@foo.bar' }
     });
 
-    // TODO: Remove this once the API is fixed
-    const id = 'id' in response ? response.id : 'xata_id' in response ? response.xata_id : undefined;
+    // @ts-expect-error Remove this once pgroll is normalized
+    const id = response.xata_id;
 
     console.log('Created record', id);
 
@@ -87,7 +87,7 @@ describe('API Client Integration Tests', () => {
       pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table', recordId: id }
     });
 
-    expect(record.id).toBeDefined();
+    expect(record.xata_id).toBeDefined();
     expect(record.email).toEqual('example@foo.bar');
 
     await waitForSearchIndexing(newApi, workspace, database);
@@ -98,7 +98,7 @@ describe('API Client Integration Tests', () => {
     });
 
     expect(search.totalCount).toEqual(1);
-    expect(search.records[0].id).toEqual(id);
+    expect(search.records[0].xata_id).toEqual(id);
 
     const failedSearch = await newApi.searchAndFilter.searchTable({
       pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },

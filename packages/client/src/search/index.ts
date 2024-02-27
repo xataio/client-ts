@@ -77,7 +77,8 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
         return {
           totalCount,
           records: records.map((record) => {
-            const { table = 'orphan' } = record.xata;
+            const table = record.xata_table;
+
             // TODO: Search endpoint doesn't support column selection
             return { table, record: initObject(this.db, pluginOptions.tables, table, record, ['*']) } as any;
           })
@@ -90,7 +91,7 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
         const { records: rawRecords, totalCount } = await this.#search(query, options, pluginOptions);
 
         const records = rawRecords.reduce((acc, record) => {
-          const { table = 'orphan' } = record.xata;
+          const table = record.xata_table;
 
           const items = acc[table] ?? [];
           // TODO: Search endpoint doesn't support column selection

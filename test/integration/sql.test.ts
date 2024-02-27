@@ -39,31 +39,20 @@ describe('SQL proxy', () => {
     expect(columns).toMatchInlineSnapshot(`
       [
         {
-          "name": "id",
-          "type": "text",
-        },
-        {
-          "name": "xata.version",
-          "type": "int4",
-        },
-        {
-          "name": "xata.createdAt",
-          "type": "timestamptz",
-        },
-        {
-          "name": "xata.updatedAt",
-          "type": "timestamptz",
-        },
-        {
           "name": "name",
           "type": "text",
         },
-        "index": {
-          "type_name": "int4",
+        {
+          "name": "description",
+          "type": "text",
+        },
+        {
+          "name": "labels",
+          "type": "_text",
         },
         {
           "name": "index",
-          "type": "int8",
+          "type": "int4",
         },
         {
           "name": "rating",
@@ -81,17 +70,33 @@ describe('SQL proxy', () => {
           "name": "plan",
           "type": "text",
         },
-        "xata_createdat": {
-          "type_name": "timestamptz",
+        {
+          "name": "dark",
+          "type": "bool",
         },
-        "xata_id": {
-          "type_name": "text",
+        {
+          "name": "config",
+          "type": "jsonb",
         },
-        "xata_updatedat": {
-          "type_name": "timestamptz",
+        {
+          "name": "xata_id",
+          "type": "text",
         },
-        "xata_version": {
-          "type_name": "int4",
+        {
+          "name": "xata_version",
+          "type": "int4",
+        },
+        {
+          "name": "xata_createdat",
+          "type": "timestamptz",
+        },
+        {
+          "name": "xata_updatedat",
+          "type": "timestamptz",
+        },
+        {
+          "name": "owner",
+          "type": "text",
         },
       ]
     `);
@@ -111,31 +116,20 @@ describe('SQL proxy', () => {
     expect(columns).toMatchInlineSnapshot(`
       [
         {
-          "name": "id",
-          "type": "text",
-        },
-        {
-          "name": "xata.version",
-          "type": "int4",
-        },
-        {
-          "name": "xata.createdAt",
-          "type": "timestamptz",
-        },
-        {
-          "name": "xata.updatedAt",
-          "type": "timestamptz",
-        },
-        {
           "name": "name",
           "type": "text",
         },
-        "index": {
-          "type_name": "int4",
+        {
+          "name": "description",
+          "type": "text",
+        },
+        {
+          "name": "labels",
+          "type": "_text",
         },
         {
           "name": "index",
-          "type": "int8",
+          "type": "int4",
         },
         {
           "name": "rating",
@@ -153,17 +147,33 @@ describe('SQL proxy', () => {
           "name": "plan",
           "type": "text",
         },
-        "xata_createdat": {
-          "type_name": "timestamptz",
+        {
+          "name": "dark",
+          "type": "bool",
         },
-        "xata_id": {
-          "type_name": "text",
+        {
+          "name": "config",
+          "type": "jsonb",
         },
-        "xata_updatedat": {
-          "type_name": "timestamptz",
+        {
+          "name": "xata_id",
+          "type": "text",
         },
-        "xata_version": {
-          "type_name": "int4",
+        {
+          "name": "xata_version",
+          "type": "int4",
+        },
+        {
+          "name": "xata_createdat",
+          "type": "timestamptz",
+        },
+        {
+          "name": "xata_updatedat",
+          "type": "timestamptz",
+        },
+        {
+          "name": "owner",
+          "type": "text",
         },
       ]
     `);
@@ -186,31 +196,20 @@ describe('SQL proxy', () => {
     expect(columns).toMatchInlineSnapshot(`
       [
         {
-          "name": "id",
-          "type": "text",
-        },
-        {
-          "name": "xata.version",
-          "type": "int4",
-        },
-        {
-          "name": "xata.createdAt",
-          "type": "timestamptz",
-        },
-        {
-          "name": "xata.updatedAt",
-          "type": "timestamptz",
-        },
-        {
           "name": "name",
           "type": "text",
         },
-        "index": {
-          "type_name": "int4",
+        {
+          "name": "description",
+          "type": "text",
+        },
+        {
+          "name": "labels",
+          "type": "_text",
         },
         {
           "name": "index",
-          "type": "int8",
+          "type": "int4",
         },
         {
           "name": "rating",
@@ -228,17 +227,33 @@ describe('SQL proxy', () => {
           "name": "plan",
           "type": "text",
         },
-        "xata_createdat": {
-          "type_name": "timestamptz",
+        {
+          "name": "dark",
+          "type": "bool",
         },
-        "xata_id": {
-          "type_name": "text",
+        {
+          "name": "config",
+          "type": "jsonb",
         },
-        "xata_updatedat": {
-          "type_name": "timestamptz",
+        {
+          "name": "xata_id",
+          "type": "text",
         },
-        "xata_version": {
-          "type_name": "int4",
+        {
+          "name": "xata_version",
+          "type": "int4",
+        },
+        {
+          "name": "xata_createdat",
+          "type": "timestamptz",
+        },
+        {
+          "name": "xata_updatedat",
+          "type": "timestamptz",
+        },
+        {
+          "name": "owner",
+          "type": "text",
         },
       ]
     `);
