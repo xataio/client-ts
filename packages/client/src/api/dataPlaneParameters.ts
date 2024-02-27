@@ -9,7 +9,7 @@ export type DBBranchNameParam = Schemas.DBBranchName;
 
 export type TableNameParam = Schemas.TableName;
 
-export type PgRollMigrationJobIDParam = Schemas.PgRollMigrationJobID;
+export type MigrationJobIDParam = Schemas.MigrationJobID;
 
 export type DBNameParam = Schemas.DBName;
 

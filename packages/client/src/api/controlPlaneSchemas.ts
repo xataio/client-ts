@@ -323,6 +323,56 @@ export type ClusterResponse = {
 /**
  * @x-internal true
  */
+export type AutoscalingConfigResponse = {
+  /**
+   * @format double
+   * @default 0.5
+   */
+  minCapacity: number;
+  /**
+   * @format double
+   * @default 4
+   */
+  maxCapacity: number;
+};
+
+/**
+ * @x-internal true
+ */
+export type MaintenanceConfigResponse = {
+  /**
+   * @default false
+   */
+  autoMinorVersionUpgrade: boolean;
+  /**
+   * @default false
+   */
+  applyImmediately: boolean;
+  maintenanceWindow: WeeklyTimeWindow;
+  backupWindow: DailyTimeWindow;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterConfigurationResponse = {
+  engineVersion: string;
+  instanceType: string;
+  /**
+   * @format int64
+   */
+  replicas: number;
+  /**
+   * @default false
+   */
+  deletionProtection: boolean;
+  autoscaling?: AutoscalingConfigResponse;
+  maintenance: MaintenanceConfigResponse;
+};
+
+/**
+ * @x-internal true
+ */
 export type ClusterMetadata = {
   id: ClusterID;
   state: string;
@@ -332,23 +382,22 @@ export type ClusterMetadata = {
    * @format int64
    */
   branches: number;
-  configuration?: ClusterConfiguration;
+  configuration: ClusterConfigurationResponse;
 };
 
 /**
  * @x-internal true
  */
 export type ClusterUpdateDetails = {
+  command: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterUpdateMetadata = {
   id: ClusterID;
-  /**
-   * @maxLength 63
-   * @minLength 1
-   * @pattern [a-zA-Z0-9_-~:]+
-   */
-  name?: string;
-  configuration?: ClusterConfiguration;
-  state?: string;
-  region?: string;
+  state: string;
 };
 
 /**

@@ -1215,7 +1215,7 @@ export type UpdateClusterVariables = {
  */
 export const updateCluster = (variables: UpdateClusterVariables, signal?: AbortSignal) =>
   controlPlaneFetch<
-    Schemas.ClusterMetadata,
+    Schemas.ClusterUpdateMetadata,
     UpdateClusterError,
     Schemas.ClusterUpdateDetails,
     {},

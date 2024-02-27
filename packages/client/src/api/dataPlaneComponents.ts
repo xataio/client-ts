@@ -52,13 +52,13 @@ export type ApplyMigrationVariables = {
  */
 export const applyMigration = (variables: ApplyMigrationVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    Schemas.PgRollApplyMigrationResponse,
+    Schemas.ApplyMigrationResponse,
     ApplyMigrationError,
     ApplyMigrationRequestBody,
     {},
     {},
     ApplyMigrationPathParams
-  >({ url: '/db/{dbBranchName}/pgroll/apply', method: 'post', ...variables, signal });
+  >({ url: '/db/{dbBranchName}/migrations/apply', method: 'post', ...variables, signal });
 
 export type AdaptTablePathParams = {
   /**
@@ -96,14 +96,14 @@ export type AdaptTableVariables = {
  * Adapt a table to be used from Xata, this will add the Xata metadata fields to the table, making it accessible through the data API.
  */
 export const adaptTable = (variables: AdaptTableVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.PgRollApplyMigrationResponse, AdaptTableError, undefined, {}, {}, AdaptTablePathParams>({
-    url: '/db/{dbBranchName}/pgroll/adapt/{tableName}',
+  dataPlaneFetch<Schemas.ApplyMigrationResponse, AdaptTableError, undefined, {}, {}, AdaptTablePathParams>({
+    url: '/db/{dbBranchName}/migrations/adapt/{tableName}',
     method: 'post',
     ...variables,
     signal
   });
 
-export type PgRollStatusPathParams = {
+export type GetBranchMigrationJobStatusPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
@@ -112,7 +112,7 @@ export type PgRollStatusPathParams = {
   region: string;
 };
 
-export type PgRollStatusError = Fetcher.ErrorWrapper<
+export type GetBranchMigrationJobStatusError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -127,19 +127,21 @@ export type PgRollStatusError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type PgRollStatusVariables = {
-  pathParams: PgRollStatusPathParams;
+export type GetBranchMigrationJobStatusVariables = {
+  pathParams: GetBranchMigrationJobStatusPathParams;
 } & DataPlaneFetcherExtraProps;
 
-export const pgRollStatus = (variables: PgRollStatusVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.PgRollJobStatusResponse, PgRollStatusError, undefined, {}, {}, PgRollStatusPathParams>({
-    url: '/db/{dbBranchName}/pgroll/status',
-    method: 'get',
-    ...variables,
-    signal
-  });
+export const getBranchMigrationJobStatus = (variables: GetBranchMigrationJobStatusVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.MigrationJobStatusResponse,
+    GetBranchMigrationJobStatusError,
+    undefined,
+    {},
+    {},
+    GetBranchMigrationJobStatusPathParams
+  >({ url: '/db/{dbBranchName}/migrations/status', method: 'get', ...variables, signal });
 
-export type PgRollJobStatusPathParams = {
+export type GetMigrationJobStatusPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
@@ -147,12 +149,12 @@ export type PgRollJobStatusPathParams = {
   /**
    * The id of the migration job
    */
-  jobId: Schemas.PgRollMigrationJobID;
+  jobId: Schemas.MigrationJobID;
   workspace: string;
   region: string;
 };
 
-export type PgRollJobStatusError = Fetcher.ErrorWrapper<
+export type GetMigrationJobStatusError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -167,19 +169,21 @@ export type PgRollJobStatusError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type PgRollJobStatusVariables = {
-  pathParams: PgRollJobStatusPathParams;
+export type GetMigrationJobStatusVariables = {
+  pathParams: GetMigrationJobStatusPathParams;
 } & DataPlaneFetcherExtraProps;
 
-export const pgRollJobStatus = (variables: PgRollJobStatusVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Schemas.PgRollJobStatusResponse, PgRollJobStatusError, undefined, {}, {}, PgRollJobStatusPathParams>({
-    url: '/db/{dbBranchName}/pgroll/jobs/{jobId}',
-    method: 'get',
-    ...variables,
-    signal
-  });
+export const getMigrationJobStatus = (variables: GetMigrationJobStatusVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.MigrationJobStatusResponse,
+    GetMigrationJobStatusError,
+    undefined,
+    {},
+    {},
+    GetMigrationJobStatusPathParams
+  >({ url: '/db/{dbBranchName}/migrations/jobs/{jobId}', method: 'get', ...variables, signal });
 
-export type PgRollMigrationHistoryPathParams = {
+export type GetMigrationHistoryPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
    */
@@ -188,7 +192,7 @@ export type PgRollMigrationHistoryPathParams = {
   region: string;
 };
 
-export type PgRollMigrationHistoryError = Fetcher.ErrorWrapper<
+export type GetMigrationHistoryError = Fetcher.ErrorWrapper<
   | {
       status: 400;
       payload: Responses.BadRequestError;
@@ -203,19 +207,19 @@ export type PgRollMigrationHistoryError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type PgRollMigrationHistoryVariables = {
-  pathParams: PgRollMigrationHistoryPathParams;
+export type GetMigrationHistoryVariables = {
+  pathParams: GetMigrationHistoryPathParams;
 } & DataPlaneFetcherExtraProps;
 
-export const pgRollMigrationHistory = (variables: PgRollMigrationHistoryVariables, signal?: AbortSignal) =>
+export const getMigrationHistory = (variables: GetMigrationHistoryVariables, signal?: AbortSignal) =>
   dataPlaneFetch<
-    Schemas.PgRollMigrationHistoryResponse,
-    PgRollMigrationHistoryError,
+    Schemas.MigrationHistoryResponse,
+    GetMigrationHistoryError,
     undefined,
     {},
     {},
-    PgRollMigrationHistoryPathParams
-  >({ url: '/db/{dbBranchName}/pgroll/migrations', method: 'get', ...variables, signal });
+    GetMigrationHistoryPathParams
+  >({ url: '/db/{dbBranchName}/migrations/history', method: 'get', ...variables, signal });
 
 export type GetBranchListPathParams = {
   /**
@@ -520,7 +524,7 @@ export type GetSchemaError = Fetcher.ErrorWrapper<
 >;
 
 export type GetSchemaResponse = {
-  schema: Schemas.PgRollSchema;
+  schema: Schemas.BranchSchema;
 };
 
 export type GetSchemaVariables = {
@@ -4760,12 +4764,25 @@ export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
   });
 
 export const operationsByTag = {
-  branch: {
+  migrations: {
     applyMigration,
     adaptTable,
-    pgRollStatus,
-    pgRollJobStatus,
-    pgRollMigrationHistory,
+    getBranchMigrationJobStatus,
+    getMigrationJobStatus,
+    getMigrationHistory,
+    getSchema,
+    getBranchMigrationHistory,
+    getBranchMigrationPlan,
+    executeBranchMigrationPlan,
+    getBranchSchemaHistory,
+    compareBranchWithUserSchema,
+    compareBranchSchemas,
+    updateBranchSchema,
+    previewBranchSchemaEdit,
+    applyBranchSchemaEdit,
+    pushBranchMigrations
+  },
+  branch: {
     getBranchList,
     getBranchDetails,
     createBranch,
@@ -4780,19 +4797,6 @@ export const operationsByTag = {
     resolveBranch
   },
   database: { getDatabaseSettings, updateDatabaseSettings },
-  migrations: {
-    getSchema,
-    getBranchMigrationHistory,
-    getBranchMigrationPlan,
-    executeBranchMigrationPlan,
-    getBranchSchemaHistory,
-    compareBranchWithUserSchema,
-    compareBranchSchemas,
-    updateBranchSchema,
-    previewBranchSchemaEdit,
-    applyBranchSchemaEdit,
-    pushBranchMigrations
-  },
   migrationRequests: {
     queryMigrationRequests,
     createMigrationRequest,
