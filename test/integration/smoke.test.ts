@@ -73,10 +73,13 @@ describe('API Client Integration Tests', () => {
 
     console.log('Created branch, table and schema');
 
-    const { id } = await newApi.records.insertRecord({
+    const response = await newApi.records.insertRecord({
       pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },
       body: { email: 'example@foo.bar' }
     });
+
+    // TODO: Remove this once the API is fixed
+    const id = 'id' in response ? response.id : 'xata_id' in response ? response.xata_id : undefined;
 
     console.log('Created record', id);
 

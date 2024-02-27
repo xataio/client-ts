@@ -38,7 +38,7 @@ describe('insert transactions', () => {
 
     expect(response.results).toEqual([{ operation: 'insert', id: expect.any(String), rows: 1 }]);
 
-    await xata.db.teams.delete({ id: response.results[0]?.id });
+    await xata.db.teams.delete({ xata_id: response.results[0]?.id });
   });
 
   test('insert by ID', async () => {
@@ -46,7 +46,7 @@ describe('insert transactions', () => {
 
     expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1, columns: {} }]);
 
-    await xata.db.teams.delete({ id: 'i0' });
+    await xata.db.teams.delete({ xata_id: 'i0' });
   });
 
   test('insert with createOnly and explicit ID', async () => {
@@ -56,7 +56,7 @@ describe('insert transactions', () => {
 
     expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1 }]);
 
-    await xata.db.teams.delete({ id: 'i0' });
+    await xata.db.teams.delete({ xata_id: 'i0' });
   });
 
   test('replace existing record if createOnly is unset', async () => {
@@ -67,7 +67,7 @@ describe('insert transactions', () => {
 
     expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1, columns: {} }]);
 
-    await xata.db.teams.delete({ id: 'i0' });
+    await xata.db.teams.delete({ xata_id: 'i0' });
   });
 
   test('replace existing record if createOnly is false', async () => {
@@ -78,7 +78,7 @@ describe('insert transactions', () => {
 
     expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1, columns: {} }]);
 
-    await xata.db.teams.delete({ id: 'i0' });
+    await xata.db.teams.delete({ xata_id: 'i0' });
   });
 
   test('replace when ifVersion set', async () => {
@@ -90,7 +90,7 @@ describe('insert transactions', () => {
 
     expect(response.results).toEqual([{ operation: 'insert', id: 'i0', rows: 1, columns: {} }]);
 
-    await xata.db.teams.delete({ id: 'i0' });
+    await xata.db.teams.delete({ xata_id: 'i0' });
   });
 
   test('mix of operations', async () => {
@@ -110,10 +110,10 @@ describe('insert transactions', () => {
       { operation: 'insert', id: 'j0', rows: 1, columns: {} }
     ]);
 
-    await xata.db.teams.delete({ id: response.results[0]?.id });
-    await xata.db.teams.delete({ id: 'i1' });
-    await xata.db.users.delete({ id: 'j1' });
-    await xata.db.users.delete({ id: 'j0' });
+    await xata.db.teams.delete({ xata_id: response.results[0]?.id });
+    await xata.db.teams.delete({ xata_id: 'i1' });
+    await xata.db.users.delete({ xata_id: 'j1' });
+    await xata.db.users.delete({ xata_id: 'j0' });
   });
 });
 
@@ -317,9 +317,9 @@ describe('combined transactions', () => {
       { update: { table: 'teams', id: 'i2', fields: { name: 'c1' } } },
       { update: { table: 'teams', id: 'i2', fields: { name: 'c1.1' } } },
       { delete: { table: 'teams', id: 'i3' } },
-      { get: { table: 'teams', id: 'i0', columns: ['id', 'index', 'name'] } },
-      { get: { table: 'teams', id: 'i1', columns: ['id', 'index', 'name'] } },
-      { get: { table: 'teams', id: 'i2', columns: ['id', 'index', 'name'] } }
+      { get: { table: 'teams', id: 'i0', columns: ['xata_id', 'index', 'name'] } },
+      { get: { table: 'teams', id: 'i1', columns: ['xata_id', 'index', 'name'] } },
+      { get: { table: 'teams', id: 'i2', columns: ['xata_id', 'index', 'name'] } }
     ]);
 
     expect(response.results).toEqual([

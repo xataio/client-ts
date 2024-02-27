@@ -34,7 +34,7 @@ describe('record update', () => {
 
     expect(updatedTeam?.xata_id).toBe(team.xata_id);
 
-    const apiTeam = await xata.db.teams.filter({ id: team.xata_id }).getFirst();
+    const apiTeam = await xata.db.teams.filter({ xata_id: team.xata_id }).getFirst();
     if (!apiTeam) throw new Error('No team found');
 
     expect(updatedTeam?.name).toBe('Team boats');
@@ -48,7 +48,7 @@ describe('record update', () => {
 
     expect(updatedTeams).toHaveLength(2);
 
-    const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ id: t.xata_id })) }).getAll();
+    const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ xata_id: t.xata_id })) }).getAll();
 
     expect(apiTeams).toHaveLength(2);
     expect(apiTeams[0].name).toBe('Team boats');
@@ -58,11 +58,11 @@ describe('record update', () => {
   test('update team with inline id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
-    const updatedTeam = await xata.db.teams.update({ id: team.xata_id, name: 'Team boats' });
+    const updatedTeam = await xata.db.teams.update({ xata_id: team.xata_id, name: 'Team boats' });
 
     expect(updatedTeam?.xata_id).toBe(team.xata_id);
 
-    const apiTeam = await xata.db.teams.filter({ id: team.xata_id }).getFirst();
+    const apiTeam = await xata.db.teams.filter({ xata_id: team.xata_id }).getFirst();
 
     expect(updatedTeam?.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
@@ -77,10 +77,10 @@ describe('record update', () => {
     const valid = await xata.db.teams.create({ name: 'Team ships' });
 
     const team1 = await xata.db.teams.update('invalid', { name: 'Team boats' });
-    const team2 = await xata.db.teams.update({ id: 'invalid', name: 'Team boats' });
+    const team2 = await xata.db.teams.update({ xata_id: 'invalid', name: 'Team boats' });
     const team3 = await xata.db.teams.update([
-      { id: 'invalid', name: 'Team boats' },
-      { id: valid.xata_id, name: 'Team boats 2' }
+      { xata_id: 'invalid', name: 'Team boats' },
+      { xata_id: valid.xata_id, name: 'Team boats 2' }
     ]);
 
     expect(team1).toBeNull();
@@ -123,12 +123,12 @@ describe('record update', () => {
     expect(update1?.xata_id).toBe(team.xata_id);
     expect(update1?.name).toBe('Team boats');
 
-    const update2 = await xata.db.teams.update({ id: team.xata_id, name: 'Team planes' });
+    const update2 = await xata.db.teams.update({ xata_id: team.xata_id, name: 'Team planes' });
 
     expect(update2?.xata_id).toBe(team.xata_id);
     expect(update2?.name).toBe('Team planes');
 
-    const update3 = await xata.db.teams.update([{ id: team.xata_id, name: 'Team cars' }]);
+    const update3 = await xata.db.teams.update([{ xata_id: team.xata_id, name: 'Team cars' }]);
 
     expect(update3[0]?.xata_id).toBe(team.xata_id);
     expect(update3[0]?.name).toBe('Team cars');
@@ -138,7 +138,7 @@ describe('record update', () => {
     expect(update4?.xata_id).toBe(team.xata_id);
     expect(update4?.name).toBe('Team trains');
 
-    const update5 = await update1?.update({ id: update1?.xata_id, name: 'Team boats' });
+    const update5 = await update1?.update({ xata_id: update1?.xata_id, name: 'Team boats' });
 
     expect(update5?.xata_id).toBe(team.xata_id);
     expect(update5?.name).toBe('Team boats');
@@ -155,10 +155,10 @@ describe('record update', () => {
     const update1 = await xata.db.pets.update(pet.xata_id, { num_legs: { $increment: 3 } });
     expect(update1?.num_legs).toBe(4);
 
-    const update2 = await xata.db.pets.update({ id: pet.xata_id, num_legs: { $divide: 2 } });
+    const update2 = await xata.db.pets.update({ xata_id: pet.xata_id, num_legs: { $divide: 2 } });
     expect(update2?.num_legs).toBe(2);
 
-    const update3 = await xata.db.pets.update([{ id: pet.xata_id, num_legs: { $multiply: 2 } }]);
+    const update3 = await xata.db.pets.update([{ xata_id: pet.xata_id, num_legs: { $multiply: 2 } }]);
     expect(update3[0]?.num_legs).toBe(4);
 
     const update4 = await xata.db.pets.update(pet.xata_id, { num_legs: { $decrement: 4 } });

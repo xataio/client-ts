@@ -30,15 +30,15 @@ describe('record read', () => {
   test('read single team with id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
-    const copy = await xata.db.teams.read(team.id);
-    const definedCopy = await xata.db.teams.readOrThrow(team.id);
+    const copy = await xata.db.teams.read(team.xata_id);
+    const definedCopy = await xata.db.teams.readOrThrow(team.xata_id);
 
     expect(copy).toBeDefined();
-    expect(copy?.id).toBe(team.id);
+    expect(copy?.xata_id).toBe(team.xata_id);
     expect(copy?.xata_createdat).toBeInstanceOf(Date);
 
     expect(definedCopy).toBeDefined();
-    expect(definedCopy.id).toBe(team.id);
+    expect(definedCopy.xata_id).toBe(team.xata_id);
     expect(definedCopy.xata_createdat).toBeInstanceOf(Date);
   });
 
@@ -49,27 +49,27 @@ describe('record read', () => {
     const definedCopies = await xata.db.teams.readOrThrow(teams);
 
     expect(copies).toHaveLength(2);
-    expect(copies[0]?.id).toBe(teams[0].id);
-    expect(copies[1]?.id).toBe(teams[1].id);
+    expect(copies[0]?.xata_id).toBe(teams[0].xata_id);
+    expect(copies[1]?.xata_id).toBe(teams[1].xata_id);
 
     expect(definedCopies).toHaveLength(2);
-    expect(definedCopies[0].id).toBe(teams[0].id);
-    expect(definedCopies[1].id).toBe(teams[1].id);
+    expect(definedCopies[0].xata_id).toBe(teams[0].xata_id);
+    expect(definedCopies[1].xata_id).toBe(teams[1].xata_id);
   });
 
   test('read multiple teams with id list', async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
-    const copies = await xata.db.teams.read(teams.map((team) => team.id));
-    const definedCopies = await xata.db.teams.readOrThrow(teams.map((team) => team.id));
+    const copies = await xata.db.teams.read(teams.map((team) => team.xata_id));
+    const definedCopies = await xata.db.teams.readOrThrow(teams.map((team) => team.xata_id));
 
     expect(copies).toHaveLength(2);
-    expect(copies[0]?.id).toBe(teams[0].id);
-    expect(copies[1]?.id).toBe(teams[1].id);
+    expect(copies[0]?.xata_id).toBe(teams[0].xata_id);
+    expect(copies[1]?.xata_id).toBe(teams[1].xata_id);
 
     expect(definedCopies).toHaveLength(2);
-    expect(definedCopies[0].id).toBe(teams[0].id);
-    expect(definedCopies[1].id).toBe(teams[1].id);
+    expect(definedCopies[0].xata_id).toBe(teams[0].xata_id);
+    expect(definedCopies[1].xata_id).toBe(teams[1].xata_id);
   });
 
   test("read single and return null if team doesn't exist", async () => {
@@ -84,17 +84,17 @@ describe('record read', () => {
   test("read multiple teams with id list and ignores a team if doesn't exist", async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
-    const copies = await xata.db.teams.read(teams.map((team) => team.id).concat(['does-not-exist']));
+    const copies = await xata.db.teams.read(teams.map((team) => team.xata_id).concat(['does-not-exist']));
 
     expect(copies).toHaveLength(3);
-    expect(copies[0]?.id).toBe(teams[0].id);
-    expect(copies[1]?.id).toBe(teams[1].id);
+    expect(copies[0]?.xata_id).toBe(teams[0].xata_id);
+    expect(copies[1]?.xata_id).toBe(teams[1].xata_id);
     expect(copies[2]).toBeNull();
   });
 
   test("read multiple teams with id list and throws if a team doesn't exist", async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
-    expect(xata.db.teams.readOrThrow(teams.map((team) => team.id).concat(['does-not-exist']))).rejects.toThrow();
+    expect(xata.db.teams.readOrThrow(teams.map((team) => team.xata_id).concat(['does-not-exist']))).rejects.toThrow();
   });
 
   test('read multiple with empty array', async () => {
@@ -138,15 +138,15 @@ describe('record read', () => {
     const owner = await xata.db.users.create({ full_name: 'John', street: 'Newark' });
     const team = await xata.db.teams.create({ name: 'Team ships', labels: ['foo', 'bar'], owner });
 
-    const copy = await xata.db.teams.read(team.id, ['id', 'name', 'owner.street']);
+    const copy = await xata.db.teams.read(team.xata_id, ['xata_id', 'name', 'owner.street']);
 
     expect(copy).toBeDefined();
-    expect(copy?.id).toBe(team.id);
+    expect(copy?.xata_id).toBe(team.xata_id);
     expect(copy?.name).toBe(team.name);
     // @ts-expect-error
     expect(copy?.labels).not.toBeDefined();
     expect(copy?.owner).toBeDefined();
-    expect(copy?.owner?.id).toBe(owner.id);
+    expect(copy?.owner?.xata_id).toBe(owner.xata_id);
     expect(copy?.owner?.street).toBe(owner.street);
     // @ts-expect-error
     expect(copy?.owner?.city).not.toBeDefined();
@@ -162,7 +162,7 @@ describe('record read', () => {
 
     const replacedTeam = await team.replace({ name: 'Team boats' });
 
-    expect(replacedTeam?.id).toBe(team.id);
+    expect(replacedTeam?.xata_id).toBe(team.xata_id);
     expect(replacedTeam?.read).toBeDefined();
     expect(replacedTeam?.email).toBeNull();
   });

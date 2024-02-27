@@ -31,7 +31,7 @@ describe('Revlinks', () => {
     const user = await xata.db.users.create({ name: 'test' });
     const team = await xata.db.teams.create({ name: 'test', owner: user });
 
-    expect(team.owner?.id).toBe(user.id);
+    expect(team.owner?.xata_id).toBe(user.xata_id);
 
     const records = await xata.db.users
       .select([
@@ -50,7 +50,7 @@ describe('Revlinks', () => {
     expect(records[0]?.ownerTeams?.records).toHaveLength(1);
     expect(records[0]?.ownerTeams?.records[0]?.name).toBe(team.name);
 
-    await xata.db.users.delete(user.id);
-    await xata.db.teams.delete(team.id);
+    await xata.db.users.delete(user.xata_id);
+    await xata.db.teams.delete(team.xata_id);
   });
 });
