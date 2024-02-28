@@ -6,7 +6,7 @@ import { server } from '../../../../test/mock_server';
 import { Response } from '../util/fetch';
 
 interface User {
-  id: string;
+  xata_id: string;
   name: string;
 }
 
@@ -324,14 +324,14 @@ describe('query', () => {
     test('returns a single object', async () => {
       const { fetch, users } = buildClient();
 
-      const resultBody = { records: [{ id: '1234' }], meta: { page: { cursor: '', more: false } } };
+      const resultBody = { records: [{ xata_id: '1234' }], meta: { page: { cursor: '', more: false } } };
       const expected = { method: 'POST', path: '/tables/users/query', body: { page: { size: 1 } } };
       const result = await expectRequest(
         fetch,
         expected,
         async () => {
           const first = await users.getFirst();
-          expect(first?.id).toBe(resultBody.records[0].id);
+          expect(first?.xata_id).toBe(resultBody.records[0].xata_id);
         },
         resultBody
       );
@@ -416,19 +416,19 @@ describe('Repository.update', () => {
   test('updates an object successfully', async () => {
     const { fetch, users } = buildClient();
 
-    const object = { id: 'rec_1234', xata: { version: 1 }, name: 'Ada' };
+    const object = { xata_id: 'rec_1234', xata_version: 1, name: 'Ada' };
     const expected = [
-      { method: 'PUT', path: `/tables/users/data/${object.id}`, body: object },
-      { method: 'GET', path: `/tables/users/data/${object.id}` }
+      { method: 'PUT', path: `/tables/users/data/${object.xata_id}`, body: object },
+      { method: 'GET', path: `/tables/users/data/${object.xata_id}` }
     ];
     const result = await expectRequest(
       fetch,
       expected,
       async () => {
-        const result = await users.update(object.id, object);
-        expect(result?.id).toBe(object.id);
+        const result = await users.update(object.xata_id, object);
+        expect(result?.xata_id).toBe(object.xata_id);
       },
-      { id: object.id }
+      { xata_id: object.xata_id }
     );
 
     expect(result).toMatchInlineSnapshot(`
@@ -469,7 +469,7 @@ describe('create', () => {
   test('successful', async () => {
     const { fetch, users } = buildClient();
 
-    const created = { id: 'rec_1234', _version: 0 };
+    const created = { xata_id: 'rec_1234', _version: 0 };
     const object = { name: 'Ada' } as User;
     const expected = [
       { method: 'POST', path: '/tables/users/data', body: object },
@@ -485,7 +485,7 @@ describe('create', () => {
       expected,
       async () => {
         const result = await users.create(object);
-        expect(result.id).toBe(created.id);
+        expect(result.xata_id).toBe(created.xata_id);
       },
       created
     );
