@@ -4,6 +4,10 @@ import { XataRecord } from './record';
 import { ApiSortFilter } from './sorting';
 
 type Record = XataRecord & {
+  xata_id: string;
+  xata_version: number;
+  xata_createdat: Date;
+  xata_updatedat: Date;
   name: string;
   string: string;
   number: number;
@@ -31,10 +35,10 @@ const sortWithRandomWildcard: ApiSortFilter<Record> = { '*': 'random' };
 const sortWithRandomWildcardOnColumn: ApiSortFilter<Record> = { name: 'random' };
 
 // Sort by updatedAt is allowed
-const sortWithUpdatedAt: ApiSortFilter<Record> = { 'xata.updatedAt': 'asc' };
+const sortWithUpdatedAt: ApiSortFilter<Record> = { xata_updatedat: 'asc' };
 
 // Sort by createdAt is allowed
-const sortWithCreatedAt: ApiSortFilter<Record> = { 'xata.createdAt': 'asc' };
+const sortWithCreatedAt: ApiSortFilter<Record> = { xata_createdat: 'asc' };
 
 // Sort by unknown metadata is not allowed
 //@ts-expect-error

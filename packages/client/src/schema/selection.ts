@@ -7,10 +7,6 @@ import { Link, XataRecord } from './record';
 export type SelectableColumn<O, RecursivePath extends any[] = []> =
   // Alias for any property
   | '*'
-  // Alias for id (not in schema)
-  | 'id'
-  // Internal properties
-  | `xata.${'version' | 'createdAt' | 'updatedAt'}`
   // Properties of the current level
   | DataProps<O>
   // Nested properties of the lower levels
@@ -99,14 +95,6 @@ export type ValueAtColumn<Object, Key, RecursivePath extends any[] = []> = Recur
   ? never
   : Key extends '*'
   ? Values<Object> // Alias for any property
-  : Key extends 'id'
-  ? string // Alias for id (not in schema)
-  : Key extends 'xata.version'
-  ? number
-  : Key extends 'xata.createdAt'
-  ? Date
-  : Key extends 'xata.updatedAt'
-  ? Date
   : Key extends keyof Object
   ? Object[Key] // Properties of the current level
   : Key extends `${infer K}.${infer V}`
@@ -163,7 +151,7 @@ type NestedColumns<O, RecursivePath extends any[]> = RecursivePath['length'] ext
     >;
 
 // Private: Utility type to get object properties without XataRecord ones
-type DataProps<O> = Exclude<StringKeys<O>, StringKeys<XataRecord>>;
+type DataProps<O> = Exclude<StringKeys<O>, StringKeys<Omit<XataRecord, 'xata_id'>>>;
 
 // Private: Utility type to get the value of a column at a given path (nested object value)
 // For "foo.bar.baz" we return { foo: { bar: { baz: type } } }
@@ -193,7 +181,7 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
           ? // If the property is a link, we forward the type of the internal XataRecord
             // Since it can be nullable, we use ForwardNullable to avoid loosing the internal type
             // Links that are not expanded ["link"] instead of ["link.*"] don't have the xata property
-            ForwardNullable<O[K], Omit<SelectedPick<NonNullable<O[K]>, ['*']>, 'xata' | 'getMetadata'>>
+            ForwardNullable<O[K], SelectedPick<NonNullable<O[K]>, ['*']>>
           : O[K];
       }
     : Key extends '*'
