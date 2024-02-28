@@ -4,6 +4,26 @@
       "name": "teams",
       "columns": [
         {
+          "name": "xata_id",
+          "type": "string",
+          "notNull": true
+        },
+        {
+          "name": "xata_version",
+          "type": "int",
+          "notNull": true
+        },
+        {
+          "name": "xata_createdat",
+          "type": "datetime",
+          "notNull": true
+        },
+        {
+          "name": "xata_updatedat",
+          "type": "datetime",
+          "notNull": true
+        },
+        {
           "name": "name",
           "type": "string"
         },
@@ -61,6 +81,26 @@
     {
       "name": "users",
       "columns": [
+        {
+          "name": "xata_id",
+          "type": "string",
+          "notNull": true
+        },
+        {
+          "name": "xata_version",
+          "type": "int",
+          "notNull": true
+        },
+        {
+          "name": "xata_createdat",
+          "type": "datetime",
+          "notNull": true
+        },
+        {
+          "name": "xata_updatedat",
+          "type": "datetime",
+          "notNull": true
+        },
         {
           "name": "email",
           "type": "email",
@@ -151,6 +191,26 @@
     {
       "name": "pets",
       "columns": [
+        {
+          "name": "xata_id",
+          "type": "string",
+          "notNull": true
+        },
+        {
+          "name": "xata_version",
+          "type": "int",
+          "notNull": true
+        },
+        {
+          "name": "xata_createdat",
+          "type": "datetime",
+          "notNull": true
+        },
+        {
+          "name": "xata_updatedat",
+          "type": "datetime",
+          "notNull": true
+        },
         {
           "name": "name",
           "type": "string"
