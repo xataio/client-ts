@@ -3,7 +3,7 @@ import { FuzzinessExpression, HighlightExpression, PrefixExpression, SearchPageC
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';
-import { BaseData, XataRecord, XataRecordMetadata } from '../schema/record';
+import { BaseData, XataRecord } from '../schema/record';
 import { initObject } from '../schema/repository';
 import { SelectedPick } from '../schema/selection';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
@@ -77,7 +77,8 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
         return {
           totalCount,
           records: records.map((record) => {
-            const { table = 'orphan' } = record.xata;
+            const table = record.xata_table;
+
             // TODO: Search endpoint doesn't support column selection
             return { table, record: initObject(this.db, pluginOptions.tables, table, record, ['*']) } as any;
           })
@@ -90,7 +91,7 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
         const { records: rawRecords, totalCount } = await this.#search(query, options, pluginOptions);
 
         const records = rawRecords.reduce((acc, record) => {
-          const { table = 'orphan' } = record.xata;
+          const table = record.xata_table;
 
           const items = acc[table] ?? [];
           // TODO: Search endpoint doesn't support column selection
@@ -121,20 +122,17 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
   }
 }
 
-export type SearchXataRecord<Record extends XataRecord> = Omit<Record, 'getMetadata' | 'xata'> & {
-  xata: XataRecordMetadata & SearchExtraProperties;
-  getMetadata: () => XataRecordMetadata & SearchExtraProperties;
-};
+export type SearchXataRecord<Record extends XataRecord> = Record & SearchExtraProperties;
 
 type SearchExtraProperties = {
   /*
    * The record's table name. APIs that return records from multiple tables will set this field accordingly.
    */
-  table: string;
+  xata_table: string;
   /*
    * Highlights of the record. This is used by the search APIs to indicate which fields and parts of the fields have matched the search.
    */
-  highlight?: {
+  xata_highlight?: {
     [key: string]:
       | string[]
       | {
@@ -144,7 +142,7 @@ type SearchExtraProperties = {
   /*
    * The record's relevancy score. This is returned by the search APIs.
    */
-  score?: number;
+  xata_score?: number;
 };
 
 type ReturnTable<Table, Tables> = Table extends Tables ? Table : never;
