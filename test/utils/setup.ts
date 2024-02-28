@@ -26,10 +26,7 @@ if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is no
 
 const host = parseProviderString(process.env.XATA_API_PROVIDER);
 
-// TODO: Branches for pgroll only work in some regions for now
-// const region = process.env.XATA_REGION || 'us-east-1';
-const region =
-  host === 'production' ? 'us-east-1' : host === 'staging' ? 'eu-west-1' : process.env.XATA_REGION || 'us-east-1';
+const region = process.env.XATA_REGION || 'us-east-1';
 
 export type EnvironmentOptions = {
   fetch?: any;

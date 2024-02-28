@@ -50,7 +50,7 @@ describe('Revlinks', () => {
     expect(records[0]?.ownerTeams?.records).toHaveLength(1);
     expect(records[0]?.ownerTeams?.records[0]?.name).toBe(team.name);
 
-    await xata.db.users.delete(user.xata_id);
     await xata.db.teams.delete(team.xata_id);
+    await xata.db.users.delete(user.xata_id);
   });
 });
