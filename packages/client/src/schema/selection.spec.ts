@@ -4,6 +4,10 @@ import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
 import { XataFile } from './files';
 
 interface Team {
+  xata_id: string;
+  xata_version: number;
+  xata_createdat: Date;
+  xata_updatedat: Date;
   name: string;
   labels?: string[] | null;
   owner?: UserRecord | null;
@@ -12,6 +16,10 @@ interface Team {
 type TeamRecord = Team & XataRecord;
 
 interface User {
+  xata_id: string;
+  xata_version: number;
+  xata_createdat: Date;
+  xata_updatedat: Date;
   email?: string | null;
   full_name: string;
   team?: TeamRecord | null;
@@ -25,7 +33,7 @@ type UserRecord = User & XataRecord;
 //                              SelectableColumn<O>                            //
 // --------------------------------------------------------------------------- //
 
-const validTeamColumns: SelectableColumn<TeamRecord>[] = ['*', 'id', 'name', 'owner.*', 'owner.date'];
+const validTeamColumns: SelectableColumn<TeamRecord>[] = ['*', 'xata_id', 'name', 'owner.*', 'owner.date'];
 
 // @ts-expect-error
 const invalidFullNameTeamColumn: SelectableColumn<Team> = 'full_name';
@@ -39,12 +47,12 @@ const invalidReadTeamColumn: SelectableColumn<Team> = 'owner.read.*';
 const invalidInternalDateColumns: SelectableColumn<Team> = 'owner.date.getFullYear';
 
 // Internal columns
-const internalVersionColumns: SelectableColumn<Team> = 'xata.version';
-const internalCreatedAtColumns: SelectableColumn<Team> = 'xata.createdAt';
-const internalUpdatedAtColumns: SelectableColumn<Team> = 'xata.updatedAt';
-const linkVersionColumns: SelectableColumn<Team> = 'owner.xata.version';
-const linkCreatedAtColumns: SelectableColumn<Team> = 'owner.xata.createdAt';
-const linkUpdatedAtColumns: SelectableColumn<Team> = 'owner.xata.updatedAt';
+const internalVersionColumns: SelectableColumn<Team> = 'xata_version';
+const internalCreatedAtColumns: SelectableColumn<Team> = 'xata_createdat';
+const internalUpdatedAtColumns: SelectableColumn<Team> = 'xata_updatedat';
+const linkVersionColumns: SelectableColumn<Team> = 'owner.xata_version';
+const linkCreatedAtColumns: SelectableColumn<Team> = 'owner.xata_createdat';
+const linkUpdatedAtColumns: SelectableColumn<Team> = 'owner.xata_updatedat';
 
 //                              ValueAtColumn<O, P>                            //
 // --------------------------------------------------------------------------- //
@@ -57,33 +65,22 @@ const invalidLabelsValue: ValueAtColumn<TeamRecord, 'labels'> = [1];
 // ---------------------------------------------------------------------------- //
 
 function test1(user: SelectedPick<UserRecord, ['*']>) {
-  user.id;
+  user.xata_id;
   user.read();
   user.full_name;
 
-  user.xata.version;
-  user.xata.createdAt;
-  user.xata.updatedAt;
+  user.xata_version;
+  user.xata_createdat;
+  user.xata_updatedat;
 
   // @ts-expect-error
-  user.team.id;
-  user.team?.id;
+  user.team.xata_id;
+  user.team?.xata_id;
   user.team?.read();
   // @ts-expect-error
   user.team?.name;
 
-  // TODO(link.xata) @ts-expect-error
-  user.team?.xata.version;
-  // TODO(link.xata) @ts-expect-error
-  user.team?.xata.createdAt;
-  // TODO(link.xata) @ts-expect-error
-  user.team?.xata.updatedAt;
-
-  user.team?.xata?.version;
-  user.team?.xata?.createdAt;
-  user.team?.xata?.updatedAt;
-
-  user.partner.id;
+  user.partner.xata_id;
   user.partner.read();
   // @ts-expect-error
   user.partner.full_name;
@@ -94,14 +91,14 @@ function test1(user: SelectedPick<UserRecord, ['*']>) {
 }
 
 function test2(user: SelectedPick<UserRecord, ['*', 'team.*']>) {
-  user.id;
+  user.xata_id;
   user.read();
   user.full_name;
-  user.team?.id;
+  user.team?.xata_id;
   user.team?.read();
   user.team?.name;
   user.team?.owner;
-  user.team?.owner?.id;
+  user.team?.owner?.xata_id;
   user.team?.owner?.read();
   // @ts-expect-error
   user.team?.owner?.full_name;
@@ -123,29 +120,29 @@ function test2(user: SelectedPick<UserRecord, ['*', 'team.*']>) {
 }
 
 function test3(user: SelectedPick<UserRecord, ['team.owner.*']>) {
-  user.id;
+  user.xata_id;
   user.read();
   // @ts-expect-error
   user.full_name;
-  user.team?.id;
+  user.team?.xata_id;
   user.team?.read();
   // @ts-expect-error
   user.team?.name;
-  user.team?.owner?.id;
+  user.team?.owner?.xata_id;
   user.team?.owner?.read();
   user.team?.owner?.full_name;
 }
 
 function test4(user: SelectedPick<UserRecord, ['partner', 'team']>) {
   user.partner;
-  user.partner.id;
+  user.partner.xata_id;
   user.partner.read();
   user.partner.full_name;
   // @ts-expect-error
   user.partner.full_name = null;
   // @ts-expect-error
-  user.team.id;
-  user.team?.id;
+  user.team.xata_id;
+  user.team?.xata_id;
   // @ts-expect-error
   user.team.read();
   user.team?.read();
@@ -157,14 +154,14 @@ function test4(user: SelectedPick<UserRecord, ['partner', 'team']>) {
 
 function test5(user: SelectedPick<UserRecord, ['partner.*', 'team.*']>) {
   user.partner;
-  user.partner.id;
+  user.partner.xata_id;
   user.partner.read();
   user.partner.full_name;
   // @ts-expect-error
   user.partner.full_name = null;
   // @ts-expect-error
-  user.team.id;
-  user.team?.id;
+  user.team.xata_id;
+  user.team?.xata_id;
   // @ts-expect-error
   user.team.read();
   user.team?.read();
