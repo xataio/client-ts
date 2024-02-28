@@ -34,13 +34,13 @@ describe('record create or replace', () => {
     expect(team.email).toBe('ships@ilovethem.com');
     expect(team.name).toBe('Team ships');
 
-    const replacedTeam = await xata.db.teams.createOrReplace(team.id, { name: 'Team boats' });
+    const replacedTeam = await xata.db.teams.createOrReplace(team.xata_id, { name: 'Team boats' });
 
-    expect(replacedTeam.id).toBe(team.id);
+    expect(replacedTeam.xata_id).toBe(team.xata_id);
     expect(replacedTeam.read).toBeDefined();
     expect(replacedTeam.email).toBeNull();
 
-    const apiTeam = await xata.db.teams.filter({ id: team.id }).getFirst();
+    const apiTeam = await xata.db.teams.filter({ xata_id: team.xata_id }).getFirst();
 
     expect(replacedTeam.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
@@ -48,14 +48,14 @@ describe('record create or replace', () => {
   });
 
   test('create or replace with optional id', async () => {
-    const id: string | undefined = undefined;
+    const xata_id: string | undefined = undefined;
 
-    const team = await xata.db.teams.createOrReplace({ id, name: 'Team ships' });
-    expect(team.id).toBeDefined();
+    const team = await xata.db.teams.createOrReplace({ xata_id, name: 'Team ships' });
+    expect(team.xata_id).toBeDefined();
   });
 
   test('create or replace fails with empty id', async () => {
-    await expect(xata.db.teams.createOrReplace({ id: '', name: 'Team ships' })).rejects.toThrowError();
+    await expect(xata.db.teams.createOrReplace({ xata_id: '', name: 'Team ships' })).rejects.toThrowError();
   });
 
   test('create or replace team with inline id', async () => {
@@ -64,13 +64,13 @@ describe('record create or replace', () => {
     expect(team.read).toBeDefined();
     expect(team.email).toBe('ships2@example.com');
 
-    const replacedTeam = await xata.db.teams.createOrReplace({ id: team.id, name: 'Team boats' });
+    const replacedTeam = await xata.db.teams.createOrReplace({ xata_id: team.xata_id, name: 'Team boats' });
 
-    expect(replacedTeam.id).toBe(team.id);
+    expect(replacedTeam.xata_id).toBe(team.xata_id);
     expect(replacedTeam.read).toBeDefined();
     expect(replacedTeam.email).toBeNull();
 
-    const apiTeam = await xata.db.teams.filter({ id: team.id }).getFirst();
+    const apiTeam = await xata.db.teams.filter({ xata_id: team.xata_id }).getFirst();
 
     expect(replacedTeam.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
@@ -84,14 +84,14 @@ describe('record create or replace', () => {
     expect(team.email).toBe('ships3@example.com');
 
     const replacedTeam = await xata.db.teams.createOrReplace([
-      { id: team.id, name: 'Team boats' },
-      { ...team, id: 'planes' }
+      { xata_id: team.xata_id, name: 'Team boats' },
+      { ...team, xata_id: 'planes' }
     ]);
 
-    expect(replacedTeam[0].id).toBe(team.id);
+    expect(replacedTeam[0].xata_id).toBe(team.xata_id);
     expect(replacedTeam[0].read).toBeDefined();
     expect(replacedTeam[0].email).toBeNull();
-    expect(replacedTeam[1].id).toBe('planes');
+    expect(replacedTeam[1].xata_id).toBe('planes');
     expect(replacedTeam[1].read).toBeDefined();
     expect(replacedTeam[1].email).toBe(team.email);
   });
