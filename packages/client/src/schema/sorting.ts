@@ -1,6 +1,6 @@
 import { isObject, isString } from '../util/lang';
 import { SingleOrArray, Values } from '../util/types';
-import { XataRecord, XataRecordMetadata } from './record';
+import { XataRecord } from './record';
 import { ColumnsByValue } from './selection';
 
 export type SortDirection = 'asc' | 'desc';
@@ -8,7 +8,7 @@ export type SortDirection = 'asc' | 'desc';
 type RandomFilter = { '*': 'random' };
 type RandomFilterExtended = { column: '*'; direction: 'random' };
 
-export type SortColumns<T extends XataRecord> = ColumnsByValue<T, any> | `xata.${keyof XataRecordMetadata}`;
+export type SortColumns<T extends XataRecord> = ColumnsByValue<T, any>;
 
 export type SortFilterExtended<T extends XataRecord, Columns extends string = SortColumns<T>> =
   | RandomFilterExtended
