@@ -8,6 +8,10 @@ const tables = [
   {
     name: 'teams',
     columns: [
+      { name: 'xata_id', type: 'string' },
+      { name: 'xata_version', type: 'int' },
+      { name: 'xata_createdat', type: 'datetime' },
+      { name: 'xata_updatedat', type: 'datetime' },
       { name: 'name', type: 'string' },
       { name: 'labels', type: 'multiple' },
       { name: 'owner', type: 'link', link: { table: 'users' } }
@@ -16,6 +20,10 @@ const tables = [
   {
     name: 'users',
     columns: [
+      { name: 'xata_id', type: 'string' },
+      { name: 'xata_version', type: 'int' },
+      { name: 'xata_createdat', type: 'datetime' },
+      { name: 'xata_updatedat', type: 'datetime' },
       { name: 'email', type: 'email' },
       { name: 'full_name', type: 'string', notNull: true, defaultValue: 'John Doe' },
       { name: 'team', type: 'link', link: { table: 'teams' } },
@@ -24,16 +32,8 @@ const tables = [
   }
 ] as const;
 
-function simpleTeam(team: SchemaInference<typeof tables>['teams'] & XataRecord) {
-  team.getMetadata();
-  team.owner?.getMetadata();
-}
-
 function simpleUser(user: SchemaInference<typeof tables>['users'] & XataRecord) {
   user.full_name.startsWith('a');
-
-  user.getMetadata();
-  user.team?.getMetadata();
 
   user.json?.foo;
   user.json?.[0];
