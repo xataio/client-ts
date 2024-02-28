@@ -10,7 +10,7 @@ export * from './inference';
 export * from './operators';
 export * from './pagination';
 export { Query } from './query';
-export { RecordColumnTypes, isIdentifiable, isXataRecord } from './record';
+export { RecordColumnTypes, isIdentifiable } from './record';
 export type { BaseData, EditableData, Identifiable, JSONData, Link, XataRecord } from './record';
 export { Repository, RestRepository } from './repository';
 export * from './selection';
