@@ -201,8 +201,8 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
       return { $includes: value };
     }
 
-    if (columnType === 'link' && isObject(value) && isString(value.id)) {
-      return value.id;
+    if (columnType === 'link' && isObject(value) && isString(value.xata_id)) {
+      return value.xata_id;
     }
 
     return value;
