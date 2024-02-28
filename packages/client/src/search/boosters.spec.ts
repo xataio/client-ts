@@ -55,7 +55,7 @@ const invalidBoosters1: Boosters<Record>[] = [
   { numericBooster: { column: 'name', factor: 50, modifier: 'invalid' } },
   {
     // @ts-expect-error
-    dateBooster: { column: 'createdAt', origin: '2020-01-21T00:00:00Z', scale: '1d', decay: 0.2 },
+    dateBooster: { column: 'invalid', origin: '2020-01-21T00:00:00Z', scale: '1d', decay: 0.2 },
     ifMatchesFilter: { noSuchColumn: 'test' }
   }
 ];
