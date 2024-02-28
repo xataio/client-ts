@@ -63,7 +63,7 @@ describe('file support', () => {
 
   test('create file with binary endpoint JSON and mediaType override', async () => {
     const record = await xata.db.users.create({ name: 'another' });
-    const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, json, {
+    const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.xata_id }, json, {
       mediaType: 'text/plain'
     });
 
@@ -84,7 +84,7 @@ describe('file support', () => {
 
   test('create file with binary endpoint JSON', async () => {
     const record = await xata.db.users.create({ name: 'another' });
-    const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, json);
+    const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.xata_id }, json);
 
     expect(file.id).toBeDefined();
     expect(file.mediaType).toBe('application/json');
@@ -103,7 +103,7 @@ describe('file support', () => {
 
   test('create file with binary endpoint CSV', async () => {
     const record = await xata.db.users.create({ name: 'another' });
-    const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.id }, csv);
+    const file = await xata.files.upload({ table: 'users', column: 'attachments', record: record.xata_id }, csv);
 
     expect(file.id).toBeDefined();
     expect(file.mediaType).toBe('text/csv');
@@ -123,7 +123,7 @@ describe('file support', () => {
   test('create XataFile on binary endpoint', async () => {
     const record = await xata.db.users.create({ name: 'another' });
     const file = await xata.files.upload(
-      { table: 'users', column: 'attachments', record: record.id },
+      { table: 'users', column: 'attachments', record: record.xata_id },
       XataFile.fromBlob(csv)
     );
 
@@ -161,7 +161,7 @@ describe('file support', () => {
     expect(upload1.status).toBe(201);
     expect(upload2.status).toBe(201);
 
-    const user = await xata.db.users.read(result.id, [
+    const user = await xata.db.users.read(result.xata_id, [
       '*',
       'photo.*',
       'photo.base64Content',

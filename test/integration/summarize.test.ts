@@ -27,11 +27,11 @@ beforeAll(async (ctx) => {
       rating: 10.5,
       plan: 'paid',
       dark: true,
-      pet: pet1.id,
+      pet: pet1.xata_id,
       account_value: 5
     },
-    { full_name: 'B', name: 'B', index: 10, rating: 10.5, plan: 'free', pet: pet2.id, account_value: 3 },
-    { full_name: 'C', name: 'C', index: 30, rating: 40.0, plan: 'paid', pet: pet3.id }
+    { full_name: 'B', name: 'B', index: 10, rating: 10.5, plan: 'free', pet: pet2.xata_id, account_value: 3 },
+    { full_name: 'C', name: 'C', index: 30, rating: 40.0, plan: 'paid', pet: pet3.xata_id }
   ]);
 });
 
@@ -426,7 +426,7 @@ describe('summarize', () => {
     const result = await xata.db.users.summarize({
       columns: ['name'],
       summaries: { total: { count: '*' } },
-      filter: { id: 'nomatches' }
+      filter: { xata_id: 'nomatches' }
     });
 
     expect(result.summaries).toMatchInlineSnapshot('[]');
@@ -440,7 +440,7 @@ describe('summarize', () => {
     const result = await xata.db.users.summarize({
       columns: ['name'],
       summaries: { total: { count: '*' } },
-      filter: { id: user1?.id ?? '' }
+      filter: { xata_id: user1?.xata_id ?? '' }
     });
 
     expect(result.summaries).toMatchInlineSnapshot(`
