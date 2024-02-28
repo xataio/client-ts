@@ -2,7 +2,6 @@ import { FilterExpression, FilterPredicate } from '../api/schemas';
 import { isDefined, isObject } from '../util/lang';
 import { SingleOrArray, Values } from '../util/types';
 import { JSONValue } from './json';
-import { XataRecordMetadata } from './record';
 import { ColumnsByValue, ValueAtColumn } from './selection';
 
 export type JSONFilterColumns<Record> = Values<{
@@ -13,7 +12,7 @@ export type JSONFilterColumns<Record> = Values<{
     : never;
 }>;
 
-export type FilterColumns<T> = ColumnsByValue<T, any> | `xata.${keyof XataRecordMetadata}`;
+export type FilterColumns<T> = ColumnsByValue<T, any>;
 
 export type FilterValueAtColumn<Record, F> = NonNullable<ValueAtColumn<Record, F>> extends JSONValue<any>
   ? PropertyFilter<any>
