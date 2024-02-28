@@ -5,6 +5,10 @@ import { XataRecord } from './record';
 import { FilterExpression } from '../api/schemas';
 
 type Record = XataRecord & {
+  xata_id: string;
+  xata_version: number;
+  xata_createdat: Date;
+  xata_updatedat: Date;
   name: string;
   string: string;
   number: number;
@@ -230,7 +234,7 @@ const filterWithWildcardIsNotAllowed: Filter<Record> = { '*': { $is: 'foo' } };
 const filterWithLinkWildcardIsNotAllowed: Filter<Record> = { 'owner.*': { $is: 'foo' } };
 
 // Filter on internal column is allowed
-const filterOnInternalColumnIsAllowed: Filter<Record> = { 'xata.version': { $is: 4 } };
+const filterOnInternalColumnIsAllowed: Filter<Record> = { xata_version: { $is: 4 } };
 
 test('fake test', () => {
   // This is a fake test to make sure that the type definitions in this file are working
