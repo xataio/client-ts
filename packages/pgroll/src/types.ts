@@ -12,7 +12,8 @@ export type ForeignKeyReference = z.infer<typeof ForeignKeyReferenceDefinition>;
 export const ForeignKeyReferenceDefinition = z.object({
   column: z.string(),
   name: z.string(),
-  table: z.string()
+  table: z.string(),
+  on_delete: z.string().optional()
 });
 
 export type Column = z.infer<typeof ColumnDefinition>;
@@ -104,6 +105,14 @@ export const OpRawSQLDefinition = z.object({
   down: z.string().optional(),
   up: z.string(),
   onComplete: z.boolean().optional()
+});
+
+export type OpRenameConstraint = z.infer<typeof OpRenameConstraintDefinition>;
+
+export const OpRenameConstraintDefinition = z.object({
+  from: z.string(),
+  to: z.string(),
+  table: z.string()
 });
 
 export type OpRenameTable = z.infer<typeof OpRenameTableDefinition>;
