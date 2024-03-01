@@ -7,15 +7,15 @@ import type * as Schemas from './dataPlaneSchemas';
 
 export type DBBranchNameParam = Schemas.DBBranchName;
 
-export type PgRollMigrationJobIDParam = Schemas.PgRollMigrationJobID;
+export type TableNameParam = Schemas.TableName;
+
+export type MigrationJobIDParam = Schemas.MigrationJobID;
 
 export type DBNameParam = Schemas.DBName;
 
 export type MigrationRequestNumberParam = Schemas.MigrationRequestNumber;
 
 export type BranchNameParam = Schemas.BranchName;
-
-export type TableNameParam = Schemas.TableName;
 
 export type ColumnNameParam = Schemas.ColumnName;
 

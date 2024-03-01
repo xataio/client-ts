@@ -2,7 +2,6 @@ import { ApiExtraProps, HostProvider, Schemas } from './api';
 import { FilesPlugin, FilesPluginResult } from './files';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
-import { CacheImpl, SimpleCache } from './schema/cache';
 import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { SQLPlugin, SQLPluginResult } from './sql';
@@ -17,7 +16,6 @@ export type BaseClientOptions = {
   apiKey?: string;
   databaseURL?: string;
   branch?: string;
-  cache?: CacheImpl;
   trace?: TraceFunction;
   enableBrowser?: boolean;
   clientName?: string;
@@ -49,7 +47,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const pluginOptions: XataPluginOptions = {
         ...this.#getFetchProps(safeOptions),
-        cache: safeOptions.cache,
         host: safeOptions.host,
         tables
       };
@@ -90,7 +87,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const isBrowser = typeof window !== 'undefined' && typeof Deno === 'undefined';
       if (isBrowser && !enableBrowser) {
         throw new Error(
-          'You are trying to use Xata from the browser, which is potentially a non-secure environment. If you understand the security concerns, such as leaking your credentials, pass `enableBrowser: true` to the client options to remove this error.'
+          'You are trying to use Xata from the browser, which is potentially a non-secure environment. How to fix: https://xata.io/docs/messages/api-key-browser-error'
         );
       }
 
@@ -98,7 +95,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const databaseURL = options?.databaseURL;
       const apiKey = options?.apiKey;
       const branch = options?.branch;
-      const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
       const clientName = options?.clientName;
       const host = options?.host ?? 'production';
@@ -121,7 +117,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         databaseURL,
         apiKey,
         branch,
-        cache,
         trace,
         host,
         clientID: generateUUID(),

@@ -4,6 +4,26 @@ declare const tables: readonly [
     readonly name: 'teams';
     readonly columns: readonly [
       {
+        readonly name: 'xata_id';
+        readonly type: 'string';
+        readonly notNull: true;
+      },
+      {
+        readonly name: 'xata_version';
+        readonly type: 'int';
+        readonly notNull: true;
+      },
+      {
+        readonly name: 'xata_createdat';
+        readonly type: 'datetime';
+        readonly notNull: true;
+      },
+      {
+        readonly name: 'xata_updatedat';
+        readonly type: 'datetime';
+        readonly notNull: true;
+      },
+      {
         readonly name: 'name';
         readonly type: 'string';
       },
@@ -61,6 +81,26 @@ declare const tables: readonly [
   {
     readonly name: 'users';
     readonly columns: readonly [
+      {
+        readonly name: 'xata_id';
+        readonly type: 'string';
+        readonly notNull: true;
+      },
+      {
+        readonly name: 'xata_version';
+        readonly type: 'int';
+        readonly notNull: true;
+      },
+      {
+        readonly name: 'xata_createdat';
+        readonly type: 'datetime';
+        readonly notNull: true;
+      },
+      {
+        readonly name: 'xata_updatedat';
+        readonly type: 'datetime';
+        readonly notNull: true;
+      },
       {
         readonly name: 'email';
         readonly type: 'email';
@@ -151,6 +191,26 @@ declare const tables: readonly [
   {
     readonly name: 'pets';
     readonly columns: readonly [
+      {
+        readonly name: 'xata_id';
+        readonly type: 'string';
+        readonly notNull: true;
+      },
+      {
+        readonly name: 'xata_version';
+        readonly type: 'int';
+        readonly notNull: true;
+      },
+      {
+        readonly name: 'xata_createdat';
+        readonly type: 'datetime';
+        readonly notNull: true;
+      },
+      {
+        readonly name: 'xata_updatedat';
+        readonly type: 'datetime';
+        readonly notNull: true;
+      },
       {
         readonly name: 'name';
         readonly type: 'string';

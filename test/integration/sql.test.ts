@@ -30,62 +30,78 @@ describe('SQL proxy', () => {
   test('read single team with id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
-    const { records, warning, columns } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE id = ${team.id}`;
+    const { records, warning, columns } =
+      await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE xata_id = ${team.xata_id}`;
 
     expect(warning).toBeUndefined();
     expect(records).toHaveLength(1);
 
     expect(columns).toMatchInlineSnapshot(`
-      {
-        "config": {
-          "type_name": "jsonb",
+      [
+        {
+          "name": "name",
+          "type": "text",
         },
-        "dark": {
-          "type_name": "bool",
+        {
+          "name": "description",
+          "type": "text",
         },
-        "description": {
-          "type_name": "text",
+        {
+          "name": "labels",
+          "type": "_text",
         },
-        "email": {
-          "type_name": "text",
+        {
+          "name": "index",
+          "type": "int4",
         },
-        "founded_date": {
-          "type_name": "timestamptz",
+        {
+          "name": "rating",
+          "type": "float8",
         },
-        "id": {
-          "type_name": "text",
+        {
+          "name": "founded_date",
+          "type": "timestamptz",
         },
-        "index": {
-          "type_name": "int8",
+        {
+          "name": "email",
+          "type": "text",
         },
-        "labels": {
-          "type_name": "_text",
+        {
+          "name": "plan",
+          "type": "text",
         },
-        "name": {
-          "type_name": "text",
+        {
+          "name": "dark",
+          "type": "bool",
         },
-        "owner": {
-          "type_name": "text",
+        {
+          "name": "config",
+          "type": "jsonb",
         },
-        "plan": {
-          "type_name": "text",
+        {
+          "name": "xata_id",
+          "type": "text",
         },
-        "rating": {
-          "type_name": "float8",
+        {
+          "name": "xata_version",
+          "type": "int4",
         },
-        "xata.createdAt": {
-          "type_name": "timestamptz",
+        {
+          "name": "xata_createdat",
+          "type": "timestamptz",
         },
-        "xata.updatedAt": {
-          "type_name": "timestamptz",
+        {
+          "name": "xata_updatedat",
+          "type": "timestamptz",
         },
-        "xata.version": {
-          "type_name": "int4",
+        {
+          "name": "owner",
+          "type": "text",
         },
-      }
+      ]
     `);
 
-    expect(records[0].id).toBe(team.id);
+    expect(records[0].xata_id).toBe(team.xata_id);
     expect(records[0].name).toBe('Team ships');
   });
 
@@ -98,57 +114,72 @@ describe('SQL proxy', () => {
     expect(records).toHaveLength(2);
 
     expect(columns).toMatchInlineSnapshot(`
-      {
-        "config": {
-          "type_name": "jsonb",
+      [
+        {
+          "name": "name",
+          "type": "text",
         },
-        "dark": {
-          "type_name": "bool",
+        {
+          "name": "description",
+          "type": "text",
         },
-        "description": {
-          "type_name": "text",
+        {
+          "name": "labels",
+          "type": "_text",
         },
-        "email": {
-          "type_name": "text",
+        {
+          "name": "index",
+          "type": "int4",
         },
-        "founded_date": {
-          "type_name": "timestamptz",
+        {
+          "name": "rating",
+          "type": "float8",
         },
-        "id": {
-          "type_name": "text",
+        {
+          "name": "founded_date",
+          "type": "timestamptz",
         },
-        "index": {
-          "type_name": "int8",
+        {
+          "name": "email",
+          "type": "text",
         },
-        "labels": {
-          "type_name": "_text",
+        {
+          "name": "plan",
+          "type": "text",
         },
-        "name": {
-          "type_name": "text",
+        {
+          "name": "dark",
+          "type": "bool",
         },
-        "owner": {
-          "type_name": "text",
+        {
+          "name": "config",
+          "type": "jsonb",
         },
-        "plan": {
-          "type_name": "text",
+        {
+          "name": "xata_id",
+          "type": "text",
         },
-        "rating": {
-          "type_name": "float8",
+        {
+          "name": "xata_version",
+          "type": "int4",
         },
-        "xata.createdAt": {
-          "type_name": "timestamptz",
+        {
+          "name": "xata_createdat",
+          "type": "timestamptz",
         },
-        "xata.updatedAt": {
-          "type_name": "timestamptz",
+        {
+          "name": "xata_updatedat",
+          "type": "timestamptz",
         },
-        "xata.version": {
-          "type_name": "int4",
+        {
+          "name": "owner",
+          "type": "text",
         },
-      }
+      ]
     `);
 
-    const record1 = records.find((record) => record.id === teams[0].id);
-    const record2 = records.find((record) => record.id === teams[1].id);
+    const record1 = records.find((record) => record.xata_id === teams[0].xata_id);
+    const record2 = records.find((record) => record.xata_id === teams[1].xata_id);
 
     expect(record1).toBeDefined();
     expect(record1?.name).toBe('[A] Cars');
@@ -158,65 +189,80 @@ describe('SQL proxy', () => {
 
   test('create team', async () => {
     const { records, warning, columns } = await xata.sql<TeamsRecord>({
-      statement: `INSERT INTO teams (name) VALUES ($1) RETURNING *`,
-      params: ['Team ships 2']
+      statement: `INSERT INTO teams (xata_id, name) VALUES ($1, $2) RETURNING *`,
+      params: ['my-id', 'Team ships 2']
     });
 
     expect(columns).toMatchInlineSnapshot(`
-      {
-        "config": {
-          "type_name": "jsonb",
+      [
+        {
+          "name": "name",
+          "type": "text",
         },
-        "dark": {
-          "type_name": "bool",
+        {
+          "name": "description",
+          "type": "text",
         },
-        "description": {
-          "type_name": "text",
+        {
+          "name": "labels",
+          "type": "_text",
         },
-        "email": {
-          "type_name": "text",
+        {
+          "name": "index",
+          "type": "int4",
         },
-        "founded_date": {
-          "type_name": "timestamptz",
+        {
+          "name": "rating",
+          "type": "float8",
         },
-        "id": {
-          "type_name": "text",
+        {
+          "name": "founded_date",
+          "type": "timestamptz",
         },
-        "index": {
-          "type_name": "int8",
+        {
+          "name": "email",
+          "type": "text",
         },
-        "labels": {
-          "type_name": "_text",
+        {
+          "name": "plan",
+          "type": "text",
         },
-        "name": {
-          "type_name": "text",
+        {
+          "name": "dark",
+          "type": "bool",
         },
-        "owner": {
-          "type_name": "text",
+        {
+          "name": "config",
+          "type": "jsonb",
         },
-        "plan": {
-          "type_name": "text",
+        {
+          "name": "xata_id",
+          "type": "text",
         },
-        "rating": {
-          "type_name": "float8",
+        {
+          "name": "xata_version",
+          "type": "int4",
         },
-        "xata.createdAt": {
-          "type_name": "timestamptz",
+        {
+          "name": "xata_createdat",
+          "type": "timestamptz",
         },
-        "xata.updatedAt": {
-          "type_name": "timestamptz",
+        {
+          "name": "xata_updatedat",
+          "type": "timestamptz",
         },
-        "xata.version": {
-          "type_name": "int4",
+        {
+          "name": "owner",
+          "type": "text",
         },
-      }
+      ]
     `);
 
     expect(warning).toBeUndefined();
     expect(records).toHaveLength(1);
     expect(records[0].name).toBe('Team ships 2');
 
-    const team = await xata.db.teams.read(records[0].id);
+    const team = await xata.db.teams.read(records[0].xata_id);
     expect(team).toBeDefined();
     expect(team?.name).toBe('Team ships 2');
   });

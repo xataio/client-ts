@@ -8,12 +8,12 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { File, Mock, Suite, TestContext, vi } from 'vitest';
-import { BaseClient, CacheImpl, XataApiClient } from '../../packages/client/src';
+import { BaseClient, XataApiClient } from '../../packages/client/src';
 import { getHostUrl, parseProviderString } from '../../packages/client/src/api/providers';
 import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { buildTraceFunction } from '../../packages/plugin-client-opentelemetry';
-import { schema } from '../mock_data';
+import { pgRollMigrations } from '../mock_data';
 
 // Get environment variables before reading them
 dotenv.config({ path: join(process.cwd(), '.env') });
@@ -24,12 +24,11 @@ if (apiKey === '') throw new Error('XATA_API_KEY environment variable is not set
 const workspace = process.env.XATA_WORKSPACE ?? '';
 if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
 
-const region = process.env.XATA_REGION || 'eu-west-1';
-
 const host = parseProviderString(process.env.XATA_API_PROVIDER);
 
+const region = process.env.XATA_REGION || 'us-east-1';
+
 export type EnvironmentOptions = {
-  cache?: CacheImpl;
   fetch?: any;
 };
 
@@ -45,7 +44,6 @@ export type TestEnvironmentResult = {
     fetch: Mock;
     apiKey: string;
     branch: string;
-    cache?: CacheImpl;
   };
   hooks: {
     beforeAll: (ctx: Suite | File) => Promise<void>;
@@ -57,7 +55,7 @@ export type TestEnvironmentResult = {
 
 export async function setUpTestEnvironment(
   prefix: string,
-  { cache, fetch: envFetch }: EnvironmentOptions = {}
+  { fetch: envFetch }: EnvironmentOptions = {}
 ): Promise<TestEnvironmentResult> {
   if (host === null) {
     throw new Error(
@@ -73,11 +71,10 @@ export async function setUpTestEnvironment(
   const id = Date.now().toString(36);
 
   const api = new XataApiClient({ apiKey, fetch, host, clientName: 'sdk-tests' });
-  const { databaseName: database } = await api.database.createDatabase({
-    workspace,
-    database: `sdk-integration-test-${prefix}-${id}`,
-    data: { region },
-    headers: { 'X-Xata-Files': 'true' }
+  const { databaseName: database } = await api.databases.createDatabase({
+    pathParams: { workspaceId: workspace, dbName: `sdk-integration-test-${prefix}-${id}` },
+    body: { region },
+    headers: { 'X-Features': 'feat-pgroll-migrations=1' }
   });
 
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace).replace('{region}', region);
@@ -87,20 +84,26 @@ export async function setUpTestEnvironment(
     branch: 'main',
     apiKey,
     fetch,
-    cache,
     trace,
     clientName: 'sdk-tests'
   };
 
-  const { edits } = await api.migrations.compareBranchWithUserSchema({
-    workspace,
-    region,
-    database,
-    branch: 'main',
-    schema
-  });
+  for (const operation of pgRollMigrations) {
+    const { jobID } = await api.migrations.applyMigration({
+      pathParams: { workspace, region, dbBranchName: `${database}:main` },
+      body: { operations: [operation] }
+    });
 
-  await api.migrations.applyBranchSchemaEdit({ workspace, region, database, branch: 'main', edits });
+    await waitForMigrationToFinish(api, workspace, region, database, 'main', jobID);
+
+    if ('create_table' in operation) {
+      const { jobID } = await api.migrations.adaptTable({
+        pathParams: { workspace, region, dbBranchName: `${database}:main`, tableName: operation.create_table.name }
+      });
+
+      await waitForMigrationToFinish(api, workspace, region, database, 'main', jobID);
+    }
+  }
 
   let span: Span | undefined;
 
@@ -110,7 +113,7 @@ export async function setUpTestEnvironment(
     },
     afterAll: async () => {
       try {
-        await api.database.deleteDatabase({ workspace, database });
+        await api.databases.deleteDatabase({ pathParams: { workspaceId: workspace, dbName: database } });
       } catch (e) {
         // Ignore error, delete database during ES snapshot fails
         console.error('Delete database failed', e);
@@ -158,4 +161,27 @@ declare module 'vitest' {
   export interface TestContext {
     span?: Span;
   }
+}
+
+async function waitForMigrationToFinish(
+  api: XataApiClient,
+  workspace: string,
+  region: string,
+  database: string,
+  branch: string,
+  jobId: string
+) {
+  const { status, error } = await api.migrations.getMigrationJobStatus({
+    pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, jobId }
+  });
+  if (status === 'failed') {
+    throw new Error(`Migration failed, ${error}`);
+  }
+
+  if (status === 'completed') {
+    return;
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
 }

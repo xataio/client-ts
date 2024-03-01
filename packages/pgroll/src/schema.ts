@@ -545,7 +545,7 @@ export const schema = {
           $ref: '#/$defs/PgRollOperations'
         }
       },
-      required: ['name', 'operations'],
+      required: ['operations'],
       type: 'object'
     },
     ReplicaIdentity: {

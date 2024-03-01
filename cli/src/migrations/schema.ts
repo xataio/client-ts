@@ -55,7 +55,7 @@ export const migrationFilePgroll = z.object({
   parent: z.string().optional(),
   migration: PgRollMigrationDefinition,
   done: z.boolean(),
-  migrationType: z.enum(['pgroll', 'inferred']) satisfies z.ZodType<Schemas.PgRollMigrationType>
+  migrationType: z.enum(['pgroll', 'inferred']) satisfies z.ZodType<Schemas.MigrationType>
 });
 
 export type MigrationFilePgroll = z.infer<typeof migrationFilePgroll>;
