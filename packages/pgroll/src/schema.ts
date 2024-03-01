@@ -498,6 +498,17 @@ export const schema = {
         },
         {
           type: 'object',
+          description: 'Rename constraint operation',
+          additionalProperties: false,
+          properties: {
+            rename_constraint: {
+              $ref: '#/$defs/OpRenameConstraint'
+            }
+          },
+          required: ['rename_constraint']
+        },
+        {
+          type: 'object',
           description: 'Drop index operation',
           additionalProperties: false,
           properties: {
