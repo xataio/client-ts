@@ -1,5 +1,4 @@
 import { defaultTrace, TraceFunction } from '../schema/tracing';
-import { getAPIKey } from '../util/environment';
 import { FetchImpl, getFetchImplementation } from '../util/fetch';
 import { RequiredKeys } from '../util/types';
 import { generateUUID } from '../util/uuid';
@@ -40,7 +39,7 @@ const buildApiClient = () =>
   class {
     constructor(options: XataApiClientOptions = {}) {
       const provider = options.host ?? 'production';
-      const apiKey = options.apiKey ?? getAPIKey();
+      const apiKey = options.apiKey;
       const trace = options.trace ?? defaultTrace;
       const clientID = generateUUID();
 
