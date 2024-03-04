@@ -389,6 +389,9 @@ export type ClusterMetadata = {
  * @x-internal true
  */
 export type ClusterUpdateDetails = {
+  /**
+   * @pattern ^[Ss][Tt][Oo][Pp]|[Ss][Tt][Aa][Rr][Tt]$
+   */
   command: string;
 };
 
