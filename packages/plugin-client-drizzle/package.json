@@ -25,7 +25,7 @@
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
-    "drizzle-orm": "^0.29.4"
+    "drizzle-orm": "^0.29.3"
   },
   "peerDependencies": {
     "drizzle-orm": "^0.28.5"
