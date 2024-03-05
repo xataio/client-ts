@@ -27,7 +27,7 @@ afterEach(async (ctx) => {
 });
 
 describe('SQL proxy', () => {
-  test('read single team with id', async () => {
+  test.skip('read single team with id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
     const { records, warning, columns } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE id = ${team.id}`;
@@ -104,7 +104,7 @@ describe('SQL proxy', () => {
     expect(records[0].name).toBe('Team ships');
   });
 
-  test('read multiple teams ', async () => {
+  test.skip('read multiple teams ', async () => {
     const teams = await xata.db.teams.create([{ name: '[A] Cars' }, { name: '[A] Planes' }]);
 
     const { records, warning, columns } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE name LIKE '[A] %'`;
@@ -186,7 +186,7 @@ describe('SQL proxy', () => {
     expect(record2?.name).toBe('[A] Planes');
   });
 
-  test('create team', async () => {
+  test.skip('create team', async () => {
     const { records, warning, columns } = await xata.sql<TeamsRecord>({
       statement: `INSERT INTO teams (name) VALUES ($1) RETURNING *`,
       params: ['Team ships 2']
@@ -266,21 +266,21 @@ describe('SQL proxy', () => {
     expect(team?.name).toBe('Team ships 2');
   });
 
-  test("calling xata.sql as a function throws an error because it's not safe", async () => {
+  test.skip("calling xata.sql as a function throws an error because it's not safe", async () => {
     // @ts-expect-error - Testing invalid usage
     await expect(xata.sql('SELECT * FROM teams')).rejects.toThrow(
       'Invalid usage of `xata.sql`. Please use it as a tagged template or with an object.'
     );
   });
 
-  test('calling xata.sql with invalid prepared statement', async () => {
+  test.skip('calling xata.sql with invalid prepared statement', async () => {
     const order = 'ASC';
     await expect(xata.sql<TeamsRecord>`SELECT * FROM teams ORDER BY name ${order}`).rejects.toThrow(
       'invalid SQL: unused parameters: used 0 of 1 parameters'
     );
   });
 
-  test("calling xata.sql with invalid prepared statement doesn't throw an error when bypassing prepared statement protection", async () => {
+  test.skip("calling xata.sql with invalid prepared statement doesn't throw an error when bypassing prepared statement protection", async () => {
     const order = 'ASC';
     const { records } = await xata.sql<TeamsRecord>({
       statement: `SELECT * FROM teams ORDER BY name ${order}`

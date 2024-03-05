@@ -12,7 +12,8 @@ export type ForeignKeyReference = z.infer<typeof ForeignKeyReferenceDefinition>;
 export const ForeignKeyReferenceDefinition = z.object({
   column: z.string(),
   name: z.string(),
-  table: z.string()
+  table: z.string(),
+  on_delete: z.string().optional()
 });
 
 export type Column = z.infer<typeof ColumnDefinition>;
@@ -106,6 +107,14 @@ export const OpRawSQLDefinition = z.object({
   onComplete: z.boolean().optional()
 });
 
+export type OpRenameConstraint = z.infer<typeof OpRenameConstraintDefinition>;
+
+export const OpRenameConstraintDefinition = z.object({
+  from: z.string(),
+  to: z.string(),
+  table: z.string()
+});
+
 export type OpRenameTable = z.infer<typeof OpRenameTableDefinition>;
 
 export const OpRenameTableDefinition = z.object({
@@ -136,6 +145,7 @@ export const PgRollOperationDefinition = z.union([
   z.object({ create_table: OpCreateTableDefinition }),
   z.object({ drop_column: OpDropColumnDefinition }),
   z.object({ drop_constraint: OpDropConstraintDefinition }),
+  z.object({ rename_constraint: OpRenameConstraintDefinition }),
   z.object({ drop_index: OpDropIndexDefinition }),
   z.object({ drop_table: OpDropTableDefinition }),
   z.object({ sql: OpRawSQLDefinition }),
@@ -163,6 +173,7 @@ export const operationTypes = [
   'create_table',
   'drop_column',
   'drop_constraint',
+  'rename_constraint',
   'drop_index',
   'drop_table',
   'sql',

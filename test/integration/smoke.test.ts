@@ -187,7 +187,10 @@ async function waitForSearchIndexing(api: XataApiClient, workspace: string, data
       aggs: { total: { count: '*' } }
     });
 
-    if (aggs?.total === 1) return;
+    if (aggs?.total === 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return;
+    }
   } catch (error) {
     // do nothing
   }

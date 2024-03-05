@@ -84,6 +84,12 @@ export const schema = {
         table: {
           description: 'Name of the referenced table',
           type: 'string'
+        },
+        on_delete: {
+          description: 'On delete behavior of the foreign key constraint',
+          type: 'string',
+          enum: ['NO ACTION', 'RESTRICT', 'CASCADE', 'SET NULL', 'SET DEFAULT'],
+          default: 'NO ACTION'
         }
       },
       required: ['column', 'name', 'table'],
@@ -370,6 +376,26 @@ export const schema = {
       ],
       type: 'object'
     },
+    OpRenameConstraint: {
+      additionalProperties: false,
+      description: 'Rename constraint operation',
+      properties: {
+        from: {
+          description: 'Name of the constraint',
+          type: 'string'
+        },
+        to: {
+          description: 'New name of the constraint',
+          type: 'string'
+        },
+        table: {
+          description: 'Name of the table',
+          type: 'string'
+        }
+      },
+      required: ['from', 'to', 'table'],
+      type: 'object'
+    },
     OpRenameTable: {
       additionalProperties: false,
       description: 'Rename table operation',
@@ -469,6 +495,17 @@ export const schema = {
             }
           },
           required: ['drop_constraint']
+        },
+        {
+          type: 'object',
+          description: 'Rename constraint operation',
+          additionalProperties: false,
+          properties: {
+            rename_constraint: {
+              $ref: '#/$defs/OpRenameConstraint'
+            }
+          },
+          required: ['rename_constraint']
         },
         {
           type: 'object',
