@@ -73,6 +73,12 @@ export async function setUpTestEnvironment(
   const id = Date.now().toString(36);
 
   const api = new XataApiClient({ apiKey, fetch, host, clientName: 'sdk-tests' });
+
+  await api.workspaces.updateWorkspaceSettings({
+    pathParams: { workspaceId: workspace },
+    body: { postgresEnabled: true }
+  });
+
   const { databaseName: database } = await api.databases.createDatabase({
     pathParams: { workspaceId: workspace, dbName: `sdk-integration-test-${prefix}-${id}` },
     body: { region },
