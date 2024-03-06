@@ -109,6 +109,10 @@ export type Workspace = WorkspaceMeta & {
   plan: WorkspacePlan;
 };
 
+export type WorkspaceSettings = {
+  postgresEnabled: boolean;
+};
+
 export type WorkspaceMember = {
   userId: UserID;
   fullname: string;
@@ -427,6 +431,10 @@ export type DatabaseMetadata = {
    * @x-internal true
    */
   defaultClusterID?: string;
+  /**
+   * The database is accessible via the Postgres protocol
+   */
+  postgresEnabled?: boolean;
   /**
    * Metadata about the database for display in Xata user interfaces
    */

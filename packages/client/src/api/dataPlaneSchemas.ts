@@ -125,7 +125,7 @@ export type ListBranchesResponse = {
 };
 
 export type DatabaseSettings = {
-  search_enabled: boolean;
+  searchEnabled: boolean;
 };
 
 /**
