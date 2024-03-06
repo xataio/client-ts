@@ -40,7 +40,7 @@ export type ApplyMigrationRequestBody = {
   operations: {
     [key: string]: any;
   }[];
-  adaptTable?: boolean;
+  adaptTables?: boolean;
 };
 
 export type ApplyMigrationVariables = {
