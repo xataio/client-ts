@@ -372,4 +372,11 @@ describe('SQL proxy', () => {
     expect(record2).toBeDefined();
     expect(record2?.[4]).toBe('[C] Planes');
   });
+  
+  test('xata.sql has a connection string', async () => {
+    expect(xata.sql.connectionString).toBeDefined();
+    expect(xata.sql.connectionString).toMatch(
+      /postgresql:\/\/([a-z0-9]+):([a-zA-Z0-9_]+)@([a-z0-9-.]+)\/([a-z0-9-]+):([a-z0-9-]+)\?sslmode=require/
+    );
+  });
 });
