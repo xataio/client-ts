@@ -489,15 +489,15 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   }
 
   parseDatabaseURL(databaseURL: string) {
-    const [protocol, , host, , database] = databaseURL.split('/');
-    const urlParts = parseWorkspacesUrlParts(host);
+    const [protocol, , host] = databaseURL.split('/');
+    const urlParts = parseWorkspacesUrlParts(databaseURL);
     if (!urlParts) {
       throw new Error(
         `Unable to parse workspace and region in ${databaseURL}. Please check your .xatarc file and re-run codegen before continuing. If don't know how to proceed, please contact us at support@xata.io.`
       );
     }
 
-    const { workspace, region } = urlParts;
+    const { workspace, region, database } = urlParts;
 
     return { databaseURL, protocol, host, database, workspace, region };
   }

@@ -13,7 +13,7 @@ interface User {
 const buildClient = (options: Partial<BaseClientOptions> = {}) => {
   const {
     apiKey = '1234',
-    databaseURL = 'https://mock.xata.sh/db/xata',
+    databaseURL = 'https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb',
     branch = 'main',
     clientName,
     xataAgentExtra
@@ -83,7 +83,7 @@ describe('client options', () => {
       {
         "body": "{"page":{"size":1},"columns":["*"]}",
         "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:branch/tables/users/query",
+        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:branch/tables/users/query",
       }
     `);
   });
@@ -115,7 +115,7 @@ describe('request', () => {
       {
         "body": "{"page":{"size":1},"columns":["*"]}",
         "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
       }
     `);
   });
@@ -145,7 +145,7 @@ describe('request', () => {
       {
         "body": "{"page":{"size":20},"columns":["*"]}",
         "method": "POST",
-        "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
       }
     `);
   });
@@ -293,7 +293,7 @@ describe('query', () => {
           {
             "body": "{"page":{"size":20},"columns":["*"]}",
             "method": "POST",
-            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
           },
         ]
       `);
@@ -313,7 +313,7 @@ describe('query', () => {
           {
             "body": "{"filter":{"$all":[{"name":"foo"}]},"page":{"size":20},"columns":["*"]}",
             "method": "POST",
-            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
           },
         ]
       `);
@@ -341,7 +341,7 @@ describe('query', () => {
           {
             "body": "{"page":{"size":1},"columns":["*"]}",
             "method": "POST",
-            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
           },
         ]
       `);
@@ -366,7 +366,7 @@ describe('query', () => {
           {
             "body": "{"page":{"size":1},"columns":["*"]}",
             "method": "POST",
-            "url": "https://mock.xata.sh/db/xata:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
           },
         ]
       `);
@@ -387,7 +387,7 @@ describe('read', () => {
         {
           "body": undefined,
           "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=*",
         },
       ]
     `);
@@ -405,7 +405,7 @@ describe('read', () => {
         {
           "body": undefined,
           "method": "GET",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=name%2Cage",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=name%2Cage",
         },
       ]
     `);
@@ -436,7 +436,7 @@ describe('Repository.update', () => {
         {
           "body": "{"name":"Ada"}",
           "method": "PATCH",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=*",
         },
       ]
     `);
@@ -458,7 +458,7 @@ describe('Repository.delete', () => {
         {
           "body": undefined,
           "method": "DELETE",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data/rec_1234?columns=*",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=*",
         },
       ]
     `);
@@ -495,7 +495,7 @@ describe('create', () => {
         {
           "body": "{"name":"Ada"}",
           "method": "POST",
-          "url": "https://mock.xata.sh/db/xata:main/tables/users/data?columns=*",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data?columns=*",
         },
       ]
     `);
