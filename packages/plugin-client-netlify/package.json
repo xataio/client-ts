@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/netlify",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
