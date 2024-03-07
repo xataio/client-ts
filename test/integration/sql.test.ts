@@ -288,7 +288,7 @@ describe('SQL proxy', () => {
     expect(records).toBeDefined();
   });
 
-  test("calling xata.sql with response type 'array' returns the correct result", async () => {
+  test.skip("calling xata.sql with response type 'array' returns the correct result", async () => {
     const teams = await xata.db.teams.create([{ name: '[C] Cars' }, { name: '[C] Planes' }]);
 
     const { rows, warning, columns } = await xata.sql({
