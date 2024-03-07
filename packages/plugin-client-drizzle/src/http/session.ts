@@ -36,28 +36,27 @@ export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends PgPrep
 
   constructor(
     private client: XataHttpClient,
-    private queryString: string,
-    private params: unknown[],
+    query: Query,
     private logger: Logger,
     private fields: SelectedFieldsOrdered<PgColumn> | undefined,
-    private name: string | undefined,
     private customResultMapper?: (rows: unknown[][]) => T['execute']
   ) {
-    super({ sql: queryString, params });
+    super(query);
   }
 
   async execute(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['execute']> {
-    const params = fillPlaceholders(this.params, placeholderValues);
+    const params = fillPlaceholders(this.query.params, placeholderValues);
 
-    this.logger.logQuery(this.queryString, params);
+    this.logger.logQuery(this.query.sql, params);
 
-    const { fields, client, queryString: statement, customResultMapper } = this;
+    const { fields, client, query, customResultMapper } = this;
+
     if (!fields && !customResultMapper) {
-      const result = await this.client.sql<Record<string, any>>({ statement, params });
+      const result = await this.client.sql<Record<string, any>>({ statement: query.sql, params });
       return { rowCount: result.records.length, rows: result.records, rowAsArray: false };
     }
 
-    const { rows, warning } = await client.sql({ statement, params, responseType: 'array' });
+    const { rows, warning } = await client.sql({ statement: query.sql, params, responseType: 'array' });
     if (warning) console.warn(warning);
 
     // @ts-expect-error joinsNotNullableMap is internal
@@ -69,19 +68,15 @@ export class XataHttpPreparedQuery<T extends PreparedQueryConfig> extends PgPrep
   }
 
   all(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['all']> {
-    const params = fillPlaceholders(this.params, placeholderValues);
-    this.logger.logQuery(this.queryString, params);
-    return this.client
-      .sql({ statement: this.queryString, params, responseType: 'array' })
-      .then((result) => result.rows);
+    const params = fillPlaceholders(this.query.params, placeholderValues);
+    this.logger.logQuery(this.query.sql, params);
+    return this.client.sql({ statement: this.query.sql, params, responseType: 'array' }).then((result) => result.rows);
   }
 
   values(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['values']> {
-    const params = fillPlaceholders(this.params, placeholderValues);
-    this.logger.logQuery(this.queryString, params);
-    return this.client
-      .sql({ statement: this.queryString, params, responseType: 'array' })
-      .then((result) => result.rows);
+    const params = fillPlaceholders(this.query.params, placeholderValues);
+    this.logger.logQuery(this.query.sql, params);
+    return this.client.sql({ statement: this.query.sql, params }).then((result) => result.records);
   }
 }
 
@@ -113,26 +108,28 @@ export class XataHttpSession<
     name: string | undefined,
     customResultMapper?: (rows: unknown[][]) => T['execute']
   ): PgPreparedQuery<T> {
-    return new XataHttpPreparedQuery(
-      this.client,
-      query.sql,
-      query.params,
-      this.logger,
-      fields,
-      name,
-      customResultMapper
-    );
+    return new XataHttpPreparedQuery(this.client, query, this.logger, fields, customResultMapper);
   }
 
   async query(query: string, params: unknown[]): Promise<QueryResults<'array'>> {
     this.logger.logQuery(query, params);
     const result = await this.client.sql({ statement: query, params, responseType: 'array' });
-    return { rowCount: result.rows.length, rows: result.rows, rowAsArray: true };
+
+    return {
+      rowCount: result.rows.length,
+      rows: result.rows,
+      rowAsArray: true
+    };
   }
 
   async queryObjects(query: string, params: unknown[]): Promise<QueryResults<'json'>> {
     const result = await this.client.sql<Record<string, any>>({ statement: query, params });
-    return { rowCount: result.records.length, rows: result.records, rowAsArray: false };
+
+    return {
+      rowCount: result.records.length,
+      rows: result.records,
+      rowAsArray: false
+    };
   }
 
   override async transaction<T>(
@@ -140,7 +137,7 @@ export class XataHttpSession<
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _config: PgTransactionConfig = {}
   ): Promise<T> {
-    throw new Error('No transactions support in xata-http driver');
+    throw new Error('No transactions support in Xata Http driver');
   }
 }
 
@@ -151,10 +148,10 @@ export class XataTransaction<
   static readonly [entityKind]: string = 'XataHttpTransaction';
 
   override async transaction<T>(_transaction: (tx: XataTransaction<TFullSchema, TSchema>) => Promise<T>): Promise<T> {
-    throw new Error('No transactions support in xata-http driver');
+    throw new Error('No transactions support in Xata Http driver');
   }
 }
 
 export interface XataHttpQueryResultHKT extends QueryResultHKT {
-  type: SQLQueryResult<unknown>;
+  type: SQLQueryResult<this['row']>;
 }

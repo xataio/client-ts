@@ -26,9 +26,7 @@ export class XataDriver {
   createSession(
     schema: RelationalSchemaConfig<TablesRelationalConfig> | undefined
   ): XataSession<Record<string, unknown>, TablesRelationalConfig> {
-    return new XataSession(this.client, this.dialect, schema, {
-      logger: this.options.logger
-    });
+    return new XataSession(this.client, this.dialect, schema, { logger: this.options.logger });
   }
 
   initMappers() {

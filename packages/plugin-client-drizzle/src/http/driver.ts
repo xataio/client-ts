@@ -1,6 +1,7 @@
 import {
   DefaultLogger,
   DrizzleConfig,
+  ExtractTablesWithRelations,
   Logger,
   RelationalSchemaConfig,
   TablesRelationalConfig,
@@ -35,10 +36,15 @@ export class XataHttpDriver {
   }
 }
 
-export type XataHttpDatabase<TSchema extends Record<string, unknown> = Record<string, never>> = PgDatabase<
+export class XataHttpDatabase<TSchema extends Record<string, unknown> = Record<string, never>> extends PgDatabase<
   XataHttpQueryResultHKT,
   TSchema
->;
+> {
+  static readonly [entityKind]: string = 'XataHttpDatabase';
+
+  /** @internal */
+  declare readonly session: XataHttpSession<TSchema, ExtractTablesWithRelations<TSchema>>;
+}
 
 export function drizzle<TSchema extends Record<string, unknown> = Record<string, never>>(
   client: XataHttpClient,
@@ -65,5 +71,9 @@ export function drizzle<TSchema extends Record<string, unknown> = Record<string,
   const driver = new XataHttpDriver(client, dialect, { logger });
   const session = driver.createSession(schema);
 
-  return new PgDatabase(dialect, session, schema) as XataHttpDatabase<TSchema>;
+  return new XataHttpDatabase(
+    dialect,
+    session,
+    schema as RelationalSchemaConfig<ExtractTablesWithRelations<TSchema>> | undefined
+  );
 }

@@ -41,8 +41,15 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PgPrepared
     private customResultMapper?: (rows: unknown[][]) => T['execute']
   ) {
     super({ sql: queryString, params });
-    this.rawQueryConfig = { name, text: queryString };
-    this.queryConfig = { name, text: queryString, rowMode: 'array' };
+    this.rawQueryConfig = {
+      name,
+      text: queryString
+    };
+    this.queryConfig = {
+      name,
+      text: queryString,
+      rowMode: 'array'
+    };
   }
 
   async execute(placeholderValues: Record<string, unknown> | undefined = {}): Promise<T['execute']> {
@@ -50,15 +57,20 @@ export class XataPreparedQuery<T extends PreparedQueryConfig> extends PgPrepared
 
     this.logger.logQuery(this.rawQueryConfig.text, params);
 
-    const { fields, client, rawQueryConfig: rawQuery, queryConfig: query, customResultMapper } = this;
+    const {
+      fields,
+      client,
+      rawQueryConfig: rawQuery,
+      queryConfig: query,
+      // @ts-expect-error joinsNotNullableMap is internal
+      joinsNotNullableMap,
+      customResultMapper
+    } = this;
     if (!fields && !customResultMapper) {
       return await client.query(rawQuery, params);
     }
 
     const result = await client.query(query, params);
-
-    // @ts-expect-error joinsNotNullableMap is internal
-    const joinsNotNullableMap = this.joinsNotNullableMap;
 
     return customResultMapper
       ? customResultMapper(result.rows)
