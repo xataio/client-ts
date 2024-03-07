@@ -92,7 +92,7 @@ export class SQLPlugin extends XataPlugin {
         throw new Error('Invalid usage of `xata.sql`. Please use it as a tagged template or with an object.');
       }
 
-      const { statement, params, consistency } = prepareParams(query, parameters);
+      const { statement, params, consistency, responseType } = prepareParams(query, parameters);
 
       const {
         records,
@@ -101,7 +101,7 @@ export class SQLPlugin extends XataPlugin {
         columns = []
       } = await sqlQuery({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-        body: { statement, params, consistency },
+        body: { statement, params, consistency, responseType },
         ...pluginOptions
       });
 

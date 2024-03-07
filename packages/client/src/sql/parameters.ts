@@ -69,9 +69,9 @@ export function prepareParams(param1: SQLQuery | string, param2?: any[]) {
   }
 
   if (isObject(param1)) {
-    const { statement, params, consistency } = param1;
+    const { statement, params, consistency, responseType } = param1;
 
-    return { statement, params: params?.map((value) => prepareValue(value)), consistency };
+    return { statement, params: params?.map((value) => prepareValue(value)), consistency, responseType };
   }
 
   throw new Error('Invalid query');

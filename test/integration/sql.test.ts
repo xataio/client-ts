@@ -287,4 +287,89 @@ describe('SQL proxy', () => {
     });
     expect(records).toBeDefined();
   });
+
+  test("calling xata.sql with response type 'array' returns the correct result", async () => {
+    const teams = await xata.db.teams.create([{ name: '[C] Cars' }, { name: '[C] Planes' }]);
+
+    const { rows, warning, columns } = await xata.sql({
+      statement: `SELECT * FROM teams WHERE name LIKE '[C] %'`,
+      responseType: 'array'
+    });
+
+    expect(warning).toBeUndefined();
+    expect(rows).toHaveLength(2);
+
+    expect(columns).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "id",
+          "type": "text",
+        },
+        {
+          "name": "xata.version",
+          "type": "int4",
+        },
+        {
+          "name": "xata.createdAt",
+          "type": "timestamptz",
+        },
+        {
+          "name": "xata.updatedAt",
+          "type": "timestamptz",
+        },
+        {
+          "name": "name",
+          "type": "text",
+        },
+        {
+          "name": "description",
+          "type": "text",
+        },
+        {
+          "name": "labels",
+          "type": "_text",
+        },
+        {
+          "name": "index",
+          "type": "int8",
+        },
+        {
+          "name": "rating",
+          "type": "float8",
+        },
+        {
+          "name": "founded_date",
+          "type": "timestamptz",
+        },
+        {
+          "name": "email",
+          "type": "text",
+        },
+        {
+          "name": "plan",
+          "type": "text",
+        },
+        {
+          "name": "dark",
+          "type": "bool",
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+        },
+        {
+          "name": "owner",
+          "type": "text",
+        },
+      ]
+    `);
+
+    const record1 = rows.find((row) => row[0] === teams[0].id);
+    const record2 = rows.find((row) => row[0] === teams[1].id);
+
+    expect(record1).toBeDefined();
+    expect(record1?.[4]).toBe('[C] Cars');
+    expect(record2).toBeDefined();
+    expect(record2?.[4]).toBe('[C] Planes');
+  });
 });
