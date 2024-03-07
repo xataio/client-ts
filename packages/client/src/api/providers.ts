@@ -58,18 +58,18 @@ export function buildProviderString(provider: HostProvider): string {
 
 export function parseWorkspacesUrlParts(
   url: string
-): { workspace: string; region: string; database: string; host: HostAliases } | null {
+): { workspace: string; region: string; database: string; branch?: string; host: HostAliases } | null {
   if (!isString(url)) return null;
 
   const matches = {
-    production: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh\/db\/(.*)/),
-    staging: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev\/db\/(.*)/),
-    dev: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev\/db\/(.*)/),
-    local: url.match(/(?:https?:\/\/)?([^.]+)(?:\.([^.]+))\.localhost:(\d+)/)
+    production: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh\/db\/([^:]+):?(.*)?/),
+    staging: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev\/db\/([^:]+):?(.*)?/),
+    dev: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev\/db\/([^:]+):?(.*)?/),
+    local: url.match(/(?:https?:\/\/)?([^.]+)(?:\.([^.]+))\.localhost:([^:]+):?(.*)?/)
   };
 
   const [host, match] = Object.entries(matches).find(([, match]) => match !== null) ?? [];
   if (!isHostProviderAlias(host) || !match) return null;
 
-  return { workspace: match[1], region: match[2], database: match[3], host };
+  return { workspace: match[1], region: match[2], database: match[3], branch: match[4], host };
 }
