@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.29.3
+
+### Patch Changes
+
+- [#1399](https://github.com/xataio/client-ts/pull/1399) [`02053fb`](https://github.com/xataio/client-ts/commit/02053fbb10479b8e9453691f957d3235762555aa) Thanks [@SferaDev](https://github.com/SferaDev)! - Expose `xata.sql.connectionString` helper
+
+- [#1398](https://github.com/xataio/client-ts/pull/1398) [`e27cb74`](https://github.com/xataio/client-ts/commit/e27cb74143aa9b6c654713878e5d3776858e5290) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for array response type
+
 ## 0.29.2
 
 ### Patch Changes

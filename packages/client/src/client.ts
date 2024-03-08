@@ -52,7 +52,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         ...this.#getFetchProps(safeOptions),
         cache: safeOptions.cache,
         host: safeOptions.host,
-        tables
+        tables,
+        branch: safeOptions.branch
       };
 
       const db = new SchemaPlugin().build(pluginOptions);

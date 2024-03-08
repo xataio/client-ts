@@ -40,7 +40,7 @@ export type ApplyMigrationRequestBody = {
   operations: {
     [key: string]: any;
   }[];
-  adaptTable?: boolean;
+  adaptTables?: boolean;
 };
 
 export type ApplyMigrationVariables = {
@@ -324,8 +324,12 @@ export type UpdateDatabaseSettingsError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type UpdateDatabaseSettingsRequestBody = {
+  searchEnabled?: boolean;
+};
+
 export type UpdateDatabaseSettingsVariables = {
-  body: Schemas.DatabaseSettings;
+  body?: UpdateDatabaseSettingsRequestBody;
   pathParams: UpdateDatabaseSettingsPathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -336,7 +340,7 @@ export const updateDatabaseSettings = (variables: UpdateDatabaseSettingsVariable
   dataPlaneFetch<
     Schemas.DatabaseSettings,
     UpdateDatabaseSettingsError,
-    Schemas.DatabaseSettings,
+    UpdateDatabaseSettingsRequestBody,
     {},
     {},
     UpdateDatabaseSettingsPathParams

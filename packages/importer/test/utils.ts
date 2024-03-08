@@ -22,5 +22,8 @@ export const getXataClientWithPlugin = () => {
     import: new XataImportPlugin()
   });
 
-  return new XataClient({ apiKey: 'xau_test123', databaseURL: 'https://something.com' });
+  return new XataClient({
+    apiKey: 'xau_test123',
+    databaseURL: 'https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb'
+  });
 };

@@ -9,4 +9,5 @@ export type XataPluginOptions = ApiExtraProps & {
   cache: CacheImpl;
   host: HostProvider;
   tables: Schemas.Table[];
+  branch: string;
 };

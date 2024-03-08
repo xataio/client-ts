@@ -1,6 +1,6 @@
-import { sqlQuery } from '../api';
+import { HostProvider, parseWorkspacesUrlParts, sqlQuery } from '../api';
 import { XataPlugin, XataPluginOptions } from '../plugins';
-import { isObject } from '../util/lang';
+import { isObject, isString } from '../util/lang';
 import { prepareParams } from './parameters';
 
 export type SQLQueryParams<T = any[]> = {
@@ -71,7 +71,7 @@ export type SQLQueryResult<T, Mode extends SQLResponseType = 'json'> = Mode exte
   ? SQLQueryResultArray
   : never;
 
-export type SQLPluginResult = <T, Query extends SQLQuery = SQLQuery>(
+type SQLPluginFunction = <T, Query extends SQLQuery = SQLQuery>(
   query: Query,
   ...parameters: any[]
 ) => Promise<
@@ -85,9 +85,18 @@ export type SQLPluginResult = <T, Query extends SQLQuery = SQLQuery>(
   >
 >;
 
+export type SQLPluginResult = SQLPluginFunction & {
+  /**
+   * Connection string to use when connecting to the database.
+   * It includes the workspace, region, database and branch.
+   * Connects with the same credentials as the Xata client.
+   */
+  connectionString: string;
+};
+
 export class SQLPlugin extends XataPlugin {
   build(pluginOptions: XataPluginOptions): SQLPluginResult {
-    return async (query: SQLQuery, ...parameters: any[]) => {
+    const sqlFunction = async (query: SQLQuery, ...parameters: any[]) => {
       if (!isParamsObject(query) && (!isTemplateStringsArray(query) || !Array.isArray(parameters))) {
         throw new Error('Invalid usage of `xata.sql`. Please use it as a tagged template or with an object.');
       }
@@ -107,6 +116,10 @@ export class SQLPlugin extends XataPlugin {
 
       return { records, rows, warning, columns } as any;
     };
+
+    sqlFunction.connectionString = buildConnectionString(pluginOptions);
+
+    return sqlFunction;
   }
 }
 
@@ -117,4 +130,35 @@ function isTemplateStringsArray(strings: unknown): strings is TemplateStringsArr
 
 function isParamsObject(params: unknown): params is SQLQueryParams {
   return isObject(params) && 'statement' in params;
+}
+
+function buildDomain(host: HostProvider, region: string): string {
+  switch (host) {
+    case 'production':
+      return `${region}.sql.xata.sh`;
+    case 'staging':
+      return `${region}.sql.staging-xata.dev`;
+    case 'dev':
+      return `${region}.sql.dev-xata.dev`;
+    case 'local':
+      return 'localhost:7654';
+    default:
+      throw new Error('Invalid host provider');
+  }
+}
+
+function buildConnectionString({ apiKey, workspacesApiUrl, branch }: XataPluginOptions): string {
+  const url = isString(workspacesApiUrl) ? workspacesApiUrl : workspacesApiUrl('', {});
+  const parts = parseWorkspacesUrlParts(url);
+  if (!parts) throw new Error('Invalid workspaces URL');
+
+  const { workspace: workspaceSlug, region, database, host } = parts;
+  const domain = buildDomain(host, region);
+  const workspace = workspaceSlug.split('-').pop();
+
+  if (!workspace || !region || !database || !apiKey || !branch) {
+    throw new Error('Unable to build xata connection string');
+  }
+
+  return `postgresql://${workspace}:${apiKey}@${domain}/${database}:${branch}?sslmode=require`;
 }
