@@ -1,5 +1,5 @@
 import { MigrationConfig, readMigrationFiles } from 'drizzle-orm/migrator';
-import type { XataDatabase } from './driver.js';
+import type { XataDatabase } from './driver';
 
 export async function migrate<TSchema extends Record<string, unknown>>(
   db: XataDatabase<TSchema>,
