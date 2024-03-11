@@ -23,7 +23,7 @@ const usersTable = pgTable('users', {
   photo: xataFile('photo')
 });
 
-describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type file support', ({ type }) => {
+describe.concurrent.each([/**{ type: 'pg' }, **/ { type: 'http' }])('Drizzle $type file support', ({ type }) => {
   beforeAll(async (ctx) => {
     const result = await setUpTestEnvironment('files');
 

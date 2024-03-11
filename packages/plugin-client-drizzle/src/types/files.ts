@@ -22,7 +22,7 @@ export const xataFile = (name: string) =>
     },
     fromDriver(value: unknown): PgXataFile {
       if (typeof value !== 'object' || Array.isArray(value)) {
-        throw new Error('Unable to parse xata file array from driver data');
+        throw new Error('Unable to parse xata file from driver data');
       }
 
       return value as PgXataFile;
