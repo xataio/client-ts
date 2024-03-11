@@ -35,6 +35,6 @@
     "drizzle-orm": "^0.30.1"
   },
   "peerDependencies": {
-    "drizzle-orm": "^0.28.5"
+    "drizzle-orm": "*"
   }
 }
