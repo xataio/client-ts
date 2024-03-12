@@ -111,6 +111,7 @@ export type Workspace = WorkspaceMeta & {
 
 export type WorkspaceSettings = {
   postgresEnabled: boolean;
+  dedicatedClusters: boolean;
 };
 
 export type WorkspaceMember = {
