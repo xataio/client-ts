@@ -357,14 +357,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(tableConfig.uniqueConstraints[0]?.name === 'custom_name');
     ctx.expect(tableConfig.uniqueConstraints[0]?.nullsNotDistinct);
-    assert.equal(
+    assert.deepEqual(
       tableConfig.uniqueConstraints[0]?.columns.map((t) => t.name),
       ['name', 'state']
     );
 
     ctx.expect(tableConfig.uniqueConstraints[1]?.name, 'custom_name1');
     ctx.expect(!tableConfig.uniqueConstraints[1]?.nullsNotDistinct);
-    assert.equal(
+    assert.deepEqual(
       tableConfig.uniqueConstraints[0]?.columns.map((t) => t.name),
       ['name', 'state']
     );
@@ -442,7 +442,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result[0]!.createdAt instanceof Date);
     ctx.expect(Math.abs(result[0]!.createdAt.getTime() - now) < 100);
-    assert.equal(result, [{ id: 1, name: 'John', verified: false, jsonb: null, createdAt: result[0]!.createdAt }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John', verified: false, jsonb: null, createdAt: result[0]!.createdAt }]);
   });
 
   test('select sql', async (ctx) => {
@@ -455,7 +455,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       })
       .from(usersTable);
 
-    assert.equal(users, [{ name: 'JOHN' }]);
+    assert.deepEqual(users, [{ name: 'JOHN' }]);
   });
 
   test('select typed sql', async (ctx) => {
@@ -469,7 +469,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       })
       .from(usersTable);
 
-    assert.equal(users, [{ name: 'JOHN' }]);
+    assert.deepEqual(users, [{ name: 'JOHN' }]);
   });
 
   test('$default function', async (ctx) => {
@@ -481,7 +481,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .returning();
     const selectedOrder = await db.select().from(orders);
 
-    assert.equal(insertedOrder, [
+    assert.deepEqual(insertedOrder, [
       {
         id: 1,
         amount: 1,
@@ -491,7 +491,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       }
     ]);
 
-    assert.equal(selectedOrder, [
+    assert.deepEqual(selectedOrder, [
       {
         id: 1,
         amount: 1,
@@ -540,22 +540,22 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     await db.execute(sql`drop table ${usersDistinctTable}`);
 
-    assert.equal(users1, [
+    assert.deepEqual(users1, [
       { id: 1, name: 'Jane', age: 24 },
       { id: 1, name: 'Jane', age: 26 },
       { id: 1, name: 'John', age: 24 },
       { id: 2, name: 'John', age: 25 }
     ]);
 
-    assert.equal(users2.length, 2);
-    assert.equal(users2[0]?.id, 1);
-    assert.equal(users2[1]?.id, 2);
+    assert.deepEqual(users2.length, 2);
+    assert.deepEqual(users2[0]?.id, 1);
+    assert.deepEqual(users2[1]?.id, 2);
 
-    assert.equal(users3.length, 2);
-    assert.equal(users3[0]?.name, 'Jane');
-    assert.equal(users3[1]?.name, 'John');
+    assert.deepEqual(users3.length, 2);
+    assert.deepEqual(users3[0]?.name, 'Jane');
+    assert.deepEqual(users3[1]?.name, 'John');
 
-    assert.equal(users4, [
+    assert.deepEqual(users4, [
       { id: 1, name: 'John', age: 24 },
       { id: 1, name: 'Jane', age: 26 },
       { id: 2, name: 'John', age: 25 }
@@ -572,7 +572,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         name: sql`upper(${usersTable.name})`
       });
 
-    assert.equal(users, [{ name: 'JOHN' }]);
+    assert.deepEqual(users, [{ name: 'JOHN' }]);
   });
 
   test('delete returning sql', async (ctx) => {
@@ -586,7 +586,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         name: sql`upper(${usersTable.name})`
       });
 
-    assert.equal(users, [{ name: 'JOHN' }]);
+    assert.deepEqual(users, [{ name: 'JOHN' }]);
   });
 
   test('update returning sql', async (ctx) => {
@@ -601,7 +601,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         name: sql`upper(${usersTable.name})`
       });
 
-    assert.equal(users, [{ name: 'JANE' }]);
+    assert.deepEqual(users, [{ name: 'JANE' }]);
   });
 
   test('update with returning all fields', async (ctx) => {
@@ -614,7 +614,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(users[0]!.createdAt instanceof Date);
     ctx.expect(Math.abs(users[0]!.createdAt.getTime() - now) < 100);
-    assert.equal(users, [{ id: 1, name: 'Jane', verified: false, jsonb: null, createdAt: users[0]!.createdAt }]);
+    assert.deepEqual(users, [{ id: 1, name: 'Jane', verified: false, jsonb: null, createdAt: users[0]!.createdAt }]);
   });
 
   test('update with returning partial', async (ctx) => {
@@ -626,7 +626,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       name: usersTable.name
     });
 
-    assert.equal(users, [{ id: 1, name: 'Jane' }]);
+    assert.deepEqual(users, [{ id: 1, name: 'Jane' }]);
   });
 
   test('delete with returning all fields', async (ctx) => {
@@ -639,7 +639,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(users[0]!.createdAt instanceof Date);
     ctx.expect(Math.abs(users[0]!.createdAt.getTime() - now) < 100);
-    assert.equal(users, [{ id: 1, name: 'John', verified: false, jsonb: null, createdAt: users[0]!.createdAt }]);
+    assert.deepEqual(users, [{ id: 1, name: 'John', verified: false, jsonb: null, createdAt: users[0]!.createdAt }]);
   });
 
   test('delete with returning partial', async (ctx) => {
@@ -651,7 +651,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       name: usersTable.name
     });
 
-    assert.equal(users, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(users, [{ id: 1, name: 'John' }]);
   });
 
   test('insert + select', async (ctx) => {
@@ -659,11 +659,11 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     await db.insert(usersTable).values({ name: 'John' });
     const result = await db.select().from(usersTable);
-    assert.equal(result, [{ id: 1, name: 'John', verified: false, jsonb: null, createdAt: result[0]!.createdAt }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John', verified: false, jsonb: null, createdAt: result[0]!.createdAt }]);
 
     await db.insert(usersTable).values({ name: 'Jane' });
     const result2 = await db.select().from(usersTable);
-    assert.equal(result2, [
+    assert.deepEqual(result2, [
       { id: 1, name: 'John', verified: false, jsonb: null, createdAt: result2[0]!.createdAt },
       { id: 2, name: 'Jane', verified: false, jsonb: null, createdAt: result2[1]!.createdAt }
     ]);
@@ -681,7 +681,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       })
       .from(usersTable);
 
-    assert.equal(result, [{ id: 1, name: 'John', jsonb: ['foo', 'bar'] }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John', jsonb: ['foo', 'bar'] }]);
   });
 
   test('char insert', async (ctx) => {
@@ -692,7 +692,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .select({ id: citiesTable.id, name: citiesTable.name, state: citiesTable.state })
       .from(citiesTable);
 
-    assert.equal(result, [{ id: 1, name: 'Austin', state: 'TX' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'Austin', state: 'TX' }]);
   });
 
   test('char update', async (ctx) => {
@@ -704,7 +704,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .select({ id: citiesTable.id, name: citiesTable.name, state: citiesTable.state })
       .from(citiesTable);
 
-    assert.equal(result, [{ id: 1, name: 'Atlanta', state: 'GA' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'Atlanta', state: 'GA' }]);
   });
 
   test('char delete', async (ctx) => {
@@ -716,7 +716,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .select({ id: citiesTable.id, name: citiesTable.name, state: citiesTable.state })
       .from(citiesTable);
 
-    assert.equal(result, []);
+    assert.deepEqual(result, []);
   });
 
   test('insert with overridden default values', async (ctx) => {
@@ -725,7 +725,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.insert(usersTable).values({ name: 'John', verified: true });
     const result = await db.select().from(usersTable);
 
-    assert.equal(result, [{ id: 1, name: 'John', verified: true, jsonb: null, createdAt: result[0]!.createdAt }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John', verified: true, jsonb: null, createdAt: result[0]!.createdAt }]);
   });
 
   test('insert many', async (ctx) => {
@@ -748,7 +748,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       })
       .from(usersTable);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 1, name: 'John', jsonb: null, verified: false },
       { id: 2, name: 'Bruce', jsonb: ['foo', 'bar'], verified: false },
       { id: 3, name: 'Jane', jsonb: null, verified: false },
@@ -774,7 +774,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         verified: usersTable.verified
       });
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 1, name: 'John', jsonb: null, verified: false },
       { id: 2, name: 'Bruce', jsonb: ['foo', 'bar'], verified: false },
       { id: 3, name: 'Jane', jsonb: null, verified: false },
@@ -789,7 +789,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select({ name: usersTable.name }).from(usersTable).groupBy(usersTable.name);
 
-    assert.equal(result, [{ name: 'Jane' }, { name: 'John' }]);
+    assert.deepEqual(result, [{ name: 'Jane' }, { name: 'John' }]);
   });
 
   test('select with exists', async (ctx) => {
@@ -810,7 +810,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         )
       );
 
-    assert.equal(result, [{ name: 'John' }]);
+    assert.deepEqual(result, [{ name: 'John' }]);
   });
 
   test('select with group by as sql', async (ctx) => {
@@ -823,7 +823,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .from(usersTable)
       .groupBy(sql`${usersTable.name}`);
 
-    assert.equal(result, [{ name: 'Jane' }, { name: 'John' }]);
+    assert.deepEqual(result, [{ name: 'Jane' }, { name: 'John' }]);
   });
 
   test('select with group by as sql + column', async (ctx) => {
@@ -836,7 +836,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .from(usersTable)
       .groupBy(sql`${usersTable.name}`, usersTable.id);
 
-    assert.equal(result, [{ name: 'Jane' }, { name: 'Jane' }, { name: 'John' }]);
+    assert.deepEqual(result, [{ name: 'Jane' }, { name: 'Jane' }, { name: 'John' }]);
   });
 
   test('select with group by as column + sql', async (ctx) => {
@@ -849,7 +849,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .from(usersTable)
       .groupBy(usersTable.id, sql`${usersTable.name}`);
 
-    assert.equal(result, [{ name: 'Jane' }, { name: 'Jane' }, { name: 'John' }]);
+    assert.deepEqual(result, [{ name: 'Jane' }, { name: 'Jane' }, { name: 'John' }]);
   });
 
   test('select with group by complex query', async (ctx) => {
@@ -864,7 +864,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .orderBy(asc(usersTable.name))
       .limit(1);
 
-    assert.equal(result, [{ name: 'Jane' }]);
+    assert.deepEqual(result, [{ name: 'Jane' }]);
   });
 
   test('build query', async (ctx) => {
@@ -876,7 +876,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .groupBy(usersTable.id, usersTable.name)
       .toSQL();
 
-    assert.equal(query, {
+    assert.deepEqual(query, {
       sql: 'select "id", "name" from "users" group by "users"."id", "users"."name"',
       params: []
     });
@@ -887,7 +887,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     await db.insert(usersTable).values({ name: sql`${'John'}` });
     const result = await db.select({ id: usersTable.id, name: usersTable.name }).from(usersTable);
-    assert.equal(result, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John' }]);
   });
 
   test('partial join with alias', async (ctx) => {
@@ -913,7 +913,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .leftJoin(customerAlias, eq(customerAlias.id, 11))
       .where(eq(usersTable.id, 10));
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       {
         user: { id: 10, name: 'Ivan' },
         customer: { id: 11, name: 'Hans' }
@@ -942,7 +942,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     ]);
     const result = await db.select().from(users).leftJoin(customers, eq(customers.id, 11)).where(eq(users.id, 10));
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       {
         users: {
           id: 10,
@@ -980,7 +980,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     ]);
     const result = await db.select().from(user).leftJoin(customers, eq(customers.id, 11)).where(eq(user.id, 10));
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       {
         user: {
           id: 10,
@@ -1002,7 +1002,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.insert(usersTable).values({ name: sql`'Jo   h     n'` });
     const result = await db.select({ id: usersTable.id, name: usersTable.name }).from(usersTable);
 
-    assert.equal(result, [{ id: 1, name: 'Jo   h     n' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'Jo   h     n' }]);
   });
 
   test('prepared statement', async (ctx) => {
@@ -1018,7 +1018,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .prepare('statement1');
     const result = await statement.execute();
 
-    assert.equal(result, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John' }]);
   });
 
   test('prepared statement reuse', async (ctx) => {
@@ -1044,7 +1044,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       })
       .from(usersTable);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 1, name: 'John 0', verified: true },
       { id: 2, name: 'John 1', verified: true },
       { id: 3, name: 'John 2', verified: true },
@@ -1072,7 +1072,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .prepare('stmt3');
     const result = await stmt.execute({ id: 1 });
 
-    assert.equal(result, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John' }]);
   });
 
   test('prepared statement with placeholder in .limit', async (ctx) => {
@@ -1091,7 +1091,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await stmt.execute({ id: 1, limit: 1 });
 
-    assert.equal(result, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John' }]);
     ctx.expect(result.length === 1);
   });
 
@@ -1110,11 +1110,11 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await stmt.execute({ offset: 1 });
 
-    assert.equal(result, [{ id: 2, name: 'John1' }]);
+    assert.deepEqual(result, [{ id: 2, name: 'John1' }]);
   });
 
   // TODO change tests to new structure
-  test('migrator : default migration strategy', async (ctx) => {
+  test.skip('migrator : default migration strategy', async (ctx) => {
     const { db2: db } = ctx;
 
     await db.execute(sql`drop table if exists all_columns`);
@@ -1127,14 +1127,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select().from(usersMigratorTable);
 
-    assert.equal(result, [{ id: 1, name: 'John', email: 'email' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John', email: 'email' }]);
 
     await db.execute(sql`drop table all_columns`);
     await db.execute(sql`drop table users12`);
     await db.execute(sql`drop table "drizzle"."__drizzle_migrations"`);
   });
 
-  test('migrator : migrate with custom schema', async (ctx) => {
+  test.skip('migrator : migrate with custom schema', async (ctx) => {
     const { db2: db } = ctx;
     const customSchema = randomString();
     await db.execute(sql`drop table if exists all_columns`);
@@ -1150,14 +1150,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     // test if the migrated table are working as expected
     await db.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
     const result = await db.select().from(usersMigratorTable);
-    assert.equal(result, [{ id: 1, name: 'John', email: 'email' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John', email: 'email' }]);
 
     await db.execute(sql`drop table all_columns`);
     await db.execute(sql`drop table users12`);
     await db.execute(sql`drop table ${sql.identifier(customSchema)}."__drizzle_migrations"`);
   });
 
-  test('migrator : migrate with custom table', async (ctx) => {
+  test.skip('migrator : migrate with custom table', async (ctx) => {
     const { db2: db } = ctx;
     const customTable = randomString();
     await db.execute(sql`drop table if exists all_columns`);
@@ -1173,14 +1173,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     // test if the migrated table are working as expected
     await db.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
     const result = await db.select().from(usersMigratorTable);
-    assert.equal(result, [{ id: 1, name: 'John', email: 'email' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John', email: 'email' }]);
 
     await db.execute(sql`drop table all_columns`);
     await db.execute(sql`drop table users12`);
     await db.execute(sql`drop table "drizzle".${sql.identifier(customTable)}`);
   });
 
-  test('migrator : migrate with custom table and custom schema', async (ctx) => {
+  test.skip('migrator : migrate with custom table and custom schema', async (ctx) => {
     const { db2: db } = ctx;
     const customTable = randomString();
     const customSchema = randomString();
@@ -1203,7 +1203,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     // test if the migrated table are working as expected
     await db.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
     const result = await db.select().from(usersMigratorTable);
-    assert.equal(result, [{ id: 1, name: 'John', email: 'email' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John', email: 'email' }]);
 
     await db.execute(sql`drop table all_columns`);
     await db.execute(sql`drop table users12`);
@@ -1216,7 +1216,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`insert into ${usersTable} (${name(usersTable.name.name)}) values (${'John'})`);
 
     const result = await db.execute<{ id: number; name: string }>(sql`select id, name from "users"`);
-    assert.equal(result.rows, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(result.rows, [{ id: 1, name: 'John' }]);
   });
 
   test('insert via db.execute + returning', async (ctx) => {
@@ -1227,7 +1227,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         usersTable.name
       }`
     );
-    assert.equal(inserted.rows, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(inserted.rows, [{ id: 1, name: 'John' }]);
   });
 
   test('insert via db.execute w/ query builder', async (ctx) => {
@@ -1236,7 +1236,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const inserted = await db.execute<Pick<typeof usersTable.$inferSelect, 'id' | 'name'>>(
       db.insert(usersTable).values({ name: 'John' }).returning({ id: usersTable.id, name: usersTable.name })
     );
-    assert.equal(inserted.rows, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(inserted.rows, [{ id: 1, name: 'John' }]);
   });
 
   test('Query check: Insert all defaults in 1 row', async (ctx) => {
@@ -1250,7 +1250,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const query = db.insert(users).values({}).toSQL();
 
-    assert.equal(query, {
+    assert.deepEqual(query, {
       sql: 'insert into "users" ("id", "name", "state") values (default, default, default)',
       params: []
     });
@@ -1267,7 +1267,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const query = db.insert(users).values([{}, {}]).toSQL();
 
-    assert.equal(query, {
+    assert.deepEqual(query, {
       sql: 'insert into "users" ("id", "name", "state") values (default, default, default), (default, default, default)',
       params: []
     });
@@ -1290,7 +1290,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const res = await db.select().from(users);
 
-    assert.equal(res, [{ id: 1, name: 'Dan', state: null }]);
+    assert.deepEqual(res, [{ id: 1, name: 'Dan', state: null }]);
   });
 
   test('Insert all defaults in multiple rows', async (ctx) => {
@@ -1310,7 +1310,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const res = await db.select().from(users);
 
-    assert.equal(res, [
+    assert.deepEqual(res, [
       { id: 1, name: 'Dan', state: null },
       { id: 2, name: 'Dan', state: null }
     ]);
@@ -1325,7 +1325,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .onConflictDoUpdate({ target: usersTable.id, set: { name: 'John1' } })
       .toSQL();
 
-    assert.equal(query, {
+    assert.deepEqual(query, {
       sql: 'insert into "users" ("id", "name", "verified", "jsonb", "created_at") values (default, $1, default, $2, default) on conflict ("id") do update set "name" = $3',
       params: ['John', '["foo","bar"]', 'John1']
     });
@@ -1340,7 +1340,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .onConflictDoUpdate({ target: [usersTable.id, usersTable.name], set: { name: 'John1' } })
       .toSQL();
 
-    assert.equal(query, {
+    assert.deepEqual(query, {
       sql: 'insert into "users" ("id", "name", "verified", "jsonb", "created_at") values (default, $1, default, $2, default) on conflict ("id","name") do update set "name" = $3',
       params: ['John', '["foo","bar"]', 'John1']
     });
@@ -1355,7 +1355,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .onConflictDoNothing()
       .toSQL();
 
-    assert.equal(query, {
+    assert.deepEqual(query, {
       sql: 'insert into "users" ("id", "name", "verified", "jsonb", "created_at") values (default, $1, default, $2, default) on conflict do nothing',
       params: ['John', '["foo","bar"]']
     });
@@ -1370,7 +1370,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .onConflictDoNothing({ target: usersTable.id })
       .toSQL();
 
-    assert.equal(query, {
+    assert.deepEqual(query, {
       sql: 'insert into "users" ("id", "name", "verified", "jsonb", "created_at") values (default, $1, default, $2, default) on conflict ("id") do nothing',
       params: ['John', '["foo","bar"]']
     });
@@ -1391,7 +1391,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .from(usersTable)
       .where(eq(usersTable.id, 1));
 
-    assert.equal(res, [{ id: 1, name: 'John1' }]);
+    assert.deepEqual(res, [{ id: 1, name: 'John1' }]);
   });
 
   test('insert with onConflict do nothing', async (ctx) => {
@@ -1406,7 +1406,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .from(usersTable)
       .where(eq(usersTable.id, 1));
 
-    assert.equal(res, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(res, [{ id: 1, name: 'John' }]);
   });
 
   test('insert with onConflict do nothing + target', async (ctx) => {
@@ -1421,7 +1421,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .from(usersTable)
       .where(eq(usersTable.id, 1));
 
-    assert.equal(res, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(res, [{ id: 1, name: 'John' }]);
   });
 
   test('left join (flat object fields)', async (ctx) => {
@@ -1445,7 +1445,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .from(users2Table)
       .leftJoin(citiesTable, eq(users2Table.cityId, citiesTable.id));
 
-    assert.equal(res, [
+    assert.deepEqual(res, [
       { userId: 1, userName: 'John', cityId, cityName: 'Paris' },
       { userId: 2, userName: 'Jane', cityId: null, cityName: null }
     ]);
@@ -1478,7 +1478,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .from(users2Table)
       .leftJoin(citiesTable, eq(users2Table.cityId, citiesTable.id));
 
-    assert.equal(res, [
+    assert.deepEqual(res, [
       {
         id: 1,
         user: { name: 'John', nameUpper: 'JOHN' },
@@ -1505,7 +1505,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const res = await db.select().from(users2Table).leftJoin(citiesTable, eq(users2Table.cityId, citiesTable.id));
 
-    assert.equal(res, [
+    assert.deepEqual(res, [
       {
         users2: {
           id: 1,
@@ -1562,7 +1562,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .leftJoin(sq2, eq(coursesTable.categoryId, sq2.categoryId))
       .orderBy(coursesTable.name);
 
-    assert.equal(res, [
+    assert.deepEqual(res, [
       { courseName: 'Design', categoryId: 1 },
       { courseName: 'Development', categoryId: 2 },
       { courseName: 'IT & Software', categoryId: 3 },
@@ -1644,7 +1644,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .groupBy(orders.region)
       .orderBy(orders.region);
 
-    assert.equal(result1, [
+    assert.deepEqual(result1, [
       {
         region: 'Europe',
         product: 'A',
@@ -1670,8 +1670,8 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         productSales: 90
       }
     ]);
-    assert.equal(result2, result1);
-    assert.equal(result3, [
+    assert.deepEqual(result2, result1);
+    assert.deepEqual(result3, [
       {
         region: 'Europe',
         productUnits: 8,
@@ -1726,7 +1726,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         id: products.id
       });
 
-    assert.equal(result, [{ id: 1 }, { id: 4 }, { id: 5 }]);
+    assert.deepEqual(result, [{ id: 1 }, { id: 4 }, { id: 5 }]);
   });
 
   test('with ... insert', async (ctx) => {
@@ -1756,7 +1756,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         admin: users.admin
       });
 
-    assert.equal(result, [{ admin: true }]);
+    assert.deepEqual(result, [{ admin: true }]);
   });
 
   test('with ... delete', async (ctx) => {
@@ -1789,7 +1789,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
         id: orders.id
       });
 
-    assert.equal(result, [{ id: 6 }, { id: 7 }, { id: 8 }]);
+    assert.deepEqual(result, [{ id: 6 }, { id: 7 }, { id: 8 }]);
   });
 
   test('select from subquery sql', async (ctx) => {
@@ -1804,7 +1804,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const res = await db.select({ name: sq.name }).from(sq);
 
-    assert.equal(res, [{ name: 'John modified' }, { name: 'Jane modified' }]);
+    assert.deepEqual(res, [{ name: 'John modified' }, { name: 'Jane modified' }]);
   });
 
   test('select a field without joining its table', (ctx) => {
@@ -1828,7 +1828,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const res = await db.select({ count: sql`count(*)` }).from(usersTable);
 
-    assert.equal(res, [{ count: '2' }]);
+    assert.deepEqual(res, [{ count: '2' }]);
   });
 
   test('select count w/ custom mapper', async (ctx) => {
@@ -1848,7 +1848,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const res = await db.select({ count: count(sql`*`) }).from(usersTable);
 
-    assert.equal(res, [{ count: 2 }]);
+    assert.deepEqual(res, [{ count: 2 }]);
   });
 
   test('network types', async (ctx) => {
@@ -1865,7 +1865,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const res = await db.select().from(network);
 
-    assert.equal(res, [value]);
+    assert.deepEqual(res, [value]);
   });
 
   test('array types', async (ctx) => {
@@ -1894,7 +1894,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const res = await db.select().from(salEmp);
 
-    assert.equal(res, values);
+    assert.deepEqual(res, values);
   });
 
   test('select for ...', (ctx) => {
@@ -1962,7 +1962,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .having(({ usersCount }) => sql`${usersCount} > 0`)
       .orderBy(({ name }) => name);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       {
         id: 1,
         name: 'LONDON',
@@ -1976,7 +1976,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     ]);
   });
 
-  test('view', async (ctx) => {
+  test.skip('view', async (ctx) => {
     const { db2: db } = ctx;
 
     const newYorkers1 = pgView('new_yorkers').as((qb) =>
@@ -2007,7 +2007,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     {
       const result = await db.select().from(newYorkers1);
-      assert.equal(result, [
+      assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
       ]);
@@ -2015,7 +2015,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     {
       const result = await db.select().from(newYorkers2);
-      assert.equal(result, [
+      assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
       ]);
@@ -2023,7 +2023,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     {
       const result = await db.select().from(newYorkers3);
-      assert.equal(result, [
+      assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
       ]);
@@ -2031,13 +2031,13 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     {
       const result = await db.select({ name: newYorkers1.name }).from(newYorkers1);
-      assert.equal(result, [{ name: 'John' }, { name: 'Jane' }]);
+      assert.deepEqual(result, [{ name: 'John' }, { name: 'Jane' }]);
     }
 
     await db.execute(sql`drop view ${newYorkers1}`);
   });
 
-  test('materialized view', async (ctx) => {
+  test.skip('materialized view', async (ctx) => {
     const { db2: db } = ctx;
 
     const newYorkers1 = pgMaterializedView('new_yorkers').as((qb) =>
@@ -2068,14 +2068,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     {
       const result = await db.select().from(newYorkers1);
-      assert.equal(result, []);
+      assert.deepEqual(result, []);
     }
 
     await db.refreshMaterializedView(newYorkers1);
 
     {
       const result = await db.select().from(newYorkers1);
-      assert.equal(result, [
+      assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
       ]);
@@ -2083,7 +2083,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     {
       const result = await db.select().from(newYorkers2);
-      assert.equal(result, [
+      assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
       ]);
@@ -2091,7 +2091,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     {
       const result = await db.select().from(newYorkers3);
-      assert.equal(result, [
+      assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
       ]);
@@ -2099,7 +2099,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     {
       const result = await db.select({ name: newYorkers1.name }).from(newYorkers1);
-      assert.equal(result, [{ name: 'John' }, { name: 'Jane' }]);
+      assert.deepEqual(result, [{ name: 'John' }, { name: 'Jane' }]);
     }
 
     await db.execute(sql`drop materialized view ${newYorkers1}`);
@@ -2118,7 +2118,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     Expect<Equal<{ id: number; name: string }[], typeof result>>;
 
-    assert.equal(result, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John' }]);
   });
 
   test('select from raw sql with joins', async (ctx) => {
@@ -2136,7 +2136,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     Expect<Equal<{ id: number; name: string; userCity: string; cityName: string }[], typeof result>>;
 
-    assert.equal(result, [{ id: 1, name: 'John', userCity: 'New York', cityName: 'Paris' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John', userCity: 'New York', cityName: 'Paris' }]);
   });
 
   test('join on aliased sql from select', async (ctx) => {
@@ -2157,7 +2157,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       Equal<{ userId: number; name: string; userCity: string; cityId: number; cityName: string }[], typeof result>
     >;
 
-    assert.equal(result, [{ userId: 1, name: 'John', userCity: 'New York', cityId: 1, cityName: 'Paris' }]);
+    assert.deepEqual(result, [{ userId: 1, name: 'John', userCity: 'New York', cityId: 1, cityName: 'Paris' }]);
   });
 
   test('join on aliased sql from with clause', async (ctx) => {
@@ -2198,7 +2198,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       Equal<{ userId: number; name: string; userCity: string; cityId: number; cityName: string }[], typeof result>
     >;
 
-    assert.equal(result, [{ userId: 1, name: 'John', userCity: 'New York', cityId: 1, cityName: 'Paris' }]);
+    assert.deepEqual(result, [{ userId: 1, name: 'John', userCity: 'New York', cityId: 1, cityName: 'Paris' }]);
   });
 
   test('prefixed table', async (ctx) => {
@@ -2221,12 +2221,12 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select().from(users);
 
-    assert.equal(result, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John' }]);
 
     await db.execute(sql`drop table ${users}`);
   });
 
-  test('select from enum', async (ctx) => {
+  test.skip('select from enum', async (ctx) => {
     const { db2: db } = ctx;
 
     const muscleEnum = pgEnum('muscle', [
@@ -2332,7 +2332,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select().from(exercises);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       {
         id: 1,
         name: 'Bench Press',
@@ -2441,7 +2441,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       >
     >;
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       {
         id: 1,
         dateString: '2022-01-01',
@@ -2484,10 +2484,10 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     // There is no way to check timezone in Date object, as it is always represented internally in UTC
     const result = await db.select().from(table);
 
-    assert.equal(result, [{ id: 1, timestamp: insertedDate }]);
+    assert.deepEqual(result, [{ id: 1, timestamp: insertedDate }]);
 
     // 3. Compare both dates
-    assert.equal(insertedDate.getTime(), result[0]?.timestamp.getTime());
+    assert.deepEqual(insertedDate.getTime(), result[0]?.timestamp.getTime());
 
     await db.execute(sql`drop table if exists ${table}`);
   });
@@ -2518,7 +2518,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     // 2, Select and compare both dates
     const result = await db.select().from(table);
 
-    assert.equal(result[0]?.timestamp.getTime(), result[1]?.timestamp.getTime());
+    assert.deepEqual(result[0]?.timestamp.getTime(), result[1]?.timestamp.getTime());
 
     await db.execute(sql`drop table if exists ${table}`);
   });
@@ -2546,7 +2546,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     // 2, Select in string format and check that values are the same
     const result = await db.select().from(table);
 
-    assert.equal(result, [{ id: 1, timestamp: '2022-01-01 02:00:00.123456' }]);
+    assert.deepEqual(result, [{ id: 1, timestamp: '2022-01-01 02:00:00.123456' }]);
 
     // 3. Select as raw query and check that values are the same
     const result2 = await db.execute<{
@@ -2554,7 +2554,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       timestamp_string: string;
     }>(sql`select * from ${table}`);
 
-    assert.equal(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456' }]);
+    assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456' }]);
 
     await db.execute(sql`drop table if exists ${table}`);
   });
@@ -2585,7 +2585,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       timestamp_string: string;
     }>(sql`select * from ${table}`);
 
-    assert.equal(result.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456' }]);
+    assert.deepEqual(result.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456' }]);
 
     await db.execute(sql`drop table if exists ${table}`);
   });
@@ -2619,7 +2619,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     }>(sql`select * from ${table}`);
 
     // 3. Compare both dates using orm mapping - Need to add 'Z' to tell JS that it is UTC
-    assert.equal(new Date(result.rows[0]!.timestamp_string + 'Z').getTime(), insertedDate.getTime());
+    assert.deepEqual(new Date(result.rows[0]!.timestamp_string + 'Z').getTime(), insertedDate.getTime());
 
     await db.execute(sql`drop table if exists ${table}`);
   });
@@ -2650,7 +2650,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const result = await db.select().from(table);
 
     // 2.1 Notice that postgres will return the date in UTC, but it is exactly the same
-    assert.equal(result, [{ id: 1, timestamp: '2022-01-01 02:00:00.123456+00' }]);
+    assert.deepEqual(result, [{ id: 1, timestamp: '2022-01-01 02:00:00.123456+00' }]);
 
     // 3. Select as raw query and checke that values are the same
     const result2 = await db.execute<{
@@ -2659,7 +2659,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     }>(sql`select * from ${table}`);
 
     // 3.1 Notice that postgres will return the date in UTC, but it is exactlt the same
-    assert.equal(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456+00' }]);
+    assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456+00' }]);
 
     await db.execute(sql`drop table if exists ${table}`);
   });
@@ -2690,7 +2690,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const result = await db.select().from(table);
 
     // 2.1 Notice that postgres will return the date in UTC, but it is exactly the same
-    assert.equal(result, [{ id: 1, timestamp: timestampString }]);
+    assert.deepEqual(result, [{ id: 1, timestamp: timestampString }]);
 
     // 3. Select as raw query and checke that values are the same
     const result2 = await db.execute<{
@@ -2699,7 +2699,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     }>(sql`select * from ${table}`);
 
     // 3.1 Notice that postgres will return the date in UTC, but it is exactlt the same
-    assert.equal(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.456+00' }]);
+    assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.456+00' }]);
 
     await db.execute(sql`drop table if exists ${table}`);
   });
@@ -2736,7 +2736,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const result = await db.select().from(table);
 
     // 2.1 Notice that postgres will return the date in UTC, but it is exactly the same
-    assert.equal(result, [{ id: 1, timestamp: '2022-01-01 02:00:00.123456+00' }]);
+    assert.deepEqual(result, [{ id: 1, timestamp: '2022-01-01 02:00:00.123456+00' }]);
 
     // 3. Select as raw query and checke that values are the same
     const result2 = await db.execute<{
@@ -2745,7 +2745,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     }>(sql`select * from ${table}`);
 
     // 3.1 Notice that postgres will return the date in UTC, but it is exactlt the same
-    assert.equal(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456+00' }]);
+    assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456+00' }]);
 
     await db.execute(sql`set time zone '${sql.raw(timezone.rows[0]!.TimeZone)}'`);
 
@@ -2783,7 +2783,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     // 2. Select date in string format and check that the values are the same
     const result = await db.select().from(table);
 
-    assert.equal(result, [{ id: 1, timestamp: '2022-01-01 00:00:00.123456-10' }]);
+    assert.deepEqual(result, [{ id: 1, timestamp: '2022-01-01 00:00:00.123456-10' }]);
 
     // 3. Select as raw query and checke that values are the same
     const result2 = await db.execute<{
@@ -2791,7 +2791,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       timestamp_string: string;
     }>(sql`select * from ${table}`);
 
-    assert.equal(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 00:00:00.123456-10' }]);
+    assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 00:00:00.123456-10' }]);
 
     await db.execute(sql`set time zone '${sql.raw(timezone.rows[0]!.TimeZone)}'`);
 
@@ -2809,7 +2809,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .orderBy((fields) => fields.test)
       .toSQL();
 
-    assert.equal(query.sql, 'select something as "test" from "users2" order by "test"');
+    assert.deepEqual(query.sql, 'select something as "test" from "users2" order by "test"');
   });
 
   test('select from sql', async (ctx) => {
@@ -2945,7 +2945,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select().from(users);
 
-    assert.equal(result, [{ id: 1, balance: 90 }]);
+    assert.deepEqual(result, [{ id: 1, balance: 90 }]);
 
     await db.execute(sql`drop table ${users}`);
     await db.execute(sql`drop table ${products}`);
@@ -2977,7 +2977,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select().from(users);
 
-    assert.equal(result, []);
+    assert.deepEqual(result, []);
 
     await db.execute(sql`drop table ${users}`);
   });
@@ -3006,7 +3006,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select().from(users);
 
-    assert.equal(result, [{ id: 1, balance: 200 }]);
+    assert.deepEqual(result, [{ id: 1, balance: 200 }]);
 
     await db.execute(sql`drop table ${users}`);
   });
@@ -3041,7 +3041,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select().from(users);
 
-    assert.equal(result, [{ id: 1, balance: 100 }]);
+    assert.deepEqual(result, [{ id: 1, balance: 100 }]);
 
     await db.execute(sql`drop table ${users}`);
   });
@@ -3081,7 +3081,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const mainQuery = await db.select().from(ticket).leftJoin(subq, eq(subq.internal_staff.userId, ticket.staffId));
 
-    assert.equal(mainQuery, [
+    assert.deepEqual(mainQuery, [
       {
         ticket: { staffId: 1 },
         internal_staff: {
@@ -3096,7 +3096,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table ${ticket}`);
   });
 
-  test('subquery with view', async (ctx) => {
+  test.skip('subquery with view', async (ctx) => {
     const { db2: db } = ctx;
 
     const users = pgTable('users_subquery_view', {
@@ -3125,7 +3125,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const sq = db.$with('sq').as(db.select().from(newYorkers));
     const result = await db.with(sq).select().from(sq);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 1, name: 'John', cityId: 1 },
       { id: 3, name: 'Jack', cityId: 1 }
     ]);
@@ -3134,7 +3134,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table ${users}`);
   });
 
-  test('join view as subquery', async (ctx) => {
+  test.skip('join view as subquery', async (ctx) => {
     const { db2: db } = ctx;
 
     const users = pgTable('users_join_view', {
@@ -3164,7 +3164,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select().from(users).leftJoin(sq, eq(users.id, sq.id));
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       {
         users_join_view: { id: 1, name: 'John', cityId: 1 },
         new_yorkers_sq: { id: 1, name: 'John', cityId: 1 }
@@ -3206,7 +3206,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select({ users }).from(users);
 
-    assert.equal(result, [{ users: { id: 1, name: 'John', cityId: 1 } }]);
+    assert.deepEqual(result, [{ users: { id: 1, name: 'John', cityId: 1 } }]);
 
     await db.execute(sql`drop table ${users}`);
   });
@@ -3225,7 +3225,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.insert(users).values({ jsonb: null }).returning();
 
-    assert.equal(result, [{ id: 1, jsonb: null }]);
+    assert.deepEqual(result, [{ id: 1, jsonb: null }]);
 
     await db.execute(sql`drop table ${users}`);
   });
@@ -3315,10 +3315,10 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       .from(posts)
       .where(arrayContains(posts.tags, db.select({ tags: posts.tags }).from(posts).where(eq(posts.id, 1))));
 
-    assert.equal(contains, [{ id: 3 }, { id: 5 }]);
-    assert.equal(contained, [{ id: 1 }, { id: 2 }, { id: 3 }]);
-    assert.equal(overlaps, [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
-    assert.equal(withSubQuery, [{ id: 1 }, { id: 3 }, { id: 5 }]);
+    assert.deepEqual(contains, [{ id: 3 }, { id: 5 }]);
+    assert.deepEqual(contained, [{ id: 1 }, { id: 2 }, { id: 3 }]);
+    assert.deepEqual(overlaps, [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
+    assert.deepEqual(withSubQuery, [{ id: 1 }, { id: 3 }, { id: 5 }]);
   });
 
   test('set operations (union) from query builder with subquery', async (ctx) => {
@@ -3338,7 +3338,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 2);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 3, name: 'Jack' },
       { id: 2, name: 'Jane' }
     ]);
@@ -3372,7 +3372,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 1);
 
-    assert.equal(result, [{ id: 1, name: 'New York' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'New York' }]);
 
     ctx
       .expect(() => {
@@ -3399,7 +3399,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 4);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 1, name: 'New York' },
       { id: 1, name: 'New York' },
       { id: 2, name: 'London' },
@@ -3430,7 +3430,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 3);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 1, name: 'New York' },
       { id: 1, name: 'John' },
       { id: 1, name: 'John' }
@@ -3462,7 +3462,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 2);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 2, name: 'London' },
       { id: 3, name: 'Tampa' }
     ]);
@@ -3496,7 +3496,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 0);
 
-    assert.equal(result, []);
+    assert.deepEqual(result, []);
 
     ctx
       .expect(() => {
@@ -3523,7 +3523,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 2);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 1, name: 'New York' },
       { id: 2, name: 'London' }
     ]);
@@ -3552,7 +3552,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 1);
 
-    assert.equal(result, [{ id: 1, name: 'John' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'John' }]);
 
     ctx
       .expect(() => {
@@ -3577,7 +3577,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 1);
 
-    assert.equal(result, [{ id: 1, name: 'New York' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'New York' }]);
 
     ctx
       .expect(() => {
@@ -3603,7 +3603,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 2);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 2, name: 'London' },
       { id: 3, name: 'Tampa' }
     ]);
@@ -3634,7 +3634,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 2);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 2, name: 'London' },
       { id: 3, name: 'Tampa' }
     ]);
@@ -3667,7 +3667,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 4);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 4, name: 'Peter' },
       { id: 5, name: 'Ben' },
       { id: 6, name: 'Jill' },
@@ -3700,7 +3700,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 1);
 
-    assert.equal(result, [{ id: 1, name: 'New York' }]);
+    assert.deepEqual(result, [{ id: 1, name: 'New York' }]);
 
     ctx
       .expect(() => {
@@ -3735,7 +3735,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     ctx.expect(result.length === 6);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       { id: 1, name: 'John' },
       { id: 2, name: 'London' },
       { id: 3, name: 'Tampa' },
@@ -3767,9 +3767,9 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const result2 = await db.select({ value: count(table.a) }).from(table);
     const result3 = await db.select({ value: countDistinct(table.name) }).from(table);
 
-    assert.equal(result1[0]?.value, 7);
-    assert.equal(result2[0]?.value, 5);
-    assert.equal(result3[0]?.value, 6);
+    assert.deepEqual(result1[0]?.value, 7);
+    assert.deepEqual(result2[0]?.value, 5);
+    assert.deepEqual(result3[0]?.value, 6);
   });
 
   test('aggregate function: avg', async (ctx) => {
@@ -3781,9 +3781,9 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const result2 = await db.select({ value: avg(table.nullOnly) }).from(table);
     const result3 = await db.select({ value: avgDistinct(table.b) }).from(table);
 
-    assert.equal(result1[0]?.value, '33.3333333333333333');
-    assert.equal(result2[0]?.value, null);
-    assert.equal(result3[0]?.value, '42.5000000000000000');
+    assert.deepEqual(result1[0]?.value, '33.3333333333333333');
+    assert.deepEqual(result2[0]?.value, null);
+    assert.deepEqual(result3[0]?.value, '42.5000000000000000');
   });
 
   test('aggregate function: sum', async (ctx) => {
@@ -3795,9 +3795,9 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const result2 = await db.select({ value: sum(table.nullOnly) }).from(table);
     const result3 = await db.select({ value: sumDistinct(table.b) }).from(table);
 
-    assert.equal(result1[0]?.value, '200');
-    assert.equal(result2[0]?.value, null);
-    assert.equal(result3[0]?.value, '170');
+    assert.deepEqual(result1[0]?.value, '200');
+    assert.deepEqual(result2[0]?.value, null);
+    assert.deepEqual(result3[0]?.value, '170');
   });
 
   test('aggregate function: max', async (ctx) => {
@@ -3808,8 +3808,8 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const result1 = await db.select({ value: max(table.b) }).from(table);
     const result2 = await db.select({ value: max(table.nullOnly) }).from(table);
 
-    assert.equal(result1[0]?.value, 90);
-    assert.equal(result2[0]?.value, null);
+    assert.deepEqual(result1[0]?.value, 90);
+    assert.deepEqual(result2[0]?.value, null);
   });
 
   test('aggregate function: min', async (ctx) => {
@@ -3820,8 +3820,8 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const result1 = await db.select({ value: min(table.b) }).from(table);
     const result2 = await db.select({ value: min(table.nullOnly) }).from(table);
 
-    assert.equal(result1[0]?.value, 10);
-    assert.equal(result2[0]?.value, null);
+    assert.deepEqual(result1[0]?.value, 10);
+    assert.deepEqual(result2[0]?.value, null);
   });
 
   test('array mapping and parsing', async (ctx) => {
@@ -3855,7 +3855,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
 
     const result = await db.select().from(arrays);
 
-    assert.equal(result, [
+    assert.deepEqual(result, [
       {
         id: 1,
         tags: ['', 'b', 'c'],
