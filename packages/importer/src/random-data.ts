@@ -46,8 +46,8 @@ function randomData(column: Schemas.Column) {
 
 function randomDataPgroll(column: Schemas.Column & { comment?: string; pgType: string }) {
   const columnCommentType = narrowStringType(column.comment);
-  // Note this will fail for invalid Xata columns
-  // that are foreign keys.
+  // Note that this is a best effort and seeding may fail for invalid Xata columns
+  // that are foreign keys, or have constraints such as length attached to them.
   switch (column.pgType) {
     case 'boolean':
     case 'bool':
