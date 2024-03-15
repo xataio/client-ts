@@ -2,49 +2,27 @@ import { fakerEN as faker } from '@faker-js/faker';
 import { Schemas } from '@xata.io/client';
 import { z } from 'zod';
 
-export function generateRandomData(table: Schemas.Table, size: number, pgRollEnabled?: boolean) {
+export function generateRandomData(table: Schemas.Table, size: number) {
   const records: Record<string, unknown>[] = [];
 
   for (let index = 0; index < size; index++) {
-    records.push(randomRecord(table.columns, pgRollEnabled));
+    // TODO fix type
+    records.push(randomRecord(table.columns as any));
   }
 
   return records;
 }
 
-function randomRecord(columns: Schemas.Column[], pgRollEnabled?: boolean) {
+function randomRecord(columns: (Schemas.Column & { comment?: string; pgType: string })[]) {
   const record: Record<string, unknown> = {};
   for (const column of columns) {
     // TODO column should contain pgType field from schema
-    record[column.name] = pgRollEnabled ? randomDataPgroll(column as any) : randomData(column);
+    record[column.name] = randomData(column);
   }
   return record;
 }
 
-function randomData(column: Schemas.Column) {
-  switch (column.type) {
-    case 'text':
-      return faker.lorem.paragraphs(rand(2, 3));
-    case 'email':
-      return faker.internet.email({ provider: 'acme.pets' });
-    case 'int':
-      return rand(1, 100);
-    case 'float':
-      return rand(1, 10000) / rand(1, 100);
-    case 'bool':
-      return rand(0, 1) === 1;
-    case 'multiple':
-      return faker.word.words(rand(1, 3)).split(' ');
-    case 'string':
-      return randomString(column.name);
-    case 'datetime':
-      return faker.date.recent({ days: rand(1, 10) });
-    default:
-      return undefined;
-  }
-}
-
-function randomDataPgroll(column: Schemas.Column & { comment?: string; pgType: string }) {
+function randomData(column: Schemas.Column & { comment?: string; pgType: string }) {
   const columnCommentType = narrowStringType(column.comment);
   // Note that this is a best effort and seeding may fail for invalid Xata columns
   // that are foreign keys, or have constraints such as length attached to them.
@@ -101,12 +79,6 @@ const generators: Record<string, () => string> = {
   lastName: () => faker.person.lastName(),
   phone: () => faker.phone.number('501-###-###')
 };
-
-function randomString(columnName: string) {
-  const gen = generators[columnName.toLowerCase()];
-  if (gen) return gen();
-  return faker.word.words(2);
-}
 
 export const xataStringColumns = ['email', 'text', 'string'] as const;
 
