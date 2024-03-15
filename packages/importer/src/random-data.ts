@@ -45,6 +45,9 @@ function randomData(column: Schemas.Column) {
 }
 
 function randomDataPgroll(column: Schemas.Column & { comment?: string; pgType: string }) {
+  const columnCommentType = narrowStringType(column.comment);
+  // Note this will fail for invalid Xata columns
+  // that are foreign keys.
   switch (column.pgType) {
     case 'boolean':
     case 'bool':
@@ -63,9 +66,9 @@ function randomDataPgroll(column: Schemas.Column & { comment?: string; pgType: s
     case 'text':
     case 'varchar':
     case 'character varying':
-      return narrowStringType(column.comment) === 'email'
-        ? faker.internet.email({ provider: 'acme.pets' })
-        : faker.word.words(1);
+      if (columnCommentType === 'email') return faker.internet.email({ provider: 'acme.pets' });
+      if (column.type === 'link') return undefined;
+      return faker.word.words(1);
     case 'timestamptz':
       return faker.date.recent({ days: rand(1, 10) });
     case 'text[]':
