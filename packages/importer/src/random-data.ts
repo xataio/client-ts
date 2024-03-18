@@ -62,24 +62,6 @@ function rand(min: number, max: number) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
-const generators: Record<string, () => string> = {
-  city: () => faker.location.city(),
-  country: () => faker.location.country(),
-  county: () => faker.location.county(),
-  state: () => faker.location.state(),
-  street: () => faker.location.street(),
-  timezone: () => faker.location.timeZone(),
-  tz: () => faker.location.timeZone(),
-  zipcode: () => faker.location.zipCode(),
-  zip: () => faker.location.zipCode(),
-  department: () => faker.commerce.department(),
-  product: () => faker.commerce.product(),
-  company: () => faker.company.name(),
-  firstName: () => faker.person.firstName(),
-  lastName: () => faker.person.lastName(),
-  phone: () => faker.phone.number('501-###-###')
-};
-
 export const xataStringColumns = ['email', 'text', 'string'] as const;
 
 const XataStringColumn = z.object({
