@@ -89,7 +89,7 @@ const {
 const notSupported = test.skip;
 const fixme = test.skip;
 
-const ENABLE_LOGGING = true;
+const ENABLE_LOGGING = false;
 
 declare module 'vitest' {
   export interface TestContext {
@@ -221,7 +221,7 @@ async function setupAggregateFunctionsSuite(db: NodePgDatabase<typeof schema>) {
   ]);
 }
 
-describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type', ({ type }) => {
+describe.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type', ({ type }) => {
   beforeAll(async () => {
     await api.database.createDatabase({
       workspace,

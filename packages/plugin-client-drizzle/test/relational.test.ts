@@ -76,7 +76,7 @@ function getDrizzleClient(type: string, branch: string) {
   }
 }
 
-describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({ type }) => {
+describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle relational $type', ({ type }) => {
   beforeAll(async () => {
     await api.database.createDatabase({
       workspace,
