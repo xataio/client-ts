@@ -22,7 +22,7 @@
     "@oclif/core": "^3.25.2",
     "@oclif/plugin-help": "^6.0.18",
     "@oclif/plugin-not-found": "^3.0.14",
-    "@oclif/plugin-plugins": "^4.3.6",
+    "@oclif/plugin-plugins": "^4.3.7",
     "@types/ini": "^4.1.0",
     "@types/prompts": "^2.4.9",
     "@types/semver": "^7.5.8",
