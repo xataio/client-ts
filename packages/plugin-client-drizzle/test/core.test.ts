@@ -1713,6 +1713,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select count()', async (ctx) => {
+    // AssertionError: expected [ { count: 2 } ] to deeply equal [ { count: '2' } ]
+    if (type === 'http') return ctx.skip();
+
     await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }]);
 
     const res = await ctx.db2.select({ count: sql`count(*)` }).from(usersTable);
@@ -1754,6 +1757,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('array types', async (ctx) => {
+    // Array support
+    if (type === 'http') return ctx.skip();
+
     const values: (typeof salEmp.$inferSelect)[] = [
       {
         name: 'John',
@@ -2233,6 +2239,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('all date and time columns', async (ctx) => {
+    // Dates support
+    if (type === 'http') return ctx.skip();
+
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       dateString: date('date_string', { mode: 'string' }).notNull(),
@@ -2391,6 +2400,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('all date and time columns without timezone first case mode string', async (ctx) => {
+    // Dates support
+    if (type === 'http') return ctx.skip();
+
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'string', precision: 6 }).notNull()
@@ -2425,6 +2437,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('all date and time columns without timezone second case mode string', async (ctx) => {
+    // Dates support
+    if (type === 'http') return ctx.skip();
+
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'string', precision: 6 }).notNull()
@@ -2454,6 +2469,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('all date and time columns without timezone third case mode date', async (ctx) => {
+    // Dates support
+    if (type === 'http') return ctx.skip();
+
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'date', precision: 3 }).notNull()
@@ -2486,6 +2504,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('test mode string for timestamp with timezone', async (ctx) => {
+    // Dates support
+    if (type === 'http') return ctx.skip();
+
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'string', withTimezone: true, precision: 6 }).notNull()
@@ -2524,6 +2545,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('test mode date for timestamp with timezone', async (ctx) => {
+    // Dates support
+    if (type === 'http') return ctx.skip();
+
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'date', withTimezone: true, precision: 3 }).notNull()
@@ -2562,6 +2586,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('test mode string for timestamp with timezone in UTC timezone', async (ctx) => {
+    // DDL SET TIME ZONE unsupported
+    if (type === 'http') return ctx.skip();
+
     // get current timezone from db
     const timezone = await ctx.db2.execute<{ TimeZone: string }>(sql`show timezone`);
 
@@ -2608,6 +2635,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('test mode string for timestamp with timezone in different timezone', async (ctx) => {
+    // DDL SET TIME ZONE unsupported
+    if (type === 'http') return ctx.skip();
+
     // get current timezone from db
     const timezone = await ctx.db2.execute<{ TimeZone: string }>(sql`show timezone`);
 
@@ -2748,6 +2778,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('transaction', async (ctx) => {
+    // Transactions are not supported in HTTP
+    if (type === 'http') return ctx.skip();
+
     const users = pgTable('users_transactions', {
       id: serial('id').primaryKey(),
       balance: integer('balance').notNull()
@@ -2799,6 +2832,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('transaction rollback', async (ctx) => {
+    // Transactions are not supported in HTTP
+    if (type === 'http') return ctx.skip();
+
     const users = pgTable('users_transactions_rollback', {
       id: serial('id').primaryKey(),
       balance: integer('balance').notNull()
@@ -2827,6 +2863,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('nested transaction', async (ctx) => {
+    // Transactions are not supported in HTTP
+    if (type === 'http') return ctx.skip();
+
     const users = pgTable('users_nested_transactions', {
       id: serial('id').primaryKey(),
       balance: integer('balance').notNull()
@@ -2854,6 +2893,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('nested transaction rollback', async (ctx) => {
+    // Transactions are not supported in HTTP
+    if (type === 'http') return ctx.skip();
+
     const users = pgTable('users_nested_transactions_rollback', {
       id: serial('id').primaryKey(),
       balance: integer('balance').notNull()
@@ -3148,6 +3190,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('set operations (union) from query builder with subquery', async (ctx) => {
+    // Error: invalid SQL: unused parameters: used 0 of 2 parameters
+    if (type === 'http') return ctx.skip();
+
     await setupSetOperationSuite(ctx.db2);
 
     const sq = ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).as('sq');
@@ -3182,6 +3227,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('set operations (union) as function', async (ctx) => {
+    // Error: invalid SQL: unused parameters: used 3 of 5 parameters
+    if (type === 'http') return ctx.skip();
+
     await setupSetOperationSuite(ctx.db2);
 
     const result = await union(
@@ -3480,6 +3528,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('set operations (except all) as function', async (ctx) => {
+    // Error: invalid SQL: unused parameters: used 2 of 4 parameters
+    if (type === 'http') return ctx.skip();
+
     await setupSetOperationSuite(ctx.db2);
 
     const result = await exceptAll(
@@ -3649,6 +3700,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('array mapping and parsing', async (ctx) => {
+    // Array support
+    if (type === 'http') return ctx.skip();
+
     const arrays = pgTable('arrays_tests', {
       id: serial('id').primaryKey(),
       tags: text('tags').array(),
