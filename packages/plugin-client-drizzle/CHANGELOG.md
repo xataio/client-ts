@@ -1,5 +1,11 @@
 # @xata.io/drizzle
 
+## 0.0.20
+
+### Patch Changes
+
+- [#1341](https://github.com/xataio/client-ts/pull/1341) [`9f12319`](https://github.com/xataio/client-ts/commit/9f12319d5464e997f72272aa400d7fba1f29a797) Thanks [@SferaDev](https://github.com/SferaDev)! - Update drizzle driver
+
 ## 0.0.19
 
 ### Patch Changes

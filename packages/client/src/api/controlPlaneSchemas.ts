@@ -111,6 +111,7 @@ export type Workspace = WorkspaceMeta & {
 
 export type WorkspaceSettings = {
   postgresEnabled: boolean;
+  dedicatedClusters: boolean;
 };
 
 export type WorkspaceMember = {
@@ -428,7 +429,7 @@ export type DatabaseMetadata = {
    */
   newMigrations?: boolean;
   /**
-   * @x-internal true
+   * The default cluster ID where branches from this database reside. Value of 'shared-cluster' for branches in shared clusters.
    */
   defaultClusterID?: string;
   /**
