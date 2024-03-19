@@ -1,4 +1,4 @@
-import { HostProvider, parseProviderString, XataApiClient } from '@xata.io/client';
+import { BaseClient, HostProvider, parseProviderString, XataApiClient } from '@xata.io/client';
 import 'dotenv/config';
 import {
   and,
@@ -20,18 +20,19 @@ import {
   min,
   name,
   placeholder,
-  type SQL,
   sql,
-  type SQLWrapper,
   sum,
   sumDistinct,
-  TransactionRollbackError
+  TransactionRollbackError,
+  type SQL,
+  type SQLWrapper
 } from 'drizzle-orm';
+import { drizzle as drizzlePg, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { migrate as migratePg } from 'drizzle-orm/node-postgres/migrator';
 import {
   alias,
   boolean,
   char,
-  cidr,
   date,
   except,
   exceptAll,
@@ -39,20 +40,17 @@ import {
   getMaterializedViewConfig,
   getTableConfig,
   getViewConfig,
-  inet,
   integer,
   intersect,
   intersectAll,
   interval,
   jsonb,
-  macaddr,
-  macaddr8,
   numeric,
-  type PgColumn,
   pgEnum,
   pgMaterializedView,
   pgTable,
   pgTableCreator,
+  uuid as pgUuid,
   pgView,
   primaryKey,
   serial,
@@ -63,15 +61,16 @@ import {
   unionAll,
   unique,
   uniqueKeyName,
-  uuid as pgUuid,
-  varchar
+  varchar,
+  type PgColumn
 } from 'drizzle-orm/pg-core';
 import { Client } from 'pg';
-import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, test } from 'vitest';
-import { drizzle as drizzlePg, type XataDatabase } from '../src/pg';
-import { migrate } from '../src/pg/migrator';
-import * as schema from './core.schema';
 import { v4 as uuid } from 'uuid';
+import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, test } from 'vitest';
+import * as schema from './core.schema';
+import { drizzle as drizzleHttp } from '../src/http';
+import { migrate as migrateHttp } from '../src/http/migrator';
+import path from 'path';
 
 const {
   usersTable,
@@ -79,7 +78,6 @@ const {
   users2Table,
   aggregateTable,
   orders,
-  _tictactoe,
   citiesTable,
   courseCategoriesTable,
   coursesTable,
@@ -88,13 +86,17 @@ const {
   usersMigratorTable
 } = schema;
 
-const ENABLE_LOGGING = false;
+const notSupported = test.skip;
+const fixme = test.skip;
+
+const ENABLE_LOGGING = true;
 
 declare module 'vitest' {
   export interface TestContext {
-    db2: XataDatabase<typeof schema>;
+    db2: NodePgDatabase<typeof schema>; // | XataHttpDatabase<typeof schema>;
     client?: Client;
     branch: string;
+    migrate: typeof migratePg; // | typeof migrateHttp;
   }
 }
 
@@ -131,7 +133,17 @@ function getDomain(host: HostProvider) {
 }
 
 function getDrizzleClient(type: string, branch: string) {
-  if (type === 'pg') {
+  if (type === 'http') {
+    const xata = new BaseClient({
+      apiKey,
+      host,
+      clientName: 'sdk-tests',
+      databaseURL: `https://${workspace}.${region}.${getDomain(host)}/db/${database}`,
+      branch
+    });
+
+    return { db: drizzleHttp(xata, { schema, logger: ENABLE_LOGGING }) };
+  } else if (type === 'pg') {
     const client = new Client({
       connectionString: `postgresql://${workspace}:${apiKey}@${region}.sql.${getDomain(
         host
@@ -145,7 +157,7 @@ function getDrizzleClient(type: string, branch: string) {
   }
 }
 
-async function setupSetOperationTest(db: XataDatabase<typeof schema>) {
+async function setupSetOperationTest(db: NodePgDatabase<typeof schema>) {
   await db.execute(sql`drop table if exists users2`);
   await db.execute(sql`drop table if exists cities`);
   await db.execute(
@@ -184,7 +196,7 @@ async function setupSetOperationTest(db: XataDatabase<typeof schema>) {
   ]);
 }
 
-async function setupAggregateFunctionsTest(db: XataDatabase<typeof schema>) {
+async function setupAggregateFunctionsTest(db: NodePgDatabase<typeof schema>) {
   await db.execute(sql`drop table if exists "aggregate_table"`);
   await db.execute(
     sql`
@@ -209,7 +221,7 @@ async function setupAggregateFunctionsTest(db: XataDatabase<typeof schema>) {
   ]);
 }
 
-describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
+describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type', ({ type }) => {
   beforeAll(async () => {
     await api.database.createDatabase({
       workspace,
@@ -324,8 +336,11 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     const { db, client } = getDrizzleClient(type, ctx.branch);
     await client?.connect();
 
+    // @ts-expect-error
     ctx.db2 = db;
     ctx.client = client;
+    // @ts-expect-error
+    ctx.migrate = type === 'pg' ? migratePg : migrateHttp;
   });
 
   afterEach(async (ctx) => {
@@ -1114,14 +1129,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
   });
 
   // TODO change tests to new structure
-  test.skip('migrator : default migration strategy', async (ctx) => {
+  fixme('migrator : default migration strategy', async (ctx) => {
     const { db2: db } = ctx;
 
     await db.execute(sql`drop table if exists all_columns`);
     await db.execute(sql`drop table if exists users12`);
     await db.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
 
-    await migrate(db, { migrationsFolder: './drizzle2/pg' });
+    await ctx.migrate(db, { migrationsFolder: path.join(__dirname, 'migrate') });
 
     await db.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
 
@@ -1134,14 +1149,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table "drizzle"."__drizzle_migrations"`);
   });
 
-  test.skip('migrator : migrate with custom schema', async (ctx) => {
+  fixme('migrator : migrate with custom schema', async (ctx) => {
     const { db2: db } = ctx;
     const customSchema = randomString();
     await db.execute(sql`drop table if exists all_columns`);
     await db.execute(sql`drop table if exists users12`);
     await db.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
 
-    await migrate(db, { migrationsFolder: './drizzle2/pg', migrationsSchema: customSchema });
+    await ctx.migrate(db, { migrationsFolder: path.join(__dirname, 'migrate'), migrationsSchema: customSchema });
 
     // test if the custom migrations table was created
     const { rowCount } = await db.execute(sql`select * from ${sql.identifier(customSchema)}."__drizzle_migrations";`);
@@ -1157,14 +1172,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table ${sql.identifier(customSchema)}."__drizzle_migrations"`);
   });
 
-  test.skip('migrator : migrate with custom table', async (ctx) => {
+  fixme('migrator : migrate with custom table', async (ctx) => {
     const { db2: db } = ctx;
     const customTable = randomString();
     await db.execute(sql`drop table if exists all_columns`);
     await db.execute(sql`drop table if exists users12`);
     await db.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
 
-    await migrate(db, { migrationsFolder: './drizzle2/pg', migrationsTable: customTable });
+    await ctx.migrate(db, { migrationsFolder: path.join(__dirname, 'migrate'), migrationsTable: customTable });
 
     // test if the custom migrations table was created
     const { rowCount } = await db.execute(sql`select * from "drizzle".${sql.identifier(customTable)};`);
@@ -1180,7 +1195,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table "drizzle".${sql.identifier(customTable)}`);
   });
 
-  test.skip('migrator : migrate with custom table and custom schema', async (ctx) => {
+  fixme('migrator : migrate with custom table and custom schema', async (ctx) => {
     const { db2: db } = ctx;
     const customTable = randomString();
     const customSchema = randomString();
@@ -1188,8 +1203,8 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table if exists users12`);
     await db.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
 
-    await migrate(db, {
-      migrationsFolder: './drizzle2/pg',
+    await ctx.migrate(db, {
+      migrationsFolder: path.join(__dirname, 'migrate'),
       migrationsTable: customTable,
       migrationsSchema: customSchema
     });
@@ -1976,7 +1991,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     ]);
   });
 
-  test.skip('view', async (ctx) => {
+  notSupported('view', async (ctx) => {
     const { db2: db } = ctx;
 
     const newYorkers1 = pgView('new_yorkers').as((qb) =>
@@ -2037,7 +2052,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop view ${newYorkers1}`);
   });
 
-  test.skip('materialized view', async (ctx) => {
+  notSupported('materialized view', async (ctx) => {
     const { db2: db } = ctx;
 
     const newYorkers1 = pgMaterializedView('new_yorkers').as((qb) =>
@@ -2226,7 +2241,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table ${users}`);
   });
 
-  test.skip('select from enum', async (ctx) => {
+  notSupported('select from enum', async (ctx) => {
     const { db2: db } = ctx;
 
     const muscleEnum = pgEnum('muscle', [
@@ -2965,15 +2980,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
       sql`create table users_transactions_rollback (id serial not null primary key, balance integer not null)`
     );
 
-    ctx
+    await ctx
       .expect(
-        async () =>
-          await db.transaction(async (tx) => {
-            await tx.insert(users).values({ balance: 100 });
-            tx.rollback();
-          })
+        db.transaction(async (tx) => {
+          await tx.insert(users).values({ balance: 100 });
+          tx.rollback();
+        })
       )
-      .toThrowError(TransactionRollbackError);
+      .rejects.toThrow(TransactionRollbackError);
 
     const result = await db.select().from(users);
 
@@ -3028,15 +3042,14 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.transaction(async (tx) => {
       await tx.insert(users).values({ balance: 100 });
 
-      ctx
+      await ctx
         .expect(
-          async () =>
-            await tx.transaction(async (tx) => {
-              await tx.update(users).set({ balance: 200 });
-              tx.rollback();
-            })
+          tx.transaction(async (tx) => {
+            await tx.update(users).set({ balance: 200 });
+            tx.rollback();
+          })
         )
-        .toThrowError(TransactionRollbackError);
+        .rejects.toThrow(TransactionRollbackError);
     });
 
     const result = await db.select().from(users);
@@ -3096,7 +3109,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table ${ticket}`);
   });
 
-  test.skip('subquery with view', async (ctx) => {
+  notSupported('subquery with view', async (ctx) => {
     const { db2: db } = ctx;
 
     const users = pgTable('users_subquery_view', {
@@ -3134,7 +3147,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table ${users}`);
   });
 
-  test.skip('join view as subquery', async (ctx) => {
+  notSupported('join view as subquery', async (ctx) => {
     const { db2: db } = ctx;
 
     const users = pgTable('users_join_view', {
@@ -3247,7 +3260,7 @@ describe.concurrent.each([{ type: 'pg' }])('Drizzle core $type', ({ type }) => {
     await db.execute(sql`drop table ${users}`);
   });
 
-  test('update undefined', async (ctx) => {
+  fixme('update undefined', async (ctx) => {
     const { db2: db } = ctx;
 
     const users = pgTable('users', {

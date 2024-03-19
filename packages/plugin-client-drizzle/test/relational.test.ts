@@ -3,7 +3,7 @@ import 'dotenv/config';
 import { desc, DrizzleError, eq, gt, gte, or, placeholder, sql } from 'drizzle-orm';
 import { Client } from 'pg';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expectTypeOf, test } from 'vitest';
-import { drizzle as drizzlePg, type XataDatabase } from '../src/pg';
+import { drizzle as drizzlePg, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { drizzle as drizzleHttp, type XataHttpDatabase } from '../src/http';
 import * as schema from './relational.schema';
 
@@ -13,7 +13,7 @@ const ENABLE_LOGGING = false;
 
 declare module 'vitest' {
   export interface TestContext {
-    db1: XataDatabase<typeof schema> | XataHttpDatabase<typeof schema>;
+    db1: NodePgDatabase<typeof schema>; // | XataHttpDatabase<typeof schema>;
     client?: Client;
     branch: string;
   }
@@ -165,6 +165,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
     const { db, client } = getDrizzleClient(type, ctx.branch);
     await client?.connect();
 
+    // @ts-expect-error
     ctx.db1 = db;
     ctx.client = client;
   });
@@ -6274,7 +6275,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
 
     const result = await ctx.db1.execute(sql`SELECT * FROM ${usersTable} WHERE id = 1`);
 
-    const rows = (result as any).rows;
+    const rows = result.rows;
     ctx.expect(rows[0].id).toEqual(1);
     ctx.expect(rows[0].name).toEqual('Dan');
     ctx.expect(rows[0].verified).toEqual(false);
