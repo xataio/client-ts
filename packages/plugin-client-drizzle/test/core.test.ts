@@ -157,7 +157,7 @@ function getDrizzleClient(type: string, branch: string) {
   }
 }
 
-async function setupSetOperationTest(db: NodePgDatabase<typeof schema>) {
+async function setupSetOperationSuite(db: NodePgDatabase<typeof schema>) {
   await db.execute(sql`drop table if exists users2`);
   await db.execute(sql`drop table if exists cities`);
   await db.execute(
@@ -196,7 +196,7 @@ async function setupSetOperationTest(db: NodePgDatabase<typeof schema>) {
   ]);
 }
 
-async function setupAggregateFunctionsTest(db: NodePgDatabase<typeof schema>) {
+async function setupAggregateFunctionsSuite(db: NodePgDatabase<typeof schema>) {
   await db.execute(sql`drop table if exists "aggregate_table"`);
   await db.execute(
     sql`
@@ -448,12 +448,10 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select all fields', async (ctx) => {
-    const { db2: db } = ctx;
-
     const now = Date.now();
 
-    await db.insert(usersTable).values({ name: 'John' });
-    const result = await db.select().from(usersTable);
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const result = await ctx.db2.select().from(usersTable);
 
     ctx.expect(result[0]!.createdAt instanceof Date);
     ctx.expect(Math.abs(result[0]!.createdAt.getTime() - now) < 100);
@@ -461,10 +459,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select sql', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John' });
-    const users = await db
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const users = await ctx.db2
       .select({
         name: sql`upper(${usersTable.name})`
       })
@@ -474,11 +470,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select typed sql', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
 
-    await db.insert(usersTable).values({ name: 'John' });
-
-    const users = await db
+    const users = await ctx.db2
       .select({
         name: sql<string>`upper(${usersTable.name})`
       })
@@ -488,13 +482,11 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('$default function', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const insertedOrder = await db
+    const insertedOrder = await ctx.db2
       .insert(orders)
       .values({ id: 1, region: 'Ukraine', amount: 1, quantity: 1 })
       .returning();
-    const selectedOrder = await db.select().from(orders);
+    const selectedOrder = await ctx.db2.select().from(orders);
 
     assert.deepEqual(insertedOrder, [
       {
@@ -518,42 +510,40 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select distinct', async (ctx) => {
-    const { db2: db } = ctx;
-
     const usersDistinctTable = pgTable('users_distinct', {
       id: integer('id').notNull(),
       name: text('name').notNull(),
       age: integer('age').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${usersDistinctTable}`);
-    await db.execute(sql`create table ${usersDistinctTable} (id integer, name text, age integer)`);
+    await ctx.db2.execute(sql`drop table if exists ${usersDistinctTable}`);
+    await ctx.db2.execute(sql`create table ${usersDistinctTable} (id integer, name text, age integer)`);
 
-    await db.insert(usersDistinctTable).values([
+    await ctx.db2.insert(usersDistinctTable).values([
       { id: 1, name: 'John', age: 24 },
       { id: 1, name: 'John', age: 24 },
       { id: 2, name: 'John', age: 25 },
       { id: 1, name: 'Jane', age: 24 },
       { id: 1, name: 'Jane', age: 26 }
     ]);
-    const users1 = await db
+    const users1 = await ctx.db2
       .selectDistinct()
       .from(usersDistinctTable)
       .orderBy(usersDistinctTable.id, usersDistinctTable.name);
-    const users2 = await db
+    const users2 = await ctx.db2
       .selectDistinctOn([usersDistinctTable.id])
       .from(usersDistinctTable)
       .orderBy(usersDistinctTable.id);
-    const users3 = await db
+    const users3 = await ctx.db2
       .selectDistinctOn([usersDistinctTable.name], { name: usersDistinctTable.name })
       .from(usersDistinctTable)
       .orderBy(usersDistinctTable.name);
-    const users4 = await db
+    const users4 = await ctx.db2
       .selectDistinctOn([usersDistinctTable.id, usersDistinctTable.age])
       .from(usersDistinctTable)
       .orderBy(usersDistinctTable.id, usersDistinctTable.age);
 
-    await db.execute(sql`drop table ${usersDistinctTable}`);
+    await ctx.db2.execute(sql`drop table ${usersDistinctTable}`);
 
     assert.deepEqual(users1, [
       { id: 1, name: 'Jane', age: 24 },
@@ -578,9 +568,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('insert returning sql', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const users = await db
+    const users = await ctx.db2
       .insert(usersTable)
       .values({ name: 'John' })
       .returning({
@@ -591,10 +579,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('delete returning sql', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John' });
-    const users = await db
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const users = await ctx.db2
       .delete(usersTable)
       .where(eq(usersTable.name, 'John'))
       .returning({
@@ -605,10 +591,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('update returning sql', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John' });
-    const users = await db
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const users = await ctx.db2
       .update(usersTable)
       .set({ name: 'Jane' })
       .where(eq(usersTable.name, 'John'))
@@ -620,12 +604,10 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('update with returning all fields', async (ctx) => {
-    const { db2: db } = ctx;
-
     const now = Date.now();
 
-    await db.insert(usersTable).values({ name: 'John' });
-    const users = await db.update(usersTable).set({ name: 'Jane' }).where(eq(usersTable.name, 'John')).returning();
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const users = await ctx.db2.update(usersTable).set({ name: 'Jane' }).where(eq(usersTable.name, 'John')).returning();
 
     ctx.expect(users[0]!.createdAt instanceof Date);
     ctx.expect(Math.abs(users[0]!.createdAt.getTime() - now) < 100);
@@ -633,10 +615,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('update with returning partial', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John' });
-    const users = await db.update(usersTable).set({ name: 'Jane' }).where(eq(usersTable.name, 'John')).returning({
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const users = await ctx.db2.update(usersTable).set({ name: 'Jane' }).where(eq(usersTable.name, 'John')).returning({
       id: usersTable.id,
       name: usersTable.name
     });
@@ -645,12 +625,10 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('delete with returning all fields', async (ctx) => {
-    const { db2: db } = ctx;
-
     const now = Date.now();
 
-    await db.insert(usersTable).values({ name: 'John' });
-    const users = await db.delete(usersTable).where(eq(usersTable.name, 'John')).returning();
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const users = await ctx.db2.delete(usersTable).where(eq(usersTable.name, 'John')).returning();
 
     ctx.expect(users[0]!.createdAt instanceof Date);
     ctx.expect(Math.abs(users[0]!.createdAt.getTime() - now) < 100);
@@ -658,10 +636,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('delete with returning partial', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John' });
-    const users = await db.delete(usersTable).where(eq(usersTable.name, 'John')).returning({
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const users = await ctx.db2.delete(usersTable).where(eq(usersTable.name, 'John')).returning({
       id: usersTable.id,
       name: usersTable.name
     });
@@ -670,14 +646,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('insert + select', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John' });
-    const result = await db.select().from(usersTable);
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const result = await ctx.db2.select().from(usersTable);
     assert.deepEqual(result, [{ id: 1, name: 'John', verified: false, jsonb: null, createdAt: result[0]!.createdAt }]);
 
-    await db.insert(usersTable).values({ name: 'Jane' });
-    const result2 = await db.select().from(usersTable);
+    await ctx.db2.insert(usersTable).values({ name: 'Jane' });
+    const result2 = await ctx.db2.select().from(usersTable);
     assert.deepEqual(result2, [
       { id: 1, name: 'John', verified: false, jsonb: null, createdAt: result2[0]!.createdAt },
       { id: 2, name: 'Jane', verified: false, jsonb: null, createdAt: result2[1]!.createdAt }
@@ -685,10 +659,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('json insert', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John', jsonb: ['foo', 'bar'] });
-    const result = await db
+    await ctx.db2.insert(usersTable).values({ name: 'John', jsonb: ['foo', 'bar'] });
+    const result = await ctx.db2
       .select({
         id: usersTable.id,
         name: usersTable.name,
@@ -700,10 +672,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('char insert', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(citiesTable).values({ name: 'Austin', state: 'TX' });
-    const result = await db
+    await ctx.db2.insert(citiesTable).values({ name: 'Austin', state: 'TX' });
+    const result = await ctx.db2
       .select({ id: citiesTable.id, name: citiesTable.name, state: citiesTable.state })
       .from(citiesTable);
 
@@ -711,11 +681,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('char update', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(citiesTable).values({ name: 'Austin', state: 'TX' });
-    await db.update(citiesTable).set({ name: 'Atlanta', state: 'GA' }).where(eq(citiesTable.id, 1));
-    const result = await db
+    await ctx.db2.insert(citiesTable).values({ name: 'Austin', state: 'TX' });
+    await ctx.db2.update(citiesTable).set({ name: 'Atlanta', state: 'GA' }).where(eq(citiesTable.id, 1));
+    const result = await ctx.db2
       .select({ id: citiesTable.id, name: citiesTable.name, state: citiesTable.state })
       .from(citiesTable);
 
@@ -723,11 +691,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('char delete', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(citiesTable).values({ name: 'Austin', state: 'TX' });
-    await db.delete(citiesTable).where(eq(citiesTable.state, 'TX'));
-    const result = await db
+    await ctx.db2.insert(citiesTable).values({ name: 'Austin', state: 'TX' });
+    await ctx.db2.delete(citiesTable).where(eq(citiesTable.state, 'TX'));
+    const result = await ctx.db2
       .select({ id: citiesTable.id, name: citiesTable.name, state: citiesTable.state })
       .from(citiesTable);
 
@@ -735,18 +701,14 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('insert with overridden default values', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John', verified: true });
-    const result = await db.select().from(usersTable);
+    await ctx.db2.insert(usersTable).values({ name: 'John', verified: true });
+    const result = await ctx.db2.select().from(usersTable);
 
     assert.deepEqual(result, [{ id: 1, name: 'John', verified: true, jsonb: null, createdAt: result[0]!.createdAt }]);
   });
 
   test('insert many', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db
+    await ctx.db2
       .insert(usersTable)
       .values([
         { name: 'John' },
@@ -754,7 +716,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         { name: 'Jane' },
         { name: 'Austin', verified: true }
       ]);
-    const result = await db
+    const result = await ctx.db2
       .select({
         id: usersTable.id,
         name: usersTable.name,
@@ -772,9 +734,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('insert many with returning', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const result = await db
+    const result = await ctx.db2
       .insert(usersTable)
       .values([
         { name: 'John' },
@@ -798,27 +758,23 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select with group by as field', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
 
-    await db.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
-
-    const result = await db.select({ name: usersTable.name }).from(usersTable).groupBy(usersTable.name);
+    const result = await ctx.db2.select({ name: usersTable.name }).from(usersTable).groupBy(usersTable.name);
 
     assert.deepEqual(result, [{ name: 'Jane' }, { name: 'John' }]);
   });
 
   test('select with exists', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
+    await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
 
     const user = alias(usersTable, 'user');
-    const result = await db
+    const result = await ctx.db2
       .select({ name: usersTable.name })
       .from(usersTable)
       .where(
         exists(
-          db
+          ctx.db2
             .select({ one: sql`1` })
             .from(user)
             .where(and(eq(usersTable.name, 'John'), eq(user.id, usersTable.id)))
@@ -829,11 +785,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select with group by as sql', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
 
-    await db.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
-
-    const result = await db
+    const result = await ctx.db2
       .select({ name: usersTable.name })
       .from(usersTable)
       .groupBy(sql`${usersTable.name}`);
@@ -842,11 +796,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select with group by as sql + column', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
 
-    await db.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
-
-    const result = await db
+    const result = await ctx.db2
       .select({ name: usersTable.name })
       .from(usersTable)
       .groupBy(sql`${usersTable.name}`, usersTable.id);
@@ -855,11 +807,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select with group by as column + sql', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
 
-    await db.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
-
-    const result = await db
+    const result = await ctx.db2
       .select({ name: usersTable.name })
       .from(usersTable)
       .groupBy(usersTable.id, sql`${usersTable.name}`);
@@ -868,11 +818,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select with group by complex query', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
 
-    await db.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }, { name: 'Jane' }]);
-
-    const result = await db
+    const result = await ctx.db2
       .select({ name: usersTable.name })
       .from(usersTable)
       .groupBy(usersTable.id, sql`${usersTable.name}`)
@@ -883,9 +831,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('build query', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const query = db
+    const query = ctx.db2
       .select({ id: usersTable.id, name: usersTable.name })
       .from(usersTable)
       .groupBy(usersTable.id, usersTable.name)
@@ -898,22 +844,19 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('insert sql', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: sql`${'John'}` });
-    const result = await db.select({ id: usersTable.id, name: usersTable.name }).from(usersTable);
+    await ctx.db2.insert(usersTable).values({ name: sql`${'John'}` });
+    const result = await ctx.db2.select({ id: usersTable.id, name: usersTable.name }).from(usersTable);
     assert.deepEqual(result, [{ id: 1, name: 'John' }]);
   });
 
   test('partial join with alias', async (ctx) => {
-    const { db2: db } = ctx;
     const customerAlias = alias(usersTable, 'customer');
 
-    await db.insert(usersTable).values([
+    await ctx.db2.insert(usersTable).values([
       { id: 10, name: 'Ivan' },
       { id: 11, name: 'Hans' }
     ]);
-    const result = await db
+    const result = await ctx.db2
       .select({
         user: {
           id: usersTable.id,
@@ -937,8 +880,6 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('full join with alias', async (ctx) => {
-    const { db2: db } = ctx;
-
     const pgTable = pgTableCreator((name) => `prefixed_${name}`);
 
     const users = pgTable('users', {
@@ -946,16 +887,16 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       name: text('name').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
-    await db.execute(sql`create table ${users} (id serial primary key, name text not null)`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`create table ${users} (id serial primary key, name text not null)`);
 
     const customers = alias(users, 'customer');
 
-    await db.insert(users).values([
+    await ctx.db2.insert(users).values([
       { id: 10, name: 'Ivan' },
       { id: 11, name: 'Hans' }
     ]);
-    const result = await db.select().from(users).leftJoin(customers, eq(customers.id, 11)).where(eq(users.id, 10));
+    const result = await ctx.db2.select().from(users).leftJoin(customers, eq(customers.id, 11)).where(eq(users.id, 10));
 
     assert.deepEqual(result, [
       {
@@ -970,12 +911,10 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ]);
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   test('select from alias', async (ctx) => {
-    const { db2: db } = ctx;
-
     const pgTable = pgTableCreator((name) => `prefixed_${name}`);
 
     const users = pgTable('users', {
@@ -983,17 +922,17 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       name: text('name').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
-    await db.execute(sql`create table ${users} (id serial primary key, name text not null)`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`create table ${users} (id serial primary key, name text not null)`);
 
     const user = alias(users, 'user');
     const customers = alias(users, 'customer');
 
-    await db.insert(users).values([
+    await ctx.db2.insert(users).values([
       { id: 10, name: 'Ivan' },
       { id: 11, name: 'Hans' }
     ]);
-    const result = await db.select().from(user).leftJoin(customers, eq(customers.id, 11)).where(eq(user.id, 10));
+    const result = await ctx.db2.select().from(user).leftJoin(customers, eq(customers.id, 11)).where(eq(user.id, 10));
 
     assert.deepEqual(result, [
       {
@@ -1008,23 +947,19 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ]);
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   test('insert with spaces', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: sql`'Jo   h     n'` });
-    const result = await db.select({ id: usersTable.id, name: usersTable.name }).from(usersTable);
+    await ctx.db2.insert(usersTable).values({ name: sql`'Jo   h     n'` });
+    const result = await ctx.db2.select({ id: usersTable.id, name: usersTable.name }).from(usersTable);
 
     assert.deepEqual(result, [{ id: 1, name: 'Jo   h     n' }]);
   });
 
   test('prepared statement', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John' });
-    const statement = db
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const statement = ctx.db2
       .select({
         id: usersTable.id,
         name: usersTable.name
@@ -1037,9 +972,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('prepared statement reuse', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const stmt = db
+    const stmt = ctx.db2
       .insert(usersTable)
       .values({
         verified: true,
@@ -1051,7 +984,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       await stmt.execute({ name: `John ${i}` });
     }
 
-    const result = await db
+    const result = await ctx.db2
       .select({
         id: usersTable.id,
         name: usersTable.name,
@@ -1074,10 +1007,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('prepared statement with placeholder in .where', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John' });
-    const stmt = db
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const stmt = ctx.db2
       .select({
         id: usersTable.id,
         name: usersTable.name
@@ -1091,10 +1022,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('prepared statement with placeholder in .limit', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values({ name: 'John' });
-    const stmt = db
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
+    const stmt = ctx.db2
       .select({
         id: usersTable.id,
         name: usersTable.name
@@ -1111,10 +1040,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('prepared statement with placeholder in .offset', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(usersTable).values([{ name: 'John' }, { name: 'John1' }]);
-    const stmt = db
+    await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'John1' }]);
+    const stmt = ctx.db2
       .select({
         id: usersTable.id,
         name: usersTable.name
@@ -1130,114 +1057,107 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
   // TODO change tests to new structure
   fixme('migrator : default migration strategy', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.execute(sql`drop table if exists all_columns`);
+    await ctx.db2.execute(sql`drop table if exists users12`);
+    await ctx.db2.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
 
-    await db.execute(sql`drop table if exists all_columns`);
-    await db.execute(sql`drop table if exists users12`);
-    await db.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
+    await ctx.migrate(ctx.db2, { migrationsFolder: path.join(__dirname, 'migrate') });
 
-    await ctx.migrate(db, { migrationsFolder: path.join(__dirname, 'migrate') });
+    await ctx.db2.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
 
-    await db.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
-
-    const result = await db.select().from(usersMigratorTable);
+    const result = await ctx.db2.select().from(usersMigratorTable);
 
     assert.deepEqual(result, [{ id: 1, name: 'John', email: 'email' }]);
 
-    await db.execute(sql`drop table all_columns`);
-    await db.execute(sql`drop table users12`);
-    await db.execute(sql`drop table "drizzle"."__drizzle_migrations"`);
+    await ctx.db2.execute(sql`drop table all_columns`);
+    await ctx.db2.execute(sql`drop table users12`);
+    await ctx.db2.execute(sql`drop table "drizzle"."__drizzle_migrations"`);
   });
 
   fixme('migrator : migrate with custom schema', async (ctx) => {
-    const { db2: db } = ctx;
     const customSchema = randomString();
-    await db.execute(sql`drop table if exists all_columns`);
-    await db.execute(sql`drop table if exists users12`);
-    await db.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
+    await ctx.db2.execute(sql`drop table if exists all_columns`);
+    await ctx.db2.execute(sql`drop table if exists users12`);
+    await ctx.db2.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
 
-    await ctx.migrate(db, { migrationsFolder: path.join(__dirname, 'migrate'), migrationsSchema: customSchema });
+    await ctx.migrate(ctx.db2, { migrationsFolder: path.join(__dirname, 'migrate'), migrationsSchema: customSchema });
 
     // test if the custom migrations table was created
-    const { rowCount } = await db.execute(sql`select * from ${sql.identifier(customSchema)}."__drizzle_migrations";`);
+    const { rowCount } = await ctx.db2.execute(
+      sql`select * from ${sql.identifier(customSchema)}."__drizzle_migrations";`
+    );
     ctx.expect(rowCount !== null && rowCount > 0);
 
     // test if the migrated table are working as expected
-    await db.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
-    const result = await db.select().from(usersMigratorTable);
+    await ctx.db2.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
+    const result = await ctx.db2.select().from(usersMigratorTable);
     assert.deepEqual(result, [{ id: 1, name: 'John', email: 'email' }]);
 
-    await db.execute(sql`drop table all_columns`);
-    await db.execute(sql`drop table users12`);
-    await db.execute(sql`drop table ${sql.identifier(customSchema)}."__drizzle_migrations"`);
+    await ctx.db2.execute(sql`drop table all_columns`);
+    await ctx.db2.execute(sql`drop table users12`);
+    await ctx.db2.execute(sql`drop table ${sql.identifier(customSchema)}."__drizzle_migrations"`);
   });
 
   fixme('migrator : migrate with custom table', async (ctx) => {
-    const { db2: db } = ctx;
     const customTable = randomString();
-    await db.execute(sql`drop table if exists all_columns`);
-    await db.execute(sql`drop table if exists users12`);
-    await db.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
+    await ctx.db2.execute(sql`drop table if exists all_columns`);
+    await ctx.db2.execute(sql`drop table if exists users12`);
+    await ctx.db2.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
 
-    await ctx.migrate(db, { migrationsFolder: path.join(__dirname, 'migrate'), migrationsTable: customTable });
+    await ctx.migrate(ctx.db2, { migrationsFolder: path.join(__dirname, 'migrate'), migrationsTable: customTable });
 
     // test if the custom migrations table was created
-    const { rowCount } = await db.execute(sql`select * from "drizzle".${sql.identifier(customTable)};`);
+    const { rowCount } = await ctx.db2.execute(sql`select * from "drizzle".${sql.identifier(customTable)};`);
     ctx.expect(rowCount !== null && rowCount > 0);
 
     // test if the migrated table are working as expected
-    await db.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
-    const result = await db.select().from(usersMigratorTable);
+    await ctx.db2.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
+    const result = await ctx.db2.select().from(usersMigratorTable);
     assert.deepEqual(result, [{ id: 1, name: 'John', email: 'email' }]);
 
-    await db.execute(sql`drop table all_columns`);
-    await db.execute(sql`drop table users12`);
-    await db.execute(sql`drop table "drizzle".${sql.identifier(customTable)}`);
+    await ctx.db2.execute(sql`drop table all_columns`);
+    await ctx.db2.execute(sql`drop table users12`);
+    await ctx.db2.execute(sql`drop table "drizzle".${sql.identifier(customTable)}`);
   });
 
   fixme('migrator : migrate with custom table and custom schema', async (ctx) => {
-    const { db2: db } = ctx;
     const customTable = randomString();
     const customSchema = randomString();
-    await db.execute(sql`drop table if exists all_columns`);
-    await db.execute(sql`drop table if exists users12`);
-    await db.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
+    await ctx.db2.execute(sql`drop table if exists all_columns`);
+    await ctx.db2.execute(sql`drop table if exists users12`);
+    await ctx.db2.execute(sql`drop table if exists "drizzle"."__drizzle_migrations"`);
 
-    await ctx.migrate(db, {
+    await ctx.migrate(ctx.db2, {
       migrationsFolder: path.join(__dirname, 'migrate'),
       migrationsTable: customTable,
       migrationsSchema: customSchema
     });
 
     // test if the custom migrations table was created
-    const { rowCount } = await db.execute(
+    const { rowCount } = await ctx.db2.execute(
       sql`select * from ${sql.identifier(customSchema)}.${sql.identifier(customTable)};`
     );
     ctx.expect(rowCount !== null && rowCount > 0);
 
     // test if the migrated table are working as expected
-    await db.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
-    const result = await db.select().from(usersMigratorTable);
+    await ctx.db2.insert(usersMigratorTable).values({ name: 'John', email: 'email' });
+    const result = await ctx.db2.select().from(usersMigratorTable);
     assert.deepEqual(result, [{ id: 1, name: 'John', email: 'email' }]);
 
-    await db.execute(sql`drop table all_columns`);
-    await db.execute(sql`drop table users12`);
-    await db.execute(sql`drop table ${sql.identifier(customSchema)}.${sql.identifier(customTable)}`);
+    await ctx.db2.execute(sql`drop table all_columns`);
+    await ctx.db2.execute(sql`drop table users12`);
+    await ctx.db2.execute(sql`drop table ${sql.identifier(customSchema)}.${sql.identifier(customTable)}`);
   });
 
-  test('insert via db.execute + select via db.execute', async (ctx) => {
-    const { db2: db } = ctx;
+  test('insert via ctx.db2.execute + select via ctx.db2.execute', async (ctx) => {
+    await ctx.db2.execute(sql`insert into ${usersTable} (${name(usersTable.name.name)}) values (${'John'})`);
 
-    await db.execute(sql`insert into ${usersTable} (${name(usersTable.name.name)}) values (${'John'})`);
-
-    const result = await db.execute<{ id: number; name: string }>(sql`select id, name from "users"`);
+    const result = await ctx.db2.execute<{ id: number; name: string }>(sql`select id, name from "users"`);
     assert.deepEqual(result.rows, [{ id: 1, name: 'John' }]);
   });
 
-  test('insert via db.execute + returning', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const inserted = await db.execute<{ id: number; name: string }>(
+  test('insert via ctx.db2.execute + returning', async (ctx) => {
+    const inserted = await ctx.db2.execute<{ id: number; name: string }>(
       sql`insert into ${usersTable} (${name(usersTable.name.name)}) values (${'John'}) returning ${usersTable.id}, ${
         usersTable.name
       }`
@@ -1245,25 +1165,21 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     assert.deepEqual(inserted.rows, [{ id: 1, name: 'John' }]);
   });
 
-  test('insert via db.execute w/ query builder', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const inserted = await db.execute<Pick<typeof usersTable.$inferSelect, 'id' | 'name'>>(
-      db.insert(usersTable).values({ name: 'John' }).returning({ id: usersTable.id, name: usersTable.name })
+  test('insert via ctx.db2.execute w/ query builder', async (ctx) => {
+    const inserted = await ctx.db2.execute<Pick<typeof usersTable.$inferSelect, 'id' | 'name'>>(
+      ctx.db2.insert(usersTable).values({ name: 'John' }).returning({ id: usersTable.id, name: usersTable.name })
     );
     assert.deepEqual(inserted.rows, [{ id: 1, name: 'John' }]);
   });
 
   test('Query check: Insert all defaults in 1 row', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users', {
       id: serial('id').primaryKey(),
       name: text('name').default('Dan'),
       state: text('state')
     });
 
-    const query = db.insert(users).values({}).toSQL();
+    const query = ctx.db2.insert(users).values({}).toSQL();
 
     assert.deepEqual(query, {
       sql: 'insert into "users" ("id", "name", "state") values (default, default, default)',
@@ -1272,15 +1188,13 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('Query check: Insert all defaults in multiple rows', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users', {
       id: serial('id').primaryKey(),
       name: text('name').default('Dan'),
       state: text('state').default('UA')
     });
 
-    const query = db.insert(users).values([{}, {}]).toSQL();
+    const query = ctx.db2.insert(users).values([{}, {}]).toSQL();
 
     assert.deepEqual(query, {
       sql: 'insert into "users" ("id", "name", "state") values (default, default, default), (default, default, default)',
@@ -1289,41 +1203,37 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('Insert all defaults in 1 row', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('empty_insert_single', {
       id: serial('id').primaryKey(),
       name: text('name').default('Dan'),
       state: text('state')
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(sql`create table ${users} (id serial primary key, name text default 'Dan', state text)`);
+    await ctx.db2.execute(sql`create table ${users} (id serial primary key, name text default 'Dan', state text)`);
 
-    await db.insert(users).values({});
+    await ctx.db2.insert(users).values({});
 
-    const res = await db.select().from(users);
+    const res = await ctx.db2.select().from(users);
 
     assert.deepEqual(res, [{ id: 1, name: 'Dan', state: null }]);
   });
 
   test('Insert all defaults in multiple rows', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('empty_insert_multiple', {
       id: serial('id').primaryKey(),
       name: text('name').default('Dan'),
       state: text('state')
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(sql`create table ${users} (id serial primary key, name text default 'Dan', state text)`);
+    await ctx.db2.execute(sql`create table ${users} (id serial primary key, name text default 'Dan', state text)`);
 
-    await db.insert(users).values([{}, {}]);
+    await ctx.db2.insert(users).values([{}, {}]);
 
-    const res = await db.select().from(users);
+    const res = await ctx.db2.select().from(users);
 
     assert.deepEqual(res, [
       { id: 1, name: 'Dan', state: null },
@@ -1332,9 +1242,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('build query insert with onConflict do update', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const query = db
+    const query = ctx.db2
       .insert(usersTable)
       .values({ name: 'John', jsonb: ['foo', 'bar'] })
       .onConflictDoUpdate({ target: usersTable.id, set: { name: 'John1' } })
@@ -1347,9 +1255,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('build query insert with onConflict do update / multiple columns', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const query = db
+    const query = ctx.db2
       .insert(usersTable)
       .values({ name: 'John', jsonb: ['foo', 'bar'] })
       .onConflictDoUpdate({ target: [usersTable.id, usersTable.name], set: { name: 'John1' } })
@@ -1362,9 +1268,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('build query insert with onConflict do nothing', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const query = db
+    const query = ctx.db2
       .insert(usersTable)
       .values({ name: 'John', jsonb: ['foo', 'bar'] })
       .onConflictDoNothing()
@@ -1377,9 +1281,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('build query insert with onConflict do nothing + target', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const query = db
+    const query = ctx.db2
       .insert(usersTable)
       .values({ name: 'John', jsonb: ['foo', 'bar'] })
       .onConflictDoNothing({ target: usersTable.id })
@@ -1392,16 +1294,14 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('insert with onConflict do update', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
 
-    await db.insert(usersTable).values({ name: 'John' });
-
-    await db
+    await ctx.db2
       .insert(usersTable)
       .values({ id: 1, name: 'John' })
       .onConflictDoUpdate({ target: usersTable.id, set: { name: 'John1' } });
 
-    const res = await db
+    const res = await ctx.db2
       .select({ id: usersTable.id, name: usersTable.name })
       .from(usersTable)
       .where(eq(usersTable.id, 1));
@@ -1410,13 +1310,11 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('insert with onConflict do nothing', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
 
-    await db.insert(usersTable).values({ name: 'John' });
+    await ctx.db2.insert(usersTable).values({ id: 1, name: 'John' }).onConflictDoNothing();
 
-    await db.insert(usersTable).values({ id: 1, name: 'John' }).onConflictDoNothing();
-
-    const res = await db
+    const res = await ctx.db2
       .select({ id: usersTable.id, name: usersTable.name })
       .from(usersTable)
       .where(eq(usersTable.id, 1));
@@ -1425,13 +1323,11 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('insert with onConflict do nothing + target', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values({ name: 'John' });
 
-    await db.insert(usersTable).values({ name: 'John' });
+    await ctx.db2.insert(usersTable).values({ id: 1, name: 'John' }).onConflictDoNothing({ target: usersTable.id });
 
-    await db.insert(usersTable).values({ id: 1, name: 'John' }).onConflictDoNothing({ target: usersTable.id });
-
-    const res = await db
+    const res = await ctx.db2
       .select({ id: usersTable.id, name: usersTable.name })
       .from(usersTable)
       .where(eq(usersTable.id, 1));
@@ -1440,17 +1336,15 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('left join (flat object fields)', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const { id: cityId } = await db
+    const { id: cityId } = await ctx.db2
       .insert(citiesTable)
       .values([{ name: 'Paris' }, { name: 'London' }])
       .returning({ id: citiesTable.id })
       .then((rows) => rows[0]!);
 
-    await db.insert(users2Table).values([{ name: 'John', cityId }, { name: 'Jane' }]);
+    await ctx.db2.insert(users2Table).values([{ name: 'John', cityId }, { name: 'Jane' }]);
 
-    const res = await db
+    const res = await ctx.db2
       .select({
         userId: users2Table.id,
         userName: users2Table.name,
@@ -1467,17 +1361,15 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('left join (grouped fields)', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const { id: cityId } = await db
+    const { id: cityId } = await ctx.db2
       .insert(citiesTable)
       .values([{ name: 'Paris' }, { name: 'London' }])
       .returning({ id: citiesTable.id })
       .then((rows) => rows[0]!);
 
-    await db.insert(users2Table).values([{ name: 'John', cityId }, { name: 'Jane' }]);
+    await ctx.db2.insert(users2Table).values([{ name: 'John', cityId }, { name: 'Jane' }]);
 
-    const res = await db
+    const res = await ctx.db2
       .select({
         id: users2Table.id,
         user: {
@@ -1508,17 +1400,15 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('left join (all fields)', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const { id: cityId } = await db
+    const { id: cityId } = await ctx.db2
       .insert(citiesTable)
       .values([{ name: 'Paris' }, { name: 'London' }])
       .returning({ id: citiesTable.id })
       .then((rows) => rows[0]!);
 
-    await db.insert(users2Table).values([{ name: 'John', cityId }, { name: 'Jane' }]);
+    await ctx.db2.insert(users2Table).values([{ name: 'John', cityId }, { name: 'Jane' }]);
 
-    const res = await db.select().from(users2Table).leftJoin(citiesTable, eq(users2Table.cityId, citiesTable.id));
+    const res = await ctx.db2.select().from(users2Table).leftJoin(citiesTable, eq(users2Table.cityId, citiesTable.id));
 
     assert.deepEqual(res, [
       {
@@ -1545,20 +1435,18 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('join subquery', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db
+    await ctx.db2
       .insert(courseCategoriesTable)
       .values([{ name: 'Category 1' }, { name: 'Category 2' }, { name: 'Category 3' }, { name: 'Category 4' }]);
 
-    await db.insert(coursesTable).values([
+    await ctx.db2.insert(coursesTable).values([
       { name: 'Development', categoryId: 2 },
       { name: 'IT & Software', categoryId: 3 },
       { name: 'Marketing', categoryId: 4 },
       { name: 'Design', categoryId: 1 }
     ]);
 
-    const sq2 = db
+    const sq2 = ctx.db2
       .select({
         categoryId: courseCategoriesTable.id,
         category: courseCategoriesTable.name,
@@ -1568,7 +1456,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       .groupBy(courseCategoriesTable.id, courseCategoriesTable.name)
       .as('sq2');
 
-    const res = await db
+    const res = await ctx.db2
       .select({
         courseName: coursesTable.name,
         categoryId: sq2.categoryId
@@ -1586,9 +1474,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('with ... select', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(orders).values([
+    await ctx.db2.insert(orders).values([
       { region: 'Europe', product: 'A', amount: 10, quantity: 1 },
       { region: 'Europe', product: 'A', amount: 20, quantity: 2 },
       { region: 'Europe', product: 'B', amount: 20, quantity: 2 },
@@ -1599,8 +1485,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       { region: 'US', product: 'B', amount: 50, quantity: 5 }
     ]);
 
-    const regionalSales = db.$with('regional_sales').as(
-      db
+    const regionalSales = ctx.db2.$with('regional_sales').as(
+      ctx.db2
         .select({
           region: orders.region,
           totalSales: sql<number>`sum(${orders.amount})`.as('total_sales')
@@ -1609,8 +1495,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         .groupBy(orders.region)
     );
 
-    const topRegions = db.$with('top_regions').as(
-      db
+    const topRegions = ctx.db2.$with('top_regions').as(
+      ctx.db2
         .select({
           region: regionalSales.region
         })
@@ -1618,12 +1504,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         .where(
           gt(
             regionalSales.totalSales,
-            db.select({ sales: sql`sum(${regionalSales.totalSales})/10` }).from(regionalSales)
+            ctx.db2.select({ sales: sql`sum(${regionalSales.totalSales})/10` }).from(regionalSales)
           )
         )
     );
 
-    const result1 = await db
+    const result1 = await ctx.db2
       .with(regionalSales, topRegions)
       .select({
         region: orders.region,
@@ -1632,10 +1518,10 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         productSales: sql<number>`sum(${orders.amount})::int`
       })
       .from(orders)
-      .where(inArray(orders.region, db.select({ region: topRegions.region }).from(topRegions)))
+      .where(inArray(orders.region, ctx.db2.select({ region: topRegions.region }).from(topRegions)))
       .groupBy(orders.region, orders.product)
       .orderBy(orders.region, orders.product);
-    const result2 = await db
+    const result2 = await ctx.db2
       .with(regionalSales, topRegions)
       .selectDistinct({
         region: orders.region,
@@ -1644,10 +1530,10 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         productSales: sql<number>`sum(${orders.amount})::int`
       })
       .from(orders)
-      .where(inArray(orders.region, db.select({ region: topRegions.region }).from(topRegions)))
+      .where(inArray(orders.region, ctx.db2.select({ region: topRegions.region }).from(topRegions)))
       .groupBy(orders.region, orders.product)
       .orderBy(orders.region, orders.product);
-    const result3 = await db
+    const result3 = await ctx.db2
       .with(regionalSales, topRegions)
       .selectDistinctOn([orders.region], {
         region: orders.region,
@@ -1655,7 +1541,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         productSales: sql<number>`sum(${orders.amount})::int`
       })
       .from(orders)
-      .where(inArray(orders.region, db.select({ region: topRegions.region }).from(topRegions)))
+      .where(inArray(orders.region, ctx.db2.select({ region: topRegions.region }).from(topRegions)))
       .groupBy(orders.region)
       .orderBy(orders.region);
 
@@ -1701,16 +1587,14 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('with ... update', async (ctx) => {
-    const { db2: db } = ctx;
-
     const products = pgTable('products', {
       id: serial('id').primaryKey(),
       price: numeric('price').notNull(),
       cheap: boolean('cheap').notNull().default(false)
     });
 
-    await db.execute(sql`drop table if exists ${products}`);
-    await db.execute(sql`
+    await ctx.db2.execute(sql`drop table if exists ${products}`);
+    await ctx.db2.execute(sql`
 		create table ${products} (
 			id serial primary key,
 			price numeric not null,
@@ -1718,19 +1602,19 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 		)
 	`);
 
-    await db
+    await ctx.db2
       .insert(products)
       .values([{ price: '10.99' }, { price: '25.85' }, { price: '32.99' }, { price: '2.50' }, { price: '4.59' }]);
 
-    const averagePrice = db.$with('average_price').as(
-      db
+    const averagePrice = ctx.db2.$with('average_price').as(
+      ctx.db2
         .select({
           value: sql`avg(${products.price})`.as('value')
         })
         .from(products)
     );
 
-    const result = await db
+    const result = await ctx.db2
       .with(averagePrice)
       .update(products)
       .set({
@@ -1745,25 +1629,23 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('with ... insert', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users', {
       username: text('username').notNull(),
       admin: boolean('admin').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
-    await db.execute(sql`create table ${users} (username text not null, admin boolean not null default false)`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`create table ${users} (username text not null, admin boolean not null default false)`);
 
-    const userCount = db.$with('user_count').as(
-      db
+    const userCount = ctx.db2.$with('user_count').as(
+      ctx.db2
         .select({
           value: sql`count(*)`.as('value')
         })
         .from(users)
     );
 
-    const result = await db
+    const result = await ctx.db2
       .with(userCount)
       .insert(users)
       .values([{ username: 'user1', admin: sql`((select * from ${userCount}) = 0)` }])
@@ -1775,9 +1657,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('with ... delete', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await db.insert(orders).values([
+    await ctx.db2.insert(orders).values([
       { region: 'Europe', product: 'A', amount: 10, quantity: 1 },
       { region: 'Europe', product: 'A', amount: 20, quantity: 2 },
       { region: 'Europe', product: 'B', amount: 20, quantity: 2 },
@@ -1788,15 +1668,15 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       { region: 'US', product: 'B', amount: 50, quantity: 5 }
     ]);
 
-    const averageAmount = db.$with('average_amount').as(
-      db
+    const averageAmount = ctx.db2.$with('average_amount').as(
+      ctx.db2
         .select({
           value: sql`avg(${orders.amount})`.as('value')
         })
         .from(orders)
     );
 
-    const result = await db
+    const result = await ctx.db2
       .with(averageAmount)
       .delete(orders)
       .where(gt(orders.amount, sql`(select * from ${averageAmount})`))
@@ -1808,47 +1688,39 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select from subquery sql', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(users2Table).values([{ name: 'John' }, { name: 'Jane' }]);
 
-    await db.insert(users2Table).values([{ name: 'John' }, { name: 'Jane' }]);
-
-    const sq = db
+    const sq = ctx.db2
       .select({ name: sql<string>`${users2Table.name} || ' modified'`.as('name') })
       .from(users2Table)
       .as('sq');
 
-    const res = await db.select({ name: sq.name }).from(sq);
+    const res = await ctx.db2.select({ name: sq.name }).from(sq);
 
     assert.deepEqual(res, [{ name: 'John modified' }, { name: 'Jane modified' }]);
   });
 
   test('select a field without joining its table', (ctx) => {
-    const { db2: db } = ctx;
-
-    ctx.expect(() => db.select({ name: users2Table.name }).from(usersTable).prepare('query')).toThrowError();
+    ctx.expect(() => ctx.db2.select({ name: users2Table.name }).from(usersTable).prepare('query')).toThrowError();
   });
 
   test('select all fields from subquery without alias', (ctx) => {
-    const { db2: db } = ctx;
+    const sq = ctx.db2
+      .$with('sq')
+      .as(ctx.db2.select({ name: sql<string>`upper(${users2Table.name})` }).from(users2Table));
 
-    const sq = db.$with('sq').as(db.select({ name: sql<string>`upper(${users2Table.name})` }).from(users2Table));
-
-    ctx.expect(() => db.select().from(sq).prepare('query')).toThrowError();
+    ctx.expect(() => ctx.db2.select().from(sq).prepare('query')).toThrowError();
   });
 
   test('select count()', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }]);
 
-    await db.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }]);
-
-    const res = await db.select({ count: sql`count(*)` }).from(usersTable);
+    const res = await ctx.db2.select({ count: sql`count(*)` }).from(usersTable);
 
     assert.deepEqual(res, [{ count: '2' }]);
   });
 
   test('select count w/ custom mapper', async (ctx) => {
-    const { db2: db } = ctx;
-
     function count(value: PgColumn | SQLWrapper): SQL<number>;
     function count(value: PgColumn | SQLWrapper, alias: string): SQL.Aliased<number>;
     function count(value: PgColumn | SQLWrapper, alias?: string): SQL<number> | SQL.Aliased<number> {
@@ -1859,16 +1731,14 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       return result.as(alias);
     }
 
-    await db.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }]);
+    await ctx.db2.insert(usersTable).values([{ name: 'John' }, { name: 'Jane' }]);
 
-    const res = await db.select({ count: count(sql`*`) }).from(usersTable);
+    const res = await ctx.db2.select({ count: count(sql`*`) }).from(usersTable);
 
     assert.deepEqual(res, [{ count: 2 }]);
   });
 
   test('network types', async (ctx) => {
-    const { db2: db } = ctx;
-
     const value: typeof network.$inferSelect = {
       inet: '127.0.0.1',
       cidr: '192.168.100.128/25',
@@ -1876,16 +1746,14 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       macaddr8: '08:00:2b:01:02:03:04:05'
     };
 
-    await db.insert(network).values(value);
+    await ctx.db2.insert(network).values(value);
 
-    const res = await db.select().from(network);
+    const res = await ctx.db2.select().from(network);
 
     assert.deepEqual(res, [value]);
   });
 
   test('array types', async (ctx) => {
-    const { db2: db } = ctx;
-
     const values: (typeof salEmp.$inferSelect)[] = [
       {
         name: 'John',
@@ -1905,24 +1773,22 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ];
 
-    await db.insert(salEmp).values(values);
+    await ctx.db2.insert(salEmp).values(values);
 
-    const res = await db.select().from(salEmp);
+    const res = await ctx.db2.select().from(salEmp);
 
     assert.deepEqual(res, values);
   });
 
   test('select for ...', (ctx) => {
-    const { db2: db } = ctx;
-
     {
-      const query = db.select().from(users2Table).for('update').toSQL();
+      const query = ctx.db2.select().from(users2Table).for('update').toSQL();
 
       ctx.expect(query.sql).toMatch(/ for update$/);
     }
 
     {
-      const query = db
+      const query = ctx.db2
         .select()
         .from(users2Table)
         .for('update', { of: [users2Table, coursesTable] })
@@ -1932,30 +1798,32 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     }
 
     {
-      const query = db.select().from(users2Table).for('no key update', { of: users2Table }).toSQL();
+      const query = ctx.db2.select().from(users2Table).for('no key update', { of: users2Table }).toSQL();
 
       ctx.expect(query.sql).toMatch(/for no key update of "users2"$/);
     }
 
     {
-      const query = db.select().from(users2Table).for('no key update', { of: users2Table, skipLocked: true }).toSQL();
+      const query = ctx.db2
+        .select()
+        .from(users2Table)
+        .for('no key update', { of: users2Table, skipLocked: true })
+        .toSQL();
 
       ctx.expect(query.sql).toMatch(/ for no key update of "users2" skip locked$/);
     }
 
     {
-      const query = db.select().from(users2Table).for('share', { of: users2Table, noWait: true }).toSQL();
+      const query = ctx.db2.select().from(users2Table).for('share', { of: users2Table, noWait: true }).toSQL();
 
       ctx.expect(query.sql).toMatch(/for share of "users2" no wait$/);
     }
   });
 
   test('having', async (ctx) => {
-    const { db2: db } = ctx;
+    await ctx.db2.insert(citiesTable).values([{ name: 'London' }, { name: 'Paris' }, { name: 'New York' }]);
 
-    await db.insert(citiesTable).values([{ name: 'London' }, { name: 'Paris' }, { name: 'New York' }]);
-
-    await db.insert(users2Table).values([
+    await ctx.db2.insert(users2Table).values([
       { name: 'John', cityId: 1 },
       { name: 'Jane', cityId: 1 },
       {
@@ -1964,7 +1832,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ]);
 
-    const result = await db
+    const result = await ctx.db2
       .select({
         id: citiesTable.id,
         name: sql<string>`upper(${citiesTable.name})`.as('upper_name'),
@@ -1992,8 +1860,6 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   notSupported('view', async (ctx) => {
-    const { db2: db } = ctx;
-
     const newYorkers1 = pgView('new_yorkers').as((qb) =>
       qb.select().from(users2Table).where(eq(users2Table.cityId, 1))
     );
@@ -2010,18 +1876,18 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       cityId: integer('city_id').notNull()
     }).existing();
 
-    await db.execute(sql`create view ${newYorkers1} as ${getViewConfig(newYorkers1).query}`);
+    await ctx.db2.execute(sql`create view ${newYorkers1} as ${getViewConfig(newYorkers1).query}`);
 
-    await db.insert(citiesTable).values([{ name: 'New York' }, { name: 'Paris' }]);
+    await ctx.db2.insert(citiesTable).values([{ name: 'New York' }, { name: 'Paris' }]);
 
-    await db.insert(users2Table).values([
+    await ctx.db2.insert(users2Table).values([
       { name: 'John', cityId: 1 },
       { name: 'Jane', cityId: 1 },
       { name: 'Jack', cityId: 2 }
     ]);
 
     {
-      const result = await db.select().from(newYorkers1);
+      const result = await ctx.db2.select().from(newYorkers1);
       assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
@@ -2029,7 +1895,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     }
 
     {
-      const result = await db.select().from(newYorkers2);
+      const result = await ctx.db2.select().from(newYorkers2);
       assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
@@ -2037,7 +1903,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     }
 
     {
-      const result = await db.select().from(newYorkers3);
+      const result = await ctx.db2.select().from(newYorkers3);
       assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
@@ -2045,16 +1911,14 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     }
 
     {
-      const result = await db.select({ name: newYorkers1.name }).from(newYorkers1);
+      const result = await ctx.db2.select({ name: newYorkers1.name }).from(newYorkers1);
       assert.deepEqual(result, [{ name: 'John' }, { name: 'Jane' }]);
     }
 
-    await db.execute(sql`drop view ${newYorkers1}`);
+    await ctx.db2.execute(sql`drop view ${newYorkers1}`);
   });
 
   notSupported('materialized view', async (ctx) => {
-    const { db2: db } = ctx;
-
     const newYorkers1 = pgMaterializedView('new_yorkers').as((qb) =>
       qb.select().from(users2Table).where(eq(users2Table.cityId, 1))
     );
@@ -2071,25 +1935,27 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       cityId: integer('city_id').notNull()
     }).existing();
 
-    await db.execute(sql`create materialized view ${newYorkers1} as ${getMaterializedViewConfig(newYorkers1).query}`);
+    await ctx.db2.execute(
+      sql`create materialized view ${newYorkers1} as ${getMaterializedViewConfig(newYorkers1).query}`
+    );
 
-    await db.insert(citiesTable).values([{ name: 'New York' }, { name: 'Paris' }]);
+    await ctx.db2.insert(citiesTable).values([{ name: 'New York' }, { name: 'Paris' }]);
 
-    await db.insert(users2Table).values([
+    await ctx.db2.insert(users2Table).values([
       { name: 'John', cityId: 1 },
       { name: 'Jane', cityId: 1 },
       { name: 'Jack', cityId: 2 }
     ]);
 
     {
-      const result = await db.select().from(newYorkers1);
+      const result = await ctx.db2.select().from(newYorkers1);
       assert.deepEqual(result, []);
     }
 
-    await db.refreshMaterializedView(newYorkers1);
+    await ctx.db2.refreshMaterializedView(newYorkers1);
 
     {
-      const result = await db.select().from(newYorkers1);
+      const result = await ctx.db2.select().from(newYorkers1);
       assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
@@ -2097,7 +1963,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     }
 
     {
-      const result = await db.select().from(newYorkers2);
+      const result = await ctx.db2.select().from(newYorkers2);
       assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
@@ -2105,7 +1971,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     }
 
     {
-      const result = await db.select().from(newYorkers3);
+      const result = await ctx.db2.select().from(newYorkers3);
       assert.deepEqual(result, [
         { id: 1, name: 'John', cityId: 1 },
         { id: 2, name: 'Jane', cityId: 1 }
@@ -2113,18 +1979,16 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     }
 
     {
-      const result = await db.select({ name: newYorkers1.name }).from(newYorkers1);
+      const result = await ctx.db2.select({ name: newYorkers1.name }).from(newYorkers1);
       assert.deepEqual(result, [{ name: 'John' }, { name: 'Jane' }]);
     }
 
-    await db.execute(sql`drop materialized view ${newYorkers1}`);
+    await ctx.db2.execute(sql`drop materialized view ${newYorkers1}`);
   });
 
   // TODO: copy to SQLite and MySQL, add to docs
   test('select from raw sql', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const result = await db
+    const result = await ctx.db2
       .select({
         id: sql<number>`id`,
         name: sql<string>`name`
@@ -2137,9 +2001,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select from raw sql with joins', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const result = await db
+    const result = await ctx.db2
       .select({
         id: sql<number>`users.id`,
         name: sql<string>`users.name`,
@@ -2155,9 +2017,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('join on aliased sql from select', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const result = await db
+    const result = await ctx.db2
       .select({
         userId: sql<number>`users.id`.as('userId'),
         name: sql<string>`users.name`,
@@ -2176,10 +2036,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('join on aliased sql from with clause', async (ctx) => {
-    const { db2: db } = ctx;
-
-    const users = db.$with('users').as(
-      db
+    const users = ctx.db2.$with('users').as(
+      ctx.db2
         .select({
           id: sql<number>`id`.as('userId'),
           name: sql<string>`name`.as('userName'),
@@ -2188,8 +2046,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         .from(sql`(select 1 as id, 'John' as name, 'New York' as city) as users`)
     );
 
-    const cities = db.$with('cities').as(
-      db
+    const cities = ctx.db2.$with('cities').as(
+      ctx.db2
         .select({
           id: sql<number>`id`.as('cityId'),
           name: sql<string>`name`.as('cityName')
@@ -2197,7 +2055,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         .from(sql`(select 1 as id, 'Paris' as name) as cities`)
     );
 
-    const result = await db
+    const result = await ctx.db2
       .with(users, cities)
       .select({
         userId: users.id,
@@ -2217,8 +2075,6 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('prefixed table', async (ctx) => {
-    const { db2: db } = ctx;
-
     const pgTable = pgTableCreator((name) => `myprefix_${name}`);
 
     const users = pgTable('test_prefixed_table_with_unique_name', {
@@ -2226,24 +2082,22 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       name: text('name').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(
+    await ctx.db2.execute(
       sql`create table myprefix_test_prefixed_table_with_unique_name (id integer not null primary key, name text not null)`
     );
 
-    await db.insert(users).values({ id: 1, name: 'John' });
+    await ctx.db2.insert(users).values({ id: 1, name: 'John' });
 
-    const result = await db.select().from(users);
+    const result = await ctx.db2.select().from(users);
 
     assert.deepEqual(result, [{ id: 1, name: 'John' }]);
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   notSupported('select from enum', async (ctx) => {
-    const { db2: db } = ctx;
-
     const muscleEnum = pgEnum('muscle', [
       'abdominals',
       'hamstrings',
@@ -2293,29 +2147,33 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         .default(sql`now()`)
     });
 
-    await db.execute(sql`drop table if exists ${exercises}`);
-    await db.execute(sql`drop type if exists ${name(muscleEnum.enumName)}`);
-    await db.execute(sql`drop type if exists ${name(forceEnum.enumName)}`);
-    await db.execute(sql`drop type if exists ${name(levelEnum.enumName)}`);
-    await db.execute(sql`drop type if exists ${name(mechanicEnum.enumName)}`);
-    await db.execute(sql`drop type if exists ${name(equipmentEnum.enumName)}`);
-    await db.execute(sql`drop type if exists ${name(categoryEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop table if exists ${exercises}`);
+    await ctx.db2.execute(sql`drop type if exists ${name(muscleEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type if exists ${name(forceEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type if exists ${name(levelEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type if exists ${name(mechanicEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type if exists ${name(equipmentEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type if exists ${name(categoryEnum.enumName)}`);
 
-    await db.execute(
+    await ctx.db2.execute(
       sql`create type ${name(
         muscleEnum.enumName
       )} as enum ('abdominals', 'hamstrings', 'adductors', 'quadriceps', 'biceps', 'shoulders', 'chest', 'middle_back', 'calves', 'glutes', 'lower_back', 'lats', 'triceps', 'traps', 'forearms', 'neck', 'abductors')`
     );
-    await db.execute(sql`create type ${name(forceEnum.enumName)} as enum ('isometric', 'isotonic', 'isokinetic')`);
-    await db.execute(sql`create type ${name(levelEnum.enumName)} as enum ('beginner', 'intermediate', 'advanced')`);
-    await db.execute(sql`create type ${name(mechanicEnum.enumName)} as enum ('compound', 'isolation')`);
-    await db.execute(
+    await ctx.db2.execute(sql`create type ${name(forceEnum.enumName)} as enum ('isometric', 'isotonic', 'isokinetic')`);
+    await ctx.db2.execute(
+      sql`create type ${name(levelEnum.enumName)} as enum ('beginner', 'intermediate', 'advanced')`
+    );
+    await ctx.db2.execute(sql`create type ${name(mechanicEnum.enumName)} as enum ('compound', 'isolation')`);
+    await ctx.db2.execute(
       sql`create type ${name(
         equipmentEnum.enumName
       )} as enum ('barbell', 'dumbbell', 'bodyweight', 'machine', 'cable', 'kettlebell')`
     );
-    await db.execute(sql`create type ${name(categoryEnum.enumName)} as enum ('upper_body', 'lower_body', 'full_body')`);
-    await db.execute(sql`
+    await ctx.db2.execute(
+      sql`create type ${name(categoryEnum.enumName)} as enum ('upper_body', 'lower_body', 'full_body')`
+    );
+    await ctx.db2.execute(sql`
 		create table ${exercises} (
 			id serial primary key,
 			name varchar not null,
@@ -2332,7 +2190,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 		)
 	`);
 
-    await db.insert(exercises).values({
+    await ctx.db2.insert(exercises).values({
       name: 'Bench Press',
       force: 'isotonic',
       level: 'beginner',
@@ -2345,7 +2203,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       secondaryMuscles: ['shoulders', 'traps']
     });
 
-    const result = await db.select().from(exercises);
+    const result = await ctx.db2.select().from(exercises);
 
     assert.deepEqual(result, [
       {
@@ -2365,18 +2223,16 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ]);
 
-    await db.execute(sql`drop table ${exercises}`);
-    await db.execute(sql`drop type ${name(muscleEnum.enumName)}`);
-    await db.execute(sql`drop type ${name(forceEnum.enumName)}`);
-    await db.execute(sql`drop type ${name(levelEnum.enumName)}`);
-    await db.execute(sql`drop type ${name(mechanicEnum.enumName)}`);
-    await db.execute(sql`drop type ${name(equipmentEnum.enumName)}`);
-    await db.execute(sql`drop type ${name(categoryEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop table ${exercises}`);
+    await ctx.db2.execute(sql`drop type ${name(muscleEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type ${name(forceEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type ${name(levelEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type ${name(mechanicEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type ${name(equipmentEnum.enumName)}`);
+    await ctx.db2.execute(sql`drop type ${name(categoryEnum.enumName)}`);
   });
 
   test('all date and time columns', async (ctx) => {
-    const { db2: db } = ctx;
-
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       dateString: date('date_string', { mode: 'string' }).notNull(),
@@ -2389,9 +2245,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       interval: interval('interval').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					date_string date not null,
@@ -2409,7 +2265,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     const fullPrecision = '2022-01-01T00:00:00.123456Z';
     const someTime = '23:23:12.432';
 
-    await db.insert(table).values({
+    await ctx.db2.insert(table).values({
       dateString: '2022-01-01',
       time: someTime,
       datetime: someDatetime,
@@ -2420,7 +2276,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       interval: '1 day'
     });
 
-    const result = await db.select().from(table);
+    const result = await ctx.db2.select().from(table);
 
     Expect<
       Equal<
@@ -2470,20 +2326,18 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ]);
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('all date and time columns with timezone second case mode date', async (ctx) => {
-    const { db2: db } = ctx;
-
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'date', withTimezone: true, precision: 3 }).notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					timestamp_string timestamp(3) with time zone not null
@@ -2493,31 +2347,29 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     const insertedDate = new Date();
 
     // 1. Insert date as new date
-    await db.insert(table).values([{ timestamp: insertedDate }]);
+    await ctx.db2.insert(table).values([{ timestamp: insertedDate }]);
 
     // 2, Select as date and check that timezones are the same
     // There is no way to check timezone in Date object, as it is always represented internally in UTC
-    const result = await db.select().from(table);
+    const result = await ctx.db2.select().from(table);
 
     assert.deepEqual(result, [{ id: 1, timestamp: insertedDate }]);
 
     // 3. Compare both dates
     assert.deepEqual(insertedDate.getTime(), result[0]?.timestamp.getTime());
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('all date and time columns with timezone third case mode date', async (ctx) => {
-    const { db2: db } = ctx;
-
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'date', withTimezone: true, precision: 3 }).notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					timestamp_string timestamp(3) with time zone not null
@@ -2528,27 +2380,25 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     const insertedDate2 = new Date('2022-01-02 04:00:00.123+04'); // They are both the same date in different time zones
 
     // 1. Insert date as new dates with different time zones
-    await db.insert(table).values([{ timestamp: insertedDate }, { timestamp: insertedDate2 }]);
+    await ctx.db2.insert(table).values([{ timestamp: insertedDate }, { timestamp: insertedDate2 }]);
 
     // 2, Select and compare both dates
-    const result = await db.select().from(table);
+    const result = await ctx.db2.select().from(table);
 
     assert.deepEqual(result[0]?.timestamp.getTime(), result[1]?.timestamp.getTime());
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('all date and time columns without timezone first case mode string', async (ctx) => {
-    const { db2: db } = ctx;
-
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'string', precision: 6 }).notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					timestamp_string timestamp(6) not null
@@ -2556,35 +2406,33 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 	`);
 
     // 1. Insert date in string format without timezone in it
-    await db.insert(table).values([{ timestamp: '2022-01-01 02:00:00.123456' }]);
+    await ctx.db2.insert(table).values([{ timestamp: '2022-01-01 02:00:00.123456' }]);
 
     // 2, Select in string format and check that values are the same
-    const result = await db.select().from(table);
+    const result = await ctx.db2.select().from(table);
 
     assert.deepEqual(result, [{ id: 1, timestamp: '2022-01-01 02:00:00.123456' }]);
 
     // 3. Select as raw query and check that values are the same
-    const result2 = await db.execute<{
+    const result2 = await ctx.db2.execute<{
       id: number;
       timestamp_string: string;
     }>(sql`select * from ${table}`);
 
     assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456' }]);
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('all date and time columns without timezone second case mode string', async (ctx) => {
-    const { db2: db } = ctx;
-
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'string', precision: 6 }).notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					timestamp_string timestamp(6) not null
@@ -2592,30 +2440,28 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 	`);
 
     // 1. Insert date in string format with timezone in it
-    await db.insert(table).values([{ timestamp: '2022-01-01T02:00:00.123456-02' }]);
+    await ctx.db2.insert(table).values([{ timestamp: '2022-01-01T02:00:00.123456-02' }]);
 
     // 2, Select as raw query and check that values are the same
-    const result = await db.execute<{
+    const result = await ctx.db2.execute<{
       id: number;
       timestamp_string: string;
     }>(sql`select * from ${table}`);
 
     assert.deepEqual(result.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456' }]);
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('all date and time columns without timezone third case mode date', async (ctx) => {
-    const { db2: db } = ctx;
-
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'date', precision: 3 }).notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					timestamp_string timestamp(3) not null
@@ -2625,10 +2471,10 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     const insertedDate = new Date('2022-01-01 20:00:00.123+04');
 
     // 1. Insert date as new date
-    await db.insert(table).values([{ timestamp: insertedDate }]);
+    await ctx.db2.insert(table).values([{ timestamp: insertedDate }]);
 
     // 2, Select as raw query as string
-    const result = await db.execute<{
+    const result = await ctx.db2.execute<{
       id: number;
       timestamp_string: string;
     }>(sql`select * from ${table}`);
@@ -2636,20 +2482,18 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     // 3. Compare both dates using orm mapping - Need to add 'Z' to tell JS that it is UTC
     assert.deepEqual(new Date(result.rows[0]!.timestamp_string + 'Z').getTime(), insertedDate.getTime());
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('test mode string for timestamp with timezone', async (ctx) => {
-    const { db2: db } = ctx;
-
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'string', withTimezone: true, precision: 6 }).notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					timestamp_string timestamp(6) with time zone not null
@@ -2659,16 +2503,16 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     const timestampString = '2022-01-01 00:00:00.123456-0200';
 
     // 1. Insert date in string format with timezone in it
-    await db.insert(table).values([{ timestamp: timestampString }]);
+    await ctx.db2.insert(table).values([{ timestamp: timestampString }]);
 
     // 2. Select date in string format and check that the values are the same
-    const result = await db.select().from(table);
+    const result = await ctx.db2.select().from(table);
 
     // 2.1 Notice that postgres will return the date in UTC, but it is exactly the same
     assert.deepEqual(result, [{ id: 1, timestamp: '2022-01-01 02:00:00.123456+00' }]);
 
     // 3. Select as raw query and checke that values are the same
-    const result2 = await db.execute<{
+    const result2 = await ctx.db2.execute<{
       id: number;
       timestamp_string: string;
     }>(sql`select * from ${table}`);
@@ -2676,20 +2520,18 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     // 3.1 Notice that postgres will return the date in UTC, but it is exactlt the same
     assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456+00' }]);
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('test mode date for timestamp with timezone', async (ctx) => {
-    const { db2: db } = ctx;
-
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'date', withTimezone: true, precision: 3 }).notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					timestamp_string timestamp(3) with time zone not null
@@ -2699,16 +2541,16 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     const timestampString = new Date('2022-01-01 00:00:00.456-0200');
 
     // 1. Insert date in string format with timezone in it
-    await db.insert(table).values([{ timestamp: timestampString }]);
+    await ctx.db2.insert(table).values([{ timestamp: timestampString }]);
 
     // 2. Select date in string format and check that the values are the same
-    const result = await db.select().from(table);
+    const result = await ctx.db2.select().from(table);
 
     // 2.1 Notice that postgres will return the date in UTC, but it is exactly the same
     assert.deepEqual(result, [{ id: 1, timestamp: timestampString }]);
 
     // 3. Select as raw query and checke that values are the same
-    const result2 = await db.execute<{
+    const result2 = await ctx.db2.execute<{
       id: number;
       timestamp_string: string;
     }>(sql`select * from ${table}`);
@@ -2716,26 +2558,24 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     // 3.1 Notice that postgres will return the date in UTC, but it is exactlt the same
     assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.456+00' }]);
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('test mode string for timestamp with timezone in UTC timezone', async (ctx) => {
-    const { db2: db } = ctx;
-
     // get current timezone from db
-    const timezone = await db.execute<{ TimeZone: string }>(sql`show timezone`);
+    const timezone = await ctx.db2.execute<{ TimeZone: string }>(sql`show timezone`);
 
     // set timezone to UTC
-    await db.execute(sql`set time zone 'UTC'`);
+    await ctx.db2.execute(sql`set time zone 'UTC'`);
 
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'string', withTimezone: true, precision: 6 }).notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					timestamp_string timestamp(6) with time zone not null
@@ -2745,16 +2585,16 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     const timestampString = '2022-01-01 00:00:00.123456-0200';
 
     // 1. Insert date in string format with timezone in it
-    await db.insert(table).values([{ timestamp: timestampString }]);
+    await ctx.db2.insert(table).values([{ timestamp: timestampString }]);
 
     // 2. Select date in string format and check that the values are the same
-    const result = await db.select().from(table);
+    const result = await ctx.db2.select().from(table);
 
     // 2.1 Notice that postgres will return the date in UTC, but it is exactly the same
     assert.deepEqual(result, [{ id: 1, timestamp: '2022-01-01 02:00:00.123456+00' }]);
 
     // 3. Select as raw query and checke that values are the same
-    const result2 = await db.execute<{
+    const result2 = await ctx.db2.execute<{
       id: number;
       timestamp_string: string;
     }>(sql`select * from ${table}`);
@@ -2762,28 +2602,26 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     // 3.1 Notice that postgres will return the date in UTC, but it is exactlt the same
     assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 02:00:00.123456+00' }]);
 
-    await db.execute(sql`set time zone '${sql.raw(timezone.rows[0]!.TimeZone)}'`);
+    await ctx.db2.execute(sql`set time zone '${sql.raw(timezone.rows[0]!.TimeZone)}'`);
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('test mode string for timestamp with timezone in different timezone', async (ctx) => {
-    const { db2: db } = ctx;
-
     // get current timezone from db
-    const timezone = await db.execute<{ TimeZone: string }>(sql`show timezone`);
+    const timezone = await ctx.db2.execute<{ TimeZone: string }>(sql`show timezone`);
 
     // set timezone to HST (UTC - 10)
-    await db.execute(sql`set time zone 'HST'`);
+    await ctx.db2.execute(sql`set time zone 'HST'`);
 
     const table = pgTable('all_columns', {
       id: serial('id').primaryKey(),
       timestamp: timestamp('timestamp_string', { mode: 'string', withTimezone: true, precision: 6 }).notNull()
     });
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
 
-    await db.execute(sql`
+    await ctx.db2.execute(sql`
 		create table ${table} (
 					id serial primary key,
 					timestamp_string timestamp(6) with time zone not null
@@ -2793,30 +2631,28 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     const timestampString = '2022-01-01 00:00:00.123456-1000';
 
     // 1. Insert date in string format with timezone in it
-    await db.insert(table).values([{ timestamp: timestampString }]);
+    await ctx.db2.insert(table).values([{ timestamp: timestampString }]);
 
     // 2. Select date in string format and check that the values are the same
-    const result = await db.select().from(table);
+    const result = await ctx.db2.select().from(table);
 
     assert.deepEqual(result, [{ id: 1, timestamp: '2022-01-01 00:00:00.123456-10' }]);
 
     // 3. Select as raw query and checke that values are the same
-    const result2 = await db.execute<{
+    const result2 = await ctx.db2.execute<{
       id: number;
       timestamp_string: string;
     }>(sql`select * from ${table}`);
 
     assert.deepEqual(result2.rows, [{ id: 1, timestamp_string: '2022-01-01 00:00:00.123456-10' }]);
 
-    await db.execute(sql`set time zone '${sql.raw(timezone.rows[0]!.TimeZone)}'`);
+    await ctx.db2.execute(sql`set time zone '${sql.raw(timezone.rows[0]!.TimeZone)}'`);
 
-    await db.execute(sql`drop table if exists ${table}`);
+    await ctx.db2.execute(sql`drop table if exists ${table}`);
   });
 
   test('orderBy with aliased column', (ctx) => {
-    const { db2: db } = ctx;
-
-    const query = db
+    const query = ctx.db2
       .select({
         test: sql`something`.as('test')
       })
@@ -2828,20 +2664,18 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('select from sql', async (ctx) => {
-    const { db2: db } = ctx;
-
     const metricEntry = pgTable('metric_entry', {
       id: pgUuid('id').notNull(),
       createdAt: timestamp('created_at').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${metricEntry}`);
-    await db.execute(sql`create table ${metricEntry} (id uuid not null, created_at timestamp not null)`);
+    await ctx.db2.execute(sql`drop table if exists ${metricEntry}`);
+    await ctx.db2.execute(sql`create table ${metricEntry} (id uuid not null, created_at timestamp not null)`);
 
     const metricId = uuid();
 
-    const intervals = db.$with('intervals').as(
-      db
+    const intervals = ctx.db2.$with('intervals').as(
+      ctx.db2
         .select({
           startTime: sql<string>`(date'2023-03-01'+ x * '1 day'::interval)`.as('start_time'),
           endTime: sql<string>`(date'2023-03-01'+ (x+1) *'1 day'::interval)`.as('end_time')
@@ -2851,7 +2685,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     ctx
       .expect(() =>
-        db
+        ctx.db2
           .with(intervals)
           .select({
             startTime: intervals.startTime,
@@ -2874,8 +2708,6 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('timestamp timezone', async (ctx) => {
-    const { db2: db } = ctx;
-
     const usersTableWithAndWithoutTimezone = pgTable('users_test_with_and_without_timezone', {
       id: serial('id').primaryKey(),
       name: text('name').notNull(),
@@ -2883,9 +2715,9 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       updatedAt: timestamp('updated_at', { withTimezone: false }).notNull().defaultNow()
     });
 
-    await db.execute(sql`drop table if exists ${usersTableWithAndWithoutTimezone}`);
+    await ctx.db2.execute(sql`drop table if exists ${usersTableWithAndWithoutTimezone}`);
 
-    await db.execute(
+    await ctx.db2.execute(
       sql`
 			create table users_test_with_and_without_timezone (
 				id serial not null primary key,
@@ -2898,13 +2730,13 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     const date = new Date(Date.parse('2020-01-01T00:00:00+04:00'));
 
-    await db.insert(usersTableWithAndWithoutTimezone).values({ name: 'With default times' });
-    await db.insert(usersTableWithAndWithoutTimezone).values({
+    await ctx.db2.insert(usersTableWithAndWithoutTimezone).values({ name: 'With default times' });
+    await ctx.db2.insert(usersTableWithAndWithoutTimezone).values({
       name: 'Without default times',
       createdAt: date,
       updatedAt: date
     });
-    const users = await db.select().from(usersTableWithAndWithoutTimezone);
+    const users = await ctx.db2.select().from(usersTableWithAndWithoutTimezone);
 
     // check that the timestamps are set correctly for default times
     ctx.expect(Math.abs(users[0]!.updatedAt.getTime() - Date.now()) < 2000);
@@ -2916,8 +2748,6 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('transaction', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users_transactions', {
       id: serial('id').primaryKey(),
       balance: integer('balance').notNull()
@@ -2928,26 +2758,28 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       stock: integer('stock').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
-    await db.execute(sql`drop table if exists ${products}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${products}`);
 
-    await db.execute(sql`create table users_transactions (id serial not null primary key, balance integer not null)`);
-    await db.execute(
+    await ctx.db2.execute(
+      sql`create table users_transactions (id serial not null primary key, balance integer not null)`
+    );
+    await ctx.db2.execute(
       sql`create table products_transactions (id serial not null primary key, price integer not null, stock integer not null)`
     );
 
-    const user = await db
+    const user = await ctx.db2
       .insert(users)
       .values({ balance: 100 })
       .returning()
       .then((rows) => rows[0]!);
-    const product = await db
+    const product = await ctx.db2
       .insert(products)
       .values({ price: 10, stock: 10 })
       .returning()
       .then((rows) => rows[0]!);
 
-    await db.transaction(async (tx) => {
+    await ctx.db2.transaction(async (tx) => {
       await tx
         .update(users)
         .set({ balance: user.balance - product.price })
@@ -2958,59 +2790,55 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         .where(eq(products.id, product.id));
     });
 
-    const result = await db.select().from(users);
+    const result = await ctx.db2.select().from(users);
 
     assert.deepEqual(result, [{ id: 1, balance: 90 }]);
 
-    await db.execute(sql`drop table ${users}`);
-    await db.execute(sql`drop table ${products}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${products}`);
   });
 
   test('transaction rollback', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users_transactions_rollback', {
       id: serial('id').primaryKey(),
       balance: integer('balance').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(
+    await ctx.db2.execute(
       sql`create table users_transactions_rollback (id serial not null primary key, balance integer not null)`
     );
 
     await ctx
       .expect(
-        db.transaction(async (tx) => {
+        ctx.db2.transaction(async (tx) => {
           await tx.insert(users).values({ balance: 100 });
           tx.rollback();
         })
       )
       .rejects.toThrow(TransactionRollbackError);
 
-    const result = await db.select().from(users);
+    const result = await ctx.db2.select().from(users);
 
     assert.deepEqual(result, []);
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   test('nested transaction', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users_nested_transactions', {
       id: serial('id').primaryKey(),
       balance: integer('balance').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(
+    await ctx.db2.execute(
       sql`create table users_nested_transactions (id serial not null primary key, balance integer not null)`
     );
 
-    await db.transaction(async (tx) => {
+    await ctx.db2.transaction(async (tx) => {
       await tx.insert(users).values({ balance: 100 });
 
       await tx.transaction(async (tx) => {
@@ -3018,28 +2846,26 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       });
     });
 
-    const result = await db.select().from(users);
+    const result = await ctx.db2.select().from(users);
 
     assert.deepEqual(result, [{ id: 1, balance: 200 }]);
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   test('nested transaction rollback', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users_nested_transactions_rollback', {
       id: serial('id').primaryKey(),
       balance: integer('balance').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(
+    await ctx.db2.execute(
       sql`create table users_nested_transactions_rollback (id serial not null primary key, balance integer not null)`
     );
 
-    await db.transaction(async (tx) => {
+    await ctx.db2.transaction(async (tx) => {
       await tx.insert(users).values({ balance: 100 });
 
       await ctx
@@ -3052,16 +2878,14 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
         .rejects.toThrow(TransactionRollbackError);
     });
 
-    const result = await db.select().from(users);
+    const result = await ctx.db2.select().from(users);
 
     assert.deepEqual(result, [{ id: 1, balance: 100 }]);
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   test('join subquery with join', async (ctx) => {
-    const { db2: db } = ctx;
-
     const internalStaff = pgTable('internal_staff', {
       userId: integer('user_id').notNull()
     });
@@ -3074,25 +2898,28 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       staffId: integer('staff_id').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${internalStaff}`);
-    await db.execute(sql`drop table if exists ${customUser}`);
-    await db.execute(sql`drop table if exists ${ticket}`);
+    await ctx.db2.execute(sql`drop table if exists ${internalStaff}`);
+    await ctx.db2.execute(sql`drop table if exists ${customUser}`);
+    await ctx.db2.execute(sql`drop table if exists ${ticket}`);
 
-    await db.execute(sql`create table internal_staff (user_id integer not null)`);
-    await db.execute(sql`create table custom_user (id integer not null)`);
-    await db.execute(sql`create table ticket (staff_id integer not null)`);
+    await ctx.db2.execute(sql`create table internal_staff (user_id integer not null)`);
+    await ctx.db2.execute(sql`create table custom_user (id integer not null)`);
+    await ctx.db2.execute(sql`create table ticket (staff_id integer not null)`);
 
-    await db.insert(internalStaff).values({ userId: 1 });
-    await db.insert(customUser).values({ id: 1 });
-    await db.insert(ticket).values({ staffId: 1 });
+    await ctx.db2.insert(internalStaff).values({ userId: 1 });
+    await ctx.db2.insert(customUser).values({ id: 1 });
+    await ctx.db2.insert(ticket).values({ staffId: 1 });
 
-    const subq = db
+    const subq = ctx.db2
       .select()
       .from(internalStaff)
       .leftJoin(customUser, eq(internalStaff.userId, customUser.id))
       .as('internal_staff');
 
-    const mainQuery = await db.select().from(ticket).leftJoin(subq, eq(subq.internal_staff.userId, ticket.staffId));
+    const mainQuery = await ctx.db2
+      .select()
+      .from(ticket)
+      .leftJoin(subq, eq(subq.internal_staff.userId, ticket.staffId));
 
     assert.deepEqual(mainQuery, [
       {
@@ -3104,14 +2931,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ]);
 
-    await db.execute(sql`drop table ${internalStaff}`);
-    await db.execute(sql`drop table ${customUser}`);
-    await db.execute(sql`drop table ${ticket}`);
+    await ctx.db2.execute(sql`drop table ${internalStaff}`);
+    await ctx.db2.execute(sql`drop table ${customUser}`);
+    await ctx.db2.execute(sql`drop table ${ticket}`);
   });
 
   notSupported('subquery with view', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users_subquery_view', {
       id: serial('id').primaryKey(),
       name: text('name').notNull(),
@@ -3120,36 +2945,34 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     const newYorkers = pgView('new_yorkers').as((qb) => qb.select().from(users).where(eq(users.cityId, 1)));
 
-    await db.execute(sql`drop table if exists ${users}`);
-    await db.execute(sql`drop view if exists ${newYorkers}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop view if exists ${newYorkers}`);
 
-    await db.execute(
+    await ctx.db2.execute(
       sql`create table ${users} (id serial not null primary key, name text not null, city_id integer not null)`
     );
-    await db.execute(sql`create view ${newYorkers} as select * from ${users} where city_id = 1`);
+    await ctx.db2.execute(sql`create view ${newYorkers} as select * from ${users} where city_id = 1`);
 
-    await db.insert(users).values([
+    await ctx.db2.insert(users).values([
       { name: 'John', cityId: 1 },
       { name: 'Jane', cityId: 2 },
       { name: 'Jack', cityId: 1 },
       { name: 'Jill', cityId: 2 }
     ]);
 
-    const sq = db.$with('sq').as(db.select().from(newYorkers));
-    const result = await db.with(sq).select().from(sq);
+    const sq = ctx.db2.$with('sq').as(ctx.db2.select().from(newYorkers));
+    const result = await ctx.db2.with(sq).select().from(sq);
 
     assert.deepEqual(result, [
       { id: 1, name: 'John', cityId: 1 },
       { id: 3, name: 'Jack', cityId: 1 }
     ]);
 
-    await db.execute(sql`drop view ${newYorkers}`);
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop view ${newYorkers}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   notSupported('join view as subquery', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users_join_view', {
       id: serial('id').primaryKey(),
       name: text('name').notNull(),
@@ -3158,24 +2981,24 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     const newYorkers = pgView('new_yorkers').as((qb) => qb.select().from(users).where(eq(users.cityId, 1)));
 
-    await db.execute(sql`drop table if exists ${users}`);
-    await db.execute(sql`drop view if exists ${newYorkers}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop view if exists ${newYorkers}`);
 
-    await db.execute(
+    await ctx.db2.execute(
       sql`create table ${users} (id serial not null primary key, name text not null, city_id integer not null)`
     );
-    await db.execute(sql`create view ${newYorkers} as select * from ${users} where city_id = 1`);
+    await ctx.db2.execute(sql`create view ${newYorkers} as select * from ${users} where city_id = 1`);
 
-    await db.insert(users).values([
+    await ctx.db2.insert(users).values([
       { name: 'John', cityId: 1 },
       { name: 'Jane', cityId: 2 },
       { name: 'Jack', cityId: 1 },
       { name: 'Jill', cityId: 2 }
     ]);
 
-    const sq = db.select().from(newYorkers).as('new_yorkers_sq');
+    const sq = ctx.db2.select().from(newYorkers).as('new_yorkers_sq');
 
-    const result = await db.select().from(users).leftJoin(sq, eq(users.id, sq.id));
+    const result = await ctx.db2.select().from(users).leftJoin(sq, eq(users.id, sq.id));
 
     assert.deepEqual(result, [
       {
@@ -3196,101 +3019,91 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ]);
 
-    await db.execute(sql`drop view ${newYorkers}`);
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop view ${newYorkers}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   test('table selection with single table', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users', {
       id: serial('id').primaryKey(),
       name: text('name').notNull(),
       cityId: integer('city_id').notNull()
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(
+    await ctx.db2.execute(
       sql`create table ${users} (id serial not null primary key, name text not null, city_id integer not null)`
     );
 
-    await db.insert(users).values({ name: 'John', cityId: 1 });
+    await ctx.db2.insert(users).values({ name: 'John', cityId: 1 });
 
-    const result = await db.select({ users }).from(users);
+    const result = await ctx.db2.select({ users }).from(users);
 
     assert.deepEqual(result, [{ users: { id: 1, name: 'John', cityId: 1 } }]);
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   test('set null to jsonb field', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users', {
       id: serial('id').primaryKey(),
       jsonb: jsonb('jsonb')
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(sql`create table ${users} (id serial not null primary key, jsonb jsonb)`);
+    await ctx.db2.execute(sql`create table ${users} (id serial not null primary key, jsonb jsonb)`);
 
-    const result = await db.insert(users).values({ jsonb: null }).returning();
+    const result = await ctx.db2.insert(users).values({ jsonb: null }).returning();
 
     assert.deepEqual(result, [{ id: 1, jsonb: null }]);
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   test('insert undefined', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users', {
       id: serial('id').primaryKey(),
       name: text('name')
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(sql`create table ${users} (id serial not null primary key, name text)`);
+    await ctx.db2.execute(sql`create table ${users} (id serial not null primary key, name text)`);
 
-    ctx.expect(async () => await db.insert(users).values({ name: undefined })).not.toThrowError();
+    ctx.expect(async () => await ctx.db2.insert(users).values({ name: undefined })).not.toThrowError();
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   fixme('update undefined', async (ctx) => {
-    const { db2: db } = ctx;
-
     const users = pgTable('users', {
       id: serial('id').primaryKey(),
       name: text('name')
     });
 
-    await db.execute(sql`drop table if exists ${users}`);
+    await ctx.db2.execute(sql`drop table if exists ${users}`);
 
-    await db.execute(sql`create table ${users} (id serial not null primary key, name text)`);
+    await ctx.db2.execute(sql`create table ${users} (id serial not null primary key, name text)`);
 
-    ctx.expect(async () => await db.update(users).set({ name: undefined })).toThrowError();
-    ctx.expect(async () => await db.update(users).set({ id: 1, name: undefined })).not.toThrowError();
+    ctx.expect(async () => await ctx.db2.update(users).set({ name: undefined })).toThrowError();
+    ctx.expect(async () => await ctx.db2.update(users).set({ id: 1, name: undefined })).not.toThrowError();
 
-    await db.execute(sql`drop table ${users}`);
+    await ctx.db2.execute(sql`drop table ${users}`);
   });
 
   test('array operators', async (ctx) => {
-    const { db2: db } = ctx;
-
     const posts = pgTable('posts', {
       id: serial('id').primaryKey(),
       tags: text('tags').array()
     });
 
-    await db.execute(sql`drop table if exists ${posts}`);
+    await ctx.db2.execute(sql`drop table if exists ${posts}`);
 
-    await db.execute(sql`create table ${posts} (id serial primary key, tags text[])`);
+    await ctx.db2.execute(sql`create table ${posts} (id serial primary key, tags text[])`);
 
-    await db.insert(posts).values([
+    await ctx.db2.insert(posts).values([
       {
         tags: ['ORM']
       },
@@ -3311,22 +3124,22 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ]);
 
-    const contains = await db
+    const contains = await ctx.db2
       .select({ id: posts.id })
       .from(posts)
       .where(arrayContains(posts.tags, ['Typescript', 'ORM']));
-    const contained = await db
+    const contained = await ctx.db2
       .select({ id: posts.id })
       .from(posts)
       .where(arrayContained(posts.tags, ['Typescript', 'ORM']));
-    const overlaps = await db
+    const overlaps = await ctx.db2
       .select({ id: posts.id })
       .from(posts)
       .where(arrayOverlaps(posts.tags, ['Typescript', 'ORM']));
-    const withSubQuery = await db
+    const withSubQuery = await ctx.db2
       .select({ id: posts.id })
       .from(posts)
-      .where(arrayContains(posts.tags, db.select({ tags: posts.tags }).from(posts).where(eq(posts.id, 1))));
+      .where(arrayContains(posts.tags, ctx.db2.select({ tags: posts.tags }).from(posts).where(eq(posts.id, 1))));
 
     assert.deepEqual(contains, [{ id: 3 }, { id: 5 }]);
     assert.deepEqual(contained, [{ id: 1 }, { id: 2 }, { id: 3 }]);
@@ -3335,16 +3148,14 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('set operations (union) from query builder with subquery', async (ctx) => {
-    const { db2: db } = ctx;
+    await setupSetOperationSuite(ctx.db2);
 
-    await setupSetOperationTest(db);
+    const sq = ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).as('sq');
 
-    const sq = db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).as('sq');
-
-    const result = await db
+    const result = await ctx.db2
       .select({ id: cities2Table.id, name: citiesTable.name })
       .from(cities2Table)
-      .union(db.select().from(sq))
+      .union(ctx.db2.select().from(sq))
       .orderBy(asc(sql`name`))
       .limit(2)
       .offset(1);
@@ -3358,11 +3169,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     ctx
       .expect(() => {
-        db.select({ id: cities2Table.id, name: citiesTable.name, name2: users2Table.name })
+        ctx.db2
+          .select({ id: cities2Table.id, name: citiesTable.name, name2: users2Table.name })
           .from(cities2Table)
           .union(
             // @ts-expect-error
-            db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table)
+            ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table)
           )
           .orderBy(asc(sql`name`));
       })
@@ -3370,14 +3182,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('set operations (union) as function', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await setupSetOperationTest(db);
+    await setupSetOperationSuite(ctx.db2);
 
     const result = await union(
-      db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+      ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
     )
       .orderBy(asc(sql`name`))
       .limit(1)
@@ -3390,24 +3200,25 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     ctx
       .expect(() => {
         union(
-          db.select({ name: citiesTable.name, id: cities2Table.id }).from(cities2Table).where(eq(citiesTable.id, 1)),
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+          ctx.db2
+            .select({ name: citiesTable.name, id: cities2Table.id })
+            .from(cities2Table)
+            .where(eq(citiesTable.id, 1)),
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
         ).orderBy(asc(sql`name`));
       })
       .toThrowError();
   });
 
   test('set operations (union all) from query builder', async (ctx) => {
-    const { db2: db } = ctx;
+    await setupSetOperationSuite(ctx.db2);
 
-    await setupSetOperationTest(db);
-
-    const result = await db
+    const result = await ctx.db2
       .select({ id: cities2Table.id, name: citiesTable.name })
       .from(cities2Table)
       .limit(2)
-      .unionAll(db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).limit(2))
+      .unionAll(ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).limit(2))
       .orderBy(asc(sql`id`));
 
     ctx.expect(result.length === 4);
@@ -3421,24 +3232,23 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     ctx
       .expect(() => {
-        db.select({ id: cities2Table.id, name: citiesTable.name })
+        ctx.db2
+          .select({ id: cities2Table.id, name: citiesTable.name })
           .from(cities2Table)
           .limit(2)
-          .unionAll(db.select({ name: citiesTable.name, id: cities2Table.id }).from(cities2Table).limit(2))
+          .unionAll(ctx.db2.select({ name: citiesTable.name, id: cities2Table.id }).from(cities2Table).limit(2))
           .orderBy(asc(sql`id`));
       })
       .toThrowError();
   });
 
   test('set operations (union all) as function', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await setupSetOperationTest(db);
+    await setupSetOperationSuite(ctx.db2);
 
     const result = await unionAll(
-      db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+      ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
     );
 
     ctx.expect(result.length === 3);
@@ -3452,24 +3262,25 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     ctx
       .expect(() => {
         unionAll(
-          db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
-          db.select({ name: users2Table.name, id: users2Table.id }).from(users2Table).where(eq(users2Table.id, 1)),
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+          ctx.db2
+            .select({ id: cities2Table.id, name: citiesTable.name })
+            .from(cities2Table)
+            .where(eq(citiesTable.id, 1)),
+          ctx.db2.select({ name: users2Table.name, id: users2Table.id }).from(users2Table).where(eq(users2Table.id, 1)),
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
         );
       })
       .toThrowError();
   });
 
   test('set operations (intersect) from query builder', async (ctx) => {
-    const { db2: db } = ctx;
+    await setupSetOperationSuite(ctx.db2);
 
-    await setupSetOperationTest(db);
-
-    const result = await db
+    const result = await ctx.db2
       .select({ id: cities2Table.id, name: citiesTable.name })
       .from(cities2Table)
       .intersect(
-        db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(gt(citiesTable.id, 1))
+        ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(gt(citiesTable.id, 1))
       )
       .orderBy(asc(sql`name`));
 
@@ -3482,7 +3293,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     ctx
       .expect(() => {
-        db.select({ id: cities2Table.id, name: citiesTable.name })
+        ctx.db2
+          .select({ id: cities2Table.id, name: citiesTable.name })
           .from(cities2Table)
           .intersect(
             // @ts-expect-error
@@ -3497,14 +3309,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('set operations (intersect) as function', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await setupSetOperationTest(db);
+    await setupSetOperationSuite(ctx.db2);
 
     const result = await intersect(
-      db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+      ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
     );
 
     ctx.expect(result.length === 0);
@@ -3514,24 +3324,25 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     ctx
       .expect(() => {
         intersect(
-          db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
-          db.select({ name: users2Table.name, id: users2Table.id }).from(users2Table).where(eq(users2Table.id, 1))
+          ctx.db2
+            .select({ id: cities2Table.id, name: citiesTable.name })
+            .from(cities2Table)
+            .where(eq(citiesTable.id, 1)),
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+          ctx.db2.select({ name: users2Table.name, id: users2Table.id }).from(users2Table).where(eq(users2Table.id, 1))
         );
       })
       .toThrowError();
   });
 
   test('set operations (intersect all) from query builder', async (ctx) => {
-    const { db2: db } = ctx;
+    await setupSetOperationSuite(ctx.db2);
 
-    await setupSetOperationTest(db);
-
-    const result = await db
+    const result = await ctx.db2
       .select({ id: cities2Table.id, name: citiesTable.name })
       .from(cities2Table)
       .limit(2)
-      .intersectAll(db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).limit(2))
+      .intersectAll(ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).limit(2))
       .orderBy(asc(sql`id`));
 
     ctx.expect(result.length === 2);
@@ -3543,24 +3354,23 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     ctx
       .expect(() => {
-        db.select({ id: cities2Table.id, name: citiesTable.name })
+        ctx.db2
+          .select({ id: cities2Table.id, name: citiesTable.name })
           .from(cities2Table)
           .limit(2)
-          .intersectAll(db.select({ name: users2Table.name, id: users2Table.id }).from(cities2Table).limit(2))
+          .intersectAll(ctx.db2.select({ name: users2Table.name, id: users2Table.id }).from(cities2Table).limit(2))
           .orderBy(asc(sql`id`));
       })
       .toThrowError();
   });
 
   test('set operations (intersect all) as function', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await setupSetOperationTest(db);
+    await setupSetOperationSuite(ctx.db2);
 
     const result = await intersectAll(
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
     );
 
     ctx.expect(result.length === 1);
@@ -3570,23 +3380,21 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     ctx
       .expect(() => {
         intersectAll(
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
-          db.select({ name: users2Table.name, id: users2Table.id }).from(users2Table).where(eq(users2Table.id, 1)),
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+          ctx.db2.select({ name: users2Table.name, id: users2Table.id }).from(users2Table).where(eq(users2Table.id, 1)),
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
         );
       })
       .toThrowError();
   });
 
   test('set operations (except) from query builder', async (ctx) => {
-    const { db2: db } = ctx;
+    await setupSetOperationSuite(ctx.db2);
 
-    await setupSetOperationTest(db);
-
-    const result = await db
+    const result = await ctx.db2
       .select()
       .from(cities2Table)
-      .except(db.select().from(cities2Table).where(gt(citiesTable.id, 1)));
+      .except(ctx.db2.select().from(cities2Table).where(gt(citiesTable.id, 1)));
 
     ctx.expect(result.length === 1);
 
@@ -3594,24 +3402,26 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     ctx
       .expect(() => {
-        db.select()
+        ctx.db2
+          .select()
           .from(cities2Table)
           .except(
-            db.select({ name: users2Table.name, id: users2Table.id }).from(cities2Table).where(gt(citiesTable.id, 1))
+            ctx.db2
+              .select({ name: users2Table.name, id: users2Table.id })
+              .from(cities2Table)
+              .where(gt(citiesTable.id, 1))
           );
       })
       .toThrowError();
   });
 
   test('set operations (except) as function', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await setupSetOperationTest(db);
+    await setupSetOperationSuite(ctx.db2);
 
     const result = await except(
-      db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table),
-      db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+      ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table),
+      ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
     ).orderBy(asc(sql`id`));
 
     ctx.expect(result.length === 2);
@@ -3624,24 +3434,25 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     ctx
       .expect(() => {
         except(
-          db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table),
-          db.select({ name: users2Table.name, id: users2Table.id }).from(cities2Table).where(eq(citiesTable.id, 1)),
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+          ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table),
+          ctx.db2
+            .select({ name: users2Table.name, id: users2Table.id })
+            .from(cities2Table)
+            .where(eq(citiesTable.id, 1)),
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
         ).orderBy(asc(sql`id`));
       })
       .toThrowError();
   });
 
   test('set operations (except all) from query builder', async (ctx) => {
-    const { db2: db } = ctx;
+    await setupSetOperationSuite(ctx.db2);
 
-    await setupSetOperationTest(db);
-
-    const result = await db
+    const result = await ctx.db2
       .select()
       .from(cities2Table)
       .exceptAll(
-        db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1))
+        ctx.db2.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1))
       )
       .orderBy(asc(sql`id`));
 
@@ -3654,10 +3465,14 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     ctx
       .expect(() => {
-        db.select({ name: cities2Table.name, id: cities2Table.id })
+        ctx.db2
+          .select({ name: cities2Table.name, id: cities2Table.id })
           .from(cities2Table)
           .exceptAll(
-            db.select({ id: cities2Table.id, name: citiesTable.name }).from(cities2Table).where(eq(citiesTable.id, 1))
+            ctx.db2
+              .select({ id: cities2Table.id, name: citiesTable.name })
+              .from(cities2Table)
+              .where(eq(citiesTable.id, 1))
           )
           .orderBy(asc(sql`id`));
       })
@@ -3665,14 +3480,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('set operations (except all) as function', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await setupSetOperationTest(db);
+    await setupSetOperationSuite(ctx.db2);
 
     const result = await exceptAll(
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(gt(users2Table.id, 7)),
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(gt(users2Table.id, 7)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
     )
       .orderBy(asc(sql`id`))
       .limit(5)
@@ -3690,25 +3503,23 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     ctx
       .expect(() => {
         exceptAll(
-          db.select({ name: users2Table.name, id: users2Table.id }).from(users2Table),
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(gt(users2Table.id, 7)),
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
+          ctx.db2.select({ name: users2Table.name, id: users2Table.id }).from(users2Table),
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(gt(users2Table.id, 7)),
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1))
         ).orderBy(asc(sql`id`));
       })
       .toThrowError();
   });
 
   test('set operations (mixed) from query builder with subquery', async (ctx) => {
-    const { db2: db } = ctx;
+    await setupSetOperationSuite(ctx.db2);
+    const sq = ctx.db2.select().from(cities2Table).where(gt(citiesTable.id, 1)).as('sq');
 
-    await setupSetOperationTest(db);
-    const sq = db.select().from(cities2Table).where(gt(citiesTable.id, 1)).as('sq');
-
-    const result = await db
+    const result = await ctx.db2
       .select()
       .from(cities2Table)
       .except(({ unionAll }) =>
-        unionAll(db.select().from(sq), db.select().from(cities2Table).where(eq(citiesTable.id, 2)))
+        unionAll(ctx.db2.select().from(sq), ctx.db2.select().from(cities2Table).where(eq(citiesTable.id, 2)))
       );
 
     ctx.expect(result.length === 1);
@@ -3717,15 +3528,16 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 
     ctx
       .expect(() => {
-        db.select()
+        ctx.db2
+          .select()
           .from(cities2Table)
           .except(({ unionAll }) =>
             unionAll(
-              db
+              ctx.db2
                 .select({ name: cities2Table.name, id: cities2Table.id })
                 .from(cities2Table)
                 .where(gt(citiesTable.id, 1)),
-              db.select().from(cities2Table).where(eq(citiesTable.id, 2))
+              ctx.db2.select().from(cities2Table).where(eq(citiesTable.id, 2))
             )
           );
       })
@@ -3733,17 +3545,15 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('set operations (mixed all) as function', async (ctx) => {
-    const { db2: db } = ctx;
-
-    await setupSetOperationTest(db);
+    await setupSetOperationSuite(ctx.db2);
 
     const result = await union(
-      db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+      ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
       except(
-        db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(gte(users2Table.id, 5)),
-        db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 7))
+        ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(gte(users2Table.id, 5)),
+        ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 7))
       ),
-      db.select().from(cities2Table).where(gt(citiesTable.id, 1))
+      ctx.db2.select().from(cities2Table).where(gt(citiesTable.id, 1))
     ).orderBy(asc(sql`id`));
 
     ctx.expect(result.length === 6);
@@ -3760,25 +3570,30 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
     ctx
       .expect(() => {
         union(
-          db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
+          ctx.db2.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(eq(users2Table.id, 1)),
           except(
-            db.select({ id: users2Table.id, name: users2Table.name }).from(users2Table).where(gte(users2Table.id, 5)),
-            db.select({ name: users2Table.name, id: users2Table.id }).from(users2Table).where(eq(users2Table.id, 7))
+            ctx.db2
+              .select({ id: users2Table.id, name: users2Table.name })
+              .from(users2Table)
+              .where(gte(users2Table.id, 5)),
+            ctx.db2
+              .select({ name: users2Table.name, id: users2Table.id })
+              .from(users2Table)
+              .where(eq(users2Table.id, 7))
           ),
-          db.select().from(cities2Table).where(gt(citiesTable.id, 1))
+          ctx.db2.select().from(cities2Table).where(gt(citiesTable.id, 1))
         ).orderBy(asc(sql`id`));
       })
       .toThrowError();
   });
 
   test('aggregate function: count', async (ctx) => {
-    const { db2: db } = ctx;
     const table = aggregateTable;
-    await setupAggregateFunctionsTest(db);
+    await setupAggregateFunctionsSuite(ctx.db2);
 
-    const result1 = await db.select({ value: count() }).from(table);
-    const result2 = await db.select({ value: count(table.a) }).from(table);
-    const result3 = await db.select({ value: countDistinct(table.name) }).from(table);
+    const result1 = await ctx.db2.select({ value: count() }).from(table);
+    const result2 = await ctx.db2.select({ value: count(table.a) }).from(table);
+    const result3 = await ctx.db2.select({ value: countDistinct(table.name) }).from(table);
 
     assert.deepEqual(result1[0]?.value, 7);
     assert.deepEqual(result2[0]?.value, 5);
@@ -3786,13 +3601,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('aggregate function: avg', async (ctx) => {
-    const { db2: db } = ctx;
     const table = aggregateTable;
-    await setupAggregateFunctionsTest(db);
+    await setupAggregateFunctionsSuite(ctx.db2);
 
-    const result1 = await db.select({ value: avg(table.b) }).from(table);
-    const result2 = await db.select({ value: avg(table.nullOnly) }).from(table);
-    const result3 = await db.select({ value: avgDistinct(table.b) }).from(table);
+    const result1 = await ctx.db2.select({ value: avg(table.b) }).from(table);
+    const result2 = await ctx.db2.select({ value: avg(table.nullOnly) }).from(table);
+    const result3 = await ctx.db2.select({ value: avgDistinct(table.b) }).from(table);
 
     assert.deepEqual(result1[0]?.value, '33.3333333333333333');
     assert.deepEqual(result2[0]?.value, null);
@@ -3800,13 +3614,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('aggregate function: sum', async (ctx) => {
-    const { db2: db } = ctx;
     const table = aggregateTable;
-    await setupAggregateFunctionsTest(db);
+    await setupAggregateFunctionsSuite(ctx.db2);
 
-    const result1 = await db.select({ value: sum(table.b) }).from(table);
-    const result2 = await db.select({ value: sum(table.nullOnly) }).from(table);
-    const result3 = await db.select({ value: sumDistinct(table.b) }).from(table);
+    const result1 = await ctx.db2.select({ value: sum(table.b) }).from(table);
+    const result2 = await ctx.db2.select({ value: sum(table.nullOnly) }).from(table);
+    const result3 = await ctx.db2.select({ value: sumDistinct(table.b) }).from(table);
 
     assert.deepEqual(result1[0]?.value, '200');
     assert.deepEqual(result2[0]?.value, null);
@@ -3814,32 +3627,28 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
   });
 
   test('aggregate function: max', async (ctx) => {
-    const { db2: db } = ctx;
     const table = aggregateTable;
-    await setupAggregateFunctionsTest(db);
+    await setupAggregateFunctionsSuite(ctx.db2);
 
-    const result1 = await db.select({ value: max(table.b) }).from(table);
-    const result2 = await db.select({ value: max(table.nullOnly) }).from(table);
+    const result1 = await ctx.db2.select({ value: max(table.b) }).from(table);
+    const result2 = await ctx.db2.select({ value: max(table.nullOnly) }).from(table);
 
     assert.deepEqual(result1[0]?.value, 90);
     assert.deepEqual(result2[0]?.value, null);
   });
 
   test('aggregate function: min', async (ctx) => {
-    const { db2: db } = ctx;
     const table = aggregateTable;
-    await setupAggregateFunctionsTest(db);
+    await setupAggregateFunctionsSuite(ctx.db2);
 
-    const result1 = await db.select({ value: min(table.b) }).from(table);
-    const result2 = await db.select({ value: min(table.nullOnly) }).from(table);
+    const result1 = await ctx.db2.select({ value: min(table.b) }).from(table);
+    const result2 = await ctx.db2.select({ value: min(table.nullOnly) }).from(table);
 
     assert.deepEqual(result1[0]?.value, 10);
     assert.deepEqual(result2[0]?.value, null);
   });
 
   test('array mapping and parsing', async (ctx) => {
-    const { db2: db } = ctx;
-
     const arrays = pgTable('arrays_tests', {
       id: serial('id').primaryKey(),
       tags: text('tags').array(),
@@ -3847,8 +3656,8 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       numbers: integer('numbers').notNull().array()
     });
 
-    await db.execute(sql`drop table if exists ${arrays}`);
-    await db.execute(sql`
+    await ctx.db2.execute(sql`drop table if exists ${arrays}`);
+    await ctx.db2.execute(sql`
 		 create table ${arrays} (
 		 id serial primary key,
 		 tags text[],
@@ -3857,7 +3666,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
 		)
 	`);
 
-    await db.insert(arrays).values({
+    await ctx.db2.insert(arrays).values({
       tags: ['', 'b', 'c'],
       nested: [
         ['1', ''],
@@ -3866,7 +3675,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       numbers: [1, 2, 3]
     });
 
-    const result = await db.select().from(arrays);
+    const result = await ctx.db2.select().from(arrays);
 
     assert.deepEqual(result, [
       {
@@ -3880,7 +3689,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle core $type
       }
     ]);
 
-    await db.execute(sql`drop table ${arrays}`);
+    await ctx.db2.execute(sql`drop table ${arrays}`);
   });
 });
 
