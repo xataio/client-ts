@@ -293,6 +293,13 @@ export type ClusterConfiguration = {
    */
   replicas?: number;
   /**
+   * @format int64
+   * @default 1
+   * @maximum 3
+   * @minimum 1
+   */
+  instanceCount?: number;
+  /**
    * @default false
    */
   deletionProtection?: boolean;
@@ -311,7 +318,7 @@ export type ClusterCreateDetails = {
   /**
    * @maxLength 63
    * @minLength 1
-   * @pattern [a-zA-Z0-9_-~:]+
+   * @pattern [a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*
    */
   name: string;
   configuration: ClusterConfiguration;
@@ -367,6 +374,10 @@ export type ClusterConfigurationResponse = {
    * @format int64
    */
   replicas: number;
+  /**
+   * @format int64
+   */
+  instanceCount: number;
   /**
    * @default false
    */
