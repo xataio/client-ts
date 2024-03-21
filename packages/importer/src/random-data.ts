@@ -2,27 +2,31 @@ import { fakerEN as faker } from '@faker-js/faker';
 import { Schemas } from '@xata.io/client';
 import { z } from 'zod';
 
+// TODO: Remove this once we migrate pgroll branches
+type PgRollColumn = Schemas.Column & {
+  comment?: string;
+  pgType?: string;
+};
+
 export function generateRandomData(table: Schemas.Table, size: number) {
   const records: Record<string, unknown>[] = [];
 
   for (let index = 0; index < size; index++) {
-    // TODO fix type
-    records.push(randomRecord(table.columns as any));
+    records.push(randomRecord(table.columns));
   }
 
   return records;
 }
 
-function randomRecord(columns: (Schemas.Column & { comment?: string; pgType: string })[]) {
+function randomRecord(columns: PgRollColumn[]) {
   const record: Record<string, unknown> = {};
   for (const column of columns) {
-    // TODO column should contain pgType field from schema
     record[column.name] = randomData(column);
   }
   return record;
 }
 
-function randomData(column: Schemas.Column & { comment?: string; pgType: string }) {
+function randomData(column: PgRollColumn) {
   const columnCommentType = narrowStringType(column.comment);
   // Note that this is a best effort and seeding may fail for invalid Xata columns
   // that are foreign keys, or have constraints such as length attached to them.
@@ -52,8 +56,9 @@ function randomData(column: Schemas.Column & { comment?: string; pgType: string 
     case 'text[]':
       return faker.word.words(rand(1, 3)).split(' ');
   }
-  if (column.pgType.startsWith('character(') || column.pgType.startsWith('varchar(')) return faker.word.words(1);
-  if (column.pgType.startsWith('numeric(')) return rand(1, 10000) / rand(1, 100);
+
+  if (column.pgType?.startsWith('character(') || column.pgType?.startsWith('varchar(')) return faker.word.words(1);
+  if (column.pgType?.startsWith('numeric(')) return rand(1, 10000) / rand(1, 100);
 
   return undefined;
 }
