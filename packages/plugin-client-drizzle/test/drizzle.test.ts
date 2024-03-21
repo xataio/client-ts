@@ -78,10 +78,9 @@ function getDrizzleClient(type: string, branch: string) {
 
 describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({ type }) => {
   beforeAll(async () => {
-    await api.database.createDatabase({
-      workspace,
-      database,
-      data: { region, branchName: 'main' },
+    await api.databases.createDatabase({
+      pathParams: { workspaceId: workspace, dbName: database },
+      body: { region, branchName: 'main' },
       headers: { 'X-Features': 'feat-pgroll-migrations=1' }
     });
 
@@ -155,12 +154,15 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
   });
 
   afterAll(async () => {
-    await api.database.deleteDatabase({ workspace, database });
+    await api.databases.deleteDatabase({ pathParams: { workspaceId: workspace, dbName: database } });
   });
 
   beforeEach(async (ctx) => {
     ctx.branch = `test-${Math.random().toString(36).substring(7)}`;
-    await api.branches.createBranch({ workspace, database, region, branch: ctx.branch, from: 'main' });
+    await api.branch.createBranch({
+      pathParams: { workspace, region, dbBranchName: `${database}:${ctx.branch}` },
+      body: { from: 'main' }
+    });
 
     const { db, client } = getDrizzleClient(type, ctx.branch);
     await client?.connect();
@@ -171,7 +173,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
 
   afterEach(async (ctx) => {
     await ctx.client?.end();
-    await api.branches.deleteBranch({ workspace, database, region, branch: ctx.branch });
+    await api.branch.deleteBranch({ pathParams: { workspace, region, dbBranchName: `${database}:${ctx.branch}` } });
   });
 
   /*
@@ -6285,7 +6287,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
 async function waitForReplication(): Promise<void> {
   try {
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    await api.branches.getBranchList({ workspace, database, region });
+    await api.branch.getBranchList({ pathParams: { workspace, dbName: database, region } });
   } catch (error) {
     console.log(`Replication not ready yet, retrying...`);
     return await waitForReplication();
