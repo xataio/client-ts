@@ -108,7 +108,7 @@ describe('xata init', () => {
       runInitTest({ '.xatarc': '{}' }, [], { workspace: 'test-1234', database: 'db1', gitIgnore: false }, (command) => {
         command.projectConfigLocation = '.xatarc';
       })
-    ).rejects.toMatch(/.*Project already configured.*/);
+    ).rejects.toThrowError(/.*Project already configured.*/);
   });
 
   test('creates .xatarc', async () => {

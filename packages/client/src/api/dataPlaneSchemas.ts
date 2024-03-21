@@ -113,7 +113,6 @@ export type Branch = {
    * The cluster where this branch resides. Value of 'shared-cluster' for branches in shared clusters
    *
    * @minLength 1
-   * @x-internal true
    */
   clusterID?: string;
   createdAt: DateTime;

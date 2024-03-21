@@ -104,6 +104,45 @@ export const adaptTable = (variables: AdaptTableVariables, signal?: AbortSignal)
     signal
   });
 
+export type AdaptAllTablesPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type AdaptAllTablesError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type AdaptAllTablesVariables = {
+  pathParams: AdaptAllTablesPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Adapt all xata incompatible tables present in the branch, this will add the Xata metadata fields to the table, making them accessible through the data API.
+ */
+export const adaptAllTables = (variables: AdaptAllTablesVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.ApplyMigrationResponse, AdaptAllTablesError, undefined, {}, {}, AdaptAllTablesPathParams>({
+    url: '/db/{dbBranchName}/migrations/adapt',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type GetBranchMigrationJobStatusPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -4772,6 +4811,7 @@ export const operationsByTag = {
   migrations: {
     applyMigration,
     adaptTable,
+    adaptAllTables,
     getBranchMigrationJobStatus,
     getMigrationJobStatus,
     getMigrationHistory,

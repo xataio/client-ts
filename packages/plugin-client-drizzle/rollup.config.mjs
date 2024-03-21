@@ -25,5 +25,29 @@ export default [
       file: `dist/index.d.ts`,
       format: 'es'
     }
-  }
+  },
+  {
+    input: 'src/pg/index.ts',
+    plugins: [esbuild()],
+    output: [
+      {
+        file: `dist/pg.cjs`,
+        format: 'cjs',
+        sourcemap: true
+      },
+      {
+        file: `dist/pg.mjs`,
+        format: 'es',
+        sourcemap: true
+      }
+    ]
+  },
+  {
+    input: 'src/pg/index.ts',
+    plugins: [dts()],
+    output: {
+      file: `dist/pg.d.ts`,
+      format: 'es'
+    }
+  },
 ];
