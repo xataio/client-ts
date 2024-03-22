@@ -19,11 +19,13 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
+    "@inquirer/prompts": "^4.3.0",
     "@oclif/core": "^3.25.2",
     "@oclif/plugin-help": "^6.0.18",
     "@oclif/plugin-not-found": "^3.0.14",
     "@oclif/plugin-plugins": "^4.3.7",
     "@types/ini": "^4.1.0",
+    "@types/inquirer": "^9.0.7",
     "@types/prompts": "^2.4.9",
     "@types/semver": "^7.5.8",
     "@xata.io/client": "workspace:*",
@@ -40,6 +42,7 @@
     "enquirer": "^2.4.1",
     "env-editor": "^1.1.0",
     "ini": "^4.1.2",
+    "inquirer": "^9.2.16",
     "lodash.compact": "^3.0.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
@@ -49,8 +52,8 @@
     "relaxed-json": "^1.0.3",
     "semver": "^7.6.0",
     "text-table": "^0.2.0",
-    "tslib": "^2.6.2",
     "tmp": "^0.2.3",
+    "tslib": "^2.6.2",
     "which": "^4.0.0",
     "zod": "^3.22.4"
   },
