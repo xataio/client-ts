@@ -32,7 +32,6 @@ function randomData(column: PgRollColumn) {
   // that are foreign keys, or have constraints such as length attached to them.
   switch (column.pgType) {
     case 'boolean':
-    case 'bool':
       return rand(0, 1) === 1;
     case 'bigint':
     case 'int8':
@@ -49,15 +48,14 @@ function randomData(column: PgRollColumn) {
     case 'varchar':
     case 'character varying':
       if (columnCommentType === 'email') return faker.internet.email({ provider: 'acme.pets' });
-      if (column.type === 'link') return undefined;
-      return faker.word.words(1);
+      return faker.word.words(3);
     case 'timestamptz':
       return faker.date.recent({ days: rand(1, 10) });
     case 'text[]':
       return faker.word.words(rand(1, 3)).split(' ');
   }
 
-  if (column.pgType?.startsWith('character(') || column.pgType?.startsWith('varchar(')) return faker.word.words(1);
+  if (column.pgType?.startsWith('character(') || column.pgType?.startsWith('varchar(')) return faker.word.words(3);
   if (column.pgType?.startsWith('numeric(')) return rand(1, 10000) / rand(1, 100);
 
   return undefined;
