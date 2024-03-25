@@ -30,8 +30,8 @@
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
-    "@types/pg": "^8.11.3",
-    "drizzle-orm": "^0.30.3",
+    "@types/pg": "^8.11.4",
+    "drizzle-orm": "^0.30.4",
     "pg": "^8.11.3"
   },
   "peerDependencies": {
