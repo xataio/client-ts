@@ -65,7 +65,7 @@ export function parseWorkspacesUrlParts(
     production: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.xata\.sh\/db\/([^:]+):?(.*)?/),
     staging: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.staging-xata\.dev\/db\/([^:]+):?(.*)?/),
     dev: url.match(/(?:https:\/\/)?([^.]+)(?:\.([^.]+))\.dev-xata\.dev\/db\/([^:]+):?(.*)?/),
-    local: url.match(/(?:https?:\/\/)?([^.]+)(?:\.([^.]+))\.localhost:([^:]+):?(.*)?/)
+    local: url.match(/(?:https?:\/\/)?([^.]+)(?:\.([^.]+))\.localhost:(?:\d+)\/db\/([^:]+):?(.*)?/)
   };
 
   const [host, match] = Object.entries(matches).find(([, match]) => match !== null) ?? [];
