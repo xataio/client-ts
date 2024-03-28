@@ -108,6 +108,7 @@ export const schema = {
           type: 'string'
         },
         up: {
+          default: '',
           description: 'SQL expression for up migration',
           type: 'string'
         }
@@ -128,6 +129,7 @@ export const schema = {
           type: 'string'
         },
         down: {
+          default: '',
           description: 'SQL expression for down migration',
           type: 'string'
         },
@@ -156,6 +158,7 @@ export const schema = {
           description: 'Add unique constraint to the column'
         },
         up: {
+          default: '',
           description: 'SQL expression for up migration',
           type: 'string'
         }
@@ -271,6 +274,7 @@ export const schema = {
           type: 'string'
         },
         down: {
+          default: '',
           description: 'SQL expression for down migration',
           type: 'string'
         },
@@ -291,6 +295,7 @@ export const schema = {
           type: 'string'
         },
         down: {
+          default: '',
           description: 'SQL expression for down migration',
           type: 'string'
         },
