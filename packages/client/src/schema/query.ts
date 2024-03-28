@@ -413,6 +413,24 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   }
 
   /**
+   */
+  exists(): Promise<boolean>;
+
+  /**
+   */
+  exists<Options extends RequiredBy<OmitBy<QueryOptions<Record>, 'pagination'>, 'columns'>>(
+    options: Options
+  ): Promise<boolean>;
+
+  /** */
+  exists(options: OmitBy<QueryOptions<Record>, 'columns' | 'pagination'>): Promise<boolean>;
+
+  async exists(options: QueryOptions<Record> = {}): Promise<boolean> {
+    const records = await this.getMany({ ...options, pagination: { size: 1 } });
+    return records.length > 0;
+  }
+
+  /**
    * Performs the query in the database and returns the first result.
    * @returns The first record that matches the query, or null if no record matched the query.
    */
