@@ -455,7 +455,13 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
   currentMigration: PgRollMigration = { operations: [] };
 
-  selectItem: ColumnEdit | TableEdit | null = null;
+  selectItem: {
+    type: 'edit-column';
+    column: ColumnEdit;
+  } | {
+    type: 'edit-table';
+    table: TableEdit;
+  } | null = null;
   flatChoices: SelectChoice[] = []
 
 
@@ -570,17 +576,40 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     }
   }
 
+  pushItem = (items: (Omit<SelectChoice, "choices">)[], arr?: unknown[]) => {
+    this.flatChoices.push(...items)
+    if (arr) {
+      arr.push(...items)
+    }
+  }
+
   async showSchemaEdit() {
 
   this.flatChoices = []
   const tableChoices: SelectChoice[] = []
 
-  let index = -1
+  const schemaChoice: SelectChoice = {
+    name: { type: 'schema' },
+    message: 'Tables',
+    role: 'heading',
+    choices: tableChoices
+  }
+
+  this.pushItem([schemaChoice])
+  
+  let index = 0
 
   for (const table of dummySchema.schema.tables) {
+    let columnChoices: SelectChoice[] = []
+    const editTable: SelectChoice = {
+      name: { type: 'edit-table', table: {name: table.name, newName: table.name, columns: [] }},
+      message: this.renderTableName(table.name),
+      choices: columnChoices,
+    }
+    this.pushItem([editTable], tableChoices)
     index = index + 1
     const columns = Object.values(table.columns);
-    const columnChoices: SelectChoice[] = columns.filter(({name}) => !name.startsWith("xata_")).map((column, columnIndex) => {
+    const choices: SelectChoice[] = columns.filter(({name}) => !name.startsWith("xata_")).map((column) => {
       const col: ColumnEdit =  {
         name: column.name,
         unique: column.unique,
@@ -596,61 +625,59 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           },
           message: this.renderColumnName({column: col})
         } as any
-        if ((this.selectItem as any)?.originalName === col?.originalName && (this.selectItem as any)?.tableName === col?.tableName) index = this.flatChoices.length + columnIndex + 1;
+        this.pushItem([item])
         return item
       })
 
-      // TODO disable when deleted
-        columnChoices.push({
-          name: { type: 'add-column', tableName: table.name },
-          message: `${chalk.green('+')} Add a column`,
-          hint: 'Add a column to a table'
-        })
+      columnChoices.push(...choices)
 
-      const editTable: SelectChoice = {
-        name: { type: 'edit-table', table: {name: table.name, newName: table.name, columns: [] }},
-        message: this.renderTableName(table.name),
-        choices: columnChoices,
+      this.pushItem([{
+        name: { type: 'add-column', tableName: table.name },
+        message: `${chalk.green('+')} Add a column`,
+        hint: 'Add a column to a table'
+      }], columnChoices)
+
+    }
+
+    this.pushItem([
+      createSpace(),{
+        message: `${chalk.green('+')} Add a table`,
+        name: { type: 'add-table', table: {columns: [], name : ''}},
+      },
+      {
+        message: `${chalk.green('►')} Run migration`,
+        name: { type: 'migrate' },
+        hint: "Run the migration"
       }
+    ], tableChoices)
 
-      this.flatChoices.push(editTable, ...columnChoices)
-      tableChoices.push(editTable)
-      const indexOfTable = this.flatChoices.findIndex(({name}) => name === editTable.name)
-      console.log("index of table", indexOfTable)
-      if ((this.selectItem as any)?.name === (editTable.name as any).table?.name) index = indexOfTable ?? 0
+    const getActiveIndex = () => {
+      let indexOfTable = 0
+    
+          if (this.selectItem?.type === 'edit-column') {
+            // TODO flat choices can have their nested choices removed
+            // TODO cannot modify the flatchoices or the indexes will get messed up
+             indexOfTable = this.flatChoices.findIndex((item) => item.name.type === 'edit-column' && item.name.column.originalName === (this.selectItem as {column: ColumnEdit}).column.originalName && item.name.column.tableName === (this.selectItem as {column: ColumnEdit}).column.tableName)
+            }
+         else if (this.selectItem?.type === 'edit-table') {
+          indexOfTable = this.flatChoices.findIndex((item) => item.name.type === 'edit-table' && item.name.table.name === (this.selectItem as {table: TableEdit}).table.name)
+        }
 
+      
+      return indexOfTable
     }
 
-  const formatting: SelectChoice[] = [
-    createSpace(),{
-      message: `${chalk.green('+')} Add a table`,
-      name: { type: 'add-table', table: {columns: [], name : ''}},
-    },
-    {
-      message: `${chalk.green('►')} Run migration`,
-      name: { type: 'migrate' },
-      hint: "Run the migration"
-    }
-  ]
-  tableChoices.push(...formatting)
+
     const select = new Select({
       message: 'Schema for database test:main',
-      initial: index,
-      choices: [
-        {
-          name: { type: 'schema' },
-          message: 'Tables',
-          role: 'heading',
-          choices: tableChoices
-        },
-      ],
+      initial: getActiveIndex(),
+      choices: [schemaChoice],
       footer:
         'Use the ↑ ↓ arrows to move across the schema, enter to edit or add things, delete or backspace to delete things.'
     });
 
     select.on('keypress', async (char: string, key: { name: string; action: string }) => {
-      const flatChoice = this.flatChoices[select.state.index - 1];
-      // console.log("flat choice exists", flatChoice)
+      const flatChoice = this.flatChoices[select.state.index];
       try {
         if (key.name === 'backspace' || key.name === 'delete') {
 
@@ -681,16 +708,15 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       const result = await select.run();
       if (result.type === 'add-table') {
       } else if (result.type === "edit-column") {
-        // todo typesafe
-        this.selectItem = result.column
-
+        this.selectItem = result
         if (!this.tableDeletions.find(({name}) => name === result.column.tableName)) {
           await this.showColumnEdit(result.column);
         }
         await select.cancel();
         // await this.showSchemaEdit();
       } else if (result.type === 'edit-table') {
-        this.selectItem = result.table;
+         this.selectItem = result;
+        // console.log("EDITING TABLE", result.table.name)
         if (!this.tableDeletions.find(({name}) => name === result.table.name)) {
           await this.showTableEdit({initialTableName: result.table.name});
         }
@@ -723,8 +749,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         }
       } else {
         this.tableDeletions.push({name: initialTableName })
-        this.selectItem = {name: initialTableName, newName: initialTableName, columns: []}
       }
+      this.selectItem = {type: 'edit-table', table: {name: initialTableName, newName: initialTableName, columns: []}}
       // TODO empty ALL edits
     }
 
@@ -741,7 +767,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           } else {
             this.columnDeletions[column.tableName].push(column.originalName)
           }
-          this.selectItem = column
+          this.selectItem = {type: 'edit-column', column}
         }
       }
 
@@ -794,7 +820,7 @@ const snippet = new Snippet({
 });
 try {
   const { values } = await snippet.run();
-    const existingEntry = this.columnEdits.find(({originalName}) => originalName === column.originalName)
+    const existingEntry = this.columnEdits.find(({originalName, tableName}) => tableName === column.tableName && originalName === column.originalName)
     if (existingEntry) {
       existingEntry.name = values.name;
       existingEntry.nullable = values.notNull;
