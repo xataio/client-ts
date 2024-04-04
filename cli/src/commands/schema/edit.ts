@@ -24,13 +24,7 @@ import {
   SelectChoice
 } from './types.js';
 
-const { Select, Snippet, Confirm } = enquirer as any;
-
-const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime', 'vector', 'json'];
-const typesList = types.join(', ');
-const uniqueUnsupportedTypes = ['text', 'multiple', 'vector', 'json'];
-const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
-const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
+const { Select, Snippet } = enquirer as any;
 
 export default class EditSchema extends BaseCommand<typeof EditSchema> {
   static description = 'Edit the schema';
@@ -98,7 +92,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
             nullable: column.notNull,
             tableName: table.name,
             originalName: column.name,
-            defaultValue: column.defaultValue,
+            defaultValue: column.defaultValue ?? undefined,
             type: column.type,
             // @ts-expect-error todo remove
             link: column.type === 'link' ? { table: column.link?.table } : undefined
