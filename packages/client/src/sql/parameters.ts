@@ -1,5 +1,6 @@
 import { SQLQuery } from '.';
 import { isDefined, isObject, isString, isStringArray } from '../util/lang';
+import { Buffer } from '../util/buffer';
 
 function escapeElement(elementRepresentation: string) {
   const escaped = elementRepresentation.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
