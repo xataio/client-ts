@@ -7,347 +7,7 @@ import { Schemas } from '@xata.io/client';
 import { OpAlterColumn, OpCreateTable, OpDropTable, OpRenameTable, PgRollMigration, PgRollMigrationDefinition } from '@xata.io/pgroll';
 import chalk from 'chalk';
 import enquirer from 'enquirer';
-// Add table
-// Rename table
-// Delete table
-// Add column
-// Edit column
-// Delete column
-
-const dummySchema = {
-  "branchName": "main",
-  "createdAt": "2024-04-02T06:40:39.989Z",
-  "databaseName": "csv",
-  "id": "bb_fipug7tus17st2pgt6l07q3bn8_o2i56v",
-  "lastMigrationID": "",
-  "version": 1,
-  "metadata": {},
-  "schema": {
-      "tables": [
-          {
-              "name": "44",
-              "xataCompatible": true,
-              "checkConstraints": {
-                  "44_xata_id_length_xata_id": {
-                      "name": "44_xata_id_length_xata_id",
-                      "columns": [
-                          "xata_id"
-                      ],
-                      "definition": "CHECK ((length(xata_id) < 256))"
-                  },
-                  "44_xata_string_length_stringggrenamed": {
-                      "name": "44_xata_string_length_stringggrenamed",
-                      "columns": [
-                          "emm"
-                      ],
-                      "definition": "CHECK ((length(emm) <= 2048))"
-                  },
-                  "44_xata_string_length_test": {
-                      "name": "44_xata_string_length_test",
-                      "columns": [
-                          "test"
-                      ],
-                      "definition": "CHECK ((length(test) <= 2048))"
-                  }
-              },
-              "foreignKeys": {},
-              "primaryKey": [],
-              "uniqueConstraints": {
-                  "44_stringggrenamed_unique": {
-                      "name": "44_stringggrenamed_unique",
-                      "columns": [
-                          "emm"
-                      ]
-                  },
-                  "_pgroll_new_44_xata_id_key": {
-                      "name": "_pgroll_new_44_xata_id_key",
-                      "columns": [
-                          "xata_id"
-                      ]
-                  }
-              },
-              "comment": "",
-              "oid": "4563954",
-              "columns": [
-                  {
-                      "name": "emm",
-                      "type": "text",
-                      "pgType": "text",
-                      "notNull": false,
-                      "unique": true,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "percentageeee",
-                      "type": "float",
-                      "pgType": "double precision",
-                      "notNull": false,
-                      "unique": false,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "price",
-                      "type": "float",
-                      "pgType": "double precision",
-                      "notNull": false,
-                      "unique": false,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "symbol",
-                      "type": "string",
-                      "pgType": "text",
-                      "notNull": false,
-                      "unique": false,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "test",
-                      "type": "string",
-                      "pgType": "text",
-                      "notNull": false,
-                      "unique": false,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "timestamp",
-                      "type": "datetime",
-                      "pgType": "timestamptz",
-                      "notNull": false,
-                      "unique": false,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "xata_createdat",
-                      "type": "datetime",
-                      "pgType": "timestamptz",
-                      "notNull": true,
-                      "unique": false,
-                      "defaultValue": "now()"
-                  },
-                  {
-                      "name": "xata_id",
-                      "type": "text",
-                      "pgType": "text",
-                      "notNull": true,
-                      "unique": true,
-                      "defaultValue": "('rec_'::text || (xata_private.xid())::text)"
-                  },
-                  {
-                      "name": "xata_updatedat",
-                      "type": "datetime",
-                      "pgType": "timestamptz",
-                      "notNull": true,
-                      "unique": false,
-                      "defaultValue": "now()"
-                  },
-                  {
-                      "name": "xata_version",
-                      "type": "int",
-                      "pgType": "integer",
-                      "notNull": true,
-                      "unique": false,
-                      "defaultValue": "0"
-                  }
-              ]
-          },
-          {
-              "name": "678",
-              "xataCompatible": true,
-              "checkConstraints": {
-                  "678_xata_id_length_xata_id": {
-                      "name": "678_xata_id_length_xata_id",
-                      "columns": [
-                          "xata_id"
-                      ],
-                      "definition": "CHECK ((length(xata_id) < 256))"
-                  }
-              },
-              "foreignKeys": {},
-              "primaryKey": [],
-              "uniqueConstraints": {
-                  "678_percentageee_unique": {
-                      "name": "678_percentageee_unique",
-                      "columns": [
-                          "percentageee"
-                      ]
-                  },
-                  "_pgroll_new_678_xata_id_key": {
-                      "name": "_pgroll_new_678_xata_id_key",
-                      "columns": [
-                          "xata_id"
-                      ]
-                  }
-              },
-              "comment": "",
-              "oid": "4564039",
-              "columns": [
-                  {
-                      "name": "percentageee",
-                      "type": "float",
-                      "pgType": "double precision",
-                      "notNull": true,
-                      "unique": true,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "pricer",
-                      "type": "float",
-                      "pgType": "double precision",
-                      "notNull": false,
-                      "unique": false,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "symbolll",
-                      "type": "string",
-                      "pgType": "text",
-                      "notNull": false,
-                      "unique": false,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "timestamp",
-                      "type": "datetime",
-                      "pgType": "timestamptz",
-                      "notNull": false,
-                      "unique": false,
-                      "defaultValue": null
-                  },
-                  {
-                      "name": "xata_createdat",
-                      "type": "datetime",
-                      "pgType": "timestamptz",
-                      "notNull": true,
-                      "unique": false,
-                      "defaultValue": "now()"
-                  },
-                  {
-                      "name": "xata_id",
-                      "type": "text",
-                      "pgType": "text",
-                      "notNull": true,
-                      "unique": true,
-                      "defaultValue": "('rec_'::text || (xata_private.xid())::text)"
-                  },
-                  {
-                      "name": "xata_updatedat",
-                      "type": "datetime",
-                      "pgType": "timestamptz",
-                      "notNull": true,
-                      "unique": false,
-                      "defaultValue": "now()"
-                  },
-                  {
-                      "name": "xata_version",
-                      "type": "int",
-                      "pgType": "integer",
-                      "notNull": true,
-                      "unique": false,
-                      "defaultValue": "0"
-                  }
-              ]
-          },
-          {
-            "name": "emily",
-            "xataCompatible": true,
-            "checkConstraints": {
-                "678_xata_id_length_xata_id": {
-                    "name": "678_xata_id_length_xata_id",
-                    "columns": [
-                        "xata_id"
-                    ],
-                    "definition": "CHECK ((length(xata_id) < 256))"
-                }
-            },
-            "foreignKeys": {},
-            "primaryKey": [],
-            "uniqueConstraints": {
-                "678_percentageee_unique": {
-                    "name": "678_percentageee_unique",
-                    "columns": [
-                        "percentageee"
-                    ]
-                },
-                "_pgroll_new_678_xata_id_key": {
-                    "name": "_pgroll_new_678_xata_id_key",
-                    "columns": [
-                        "xata_id"
-                    ]
-                }
-            },
-            "comment": "",
-            "oid": "4564039",
-            "columns": [
-                {
-                    "name": "percentageee",
-                    "type": "float",
-                    "pgType": "double precision",
-                    "notNull": true,
-                    "unique": true,
-                    "defaultValue": null
-                },
-                {
-                    "name": "pricer",
-                    "type": "float",
-                    "pgType": "double precision",
-                    "notNull": false,
-                    "unique": false,
-                    "defaultValue": null
-                },
-                {
-                    "name": "symbolll",
-                    "type": "string",
-                    "pgType": "text",
-                    "notNull": false,
-                    "unique": false,
-                    "defaultValue": null
-                },
-                {
-                    "name": "timestamp",
-                    "type": "datetime",
-                    "pgType": "timestamptz",
-                    "notNull": false,
-                    "unique": false,
-                    "defaultValue": null
-                },
-                {
-                    "name": "xata_createdat",
-                    "type": "datetime",
-                    "pgType": "timestamptz",
-                    "notNull": true,
-                    "unique": false,
-                    "defaultValue": "now()"
-                },
-                {
-                    "name": "xata_id",
-                    "type": "text",
-                    "pgType": "text",
-                    "notNull": true,
-                    "unique": true,
-                    "defaultValue": "('rec_'::text || (xata_private.xid())::text)"
-                },
-                {
-                    "name": "xata_updatedat",
-                    "type": "datetime",
-                    "pgType": "timestamptz",
-                    "notNull": true,
-                    "unique": false,
-                    "defaultValue": "now()"
-                },
-                {
-                    "name": "xata_version",
-                    "type": "int",
-                    "pgType": "integer",
-                    "notNull": true,
-                    "unique": false,
-                    "defaultValue": "0"
-                }
-            ]
-        },
-      ]
-  }
-}
+import { dummySchema } from './dummySchema.js';
 
 const { Select, Snippet, Confirm } = enquirer as any;
 
@@ -386,32 +46,31 @@ type ColumnAdd = {
   link?: string
 }
 
-const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime', 'vector', 'json'];
-const typesList = types.join(', ');
-const uniqueUnsupportedTypes = ['text', 'multiple', 'vector', 'json'];
-const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
-const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
-
 type SelectChoice = {
   name:
   | {
       type: 'space' | 'migrate' | 'schema';
+      id: string;
     }
     | {
       type: 'add-table';
       table: TableAdd
+      id: string;
     }
     | {
       type: 'edit-table';
       table: TableEdit;
+      id: string;
     }
     | {
       type: 'add-column';
       tableName: string;
+      id: string;
     }
   | {
       type: 'edit-column';
       column: ColumnEdit;
+      id: string;
     }
   message: string;
   role?: string;
@@ -420,8 +79,24 @@ type SelectChoice = {
   hint?: string;
 }
 
+
+const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime', 'vector', 'json'];
+const typesList = types.join(', ');
+const uniqueUnsupportedTypes = ['text', 'multiple', 'vector', 'json'];
+const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
+const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
+
+const notEmptyString = (value: string) => {
+  return value !== "" ? true : "Name cannot be empty"
+}
+
+
+const generateRandomId = () => {
+  return Math.random().toString(36).substring(7);
+}
+
 const createSpace = (): SelectChoice => {
-  return { name: { type: 'space' }, message: ' ', role: 'heading' };
+  return { name: { type: 'space', id: generateRandomId() }, message: ' ', role: 'heading' };
 }
 
 
@@ -462,7 +137,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     type: 'edit-table';
     table: TableEdit;
   } | null = null;
-  flatChoices: SelectChoice[] = []
+  activeIndex: number = 0
 
 
   editsToMigrations = () => {
@@ -474,7 +149,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         to: newName
       }}
     })
-    this.currentMigration.operations.push(...tableEdits)
+
     const tableDeletions: {drop_table: OpDropTable}[] = this.tableDeletions.map(({name}) => {
       return {drop_table: {
         type: 'drop_table',
@@ -482,7 +157,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       }}
     })
     // // TODO IF THERE ARE NEW DELETIONS REMOVE ALL TABLE EDITS AND COLUMNS
-    this.currentMigration.operations.push(...tableDeletions)
     const columnEdits: {alter_column: OpAlterColumn}[] = this.columnEdits.map(({originalName,  tableName, name}) => {
       const edit: {alter_column: OpAlterColumn} = {alter_column: {
         column: originalName,
@@ -504,7 +178,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         }
       }
       })}).flat().filter((operation) => !this.tableDeletions.some(({name}) => operation.drop_column.table === name))
-    this.currentMigration.operations.push(...columnDeletions)
+      
+    this.currentMigration.operations.push(...tableEdits, ...tableDeletions, ...columnDeletions)
     // const tableAdditions: {create_table: OpCreateTable}[] = this.tableAdditions.map(({name}) => {
     //   return {create_table: {
     //     type: 'create_table',
@@ -572,42 +247,29 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     message: 'The table name',
     validate(value: string, state: unknown, item: unknown, index: number) {
       // TODO make sure no other tables have this name
-     return value !== "" ? true : "Name cannot be empty"
-    }
-  }
-
-  pushItem = (items: (Omit<SelectChoice, "choices">)[], arr?: unknown[]) => {
-    this.flatChoices.push(...items)
-    if (arr) {
-      arr.push(...items)
+      return notEmptyString(value) 
     }
   }
 
   async showSchemaEdit() {
 
-  this.flatChoices = []
   const tableChoices: SelectChoice[] = []
 
   const schemaChoice: SelectChoice = {
-    name: { type: 'schema' },
+    name: { type: 'schema', id: generateRandomId() },
     message: 'Tables',
     role: 'heading',
     choices: tableChoices
   }
-
-  this.pushItem([schemaChoice])
   
-  let index = 0
-
   for (const table of dummySchema.schema.tables) {
     let columnChoices: SelectChoice[] = []
     const editTable: SelectChoice = {
-      name: { type: 'edit-table', table: {name: table.name, newName: table.name, columns: [] }},
+      name: { type: 'edit-table', id: generateRandomId(), table: {name: table.name, newName: table.name, columns: [] }},
       message: this.renderTableName(table.name),
       choices: columnChoices,
     }
-    this.pushItem([editTable], tableChoices)
-    index = index + 1
+    tableChoices.push(editTable)
     const columns = Object.values(table.columns);
     const choices: SelectChoice[] = columns.filter(({name}) => !name.startsWith("xata_")).map((column) => {
       const col: ColumnEdit =  {
@@ -625,64 +287,48 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           },
           message: this.renderColumnName({column: col})
         } as any
-        this.pushItem([item])
         return item
       })
 
       columnChoices.push(...choices)
 
-      this.pushItem([{
-        name: { type: 'add-column', tableName: table.name },
+      columnChoices.push({
+        name: { type: 'add-column', tableName: table.name, id: generateRandomId() },
         message: `${chalk.green('+')} Add a column`,
         hint: 'Add a column to a table'
-      }], columnChoices)
+      })
 
     }
 
-    this.pushItem([
+    tableChoices.push(
       createSpace(),{
         message: `${chalk.green('+')} Add a table`,
-        name: { type: 'add-table', table: {columns: [], name : ''}},
+        name: { type: 'add-table', table: {columns: [], name : ''}, id: generateRandomId()},
       },
       {
         message: `${chalk.green('►')} Run migration`,
-        name: { type: 'migrate' },
+        name: { type: 'migrate', id: generateRandomId() },
         hint: "Run the migration"
       }
-    ], tableChoices)
-
-    const getActiveIndex = () => {
-      let indexOfTable = 0
-    
-          if (this.selectItem?.type === 'edit-column') {
-            // TODO flat choices can have their nested choices removed
-            // TODO cannot modify the flatchoices or the indexes will get messed up
-             indexOfTable = this.flatChoices.findIndex((item) => item.name.type === 'edit-column' && item.name.column.originalName === (this.selectItem as {column: ColumnEdit}).column.originalName && item.name.column.tableName === (this.selectItem as {column: ColumnEdit}).column.tableName)
-            }
-         else if (this.selectItem?.type === 'edit-table') {
-          indexOfTable = this.flatChoices.findIndex((item) => item.name.type === 'edit-table' && item.name.table.name === (this.selectItem as {table: TableEdit}).table.name)
-        }
-
-      
-      return indexOfTable
-    }
+    )
 
 
     const select = new Select({
       message: 'Schema for database test:main',
-      initial: getActiveIndex(),
+      initial: this.activeIndex,
       choices: [schemaChoice],
       footer:
         'Use the ↑ ↓ arrows to move across the schema, enter to edit or add things, delete or backspace to delete things.'
     });
 
     select.on('keypress', async (char: string, key: { name: string; action: string }) => {
-      const flatChoice = this.flatChoices[select.state.index];
+      this.activeIndex = select.state.index
+      const selectedItem = select.state.choices[select.state.index];
       try {
         if (key.name === 'backspace' || key.name === 'delete') {
 
-          if (!flatChoice) return; // add table is not here for example
-          const choice = flatChoice.name;
+          if (!selectedItem) return; // add table is not here for example
+          const choice = selectedItem.name;
   
           if (typeof choice !== 'object') return;
       
@@ -795,26 +441,42 @@ async showColumnEdit(column: ColumnEdit) {
   }
 }`
 
+
+const noExistingColumnName = (value: string) => {
+  // Todo maek sure non edited names to conflict
+  return !this.columnEdits.find(({name, tableName}) => tableName === column.tableName && name === value) ? true : "Name already exists"
+}
+
 const snippet = new Snippet({
-  // todo show information about field
   message: "Edit a column",
   initial: alterColumnDefaultValues,
   fields: [
     {
       name: 'name',
       message: alterColumnDefaultValues.alter_column.column,
+      initial: alterColumnDefaultValues.alter_column.column,
+      validate: (value: string) => {
+        // Todo field does not start with xata_
+        return notEmptyString(value) && noExistingColumnName(value)
+      }
     },
     {
       name: 'nullable',
       message: alterColumnDefaultValues.alter_column.nullable ? "false" : "true",
+      initial: alterColumnDefaultValues.alter_column.nullable ? "false" : "true",
+      validate: (value: string) => {
+        return notEmptyString(value) && noExistingColumnName(value)
+      }
     },
     {
       name: 'unique',
       message: alterColumnDefaultValues.alter_column.unique ? "true" : "false",
+      initial: alterColumnDefaultValues.alter_column.unique ? "true" : "false",
+      validate: (value: string) => {
+        return notEmptyString(value) && noExistingColumnName(value)
+      }
     }
   ],
-  // TODO name cannot be empty
-  // TODO name cannot be already taken
   footer: this.footer,
   template
 });
@@ -827,7 +489,10 @@ try {
       existingEntry.unique = values.unique;
     } else {
       // TODO default value and type
-      this.columnEdits.push({name: values.name, defaultValue: null, type: "string", nullable: values.notNull, unique: values.unique, originalName: column.originalName, tableName: column.tableName})
+      if (values.name !== column.originalName) {
+        this.columnEdits.push({name: values.name, defaultValue: column.defaultValue, type: column.type, nullable: values.notNull, unique: values.unique, originalName: column.originalName, tableName: column.tableName})
+      }
+
     }
     await this.showSchemaEdit();
   
@@ -837,7 +502,6 @@ try {
 }
 
   async showTableEdit({initialTableName}: {initialTableName: string}) {
-    // TODO the new name is not being showed during
     this.clear()
     const snippet = new Snippet({
       message: "Edit table name",
@@ -845,6 +509,7 @@ try {
       fields: [
         this.tableNameField,
       ],
+      
       // TODO name cannot be empty
       // TODO name cannot be already taken
       footer: this.footer,
