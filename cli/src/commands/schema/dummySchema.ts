@@ -35,7 +35,30 @@ export const dummySchema = {
                         "definition": "CHECK ((length(test) <= 2048))"
                     }
                 },
-                "foreignKeys": {},
+                "foreignKeys": {
+                    "fk_image": {
+                        "name": "fk_image",
+                        "columns": [
+                            "symbol"
+                        ],
+                        "referencedTable": "emily",
+                        "referencedColumns": [
+                            "xata_id"
+                        ],
+                        "onDelete": "NO ACTION"
+                    },
+                    "fk_tag": {
+                        "name": "fk_tag",
+                        "columns": [
+                            "test"
+                        ],
+                        "referencedTable": "emily",
+                        "referencedColumns": [
+                            "xata_id"
+                        ],
+                        "onDelete": "NO ACTION"
+                    }
+                },
                 "primaryKey": [],
                 "uniqueConstraints": {
                     "44_stringggrenamed_unique": {
@@ -80,7 +103,10 @@ export const dummySchema = {
                     },
                     {
                         "name": "symbol",
-                        "type": "string",
+                        "type": "link",
+                        "link": {
+                            "table": "emily"
+                        },
                         "pgType": "text",
                         "notNull": false,
                         "unique": false,
@@ -88,7 +114,10 @@ export const dummySchema = {
                     },
                     {
                         "name": "test",
-                        "type": "string",
+                        "type": "link",
+                        "link": {
+                            "table": "emily"
+                        },
                         "pgType": "text",
                         "notNull": false,
                         "unique": false,

@@ -10,7 +10,9 @@ export type AddTablePayload = {
         nullable: boolean;
         default?: string;
         vectorDimension?: string
-        link?: string
+        link?: {
+          table: string
+        }
       }[];
     }
   }
@@ -33,7 +35,9 @@ export type AddTablePayload = {
       nullable: boolean;
       defaultValue?: string;
       vectorDimension?: string
-      link?: string
+      link?: {
+        table: string
+      }
     }
   }
 
@@ -48,7 +52,10 @@ export type AddTablePayload = {
       originalName: string;
       tableName: string
       defaultValue: any
-      type: string
+      type: string,
+      link?: {
+        table: string
+      }
     };
   }
 

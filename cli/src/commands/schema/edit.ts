@@ -102,13 +102,14 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   }
 
   renderColumnName({column}: {column: EditColumnPayload["column"]}) {
-    // TODO link columns
     const columnEdit = this.columnEdits.filter((edit) => edit.tableName === column.tableName).find(({originalName: editName}) => editName === column.originalName);
     const columnDelete = Object.entries(this.columnDeletions).filter((entry) => entry[0] === column.tableName).find((entry) => entry[1].includes(column.originalName));
     const tableDelete = this.tableDeletions.find(({name}) => name === column.tableName);
    
+    const table = dummySchema.schema.tables.find((table) => table.name === column.tableName);
+
     const metadata = [
-      `${chalk.gray.italic(column.type)}`,
+      `${chalk.gray.italic(column.type)}${column.type === "link" ? ` → ${chalk.gray.italic(column.link?.table)}` : ""}`,
       column.unique ? chalk.gray.italic('unique') : '',
       column.nullable ? chalk.gray.italic('not null') : '',
       column.defaultValue ? chalk.gray.italic(`default: ${column.defaultValue}`) : ''
@@ -171,7 +172,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   }
   
   for (const table of dummySchema.schema.tables) {
-    let columnChoices: SelectChoice[] = []
+    const columnChoices: SelectChoice[] = []
     const editTable: SelectChoice = {
       name: { type: 'edit-table', table: {name: table.name, newName: table.name }},
       message: this.renderTableName(table.name),
@@ -179,7 +180,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     }
     tableChoices.push(editTable)
     const columns = Object.values(table.columns);
-    const choices: SelectChoice[] = columns.filter(({name}) => !name.startsWith("xata_")).map((column) => {
+    const choices: SelectChoice[] = columns.filter(({name}) => !name.toLowerCase().startsWith("xata_")).map((column) => {
       const col: EditColumnPayload["column"] =  {
         name: column.name,
         unique: column.unique,
@@ -187,7 +188,9 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         tableName: table.name,
         originalName: column.name,
         defaultValue: column.defaultValue,
-        type: column.type
+        type: column.type,
+        // @ts-expect-error
+        link: column.type === "link" ? {table: column.link?.table} : undefined
       }
         const item: SelectChoice = {
           name: { 
