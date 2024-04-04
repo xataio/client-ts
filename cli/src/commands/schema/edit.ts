@@ -4,101 +4,19 @@ import { BaseCommand } from '../../base.js';
 // import schemas from "@xata.io/pgroll"
 import { Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
-import { OpAlterColumn, OpCreateTable, OpDropTable, OpRenameTable, PgRollMigration, PgRollMigrationDefinition } from '@xata.io/pgroll';
+import { OpAlterColumn, OpCreateTable, OpDropColumn, OpDropTable, OpRenameTable, PgRollMigration, PgRollMigrationDefinition } from '@xata.io/pgroll';
 import chalk from 'chalk';
 import enquirer from 'enquirer';
 import { dummySchema } from './dummySchema.js';
+import { AddColumnPayload, AddTablePayload, EditColumnPayload, EditTablePayload, SelectChoice } from './types.js';
 
 const { Select, Snippet, Confirm } = enquirer as any;
-
-type TableAdd = {
-  name: string;
-  columns: ColumnAdd[];
-}
-
-type TableEdit = {
-  name: string;
-  newName: string;
-  columns: ColumnEdit[];
-}
-
-type TableDelete = {
-  name: string;
-}
-
-type ColumnEdit = {
-  name: string;
-  unique: boolean;
-  nullable: boolean;
-  originalName: string;
-  tableName: string
-  defaultValue: any
-  type: string
-}
-
-type ColumnAdd = {
-  name: string;
-  type: string;
-  unique: boolean;
-  nullable: boolean;
-  default?: string;
-  vectorDimension?: string
-  link?: string
-}
-
-type SelectChoice = {
-  name:
-  | {
-      type: 'space' | 'migrate' | 'schema';
-      id: string;
-    }
-    | {
-      type: 'add-table';
-      table: TableAdd
-      id: string;
-    }
-    | {
-      type: 'edit-table';
-      table: TableEdit;
-      id: string;
-    }
-    | {
-      type: 'add-column';
-      tableName: string;
-      id: string;
-    }
-  | {
-      type: 'edit-column';
-      column: ColumnEdit;
-      id: string;
-    }
-  message: string;
-  role?: string;
-  choices?: SelectChoice[];
-  disabled?: boolean;
-  hint?: string;
-}
-
 
 const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime', 'vector', 'json'];
 const typesList = types.join(', ');
 const uniqueUnsupportedTypes = ['text', 'multiple', 'vector', 'json'];
 const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
 const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
-
-const notEmptyString = (value: string) => {
-  return value !== "" ? true : "Name cannot be empty"
-}
-
-
-const generateRandomId = () => {
-  return Math.random().toString(36).substring(7);
-}
-
-const createSpace = (): SelectChoice => {
-  return { name: { type: 'space', id: generateRandomId() }, message: ' ', role: 'heading' };
-}
-
 
 export default class EditSchema extends BaseCommand<typeof EditSchema> {
   static description = 'Edit the schema';
@@ -121,22 +39,17 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   database!: string;
   branch!: string;
 
-  tableAdditions: TableAdd[] = [];
-  tableEdits: TableEdit[] = [];
-  tableDeletions: TableDelete[] = [];
-  columnAdditions: ColumnAdd[] = [];
-  columnEdits: ColumnEdit[] = [];
+  tableAdditions: AddTablePayload["table"][] = [];
+  tableEdits: EditTablePayload["table"][] = [];
+  tableDeletions: {
+    name: string;
+  }[] = [];
+  columnAdditions: AddColumnPayload["column"][] = [];
+  columnEdits: EditColumnPayload["column"][] = [];
   columnDeletions: { [tableName: string]: string[] } = {};
 
   currentMigration: PgRollMigration = { operations: [] };
 
-  selectItem: {
-    type: 'edit-column';
-    column: ColumnEdit;
-  } | {
-    type: 'edit-table';
-    table: TableEdit;
-  } | null = null;
   activeIndex: number = 0
 
 
@@ -168,7 +81,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     })
     this.currentMigration.operations.push(...columnEdits)
 
-    const columnDeletions: {drop_column: OpAlterColumn}[] = Object.entries(this.columnDeletions).map((entry) => {
+    const columnDeletions: {drop_column: OpDropColumn}[] = Object.entries(this.columnDeletions).map((entry) => {
       return entry[1].map((e) => {
         return {
           drop_column: {
@@ -193,7 +106,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     // todo column edit
   }
 
-  renderColumnName({column}: {column: ColumnEdit}) {
+  renderColumnName({column}: {column: EditColumnPayload["column"]}) {
     // TODO link columns
     const columnEdit = this.columnEdits.filter((edit) => edit.tableName === column.tableName).find(({originalName: editName}) => editName === column.originalName);
     const columnDelete = Object.entries(this.columnDeletions).filter((entry) => entry[0] === column.tableName).find((entry) => entry[1].includes(column.originalName));
@@ -256,7 +169,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   const tableChoices: SelectChoice[] = []
 
   const schemaChoice: SelectChoice = {
-    name: { type: 'schema', id: generateRandomId() },
+    name: { type: 'schema' },
     message: 'Tables',
     role: 'heading',
     choices: tableChoices
@@ -265,14 +178,14 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   for (const table of dummySchema.schema.tables) {
     let columnChoices: SelectChoice[] = []
     const editTable: SelectChoice = {
-      name: { type: 'edit-table', id: generateRandomId(), table: {name: table.name, newName: table.name, columns: [] }},
+      name: { type: 'edit-table', table: {name: table.name, newName: table.name }},
       message: this.renderTableName(table.name),
       choices: columnChoices,
     }
     tableChoices.push(editTable)
     const columns = Object.values(table.columns);
     const choices: SelectChoice[] = columns.filter(({name}) => !name.startsWith("xata_")).map((column) => {
-      const col: ColumnEdit =  {
+      const col: EditColumnPayload["column"] =  {
         name: column.name,
         unique: column.unique,
         nullable: column.notNull,
@@ -293,25 +206,23 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       columnChoices.push(...choices)
 
       columnChoices.push({
-        name: { type: 'add-column', tableName: table.name, id: generateRandomId() },
+        name: { type: 'add-column', tableName: table.name, column: {name: '', type: 'string', unique: false, nullable: false}},
         message: `${chalk.green('+')} Add a column`,
         hint: 'Add a column to a table'
       })
-
     }
 
     tableChoices.push(
       createSpace(),{
         message: `${chalk.green('+')} Add a table`,
-        name: { type: 'add-table', table: {columns: [], name : ''}, id: generateRandomId()},
+        name: { type: 'add-table', table: {columns: [], name : ''}},
       },
       {
         message: `${chalk.green('►')} Run migration`,
-        name: { type: 'migrate', id: generateRandomId() },
+        name: { type: 'migrate' },
         hint: "Run the migration"
       }
     )
-
 
     const select = new Select({
       message: 'Schema for database test:main',
@@ -354,20 +265,15 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       const result = await select.run();
       if (result.type === 'add-table') {
       } else if (result.type === "edit-column") {
-        this.selectItem = result
         if (!this.tableDeletions.find(({name}) => name === result.column.tableName)) {
           await this.showColumnEdit(result.column);
         }
         await select.cancel();
-        // await this.showSchemaEdit();
       } else if (result.type === 'edit-table') {
-         this.selectItem = result;
-        // console.log("EDITING TABLE", result.table.name)
         if (!this.tableDeletions.find(({name}) => name === result.table.name)) {
           await this.showTableEdit({initialTableName: result.table.name});
         }
         await select.cancel();
-        // await this.showSchemaEdit();
         // todo prevent from exiting
       } else if (result.type === "add-column") {
       } else if (result.type === 'migrate') {
@@ -380,7 +286,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           this.toErrorJson("Migration is invalid")
         }
         // todo exhaustive check
-        // exhaustiveCheck(result.type)
       }
     } catch (error) {
      }
@@ -396,11 +301,10 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       } else {
         this.tableDeletions.push({name: initialTableName })
       }
-      this.selectItem = {type: 'edit-table', table: {name: initialTableName, newName: initialTableName, columns: []}}
       // TODO empty ALL edits
     }
 
-    async toggleColumnDelete({column}: {column: ColumnEdit}) {
+    async toggleColumnDelete({column}: {column: EditColumnPayload["column"]}) {
       const existingEntry = Object.entries(this.columnDeletions).filter((entry) => entry[0] === column.tableName).find((entry) => entry[1].includes(column.originalName))
         if (existingEntry) {
           const index = existingEntry[1].findIndex((name) => name === column.originalName);
@@ -413,11 +317,10 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           } else {
             this.columnDeletions[column.tableName].push(column.originalName)
           }
-          this.selectItem = {type: 'edit-column', column}
         }
       }
 
-async showColumnEdit(column: ColumnEdit) {
+async showColumnEdit(column: EditColumnPayload["column"]) {
   const alterColumnDefaultValues: {alter_column: OpAlterColumn} = {
     alter_column: {
       column: column.originalName,
@@ -443,7 +346,7 @@ async showColumnEdit(column: ColumnEdit) {
 
 
 const noExistingColumnName = (value: string) => {
-  // Todo maek sure non edited names to conflict
+  // Todo make sure non edited names to conflict
   return !this.columnEdits.find(({name, tableName}) => tableName === column.tableName && name === value) ? true : "Name already exists"
 }
 
@@ -528,7 +431,7 @@ try {
 
         existingEntry.newName = answer.values.name;
       } else {
-        this.tableEdits.push({name: initialTableName, newName: answer.values.name, columns: []})
+        this.tableEdits.push({name: initialTableName, newName: answer.values.name})
       }
     } else {
       const index = this.tableEdits.findIndex(({name}) => name === initialTableName);
@@ -548,3 +451,10 @@ const validateMigration = (migration: object) => {
   return PgRollMigrationDefinition.safeParse(migration).success
 }
 
+const notEmptyString = (value: string) => {
+  return value !== "" ? true : "Name cannot be empty"
+}
+
+const createSpace = (): SelectChoice => {
+  return { name: { type: 'space' }, message: ' ', role: 'heading' };
+}
