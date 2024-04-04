@@ -24,6 +24,7 @@
     "@oclif/plugin-not-found": "^3.0.14",
     "@oclif/plugin-plugins": "^4.3.7",
     "@types/ini": "^4.1.0",
+    "@types/prompts": "^2.4.9",
     "@types/semver": "^7.5.8",
     "@xata.io/client": "workspace:*",
     "@xata.io/codegen": "workspace:*",
