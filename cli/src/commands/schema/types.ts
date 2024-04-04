@@ -36,6 +36,8 @@ export type AddTablePayload = {
       link?: string
     }
   }
+
+  export type DeleteColumnPayload = { [tableName: string]: string[] }
   
   export type EditColumnPayload = {
     type: 'edit-column';
@@ -48,6 +50,10 @@ export type AddTablePayload = {
       defaultValue: any
       type: string
     };
+  }
+
+  export type DeleteTablePayload = {
+    name: string;
   }
   
   export type FormatPayload = {

@@ -1,14 +1,11 @@
-// import { Flags } from "@oclif/core";
-// import { BaseCommand } from "../../base";
 import { BaseCommand } from '../../base.js';
-// import schemas from "@xata.io/pgroll"
 import { Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import { OpAlterColumn, OpCreateTable, OpDropColumn, OpDropTable, OpRenameTable, PgRollMigration, PgRollMigrationDefinition } from '@xata.io/pgroll';
 import chalk from 'chalk';
 import enquirer from 'enquirer';
 import { dummySchema } from './dummySchema.js';
-import { AddColumnPayload, AddTablePayload, EditColumnPayload, EditTablePayload, SelectChoice } from './types.js';
+import { AddColumnPayload, AddTablePayload, DeleteColumnPayload, DeleteTablePayload, EditColumnPayload, EditTablePayload, SelectChoice } from './types.js';
 
 const { Select, Snippet, Confirm } = enquirer as any;
 
@@ -41,12 +38,10 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
   tableAdditions: AddTablePayload["table"][] = [];
   tableEdits: EditTablePayload["table"][] = [];
-  tableDeletions: {
-    name: string;
-  }[] = [];
+  tableDeletions: DeleteTablePayload[] = [];
   columnAdditions: AddColumnPayload["column"][] = [];
   columnEdits: EditColumnPayload["column"][] = [];
-  columnDeletions: { [tableName: string]: string[] } = {};
+  columnDeletions: DeleteColumnPayload = {};
 
   currentMigration: PgRollMigration = { operations: [] };
 
@@ -143,7 +138,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   return `• ${chalk.bold(originalName)}`;
  }
 
-  async run(): Promise<any> {    
+  async run(): Promise<void> {    
     await this.showSchemaEdit()    
   }
 
@@ -194,12 +189,14 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         defaultValue: column.defaultValue,
         type: column.type
       }
-        const item = {
-          name: { type: "edit-column", 
+        const item: SelectChoice = {
+          name: { 
+            type: "edit-column", 
             column: col
           },
-          message: this.renderColumnName({column: col})
-        } as any
+          message: this.renderColumnName({column: col}),
+          disabled: editTableDisabled(table.name, this.tableDeletions),
+        } 
         return item
       })
 
@@ -208,6 +205,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       columnChoices.push({
         name: { type: 'add-column', tableName: table.name, column: {name: '', type: 'string', unique: false, nullable: false}},
         message: `${chalk.green('+')} Add a column`,
+        disabled: editTableDisabled(table.name, this.tableDeletions),
         hint: 'Add a column to a table'
       })
     }
@@ -262,19 +260,22 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     });
 
     try {
-      const result = await select.run();
+      const result: SelectChoice["name"] = await select.run();
       if (result.type === 'add-table') {
       } else if (result.type === "edit-column") {
-        if (!this.tableDeletions.find(({name}) => name === result.column.tableName)) {
+        await select.cancel();
+        if (editColumnDisabled(result.column, this.columnDeletions)) {
+          await this.showSchemaEdit();
+        } else {
           await this.showColumnEdit(result.column);
         }
-        await select.cancel();
       } else if (result.type === 'edit-table') {
-        if (!this.tableDeletions.find(({name}) => name === result.table.name)) {
+        await select.cancel();
+        if (editTableDisabled(result.table.name, this.tableDeletions)) {
+          await this.showSchemaEdit();
+        } else {
           await this.showTableEdit({initialTableName: result.table.name});
         }
-        await select.cancel();
-        // todo prevent from exiting
       } else if (result.type === "add-column") {
       } else if (result.type === 'migrate') {
         this.editsToMigrations()
@@ -445,6 +446,15 @@ try {
       if (err) throw err;
     }
   }
+}
+
+const editTableDisabled = (name: string, tableDeletions: DeleteTablePayload[]) => {
+  return tableDeletions.some(({name: tableName}) => tableName === name) ? true : false
+}
+
+/** Necessary because disabling prevents the user from "undeleting" a column */
+const editColumnDisabled = (column: EditColumnPayload["column"], columnDeletions: DeleteColumnPayload) => {
+  return columnDeletions[column.tableName]?.includes(column.originalName) ? true : false
 }
 
 const validateMigration = (migration: object) => {
