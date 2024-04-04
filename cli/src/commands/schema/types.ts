@@ -3,17 +3,6 @@ export type AddTablePayload = {
     type: 'add-table';
     table: {
       name: string;
-      columns:  {
-        name: string;
-        type: string;
-        unique: boolean;
-        nullable: boolean;
-        default?: string;
-        vectorDimension?: string
-        link?: {
-          table: string
-        }
-      }[];
     }
   }
   
@@ -34,7 +23,9 @@ export type AddTablePayload = {
       unique: boolean;
       nullable: boolean;
       defaultValue?: string;
-      vectorDimension?: string
+      vectorDimension?: string;
+      originalName: string;
+      tableName: string;
       link?: {
         table: string
       }

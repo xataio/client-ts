@@ -1,7 +1,7 @@
 import { BaseCommand } from '../../base.js';
 import { Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
-import { OpAlterColumn, OpCreateTable, OpDropColumn, OpDropTable, OpRenameTable, PgRollMigration, PgRollMigrationDefinition } from '@xata.io/pgroll';
+import { OpAddColumn, OpAlterColumn, OpCreateTable, OpDropColumn, OpDropTable, OpRenameTable, PgRollMigration, PgRollMigrationDefinition } from '@xata.io/pgroll';
 import chalk from 'chalk';
 import enquirer from 'enquirer';
 import { dummySchema } from './dummySchema.js';
@@ -47,67 +47,162 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
   activeIndex: number = 0
 
-
-  editsToMigrations = () => {
-    // TODO rename table and rename columns go last
-    const tableEdits: {rename_table: OpRenameTable}[] = this.tableEdits.map(({name, newName}) => {
-      return {rename_table: {
-        type: 'rename_table',
-        from: name,
-        to: newName
-      }}
-    })
-
-    const tableDeletions: {drop_table: OpDropTable}[] = this.tableDeletions.map(({name}) => {
-      return {drop_table: {
-        type: 'drop_table',
-        name: name
-      }}
-    })
-    // // TODO IF THERE ARE NEW DELETIONS REMOVE ALL TABLE EDITS AND COLUMNS
-    const columnEdits: {alter_column: OpAlterColumn}[] = this.columnEdits.map(({originalName,  tableName, name}) => {
-      const edit: {alter_column: OpAlterColumn} = {alter_column: {
-        column: originalName,
-        table: tableName,
-        nullable: false,
-        name:  originalName !== name ? name : undefined,
-      }}
-    return edit
-    })
-    this.currentMigration.operations.push(...columnEdits)
-
-    const columnDeletions: {drop_column: OpDropColumn}[] = Object.entries(this.columnDeletions).map((entry) => {
-      return entry[1].map((e) => {
-        return {
-          drop_column: {
-          type: 'drop_column',
-          column: e,
-          table: entry[0]
-        }
-      }
-      })}).flat().filter((operation) => !this.tableDeletions.some(({name}) => operation.drop_column.table === name))
-      
-    this.currentMigration.operations.push(...tableEdits, ...tableDeletions, ...columnDeletions)
-    // const tableAdditions: {create_table: OpCreateTable}[] = this.tableAdditions.map(({name}) => {
-    //   return {create_table: {
-    //     type: 'create_table',
-    //     name: name,
-    //     columns: [],
-    //   }}
-    // })
-    // this.currentMigration.operations.push(...tableAdditions)
-    // todo column add
-    // todo column remove
-    // todo column edit
+  async showSchemaEdit() {
+  const tableChoices: SelectChoice[] = []
+  const schemaChoice: SelectChoice = {
+    name: { type: 'schema' },
+    message: 'Tables',
+    role: 'heading',
+    choices: tableChoices
   }
+
+
+  const tablesToLoop = [...dummySchema.schema.tables, ...this.tableAdditions.map((addition) => ({
+    name: addition.name,
+    columns: []
+  }))]
+  for (const table of tablesToLoop) {
+    const columnChoices: SelectChoice[] = []
+    const editTable: SelectChoice = {
+      name: { type: 'edit-table', table: {name: table.name, newName: table.name }},
+      message: this.renderTableName(table.name),
+      choices: columnChoices,
+    }
+    tableChoices.push(editTable)
+    const columns = Object.values(table.columns);
+    const choices: SelectChoice[] = columns.filter(({name}) => !name.toLowerCase().startsWith("xata_")).map((column) => {
+      const col: EditColumnPayload["column"] =  {
+        name: column.name,
+        unique: column.unique,
+        nullable: column.notNull,
+        tableName: table.name,
+        originalName: column.name,
+        defaultValue: column.defaultValue,
+        type: column.type,
+        // @ts-expect-error todo remove
+        link: column.type === "link" ? {table: column.link?.table} : undefined
+      }
+        const item: SelectChoice = {
+          name: { 
+            type: "edit-column", 
+            column: col
+          },
+          message: this.renderColumnName({column: col}),
+          disabled: editTableDisabled(table.name, this.tableDeletions),
+        } 
+        return item
+      })
+
+      const newColumns: SelectChoice[] = []
+      for (const addition of this.columnAdditions.filter((addition) => addition.tableName === table.name)) {
+        const formatted = {...addition, tableName: table.name, originalName: addition.name} as any
+        newColumns.push({
+          // todo fix type
+          name: { type: 'edit-column', column: formatted},
+          message: this.renderColumnName({column: formatted }),
+          disabled: editTableDisabled(table.name, this.tableDeletions),
+        })
+      }
+
+      columnChoices.push(...choices, ...newColumns, {
+        name: { type: 'add-column', tableName: table.name, column: {originalName: "", tableName: table.name, name: '', type: 'string', unique: false, nullable: false}},
+        message: `${chalk.green('+')} Add a column`,
+        disabled: editTableDisabled(table.name, this.tableDeletions),
+        hint: 'Add a column to a table'
+      })
+    }
+
+
+    tableChoices.push(
+      createSpace(),{
+        message: `${chalk.green('+')} Add a table`,
+        name: { type: 'add-table', table: { name : ''}},
+      },
+      {
+        message: `${chalk.green('►')} Run migration`,
+        name: { type: 'migrate' },
+        hint: "Run the migration"
+      }
+    )
+
+
+    const select = new Select({
+      message: 'Schema for database test:main',
+      initial: this.activeIndex,
+      choices: [schemaChoice],
+      footer:
+        'Use the ↑ ↓ arrows to move across the schema, enter to edit or add things, delete or backspace to delete things.'
+    });
+
+    select.on('keypress', async (char: string, key: { name: string; action: string }) => {
+      this.activeIndex = select.state.index
+      const selectedItem = select.state.choices[select.state.index];
+      try {
+        if (key.name === 'backspace' || key.name === 'delete') {
+
+          if (!selectedItem) return; 
+          const choice = selectedItem.name;
+          if (typeof choice !== 'object') return;
+          if (choice.type === 'edit-table') {
+            await select.cancel();  
+            await this.toggleTableDelete({initialTableName: choice.table.name});
+            await this.showSchemaEdit()
+          } 
+          if (choice.type === 'edit-column') {
+            await select.cancel();  
+            await this.toggleColumnDelete(choice);
+            await this.showSchemaEdit()
+          } 
+        }
+      } catch (err) {
+        if (err) throw err;
+        this.clear();
+      }
+    });
+
+    try {
+      const result: SelectChoice["name"] = await select.run();
+      if (result.type === 'add-table') {
+        await select.cancel();
+        await this.showAddTable(result.table);
+      } else if (result.type === "edit-column") {
+        await select.cancel();
+        if (editColumnDisabled(result.column, this.columnDeletions)) {
+          await this.showSchemaEdit();
+        } else {
+          await this.showColumnEdit(result.column);
+        }
+      } else if (result.type === 'edit-table') {
+        await select.cancel();
+        if (editTableDisabled(result.table.name, this.tableDeletions)) {
+          await this.showSchemaEdit();
+        } else {
+          await this.showTableEdit({initialTableName: result.table.name});
+        }
+      } else if (result.type === "add-column") {
+        await select.cancel();
+        await this.showAddColumn(result);
+      } else if (result.type === 'migrate') {
+        this.editsToMigrations()
+        if (validateMigration(this.currentMigration)) {
+          // TODO prompt confirm
+          this.logJson(this.currentMigration)
+
+        } else {
+          this.toErrorJson("Migration is invalid")
+        }
+        // todo exhaustive check
+      }
+    } catch (error) {
+     }
+  }
+
 
   renderColumnName({column}: {column: EditColumnPayload["column"]}) {
     const columnEdit = this.columnEdits.filter((edit) => edit.tableName === column.tableName).find(({originalName: editName}) => editName === column.originalName);
     const columnDelete = Object.entries(this.columnDeletions).filter((entry) => entry[0] === column.tableName).find((entry) => entry[1].includes(column.originalName));
     const tableDelete = this.tableDeletions.find(({name}) => name === column.tableName);
-   
-    const table = dummySchema.schema.tables.find((table) => table.name === column.tableName);
-
+  
     const metadata = [
       `${chalk.gray.italic(column.type)}${column.type === "link" ? ` → ${chalk.gray.italic(column.link?.table)}` : ""}`,
       column.unique ? chalk.gray.italic('unique') : '',
@@ -127,7 +222,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
    return `- ${chalk.cyan(column.originalName)} (${metadata})`
   }
 
- renderTableName(originalName: string) {
+ renderTableName(originalName: string, newTable: boolean = false) {
   const tableEdit = this.tableEdits.find(({name}) => name === originalName);
   const tableDelete = this.tableDeletions.find(({name}) => name === originalName);
   if (tableDelete) {
@@ -136,7 +231,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   if (tableEdit) {
     return `• ${chalk.bold(tableEdit.newName)} -> ${chalk.yellow.strikethrough(originalName)}`
   }
-  return `• ${chalk.bold(originalName)}`;
+  return newTable ? `• ${chalk.bold(originalName)}` : `• ${chalk.bold(originalName)}`;
  }
 
   async run(): Promise<void> {    
@@ -158,141 +253,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       // TODO make sure no other tables have this name
       return notEmptyString(value) 
     }
-  }
-
-  async showSchemaEdit() {
-
-  const tableChoices: SelectChoice[] = []
-
-  const schemaChoice: SelectChoice = {
-    name: { type: 'schema' },
-    message: 'Tables',
-    role: 'heading',
-    choices: tableChoices
-  }
-  
-  for (const table of dummySchema.schema.tables) {
-    const columnChoices: SelectChoice[] = []
-    const editTable: SelectChoice = {
-      name: { type: 'edit-table', table: {name: table.name, newName: table.name }},
-      message: this.renderTableName(table.name),
-      choices: columnChoices,
-    }
-    tableChoices.push(editTable)
-    const columns = Object.values(table.columns);
-    const choices: SelectChoice[] = columns.filter(({name}) => !name.toLowerCase().startsWith("xata_")).map((column) => {
-      const col: EditColumnPayload["column"] =  {
-        name: column.name,
-        unique: column.unique,
-        nullable: column.notNull,
-        tableName: table.name,
-        originalName: column.name,
-        defaultValue: column.defaultValue,
-        type: column.type,
-        // @ts-expect-error
-        link: column.type === "link" ? {table: column.link?.table} : undefined
-      }
-        const item: SelectChoice = {
-          name: { 
-            type: "edit-column", 
-            column: col
-          },
-          message: this.renderColumnName({column: col}),
-          disabled: editTableDisabled(table.name, this.tableDeletions),
-        } 
-        return item
-      })
-
-      columnChoices.push(...choices)
-
-      columnChoices.push({
-        name: { type: 'add-column', tableName: table.name, column: {name: '', type: 'string', unique: false, nullable: false}},
-        message: `${chalk.green('+')} Add a column`,
-        disabled: editTableDisabled(table.name, this.tableDeletions),
-        hint: 'Add a column to a table'
-      })
-    }
-
-    tableChoices.push(
-      createSpace(),{
-        message: `${chalk.green('+')} Add a table`,
-        name: { type: 'add-table', table: {columns: [], name : ''}},
-      },
-      {
-        message: `${chalk.green('►')} Run migration`,
-        name: { type: 'migrate' },
-        hint: "Run the migration"
-      }
-    )
-
-    const select = new Select({
-      message: 'Schema for database test:main',
-      initial: this.activeIndex,
-      choices: [schemaChoice],
-      footer:
-        'Use the ↑ ↓ arrows to move across the schema, enter to edit or add things, delete or backspace to delete things.'
-    });
-
-    select.on('keypress', async (char: string, key: { name: string; action: string }) => {
-      this.activeIndex = select.state.index
-      const selectedItem = select.state.choices[select.state.index];
-      try {
-        if (key.name === 'backspace' || key.name === 'delete') {
-
-          if (!selectedItem) return; // add table is not here for example
-          const choice = selectedItem.name;
-  
-          if (typeof choice !== 'object') return;
-      
-          // TODO disabling
-          if (choice.type === 'edit-table') {
-            await select.cancel();  
-            await this.toggleTableDelete({initialTableName: choice.table.name});
-            await this.showSchemaEdit()
-          } 
-          if (choice.type === 'edit-column') {
-            await select.cancel();  
-            await this.toggleColumnDelete(choice);
-            await this.showSchemaEdit()
-          } 
-        }
-      } catch (err) {
-        if (err) throw err;
-        this.clear();
-      }
-    });
-
-    try {
-      const result: SelectChoice["name"] = await select.run();
-      if (result.type === 'add-table') {
-      } else if (result.type === "edit-column") {
-        await select.cancel();
-        if (editColumnDisabled(result.column, this.columnDeletions)) {
-          await this.showSchemaEdit();
-        } else {
-          await this.showColumnEdit(result.column);
-        }
-      } else if (result.type === 'edit-table') {
-        await select.cancel();
-        if (editTableDisabled(result.table.name, this.tableDeletions)) {
-          await this.showSchemaEdit();
-        } else {
-          await this.showTableEdit({initialTableName: result.table.name});
-        }
-      } else if (result.type === "add-column") {
-      } else if (result.type === 'migrate') {
-        this.editsToMigrations()
-        if (validateMigration(this.currentMigration)) {
-          // TODO prompt confirm
-          this.logJson(this.currentMigration)
-
-        } else {
-          this.toErrorJson("Migration is invalid")
-        }
-        // todo exhaustive check
-      }
-    } catch (error) {
-     }
   }
 
   async toggleTableDelete({initialTableName}: {initialTableName: string}) {
@@ -408,6 +368,90 @@ try {
 }
 }
 
+async showAddColumn({tableName, column}: {tableName: AddColumnPayload["tableName"], column: AddColumnPayload["column"]}) {
+  this.clear();
+  const template = `
+  {
+    add_column: {
+      name: \${name},
+      nullable: \${nullable},
+      unique: {name: \${unique}},
+    }
+  }
+}`
+
+
+const noExistingColumnName = (value: string) => {
+  // Todo make sure non edited names to conflict
+  return !this.columnEdits.find(({name, tableName}) => tableName === tableName && name === value) ? true : "Name already exists"
+}
+
+const snippet = new Snippet({
+  message: "Edit a column",
+  fields: [
+    {
+      name: 'name',
+      message: "",
+      validate: (value: string) => {
+        // Todo field does not start with xata_
+        return notEmptyString(value) && noExistingColumnName(value)
+      }
+    },
+    {
+      name: 'nullable',
+      message: "false",
+      validate: (value: string) => {
+        return notEmptyString(value) && noExistingColumnName(value)
+      }
+    },
+    {
+      name: 'unique',
+      message: "false",
+      validate: (value: string) => {
+        return notEmptyString(value) && noExistingColumnName(value)
+      }
+    }
+  ],
+  footer: this.footer,
+  template
+});
+try {
+  const { values } = await snippet.run();
+   
+    this.columnAdditions.push({name: values.name, defaultValue: column.defaultValue, type: column.type, nullable: values.notNull, unique: values.unique, tableName, originalName: column.originalName})
+    await this.showSchemaEdit();
+  
+} catch (err) {
+  if (err) throw err;
+}
+  
+}
+
+
+async showAddTable({name}: {name: AddTablePayload["table"]["name"]}) {
+  this.clear();
+  const snippet = new Snippet({
+    message: "Add a table",
+    initial: { name: name },
+    fields: [
+      this.tableNameField,
+    ],
+    footer: this.footer,
+    template: `
+       Name: \${name}
+       `
+       // TODO validate name
+  });
+
+  try {
+    const answer: { values: { name: string } } = await snippet.run();
+    this.tableAdditions.push({name: answer.values.name})
+    this.showSchemaEdit()
+  } catch (err) {
+    if (err) throw err;
+  }
+}
+
   async showTableEdit({initialTableName}: {initialTableName: string}) {
     this.clear()
     const snippet = new Snippet({
@@ -448,6 +492,71 @@ try {
     } catch (err) {
       if (err) throw err;
     }
+  }
+
+
+  editsToMigrations = () => {
+    // TODO rename table and rename columns go last
+    // TODO bundle new columns with table additions
+    const tableEdits: {rename_table: OpRenameTable}[] = this.tableEdits.map(({name, newName}) => {
+      return {rename_table: {
+        type: 'rename_table',
+        from: name,
+        to: newName
+      }}
+    })
+
+    const tableDeletions: {drop_table: OpDropTable}[] = this.tableDeletions.map(({name}) => {
+      return {drop_table: {
+        type: 'drop_table',
+        name: name
+      }}
+    })
+    // // TODO IF THERE ARE NEW DELETIONS REMOVE ALL TABLE EDITS AND COLUMNS
+    const columnEdits: {alter_column: OpAlterColumn}[] = this.columnEdits.map(({originalName,  tableName, name}) => {
+      const edit: {alter_column: OpAlterColumn} = {alter_column: {
+        column: originalName,
+        table: tableName,
+        nullable: false,
+        name:  originalName !== name ? name : undefined,
+      }}
+    return edit
+    })
+    this.currentMigration.operations.push(...columnEdits)
+
+    const columnDeletions: {drop_column: OpDropColumn}[] = Object.entries(this.columnDeletions).map((entry) => {
+      return entry[1].map((e) => {
+        return {
+          drop_column: {
+          type: 'drop_column',
+          column: e,
+          table: entry[0]
+        }
+      }
+      })}).flat().filter((operation) => !this.tableDeletions.some(({name}) => operation.drop_column.table === name))
+      
+      const tableAdditions: {create_table: OpCreateTable}[] = this.tableAdditions.map(({name}) => {
+      return {create_table: {
+        type: 'create_table',
+        name: name,
+        columns: [],
+      }}
+    })
+
+    const columnAdditions: {add_column: OpAddColumn}[] = this.columnAdditions.map(({name, tableName, type, nullable, unique, defaultValue}) => {
+      return {add_column: {
+        column: {
+          name,
+          type,
+          nullable,
+          unique,
+          defaultValue
+        },
+        table: tableName
+      }}
+    })
+
+    this.currentMigration.operations.push(...tableEdits, ...tableDeletions, ...columnDeletions, ...tableAdditions, ...columnAdditions)
   }
 }
 
