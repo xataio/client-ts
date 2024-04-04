@@ -47,7 +47,7 @@ const getPgRollLink = (table: any, column: any) => {
   return null;
 };
 
-export function pgRollToXataColumnType(type: string): string {
+function pgRollToXataColumnType(type: string): string {
   switch (type) {
     case 'boolean':
       return 'bool';
