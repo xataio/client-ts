@@ -24,7 +24,7 @@ import {
   SelectChoice
 } from './types.js';
 
-const { Select, Snippet } = enquirer as any;
+const { Select, Snippet, Confirm } = enquirer as any;
 
 export default class EditSchema extends BaseCommand<typeof EditSchema> {
   static description = 'Edit the schema';
@@ -200,17 +200,40 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         await select.cancel();
         await this.showAddColumn(result);
       } else if (result.type === 'migrate') {
-        this.editsToMigrations();
-        if (validateMigration(this.currentMigration)) {
-          // TODO prompt confirm
-          this.logJson(this.currentMigration);
-        } else {
-          this.toErrorJson('Migration is invalid');
-        }
+        await this.migrate();
         // todo exhaustive check
       }
     } catch (error) {
       if (error) throw error;
+    }
+  }
+
+  async migrate() {
+    this.clear();
+    this.currentMigration = { operations: [] };
+    this.editsToMigrations();
+    const valid = validateMigration(this.currentMigration);
+    if (valid.success) {
+      const prompt = new Confirm({
+        name: 'question',
+        message: `Are you sure you want to run the migration? ${JSON.stringify(this.currentMigration, null, 2)}`
+      });
+      try {
+        const answer = await prompt.run();
+        if (!answer) {
+          await this.showSchemaEdit();
+          return;
+        }
+      } catch (err) {
+        if (err) throw err;
+        // User cancelled
+        await this.showSchemaEdit();
+        return;
+      }
+      // TODO run migration
+    } else {
+      this.logJson(this.currentMigration);
+      this.toErrorJson('Migration is invalid:' + valid.error.errors.flatMap((e) => e.message).join('\n'));
     }
   }
 
@@ -533,8 +556,66 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   }
 
   editsToMigrations = () => {
-    // TODO rename table and rename columns go last
-    // TODO bundle new columns with table additions
+    const tableDeletions: { drop_table: OpDropTable }[] = this.tableDeletions.map(({ name }) => {
+      this.tableEdits = this.tableEdits.filter(({ name: originalTableName }) => originalTableName !== name);
+      this.columnAdditions = this.columnAdditions.filter(({ tableName }) => tableName !== name);
+      delete this.columnDeletions[name];
+      this.columnEdits = this.columnEdits.filter(({ tableName }) => tableName !== name);
+
+      return {
+        drop_table: {
+          type: 'drop_table',
+          name: name
+        }
+      };
+    });
+
+    const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(this.columnDeletions)
+      .map((entry) => {
+        return entry[1].map((e) => {
+          this.columnEdits = this.columnEdits.filter(
+            ({ originalName, tableName }) => originalName !== e || tableName !== entry[0]
+          );
+          return {
+            drop_column: {
+              type: 'drop_column',
+              column: e,
+              table: entry[0]
+            }
+          };
+        });
+      })
+      .flat();
+
+    const tableAdditions: { create_table: OpCreateTable }[] = this.tableAdditions.map(({ name }) => {
+      const relevantColumnAdditions = this.columnAdditions.filter(({ tableName }) => tableName === name);
+      this.columnAdditions = this.columnAdditions.filter(({ tableName }) => tableName !== name);
+
+      return {
+        create_table: {
+          type: 'create_table',
+          name: name,
+          columns: relevantColumnAdditions.map((col) => {
+            const correspondingColumnEdit = this.columnEdits.filter(
+              ({ tableName, originalName }) => tableName === name && col.originalName === originalName
+            )[0];
+            this.columnEdits = this.columnEdits.filter(
+              ({ tableName, originalName }) => !(tableName === name && col.originalName === originalName)
+            );
+
+            return {
+              name: correspondingColumnEdit.name ?? col.name,
+              type: correspondingColumnEdit.type ?? col.type,
+              nullable: correspondingColumnEdit.nullable ?? col.nullable,
+              unique: correspondingColumnEdit.unique ?? col.unique,
+              // todo booleans
+              defaultValue: correspondingColumnEdit.defaultValue ?? col.defaultValue
+            };
+          })
+        }
+      };
+    });
+
     const tableEdits: { rename_table: OpRenameTable }[] = this.tableEdits.map(({ name, newName }) => {
       return {
         rename_table: {
@@ -545,15 +626,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       };
     });
 
-    const tableDeletions: { drop_table: OpDropTable }[] = this.tableDeletions.map(({ name }) => {
-      return {
-        drop_table: {
-          type: 'drop_table',
-          name: name
-        }
-      };
-    });
-    // // TODO IF THERE ARE NEW DELETIONS REMOVE ALL TABLE EDITS AND COLUMNS
     const columnEdits: { alter_column: OpAlterColumn }[] = this.columnEdits.map(({ originalName, tableName, name }) => {
       const edit: { alter_column: OpAlterColumn } = {
         alter_column: {
@@ -564,32 +636,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         }
       };
       return edit;
-    });
-    this.currentMigration.operations.push(...columnEdits);
-
-    const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(this.columnDeletions)
-      .map((entry) => {
-        return entry[1].map((e) => {
-          return {
-            drop_column: {
-              type: 'drop_column',
-              column: e,
-              table: entry[0]
-            }
-          };
-        });
-      })
-      .flat()
-      .filter((operation) => !this.tableDeletions.some(({ name }) => operation.drop_column.table === name));
-
-    const tableAdditions: { create_table: OpCreateTable }[] = this.tableAdditions.map(({ name }) => {
-      return {
-        create_table: {
-          type: 'create_table',
-          name: name,
-          columns: []
-        }
-      };
     });
 
     const columnAdditions: { add_column: OpAddColumn }[] = this.columnAdditions.map(
@@ -608,12 +654,15 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         };
       }
     );
+
     this.currentMigration.operations.push(
-      ...tableEdits,
-      ...tableDeletions,
       ...columnDeletions,
+      ...tableDeletions,
       ...tableAdditions,
-      ...columnAdditions
+      ...columnAdditions,
+      ...columnEdits,
+      // todo table renames should go in a separate migration (?)
+      ...tableEdits
     );
   };
 }
@@ -628,7 +677,7 @@ const editColumnDisabled = (column: EditColumnPayload['column'], columnDeletions
 };
 
 const validateMigration = (migration: object) => {
-  return PgRollMigrationDefinition.safeParse(migration).success;
+  return PgRollMigrationDefinition.safeParse(migration);
 };
 
 const notEmptyString = (value: string) => {
