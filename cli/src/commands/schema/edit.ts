@@ -290,7 +290,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   tableNameField = {
     name: 'name',
     message: 'The table name',
-    validate(value: string, state: unknown, item: unknown, index: number) {
+    validate(value: string) {
       // TODO make sure no other tables have this name
       return notEmptyString(value);
     }
@@ -583,9 +583,6 @@ export const editsToMigrations = (command: EditSchema) => {
   let localColumnEdits: EditColumnPayload['column'][] = command.columnEdits;
   let localColumnDeletions: DeleteColumnPayload = command.columnDeletions;
 
-  console.log('column deletions before logic', localColumnDeletions);
-
-  console.log('column additions before logic', localColumnAdditions);
   const tmpColumnAddition = [...localColumnAdditions];
   localColumnAdditions = localColumnAdditions.filter(
     (addition) => !localColumnDeletions[addition.tableName]?.includes(addition.originalName)
@@ -598,9 +595,6 @@ export const editsToMigrations = (command: EditSchema) => {
       (entry) => !tmpColumnAddition.find((addition) => addition.tableName === entry[0])
     )
   );
-
-  console.log('column deletions should be empty', localColumnDeletions);
-  console.log('column additions should be empty', localColumnAdditions);
 
   localTableAdditions = localTableAdditions.filter(
     ({ name }) => !localTableDeletions.find(({ name: tableName }) => tableName === name)
