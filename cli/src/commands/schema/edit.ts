@@ -23,6 +23,7 @@ import {
   SelectChoice
 } from './types.js';
 import {
+  exhaustiveCheck,
   generateLinkReference,
   getBranchDetailsWithPgRoll,
   requiresUpArgument,
@@ -212,7 +213,10 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         await this.showAddColumn(result);
       } else if (result.type === 'migrate') {
         await this.migrate();
-        // todo exhaustive check
+      } else if (result.type === 'schema' || result.type === 'space') {
+        await this.showSchemaEdit();
+      } else {
+        exhaustiveCheck(result.type);
       }
     } catch (error) {
       if (error) throw error;
@@ -261,7 +265,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         await this.showSchemaEdit();
         return;
       }
-      // TODO run migration
     } else {
       this.logJson(this.currentMigration);
       this.toErrorJson('Migration is invalid:' + valid.error.errors.flatMap((e) => e.message).join('\n'));
