@@ -76,12 +76,11 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     ];
     for (const table of tablesToLoop) {
       const columnChoices: SelectChoice[] = [];
-      const editTable: SelectChoice = {
+      tableChoices.push({
         name: { type: 'edit-table', table: { name: table.name, newName: table.name } },
         message: this.renderTableName(table.name),
         choices: columnChoices
-      };
-      tableChoices.push(editTable);
+      });
       const columns = Object.values(table.columns);
       const choices: SelectChoice[] = columns
         .filter(({ name }) => !name.toLowerCase().startsWith('xata_'))
@@ -110,9 +109,9 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
       const newColumns: SelectChoice[] = [];
       for (const addition of this.columnAdditions.filter((addition) => addition.tableName === table.name)) {
+        // todo fix type
         const formatted = { ...addition, tableName: table.name, originalName: addition.name } as any;
         newColumns.push({
-          // todo fix type
           name: { type: 'edit-column', column: formatted },
           message: this.renderColumnName({ column: formatted }),
           disabled: editTableDisabled(table.name, this.tableDeletions)
@@ -211,7 +210,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   async migrate() {
     this.clear();
     this.currentMigration = { operations: [] };
-    this.editsToMigrations();
+    this.currentMigration.operations = editsToMigrations(this);
     const valid = validateMigration(this.currentMigration);
     if (valid.success) {
       const prompt = new Confirm({
@@ -259,10 +258,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       return `  - ${chalk.red.strikethrough(column.originalName)} (${metadata})`;
     }
     if (columnEdit) {
-      // TODO show separate field edits if name not changed
       return `  - ${chalk.bold(columnEdit.name)} -> ${chalk.yellow.strikethrough(column.originalName)} (${metadata})`;
     }
-
     return `- ${chalk.cyan(column.originalName)} (${metadata})`;
   }
 
@@ -309,7 +306,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     } else {
       this.tableDeletions.push({ name: initialTableName });
     }
-    // TODO empty ALL edits
   }
 
   async toggleColumnDelete({ column }: { column: EditColumnPayload['column'] }) {
@@ -482,12 +478,12 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
       this.columnAdditions.push({
         name: values.name,
-        defaultValue: column.defaultValue,
-        type: column.type,
+        defaultValue: values.defaultValue,
+        type: values.type,
         nullable: values.notNull,
         unique: values.unique,
         tableName,
-        originalName: column.originalName
+        originalName: values.name
       });
       await this.showSchemaEdit();
     } catch (err) {
@@ -554,117 +550,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       if (err) throw err;
     }
   }
-
-  editsToMigrations = () => {
-    const tableDeletions: { drop_table: OpDropTable }[] = this.tableDeletions.map(({ name }) => {
-      this.tableEdits = this.tableEdits.filter(({ name: originalTableName }) => originalTableName !== name);
-      this.columnAdditions = this.columnAdditions.filter(({ tableName }) => tableName !== name);
-      delete this.columnDeletions[name];
-      this.columnEdits = this.columnEdits.filter(({ tableName }) => tableName !== name);
-
-      return {
-        drop_table: {
-          type: 'drop_table',
-          name: name
-        }
-      };
-    });
-
-    const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(this.columnDeletions)
-      .map((entry) => {
-        return entry[1].map((e) => {
-          this.columnEdits = this.columnEdits.filter(
-            ({ originalName, tableName }) => originalName !== e || tableName !== entry[0]
-          );
-          return {
-            drop_column: {
-              type: 'drop_column',
-              column: e,
-              table: entry[0]
-            }
-          };
-        });
-      })
-      .flat();
-
-    const tableAdditions: { create_table: OpCreateTable }[] = this.tableAdditions.map(({ name }) => {
-      const relevantColumnAdditions = this.columnAdditions.filter(({ tableName }) => tableName === name);
-      this.columnAdditions = this.columnAdditions.filter(({ tableName }) => tableName !== name);
-
-      return {
-        create_table: {
-          type: 'create_table',
-          name: name,
-          columns: relevantColumnAdditions.map((col) => {
-            const correspondingColumnEdit = this.columnEdits.filter(
-              ({ tableName, originalName }) => tableName === name && col.originalName === originalName
-            )[0];
-            this.columnEdits = this.columnEdits.filter(
-              ({ tableName, originalName }) => !(tableName === name && col.originalName === originalName)
-            );
-
-            return {
-              name: correspondingColumnEdit.name ?? col.name,
-              type: correspondingColumnEdit.type ?? col.type,
-              nullable: correspondingColumnEdit.nullable ?? col.nullable,
-              unique: correspondingColumnEdit.unique ?? col.unique,
-              // todo booleans
-              defaultValue: correspondingColumnEdit.defaultValue ?? col.defaultValue
-            };
-          })
-        }
-      };
-    });
-
-    const tableEdits: { rename_table: OpRenameTable }[] = this.tableEdits.map(({ name, newName }) => {
-      return {
-        rename_table: {
-          type: 'rename_table',
-          from: name,
-          to: newName
-        }
-      };
-    });
-
-    const columnEdits: { alter_column: OpAlterColumn }[] = this.columnEdits.map(({ originalName, tableName, name }) => {
-      const edit: { alter_column: OpAlterColumn } = {
-        alter_column: {
-          column: originalName,
-          table: tableName,
-          nullable: false,
-          name: originalName !== name ? name : undefined
-        }
-      };
-      return edit;
-    });
-
-    const columnAdditions: { add_column: OpAddColumn }[] = this.columnAdditions.map(
-      ({ name, tableName, type, nullable, unique, defaultValue }) => {
-        return {
-          add_column: {
-            column: {
-              name,
-              type,
-              nullable,
-              unique,
-              defaultValue
-            },
-            table: tableName
-          }
-        };
-      }
-    );
-
-    this.currentMigration.operations.push(
-      ...columnDeletions,
-      ...tableDeletions,
-      ...tableAdditions,
-      ...columnAdditions,
-      ...columnEdits,
-      // todo table renames should go in a separate migration (?)
-      ...tableEdits
-    );
-  };
 }
 
 const editTableDisabled = (name: string, tableDeletions: DeleteTablePayload[]) => {
@@ -686,4 +571,179 @@ const notEmptyString = (value: string) => {
 
 const createSpace = (): SelectChoice => {
   return { name: { type: 'space' }, message: ' ', role: 'heading' };
+};
+
+export const editsToMigrations = (command: EditSchema) => {
+  // Duplicating here because if we remove items from class state they dont show on UI
+  let localTableAdditions: (AddTablePayload['table'] & { columns?: AddColumnPayload['column'][] })[] =
+    command.tableAdditions;
+  let localTableEdits: EditTablePayload['table'][] = command.tableEdits;
+  const localTableDeletions: DeleteTablePayload[] = command.tableDeletions;
+  let localColumnAdditions: AddColumnPayload['column'][] = command.columnAdditions;
+  let localColumnEdits: EditColumnPayload['column'][] = command.columnEdits;
+  let localColumnDeletions: DeleteColumnPayload = command.columnDeletions;
+
+  console.log('column deletions before logic', localColumnDeletions);
+
+  console.log('column additions before logic', localColumnAdditions);
+  const tmpColumnAddition = [...localColumnAdditions];
+  localColumnAdditions = localColumnAdditions.filter(
+    (addition) => !localColumnDeletions[addition.tableName]?.includes(addition.originalName)
+  );
+  localColumnEdits = localColumnEdits.filter(
+    (edit) => !localColumnDeletions[edit.tableName]?.includes(edit.originalName)
+  );
+  localColumnDeletions = Object.fromEntries(
+    Object.entries(localColumnDeletions).filter(
+      (entry) => !tmpColumnAddition.find((addition) => addition.tableName === entry[0])
+    )
+  );
+
+  console.log('column deletions should be empty', localColumnDeletions);
+  console.log('column additions should be empty', localColumnAdditions);
+
+  localTableAdditions = localTableAdditions.filter(
+    ({ name }) => !localTableDeletions.find(({ name: tableName }) => tableName === name)
+  );
+  localTableEdits = localTableEdits.filter(
+    ({ name }) => !localTableDeletions.find(({ name: tableName }) => tableName === name)
+  );
+  localColumnAdditions = localColumnAdditions.filter(
+    ({ tableName }) => !localTableDeletions.find(({ name }) => name === tableName)
+  );
+  localColumnEdits = localColumnEdits.filter(
+    ({ tableName }) => !localTableDeletions.find(({ name }) => name === tableName)
+  );
+  localColumnDeletions = Object.fromEntries(
+    Object.entries(localColumnDeletions).filter(
+      ([tableName]) => !localTableDeletions.find(({ name }) => name === tableName)
+    )
+  );
+
+  const editsToNewTable = localTableEdits.filter(({ name }) =>
+    localTableAdditions.find((addition) => addition.name === name)
+  );
+  localTableEdits = localTableEdits.filter(({ name }) => !editsToNewTable.find((edit) => edit.name === name));
+  localTableAdditions = localTableAdditions.map((addition) => {
+    const edit = editsToNewTable.find(({ name }) => name === addition.name);
+    if (edit) {
+      return {
+        name: edit.newName
+      };
+    }
+    return addition;
+  });
+
+  // bundle edit columns into new columns
+  const editsToNewColumn = localColumnEdits.filter(({ originalName }) =>
+    localColumnAdditions.find((addition) => addition.name === originalName)
+  );
+  localColumnEdits = localColumnEdits.filter(
+    ({ originalName }) => !editsToNewColumn.find((edit) => edit.originalName === originalName)
+  );
+  localColumnAdditions = localColumnAdditions.map((addition) => {
+    const edit = editsToNewColumn.find(({ originalName }) => originalName === addition.name);
+    if (edit) {
+      return {
+        ...addition,
+        name: edit.name
+      };
+    }
+    return addition;
+  });
+
+  // bundle new columns into create_tables
+  const columnAdditionsToNewTables = localColumnAdditions.filter(({ tableName }) =>
+    localTableAdditions.find(({ name }) => name === tableName)
+  );
+  localColumnAdditions = localColumnAdditions.filter(
+    ({ tableName }) => !columnAdditionsToNewTables.find((addition) => addition.tableName === tableName)
+  );
+  localTableAdditions = localTableAdditions.map((addition) => {
+    const columns = columnAdditionsToNewTables
+      .filter((column) => column.tableName === addition.name)
+      .map((column) => {
+        return {
+          name: column.name,
+          type: column.type,
+          nullable: column.nullable,
+          unique: column.unique,
+          defaultValue: column.defaultValue
+        } as AddColumnPayload['column'];
+      });
+    return {
+      ...addition,
+      columns: columns
+    };
+  });
+
+  const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(localColumnDeletions)
+    .map((entry) => {
+      return entry[1].map((e) => {
+        return {
+          drop_column: {
+            column: e,
+            table: entry[0]
+          }
+        };
+      });
+    })
+    .flat();
+
+  const tableDeletions: { drop_table: OpDropTable }[] = localTableDeletions.map(({ name }) => {
+    return {
+      drop_table: {
+        name: name
+      }
+    };
+  });
+
+  const columnAdditions: { add_column: OpAddColumn }[] = localColumnAdditions.map(
+    ({ name, tableName, type, nullable, unique, defaultValue }) => {
+      return {
+        add_column: {
+          column: {
+            name,
+            type,
+            nullable,
+            unique,
+            defaultValue
+          },
+          table: tableName
+        }
+      };
+    }
+  );
+
+  const tableAdditions: { create_table: OpCreateTable }[] = localTableAdditions.map(({ name, columns }) => {
+    return {
+      create_table: {
+        name: name,
+        columns: columns as any
+      }
+    };
+  });
+
+  const tableEdits: { rename_table: OpRenameTable }[] = localTableEdits.map(({ name, newName }) => {
+    return {
+      rename_table: {
+        from: name,
+        to: newName
+      }
+    };
+  });
+
+  const columnEdits: { alter_column: OpAlterColumn }[] = localColumnEdits.map(({ originalName, tableName, name }) => {
+    const edit: { alter_column: OpAlterColumn } = {
+      alter_column: {
+        column: originalName,
+        table: tableName,
+        nullable: false,
+        name: originalName !== name ? name : undefined
+      }
+    };
+    return edit;
+  });
+
+  return [...columnDeletions, ...tableDeletions, ...tableAdditions, ...columnAdditions, ...columnEdits, ...tableEdits];
 };
