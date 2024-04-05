@@ -22,7 +22,15 @@ import {
   EditTablePayload,
   SelectChoice
 } from './types.js';
-import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
+import {
+  generateLinkReference,
+  getBranchDetailsWithPgRoll,
+  requiresUpArgument,
+  xataColumnTypeToPgRoll,
+  xataColumnTypeToPgRollComment,
+  xataColumnTypeToPgRollConstraint,
+  xataColumnTypeToZeroValue
+} from '../../migrations/pgroll.js';
 
 const { Select, Snippet, Confirm } = enquirer as any;
 
@@ -461,7 +469,6 @@ Beware that this can lead to ${chalk.bold(
       const existingEntry = this.columnEdits.find(
         ({ originalName, tableName }) => tableName === column.tableName && originalName === column.originalName
       );
-      console.log('VALUES UNIQUE', values);
       if (existingEntry) {
         // todo only add to edits if it changed from original
         existingEntry.name = values.name;
@@ -520,6 +527,7 @@ Beware that this can lead to ${chalk.bold(
         unique: \${unique},
         type: \${type},
         defaultValue: \${defaultValue}
+        link: \${link}
       },
       table: ${tableName}
     }
@@ -538,6 +546,8 @@ Beware that this can lead to ${chalk.bold(
             return notEmptyString(value) && this.noExistingColumnName(value, column) && !isReservedXataFieldName(value);
           }
         },
+        // todo add type
+        // todo add link
         {
           name: 'nullable',
           message: addColumnDefault.add_column.column.nullable ? 'false' : 'true',
@@ -695,22 +705,17 @@ export const editsToMigrations = (command: EditSchema) => {
     )
   );
 
-  localTableAdditions = localTableAdditions.filter(
-    ({ name }) => !localTableDeletions.find(({ name: tableName }) => tableName === name)
-  );
-  localTableEdits = localTableEdits.filter(
-    ({ name }) => !localTableDeletions.find(({ name: tableName }) => tableName === name)
-  );
-  localColumnAdditions = localColumnAdditions.filter(
-    ({ tableName }) => !localTableDeletions.find(({ name }) => name === tableName)
-  );
-  localColumnEdits = localColumnEdits.filter(
-    ({ tableName }) => !localTableDeletions.find(({ name }) => name === tableName)
-  );
+  const isTableDeleted = (name: string) => {
+    return localTableDeletions.find(({ name: tableName }) => tableName === name);
+  };
+
+  localTableAdditions = localTableAdditions.filter(({ name }) => !isTableDeleted(name));
+  localTableEdits = localTableEdits.filter(({ name }) => !isTableDeleted(name));
+  localColumnAdditions = localColumnAdditions.filter(({ tableName }) => !isTableDeleted(tableName));
+
+  localColumnEdits = localColumnEdits.filter(({ tableName }) => !isTableDeleted(tableName));
   localColumnDeletions = Object.fromEntries(
-    Object.entries(localColumnDeletions).filter(
-      ([tableName]) => !localTableDeletions.find(({ name }) => name === tableName)
-    )
+    Object.entries(localColumnDeletions).filter(([tableName]) => !isTableDeleted(tableName))
   );
 
   const editsToNewTable = localTableEdits.filter(({ name }) =>
@@ -739,32 +744,12 @@ export const editsToMigrations = (command: EditSchema) => {
     if (edit) {
       return {
         ...addition,
+        tableName: edit.tableName,
         name: edit.name
       };
     }
     return addition;
   });
-
-  // todo edit column additions
-  // add_column: {
-  //   table,
-  //   up: requiresUpArgument(notNull, defaultValue)
-  //     ? xataColumnTypeToZeroValue(column.type, defaultValue)
-  //     : undefined,
-  //   column: {
-  //     name: column.name,
-  //     type: xataColumnTypeToPgRoll(column.type),
-  //     references:
-  //       column.type === 'link'
-  //         ? generateLinkReference({ column: column.name, table: linkTable, onDelete: linkOnDelete })
-  //         : undefined,
-  //     default: defaultValue !== null && defaultValue !== undefined ? `'${defaultValue}'` : undefined,
-  //     nullable: !notNull,
-  //     unique: unique,
-  //     check: xataColumnTypeToPgRollConstraint(column, table),
-  //     comment: xataColumnTypeToPgRollComment(column)
-  //   }
-  // }
 
   // bundle new columns into create_tables
   const columnAdditionsToNewTables = localColumnAdditions.filter(({ tableName }) =>
@@ -777,19 +762,35 @@ export const editsToMigrations = (command: EditSchema) => {
     const columns = columnAdditionsToNewTables
       .filter((column) => column.tableName === addition.name)
       .map((column) => {
-        return {
-          name: column.name,
-          type: column.type,
-          nullable: column.nullable,
-          unique: column.unique,
-          defaultValue: column.defaultValue
-        } as AddColumnPayload['column'];
+        return column as AddColumnPayload['column'];
       });
     return {
       ...addition,
       columns: columns
     };
   });
+
+  const augmentColumns = (
+    columns: AddColumnPayload['column'][]
+  ): { column: OpAddColumn['column']; tableName: string }[] => {
+    return columns.map((column) => ({
+      tableName: column.tableName,
+      column: {
+        name: column.name,
+        type: xataColumnTypeToPgRoll(column.type as any),
+        references:
+          column.type === 'link'
+            ? generateLinkReference({ column: column.name, table: column.link?.table ?? '' })
+            : undefined,
+        default:
+          column.defaultValue !== null && column.defaultValue !== undefined ? `'${column.defaultValue}'` : undefined,
+        nullable: column.nullable,
+        unique: column.unique as boolean,
+        check: xataColumnTypeToPgRollConstraint(column as any, column.tableName),
+        comment: xataColumnTypeToPgRollComment(column as any)
+      }
+    }));
+  };
 
   const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(localColumnDeletions)
     .map((entry) => {
@@ -812,18 +813,15 @@ export const editsToMigrations = (command: EditSchema) => {
     };
   });
 
-  const columnAdditions: { add_column: OpAddColumn }[] = localColumnAdditions.map(
-    ({ name, tableName, type, nullable, unique, defaultValue }) => {
+  const columnAdditions: { add_column: OpAddColumn }[] = augmentColumns(localColumnAdditions).map(
+    ({ column, tableName }) => {
       return {
         add_column: {
-          column: {
-            name,
-            type,
-            nullable,
-            unique: unique as boolean,
-            defaultValue
-          },
-          table: tableName
+          column,
+          table: tableName,
+          up: requiresUpArgument(!!column.nullable, column.default)
+            ? xataColumnTypeToZeroValue(column.type as any, column.default)
+            : undefined
         }
       };
     }
@@ -833,7 +831,7 @@ export const editsToMigrations = (command: EditSchema) => {
     return {
       create_table: {
         name: name,
-        columns: columns as any
+        columns: augmentColumns(columns ?? []).map(({ column }) => column)
       }
     };
   });

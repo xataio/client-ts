@@ -53,8 +53,7 @@ describe('edits to migrations', () => {
     });
 
     test('add column', () => {
-      // todo correct this
-      // add different types of edits
+      // todo some more types of additions
       editCommand.columnAdditions.push({
         name: 'col1',
         nullable: false,
@@ -70,9 +69,17 @@ describe('edits to migrations', () => {
             table: 'table1',
             column: {
               name: 'col1',
-              type: 'string',
+              type: 'text',
               nullable: false,
-              unique: false
+              unique: false,
+              check: {
+                constraint: 'LENGTH("col1") <= 2048',
+                name: 'table1_xata_string_length_col1'
+              },
+              comment: '{"xata.type":"string"}',
+              default: undefined,
+              references: undefined,
+              up: undefined
             }
           }
         }
@@ -304,9 +311,17 @@ describe('edits to migrations', () => {
             table: 'table1',
             column: {
               name: 'col2',
-              type: 'string',
+              type: 'text',
               nullable: false,
-              unique: false
+              unique: false,
+              check: {
+                constraint: 'LENGTH("col2") <= 2048',
+                name: 'table1_xata_string_length_col2'
+              },
+              comment: '{"xata.type":"string"}',
+              default: undefined,
+              references: undefined,
+              up: undefined
             }
           }
         }
@@ -370,9 +385,16 @@ describe('edits to migrations', () => {
             columns: [
               {
                 name: 'col2',
-                type: 'string',
+                type: 'text',
                 nullable: false,
-                unique: false
+                unique: false,
+                check: {
+                  constraint: 'LENGTH("col2") <= 2048',
+                  name: 'table1_xata_string_length_col2'
+                },
+                comment: '{"xata.type":"string"}',
+                default: undefined,
+                references: undefined
               }
             ]
           }
