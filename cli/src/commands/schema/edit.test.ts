@@ -53,6 +53,8 @@ describe('edits to migrations', () => {
     });
 
     test('add column', () => {
+      // todo correct this
+      // add different types of edits
       editCommand.columnAdditions.push({
         name: 'col1',
         nullable: false,
@@ -78,6 +80,8 @@ describe('edits to migrations', () => {
     });
 
     test('edit column', () => {
+      // todo correct this
+      // add different types of payloads
       editCommand.columnEdits.push({
         name: 'col2',
         nullable: false,

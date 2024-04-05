@@ -1,6 +1,6 @@
 import { BaseCommand } from '../../base.js';
 import { Flags } from '@oclif/core';
-import { Schemas } from '@xata.io/client';
+import { Schemas, XataApiClient } from '@xata.io/client';
 import {
   OpAddColumn,
   OpAlterColumn,
@@ -13,7 +13,6 @@ import {
 } from '@xata.io/pgroll';
 import chalk from 'chalk';
 import enquirer from 'enquirer';
-import { dummySchema } from './dummySchema.js';
 import {
   AddColumnPayload,
   AddTablePayload,
@@ -23,6 +22,7 @@ import {
   EditTablePayload,
   SelectChoice
 } from './types.js';
+import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
 
 const { Select, Snippet, Confirm } = enquirer as any;
 
@@ -68,7 +68,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     };
 
     const tablesToLoop = [
-      ...dummySchema.schema.tables,
+      ...this.branchDetails!.schema.tables,
       ...this.tableAdditions.map((addition) => ({
         name: addition.name,
         columns: []
@@ -87,8 +87,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         .map((column) => {
           const col: EditColumnPayload['column'] = {
             name: column.name,
-            unique: column.unique,
-            nullable: column.notNull,
+            unique: column.unique ?? false,
+            nullable: column.notNull ?? true,
             tableName: table.name,
             originalName: column.name,
             defaultValue: column.defaultValue ?? undefined,
@@ -223,6 +223,26 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           await this.showSchemaEdit();
           return;
         }
+        const xata = await this.getXataClient();
+        const submitMigrationRessponse = await xata.api.migrations.applyMigration({
+          pathParams: {
+            workspace: this.workspace,
+            region: this.region,
+            dbBranchName: `${this.database}:${this.branch}`
+          },
+          body: this.currentMigration
+        });
+
+        await waitForMigrationToFinish(
+          xata.api,
+          this.workspace,
+          this.region,
+          this.database,
+          this.branch,
+          submitMigrationRessponse.jobID
+        );
+
+        this.success('Migration completed!');
       } catch (err) {
         if (err) throw err;
         // User cancelled
@@ -276,7 +296,36 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   }
 
   async run(): Promise<void> {
-    await this.showSchemaEdit();
+    const { flags } = await this.parseCommand();
+
+    if (flags.source) {
+      this.warn(
+        `This way of editing the schema doesn't detect renames of tables or columns. They are interpreted as deleting/adding tables and columns.
+Beware that this can lead to ${chalk.bold(
+          'data loss'
+        )}. Other ways of editing the schema that do not have this limitation are:
+* run the command without ${chalk.bold('--source')}
+* edit the schema in the Web UI. Use ${chalk.bold('xata browse')} to open the Web UI in your browser.`
+      );
+      this.log();
+    }
+
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    this.workspace = workspace;
+    this.region = region;
+    this.database = database;
+    this.branch = branch;
+
+    const xata = await this.getXataClient();
+    const branchDetails = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
+    if (!branchDetails) this.error('Could not get the schema from the current branch');
+
+    if (flags.source) {
+      // todo implement editor
+    } else {
+      this.branchDetails = branchDetails;
+      await this.showSchemaEdit();
+    }
   }
 
   clear() {
@@ -741,3 +790,26 @@ export const editsToMigrations = (command: EditSchema) => {
 
   return [...columnDeletions, ...tableDeletions, ...tableAdditions, ...columnAdditions, ...columnEdits, ...tableEdits];
 };
+
+async function waitForMigrationToFinish(
+  api: XataApiClient,
+  workspace: string,
+  region: string,
+  database: string,
+  branch: string,
+  jobId: string
+): Promise<void> {
+  const { status, error } = await api.migrations.getMigrationJobStatus({
+    pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, jobId }
+  });
+  if (status === 'failed') {
+    throw new Error(`Migration failed, ${error}`);
+  }
+
+  if (status === 'completed') {
+    return;
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
+}
