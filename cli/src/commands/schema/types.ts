@@ -1,10 +1,14 @@
 type ColumnData = {
   name: string;
   type: string;
-  unique: boolean;
+  unique?:
+    | boolean
+    | {
+        name: string;
+      };
   nullable: boolean;
   defaultValue?: string;
-  vectorDimension?: string;
+  vectorDimension?: number;
   originalName: string;
   tableName: string;
   link?: {

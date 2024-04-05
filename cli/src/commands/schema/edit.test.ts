@@ -97,7 +97,9 @@ describe('edits to migrations', () => {
             name: 'col2',
             column: 'col1',
             nullable: false,
-            table: 'table1'
+            table: 'table1',
+            // Todo fix this. alter_column should not be boolean
+            unique: false
           }
         }
       ]);

@@ -26,6 +26,10 @@ import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
 
 const { Select, Snippet, Confirm } = enquirer as any;
 
+const uniqueUnsupportedTypes = ['text', 'multiple', 'vector', 'json'];
+const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
+const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
+
 export default class EditSchema extends BaseCommand<typeof EditSchema> {
   static description = 'Edit the schema';
 
@@ -83,18 +87,18 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       });
       const columns = Object.values(table.columns);
       const choices: SelectChoice[] = columns
-        .filter(({ name }) => !name.toLowerCase().startsWith('xata_'))
+        .filter(({ name }) => !isReservedXataFieldName(name))
         .map((column) => {
           const col: EditColumnPayload['column'] = {
             name: column.name,
             unique: column.unique ?? false,
+            type: column.type,
             nullable: column.notNull ?? true,
             tableName: table.name,
             originalName: column.name,
             defaultValue: column.defaultValue ?? undefined,
-            type: column.type,
-            // @ts-expect-error todo remove
-            link: column.type === 'link' ? { table: column.link?.table } : undefined
+            vectorDimension: column.vector ? column.vector.dimension : undefined,
+            link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined
           };
           const item: SelectChoice = {
             name: {
@@ -345,6 +349,13 @@ Beware that this can lead to ${chalk.bold(
     }
   };
 
+  noExistingColumnName = (value: string, column: AddColumnPayload['column']) => {
+    return !this.columnEdits.find(({ name, tableName }) => tableName === column.tableName && name === value) ||
+      !this.columnAdditions.find(({ name, tableName }) => tableName === column.tableName && name === value)
+      ? true
+      : 'Column name conflicts with another one in the same table';
+  };
+
   async toggleTableDelete({ initialTableName }: { initialTableName: string }) {
     const existingEntry = this.tableDeletions.find(({ name }) => name === initialTableName);
     if (existingEntry) {
@@ -376,16 +387,16 @@ Beware that this can lead to ${chalk.bold(
   }
 
   async showColumnEdit(column: EditColumnPayload['column']) {
+    const uniqueObject = column.unique ? { name: `unique_constraint_${column.originalName}` } : undefined;
     const alterColumnDefaultValues: { alter_column: OpAlterColumn } = {
       alter_column: {
+        name: column.name,
         column: column.originalName,
-        // todo replace with real value
         table: column.tableName,
-        nullable: column.nullable,
-        unique: { name: '' },
-        down: '',
-        name: '',
-        up: ''
+        nullable: !notNullUnsupportedTypes.includes(column.type) ? column.nullable : undefined,
+        unique: !uniqueUnsupportedTypes.includes(column.type) ? (column.unique ? uniqueObject : undefined) : undefined
+        // TODO support default https://github.com/xataio/pgroll/issues/327
+        // TODO support changing type https://github.com/xataio/pgroll/issues/328
       }
     };
     this.clear();
@@ -393,18 +404,12 @@ Beware that this can lead to ${chalk.bold(
   {
     alter_column: {
       name: \${name},
-      nullable: \${nullable},
-      unique: {name: \${unique}},
+      column: ${column.originalName},
+      ${!notNullUnsupportedTypes.includes(column.type) ? `nullable: \${nullable},` : ''}
+      ${!uniqueUnsupportedTypes.includes(column.type) ? `unique: \${unique},` : ''}
     }
   }
 }`;
-
-    const noExistingColumnName = (value: string) => {
-      // Todo make sure non edited names to conflict
-      return !this.columnEdits.find(({ name, tableName }) => tableName === column.tableName && name === value)
-        ? true
-        : 'Name already exists';
-    };
 
     const snippet = new Snippet({
       message: 'Edit a column',
@@ -415,8 +420,8 @@ Beware that this can lead to ${chalk.bold(
           message: alterColumnDefaultValues.alter_column.column,
           initial: alterColumnDefaultValues.alter_column.column,
           validate: (value: string) => {
-            // Todo field does not start with xata_
-            return notEmptyString(value) && noExistingColumnName(value);
+            if (column.originalName === value) return true;
+            return notEmptyString(value) && this.noExistingColumnName(value, column) && !isReservedXataFieldName(value);
           }
         },
         {
@@ -424,43 +429,55 @@ Beware that this can lead to ${chalk.bold(
           message: alterColumnDefaultValues.alter_column.nullable ? 'false' : 'true',
           initial: alterColumnDefaultValues.alter_column.nullable ? 'false' : 'true',
           validate: (value: string) => {
-            return notEmptyString(value) && noExistingColumnName(value);
+            return value !== 'false' && value !== 'true' ? 'Invalid value. Nullable field must be a boolean' : true;
           }
         },
         {
           name: 'unique',
-          message: alterColumnDefaultValues.alter_column.unique ? 'true' : 'false',
-          initial: alterColumnDefaultValues.alter_column.unique ? 'true' : 'false',
+          message: alterColumnDefaultValues.alter_column.unique ? JSON.stringify(uniqueObject) : 'undefined',
+          initial: alterColumnDefaultValues.alter_column.unique ? JSON.stringify(uniqueObject) : 'undefined',
           validate: (value: string) => {
-            return notEmptyString(value) && noExistingColumnName(value);
+            if (value === 'undefined') return true;
+            const errorMessage =
+              'Invalid value. Unique field must be in the form of { "name": "unique_name_for_constraint" }';
+            try {
+              const v = JSON.parse(value);
+              if (v && v.name) {
+                return true;
+              }
+              throw errorMessage;
+            } catch (e) {
+              return errorMessage;
+            }
           }
         }
       ],
       footer: this.footer,
       template
     });
+
     try {
       const { values } = await snippet.run();
       const existingEntry = this.columnEdits.find(
         ({ originalName, tableName }) => tableName === column.tableName && originalName === column.originalName
       );
+      console.log('VALUES UNIQUE', values);
       if (existingEntry) {
+        // todo only add to edits if it changed from original
         existingEntry.name = values.name;
-        existingEntry.nullable = values.notNull;
-        existingEntry.unique = values.unique;
+        (existingEntry.nullable = values.notNull === undefined || values.notNull === false ? true : false),
+          (existingEntry.unique = values.unique);
       } else {
-        // TODO default value and type
-        if (values.name !== column.originalName) {
-          this.columnEdits.push({
-            name: values.name,
-            defaultValue: column.defaultValue,
-            type: column.type,
-            nullable: values.notNull,
-            unique: values.unique,
-            originalName: column.originalName,
-            tableName: column.tableName
-          });
-        }
+        this.columnEdits.push({
+          // todo only add to edits if it changed from original
+          name: values.name,
+          defaultValue: column.defaultValue,
+          type: column.type,
+          nullable: values.notNull === undefined || values.notNull === false ? true : false,
+          unique: values.unique,
+          originalName: column.originalName,
+          tableName: column.tableName
+        });
       }
       await this.showSchemaEdit();
     } catch (err) {
@@ -476,46 +493,80 @@ Beware that this can lead to ${chalk.bold(
     column: AddColumnPayload['column'];
   }) {
     this.clear();
+
+    const addColumnDefault: { add_column: OpAddColumn } = {
+      add_column: {
+        column: {
+          name: column.originalName,
+          nullable: !notNullUnsupportedTypes.includes(column.type) ? column.nullable : undefined,
+          unique: !uniqueUnsupportedTypes.includes(column.type) ? false : undefined,
+          type: column.type,
+          default: defaultValueUnsupportedTypes.includes(column.type) ? column.defaultValue : undefined
+        },
+        table: column.tableName
+
+        // TODO support default https://github.com/xataio/pgroll/issues/327
+        // TODO support changing type https://github.com/xataio/pgroll/issues/328
+      }
+    };
+
+    // TODO add reference if link is chosen as type
     const template = `
   {
     add_column: {
-      name: \${name},
-      nullable: \${nullable},
-      unique: {name: \${unique}},
+      column: {
+        name: \${name},
+        nullable: \${nullable},
+        unique: \${unique},
+        type: \${type},
+        defaultValue: \${defaultValue}
+      },
+      table: ${tableName}
     }
   }
 }`;
 
-    const noExistingColumnName = (value: string) => {
-      // Todo make sure non edited names to conflict
-      return !this.columnEdits.find(({ name, tableName }) => tableName === tableName && name === value)
-        ? true
-        : 'Name already exists';
-    };
-
     const snippet = new Snippet({
-      message: 'Edit a column',
+      message: 'Add a column',
       fields: [
         {
           name: 'name',
-          message: '',
+          message: addColumnDefault.add_column.column.name,
+          initial: addColumnDefault.add_column.column.name,
           validate: (value: string) => {
-            // Todo field does not start with xata_
-            return notEmptyString(value) && noExistingColumnName(value);
+            if (column.originalName === value) return true;
+            return notEmptyString(value) && this.noExistingColumnName(value, column) && !isReservedXataFieldName(value);
           }
         },
         {
           name: 'nullable',
-          message: 'false',
+          message: addColumnDefault.add_column.column.nullable ? 'false' : 'true',
+          initial: addColumnDefault.add_column.column.nullable ? 'false' : 'true',
           validate: (value: string) => {
-            return notEmptyString(value) && noExistingColumnName(value);
+            // todo check if the type supports nullable otherwise return error
+            return value !== 'false' && value !== 'true' ? 'Invalid value. Nullable field must be a boolean' : true;
           }
         },
         {
           name: 'unique',
-          message: 'false',
+          message: addColumnDefault.add_column.column.unique ? 'false' : 'true',
+          initial: addColumnDefault.add_column.column.unique ? 'false' : 'true',
           validate: (value: string) => {
-            return notEmptyString(value) && noExistingColumnName(value);
+            // todo check if the type supports unique otherwise return error
+            return value !== 'false' && value !== 'true' ? 'Invalid value. Unique field must be a boolean' : true;
+          }
+        },
+        {
+          name: 'default',
+          message: addColumnDefault.add_column.column.default
+            ? addColumnDefault.add_column.column.default
+            : 'undefined',
+          initial: addColumnDefault.add_column.column.default
+            ? addColumnDefault.add_column.column.default
+            : 'undefined',
+          validate: (value: string) => {
+            // todo check if the type supports default otherwise return error
+            return true;
           }
         }
       ],
@@ -529,7 +580,7 @@ Beware that this can lead to ${chalk.bold(
         name: values.name,
         defaultValue: values.defaultValue,
         type: values.type,
-        nullable: values.notNull,
+        nullable: values.notNull === undefined || values.notNull === false ? true : false,
         unique: values.unique,
         tableName,
         originalName: values.name
@@ -550,7 +601,6 @@ Beware that this can lead to ${chalk.bold(
       template: `
        Name: \${name}
        `
-      // TODO validate name
     });
 
     try {
@@ -695,6 +745,27 @@ export const editsToMigrations = (command: EditSchema) => {
     return addition;
   });
 
+  // todo edit column additions
+  // add_column: {
+  //   table,
+  //   up: requiresUpArgument(notNull, defaultValue)
+  //     ? xataColumnTypeToZeroValue(column.type, defaultValue)
+  //     : undefined,
+  //   column: {
+  //     name: column.name,
+  //     type: xataColumnTypeToPgRoll(column.type),
+  //     references:
+  //       column.type === 'link'
+  //         ? generateLinkReference({ column: column.name, table: linkTable, onDelete: linkOnDelete })
+  //         : undefined,
+  //     default: defaultValue !== null && defaultValue !== undefined ? `'${defaultValue}'` : undefined,
+  //     nullable: !notNull,
+  //     unique: unique,
+  //     check: xataColumnTypeToPgRollConstraint(column, table),
+  //     comment: xataColumnTypeToPgRollComment(column)
+  //   }
+  // }
+
   // bundle new columns into create_tables
   const columnAdditionsToNewTables = localColumnAdditions.filter(({ tableName }) =>
     localTableAdditions.find(({ name }) => name === tableName)
@@ -749,7 +820,7 @@ export const editsToMigrations = (command: EditSchema) => {
             name,
             type,
             nullable,
-            unique,
+            unique: unique as boolean,
             defaultValue
           },
           table: tableName
@@ -776,17 +847,21 @@ export const editsToMigrations = (command: EditSchema) => {
     };
   });
 
-  const columnEdits: { alter_column: OpAlterColumn }[] = localColumnEdits.map(({ originalName, tableName, name }) => {
-    const edit: { alter_column: OpAlterColumn } = {
-      alter_column: {
-        column: originalName,
-        table: tableName,
-        nullable: false,
-        name: originalName !== name ? name : undefined
-      }
-    };
-    return edit;
-  });
+  const columnEdits: { alter_column: OpAlterColumn }[] = localColumnEdits.map(
+    ({ originalName, tableName, name, nullable, unique }) => {
+      const edit: { alter_column: OpAlterColumn } = {
+        alter_column: {
+          column: originalName,
+          table: tableName,
+          nullable,
+          unique: unique as { name: string },
+          name
+          // TODO populate up and down
+        }
+      };
+      return edit;
+    }
+  );
 
   return [...columnDeletions, ...tableDeletions, ...tableAdditions, ...columnAdditions, ...columnEdits, ...tableEdits];
 };
@@ -813,3 +888,7 @@ async function waitForMigrationToFinish(
   await new Promise((resolve) => setTimeout(resolve, 1000));
   return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
 }
+
+const isReservedXataFieldName = (name: string) => {
+  return name.toLowerCase().startsWith('xata_');
+};
