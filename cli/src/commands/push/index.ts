@@ -107,7 +107,7 @@ export default class Push extends BaseCommand<typeof Push> {
         .flatMap((migration) => PgRollMigrationDefinition.parse(migration));
       for (const migration of migrationsToPush) {
         try {
-          await xata.api.branches.applyMigration({
+          const applyResp = await xata.api.branches.applyMigration({
             workspace,
             region,
             database,
@@ -115,6 +115,29 @@ export default class Push extends BaseCommand<typeof Push> {
             // @ts-expect-error Backend API spec doesn't know all pgroll migrations yet
             migration
           });
+
+          let statusResp = await xata.api.migrations.getMigrationJobStatus({
+            workspace,
+            region,
+            database,
+            branch,
+            jobId: applyResp.jobID
+          });
+
+          while (statusResp.status === 'pending' || statusResp.status === 'in_progress') {
+            await sleep(500);
+            statusResp = await xata.api.migrations.getMigrationJobStatus({
+              workspace,
+              region,
+              database,
+              branch,
+              jobId: applyResp.jobID
+            });
+          }
+
+          if (statusResp.status !== 'completed') {
+            throw new Error(`Migration failed with error ${statusResp.error}`);
+          }
         } catch (e) {
           this.log(`Failed to push ${migration} with ${e}. Stopping.`);
           this.exit(1);
@@ -162,4 +185,8 @@ export default class Push extends BaseCommand<typeof Push> {
 
     return newLocalMigrations;
   }
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
