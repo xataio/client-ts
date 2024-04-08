@@ -1,4 +1,4 @@
-type Buffer = any;
+export type Buffer = any;
 
 function loadBuffer(): Buffer {
   try {
