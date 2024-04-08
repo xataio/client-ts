@@ -272,8 +272,6 @@ describe('edits to migrations', () => {
     });
 
     test('edit column', () => {
-      // todo correct this
-      // add different types of payloads
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
@@ -290,6 +288,53 @@ describe('edits to migrations', () => {
             unique: undefined,
             down: '"col2"',
             up: '"col2"'
+          }
+        }
+      ]);
+    });
+
+    test('edit column nullable to not nullable', () => {
+      editCommand.columnEdits.push({
+        ...column,
+        nullable: false
+      });
+      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+      expect(editCommand.currentMigration.operations).toEqual([
+        {
+          alter_column: {
+            // todo name should not be in here
+            name: 'col1',
+            column: 'col1',
+            nullable: false,
+            table: 'table1',
+            unique: undefined,
+            down: '"col1"',
+            up: '"col1"'
+          }
+        }
+      ]);
+    });
+
+    test('edit column not unique to unique', () => {
+      editCommand.columnEdits.push({
+        ...column,
+        unique: true
+      });
+      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+      expect(editCommand.currentMigration.operations).toEqual([
+        {
+          alter_column: {
+            // todo name should not be in here
+            name: 'col1',
+            column: 'col1',
+            // todo nullable should not be in here
+            nullable: true,
+            table: 'table1',
+            unique: {
+              name: 'unique_constraint_table1_col1'
+            },
+            down: '"col1"',
+            up: '"col1"'
           }
         }
       ]);
