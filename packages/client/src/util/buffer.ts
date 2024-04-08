@@ -1,4 +1,6 @@
-function loadBuffer(): any {
+type Buffer = any;
+
+function loadBuffer(): Buffer {
   try {
     if (typeof Buffer !== 'undefined') {
       return Buffer;
@@ -11,4 +13,4 @@ function loadBuffer(): any {
   return undefined;
 }
 
-export const Buffer = loadBuffer();
+export const Buffer: Buffer = loadBuffer();
