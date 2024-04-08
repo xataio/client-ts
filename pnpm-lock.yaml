@@ -130,6 +130,9 @@ importers:
       typescript:
         specifier: ^5.4.4
         version: 5.4.4
+      typescript-eslint:
+        specifier: ^7.5.0
+        version: 7.5.0(eslint@9.0.0)(typescript@5.4.4)
       vite:
         specifier: ^5.2.8
         version: 5.2.8(@types/node@20.12.5)
@@ -16111,6 +16114,26 @@ packages:
   /typedarray@0.0.6:
     resolution:
       { integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA== }
+    dev: true
+
+  /typescript-eslint@7.5.0(eslint@9.0.0)(typescript@5.4.4):
+    resolution:
+      { integrity: sha512-eKhF39LRi2xYvvXh3h3S+mCxC01dZTIZBlka25o39i81VeQG+OZyfC4i2GEDspNclMRdXkg9uGhmvWMhjph2XQ== }
+    engines: { node: ^18.18.0 || >=20.0.0 }
+    peerDependencies:
+      eslint: ^8.56.0
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@typescript-eslint/eslint-plugin': 7.5.0(@typescript-eslint/parser@7.5.0)(eslint@9.0.0)(typescript@5.4.4)
+      '@typescript-eslint/parser': 7.5.0(eslint@9.0.0)(typescript@5.4.4)
+      '@typescript-eslint/utils': 7.5.0(eslint@9.0.0)(typescript@5.4.4)
+      eslint: 9.0.0
+      typescript: 5.4.4
+    transitivePeerDependencies:
+      - supports-color
     dev: true
 
   /typescript@4.8.2:
