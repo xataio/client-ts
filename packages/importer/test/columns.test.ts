@@ -1,10 +1,10 @@
 import { Schemas } from '@xata.io/client';
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
-import { CoercedValue, coerceRows, coerceValue, guessColumns, guessColumnTypes } from '../src/columns';
+import fs from 'fs/promises';
+import path from 'path';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { CoercedValue, coerceRows, coerceValue, guessColumnTypes, guessColumns } from '../src/columns';
 import { ColumnOptions } from '../src/types';
 import { yepNopeToBoolean } from './utils';
-import path from 'path';
-import fs from 'fs/promises';
 
 const guessNumbersTestCases = [
   { input: ['1', '2', '3', '-4'], expected: 'int' },
@@ -358,7 +358,7 @@ const coerceTestCases: {
       isError: false
     },
     options: {
-      proxyFunction: async (url) => {
+      proxyFunction: async () => {
         return new Blob(['hello world']);
       }
     }
@@ -398,7 +398,7 @@ const coerceTestCases: {
       isError: false
     },
     options: {
-      proxyFunction: async (url) => {
+      proxyFunction: async () => {
         return new Blob(['hello world']);
       }
     }
