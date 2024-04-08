@@ -14,35 +14,43 @@ class Buffer extends Uint8Array {
    * @param str String to store in buffer.
    * @param encoding Encoding to use, optional. Default is `utf8`.
    */
-  protected constructor(str: string, encoding?: Encoding);
+  constructor(str: string, encoding?: Encoding);
 
   /**
    * Allocates a new buffer of `size` octets.
    *
    * @param size Count of octets to allocate.
    */
-  protected constructor(size: number);
+  constructor(size: number);
 
   /**
    * Allocates a new buffer containing the given `array` of octets.
    *
    * @param array The octets to store.
    */
-  protected constructor(array: Uint8Array);
+  constructor(array: Uint8Array);
 
   /**
    * Allocates a new buffer containing the given `array` of octet values.
    *
    * @param array
    */
-  protected constructor(array: number[]);
+  constructor(array: number[]);
+
+  /**
+   * Allocates a new buffer containing the given `array` of octet values.
+   *
+   * @param array
+   * @param encoding
+   */
+  constructor(array: number[], encoding: Encoding);
 
   /**
    * Copies the passed `buffer` data onto a new `Buffer` instance.
    *
    * @param buffer
    */
-  protected constructor(buffer: Buffer);
+  constructor(buffer: Buffer);
 
   /**
    * When passed a reference to the .buffer property of a TypedArray instance, the newly created Buffer will share
@@ -53,7 +61,7 @@ class Buffer extends Uint8Array {
    * @param byteOffset
    * @param length
    */
-  protected constructor(buffer: ArrayBuffer, byteOffset?: number, length?: number);
+  constructor(buffer: ArrayBuffer, byteOffset?: number, length?: number);
 
   /**
    * Constructs a new `Buffer` instance.
@@ -62,7 +70,7 @@ class Buffer extends Uint8Array {
    * @param encodingOrOffset
    * @param length
    */
-  protected constructor(
+  constructor(
     value: string | number | Uint8Array | ArrayBuffer | number[] | Buffer,
     encodingOrOffset?: Encoding | number,
     length?: number
@@ -194,6 +202,26 @@ class Buffer extends Uint8Array {
   }
 
   /**
+   * Return JSON representation of the buffer.
+   */
+  public toJSON(): { type: 'Buffer'; data: number[] } {
+    return {
+      type: 'Buffer',
+      data: Array.prototype.slice.call(this)
+    };
+  }
+
+  /**
+   * Writes `string` to the buffer at `offset` according to the character encoding in `encoding`. The `length`
+   * parameter is the number of bytes to write. If the buffer does not contain enough space to fit the entire string,
+   * only part of `string` will be written. However, partially encoded characters will not be written.
+   *
+   * @param string String to write to `buf`.
+   * @param encoding The character encoding of `string`. Default: `utf8`.
+   */
+  public write(string: string, encoding?: Encoding): number;
+
+  /**
    * Writes `string` to the buffer at `offset` according to the character encoding in `encoding`. The `length`
    * parameter is the number of bytes to write. If the buffer does not contain enough space to fit the entire string,
    * only part of `string` will be written. However, partially encoded characters will not be written.
@@ -203,7 +231,19 @@ class Buffer extends Uint8Array {
    * @param length Maximum number of bytes to write: Default: `buf.length - offset`.
    * @param encoding The character encoding of `string`. Default: `utf8`.
    */
-  public write(string: string, offset?: number, length?: number, encoding?: Encoding): number {
+  public write(string: string, offset?: number, length?: number, encoding?: Encoding): number;
+
+  /**
+   * Writes `string` to the buffer at `offset` according to the character encoding in `encoding`. The `length`
+   * parameter is the number of bytes to write. If the buffer does not contain enough space to fit the entire string,
+   * only part of `string` will be written. However, partially encoded characters will not be written.
+   *
+   * @param string String to write to `buf`.
+   * @param offset Number of bytes to skip before starting to write `string`. Default: `0`.
+   * @param length Maximum number of bytes to write: Default: `buf.length - offset`.
+   * @param encoding The character encoding of `string`. Default: `utf8`.
+   */
+  public write(string: string, offset?: number | Encoding, length?: number, encoding?: Encoding): number {
     if (typeof offset === 'undefined') {
       encoding = 'utf8';
       length = this.length;
@@ -1061,7 +1101,7 @@ class Buffer extends Uint8Array {
    * @param noAssert
    * @returns `offset` plus the number of bytes written.
    */
-  public writeUInt16LE(value: number, offset: number, noAssert?: boolean): number {
+  public writeUInt16LE(value: number | string, offset: number, noAssert?: boolean): number {
     value = +value;
     offset = offset >>> 0;
 

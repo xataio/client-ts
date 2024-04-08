@@ -89,7 +89,7 @@ function tripletToBase64(num: number): string {
   return lookup[(num >> 18) & 0x3f] + lookup[(num >> 12) & 0x3f] + lookup[(num >> 6) & 0x3f] + lookup[num & 0x3f];
 }
 
-function encodeChunk(uint8: Uint8Array, start: number, end: number): string {
+function encodeChunk(uint8: Uint8Array | number[], start: number, end: number): string {
   let tmp;
   const output = [];
   for (let i = start; i < end; i += 3) {
@@ -99,7 +99,7 @@ function encodeChunk(uint8: Uint8Array, start: number, end: number): string {
   return output.join('');
 }
 
-export function fromByteArray(uint8: Uint8Array): string {
+export function fromByteArray(uint8: Uint8Array | number[]): string {
   let tmp;
   const len = uint8.length;
   const extraBytes = len % 3; // if we have 1 byte left, pad 2 bytes
