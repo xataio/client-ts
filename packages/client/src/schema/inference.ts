@@ -99,4 +99,5 @@ type InnerType<Type, Tables, LinkedTable> = Type extends
   ? JSONValue<any>
   : Type extends 'link'
   ? TableType<Tables, LinkedTable> & XataRecord
-  : never;
+  : // This is a fallback for when the type is not recognized
+    string;
