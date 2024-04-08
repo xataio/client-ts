@@ -36,9 +36,6 @@ import {
 
 const { Select, Snippet, Confirm } = enquirer as any;
 
-const uniqueUnsupportedTypes = ['text', 'multiple', 'vector', 'json'];
-const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
-const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
 const xataTypes = [
   'string',
   'int',
@@ -483,17 +480,9 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'nullable',
           message: `Whether the column can be null.`,
-          initial: notNullUnsupportedTypes.includes(column.type)
-            ? undefined
-            : this.renderNullable({ column })
-            ? 'true'
-            : 'false',
+          initial: this.renderNullable({ column }) ? 'true' : 'false',
           validate: (value: string) => {
-            if (value !== undefined && notNullUnsupportedTypes.includes(column.type)) {
-              return `Nullable is not supported for ${column.type} columns. Please leave blank.`;
-            }
-            if (!notNullUnsupportedTypes.includes(column.type) && parseBoolean(value) === undefined)
-              return 'Invalid value. Nullable field must be a boolean';
+            if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
             return true;
           }
         },
@@ -501,17 +490,9 @@ Beware that this can lead to ${chalk.bold(
           // todo abstract into function
           name: 'unique',
           message: `Whether the column is unique.`,
-          initial: uniqueUnsupportedTypes.includes(column.type)
-            ? undefined
-            : this.renderUnique({ column })
-            ? 'true'
-            : 'false',
+          initial: this.renderUnique({ column }) ? 'true' : 'false',
           validate: (value: string) => {
-            if (value !== undefined && uniqueUnsupportedTypes.includes(column.type)) {
-              return `Unique is not supported for ${column.type} columns. Please leave blank.`;
-            }
-            if (!uniqueUnsupportedTypes.includes(column.type) && parseBoolean(value) === undefined)
-              return 'Invalid value. Unique field must be a boolean';
+            if (parseBoolean(value) === undefined) return 'Invalid value. Unique field must be a boolean';
             return true;
           }
         }
@@ -599,39 +580,25 @@ Beware that this can lead to ${chalk.bold(
         },
         {
           name: 'nullable',
-          message: `Whether the column can be null.  Will be ignored if type is one of ${notNullUnsupportedTypes}`,
+          message: `Whether the column can be null.`,
           // todo these restriction still apply in pgroll branches?
-          validate: (value: string, state: ValidationState) => {
-            const columnType = state.items.find(({ name }) => name === 'type')?.input;
-            if (value !== undefined && columnType && notNullUnsupportedTypes.includes(columnType)) {
-              return `Nullable is not supported for ${columnType} columns. Please leave blank.`;
-            }
-            if (columnType && !notNullUnsupportedTypes.includes(columnType) && parseBoolean(value) === undefined)
-              return 'Invalid value. Nullable field must be a boolean';
+          validate: (value: string) => {
+            if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
             return true;
           }
         },
         {
           name: 'unique',
-          message: `Whether the column is unique. Will be ignored if type is one of ${uniqueUnsupportedTypes}`,
-          validate: (value: string, state: ValidationState) => {
-            const columnType = state.items.find(({ name }) => name === 'type')?.input;
-            if (value !== undefined && columnType && uniqueUnsupportedTypes.includes(columnType)) {
-              return `Unique is not supported for ${columnType} columns. Please leave blank.`;
-            }
-            if (columnType && !uniqueUnsupportedTypes.includes(columnType) && parseBoolean(value) === undefined)
-              return 'Invalid value. Unique field must be a boolean';
+          message: `Whether the column is unique.`,
+          validate: (value: string) => {
+            if (parseBoolean(value) === undefined) return 'Invalid value. Unique field must be a boolean';
             return true;
           }
         },
         {
           name: 'default',
-          message: `The default for the column. Will be ignored if type is one of ${defaultValueUnsupportedTypes}`,
-          validate: (value: string, state: ValidationState) => {
-            const columnType = state.items.find(({ name }) => name === 'type')?.input;
-            if (value !== undefined && columnType && defaultValueUnsupportedTypes.includes(columnType)) {
-              return `Default value is not supported for ${columnType} columns. Please leave blank.`;
-            }
+          message: `The default for the column.`,
+          validate: (value: string) => {
             return true;
           }
         },

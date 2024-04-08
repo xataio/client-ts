@@ -383,6 +383,38 @@ describe('edits to migrations', () => {
       expect(editCommand.currentMigration.operations).toEqual([{ drop_table: { name: 'table1' } }]);
     });
 
+    // todo try deleting a column, and then adding one...
+    test.skip('creating a new column and deleting an existing table', () => {
+      editCommand.columnAdditions.push(column);
+      editCommand.columnDeletions['table1'] = ['col1'];
+      editCommand.columnAdditions.push({
+        ...column,
+        name: 'col2'
+      });
+      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+      expect(editCommand.currentMigration.operations).toEqual([
+        {
+          add_column: {
+            table: 'table1',
+            column: {
+              name: 'col2',
+              type: 'text',
+              nullable: true,
+              unique: false,
+              check: {
+                constraint: 'LENGTH("col2") <= 2048',
+                name: 'table1_xata_string_length_col2'
+              },
+              comment: '{"xata.type":"string"}',
+              default: undefined,
+              references: undefined,
+              up: undefined
+            }
+          }
+        }
+      ]);
+    });
+
     test('deleting an existing column deletes all column edits', () => {
       editCommand.columnEdits.push({
         ...column,
