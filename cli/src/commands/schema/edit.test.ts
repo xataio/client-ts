@@ -383,12 +383,12 @@ describe('edits to migrations', () => {
       expect(editCommand.currentMigration.operations).toEqual([{ drop_table: { name: 'table1' } }]);
     });
 
-    // todo try deleting a column, and then adding one...
-    test.skip('creating a new column and deleting an existing table', () => {
+    test('creating a new column and deleting an existing table', () => {
       editCommand.columnAdditions.push(column);
       editCommand.columnDeletions['table1'] = ['col1'];
       editCommand.columnAdditions.push({
         ...column,
+        originalName: 'col2',
         name: 'col2'
       });
       editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);

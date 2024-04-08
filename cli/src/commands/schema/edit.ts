@@ -581,7 +581,6 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'nullable',
           message: `Whether the column can be null.`,
-          // todo these restriction still apply in pgroll branches?
           validate: (value: string) => {
             if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
             return true;
@@ -776,14 +775,25 @@ export const editsToMigrations = (command: EditSchema) => {
   localColumnAdditions = localColumnAdditions.filter(
     (addition) => !localColumnDeletions[addition.tableName]?.includes(addition.originalName)
   );
+
   localColumnEdits = localColumnEdits.filter(
     (edit) => !localColumnDeletions[edit.tableName]?.includes(edit.originalName)
   );
-  localColumnDeletions = Object.fromEntries(
-    Object.entries(localColumnDeletions).filter(
-      (entry) => !tmpColumnAddition.find((addition) => addition.tableName === entry[0])
-    )
+
+  console.log('object entries', Object.entries(localColumnDeletions));
+  console.log(
+    'object entries filtered',
+    Object.entries(localColumnDeletions).filter((el) => true)
   );
+
+  for (const [tableName, columns] of Object.entries(localColumnDeletions)) {
+    const indexOfColumnToDelete = tmpColumnAddition.findIndex(
+      (addition) => addition.tableName === tableName && columns.includes(addition.originalName)
+    );
+    if (indexOfColumnToDelete > -1) {
+      localColumnDeletions[tableName].splice(indexOfColumnToDelete, 1);
+    }
+  }
 
   const isTableDeleted = (name: string) => {
     return localTableDeletions.find(({ name: tableName }) => tableName === name);
