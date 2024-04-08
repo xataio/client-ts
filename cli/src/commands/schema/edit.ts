@@ -140,8 +140,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
       const newColumns: SelectChoice[] = [];
       for (const addition of this.columnAdditions.filter((addition) => addition.tableName === table.name)) {
-        // todo fix type
-        const formatted = { ...addition, tableName: table.name, originalName: addition.name } as any;
+        const formatted = { ...addition, tableName: table.name, originalName: addition.name };
         newColumns.push({
           name: { type: 'edit-column', column: formatted },
           message: this.renderColumnName({ column: formatted }),
@@ -318,11 +317,28 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       .find((entry) => entry[1].includes(column.originalName));
     const tableDelete = this.tableDeletions.find(({ name }) => name === column.tableName);
 
-    // todo show edits in default schema view
+    const uniqueDisplay = () => {
+      const currentUniqueValue = this.renderUnique({ column });
+      const originalUnique = column.unique;
+      if (currentUniqueValue !== originalUnique) {
+        return currentUniqueValue ? chalk.green('unique') : chalk.green('not unique');
+      }
+      return currentUniqueValue ? chalk.gray.italic('unique') : '';
+    };
+
+    const nullableDisplay = () => {
+      const currentNullableValue = this.renderNullable({ column });
+      const originalNullable = column.nullable;
+      if (currentNullableValue !== originalNullable) {
+        return currentNullableValue ? chalk.green('nullable') : chalk.green('not nullable');
+      }
+      return currentNullableValue ? chalk.gray.italic('nullable') : '';
+    };
+
     const metadata = [
       `${chalk.gray.italic(column.type)}${column.type === 'link' ? ` → ${chalk.gray.italic(column.link?.table)}` : ''}`,
-      column.unique ? chalk.gray.italic('unique') : '',
-      !column.nullable ? chalk.gray.italic('not null') : '',
+      uniqueDisplay(),
+      nullableDisplay(),
       column.defaultValue ? chalk.gray.italic(`default: ${column.defaultValue}`) : ''
     ]
       .filter(Boolean)
