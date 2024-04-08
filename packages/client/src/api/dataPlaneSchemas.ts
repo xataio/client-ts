@@ -175,20 +175,7 @@ export type ColumnFile = {
 
 export type Column = {
   name: string;
-  type:
-    | 'bool'
-    | 'int'
-    | 'float'
-    | 'string'
-    | 'text'
-    | 'email'
-    | 'multiple'
-    | 'link'
-    | 'datetime'
-    | 'vector'
-    | 'file[]'
-    | 'file'
-    | 'json';
+  type: string;
   link?: ColumnLink;
   vector?: ColumnVector;
   file?: ColumnFile;
