@@ -5,6 +5,8 @@ import * as base64 from './base64';
 export const K_MAX_LENGTH = 0x7fffffff;
 export const MAX_ARGUMENTS_LENGTH = 4096;
 
+// Based from https://github.com/feross/buffer
+// Re-used some type checking from https://gist.github.com/baileyherbert/799c9277429497a40c5f28599494d46f
 class Buffer extends Uint8Array {
   /**
    * Allocates a new buffer containing the given `str`.

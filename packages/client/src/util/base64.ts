@@ -1,3 +1,5 @@
+// Based from https://github.com/beatgammit/base64-js
+
 const lookup: string[] = [];
 const revLookup: number[] = [];
 
