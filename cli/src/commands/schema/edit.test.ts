@@ -287,7 +287,7 @@ describe('edits to migrations', () => {
             nullable: true,
             table: 'table1',
             // Todo fix this. alter_column should not be boolean
-            unique: false,
+            unique: undefined,
             down: '"col2"',
             up: '"col2"'
           }

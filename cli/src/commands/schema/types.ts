@@ -1,11 +1,7 @@
 export type ColumnData = {
   name: string;
   type: string;
-  unique?:
-    | boolean
-    | {
-        name: string;
-      };
+  unique: boolean;
   nullable: boolean;
   defaultValue?: string;
   vector?: {
@@ -69,4 +65,4 @@ export type DeleteTablePayload = {
 
 export type DeleteColumnPayload = { [tableName: string]: string[] };
 
-export type ValidationState = { items: { name: string; input: string }[] };
+export type ValidationState = { values: { name: string }; items: { name: string; input: string }[] };

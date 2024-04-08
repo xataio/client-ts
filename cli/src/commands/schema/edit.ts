@@ -118,7 +118,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
             name: column.name,
             unique: column.unique ?? false,
             type: column.type,
-            nullable: column.notNull ?? true,
+            nullable: column.notNull === true ? false : true,
             tableName: table.name,
             originalName: column.name,
             defaultValue: column.defaultValue ?? undefined,
@@ -289,15 +289,36 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     }
   }
 
-  renderColumnName({ column }: { column: EditColumnPayload['column'] }) {
+  renderColumnNameChange({ column }: { column: EditColumnPayload['column'] }) {
     const columnEdit = this.columnEdits
       .filter((edit) => edit.tableName === column.tableName)
       .find(({ originalName: editName }) => editName === column.originalName);
+    return columnEdit?.name;
+  }
+
+  renderNullable({ column }: { column: EditColumnPayload['column'] }) {
+    const columnEdit = this.columnEdits
+      .filter((edit) => edit.tableName === column.tableName)
+      .find(({ originalName: editName }) => editName === column.originalName);
+
+    return columnEdit?.nullable ?? column.nullable;
+  }
+
+  renderUnique({ column }: { column: EditColumnPayload['column'] }) {
+    const columnEdit = this.columnEdits
+      .filter((edit) => edit.tableName === column.tableName)
+      .find(({ originalName: editName }) => editName === column.originalName);
+    return columnEdit?.unique ?? column.unique;
+  }
+
+  renderColumnName({ column }: { column: EditColumnPayload['column'] }) {
+    const columnNewName = this.renderColumnNameChange({ column });
     const columnDelete = Object.entries(this.columnDeletions)
       .filter((entry) => entry[0] === column.tableName)
       .find((entry) => entry[1].includes(column.originalName));
     const tableDelete = this.tableDeletions.find(({ name }) => name === column.tableName);
 
+    // todo show edits in default schema view
     const metadata = [
       `${chalk.gray.italic(column.type)}${column.type === 'link' ? ` → ${chalk.gray.italic(column.link?.table)}` : ''}`,
       column.unique ? chalk.gray.italic('unique') : '',
@@ -310,8 +331,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     if (columnDelete || tableDelete) {
       return `  - ${chalk.red.strikethrough(column.originalName)} (${metadata})`;
     }
-    if (columnEdit) {
-      return `  - ${chalk.bold(columnEdit.name)} -> ${chalk.yellow.strikethrough(column.originalName)} (${metadata})`;
+    if (columnNewName) {
+      return `  - ${chalk.bold(columnNewName)} -> ${chalk.yellow.strikethrough(column.originalName)} (${metadata})`;
     }
     return `- ${chalk.cyan(column.originalName)} (${metadata})`;
   }
@@ -419,68 +440,63 @@ Beware that this can lead to ${chalk.bold(
   };
 
   async showColumnEdit(column: EditColumnPayload['column']) {
-    const uniqueObject = column.unique ? { name: `unique_constraint_${column.originalName}` } : undefined;
-    const alterColumnDefaultValues: { alter_column: OpAlterColumn } = {
-      alter_column: {
-        name: column.name,
-        column: column.originalName,
-        table: column.tableName,
-        nullable: !notNullUnsupportedTypes.includes(column.type) ? column.nullable : undefined,
-        unique: !uniqueUnsupportedTypes.includes(column.type) ? (column.unique ? uniqueObject : undefined) : undefined
-        // TODO support default https://github.com/xataio/pgroll/issues/327
-        // TODO support changing type https://github.com/xataio/pgroll/issues/328
-      }
-    };
     this.clear();
     const template = `
   {
     alter_column: {
       name: \${name},
       column: ${column.originalName},
-      ${!notNullUnsupportedTypes.includes(column.type) ? `nullable: \${nullable},` : ''}
-      ${!uniqueUnsupportedTypes.includes(column.type) ? `unique: \${unique},` : ''}
+      nullable: \${nullable},
+      unique: \${unique},
     }
-  }
-}`;
-
+  }`;
+    // TODO support default https://github.com/xataio/pgroll/issues/327
+    // TODO support changing type https://github.com/xataio/pgroll/issues/328
     const snippet = new Snippet({
       message: 'Edit a column',
-      initial: alterColumnDefaultValues,
       fields: [
         {
           name: 'name',
-          message: alterColumnDefaultValues.alter_column.column,
-          initial: alterColumnDefaultValues.alter_column.column,
-          validate: (value: string) => {
-            if (column.originalName === value) return true;
+          message: 'The name of the column',
+          initial: this.renderColumnNameChange({ column }) ?? column.originalName,
+          validate: (value: string, state: ValidationState) => {
+            if (column.originalName === value || value === state.values.name) return true;
             return !emptyString(value) && !this.existingColumnName(value, column) && !isReservedXataFieldName(value);
           }
         },
         {
           name: 'nullable',
-          message: alterColumnDefaultValues.alter_column.nullable ? 'false' : 'true',
-          initial: alterColumnDefaultValues.alter_column.nullable ? 'false' : 'true',
+          message: `Whether the column can be null.`,
+          initial: notNullUnsupportedTypes.includes(column.type)
+            ? undefined
+            : this.renderNullable({ column })
+            ? 'true'
+            : 'false',
           validate: (value: string) => {
-            return value !== 'false' && value !== 'true' ? 'Invalid value. Nullable field must be a boolean' : true;
+            if (value !== undefined && notNullUnsupportedTypes.includes(column.type)) {
+              return `Nullable is not supported for ${column.type} columns. Please leave blank.`;
+            }
+            if (!notNullUnsupportedTypes.includes(column.type) && parseBoolean(value) === undefined)
+              return 'Invalid value. Nullable field must be a boolean';
+            return true;
           }
         },
         {
+          // todo abstract into function
           name: 'unique',
-          message: alterColumnDefaultValues.alter_column.unique ? JSON.stringify(uniqueObject) : 'undefined',
-          initial: alterColumnDefaultValues.alter_column.unique ? JSON.stringify(uniqueObject) : 'undefined',
+          message: `Whether the column is unique.`,
+          initial: uniqueUnsupportedTypes.includes(column.type)
+            ? undefined
+            : this.renderUnique({ column })
+            ? 'true'
+            : 'false',
           validate: (value: string) => {
-            if (value === 'undefined') return true;
-            const errorMessage =
-              'Invalid value. Unique field must be in the form of { "name": "unique_name_for_constraint" }';
-            try {
-              const v = JSON.parse(value);
-              if (v && v.name) {
-                return true;
-              }
-              throw errorMessage;
-            } catch (e) {
-              return errorMessage;
+            if (value !== undefined && uniqueUnsupportedTypes.includes(column.type)) {
+              return `Unique is not supported for ${column.type} columns. Please leave blank.`;
             }
+            if (!uniqueUnsupportedTypes.includes(column.type) && parseBoolean(value) === undefined)
+              return 'Invalid value. Unique field must be a boolean';
+            return true;
           }
         }
       ],
@@ -494,23 +510,23 @@ Beware that this can lead to ${chalk.bold(
         ({ originalName, tableName }) => tableName === column.tableName && originalName === column.originalName
       );
       if (existingEntry) {
-        // todo only add to edits if it changed from original
         existingEntry.name = values.name;
-        (existingEntry.nullable = values.notNull === undefined || values.notNull === false ? true : false),
-          (existingEntry.unique = values.unique);
+        existingEntry.nullable = parseBoolean(values.nullable) ?? true;
+        existingEntry.unique = parseBoolean(values.unique) ?? false;
+        await this.showSchemaEdit();
       } else {
         this.columnEdits.push({
-          // todo only add to edits if it changed from original
           name: values.name,
           defaultValue: column.defaultValue,
           type: column.type,
-          nullable: values.notNull === undefined || values.notNull === false ? true : false,
-          unique: values.unique,
+          nullable: parseBoolean(values.nullable) ?? true,
+          unique: parseBoolean(values.unique) ?? false,
           originalName: column.originalName,
           tableName: column.tableName
         });
+
+        await this.showSchemaEdit();
       }
-      await this.showSchemaEdit();
     } catch (err) {
       if (err) throw err;
     }
@@ -574,7 +590,7 @@ Beware that this can lead to ${chalk.bold(
             if (value !== undefined && columnType && notNullUnsupportedTypes.includes(columnType)) {
               return `Nullable is not supported for ${columnType} columns. Please leave blank.`;
             }
-            if (columnType && !notNullUnsupportedTypes.includes(columnType) && value !== 'true' && value !== 'false')
+            if (columnType && !notNullUnsupportedTypes.includes(columnType) && parseBoolean(value) === undefined)
               return 'Invalid value. Nullable field must be a boolean';
             return true;
           }
@@ -587,7 +603,7 @@ Beware that this can lead to ${chalk.bold(
             if (value !== undefined && columnType && uniqueUnsupportedTypes.includes(columnType)) {
               return `Unique is not supported for ${columnType} columns. Please leave blank.`;
             }
-            if (columnType && !uniqueUnsupportedTypes.includes(columnType) && value !== 'true' && value !== 'false')
+            if (columnType && !uniqueUnsupportedTypes.includes(columnType) && parseBoolean(value) === undefined)
               return 'Invalid value. Unique field must be a boolean';
             return true;
           }
@@ -647,8 +663,8 @@ Beware that this can lead to ${chalk.bold(
         originalName: values.name,
         name: values.name,
         type: values.type,
-        nullable: values.notNull === undefined || values.notNull === 'false' ? true : false,
-        unique: values.unique === undefined || values.unique === 'false' ? false : true,
+        nullable: parseBoolean(values.nullable) ?? true,
+        unique: parseBoolean(values.nullable) ?? false,
         defaultValue: values.default,
         link: values.link ? { table: values.link } : undefined,
         vector: values.vectorDimension ? { dimension: values.vectorDimension } : undefined,
@@ -933,12 +949,15 @@ export const editsToMigrations = (command: EditSchema) => {
           column: originalName,
           table: tableName,
           nullable,
-          unique: unique as { name: string },
+          unique: !unique
+            ? undefined
+            : {
+                name: `unique_constraint_${tableName}_${name}`
+              },
           name,
           references: type === 'link' ? generateLinkReference({ column: name, table: link?.table ?? '' }) : undefined,
-          // if just a rename, no up and down required
-          // if a unique constraint change, below is required
-          // if notnull changes - notNullUpValue needs to be called
+          // todo if just a rename, no up and down required
+          // todo if notnull changes - notNullUpValue needs to be called
           up: `"${name}"`,
           down: `"${name}"`
         }
@@ -976,3 +995,10 @@ async function waitForMigrationToFinish(
 const isReservedXataFieldName = (name: string) => {
   return name.toLowerCase().startsWith('xata_');
 };
+
+function parseBoolean(value?: string) {
+  if (!value) return undefined;
+  const val = value.toLowerCase();
+  if (['true', 't', '1', 'y', 'yes'].includes(val)) return true;
+  if (['false', 'f', '0', 'n', 'no'].includes(val)) return false;
+}
