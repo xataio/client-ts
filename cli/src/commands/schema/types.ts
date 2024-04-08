@@ -8,11 +8,19 @@ export type ColumnData = {
       };
   nullable: boolean;
   defaultValue?: string;
-  vectorDimension?: number;
+  vector?: {
+    dimension: number;
+  };
   originalName: string;
   tableName: string;
   link?: {
     table: string;
+  };
+  file?: {
+    defaultPublicAccess: boolean;
+  };
+  'file[]'?: {
+    defaultPublicAccess: boolean;
   };
 };
 

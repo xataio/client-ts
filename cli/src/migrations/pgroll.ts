@@ -206,7 +206,6 @@ export const xataColumnTypeToPgRollConstraintName = (
 
 export const xataColumnTypeToPgRollConstraint = (column: Column, table: string) => {
   const getConstraint = () => {
-    console.log('column type.....', table);
     if (isColumnTypeUnsupported(column.type)) return undefined;
     switch (column.type) {
       case 'vector':

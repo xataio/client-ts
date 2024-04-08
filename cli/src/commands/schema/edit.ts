@@ -106,8 +106,10 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
             tableName: table.name,
             originalName: column.name,
             defaultValue: column.defaultValue ?? undefined,
-            vectorDimension: column.vector ? column.vector.dimension : undefined,
-            link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined
+            vector: column.vector ? { dimension: column.vector.dimension } : undefined,
+            link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
+            file: column.type === 'file' ? { defaultPublicAccess: false } : undefined,
+            'file[]': column.type === 'file[]' ? { defaultPublicAccess: false } : undefined
           };
           const item: SelectChoice = {
             name: {
@@ -283,7 +285,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     const metadata = [
       `${chalk.gray.italic(column.type)}${column.type === 'link' ? ` → ${chalk.gray.italic(column.link?.table)}` : ''}`,
       column.unique ? chalk.gray.italic('unique') : '',
-      column.nullable ? chalk.gray.italic('not null') : '',
+      !column.nullable ? chalk.gray.italic('not null') : '',
       column.defaultValue ? chalk.gray.italic(`default: ${column.defaultValue}`) : ''
     ]
       .filter(Boolean)
@@ -510,25 +512,7 @@ Beware that this can lead to ${chalk.bold(
     column: AddColumnPayload['column'];
   }) {
     this.clear();
-
-    const addColumnDefault: { add_column: OpAddColumn } = {
-      add_column: {
-        column: {
-          name: column.originalName,
-          nullable: !notNullUnsupportedTypes.includes(column.type) ? column.nullable : true,
-          unique: !uniqueUnsupportedTypes.includes(column.type) ? false : false,
-          type: column.type,
-          default: defaultValueUnsupportedTypes.includes(column.type) ? column.defaultValue : undefined
-        },
-        table: column.tableName
-
-        // TODO support default https://github.com/xataio/pgroll/issues/327
-        // TODO support changing type https://github.com/xataio/pgroll/issues/328
-      }
-    };
-
-    // TODO support vector dimension
-    // TODO support dpa for files
+    // TODO conditionally show template fields
     const template = `
   {
     add_column: {
@@ -537,8 +521,10 @@ Beware that this can lead to ${chalk.bold(
         nullable: \${nullable},
         unique: \${unique},
         type: \${type},
-        defaultValue: \${defaultValue}
+        default: \${default}
         link: \${link}
+        vectorDimension: \${vectorDimension}
+        defaultPublicAccess: \${defaultPublicAccess}
       },
       table: ${tableName}
     }
@@ -550,57 +536,72 @@ Beware that this can lead to ${chalk.bold(
       fields: [
         {
           name: 'name',
-          message: addColumnDefault.add_column.column.name,
-          initial: addColumnDefault.add_column.column.name,
+          message: 'The name of the column',
           validate: (value: string) => {
             if (column.originalName === value) return true;
             return notEmptyString(value) && this.noExistingColumnName(value, column) && !isReservedXataFieldName(value);
           }
         },
-        // todo add type
-        // todo add link
         {
           name: 'type',
-          message: addColumnDefault.add_column.column.type,
-          initial: addColumnDefault.add_column.column.type,
+          message: `The type of the column ${[
+            'string',
+            'int',
+            'float',
+            'bool',
+            'text',
+            'multiple',
+            'link',
+            'email',
+            'datetime',
+            'vector',
+            'json',
+            'file',
+            'file[]'
+          ]}`,
           validate: (value: string) => {
-            // todo check if the type is supported otherwise return error
-            return true;
-          }
-        },
-        {
-          name: 'link',
-          message: 'Linked table. Only for columns that are links',
-          initial: undefined,
-          validate: (value: string) => {
-            // todo check if the table exists otherwise return error
             return true;
           }
         },
         {
           name: 'nullable',
-          message: addColumnDefault.add_column.column.nullable,
-          initial: addColumnDefault.add_column.column.nullable,
+          message: 'Whether the column can be null',
           validate: (value: string) => {
-            // todo check if the type supports nullable otherwise return error
             return value !== 'false' && value !== 'true' ? 'Invalid value. Nullable field must be a boolean' : true;
           }
         },
         {
           name: 'unique',
-          message: addColumnDefault.add_column.column.unique,
-          initial: addColumnDefault.add_column.column.unique,
+          message: 'Whether the column is unique',
           validate: (value: string) => {
-            // todo check if the type supports unique otherwise return error
             return value !== 'false' && value !== 'true' ? 'Invalid value. Unique field must be a boolean' : true;
           }
         },
         {
           name: 'default',
-          message: addColumnDefault.add_column.column.default,
-          initial: addColumnDefault.add_column.column.default,
+          message: 'The default for the column',
           validate: (value: string) => {
-            // todo check if the type supports default otherwise return error
+            return true;
+          }
+        },
+        {
+          name: 'link',
+          message: 'Linked table. Only required for columns that are links',
+          validate: (value: string) => {
+            return true;
+          }
+        },
+        {
+          name: 'vectorDimension',
+          message: 'Vector dimension. Only required for vector columns',
+          validate: (value: string) => {
+            return true;
+          }
+        },
+        {
+          name: 'defaultPublicAccess',
+          message: 'Default public access. Only required for file or file[] columns',
+          validate: (value: string) => {
             return true;
           }
         }
@@ -612,15 +613,25 @@ Beware that this can lead to ${chalk.bold(
       const { values } = await snippet.run();
 
       this.columnAdditions.push({
-        name: values.name,
-        defaultValue: values.defaultValue,
-        type: values.type,
-        link: values.link ? { table: values.link } : undefined,
-        nullable: values.notNull === undefined || values.notNull === false ? true : false,
-        unique: values.unique,
         tableName,
-        originalName: values.name
+        originalName: values.name,
+        name: values.name,
+        type: values.type,
+        nullable: values.notNull === undefined || values.notNull === 'false' ? true : false,
+        unique: values.unique === undefined || values.unique === 'false' ? false : true,
+        defaultValue: values.default,
+        link: values.link ? { table: values.link } : undefined,
+        vector: values.vectorDimension ? { dimension: values.vectorDimension } : undefined,
+        file:
+          values.type === 'file' && values.defaultPublicAccess
+            ? { defaultPublicAccess: values.defaultPublicAccess }
+            : undefined,
+        'file[]':
+          values.type === 'file[]' && values.defaultPublicAccess
+            ? { defaultPublicAccess: values.defaultPublicAccess }
+            : undefined
       });
+
       await this.showSchemaEdit();
     } catch (err) {
       if (err) throw err;

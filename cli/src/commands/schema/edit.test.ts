@@ -2,7 +2,6 @@ import { beforeEach, expect, test, describe } from 'vitest';
 import {
   AddColumnPayload,
   AddTablePayload,
-  ColumnData,
   DeleteColumnPayload,
   DeleteTablePayload,
   EditColumnPayload,
@@ -161,7 +160,10 @@ describe('edits to migrations', () => {
     test('add column file', () => {
       editCommand.columnAdditions.push({
         ...column,
-        type: 'file'
+        type: 'file',
+        file: {
+          defaultPublicAccess: false
+        }
       });
       editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
       expect(editCommand.currentMigration.operations).toEqual([
@@ -184,7 +186,10 @@ describe('edits to migrations', () => {
     test('add column file[]', () => {
       editCommand.columnAdditions.push({
         ...column,
-        type: 'file[]'
+        type: 'file[]',
+        'file[]': {
+          defaultPublicAccess: true
+        }
       });
       editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
       expect(editCommand.currentMigration.operations).toEqual([
@@ -193,7 +198,7 @@ describe('edits to migrations', () => {
             table: 'table1',
             column: {
               name: 'col1',
-              comment: '{"xata.file.dpa":false}',
+              comment: '{"xata.file.dpa":true}',
               type: 'xata.xata_file_array',
               references: undefined,
               up: undefined,
@@ -207,7 +212,10 @@ describe('edits to migrations', () => {
     test('add column vector', () => {
       editCommand.columnAdditions.push({
         ...column,
-        type: 'vector'
+        type: 'vector',
+        vector: {
+          dimension: 10
+        }
       });
       editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
       expect(editCommand.currentMigration.operations).toEqual([
@@ -217,13 +225,13 @@ describe('edits to migrations', () => {
             column: {
               name: 'col1',
               check: {
-                constraint: 'ARRAY_LENGTH("col1", 1) = undefined',
+                constraint: 'ARRAY_LENGTH("col1", 1) = 10',
                 name: 'table1_xata_vector_length_col1'
               },
               type: 'real[]',
               nullable: true,
               unique: false,
-              comment: '{}',
+              comment: '{"xata.search.dimension":10}',
               references: undefined,
               up: undefined,
               default: undefined
