@@ -68,3 +68,5 @@ export type DeleteTablePayload = {
 };
 
 export type DeleteColumnPayload = { [tableName: string]: string[] };
+
+export type ValidationState = { items: { name: string; input: string }[] };

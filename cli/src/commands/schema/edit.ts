@@ -20,7 +20,8 @@ import {
   DeleteTablePayload,
   EditColumnPayload,
   EditTablePayload,
-  SelectChoice
+  SelectChoice,
+  ValidationState
 } from './types.js';
 import {
   exhaustiveCheck,
@@ -38,6 +39,21 @@ const { Select, Snippet, Confirm } = enquirer as any;
 const uniqueUnsupportedTypes = ['text', 'multiple', 'vector', 'json'];
 const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
 const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
+const xataTypes = [
+  'string',
+  'int',
+  'float',
+  'bool',
+  'text',
+  'multiple',
+  'link',
+  'email',
+  'datetime',
+  'vector',
+  'json',
+  'file',
+  'file[]'
+];
 
 export default class EditSchema extends BaseCommand<typeof EditSchema> {
   static description = 'Edit the schema';
@@ -353,28 +369,6 @@ Beware that this can lead to ${chalk.bold(
   footer() {
     return '\nUse the ↑ ↓ arrows to move across fields, enter to submit and escape to cancel.';
   }
-  tableNameField = {
-    name: 'name',
-    message: 'The table name',
-    validate(value: string) {
-      // TODO make sure no other tables have this name
-      return notEmptyString(value) && !isReservedXataFieldName(value); //noExistingTableName(value)
-    }
-  };
-
-  noExistingTableName = (value: string) => {
-    return !this.tableEdits.find(({ name }) => name === value) ||
-      !this.tableAdditions.find(({ name }) => name === value)
-      ? true
-      : 'Table name conflicts with another one';
-  };
-
-  noExistingColumnName = (value: string, column: AddColumnPayload['column']) => {
-    return !this.columnEdits.find(({ name, tableName }) => tableName === column.tableName && name === value) ||
-      !this.columnAdditions.find(({ name, tableName }) => tableName === column.tableName && name === value)
-      ? true
-      : 'Column name conflicts with another one in the same table';
-  };
 
   async toggleTableDelete({ initialTableName }: { initialTableName: string }) {
     const existingEntry = this.tableDeletions.find(({ name }) => name === initialTableName);
@@ -405,6 +399,24 @@ Beware that this can lead to ${chalk.bold(
       }
     }
   }
+
+  existingTableName = (value: string) => {
+    return this.branchDetails?.schema.tables.find(({ name }) => name === value) ||
+      this.tableEdits.find(({ name }) => name === value) ||
+      this.tableAdditions.find(({ name }) => name === value)
+      ? true
+      : false;
+  };
+
+  existingColumnName = (value: string, column: AddColumnPayload['column']) => {
+    return this.branchDetails?.schema.tables
+      .find(({ name }) => name === column.tableName)
+      ?.columns.find(({ name }) => name === value) ||
+      this.columnEdits.find(({ name, tableName }) => tableName === column.tableName && name === value) ||
+      this.columnAdditions.find(({ name, tableName }) => tableName === column.tableName && name === value)
+      ? true
+      : false;
+  };
 
   async showColumnEdit(column: EditColumnPayload['column']) {
     const uniqueObject = column.unique ? { name: `unique_constraint_${column.originalName}` } : undefined;
@@ -441,7 +453,7 @@ Beware that this can lead to ${chalk.bold(
           initial: alterColumnDefaultValues.alter_column.column,
           validate: (value: string) => {
             if (column.originalName === value) return true;
-            return notEmptyString(value) && this.noExistingColumnName(value, column) && !isReservedXataFieldName(value);
+            return !emptyString(value) && !this.existingColumnName(value, column) && !isReservedXataFieldName(value);
           }
         },
         {
@@ -512,7 +524,6 @@ Beware that this can lead to ${chalk.bold(
     column: AddColumnPayload['column'];
   }) {
     this.clear();
-    // TODO conditionally show template fields
     const template = `
   {
     add_column: {
@@ -538,70 +549,89 @@ Beware that this can lead to ${chalk.bold(
           name: 'name',
           message: 'The name of the column',
           validate: (value: string) => {
-            if (column.originalName === value) return true;
-            return notEmptyString(value) && this.noExistingColumnName(value, column) && !isReservedXataFieldName(value);
+            if (value === undefined) return 'Name cannot be undefined';
+            if (emptyString(value)) return 'Name cannot be empty';
+            if (this.existingColumnName(value, column)) return 'Column already exists';
+            return !isReservedXataFieldName(value);
           }
         },
         {
           name: 'type',
-          message: `The type of the column ${[
-            'string',
-            'int',
-            'float',
-            'bool',
-            'text',
-            'multiple',
-            'link',
-            'email',
-            'datetime',
-            'vector',
-            'json',
-            'file',
-            'file[]'
-          ]}`,
+          message: `The type of the column ${xataTypes}`,
           validate: (value: string) => {
-            return true;
+            if (value === undefined) return 'Type cannot be undefined';
+            if (emptyString(value)) return 'Type cannot be empty';
+            if (!xataTypes.includes(value))
+              return 'Invalid xata type. Please specify one of the following: ' + xataTypes;
           }
         },
         {
           name: 'nullable',
-          message: 'Whether the column can be null',
-          validate: (value: string) => {
-            return value !== 'false' && value !== 'true' ? 'Invalid value. Nullable field must be a boolean' : true;
+          message: `Whether the column can be null.  Will be ignored if type is one of ${notNullUnsupportedTypes}`,
+          // todo these restriction still apply in pgroll branches?
+          validate: (value: string, state: ValidationState) => {
+            const columnType = state.items.find(({ name }) => name === 'type')?.input;
+            if (value !== undefined && columnType && notNullUnsupportedTypes.includes(columnType)) {
+              return `Nullable is not supported for ${columnType} columns. Please leave blank.`;
+            }
+            if (columnType && !notNullUnsupportedTypes.includes(columnType) && value !== 'true' && value !== 'false')
+              return 'Invalid value. Nullable field must be a boolean';
+            return true;
           }
         },
         {
           name: 'unique',
-          message: 'Whether the column is unique',
-          validate: (value: string) => {
-            return value !== 'false' && value !== 'true' ? 'Invalid value. Unique field must be a boolean' : true;
+          message: `Whether the column is unique. Will be ignored if type is one of ${uniqueUnsupportedTypes}`,
+          validate: (value: string, state: ValidationState) => {
+            const columnType = state.items.find(({ name }) => name === 'type')?.input;
+            if (value !== undefined && columnType && uniqueUnsupportedTypes.includes(columnType)) {
+              return `Unique is not supported for ${columnType} columns. Please leave blank.`;
+            }
+            if (columnType && !uniqueUnsupportedTypes.includes(columnType) && value !== 'true' && value !== 'false')
+              return 'Invalid value. Unique field must be a boolean';
+            return true;
           }
         },
         {
           name: 'default',
-          message: 'The default for the column',
-          validate: (value: string) => {
+          message: `The default for the column. Will be ignored if type is one of ${defaultValueUnsupportedTypes}`,
+          validate: (value: string, state: ValidationState) => {
+            const columnType = state.items.find(({ name }) => name === 'type')?.input;
+            if (value !== undefined && columnType && defaultValueUnsupportedTypes.includes(columnType)) {
+              return `Default value is not supported for ${columnType} columns. Please leave blank.`;
+            }
             return true;
           }
         },
         {
           name: 'link',
-          message: 'Linked table. Only required for columns that are links',
-          validate: (value: string) => {
+          message: 'Linked table. Only required for columns that are links. Will be ignored if type is not link.',
+          validate: (value: string, state: ValidationState) => {
+            const columnType = state.items.find(({ name }) => name === 'type')?.input;
+            if ((value === undefined || emptyString(value)) && columnType === 'link')
+              return 'Cannot be empty string when the type is link';
+            if (columnType === 'link' && !this.existingTableName(value)) return 'Table does not exist';
             return true;
           }
         },
         {
           name: 'vectorDimension',
-          message: 'Vector dimension. Only required for vector columns',
-          validate: (value: string) => {
+          message: 'Vector dimension. Only required for vector columns. Will be ignored if type is not vector.',
+          validate: (value: string, state: ValidationState) => {
+            const columnType = state.items.find(({ name }) => name === 'type')?.input;
+            if ((value === undefined || emptyString(value)) && columnType === 'vector')
+              return 'Cannot be empty string when the type is vector';
             return true;
           }
         },
         {
           name: 'defaultPublicAccess',
-          message: 'Default public access. Only required for file or file[] columns',
-          validate: (value: string) => {
+          message:
+            'Default public access. Only required for file or file[] columns. Will be ignored if type is not file or file[].',
+          validate: (value: string, state: ValidationState) => {
+            const columnType = state.items.find(({ name }) => name === 'type')?.input;
+            if ((value === undefined || emptyString(value)) && (columnType === 'file' || columnType === 'file[]'))
+              return 'Cannot be empty string when the type is file or file[]. Please input true or false';
             return true;
           }
         }
@@ -643,7 +673,16 @@ Beware that this can lead to ${chalk.bold(
     const snippet = new Snippet({
       message: 'Add a table',
       initial: { name: name },
-      fields: [this.tableNameField],
+      fields: [
+        {
+          name: 'name',
+          message: 'The table name',
+          validate: (value: string) => {
+            if (emptyString(value)) return 'Name cannot be empty';
+            return !isReservedXataFieldName(value) && !this.existingTableName(value);
+          }
+        }
+      ],
       footer: this.footer,
       template: `
        Name: \${name}
@@ -664,10 +703,15 @@ Beware that this can lead to ${chalk.bold(
     const snippet = new Snippet({
       message: 'Edit table name',
       initial: { name: initialTableName },
-      fields: [this.tableNameField],
-
-      // TODO name cannot be empty
-      // TODO name cannot be already taken
+      fields: [
+        {
+          name: 'name',
+          message: 'The table name',
+          validate: (value: string) => {
+            return !emptyString(value) && !isReservedXataFieldName(value) && !this.existingTableName(value);
+          }
+        }
+      ],
       footer: this.footer,
       template: `
          Name: \${name}
@@ -711,8 +755,8 @@ const validateMigration = (migration: object) => {
   return PgRollMigrationDefinition.safeParse(migration);
 };
 
-const notEmptyString = (value: string) => {
-  return value !== '' ? true : 'Name cannot be empty';
+const emptyString = (value: string) => {
+  return value === '';
 };
 
 const createSpace = (): SelectChoice => {
