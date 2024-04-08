@@ -1,4 +1,4 @@
-/* eslint-disable no-class-assign, prefer-rest-params, prefer-spread */
+/* eslint-disable prefer-rest-params, prefer-spread */
 
 import * as base64 from './base64';
 
@@ -2285,8 +2285,5 @@ function base64clean(str: string) {
  * The encodings that are supported in both native and polyfilled `Buffer` instances.
  */
 export type Encoding = 'ascii' | 'utf8' | 'utf16le' | 'ucs2' | 'binary' | 'hex' | 'latin1' | 'base64';
-
-// @ts-ignore
-if (typeof global !== 'undefined' && typeof global.Buffer !== 'undefined') Buffer = global.Buffer;
 
 export { Buffer };

@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { TestEnvironmentResult, setUpTestEnvironment } from '../utils/setup';
-import { XataFile } from '../../packages/client/src';
+import { XataFile, Buffer } from '../../packages/client/src';
 
 let xata: XataClient;
 let hooks: TestEnvironmentResult['hooks'];
