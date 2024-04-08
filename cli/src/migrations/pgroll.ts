@@ -302,3 +302,20 @@ export function xataColumnTypeToZeroValue(type: Column['type'], defaultValue: un
       return exhaustiveCheck(type);
   }
 }
+
+export const notNullUpValue = (column: Column, notNull: boolean) => {
+  return {
+    up: notNull
+      ? `(SELECT CASE WHEN "${column.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
+          column.type,
+          column.defaultValue
+        )} ELSE "${column.name}" END)`
+      : `"${column.name}"`,
+    down: notNull
+      ? `"${column.name}"`
+      : `(SELECT CASE WHEN "${column.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
+          column.type,
+          column.defaultValue
+        )} ELSE "${column.name}" END)`
+  };
+};

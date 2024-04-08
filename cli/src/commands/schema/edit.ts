@@ -356,8 +356,15 @@ Beware that this can lead to ${chalk.bold(
     message: 'The table name',
     validate(value: string) {
       // TODO make sure no other tables have this name
-      return notEmptyString(value);
+      return notEmptyString(value) && !isReservedXataFieldName(value); //noExistingTableName(value)
     }
+  };
+
+  noExistingTableName = (value: string) => {
+    return !this.tableEdits.find(({ name }) => name === value) ||
+      !this.tableAdditions.find(({ name }) => name === value)
+      ? true
+      : 'Table name conflicts with another one';
   };
 
   noExistingColumnName = (value: string, column: AddColumnPayload['column']) => {
@@ -508,8 +515,8 @@ Beware that this can lead to ${chalk.bold(
       add_column: {
         column: {
           name: column.originalName,
-          nullable: !notNullUnsupportedTypes.includes(column.type) ? column.nullable : undefined,
-          unique: !uniqueUnsupportedTypes.includes(column.type) ? false : undefined,
+          nullable: !notNullUnsupportedTypes.includes(column.type) ? column.nullable : true,
+          unique: !uniqueUnsupportedTypes.includes(column.type) ? false : false,
           type: column.type,
           default: defaultValueUnsupportedTypes.includes(column.type) ? column.defaultValue : undefined
         },
@@ -520,7 +527,8 @@ Beware that this can lead to ${chalk.bold(
       }
     };
 
-    // TODO add reference if link is chosen as type
+    // TODO support vector dimension
+    // TODO support dpa for files
     const template = `
   {
     add_column: {
@@ -552,9 +560,27 @@ Beware that this can lead to ${chalk.bold(
         // todo add type
         // todo add link
         {
+          name: 'type',
+          message: addColumnDefault.add_column.column.type,
+          initial: addColumnDefault.add_column.column.type,
+          validate: (value: string) => {
+            // todo check if the type is supported otherwise return error
+            return true;
+          }
+        },
+        {
+          name: 'link',
+          message: 'Linked table. Only for columns that are links',
+          initial: undefined,
+          validate: (value: string) => {
+            // todo check if the table exists otherwise return error
+            return true;
+          }
+        },
+        {
           name: 'nullable',
-          message: addColumnDefault.add_column.column.nullable ? 'false' : 'true',
-          initial: addColumnDefault.add_column.column.nullable ? 'false' : 'true',
+          message: addColumnDefault.add_column.column.nullable,
+          initial: addColumnDefault.add_column.column.nullable,
           validate: (value: string) => {
             // todo check if the type supports nullable otherwise return error
             return value !== 'false' && value !== 'true' ? 'Invalid value. Nullable field must be a boolean' : true;
@@ -562,8 +588,8 @@ Beware that this can lead to ${chalk.bold(
         },
         {
           name: 'unique',
-          message: addColumnDefault.add_column.column.unique ? 'false' : 'true',
-          initial: addColumnDefault.add_column.column.unique ? 'false' : 'true',
+          message: addColumnDefault.add_column.column.unique,
+          initial: addColumnDefault.add_column.column.unique,
           validate: (value: string) => {
             // todo check if the type supports unique otherwise return error
             return value !== 'false' && value !== 'true' ? 'Invalid value. Unique field must be a boolean' : true;
@@ -571,12 +597,8 @@ Beware that this can lead to ${chalk.bold(
         },
         {
           name: 'default',
-          message: addColumnDefault.add_column.column.default
-            ? addColumnDefault.add_column.column.default
-            : 'undefined',
-          initial: addColumnDefault.add_column.column.default
-            ? addColumnDefault.add_column.column.default
-            : 'undefined',
+          message: addColumnDefault.add_column.column.default,
+          initial: addColumnDefault.add_column.column.default,
           validate: (value: string) => {
             // todo check if the type supports default otherwise return error
             return true;
@@ -593,6 +615,7 @@ Beware that this can lead to ${chalk.bold(
         name: values.name,
         defaultValue: values.defaultValue,
         type: values.type,
+        link: values.link ? { table: values.link } : undefined,
         nullable: values.notNull === undefined || values.notNull === false ? true : false,
         unique: values.unique,
         tableName,
@@ -790,7 +813,10 @@ export const editsToMigrations = (command: EditSchema) => {
         nullable: column.nullable,
         unique: column.unique as boolean,
         check: xataColumnTypeToPgRollConstraint(column as any, column.tableName),
-        comment: xataColumnTypeToPgRollComment(column as any)
+        comment: xataColumnTypeToPgRollComment(column as any),
+        up: requiresUpArgument(column.nullable === false, column.defaultValue)
+          ? xataColumnTypeToZeroValue(column.type as any, column.defaultValue)
+          : undefined
       }
     }));
   };
@@ -821,10 +847,7 @@ export const editsToMigrations = (command: EditSchema) => {
       return {
         add_column: {
           column,
-          table: tableName,
-          up: requiresUpArgument(!!column.nullable, column.default)
-            ? xataColumnTypeToZeroValue(column.type as any, column.default)
-            : undefined
+          table: tableName
         }
       };
     }
@@ -849,15 +872,20 @@ export const editsToMigrations = (command: EditSchema) => {
   });
 
   const columnEdits: { alter_column: OpAlterColumn }[] = localColumnEdits.map(
-    ({ originalName, tableName, name, nullable, unique }) => {
+    ({ originalName, tableName, name, nullable, unique, type, link }) => {
       const edit: { alter_column: OpAlterColumn } = {
         alter_column: {
           column: originalName,
           table: tableName,
           nullable,
           unique: unique as { name: string },
-          name
-          // TODO populate up and down
+          name,
+          references: type === 'link' ? generateLinkReference({ column: name, table: link?.table ?? '' }) : undefined,
+          // if just a rename, no up and down required
+          // if a unique constraint change, below is required
+          // if notnull changes - notNullUpValue needs to be called
+          up: `"${name}"`,
+          down: `"${name}"`
         }
       };
       return edit;

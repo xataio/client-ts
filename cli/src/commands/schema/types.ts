@@ -1,4 +1,4 @@
-type ColumnData = {
+export type ColumnData = {
   name: string;
   type: string;
   unique?:
