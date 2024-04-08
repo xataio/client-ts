@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { XataClient } from '../../packages/codegen/example/xata';
 import { TestEnvironmentResult, setUpTestEnvironment } from '../utils/setup';
-import { XataFile } from '../../packages/client/src';
+import { XataFile, Buffer } from '../../packages/client/src';
 
 let xata: XataClient;
 let hooks: TestEnvironmentResult['hooks'];
@@ -59,6 +59,11 @@ describe('file support', () => {
     // Check for default public access (photo is public by default, attachments are not)
     expect(record.attachments?.[0]?.enablePublicUrl).toBe(false);
     expect(record.photo?.enablePublicUrl).toBe(true);
+
+    const buffer = record.attachments?.[0]?.toBuffer();
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer?.toString('utf8')).toBe('hello');
+    expect(buffer?.toString('base64')).toBe(record.attachments?.[0]?.base64Content);
   });
 
   test('create file with binary endpoint JSON and mediaType override', async () => {

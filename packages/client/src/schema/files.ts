@@ -1,5 +1,6 @@
 import { InputFileEntry } from '../api/schemas';
 import { ImageTransformations, transformImage } from '../files/transformations';
+import { Buffer } from '../util/buffer';
 import { compactObject, isDefined } from '../util/lang';
 import { StringKeys } from '../util/types';
 import { Identifiable, InputXataFile } from './record';
