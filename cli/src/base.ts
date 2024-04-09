@@ -538,7 +538,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
   }
 
-  async obtainKey() {
+  async obtainKey(webHost: string) {
     const { decision } = await this.prompt({
       type: 'select',
       name: 'decision',
@@ -551,7 +551,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     if (!decision) this.exit(2);
 
     if (decision === 'create') {
-      return createAPIKeyThroughWebUI();
+      return createAPIKeyThroughWebUI(webHost);
     } else if (decision === 'existing') {
       const { key } = await this.prompt({
         type: 'password',

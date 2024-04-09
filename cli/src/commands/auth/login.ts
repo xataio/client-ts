@@ -13,6 +13,9 @@ export default class Login extends BaseCommand<typeof Login> {
     host: Flags.string({
       description: 'Xata API host provider'
     }),
+    'web-host': Flags.string({
+      description: 'Xata web host url (app.xata.io)'
+    }),
     'api-key': Flags.string({
       description: 'Xata API key to use for authentication'
     })
@@ -42,11 +45,16 @@ export default class Login extends BaseCommand<typeof Login> {
       this.error('Invalid host provider, expected either "production", "staging" or "{apiUrl},{workspacesUrl}"');
     }
 
-    const key = flags['api-key'] ?? (await this.obtainKey());
+    const web = flags['web-host'];
+    if (/^https?:\/\//.test(web ?? '') === false) {
+      this.error('Invalid web host url, expected a valid url starting with http:// or https://');
+    }
+
+    const key = flags['api-key'] ?? (await this.obtainKey(web ?? 'https://app.xata.io'));
 
     await this.verifyAPIKey({ ...profile, apiKey: key, host });
 
-    await setProfile(profile.name, { apiKey: key, api: flags.host });
+    await setProfile(profile.name, { apiKey: key, api: flags.host, web });
 
     this.success('All set! you can now start using xata');
   }
