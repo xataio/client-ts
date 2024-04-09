@@ -350,6 +350,11 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     return `- ${chalk.cyan(column.originalName)} (${metadata})`;
   }
 
+  renderTableNameChange(tableName: string) {
+    const tableEdit = this.tableEdits.find((edit) => edit.name === tableName);
+    return tableEdit?.newName;
+  }
+
   renderTableName(originalName: string, newTable: boolean = false) {
     const tableEdit = this.tableEdits.find(({ name }) => name === originalName);
     const tableDelete = this.tableDeletions.find(({ name }) => name === originalName);
@@ -357,7 +362,9 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       return `• ${chalk.red.strikethrough(originalName)}`;
     }
     if (tableEdit) {
-      return `• ${chalk.bold(tableEdit.newName)} -> ${chalk.yellow.strikethrough(originalName)}`;
+      return `• ${chalk.bold(this.renderTableNameChange(originalName) ?? originalName)} -> ${chalk.yellow.strikethrough(
+        originalName
+      )}`;
     }
     return newTable ? `• ${chalk.bold(originalName)}` : `• ${chalk.bold(originalName)}`;
   }
@@ -692,12 +699,13 @@ Beware that this can lead to ${chalk.bold(
     this.clear();
     const snippet = new Snippet({
       message: 'Edit table name',
-      initial: { name: initialTableName },
       fields: [
         {
           name: 'name',
           message: 'The table name',
-          validate: (value: string) => {
+          initial: this.renderTableNameChange(initialTableName) ?? initialTableName,
+          validate: (value: string, state: ValidationState) => {
+            if (value === state.values.name) return true;
             return !emptyString(value) && !isReservedXataFieldName(value) && !this.existingTableName(value);
           }
         }
