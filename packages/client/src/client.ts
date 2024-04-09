@@ -2,7 +2,6 @@ import { ApiExtraProps, HostProvider, Schemas } from './api';
 import { FilesPlugin, FilesPluginResult } from './files';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
-import { CacheImpl, SimpleCache } from './schema/cache';
 import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { SQLPlugin, SQLPluginResult } from './sql';
@@ -18,7 +17,6 @@ export type BaseClientOptions = {
   apiKey?: string;
   databaseURL?: string;
   branch?: string;
-  cache?: CacheImpl;
   trace?: TraceFunction;
   enableBrowser?: boolean;
   clientName?: string;
@@ -49,7 +47,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const pluginOptions: XataPluginOptions = {
         ...this.#getFetchProps(safeOptions),
-        cache: safeOptions.cache,
         host: safeOptions.host,
         tables,
         branch: safeOptions.branch
@@ -98,7 +95,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const fetch = getFetchImplementation(options?.fetch);
       const databaseURL = options?.databaseURL || getDatabaseURL();
       const apiKey = options?.apiKey || getAPIKey();
-      const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
       const trace = options?.trace ?? defaultTrace;
       const clientName = options?.clientName;
       const host = options?.host ?? 'production';
@@ -138,7 +134,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         databaseURL,
         apiKey,
         branch,
-        cache,
         trace,
         host,
         clientID: generateUUID(),
