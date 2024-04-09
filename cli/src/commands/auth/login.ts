@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import { parseProviderString } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
-import { hasProfile, setProfile } from '../../credentials.js';
+import { buildProfile, hasProfile, setProfile } from '../../credentials.js';
 
 export default class Login extends BaseCommand<typeof Login> {
   static description = 'Authenticate with Xata';
@@ -50,11 +50,12 @@ export default class Login extends BaseCommand<typeof Login> {
       this.error('Invalid web host url, expected a valid url starting with http:// or https://');
     }
 
-    const key = flags['api-key'] ?? (await this.obtainKey(web ?? 'https://app.xata.io'));
+    const newProfile = buildProfile({ name: profile.name, api: flags.host, web });
+    const key = flags['api-key'] ?? (await this.obtainKey(newProfile.web));
 
     await this.verifyAPIKey({ ...profile, apiKey: key, host });
 
-    await setProfile(profile.name, { apiKey: key, api: flags.host, web });
+    await setProfile(profile.name, { ...newProfile, apiKey: key });
 
     this.success('All set! you can now start using xata');
   }

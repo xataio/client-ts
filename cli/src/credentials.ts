@@ -90,7 +90,7 @@ export function buildProfile(base: Partial<Credential> & { name: string }): Prof
   return {
     name: base.name,
     apiKey: base.apiKey ?? process.env.XATA_API_KEY ?? '',
-    web: base.web ?? process.env.XATA_WEB_URL ?? '',
+    web: base.web ?? process.env.XATA_WEB_URL ?? 'https://app.xata.io',
     host: parseProviderString(base.api ?? process.env.XATA_API_PROVIDER) ?? 'production'
   };
 }
