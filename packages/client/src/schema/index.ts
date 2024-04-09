@@ -4,7 +4,6 @@ import { XataRecord } from './record';
 import { Repository, RestRepository } from './repository';
 
 export * from './ask';
-export * from './cache';
 export { XataFile } from './files';
 export type { XataArrayFile } from './files';
 export * from './inference';
