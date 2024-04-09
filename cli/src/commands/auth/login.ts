@@ -46,10 +46,6 @@ export default class Login extends BaseCommand<typeof Login> {
     }
 
     const web = flags['web-host'];
-    if (/^https?:\/\//.test(web ?? '') === false) {
-      this.error('Invalid web host url, expected a valid url starting with http:// or https://');
-    }
-
     const newProfile = buildProfile({ name: profile.name, api: flags.host, web });
     const key = flags['api-key'] ?? (await this.obtainKey(newProfile.web));
 
