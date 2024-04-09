@@ -373,7 +373,7 @@ describe('SQL proxy', () => {
     expect(record2).toBeDefined();
     expect(record2?.[4]).toBe('[C] Planes');
   });
-  
+
   test('xata.sql has a connection string', async () => {
     expect(xata.sql.connectionString).toBeDefined();
     expect(xata.sql.connectionString).toMatch(
