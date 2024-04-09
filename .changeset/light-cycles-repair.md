@@ -1,5 +1,5 @@
 ---
-"@xata.io/client": major
+'@xata.io/client': major
 ---
 
 Make XataApiClient to use ES Proxies
