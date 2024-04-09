@@ -1,4 +1,3 @@
-import { RecordColumnTypes } from '@xata.io/client';
 import { z } from 'zod';
 
 // We need to do this because of problems with Zod and recursive types https://www.npmjs.com/package/zod#recursive-types
