@@ -188,6 +188,14 @@ const baseFetch = (url: string, request: any) => {
         }
       })
     };
+  } else if (
+    url === `https://test-1234.us-east-1.xata.sh/db/db1:main/migrations/jobs/1234` &&
+    request.method === 'GET'
+  ) {
+    return {
+      ok: true,
+      json: async () => ({ status: 'completed' })
+    };
   }
 
   throw new Error(`Unexpected fetch request: ${url} ${request.method}`);
