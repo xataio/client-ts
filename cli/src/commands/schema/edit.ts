@@ -388,7 +388,8 @@ Beware that this can lead to ${chalk.bold(
     if (!branchDetails) this.error('Could not get the schema from the current branch');
 
     if (flags.source) {
-      // todo implement editor
+      this.warn('Schema source editing is not supported yet. Please run the command without the --source flag.');
+      process.exit(0);
     } else {
       this.branchDetails = branchDetails;
       await this.showSchemaEdit();
@@ -455,14 +456,11 @@ Beware that this can lead to ${chalk.bold(
   async showColumnEdit(column: EditColumnPayload['column']) {
     this.clear();
     const template = `
-  {
-    alter_column: {
       name: \${name},
       column: ${column.originalName},
       nullable: \${nullable},
       unique: \${unique},
-    }
-  }`;
+      `;
     // TODO support default https://github.com/xataio/pgroll/issues/327
     // TODO support changing type https://github.com/xataio/pgroll/issues/328
     const snippet = new Snippet({
@@ -538,9 +536,6 @@ Beware that this can lead to ${chalk.bold(
   }) {
     this.clear();
     const template = `
-  {
-    add_column: {
-      column: {
         name: \${name},
         nullable: \${nullable},
         unique: \${unique},
@@ -550,10 +545,7 @@ Beware that this can lead to ${chalk.bold(
         vectorDimension: \${vectorDimension}
         defaultPublicAccess: \${defaultPublicAccess}
       },
-      table: ${tableName}
-    }
-  }
-}`;
+      table: ${tableName}`;
 
     const snippet = new Snippet({
       message: 'Add a column',
@@ -763,10 +755,11 @@ const createSpace = (): SelectChoice => {
 
 export const editsToMigrations = (command: EditSchema) => {
   // Duplicating here because if we remove items from class state they dont show on UI
-  let localTableAdditions: (AddTablePayload['table'] & { columns?: AddColumnPayload['column'][] })[] =
-    command.tableAdditions;
+  let localTableAdditions: (AddTablePayload['table'] & { columns?: AddColumnPayload['column'][] })[] = [
+    ...command.tableAdditions
+  ];
   let localTableEdits: EditTablePayload['table'][] = [...command.tableEdits];
-  const localTableDeletions: DeleteTablePayload[] = [...command.tableDeletions];
+  let localTableDeletions: DeleteTablePayload[] = [...command.tableDeletions];
   let localColumnAdditions: AddColumnPayload['column'][] = [...command.columnAdditions];
   let localColumnEdits: EditColumnPayload['column'][] = [...command.columnEdits];
   let localColumnDeletions: DeleteColumnPayload = Object.assign({}, command.columnDeletions);
@@ -795,13 +788,21 @@ export const editsToMigrations = (command: EditSchema) => {
     return localTableDeletions.find(({ name: tableName }) => tableName === name);
   };
 
+  // Remove table edits, additions for tables that are deleted
   localTableAdditions = localTableAdditions.filter(({ name }) => !isTableDeleted(name));
   localTableEdits = localTableEdits.filter(({ name }) => !isTableDeleted(name));
-  localColumnAdditions = localColumnAdditions.filter(({ tableName }) => !isTableDeleted(tableName));
 
+  // Remove column edits, additions and deletions for tables that are deleted
+  localColumnAdditions = localColumnAdditions.filter(({ tableName }) => !isTableDeleted(tableName));
   localColumnEdits = localColumnEdits.filter(({ tableName }) => !isTableDeleted(tableName));
   localColumnDeletions = Object.fromEntries(
     Object.entries(localColumnDeletions).filter(([tableName]) => !isTableDeleted(tableName))
+  );
+
+  // Remove the table deletion if the table is new
+  // checking table additions unfiltered because the deleted tables have already been removed
+  localTableDeletions = localTableDeletions.filter(
+    ({ name }) => !command.tableAdditions.find((addition) => addition.name === name)
   );
 
   const editsToNewTable = localTableEdits.filter(({ name }) =>
@@ -886,7 +887,6 @@ export const editsToMigrations = (command: EditSchema) => {
 
   const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(localColumnDeletions)
     .map((entry) => {
-      console.log('entry from localdeletions', localColumnDeletions);
       return entry[1].map((e) => {
         return {
           drop_column: {

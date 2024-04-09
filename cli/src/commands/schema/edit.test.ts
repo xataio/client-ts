@@ -435,47 +435,35 @@ describe('edits to migrations', () => {
 
   describe('new tables', () => {
     test('deleting a new table deletes all table edits', () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
       editCommand.tableDeletions.push({ name: 'table1' });
       editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          drop_table: { name: 'table1' }
-        }
-      ]);
+      expect(editCommand.currentMigration.operations).toEqual([]);
     });
     test('deleting a new table deletes all column edits', () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
       });
       editCommand.tableDeletions.push({ name: 'table1' });
       editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          drop_table: { name: 'table1' }
-        }
-      ]);
+      expect(editCommand.currentMigration.operations).toEqual([]);
     });
     test('deleting a new table deletes all column deletes', () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnDeletions['table1'] = ['col1'];
       editCommand.tableDeletions.push({ name: 'table1' });
       editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          drop_table: { name: 'table1' }
-        }
-      ]);
+      expect(editCommand.currentMigration.operations).toEqual([]);
     });
     test('deleting a new table deletes all column additions', () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnAdditions.push(column);
       editCommand.tableDeletions.push({ name: 'table1' });
       editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          drop_table: { name: 'table1' }
-        }
-      ]);
+      expect(editCommand.currentMigration.operations).toEqual([]);
     });
     test('editing a new table is bundled with the table addition', () => {
       editCommand.tableAdditions.push({ name: 'table1' });
@@ -497,6 +485,10 @@ describe('edits to migrations', () => {
         }
       ]);
     });
+    test.todo('adding a column on a new table with unique = false is sent correctly');
+    test.todo('adding a column on a new table with unique = true is sent correctly');
+    test.todo('adding a column on a new table with nullable = false is sent correctly');
+    test.todo('adding a column on a new table with nullable = true is sent correctly');
   });
 
   describe('existing tables with new columns', () => {
