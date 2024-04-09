@@ -1,5 +1,6 @@
 import { Args, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
+import { PgRollMigrationDefinition } from '@xata.io/pgroll';
 import { BaseCommand } from '../../base.js';
 import {
   LocalMigrationFile,
@@ -11,10 +12,10 @@ import {
   allMigrationsPgRollFormat,
   getBranchDetailsWithPgRoll,
   isBranchPgRollEnabled,
-  isMigrationPgRollFormat
+  isMigrationPgRollFormat,
+  waitForMigrationToFinish
 } from '../../migrations/pgroll.js';
 import { MigrationFilePgroll } from '../../migrations/schema.js';
-import { PgRollMigrationDefinition } from '@xata.io/pgroll';
 
 export default class Push extends BaseCommand<typeof Push> {
   static description = 'Push local changes to a remote Xata branch';
@@ -103,10 +104,12 @@ export default class Push extends BaseCommand<typeof Push> {
         .flatMap((migration) => PgRollMigrationDefinition.parse(migration));
       for (const migration of migrationsToPush) {
         try {
-          await xata.api.migrations.applyMigration({
+          const { jobID } = await xata.api.migrations.applyMigration({
             pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
             body: migration
           });
+
+          await waitForMigrationToFinish(xata.api, workspace, region, database, branch, jobID);
         } catch (e) {
           this.log(`Failed to push ${migration} with ${e}. Stopping.`);
           this.exit(1);
