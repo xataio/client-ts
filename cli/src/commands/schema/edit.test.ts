@@ -43,121 +43,148 @@ const column: AddColumnPayload['column'] = {
   tableName: 'table1'
 };
 
-describe('edits to migrations', () => {
-  describe('single edits to existing entities', () => {
-    test('add table', () => {
+const runTest = (name: string, fx: () => void, expectation: any) => {
+  test(name, () => {
+    fx();
+    editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+    expect(editCommand.currentMigration.operations).toEqual(expectation);
+  });
+};
+
+type TestCase = {
+  name: string;
+  fx: () => void;
+  expectation: any;
+  only?: boolean;
+};
+
+const testCases: TestCase[] = [
+  {
+    name: 'add table',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([{ create_table: { name: 'table1', columns: [] } }]);
-    });
-
-    test('delete table', () => {
+    },
+    expectation: [{ create_table: { name: 'table1', columns: [] } }]
+  },
+  {
+    name: 'delete table',
+    fx: () => {
       editCommand.tableDeletions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([{ drop_table: { name: 'table1' } }]);
-    });
-
-    test('edit table', () => {
+    },
+    expectation: [{ drop_table: { name: 'table1' } }]
+  },
+  {
+    name: 'edit table',
+    fx: () => {
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([{ rename_table: { from: 'table1', to: 'table2' } }]);
-    });
-
-    test('add column', () => {
+    },
+    expectation: [{ rename_table: { from: 'table1', to: 'table2' } }]
+  },
+  {
+    name: 'add column',
+    fx: () => {
       editCommand.columnAdditions.push(column);
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col1',
-              type: 'text',
-              nullable: true,
-              unique: false,
-              check: {
-                constraint: 'LENGTH("col1") <= 2048',
-                name: 'table1_xata_string_length_col1'
-              },
-              up: undefined,
-              comment: '{"xata.type":"string"}',
-              default: undefined,
-              references: undefined
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col1',
+            type: 'text',
+            nullable: true,
+            unique: false,
+            check: {
+              constraint: 'LENGTH("col1") <= 2048',
+              name: 'table1_xata_string_length_col1'
+            },
+            up: undefined,
+            comment: '{"xata.type":"string"}',
+            default: undefined,
+            references: undefined
           }
         }
-      ]);
-    });
-    test('add column default', () => {
+      }
+    ]
+  },
+  {
+    name: 'add column default',
+    fx: () => {
       editCommand.columnAdditions.push({
         ...column,
         type: 'int',
         defaultValue: '10000'
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col1',
-              type: 'bigint',
-              references: undefined,
-              default: "'10000'",
-              nullable: true,
-              unique: false
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col1',
+            type: 'bigint',
+            references: undefined,
+            default: "'10000'",
+            nullable: true,
+            unique: false
           }
         }
-      ]);
-    });
-    test('add column not null', () => {
+      }
+    ]
+  },
+  {
+    name: 'add column not null',
+    fx: () => {
       editCommand.columnAdditions.push({
         ...column,
         type: 'int',
         nullable: false
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col1',
-              type: 'bigint',
-              references: undefined,
-              up: '0',
-              nullable: false,
-              unique: false
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col1',
+            type: 'bigint',
+            references: undefined,
+            up: '0',
+            nullable: false,
+            unique: false
           }
         }
-      ]);
-    });
-    test('add column unique', () => {
+      }
+    ]
+  },
+  {
+    name: 'add column unique',
+    fx: () => {
       editCommand.columnAdditions.push({
         ...column,
         type: 'int',
         unique: true
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col1',
-              type: 'bigint',
-              references: undefined,
-              up: undefined,
-              nullable: true,
-              unique: true
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col1',
+            type: 'bigint',
+            references: undefined,
+            up: undefined,
+            nullable: true,
+            unique: true
           }
         }
-      ]);
-    });
-    test('add column file', () => {
+      }
+    ]
+  },
+  {
+    name: 'add column file',
+    fx: () => {
       editCommand.columnAdditions.push({
         ...column,
         type: 'file',
@@ -165,25 +192,27 @@ describe('edits to migrations', () => {
           defaultPublicAccess: false
         }
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col1',
-              comment: '{"xata.file.dpa":false}',
-              type: 'xata.xata_file',
-              references: undefined,
-              up: undefined,
-              nullable: true,
-              unique: false
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col1',
+            comment: '{"xata.file.dpa":false}',
+            type: 'xata.xata_file',
+            references: undefined,
+            up: undefined,
+            nullable: true,
+            unique: false
           }
         }
-      ]);
-    });
-    test('add column file[]', () => {
+      }
+    ]
+  },
+  {
+    name: 'add column file[]',
+    fx: () => {
       editCommand.columnAdditions.push({
         ...column,
         type: 'file[]',
@@ -191,25 +220,27 @@ describe('edits to migrations', () => {
           defaultPublicAccess: true
         }
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col1',
-              comment: '{"xata.file.dpa":true}',
-              type: 'xata.xata_file_array',
-              references: undefined,
-              up: undefined,
-              nullable: true,
-              unique: false
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col1',
+            comment: '{"xata.file.dpa":true}',
+            type: 'xata.xata_file_array',
+            references: undefined,
+            up: undefined,
+            nullable: true,
+            unique: false
           }
         }
-      ]);
-    });
-    test('add column vector', () => {
+      }
+    ]
+  },
+  {
+    name: 'add column vector',
+    fx: () => {
       editCommand.columnAdditions.push({
         ...column,
         type: 'vector',
@@ -217,173 +248,170 @@ describe('edits to migrations', () => {
           dimension: 10
         }
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col1',
-              check: {
-                constraint: 'ARRAY_LENGTH("col1", 1) = 10',
-                name: 'table1_xata_vector_length_col1'
-              },
-              type: 'real[]',
-              nullable: true,
-              unique: false,
-              comment: '{"xata.search.dimension":10}',
-              references: undefined,
-              up: undefined,
-              default: undefined
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col1',
+            check: {
+              constraint: 'ARRAY_LENGTH("col1", 1) = 10',
+              name: 'table1_xata_vector_length_col1'
+            },
+            type: 'real[]',
+            nullable: true,
+            unique: false,
+            comment: '{"xata.search.dimension":10}',
+            references: undefined,
+            up: undefined,
+            default: undefined
           }
         }
-      ]);
-    });
-    test('add link column', () => {
+      }
+    ]
+  },
+  {
+    name: 'add link column',
+    fx: () => {
       editCommand.columnAdditions.push({
         ...column,
         type: 'link',
         link: { table: 'table2' }
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col1',
-              type: 'text',
-              nullable: true,
-              unique: false,
-              comment: '{"xata.link":"table2"}',
-              references: {
-                column: 'xata_id',
-                name: 'col1_link',
-                on_delete: 'SET NULL',
-                table: 'table2'
-              },
-              default: undefined,
-              up: undefined
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col1',
+            type: 'text',
+            nullable: true,
+            unique: false,
+            comment: '{"xata.link":"table2"}',
+            references: {
+              column: 'xata_id',
+              name: 'col1_link',
+              on_delete: 'SET NULL',
+              table: 'table2'
+            },
+            default: undefined,
+            up: undefined
           }
         }
-      ]);
-    });
-
-    test('edit column', () => {
+      }
+    ]
+  },
+  {
+    name: 'edit column',
+    fx: () => {
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          alter_column: {
-            name: 'col2',
-            column: 'col1',
-            nullable: true,
-            table: 'table1',
-            // Todo fix this. alter_column should not be boolean
-            unique: undefined,
-            down: '"col2"',
-            up: '"col2"'
-          }
+    },
+    expectation: [
+      {
+        alter_column: {
+          name: 'col2',
+          column: 'col1',
+          nullable: true,
+          table: 'table1',
+          // Todo fix this. alter_column should not be boolean
+          unique: undefined,
+          down: '"col2"',
+          up: '"col2"'
         }
-      ]);
-    });
-
-    test('edit column nullable to not nullable', () => {
+      }
+    ]
+  },
+  {
+    name: 'edit column nullable to not nullable',
+    fx: () => {
       editCommand.columnEdits.push({
         ...column,
         nullable: false
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          alter_column: {
-            // todo name should not be in here
-            name: 'col1',
-            column: 'col1',
-            nullable: false,
-            table: 'table1',
-            unique: undefined,
-            down: '"col1"',
-            up: '"col1"'
-          }
+    },
+    expectation: [
+      {
+        alter_column: {
+          name: 'col1',
+          column: 'col1',
+          nullable: false,
+          table: 'table1',
+          unique: undefined,
+          down: '"col1"',
+          up: '"col1"'
         }
-      ]);
-    });
-
-    test('edit column not unique to unique', () => {
+      }
+    ]
+  },
+  {
+    name: 'edit column not unique to unique',
+    fx: () => {
       editCommand.columnEdits.push({
         ...column,
         unique: true
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          alter_column: {
-            // todo name should not be in here
-            name: 'col1',
-            column: 'col1',
-            // todo nullable should not be in here
-            nullable: true,
-            table: 'table1',
-            unique: {
-              name: 'unique_constraint_table1_col1'
-            },
-            down: '"col1"',
-            up: '"col1"'
+    },
+    expectation: [
+      {
+        alter_column: {
+          // todo name should not be in here
+          name: 'col1',
+          column: 'col1',
+          // todo nullable should not be in here
+          nullable: true,
+          down: '"col1"',
+          up: '"col1"',
+          table: 'table1',
+          unique: {
+            name: 'unique_constraint_table1_col1'
           }
         }
-      ]);
-    });
-
-    test('delete column', () => {
-      editCommand.columnDeletions['table1'] = ['col1'];
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          drop_column: {
-            column: 'col1',
-            table: 'table1'
-          }
-        }
-      ]);
-    });
-  });
-
-  describe('multiple edits to existing entities', () => {
-    test('deleting an existing table deletes all table edits', () => {
+      }
+    ]
+  },
+  {
+    name: 'deleting an existing table deletes all table edits',
+    fx: () => {
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
       editCommand.tableDeletions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([{ drop_table: { name: 'table1' } }]);
-    });
-    test('deleting an existing table deletes all column edits', () => {
+    },
+    expectation: [{ drop_table: { name: 'table1' } }]
+  },
+  {
+    name: 'deleting an existing table deletes all column edits',
+    fx: () => {
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
       });
       editCommand.tableDeletions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([{ drop_table: { name: 'table1' } }]);
-    });
-    test('deleting an existing table deletes all column deletes', () => {
+    },
+    expectation: [{ drop_table: { name: 'table1' } }]
+  },
+  {
+    name: 'deleting an existing table deletes all column deletes',
+    fx: () => {
       editCommand.columnDeletions['table1'] = ['col1'];
       editCommand.tableDeletions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([{ drop_table: { name: 'table1' } }]);
-    });
-    test('deleting an existing table deletes all column additions', () => {
+    },
+    expectation: [{ drop_table: { name: 'table1' } }]
+  },
+  {
+    name: 'deleting an existing table deletes all column additions',
+    fx: () => {
       editCommand.columnAdditions.push(column);
       editCommand.tableDeletions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([{ drop_table: { name: 'table1' } }]);
-    });
-
-    test('creating a new column and deleting an existing table', () => {
+    },
+    expectation: [{ drop_table: { name: 'table1' } }]
+  },
+  {
+    name: 'creating a new column and deleting an existing table',
+    fx: () => {
       editCommand.columnAdditions.push(column);
       editCommand.columnDeletions['table1'] = ['col1'];
       editCommand.columnAdditions.push({
@@ -391,222 +419,244 @@ describe('edits to migrations', () => {
         originalName: 'col2',
         name: 'col2'
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col2',
-              type: 'text',
-              nullable: true,
-              unique: false,
-              check: {
-                constraint: 'LENGTH("col2") <= 2048',
-                name: 'table1_xata_string_length_col2'
-              },
-              comment: '{"xata.type":"string"}',
-              default: undefined,
-              references: undefined,
-              up: undefined
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col2',
+            type: 'text',
+            nullable: true,
+            unique: false,
+            check: {
+              constraint: 'LENGTH("col2") <= 2048',
+              name: 'table1_xata_string_length_col2'
+            },
+            comment: '{"xata.type":"string"}',
+            default: undefined,
+            references: undefined,
+            up: undefined
           }
         }
-      ]);
-    });
-
-    test('deleting an existing column deletes all column edits', () => {
+      }
+    ]
+  },
+  {
+    name: 'deleting an existing column deletes all column edits',
+    fx: () => {
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
       });
       editCommand.columnDeletions['table1'] = ['col1'];
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          drop_column: {
-            column: 'col1',
-            table: 'table1'
-          }
+    },
+    expectation: [
+      {
+        drop_column: {
+          column: 'col1',
+          table: 'table1'
         }
-      ]);
-    });
-  });
+      }
+    ]
+  },
 
-  describe('new tables', () => {
-    test('deleting a new table deletes all table edits', () => {
+  {
+    name: 'deleting a new table deletes all table edits',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
       editCommand.tableDeletions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([]);
-    });
-    test('deleting a new table deletes all column edits', () => {
+    },
+    expectation: []
+  },
+  {
+    name: 'deleting a new table deletes all column edits',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
       });
       editCommand.tableDeletions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([]);
-    });
-    test('deleting a new table deletes all column deletes', () => {
+    },
+    expectation: []
+  },
+
+  {
+    name: 'deleting a new table deletes all column deletes',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnDeletions['table1'] = ['col1'];
       editCommand.tableDeletions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([]);
-    });
-    test('deleting a new table deletes all column additions', () => {
+    },
+    expectation: []
+  },
+
+  {
+    name: 'deleting a new table deletes all column additions',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnAdditions.push(column);
       editCommand.tableDeletions.push({ name: 'table1' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([]);
-    });
-    test('editing a new table is bundled with the table addition', () => {
+    },
+    expectation: []
+  },
+  {
+    name: 'editing a new table is bundled with the table addition',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          create_table: { name: 'table2', columns: [] }
-        }
-      ]);
-    });
-    test('editing a new table removes the table edit', () => {
+    },
+    expectation: [
+      {
+        create_table: { name: 'table2', columns: [] }
+      }
+    ]
+  },
+  {
+    name: 'editing a new table removes the table edit',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          create_table: { name: 'table2', columns: [] }
-        }
-      ]);
-    });
-    test('adding a column on a new table with unique = false is sent correctly', () => {
+    },
+    expectation: [
+      {
+        create_table: { name: 'table2', columns: [] }
+      }
+    ]
+  },
+  {
+    name: 'adding a column on a new table with unique = false is sent correctly',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnAdditions.push({
         ...column,
         type: 'float',
         unique: true
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          create_table: {
-            name: 'table1',
-            columns: [
-              {
-                name: 'col1',
-                type: 'double precision',
-                nullable: true,
-                unique: true,
-                default: undefined,
-                references: undefined,
-                up: undefined
-              }
-            ]
-          }
+    },
+    expectation: [
+      {
+        create_table: {
+          name: 'table1',
+          columns: [
+            {
+              name: 'col1',
+              type: 'double precision',
+              nullable: true,
+              unique: true,
+              default: undefined,
+              references: undefined,
+              up: undefined
+            }
+          ]
         }
-      ]);
-    });
-    test('adding a column on a new table with unique = true is sent correctly', () => {
-      editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnAdditions.push({
-        ...column,
-        type: 'float',
-        unique: false
-      });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          create_table: {
-            name: 'table1',
-            columns: [
-              {
-                name: 'col1',
-                type: 'double precision',
-                nullable: true,
-                unique: false,
-                default: undefined,
-                references: undefined,
-                up: undefined
-              }
-            ]
-          }
-        }
-      ]);
-    });
-    test('adding a column on a new table with nullable = false is sent correctly', () => {
+      }
+    ]
+  },
+  {
+    name: 'adding a column on a new table with nullable = false is sent correctly',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnAdditions.push({
         ...column,
         type: 'float',
         nullable: false
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          create_table: {
-            name: 'table1',
-            columns: [
-              {
-                name: 'col1',
-                type: 'double precision',
-                nullable: false,
-                unique: false,
-                default: undefined,
-                references: undefined,
-                up: '0'
-              }
-            ]
-          }
+    },
+    expectation: [
+      {
+        create_table: {
+          name: 'table1',
+          columns: [
+            {
+              name: 'col1',
+              type: 'double precision',
+              nullable: false,
+              unique: false,
+              default: undefined,
+              references: undefined,
+              up: '0'
+            }
+          ]
         }
-      ]);
-    });
-    test('adding a column on a new table with nullable = true is sent correctly', () => {
+      }
+    ]
+  },
+  {
+    name: 'adding a column on a new table with nullable = false is sent correctly',
+    fx: () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
+      editCommand.columnAdditions.push({
+        ...column,
+        type: 'float',
+        nullable: false
+      });
+    },
+    expectation: [
+      {
+        create_table: {
+          name: 'table1',
+          columns: [
+            {
+              name: 'col1',
+              type: 'double precision',
+              nullable: false,
+              unique: false,
+              default: undefined,
+              references: undefined,
+              up: '0'
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    name: 'adding a column on a new table with nullable = true is sent correctly',
+    fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnAdditions.push({
         ...column,
         type: 'float',
         nullable: true
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          create_table: {
-            name: 'table1',
-            columns: [
-              {
-                name: 'col1',
-                type: 'double precision',
-                nullable: true,
-                unique: false,
-                default: undefined,
-                references: undefined,
-                up: undefined
-              }
-            ]
-          }
+    },
+    expectation: [
+      {
+        create_table: {
+          name: 'table1',
+          columns: [
+            {
+              name: 'col1',
+              type: 'double precision',
+              nullable: true,
+              unique: false,
+              default: undefined,
+              references: undefined,
+              up: undefined
+            }
+          ]
         }
-      ]);
-    });
-  });
-
-  describe('existing tables with new columns', () => {
-    test('deleting a new column deletes all column additions, edit and deletions', () => {
+      }
+    ]
+  },
+  {
+    name: 'deleting a new column deletes all column additions, edit and deletions',
+    fx: () => {
       editCommand.columnAdditions.push(column);
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
       });
       editCommand.columnDeletions['table1'] = ['col1'];
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([]);
-    });
-    test('deleting a newly created column does not remove other deletes', () => {
+    },
+    expectation: []
+  },
+  {
+    name: 'deleting a newly created column does not remove other deletes',
+    fx: () => {
       editCommand.columnDeletions['table1'] = ['col1'];
       editCommand.columnAdditions.push({
         ...column,
@@ -615,17 +665,19 @@ describe('edits to migrations', () => {
         type: 'float'
       });
       editCommand.columnDeletions['table1'].push('col2');
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          drop_column: {
-            column: 'col1',
-            table: 'table1'
-          }
+    },
+    expectation: [
+      {
+        drop_column: {
+          column: 'col1',
+          table: 'table1'
         }
-      ]);
-    });
-    test('adding a newly created column and making edit', () => {
+      }
+    ]
+  },
+  {
+    name: 'adding a newly created column and making edit',
+    fx: () => {
       editCommand.columnAdditions.push({
         ...column,
         type: 'float'
@@ -636,36 +688,83 @@ describe('edits to migrations', () => {
         nullable: false,
         unique: true
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
-              name: 'col5',
-              type: 'double precision',
-              nullable: false,
-              unique: true,
-              default: undefined,
-              references: undefined,
-              up: '0'
-            }
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col5',
+            type: 'double precision',
+            nullable: false,
+            unique: true,
+            default: undefined,
+            references: undefined,
+            up: '0'
           }
         }
-      ]);
-    });
-    test('editing a new column in an existing table removes the column edit, and gets sent in add_column', () => {
+      }
+    ]
+  },
+  {
+    name: 'editing a new column in an existing table removes the column edit, and gets sent in add_column',
+    fx: () => {
       editCommand.columnAdditions.push(column);
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
       });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          add_column: {
-            table: 'table1',
-            column: {
+    },
+    expectation: [
+      {
+        add_column: {
+          table: 'table1',
+          column: {
+            name: 'col2',
+            type: 'text',
+            nullable: true,
+            unique: false,
+            check: {
+              constraint: 'LENGTH("col2") <= 2048',
+              name: 'table1_xata_string_length_col2'
+            },
+            comment: '{"xata.type":"string"}',
+            default: undefined,
+            references: undefined,
+            up: undefined
+          }
+        }
+      }
+    ]
+  },
+  {
+    name: 'deleting a new column deletes all column additions, edits, and deletions',
+    fx: () => {
+      editCommand.columnAdditions.push(column);
+      editCommand.columnEdits.push({
+        ...column,
+        name: 'col2'
+      });
+      editCommand.columnDeletions['table1'] = ['col1'];
+    },
+    expectation: []
+  },
+  {
+    name: 'editing a new column in a new table removes the column edit',
+    fx: () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
+      editCommand.columnAdditions.push(column);
+      editCommand.columnEdits.push({
+        ...column,
+        name: 'col2'
+      });
+    },
+    expectation: [
+      {
+        create_table: {
+          name: 'table1',
+          columns: [
+            {
               name: 'col2',
               type: 'text',
               nullable: true,
@@ -676,64 +775,15 @@ describe('edits to migrations', () => {
               },
               comment: '{"xata.type":"string"}',
               default: undefined,
-              references: undefined,
-              up: undefined
+              references: undefined
             }
-          }
+          ]
         }
-      ]);
-    });
-  });
+      }
+    ]
+  }
+];
 
-  describe('new tables with new columns', () => {
-    test('deleting a new column deletes all column additions, edits, and deletions', () => {
-      editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnAdditions.push(column);
-      editCommand.columnEdits.push({
-        ...column,
-        name: 'col2'
-      });
-      editCommand.columnDeletions['table1'] = ['col1'];
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          create_table: {
-            name: 'table1',
-            columns: []
-          }
-        }
-      ]);
-    });
-    test('editing a new column in a new table removes the column edit', () => {
-      editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnAdditions.push(column);
-      editCommand.columnEdits.push({
-        ...column,
-        name: 'col2'
-      });
-      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
-      expect(editCommand.currentMigration.operations).toEqual([
-        {
-          create_table: {
-            name: 'table1',
-            columns: [
-              {
-                name: 'col2',
-                type: 'text',
-                nullable: true,
-                unique: false,
-                check: {
-                  constraint: 'LENGTH("col2") <= 2048',
-                  name: 'table1_xata_string_length_col2'
-                },
-                comment: '{"xata.type":"string"}',
-                default: undefined,
-                references: undefined
-              }
-            ]
-          }
-        }
-      ]);
-    });
-  });
+describe('edits to migrations', () => {
+  testCases.forEach(({ name, fx, expectation }) => runTest(name, fx, expectation));
 });
