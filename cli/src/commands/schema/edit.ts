@@ -312,7 +312,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       .find((entry) => entry[1].includes(column.originalName));
     const isTableDeleted = this.tableDeletions.find(({ name }) => name === column.tableName);
 
-    const uniqueDisplay = () => {
+    const displayUnique = () => {
       const currentUniqueValue = this.renderColumnUnique({ column });
       if (currentUniqueValue !== column.unique) {
         return currentUniqueValue ? chalk.green('unique') : chalk.green('not unique');
@@ -320,7 +320,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       return currentUniqueValue ? chalk.gray.italic('unique') : '';
     };
 
-    const nullableDisplay = () => {
+    // todo better names, render versus display not obvious
+    const displayNullable = () => {
       const currentNullableValue = this.renderColumnNullable({ column });
       if (currentNullableValue !== column.nullable) {
         return currentNullableValue ? chalk.green('nullable') : chalk.green('not nullable');
@@ -330,8 +331,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
     const metadata = [
       `${chalk.gray.italic(column.type)}${column.type === 'link' ? ` → ${chalk.gray.italic(column.link?.table)}` : ''}`,
-      uniqueDisplay(),
-      nullableDisplay(),
+      displayUnique(),
+      displayNullable(),
       column.defaultValue ? chalk.gray.italic(`default: ${column.defaultValue}`) : ''
     ]
       .filter(Boolean)
@@ -864,31 +865,6 @@ export const editsToMigrations = (command: EditSchema) => {
     };
   });
 
-  const augmentColumns = (
-    columns: AddColumnPayload['column'][]
-  ): { column: OpAddColumn['column']; tableName: string }[] => {
-    return columns.map((column) => ({
-      tableName: column.tableName,
-      column: {
-        name: column.name,
-        type: xataColumnTypeToPgRoll(column.type as any),
-        references:
-          column.type === 'link'
-            ? generateLinkReference({ column: column.name, table: column.link?.table ?? '' })
-            : undefined,
-        default:
-          column.defaultValue !== null && column.defaultValue !== undefined ? `'${column.defaultValue}'` : undefined,
-        nullable: parseBoolean(String(column.nullable)) ?? true,
-        unique: parseBoolean(String(column.unique)) ?? false,
-        check: xataColumnTypeToPgRollConstraint(column as any, column.tableName),
-        comment: xataColumnTypeToPgRollComment(column as any),
-        up: requiresUpArgument(column.nullable === false, column.defaultValue)
-          ? xataColumnTypeToZeroValue(column.type as any, column.defaultValue)
-          : undefined
-      }
-    }));
-  };
-
   const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(localColumnDeletions)
     .map((entry) => {
       return entry[1].map((e) => {
@@ -966,6 +942,32 @@ export const editsToMigrations = (command: EditSchema) => {
   return [...columnDeletions, ...tableDeletions, ...tableAdditions, ...columnAdditions, ...columnEdits, ...tableEdits];
 };
 
+// todo add to pgroll file?
+const augmentColumns = (
+  columns: AddColumnPayload['column'][]
+): { column: OpAddColumn['column']; tableName: string }[] => {
+  return columns.map((column) => ({
+    tableName: column.tableName,
+    column: {
+      name: column.name,
+      type: xataColumnTypeToPgRoll(column.type as any),
+      references:
+        column.type === 'link'
+          ? generateLinkReference({ column: column.name, table: column.link?.table ?? '' })
+          : undefined,
+      default:
+        column.defaultValue !== null && column.defaultValue !== undefined ? `'${column.defaultValue}'` : undefined,
+      nullable: parseBoolean(String(column.nullable)) ?? true,
+      unique: parseBoolean(String(column.unique)) ?? false,
+      check: xataColumnTypeToPgRollConstraint(column as any, column.tableName),
+      comment: xataColumnTypeToPgRollComment(column as any),
+      up: requiresUpArgument(column.nullable === false, column.defaultValue)
+        ? xataColumnTypeToZeroValue(column.type as any, column.defaultValue)
+        : undefined
+    }
+  }));
+};
+
 async function waitForMigrationToFinish(
   api: XataApiClient,
   workspace: string,
@@ -993,6 +995,7 @@ const isReservedXataFieldName = (name: string) => {
   return name.toLowerCase().startsWith('xata_');
 };
 
+// todo add to helpers file?
 function parseBoolean(value?: string) {
   if (!value) return undefined;
   const val = value.toLowerCase();
