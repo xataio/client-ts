@@ -10,7 +10,13 @@ import url, { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export function handler(publicKey: string, privateKey: string, passphrase: string, callback: (apiKey: string) => void) {
+export function handler(
+  webHost: string,
+  publicKey: string,
+  privateKey: string,
+  passphrase: string,
+  callback: (apiKey: string) => void
+) {
   return (req: http.IncomingMessage, res: http.ServerResponse) => {
     try {
       if (req.method !== 'GET') {
@@ -22,7 +28,7 @@ export function handler(publicKey: string, privateKey: string, passphrase: strin
       if (parsedURL.pathname === '/new') {
         const port = req.socket.localPort ?? 80;
         res.writeHead(302, {
-          location: generateURL(port, publicKey)
+          location: generateURL(webHost, port, publicKey)
         });
         res.end();
         return;
@@ -58,14 +64,14 @@ function renderSuccessPage(req: http.IncomingMessage, res: http.ServerResponse, 
   res.end(html.replace('data-color-mode=""', `data-color-mode="${colorMode}"`));
 }
 
-export function generateURL(port: number, publicKey: string) {
+export function generateURL(webHost: string, port: number, publicKey: string) {
   const pub = publicKey
     .replace(/\n/g, '')
     .replace('-----BEGIN PUBLIC KEY-----', '')
     .replace('-----END PUBLIC KEY-----', '');
   const name = 'Xata CLI';
   const redirect = `http://localhost:${port}`;
-  const url = new URL('https://app.xata.io/new-api-key');
+  const url = new URL(`${webHost}/new-api-key`);
   url.searchParams.append('pub', pub);
   url.searchParams.append('name', name);
   url.searchParams.append('redirect', redirect);
@@ -90,19 +96,19 @@ export function generateKeys() {
   return { publicKey, privateKey, passphrase };
 }
 
-export async function createAPIKeyThroughWebUI() {
+export async function createAPIKeyThroughWebUI(webHost: string) {
   const { publicKey, privateKey, passphrase } = generateKeys();
 
   return new Promise<string>((resolve) => {
     const server = http.createServer(
-      handler(publicKey, privateKey, passphrase, (apiKey) => {
+      handler(webHost, publicKey, privateKey, passphrase, (apiKey) => {
         resolve(apiKey);
         server.close();
       })
     );
     server.listen(() => {
       const { port } = server.address() as AddressInfo;
-      const openURL = generateURL(port, publicKey);
+      const openURL = generateURL(webHost, port, publicKey);
       console.log(
         `We are opening your default browser. If your browser doesn't open automatically, please copy and paste the following URL into your browser: ${chalk.bold(
           `http://localhost:${port}/new`

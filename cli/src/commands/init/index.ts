@@ -395,7 +395,7 @@ export default class Init extends BaseCommand<typeof Init> {
     let apiKey = profile.apiKey;
 
     if (!apiKey) {
-      apiKey = await createAPIKeyThroughWebUI();
+      apiKey = await createAPIKeyThroughWebUI(profile.web);
       this.apiKeyLocation = 'new';
       // Any following API call must use this API key
       process.env.XATA_API_KEY = apiKey;
