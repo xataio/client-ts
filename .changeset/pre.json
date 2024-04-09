@@ -6,8 +6,6 @@
     "@xata.io/client": "0.28.2",
     "@xata.io/codegen": "0.28.2",
     "@xata.io/importer": "1.1.3",
-    "@xata.io/plugin-client-cache": "0.1.39",
-    "@xata.io/plugin-client-cloudflare": "0.0.38",
     "@xata.io/drizzle": "0.0.13",
     "@xata.io/kysely": "0.1.13",
     "@xata.io/netlify": "0.1.23",

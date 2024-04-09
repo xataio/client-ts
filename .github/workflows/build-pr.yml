@@ -106,8 +106,6 @@ jobs:
           cat << EOF > .changeset/force-canary-build.md
           ---
           '@xata.io/plugin-client-opentelemetry': patch
-          '@xata.io/plugin-client-cloudflare': patch
-          '@xata.io/plugin-client-cache': patch
           '@xata.io/drizzle': patch
           '@xata.io/kysely': patch
           '@xata.io/pgroll': patch
