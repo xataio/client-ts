@@ -36,7 +36,6 @@ import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
 import { AskOptions, AskResult } from './ask';
-import { CacheImpl } from './cache';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter } from './filters';
 import { parseJson, stringifyJson } from './json';
@@ -815,7 +814,6 @@ export class RestRepository<Record extends XataRecord>
   #table: string;
   #getFetchProps: () => ApiExtraProps;
   #db: SchemaPluginResult<any>;
-  #cache?: CacheImpl;
   #schemaTables?: Schemas.Table[];
   #trace: TraceFunction;
 
@@ -833,7 +831,6 @@ export class RestRepository<Record extends XataRecord>
 
     this.#table = options.table;
     this.#db = options.db;
-    this.#cache = options.pluginOptions.cache;
     this.#schemaTables = options.schemaTables;
     this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
 
@@ -1852,9 +1849,6 @@ export class RestRepository<Record extends XataRecord>
 
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
     return this.#trace('query', async () => {
-      const cacheQuery = await this.#getCacheQuery<Result>(query);
-      if (cacheQuery) return new Page<Record, Result>(query, cacheQuery.meta, cacheQuery.records);
-
       const data = query.getQueryOptions();
 
       const { meta, records: objects } = await queryTable({
@@ -1885,7 +1879,6 @@ export class RestRepository<Record extends XataRecord>
           (data.columns as SelectableColumn<Result>[]) ?? ['*']
         )
       );
-      await this.#setCacheQuery(query, meta, records);
 
       return new Page<Record, Result>(query, meta, records);
     });
@@ -1961,25 +1954,6 @@ export class RestRepository<Record extends XataRecord>
     } else {
       return askTableSession(params as any);
     }
-  }
-
-  async #setCacheQuery(query: Query<Record, XataRecord>, meta: RecordsMetadata, records: XataRecord[]): Promise<void> {
-    await this.#cache?.set(`query_${this.#table}:${query.key()}`, { date: new Date(), meta, records });
-  }
-
-  async #getCacheQuery<T extends XataRecord>(
-    query: Query<Record, XataRecord>
-  ): Promise<{ meta: RecordsMetadata; records: T[] } | null> {
-    const key = `query_${this.#table}:${query.key()}`;
-    const result = await this.#cache?.get<{ date: Date; meta: RecordsMetadata; records: T[] }>(key);
-    if (!result) return null;
-
-    const defaultTTL = this.#cache?.defaultQueryTTL ?? -1;
-    const { cache: ttl = defaultTTL } = query.getQueryOptions();
-    if (ttl < 0) return null;
-
-    const hasExpired = result.date.getTime() + ttl < Date.now();
-    return hasExpired ? null : result;
   }
 
   async #getSchemaTables(): Promise<Schemas.Table[]> {
