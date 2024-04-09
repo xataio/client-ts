@@ -485,10 +485,114 @@ describe('edits to migrations', () => {
         }
       ]);
     });
-    test.todo('adding a column on a new table with unique = false is sent correctly');
-    test.todo('adding a column on a new table with unique = true is sent correctly');
-    test.todo('adding a column on a new table with nullable = false is sent correctly');
-    test.todo('adding a column on a new table with nullable = true is sent correctly');
+    test('adding a column on a new table with unique = false is sent correctly', () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
+      editCommand.columnAdditions.push({
+        ...column,
+        type: 'float',
+        unique: true
+      });
+      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+      expect(editCommand.currentMigration.operations).toEqual([
+        {
+          create_table: {
+            name: 'table1',
+            columns: [
+              {
+                name: 'col1',
+                type: 'double precision',
+                nullable: true,
+                unique: true,
+                default: undefined,
+                references: undefined,
+                up: undefined
+              }
+            ]
+          }
+        }
+      ]);
+    });
+    test('adding a column on a new table with unique = true is sent correctly', () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
+      editCommand.columnAdditions.push({
+        ...column,
+        type: 'float',
+        unique: false
+      });
+      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+      expect(editCommand.currentMigration.operations).toEqual([
+        {
+          create_table: {
+            name: 'table1',
+            columns: [
+              {
+                name: 'col1',
+                type: 'double precision',
+                nullable: true,
+                unique: false,
+                default: undefined,
+                references: undefined,
+                up: undefined
+              }
+            ]
+          }
+        }
+      ]);
+    });
+    test('adding a column on a new table with nullable = false is sent correctly', () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
+      editCommand.columnAdditions.push({
+        ...column,
+        type: 'float',
+        nullable: false
+      });
+      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+      expect(editCommand.currentMigration.operations).toEqual([
+        {
+          create_table: {
+            name: 'table1',
+            columns: [
+              {
+                name: 'col1',
+                type: 'double precision',
+                nullable: false,
+                unique: false,
+                default: undefined,
+                references: undefined,
+                up: '0'
+              }
+            ]
+          }
+        }
+      ]);
+    });
+    test('adding a column on a new table with nullable = true is sent correctly', () => {
+      editCommand.tableAdditions.push({ name: 'table1' });
+      editCommand.columnAdditions.push({
+        ...column,
+        type: 'float',
+        nullable: true
+      });
+      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+      expect(editCommand.currentMigration.operations).toEqual([
+        {
+          create_table: {
+            name: 'table1',
+            columns: [
+              {
+                name: 'col1',
+                type: 'double precision',
+                nullable: true,
+                unique: false,
+                default: undefined,
+                references: undefined,
+                up: undefined
+              }
+            ]
+          }
+        }
+      ]);
+    });
   });
 
   describe('existing tables with new columns', () => {

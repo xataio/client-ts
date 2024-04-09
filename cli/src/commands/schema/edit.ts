@@ -638,7 +638,7 @@ Beware that this can lead to ${chalk.bold(
         name: values.name,
         type: values.type,
         nullable: parseBoolean(values.nullable) ?? true,
-        unique: parseBoolean(values.nullable) ?? false,
+        unique: parseBoolean(values.unique) ?? false,
         defaultValue: values.default,
         link: values.link ? { table: values.link } : undefined,
         vector: values.vectorDimension ? { dimension: values.vectorDimension } : undefined,
