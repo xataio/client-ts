@@ -27,16 +27,6 @@ describe('base64 big fata', () => {
 describe('base64 convert', () => {
   const checks = ['a', 'aa', 'aaa', 'hi', 'hi!', 'hi!!', 'sup', 'sup?', 'sup?!'];
 
-  function equal(a: Uint8Array, b: Uint8Array) {
-    let i;
-    const length = a.length;
-    if (length !== b.length) return false;
-    for (i = 0; i < length; ++i) {
-      if ((a[i] & 0xff) !== (b[i] & 0xff)) return false;
-    }
-    return true;
-  }
-
   function map(arr: any, callback: any) {
     const res = [];
     let kValue, mappedValue;
