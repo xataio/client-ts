@@ -86,74 +86,80 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
   async showSchemaEdit() {
     const tableChoices: SelectChoice[] = [];
-    const schemaChoice: SelectChoice = {
-      name: { type: 'schema' },
-      message: 'Tables',
-      role: 'heading',
-      choices: tableChoices
-    };
+    const select = new Select({
+      message: 'Schema for database test:main',
+      initial: this.activeIndex,
+      choices: [
+        {
+          name: { type: 'schema' },
+          message: 'Tables',
+          role: 'heading',
+          choices: tableChoices
+        }
+      ],
+      footer:
+        'Use the ↑ ↓ arrows to move across the schema, enter to edit or add things, delete or backspace to delete things.'
+    });
 
-    const tablesToLoop = [
+    for (const table of [
       ...this.branchDetails!.schema.tables,
       ...this.tableAdditions.map((addition) => ({
         name: addition.name,
         columns: []
       }))
-    ];
-    for (const table of tablesToLoop) {
-      const columnChoices: SelectChoice[] = [];
+    ]) {
       tableChoices.push({
         name: { type: 'edit-table', table: { name: table.name, newName: table.name } },
-        message: this.renderTableName(table.name),
-        choices: columnChoices
-      });
-      const columns = Object.values(table.columns);
-      const choices: SelectChoice[] = columns
-        .filter(({ name }) => !isReservedXataFieldName(name))
-        .map((column) => {
-          const col: EditColumnPayload['column'] = {
-            name: column.name,
-            unique: column.unique ?? false,
-            type: column.type,
-            nullable: column.notNull === true ? false : true,
-            tableName: table.name,
-            originalName: column.name,
-            defaultValue: column.defaultValue ?? undefined,
-            vector: column.vector ? { dimension: column.vector.dimension } : undefined,
-            link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
-            file: column.type === 'file' ? { defaultPublicAccess: false } : undefined,
-            'file[]': column.type === 'file[]' ? { defaultPublicAccess: false } : undefined
-          };
-          const item: SelectChoice = {
+        message: this.renderTableMessage(table.name),
+        choices: [
+          ...Object.values(table.columns)
+            .filter(({ name }) => !isReservedXataFieldName(name))
+            .map((column) => {
+              const col: EditColumnPayload['column'] = {
+                // todo abstract into function
+                name: column.name,
+                unique: column.unique ?? false,
+                type: column.type,
+                nullable: column.notNull === true ? false : true,
+                tableName: table.name,
+                originalName: column.name,
+                defaultValue: column.defaultValue ?? undefined,
+                vector: column.vector ? { dimension: column.vector.dimension } : undefined,
+                link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
+                file: column.type === 'file' ? { defaultPublicAccess: false } : undefined,
+                'file[]': column.type === 'file[]' ? { defaultPublicAccess: false } : undefined
+              };
+              return {
+                name: {
+                  type: 'edit-column',
+                  column: col
+                },
+                message: this.renderColumnMessage({ column: col }),
+                disabled: editTableDisabled(table.name, this.tableDeletions)
+              } as SelectChoice;
+            }),
+          ...this.columnAdditions
+            .filter((addition) => addition.tableName === table.name)
+            .map((addition) => {
+              // todo abstract into function
+              const formatted = { ...addition, tableName: table.name, originalName: addition.name };
+              return {
+                name: { type: 'edit-column', column: formatted },
+                message: this.renderColumnMessage({ column: formatted }),
+                disabled: editTableDisabled(table.name, this.tableDeletions)
+              } as SelectChoice;
+            }),
+          {
             name: {
-              type: 'edit-column',
-              column: col
+              type: 'add-column',
+              tableName: table.name,
+              column: { originalName: '', tableName: table.name, name: '', type: '', unique: false, nullable: true }
             },
-            message: this.renderColumnName({ column: col }),
-            disabled: editTableDisabled(table.name, this.tableDeletions)
-          };
-          return item;
-        });
-
-      const newColumns: SelectChoice[] = [];
-      for (const addition of this.columnAdditions.filter((addition) => addition.tableName === table.name)) {
-        const formatted = { ...addition, tableName: table.name, originalName: addition.name };
-        newColumns.push({
-          name: { type: 'edit-column', column: formatted },
-          message: this.renderColumnName({ column: formatted }),
-          disabled: editTableDisabled(table.name, this.tableDeletions)
-        });
-      }
-
-      columnChoices.push(...choices, ...newColumns, {
-        name: {
-          type: 'add-column',
-          tableName: table.name,
-          column: { originalName: '', tableName: table.name, name: '', type: 'string', unique: false, nullable: false }
-        },
-        message: `${chalk.green('+')} Add a column`,
-        disabled: editTableDisabled(table.name, this.tableDeletions),
-        hint: 'Add a column to a table'
+            message: `${chalk.green('+')} Add a column`,
+            disabled: editTableDisabled(table.name, this.tableDeletions),
+            hint: 'Add a column to a table'
+          }
+        ]
       });
     }
 
@@ -169,14 +175,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         hint: 'Run the migration'
       }
     );
-
-    const select = new Select({
-      message: 'Schema for database test:main',
-      initial: this.activeIndex,
-      choices: [schemaChoice],
-      footer:
-        'Use the ↑ ↓ arrows to move across the schema, enter to edit or add things, delete or backspace to delete things.'
-    });
 
     select.on('keypress', async (char: string, key: { name: string; action: string }) => {
       this.activeIndex = select.state.index;
@@ -285,48 +283,46 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     }
   }
 
-  renderColumnNameChange({ column }: { column: EditColumnPayload['column'] }) {
-    const columnEdit = this.columnEdits
+  renderColumnNameEdited({ column }: { column: EditColumnPayload['column'] }) {
+    return this.columnEdits
       .filter((edit) => edit.tableName === column.tableName)
-      .find(({ originalName: editName }) => editName === column.originalName);
-    return columnEdit?.name;
+      .find(({ originalName: editName }) => editName === column.originalName)?.name;
   }
 
-  renderNullable({ column }: { column: EditColumnPayload['column'] }) {
-    const columnEdit = this.columnEdits
-      .filter((edit) => edit.tableName === column.tableName)
-      .find(({ originalName: editName }) => editName === column.originalName);
-
-    return columnEdit?.nullable ?? column.nullable;
+  renderColumnNullable({ column }: { column: EditColumnPayload['column'] }) {
+    return (
+      this.columnEdits
+        .filter((edit) => edit.tableName === column.tableName)
+        .find(({ originalName: editName }) => editName === column.originalName)?.nullable ?? column.nullable
+    );
   }
 
-  renderUnique({ column }: { column: EditColumnPayload['column'] }) {
-    const columnEdit = this.columnEdits
-      .filter((edit) => edit.tableName === column.tableName)
-      .find(({ originalName: editName }) => editName === column.originalName);
-    return columnEdit?.unique ?? column.unique;
+  renderColumnUnique({ column }: { column: EditColumnPayload['column'] }) {
+    return (
+      this.columnEdits
+        .filter((edit) => edit.tableName === column.tableName)
+        .find(({ originalName: editName }) => editName === column.originalName)?.unique ?? column.unique
+    );
   }
 
-  renderColumnName({ column }: { column: EditColumnPayload['column'] }) {
-    const columnEditName = this.renderColumnNameChange({ column });
-    const columnDelete = Object.entries(this.columnDeletions)
+  renderColumnMessage({ column }: { column: EditColumnPayload['column'] }) {
+    const maybeNewColumnName = this.renderColumnNameEdited({ column });
+    const isColumnDeleted = Object.entries(this.columnDeletions)
       .filter((entry) => entry[0] === column.tableName)
       .find((entry) => entry[1].includes(column.originalName));
-    const tableDelete = this.tableDeletions.find(({ name }) => name === column.tableName);
+    const isTableDeleted = this.tableDeletions.find(({ name }) => name === column.tableName);
 
     const uniqueDisplay = () => {
-      const currentUniqueValue = this.renderUnique({ column });
-      const originalUnique = column.unique;
-      if (currentUniqueValue !== originalUnique) {
+      const currentUniqueValue = this.renderColumnUnique({ column });
+      if (currentUniqueValue !== column.unique) {
         return currentUniqueValue ? chalk.green('unique') : chalk.green('not unique');
       }
       return currentUniqueValue ? chalk.gray.italic('unique') : '';
     };
 
     const nullableDisplay = () => {
-      const currentNullableValue = this.renderNullable({ column });
-      const originalNullable = column.nullable;
-      if (currentNullableValue !== originalNullable) {
+      const currentNullableValue = this.renderColumnNullable({ column });
+      if (currentNullableValue !== column.nullable) {
         return currentNullableValue ? chalk.green('nullable') : chalk.green('not nullable');
       }
       return currentNullableValue ? chalk.gray.italic('nullable') : '';
@@ -341,28 +337,30 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       .filter(Boolean)
       .join(' ');
 
-    if (columnDelete || tableDelete) {
+    if (isColumnDeleted || isTableDeleted) {
       return `  - ${chalk.red.strikethrough(column.originalName)} (${metadata})`;
     }
-    if (columnEditName && columnEditName !== column.originalName) {
-      return `  - ${chalk.bold(columnEditName)} -> ${chalk.yellow.strikethrough(column.originalName)} (${metadata})`;
+    // Checking names are not the same because it is possible only nullable or unique changed
+    if (maybeNewColumnName && maybeNewColumnName !== column.originalName) {
+      return `  - ${chalk.bold(maybeNewColumnName)} -> ${chalk.yellow.strikethrough(
+        column.originalName
+      )} (${metadata})`;
     }
     return `- ${chalk.cyan(column.originalName)} (${metadata})`;
   }
 
-  renderTableNameChange(tableName: string) {
-    const tableEdit = this.tableEdits.find((edit) => edit.name === tableName);
-    return tableEdit?.newName;
+  renderTableNameEdited(tableName: string) {
+    return this.tableEdits.find((edit) => edit.name === tableName)?.newName;
   }
 
-  renderTableName(originalName: string, newTable: boolean = false) {
+  renderTableMessage(originalName: string, newTable: boolean = false) {
     const tableEdit = this.tableEdits.find(({ name }) => name === originalName);
     const tableDelete = this.tableDeletions.find(({ name }) => name === originalName);
     if (tableDelete) {
       return `• ${chalk.red.strikethrough(originalName)}`;
     }
     if (tableEdit) {
-      return `• ${chalk.bold(this.renderTableNameChange(originalName) ?? originalName)} -> ${chalk.yellow.strikethrough(
+      return `• ${chalk.bold(this.renderTableNameEdited(originalName) ?? originalName)} -> ${chalk.yellow.strikethrough(
         originalName
       )}`;
     }
@@ -371,18 +369,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
   async run(): Promise<void> {
     const { flags } = await this.parseCommand();
-
-    if (flags.source) {
-      this.warn(
-        `This way of editing the schema doesn't detect renames of tables or columns. They are interpreted as deleting/adding tables and columns.
-Beware that this can lead to ${chalk.bold(
-          'data loss'
-        )}. Other ways of editing the schema that do not have this limitation are:
-* run the command without ${chalk.bold('--source')}
-* edit the schema in the Web UI. Use ${chalk.bold('xata browse')} to open the Web UI in your browser.`
-      );
-      this.log();
-    }
 
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     this.workspace = workspace;
@@ -413,21 +399,17 @@ Beware that this can lead to ${chalk.bold(
   }
 
   async toggleTableDelete({ initialTableName }: { initialTableName: string }) {
-    const existingEntry = this.tableDeletions.find(({ name }) => name === initialTableName);
-    if (existingEntry) {
-      const index = this.tableDeletions.findIndex(({ name }) => name === initialTableName);
-      if (index > -1) {
-        this.tableDeletions.splice(index, 1);
-      }
-    } else {
-      this.tableDeletions.push({ name: initialTableName });
-    }
+    const indexOfExistingEntry = this.tableDeletions.findIndex(({ name }) => name === initialTableName);
+    indexOfExistingEntry > -1
+      ? this.tableDeletions.splice(indexOfExistingEntry, 1)
+      : this.tableDeletions.push({ name: initialTableName });
   }
 
   async toggleColumnDelete({ column }: { column: EditColumnPayload['column'] }) {
     const existingEntry = Object.entries(this.columnDeletions)
       .filter((entry) => entry[0] === column.tableName)
       .find((entry) => entry[1].includes(column.originalName));
+    // todo simplify
     if (existingEntry) {
       const index = existingEntry[1].findIndex((name) => name === column.originalName);
       if (index > -1) {
@@ -442,7 +424,7 @@ Beware that this can lead to ${chalk.bold(
     }
   }
 
-  existingTableName = (value: string) => {
+  tableNameAlreadyExists = (value: string) => {
     return this.branchDetails?.schema.tables.find(({ name }) => name === value) ||
       this.tableEdits.find(({ name }) => name === value) ||
       this.tableAdditions.find(({ name }) => name === value)
@@ -450,7 +432,8 @@ Beware that this can lead to ${chalk.bold(
       : false;
   };
 
-  existingColumnName = (value: string, column: AddColumnPayload['column']) => {
+  columnNameAlreadyExists = (value: string, column: AddColumnPayload['column']) => {
+    // todo simplify
     return this.branchDetails?.schema.tables
       .find(({ name }) => name === column.tableName)
       ?.columns.find(({ name }) => name === value) ||
@@ -476,16 +459,18 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'name',
           message: 'The name of the column',
-          initial: this.renderColumnNameChange({ column }) ?? column.originalName,
+          initial: this.renderColumnNameEdited({ column }) ?? column.originalName,
           validate: (value: string, state: ValidationState) => {
             if (column.originalName === value || value === state.values.name) return true;
-            return !emptyString(value) && !this.existingColumnName(value, column) && !isReservedXataFieldName(value);
+            return (
+              !emptyString(value) && !this.columnNameAlreadyExists(value, column) && !isReservedXataFieldName(value)
+            );
           }
         },
         {
           name: 'nullable',
           message: `Whether the column can be null.`,
-          initial: this.renderNullable({ column }) ? 'true' : 'false',
+          initial: this.renderColumnNullable({ column }) ? 'true' : 'false',
           validate: (value: string) => {
             if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
             return true;
@@ -495,7 +480,7 @@ Beware that this can lead to ${chalk.bold(
           // todo abstract into function
           name: 'unique',
           message: `Whether the column is unique.`,
-          initial: this.renderUnique({ column }) ? 'true' : 'false',
+          initial: this.renderColumnUnique({ column }) ? 'true' : 'false',
           validate: (value: string) => {
             if (parseBoolean(value) === undefined) return 'Invalid value. Unique field must be a boolean';
             return true;
@@ -574,7 +559,7 @@ Beware that this can lead to ${chalk.bold(
           validate: (value: string) => {
             if (value === undefined) return 'Name cannot be undefined';
             if (emptyString(value)) return 'Name cannot be empty';
-            if (this.existingColumnName(value, column)) return 'Column already exists';
+            if (this.columnNameAlreadyExists(value, column)) return 'Column already exists';
             return !isReservedXataFieldName(value);
           }
         },
@@ -618,7 +603,7 @@ Beware that this can lead to ${chalk.bold(
             const columnType = state.items.find(({ name }) => name === 'type')?.input;
             if ((value === undefined || emptyString(value)) && columnType === 'link')
               return 'Cannot be empty string when the type is link';
-            if (columnType === 'link' && !this.existingTableName(value)) return 'Table does not exist';
+            if (columnType === 'link' && !this.tableNameAlreadyExists(value)) return 'Table does not exist';
             return true;
           }
         },
@@ -687,7 +672,7 @@ Beware that this can lead to ${chalk.bold(
           message: 'The table name',
           validate: (value: string) => {
             if (emptyString(value)) return 'Name cannot be empty';
-            return !isReservedXataFieldName(value) && !this.existingTableName(value);
+            return !isReservedXataFieldName(value) && !this.tableNameAlreadyExists(value);
           }
         }
       ],
@@ -714,10 +699,10 @@ Beware that this can lead to ${chalk.bold(
         {
           name: 'name',
           message: 'The table name',
-          initial: this.renderTableNameChange(initialTableName) ?? initialTableName,
+          initial: this.renderTableNameEdited(initialTableName) ?? initialTableName,
           validate: (value: string, state: ValidationState) => {
             if (value === state.values.name) return true;
-            return !emptyString(value) && !isReservedXataFieldName(value) && !this.existingTableName(value);
+            return !emptyString(value) && !isReservedXataFieldName(value) && !this.tableNameAlreadyExists(value);
           }
         }
       ],
