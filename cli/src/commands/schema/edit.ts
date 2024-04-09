@@ -308,7 +308,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   }
 
   renderColumnName({ column }: { column: EditColumnPayload['column'] }) {
-    const columnNewName = this.renderColumnNameChange({ column });
+    const columnEditName = this.renderColumnNameChange({ column });
     const columnDelete = Object.entries(this.columnDeletions)
       .filter((entry) => entry[0] === column.tableName)
       .find((entry) => entry[1].includes(column.originalName));
@@ -344,8 +344,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     if (columnDelete || tableDelete) {
       return `  - ${chalk.red.strikethrough(column.originalName)} (${metadata})`;
     }
-    if (columnNewName) {
-      return `  - ${chalk.bold(columnNewName)} -> ${chalk.yellow.strikethrough(column.originalName)} (${metadata})`;
+    if (columnEditName && columnEditName !== column.originalName) {
+      return `  - ${chalk.bold(columnEditName)} -> ${chalk.yellow.strikethrough(column.originalName)} (${metadata})`;
     }
     return `- ${chalk.cyan(column.originalName)} (${metadata})`;
   }
@@ -511,11 +511,23 @@ Beware that this can lead to ${chalk.bold(
       const existingEntry = this.columnEdits.find(
         ({ originalName, tableName }) => tableName === column.tableName && originalName === column.originalName
       );
-      if (existingEntry) {
+
+      const unchanged =
+        column.name === values.name &&
+        column.nullable === parseBoolean(values.nullable) &&
+        column.unique === parseBoolean(values.unique);
+
+      if (unchanged) {
+        const index = this.columnEdits.findIndex(
+          ({ originalName, tableName }) => tableName === column.tableName && originalName === column.originalName
+        );
+        if (index > -1) {
+          this.columnEdits.splice(index, 1);
+        }
+      } else if (existingEntry) {
         existingEntry.name = values.name;
         existingEntry.nullable = parseBoolean(values.nullable) ?? true;
         existingEntry.unique = parseBoolean(values.unique) ?? false;
-        await this.showSchemaEdit();
       } else {
         this.columnEdits.push({
           name: values.name,
@@ -526,9 +538,8 @@ Beware that this can lead to ${chalk.bold(
           originalName: column.originalName,
           tableName: column.tableName
         });
-
-        await this.showSchemaEdit();
       }
+      await this.showSchemaEdit();
     } catch (err) {
       if (err) throw err;
     }
