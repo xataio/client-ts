@@ -510,6 +510,42 @@ describe('edits to migrations', () => {
       editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
       expect(editCommand.currentMigration.operations).toEqual([]);
     });
+    test('deleting a newly created column does not remove other deletes', () => {
+      // delete column
+      // add new column
+      // delete new column
+      // make sure delete to old column is still present
+    });
+    // todo unique test
+    test('adding a newly created column and making edit', () => {
+      editCommand.columnAdditions.push({
+        ...column,
+        type: 'float'
+      });
+      editCommand.columnEdits.push({
+        ...column,
+        name: 'col5',
+        nullable: false,
+        unique: true
+      });
+      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+      expect(editCommand.currentMigration.operations).toEqual([
+        {
+          add_column: {
+            table: 'table1',
+            column: {
+              name: 'col5',
+              type: 'double precision',
+              nullable: false,
+              unique: true,
+              default: undefined,
+              references: undefined,
+              up: '0'
+            }
+          }
+        }
+      ]);
+    });
     test('editing a new column in an existing table removes the column edit, and gets sent in add_column', () => {
       editCommand.columnAdditions.push(column);
       editCommand.columnEdits.push({

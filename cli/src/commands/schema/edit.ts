@@ -780,12 +780,6 @@ export const editsToMigrations = (command: EditSchema) => {
     (edit) => !localColumnDeletions[edit.tableName]?.includes(edit.originalName)
   );
 
-  console.log('object entries', Object.entries(localColumnDeletions));
-  console.log(
-    'object entries filtered',
-    Object.entries(localColumnDeletions).filter((el) => true)
-  );
-
   for (const [tableName, columns] of Object.entries(localColumnDeletions)) {
     const indexOfColumnToDelete = tmpColumnAddition.findIndex(
       (addition) => addition.tableName === tableName && columns.includes(addition.originalName)
@@ -832,11 +826,14 @@ export const editsToMigrations = (command: EditSchema) => {
   localColumnAdditions = localColumnAdditions.map((addition) => {
     const edit = editsToNewColumn.find(({ originalName }) => originalName === addition.name);
     if (edit) {
-      return {
+      const augmentedEdit = {
         ...addition,
         tableName: edit.tableName,
-        name: edit.name
+        name: edit.name,
+        unique: edit.unique ?? false,
+        nullable: edit.nullable ?? true
       };
+      return augmentedEdit;
     }
     return addition;
   });
@@ -874,8 +871,8 @@ export const editsToMigrations = (command: EditSchema) => {
             : undefined,
         default:
           column.defaultValue !== null && column.defaultValue !== undefined ? `'${column.defaultValue}'` : undefined,
-        nullable: column.nullable,
-        unique: column.unique as boolean,
+        nullable: parseBoolean(String(column.nullable)) ?? true,
+        unique: parseBoolean(String(column.unique)) ?? false,
         check: xataColumnTypeToPgRollConstraint(column as any, column.tableName),
         comment: xataColumnTypeToPgRollComment(column as any),
         up: requiresUpArgument(column.nullable === false, column.defaultValue)
