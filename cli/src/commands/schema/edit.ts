@@ -765,11 +765,11 @@ export const editsToMigrations = (command: EditSchema) => {
   // Duplicating here because if we remove items from class state they dont show on UI
   let localTableAdditions: (AddTablePayload['table'] & { columns?: AddColumnPayload['column'][] })[] =
     command.tableAdditions;
-  let localTableEdits: EditTablePayload['table'][] = command.tableEdits;
-  const localTableDeletions: DeleteTablePayload[] = command.tableDeletions;
-  let localColumnAdditions: AddColumnPayload['column'][] = command.columnAdditions;
-  let localColumnEdits: EditColumnPayload['column'][] = command.columnEdits;
-  let localColumnDeletions: DeleteColumnPayload = command.columnDeletions;
+  let localTableEdits: EditTablePayload['table'][] = [...command.tableEdits];
+  const localTableDeletions: DeleteTablePayload[] = [...command.tableDeletions];
+  let localColumnAdditions: AddColumnPayload['column'][] = [...command.columnAdditions];
+  let localColumnEdits: EditColumnPayload['column'][] = [...command.columnEdits];
+  let localColumnDeletions: DeleteColumnPayload = Object.assign({}, command.columnDeletions);
 
   const tmpColumnAddition = [...localColumnAdditions];
   localColumnAdditions = localColumnAdditions.filter(
@@ -781,11 +781,13 @@ export const editsToMigrations = (command: EditSchema) => {
   );
 
   for (const [tableName, columns] of Object.entries(localColumnDeletions)) {
-    const indexOfColumnToDelete = tmpColumnAddition.findIndex(
+    const columnWasAdded = tmpColumnAddition.filter(
       (addition) => addition.tableName === tableName && columns.includes(addition.originalName)
     );
-    if (indexOfColumnToDelete > -1) {
-      localColumnDeletions[tableName].splice(indexOfColumnToDelete, 1);
+    if (columnWasAdded) {
+      localColumnDeletions[tableName] = localColumnDeletions[tableName].filter((col) => {
+        return !tmpColumnAddition.some((addition) => addition.tableName === tableName && addition.originalName === col);
+      });
     }
   }
 
@@ -884,6 +886,7 @@ export const editsToMigrations = (command: EditSchema) => {
 
   const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(localColumnDeletions)
     .map((entry) => {
+      console.log('entry from localdeletions', localColumnDeletions);
       return entry[1].map((e) => {
         return {
           drop_column: {

@@ -511,12 +511,24 @@ describe('edits to migrations', () => {
       expect(editCommand.currentMigration.operations).toEqual([]);
     });
     test('deleting a newly created column does not remove other deletes', () => {
-      // delete column
-      // add new column
-      // delete new column
-      // make sure delete to old column is still present
+      editCommand.columnDeletions['table1'] = ['col1'];
+      editCommand.columnAdditions.push({
+        ...column,
+        originalName: 'col2',
+        name: 'col3',
+        type: 'float'
+      });
+      editCommand.columnDeletions['table1'].push('col2');
+      editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+      expect(editCommand.currentMigration.operations).toEqual([
+        {
+          drop_column: {
+            column: 'col1',
+            table: 'table1'
+          }
+        }
+      ]);
     });
-    // todo unique test
     test('adding a newly created column and making edit', () => {
       editCommand.columnAdditions.push({
         ...column,
