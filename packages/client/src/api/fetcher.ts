@@ -203,6 +203,8 @@ export async function fetch<
         'X-Xata-Client-ID': clientID ?? defaultClientID,
         'X-Xata-Session-ID': sessionID ?? generateUUID(),
         'X-Xata-Agent': xataAgent,
+        // Force field rename to xata_ internal properties
+        'X-Features': compact(['feat-internal-field-rename-api=1', customHeaders?.['X-Features']]).join(' '),
         ...customHeaders,
         ...hostHeader(fullUrl),
         Authorization: `Bearer ${apiKey}`

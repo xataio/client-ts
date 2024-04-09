@@ -29,7 +29,7 @@ afterEach(async (ctx) => {
 describe('JSON support', () => {
   test('read returns json', async () => {
     const record = await xata.db.teams.create({ name: 'test', config: { hello: 'world' } });
-    const read = await xata.db.teams.read(record.id, ['config']);
+    const read = await xata.db.teams.read(record.xata_id, ['config']);
     expect(read?.config.hello).toBe('world');
   });
 
@@ -47,7 +47,7 @@ describe('JSON support', () => {
 
     expect(record.config.hello).toBe('world');
 
-    await xata.db.teams.delete(record.id);
+    await xata.db.teams.delete(record.xata_id);
   });
 
   test('create file with JSON as string', async () => {
@@ -55,7 +55,7 @@ describe('JSON support', () => {
 
     expect(record.config.hello).toBe('world');
 
-    await xata.db.teams.delete(record.id);
+    await xata.db.teams.delete(record.xata_id);
   });
 
   test('create file with JSON array as object', async () => {
@@ -63,7 +63,7 @@ describe('JSON support', () => {
 
     expect(record.config[0].hello[0]).toBe('world');
 
-    await xata.db.teams.delete(record.id);
+    await xata.db.teams.delete(record.xata_id);
   });
 
   test('create file with JSON array as string', async () => {
@@ -71,7 +71,7 @@ describe('JSON support', () => {
 
     expect(record.config[0].hello[0]).toBe('world');
 
-    await xata.db.teams.delete(record.id);
+    await xata.db.teams.delete(record.xata_id);
   });
 
   test('filters work with JSON fields', async () => {
@@ -118,22 +118,22 @@ describe('JSON support', () => {
       .getAll();
 
     expect(filterEquals.length).toBe(1);
-    expect(filterEquals[0].id).toBe(r2.id);
+    expect(filterEquals[0].xata_id).toBe(r2.xata_id);
 
     const filterNodeEqualsString = await xata.db.teams.filter('config->bg->path', 'a/b/c').getAll();
     expect(filterNodeEqualsString.length).toBe(2);
 
     const filterNodeEqualsNumber = await xata.db.teams.filter('config->bg->alpha', 0.8).getAll();
     expect(filterNodeEqualsNumber.length).toBe(1);
-    expect(filterNodeEqualsNumber[0].id).toBe(r1.id);
+    expect(filterNodeEqualsNumber[0].xata_id).toBe(r1.xata_id);
 
     const filterNodeGreaterThan = await xata.db.teams.filter('config->bg->alpha', { $gt: 0.5 }).getAll();
     expect(filterNodeGreaterThan.length).toBe(1);
-    expect(filterNodeGreaterThan[0].id).toBe(r1.id);
+    expect(filterNodeGreaterThan[0].xata_id).toBe(r1.xata_id);
 
     const filterNodeLessThan = await xata.db.teams.filter('config->bg->alpha', { $lt: 0.5 }).getAll();
     expect(filterNodeLessThan.length).toBe(1);
-    expect(filterNodeLessThan[0].id).toBe(r2.id);
+    expect(filterNodeLessThan[0].xata_id).toBe(r2.xata_id);
 
     const filterNodeEqualsNumberNotFound = await xata.db.teams.filter('config->bg->alpha', 1).getAll();
     expect(filterNodeEqualsNumberNotFound.length).toBe(0);
@@ -212,15 +212,15 @@ describe('JSON support', () => {
 
     const recordsBySizeM = await xata.db.teams.filter({ 'config->size': 'M' }).getMany();
     expect(recordsBySizeM.length).toBe(1);
-    expect(recordsBySizeM[0].id).toBe(record1.id);
+    expect(recordsBySizeM[0].xata_id).toBe(record1.xata_id);
 
     const recordsLengthGreater = await xata.db.teams.filter({ 'config->length': { $gt: 50 } }).getMany();
     expect(recordsLengthGreater.length).toBe(1);
-    expect(recordsLengthGreater[0].id).toBe(record3.id);
+    expect(recordsLengthGreater[0].xata_id).toBe(record3.xata_id);
 
     const recordsBySubstring = await xata.db.teams.filter({ 'config->isbn': { $contains: '0140449334' } }).getMany();
     expect(recordsBySubstring.length).toBe(1);
-    expect(recordsBySubstring[0].id).toBe(record2.id);
+    expect(recordsBySubstring[0].xata_id).toBe(record2.xata_id);
 
     const recordsWithNegationOperator = await xata.db.teams.filter({ 'config->color': { $isNot: 'yellow' } }).getMany();
     expect(recordsWithNegationOperator.length).toBe(2);
