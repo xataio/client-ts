@@ -12,10 +12,10 @@ import {
   allMigrationsPgRollFormat,
   getBranchDetailsWithPgRoll,
   isBranchPgRollEnabled,
-  isMigrationPgRollFormat
+  isMigrationPgRollFormat,
+  waitForMigrationToFinish
 } from '../../migrations/pgroll.js';
 import { MigrationFilePgroll } from '../../migrations/schema.js';
-import { waitForMigrationToFinish } from '../../utils/pgroll.js';
 
 export default class Push extends BaseCommand<typeof Push> {
   static description = 'Push local changes to a remote Xata branch';
