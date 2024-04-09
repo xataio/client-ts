@@ -8,7 +8,7 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { File, Mock, Suite, TestContext, vi } from 'vitest';
-import { BaseClient, CacheImpl, XataApiClient } from '../../packages/client/src';
+import { BaseClient, XataApiClient } from '../../packages/client/src';
 import { getHostUrl, parseProviderString } from '../../packages/client/src/api/providers';
 import { TraceAttributes } from '../../packages/client/src/schema/tracing';
 import { XataClient } from '../../packages/codegen/example/xata';
@@ -29,7 +29,6 @@ const region = process.env.XATA_REGION || 'eu-west-1';
 const host = parseProviderString(process.env.XATA_API_PROVIDER);
 
 export type EnvironmentOptions = {
-  cache?: CacheImpl;
   fetch?: any;
 };
 
@@ -45,7 +44,6 @@ export type TestEnvironmentResult = {
     fetch: Mock;
     apiKey: string;
     branch: string;
-    cache?: CacheImpl;
   };
   hooks: {
     beforeAll: (ctx: Suite | File) => Promise<void>;
@@ -57,7 +55,7 @@ export type TestEnvironmentResult = {
 
 export async function setUpTestEnvironment(
   prefix: string,
-  { cache, fetch: envFetch }: EnvironmentOptions = {}
+  { fetch: envFetch }: EnvironmentOptions = {}
 ): Promise<TestEnvironmentResult> {
   if (host === null) {
     throw new Error(
@@ -86,7 +84,6 @@ export async function setUpTestEnvironment(
     branch: 'main',
     apiKey,
     fetch,
-    cache,
     trace,
     clientName: 'sdk-tests'
   };
