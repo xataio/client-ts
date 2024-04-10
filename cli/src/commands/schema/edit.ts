@@ -835,29 +835,23 @@ export const editsToMigrations = (command: EditSchema) => {
     }
   }
 
-  // console.log("are edits bundled into one", localColumnEdits)
   // bundle new columns into new tables
   for (const [tableName, columns] of Object.entries(localColumnAdditions)) {
-    console.log('columns in localColumn additions', tableName, columns);
     const tableIsNew = localTableAdditions.find((addition) => addition.name === tableName);
     if (tableIsNew) {
       for (const [columnName, column] of Object.entries(columns)) {
         const localTableAddition = localTableAdditions.find((addition) => addition.name === tableName);
-        console.log('local table edition', localTableAddition);
         if (localTableAddition) {
           if (!localTableAddition?.columns) localTableAddition.columns = [];
           // add to table additions
           localTableAddition?.columns.push(column);
-          console.log('pushign column into tableaddition', column, localTableAddition);
         }
-
         // delete from column additions
         delete localColumnAdditions[tableName][columnName];
       }
       delete localColumnAdditions[tableName];
     }
   }
-  // console.log("local column additions", localTableAdditions)
 
   const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(localColumnDeletions)
     .map((entry) => {
