@@ -2,9 +2,9 @@ import { beforeEach, expect, test, describe } from 'vitest';
 import {
   AddColumnPayload,
   AddTablePayload,
-  ColumnAdditionData,
+  ColumnAdditions,
   ColumnData,
-  ColumnEditData,
+  ColumnEdits,
   DeleteColumnPayload,
   DeleteTablePayload,
   EditTablePayload
@@ -16,8 +16,8 @@ class mockEdit {
   tableAdditions: AddTablePayload['table'][] = [];
   tableEdits: EditTablePayload['table'][] = [];
   tableDeletions: DeleteTablePayload[] = [];
-  columnAdditions: ColumnAdditionData = {};
-  columnEdits: ColumnEditData = {};
+  columnAdditions: ColumnAdditions = {};
+  columnEdits: ColumnEdits = {};
   columnDeletions: DeleteColumnPayload = {};
   currentMigration: PgRollMigration = { operations: [] };
 }
