@@ -300,7 +300,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       if (currentNullableValue !== column.nullable) {
         return currentNullableValue ? chalk.green('nullable') : chalk.green('not nullable');
       }
-      return currentNullableValue ? chalk.gray.italic('nullable') : '';
+      return currentNullableValue ? '' : chalk.gray.italic('not nullable');
     };
 
     const metadata = [
@@ -481,7 +481,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           column: {
             ...column,
             ...values,
-            nullable: parseBoolean(values.nullable) ?? true,
+            notNull: parseBoolean(values.nullable) === false ?? false,
             unique: parseBoolean(values.unique) ?? false
           },
           tableName: column.tableName
@@ -603,7 +603,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         column: {
           ...column,
           ...values,
-          nullable: parseBoolean(values.nullable) ?? true,
+          defaultValue: values.default,
+          notNull: parseBoolean(values.nullable) === false ?? false,
           unique: parseBoolean(values.unique) ?? false
         },
         tableName: column.tableName
