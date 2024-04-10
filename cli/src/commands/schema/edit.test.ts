@@ -4,9 +4,9 @@ import {
   AddTablePayload,
   ColumnAdditionData,
   ColumnData,
+  ColumnEditData,
   DeleteColumnPayload,
   DeleteTablePayload,
-  EditColumnPayload,
   EditTablePayload
 } from './types';
 import { PgRollMigration } from '@xata.io/pgroll';
@@ -17,7 +17,7 @@ class mockEdit {
   tableEdits: EditTablePayload['table'][] = [];
   tableDeletions: DeleteTablePayload[] = [];
   columnAdditions: ColumnAdditionData = {};
-  columnEdits: EditColumnPayload['column'][] = [];
+  columnEdits: ColumnEditData = {};
   columnDeletions: DeleteColumnPayload = {};
   currentMigration: PgRollMigration = { operations: [] };
 }
@@ -29,7 +29,7 @@ beforeEach(() => {
   editCommand.tableEdits = [];
   editCommand.tableDeletions = [];
   editCommand.columnAdditions = {};
-  editCommand.columnEdits = [];
+  editCommand.columnEdits = {};
   editCommand.columnDeletions = {};
   editCommand.currentMigration = { operations: [] };
 });
@@ -39,6 +39,13 @@ const createAddition = (column: ColumnData) => {
   if (!editCommand.columnAdditions[column.tableName][column.originalName])
     editCommand.columnAdditions[column.tableName][column.originalName] = {} as any;
   editCommand.columnAdditions[column.tableName][column.originalName] = column;
+};
+
+const createEdit = (column: ColumnData) => {
+  if (!editCommand.columnEdits[column.tableName]) editCommand.columnEdits[column.tableName] = {};
+  if (!editCommand.columnEdits[column.tableName][column.originalName])
+    editCommand.columnEdits[column.tableName][column.originalName] = {} as any;
+  editCommand.columnEdits[column.tableName][column.originalName] = column;
 };
 
 const column: AddColumnPayload['column'] = {
@@ -315,7 +322,7 @@ const testCases: TestCase[] = [
   {
     name: 'edit column',
     fx: () => {
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
         name: 'col2'
       });
@@ -338,7 +345,7 @@ const testCases: TestCase[] = [
   {
     name: 'edit column nullable to not nullable',
     fx: () => {
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
         nullable: false
       });
@@ -360,7 +367,7 @@ const testCases: TestCase[] = [
   {
     name: 'edit column not unique to unique',
     fx: () => {
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
         unique: true
       });
@@ -394,7 +401,7 @@ const testCases: TestCase[] = [
   {
     name: 'deleting an existing table deletes all column edits',
     fx: () => {
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
         name: 'col2'
       });
@@ -454,7 +461,7 @@ const testCases: TestCase[] = [
   {
     name: 'deleting an existing column deletes all column edits',
     fx: () => {
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
         name: 'col2'
       });
@@ -483,7 +490,7 @@ const testCases: TestCase[] = [
     name: 'deleting a new table deletes all column edits',
     fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
         name: 'col2'
       });
@@ -655,7 +662,7 @@ const testCases: TestCase[] = [
     name: 'deleting a new column deletes all column additions, edit and deletions',
     fx: () => {
       createAddition(column);
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
         name: 'col2'
       });
@@ -691,9 +698,17 @@ const testCases: TestCase[] = [
         ...column,
         type: 'float'
       });
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
+        type: 'float',
         name: 'col5',
+        nullable: false,
+        unique: true
+      });
+      createEdit({
+        ...column,
+        type: 'float',
+        name: 'col6',
         nullable: false,
         unique: true
       });
@@ -703,7 +718,7 @@ const testCases: TestCase[] = [
         add_column: {
           table: 'table1',
           column: {
-            name: 'col5',
+            name: 'col6',
             type: 'double precision',
             nullable: false,
             unique: true,
@@ -719,7 +734,7 @@ const testCases: TestCase[] = [
     name: 'editing a new column in an existing table removes the column edit, and gets sent in add_column',
     fx: () => {
       createAddition(column);
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
         name: 'col2'
       });
@@ -750,7 +765,7 @@ const testCases: TestCase[] = [
     name: 'deleting a new column deletes all column additions, edits, and deletions',
     fx: () => {
       createAddition(column);
-      editCommand.columnEdits.push({
+      createEdit({
         ...column,
         name: 'col2'
       });
@@ -763,9 +778,18 @@ const testCases: TestCase[] = [
     fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition(column);
-      editCommand.columnEdits.push({
+      createAddition({
+        ...column,
+        name: 'col8',
+        originalName: 'col8'
+      });
+      createEdit({
         ...column,
         name: 'col2'
+      });
+      createEdit({
+        ...column,
+        name: 'col3'
       });
     },
     expectation: [
@@ -774,17 +798,31 @@ const testCases: TestCase[] = [
           name: 'table1',
           columns: [
             {
-              name: 'col2',
+              name: 'col3',
               type: 'text',
               nullable: true,
               unique: false,
               check: {
-                constraint: 'LENGTH("col2") <= 2048',
-                name: 'table1_xata_string_length_col2'
+                constraint: 'LENGTH("col3") <= 2048',
+                name: 'table1_xata_string_length_col3'
               },
               comment: '{"xata.type":"string"}',
               default: undefined,
               references: undefined
+            },
+            {
+              name: 'col8',
+              type: 'text',
+              nullable: true,
+              unique: false,
+              check: {
+                constraint: 'LENGTH("col8") <= 2048',
+                name: 'table1_xata_string_length_col8'
+              },
+              comment: '{"xata.type":"string"}',
+              default: undefined,
+              references: undefined,
+              up: undefined
             }
           ]
         }

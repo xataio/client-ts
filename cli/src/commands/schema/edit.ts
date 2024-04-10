@@ -17,6 +17,7 @@ import {
   AddColumnPayload,
   AddTablePayload,
   ColumnAdditionData,
+  ColumnEditData,
   DeleteColumnPayload,
   DeleteTablePayload,
   EditColumnPayload,
@@ -77,8 +78,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   tableAdditions: AddTablePayload['table'][] = [];
   tableEdits: EditTablePayload['table'][] = [];
   tableDeletions: DeleteTablePayload[] = [];
+  columnEdits: ColumnEditData = {};
   columnAdditions: ColumnAdditionData = {};
-  columnEdits: EditColumnPayload['column'][] = [];
   columnDeletions: DeleteColumnPayload = {};
 
   currentMigration: PgRollMigration = { operations: [] };
@@ -282,25 +283,15 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   }
 
   renderColumnNameEdited({ column }: { column: EditColumnPayload['column'] }) {
-    return this.columnEdits
-      .filter((edit) => edit.tableName === column.tableName)
-      .find(({ originalName: editName }) => editName === column.originalName)?.name;
+    return this.columnEdits[column.tableName]?.[column.originalName]?.name;
   }
 
   renderColumnNullable({ column }: { column: EditColumnPayload['column'] }) {
-    return (
-      this.columnEdits
-        .filter((edit) => edit.tableName === column.tableName)
-        .find(({ originalName: editName }) => editName === column.originalName)?.nullable ?? column.nullable
-    );
+    return this.columnEdits[column.tableName]?.[column.originalName]?.nullable ?? column.nullable;
   }
 
   renderColumnUnique({ column }: { column: EditColumnPayload['column'] }) {
-    return (
-      this.columnEdits
-        .filter((edit) => edit.tableName === column.tableName)
-        .find(({ originalName: editName }) => editName === column.originalName)?.unique ?? column.unique
-    );
+    return this.columnEdits[column.tableName]?.[column.originalName]?.unique ?? column.unique;
   }
 
   renderColumnMessage({ column }: { column: EditColumnPayload['column'] }) {
@@ -436,7 +427,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     return this.branchDetails?.schema.tables
       .find(({ name }) => name === column.tableName)
       ?.columns.find(({ name }) => name === value) ||
-      this.columnEdits.find(({ name, tableName }) => tableName === column.tableName && name === value) ||
+      this.columnEdits?.[column.tableName]?.[value] ||
       this.columnAdditions?.[column.tableName]?.[value]
       ? true
       : false;
@@ -492,36 +483,32 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
     try {
       const { values } = await snippet.run();
-      const existingEntry = this.columnEdits.find(
-        ({ originalName, tableName }) => tableName === column.tableName && originalName === column.originalName
-      );
+      const existingEntry = this.columnEdits[column.tableName]?.[column.originalName];
 
       const unchanged =
         column.name === values.name &&
         column.nullable === parseBoolean(values.nullable) &&
         column.unique === parseBoolean(values.unique);
 
-      if (unchanged) {
-        const index = this.columnEdits.findIndex(
-          ({ originalName, tableName }) => tableName === column.tableName && originalName === column.originalName
-        );
-        if (index > -1) {
-          this.columnEdits.splice(index, 1);
-        }
-      } else if (existingEntry) {
+      if (unchanged && existingEntry) {
+        delete this.columnEdits[column.tableName][column.originalName];
+      } else if (!unchanged && existingEntry) {
         existingEntry.name = values.name;
         existingEntry.nullable = parseBoolean(values.nullable) ?? true;
         existingEntry.unique = parseBoolean(values.unique) ?? false;
       } else {
-        this.columnEdits.push({
+        if (!this.columnEdits[column.tableName]) this.columnEdits[column.tableName] = {};
+        if (!this.columnEdits[column.tableName][column.originalName])
+          this.columnEdits[column.tableName][column.originalName] = {} as any;
+        this.columnEdits[column.tableName][column.originalName] = {
           name: values.name,
-          defaultValue: column.defaultValue,
-          type: column.type,
           nullable: parseBoolean(values.nullable) ?? true,
           unique: parseBoolean(values.unique) ?? false,
+          type: column.type,
+          defaultValue: column.defaultValue,
           originalName: column.originalName,
           tableName: column.tableName
-        });
+        };
       }
       await this.showSchemaEdit();
     } catch (err) {
@@ -634,10 +621,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     try {
       const { values } = await snippet.run();
       if (!this.columnAdditions[tableName]) this.columnAdditions[tableName] = {};
-      if (!this.columnAdditions[tableName][column.originalName])
-        this.columnAdditions[tableName][column.originalName] = {} as any;
-
-      this.columnAdditions[tableName][column.originalName] = {
+      if (!this.columnAdditions[tableName][values.name]) this.columnAdditions[tableName][values.name] = {} as any;
+      this.columnAdditions[tableName][values.name] = {
         tableName,
         originalName: values.name,
         name: values.name,
@@ -761,61 +746,55 @@ const createSpace = (): SelectChoice => {
 
 export const editsToMigrations = (command: EditSchema) => {
   // Duplicating here because if we remove items from class state they dont show on UI
-  let localTableAdditions: (AddTablePayload['table'] & { columns?: AddColumnPayload['column'][] })[] = [
-    ...command.tableAdditions
-  ];
-  let localTableEdits: EditTablePayload['table'][] = [...command.tableEdits];
-  let localTableDeletions: DeleteTablePayload[] = [...command.tableDeletions];
-  const localColumnAdditions: ColumnAdditionData = JSON.parse(JSON.stringify(command.columnAdditions));
-  let localColumnEdits: EditColumnPayload['column'][] = [...command.columnEdits];
-  let localColumnDeletions: DeleteColumnPayload = Object.assign({}, command.columnDeletions);
+  // todo better way to deep copy? If not surround with try catch
 
-  const tmpColumnAddition = JSON.parse(JSON.stringify(localColumnAdditions));
-  for (const [tableName, columns] of Object.entries(localColumnAdditions)) {
-    // if column was deleted then remove it from columns to be added
-    for (const [columnName, _] of Object.entries(columns)) {
-      const columnWasDeleted = localColumnDeletions[tableName]?.includes(columnName);
-      if (columnWasDeleted) {
-        delete localColumnAdditions[tableName][columnName];
-      }
-    }
-  }
-
-  localColumnEdits = localColumnEdits.filter(
-    (edit) => !localColumnDeletions[edit.tableName]?.includes(edit.originalName)
+  let localTableAdditions: (AddTablePayload['table'] & { columns?: AddColumnPayload['column'][] })[] = JSON.parse(
+    JSON.stringify(command.tableAdditions)
   );
-
-  // remove column deletion if column is also being added
-  for (const [tableName, columns] of Object.entries(localColumnDeletions)) {
-    for (const columnName of columns) {
-      const columnWasAdded = tmpColumnAddition[tableName]?.[columnName];
-      if (columnWasAdded) {
-        localColumnDeletions[tableName] = localColumnDeletions[tableName].filter((col) => col !== columnName);
-      }
-    }
-  }
+  let localTableEdits: EditTablePayload['table'][] = JSON.parse(JSON.stringify(command.tableEdits));
+  let localTableDeletions: DeleteTablePayload[] = JSON.parse(JSON.stringify(command.tableDeletions));
+  const localColumnAdditions: ColumnAdditionData = JSON.parse(JSON.stringify(command.columnAdditions));
+  const localColumnEdits: ColumnEditData = JSON.parse(JSON.stringify(command.columnEdits));
+  const localColumnDeletions: DeleteColumnPayload = JSON.parse(JSON.stringify(command.columnDeletions));
 
   const isTableDeleted = (name: string) => {
     return localTableDeletions.find(({ name: tableName }) => tableName === name);
   };
 
-  // Remove table edits, additions for tables that are deleted
-  localTableAdditions = localTableAdditions.filter(({ name }) => !isTableDeleted(name));
-  localTableEdits = localTableEdits.filter(({ name }) => !isTableDeleted(name));
-
   // Remove column edits, additions and deletions for tables that are deleted
-  for (const [tableName, _] of Object.entries(localColumnAdditions)) {
+  for (const [tableName, _] of Object.entries({
+    ...localColumnAdditions,
+    ...localColumnEdits,
+    ...localColumnDeletions
+  })) {
     if (isTableDeleted(tableName)) {
       delete localColumnAdditions[tableName];
+      delete localColumnEdits[tableName];
+      delete localColumnDeletions[tableName];
     }
   }
-  localColumnEdits = localColumnEdits.filter(({ tableName }) => !isTableDeleted(tableName));
-  localColumnDeletions = Object.fromEntries(
-    Object.entries(localColumnDeletions).filter(([tableName]) => !isTableDeleted(tableName))
-  );
 
-  // Remove the table deletion if the table is new
-  // checking table additions unfiltered because the deleted tables have already been removed
+  // if column was deleted then remove edits, and additions and deletions if new
+  for (const [tableName, columns] of Object.entries(localColumnDeletions)) {
+    for (const columnName of columns) {
+      const columnWasEdited = localColumnEdits[tableName]?.[columnName];
+      if (columnWasEdited) {
+        // remove the edit
+        delete localColumnEdits[tableName][columnName];
+      }
+      const columnWasAdded = localColumnAdditions[tableName]?.[columnName];
+      if (columnWasAdded) {
+        // remove deletions
+        localColumnDeletions[tableName] = localColumnDeletions[tableName].filter((col) => col !== columnName);
+        // remove the addition
+        delete localColumnAdditions[tableName][columnName];
+      }
+    }
+  }
+
+  // Remove table edits, additions and deletions for tables that are newly added and also deleted
+  localTableAdditions = localTableAdditions.filter(({ name }) => !isTableDeleted(name));
+  localTableEdits = localTableEdits.filter(({ name }) => !isTableDeleted(name));
   localTableDeletions = localTableDeletions.filter(
     ({ name }) => !command.tableAdditions.find((addition) => addition.name === name)
   );
@@ -835,53 +814,50 @@ export const editsToMigrations = (command: EditSchema) => {
   });
 
   // bundle edit columns into new columns
-  const editsToNewColumn = localColumnEdits.filter(
-    ({ originalName, tableName }) => localColumnAdditions[tableName]?.[originalName]
-  );
-  localColumnEdits = localColumnEdits.filter(
-    ({ originalName }) => !editsToNewColumn.find((edit) => edit.originalName === originalName)
-  );
-
-  for (const [tableName, columns] of Object.entries(localColumnAdditions)) {
+  for (const [tableName, columns] of Object.entries(localColumnEdits)) {
+    // TODO multiple edits are not being bundled into one
     for (const [columnName, column] of Object.entries(columns)) {
-      const edit = editsToNewColumn.find(
-        ({ originalName, tableName }) => originalName === columnName && tableName === tableName
-      );
-      if (edit) {
-        if (!localColumnAdditions[tableName]) localColumnAdditions[tableName] = {};
-        if (!localColumnAdditions[tableName][columnName]) localColumnAdditions[tableName][columnName] = {} as any;
+      const columnIsNew = localColumnAdditions[tableName]?.[columnName];
+      if (columnIsNew) {
+        // add to column additions
         localColumnAdditions[tableName][columnName] = {
           ...column,
-          name: edit.name,
-          unique: edit.unique ?? false,
-          nullable: edit.nullable ?? true
+          name: column.name,
+          unique: column.unique ?? false,
+          nullable: column.nullable ?? true
         };
+        // delete column from edits
+        delete localColumnEdits[tableName][columnName];
+        if (Object.keys(localColumnEdits[tableName]).length === 0) {
+          delete localColumnEdits[tableName];
+        }
       }
     }
   }
 
-  // bundle new columns into create_tables
-  const columnAdditionsToNewTables = localTableAdditions.map((addition) => {
-    return {
-      tableName: addition.name,
-      columns: Object.values(localColumnAdditions?.[addition.name] ?? []).map((column) => column)
-    };
-  });
+  // console.log("are edits bundled into one", localColumnEdits)
+  // bundle new columns into new tables
+  for (const [tableName, columns] of Object.entries(localColumnAdditions)) {
+    console.log('columns in localColumn additions', tableName, columns);
+    const tableIsNew = localTableAdditions.find((addition) => addition.name === tableName);
+    if (tableIsNew) {
+      for (const [columnName, column] of Object.entries(columns)) {
+        const localTableAddition = localTableAdditions.find((addition) => addition.name === tableName);
+        console.log('local table edition', localTableAddition);
+        if (localTableAddition) {
+          if (!localTableAddition?.columns) localTableAddition.columns = [];
+          // add to table additions
+          localTableAddition?.columns.push(column);
+          console.log('pushign column into tableaddition', column, localTableAddition);
+        }
 
-  // remove the column additions
-  for (const addition of localTableAdditions) {
-    localColumnAdditions[addition.name] = {};
+        // delete from column additions
+        delete localColumnAdditions[tableName][columnName];
+      }
+      delete localColumnAdditions[tableName];
+    }
   }
-
-  localTableAdditions = localTableAdditions.map((addition) => {
-    const columns = columnAdditionsToNewTables
-      .filter((column) => column.tableName === addition.name)
-      .flatMap(({ columns }) => columns);
-    return {
-      ...addition,
-      columns: columns
-    };
-  });
+  // console.log("local column additions", localTableAdditions)
 
   const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(localColumnDeletions)
     .map((entry) => {
@@ -936,29 +912,33 @@ export const editsToMigrations = (command: EditSchema) => {
     };
   });
 
-  const columnEdits: { alter_column: OpAlterColumn }[] = localColumnEdits.map(
-    ({ originalName, tableName, name, nullable, unique, type, link }) => {
-      const edit: { alter_column: OpAlterColumn } = {
-        alter_column: {
-          column: originalName,
-          table: tableName,
-          nullable,
-          unique: !unique
-            ? undefined
-            : {
-                name: `unique_constraint_${tableName}_${name}`
-              },
-          name,
-          references: type === 'link' ? generateLinkReference({ column: name, table: link?.table ?? '' }) : undefined,
-          // todo if just a rename, no up and down required
-          // todo if notnull changes - notNullUpValue needs to be called
-          up: `"${name}"`,
-          down: `"${name}"`
-        }
-      };
-      return edit;
+  const columnEdits: { alter_column: OpAlterColumn }[] = [];
+  for (const [_, columns] of Object.entries(localColumnEdits)) {
+    for (const [_, data] of Object.entries(columns)) {
+      const { name, nullable, unique, type, link, originalName } = data;
+      const cols = augmentColumns([data]).map(({ column, tableName }) => {
+        return {
+          alter_column: {
+            column: originalName,
+            table: tableName,
+            nullable,
+            unique: !unique
+              ? undefined
+              : {
+                  name: `unique_constraint_${tableName}_${name}`
+                },
+            name,
+            references: type === 'link' ? generateLinkReference({ column: name, table: link?.table ?? '' }) : undefined,
+            // todo if just a rename, no up and down required
+            // todo if notnull changes - notNullUpValue needs to be called
+            up: `"${name}"`,
+            down: `"${name}"`
+          }
+        };
+      });
+      columnEdits.push(...cols);
     }
-  );
+  }
 
   return [...columnDeletions, ...tableDeletions, ...tableAdditions, ...columnAdditions, ...columnEdits, ...tableEdits];
 };

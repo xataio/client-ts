@@ -48,6 +48,8 @@ export type EditColumnPayload = {
   column: ColumnData;
 };
 
+export type ColumnEditData = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
+
 export type FormatPayload = {
   type: 'space' | 'migrate' | 'schema';
 };
