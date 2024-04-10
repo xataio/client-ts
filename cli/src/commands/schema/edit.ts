@@ -603,6 +603,24 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         column: {
           ...column,
           ...values,
+          'file[]':
+            values.type === 'file[]'
+              ? { defaultPublicAccess: parseBoolean(values.defaultPublicAccess) ?? false }
+              : undefined,
+          file:
+            values.type === 'file'
+              ? { defaultPublicAccess: parseBoolean(values.defaultPublicAccess) ?? false }
+              : undefined,
+          vector: values.vectorDimension
+            ? {
+                dimension: values.vectorDimension
+              }
+            : undefined,
+          link: values.link
+            ? {
+                table: values.link
+              }
+            : undefined,
           defaultValue: values.default,
           notNull: parseBoolean(values.nullable) === false ?? false,
           unique: parseBoolean(values.unique) ?? false
