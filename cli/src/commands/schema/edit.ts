@@ -684,12 +684,12 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 }
 
 const editTableDisabled = (name: string, tableDeletions: DeleteTablePayload[]) => {
-  return tableDeletions.some(({ name: tableName }) => tableName === name) ? true : false;
+  return tableDeletions.some(({ name: tableName }) => tableName === name);
 };
 
 /** Necessary because disabling prevents the user from "undeleting" a column */
 const editColumnDisabled = (column: EditColumnPayload['column'], columnDeletions: DeleteColumnPayload) => {
-  return columnDeletions[column.tableName]?.includes(column.originalName) ? true : false;
+  return columnDeletions[column.tableName]?.includes(column.originalName);
 };
 
 const validateMigration = (migration: object) => {
@@ -713,6 +713,7 @@ export const editsToMigrations = (command: EditSchema) => {
   );
   let localTableEdits: EditTablePayload['table'][] = JSON.parse(JSON.stringify(command.tableEdits));
   let localTableDeletions: DeleteTablePayload[] = JSON.parse(JSON.stringify(command.tableDeletions));
+
   const localColumnAdditions: ColumnAdditions = JSON.parse(JSON.stringify(command.columnAdditions));
   const localColumnEdits: ColumnEdits = JSON.parse(JSON.stringify(command.columnEdits));
   const localColumnDeletions: DeleteColumnPayload = JSON.parse(JSON.stringify(command.columnDeletions));
@@ -765,12 +766,11 @@ export const editsToMigrations = (command: EditSchema) => {
   localTableEdits = localTableEdits.filter(({ name }) => !editsToNewTable.find((edit) => edit.name === name));
   localTableAdditions = localTableAdditions.map((addition) => {
     const edit = editsToNewTable.find(({ name }) => name === addition.name);
-    if (edit) {
-      return {
-        name: edit.newName
-      };
-    }
-    return addition;
+    return edit
+      ? {
+          name: edit.newName
+        }
+      : addition;
   });
 
   // bundle edit columns into new columns
@@ -869,7 +869,7 @@ export const editsToMigrations = (command: EditSchema) => {
   for (const [_, columns] of Object.entries(localColumnEdits)) {
     for (const [_, data] of Object.entries(columns)) {
       const { name, nullable, unique, type, link, originalName } = data;
-      const cols = augmentColumns([data]).map(({ column, tableName }) => {
+      const cols = augmentColumns([data]).map(({ column: _, tableName }) => {
         return {
           alter_column: {
             column: originalName,
