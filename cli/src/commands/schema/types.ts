@@ -41,6 +41,8 @@ export type AddColumnPayload = {
   column: ColumnData;
 };
 
+export type ColumnAdditionData = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
+
 export type EditColumnPayload = {
   type: 'edit-column';
   column: ColumnData;

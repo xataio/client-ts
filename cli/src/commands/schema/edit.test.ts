@@ -2,6 +2,8 @@ import { beforeEach, expect, test, describe } from 'vitest';
 import {
   AddColumnPayload,
   AddTablePayload,
+  ColumnAdditionData,
+  ColumnData,
   DeleteColumnPayload,
   DeleteTablePayload,
   EditColumnPayload,
@@ -14,7 +16,7 @@ class mockEdit {
   tableAdditions: AddTablePayload['table'][] = [];
   tableEdits: EditTablePayload['table'][] = [];
   tableDeletions: DeleteTablePayload[] = [];
-  columnAdditions: AddColumnPayload['column'][] = [];
+  columnAdditions: ColumnAdditionData = {};
   columnEdits: EditColumnPayload['column'][] = [];
   columnDeletions: DeleteColumnPayload = {};
   currentMigration: PgRollMigration = { operations: [] };
@@ -26,11 +28,18 @@ beforeEach(() => {
   editCommand.tableAdditions = [];
   editCommand.tableEdits = [];
   editCommand.tableDeletions = [];
-  editCommand.columnAdditions = [];
+  editCommand.columnAdditions = {};
   editCommand.columnEdits = [];
   editCommand.columnDeletions = {};
   editCommand.currentMigration = { operations: [] };
 });
+
+const createAddition = (column: ColumnData) => {
+  if (!editCommand.columnAdditions[column.tableName]) editCommand.columnAdditions[column.tableName] = {};
+  if (!editCommand.columnAdditions[column.tableName][column.originalName])
+    editCommand.columnAdditions[column.tableName][column.originalName] = {} as any;
+  editCommand.columnAdditions[column.tableName][column.originalName] = column;
+};
 
 const column: AddColumnPayload['column'] = {
   name: 'col1',
@@ -83,7 +92,7 @@ const testCases: TestCase[] = [
   {
     name: 'add column',
     fx: () => {
-      editCommand.columnAdditions.push(column);
+      createAddition(column);
     },
     expectation: [
       {
@@ -110,7 +119,7 @@ const testCases: TestCase[] = [
   {
     name: 'add column default',
     fx: () => {
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'int',
         defaultValue: '10000'
@@ -135,7 +144,7 @@ const testCases: TestCase[] = [
   {
     name: 'add column not null',
     fx: () => {
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'int',
         nullable: false
@@ -160,7 +169,7 @@ const testCases: TestCase[] = [
   {
     name: 'add column unique',
     fx: () => {
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'int',
         unique: true
@@ -185,7 +194,7 @@ const testCases: TestCase[] = [
   {
     name: 'add column file',
     fx: () => {
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'file',
         file: {
@@ -213,7 +222,7 @@ const testCases: TestCase[] = [
   {
     name: 'add column file[]',
     fx: () => {
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'file[]',
         'file[]': {
@@ -241,7 +250,7 @@ const testCases: TestCase[] = [
   {
     name: 'add column vector',
     fx: () => {
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'vector',
         vector: {
@@ -274,7 +283,7 @@ const testCases: TestCase[] = [
   {
     name: 'add link column',
     fx: () => {
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'link',
         link: { table: 'table2' }
@@ -404,7 +413,7 @@ const testCases: TestCase[] = [
   {
     name: 'deleting an existing table deletes all column additions',
     fx: () => {
-      editCommand.columnAdditions.push(column);
+      createAddition(column);
       editCommand.tableDeletions.push({ name: 'table1' });
     },
     expectation: [{ drop_table: { name: 'table1' } }]
@@ -412,9 +421,9 @@ const testCases: TestCase[] = [
   {
     name: 'creating a new column and deleting an existing table',
     fx: () => {
-      editCommand.columnAdditions.push(column);
+      createAddition(column);
       editCommand.columnDeletions['table1'] = ['col1'];
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         originalName: 'col2',
         name: 'col2'
@@ -497,7 +506,7 @@ const testCases: TestCase[] = [
     name: 'deleting a new table deletes all column additions',
     fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnAdditions.push(column);
+      createAddition(column);
       editCommand.tableDeletions.push({ name: 'table1' });
     },
     expectation: []
@@ -530,7 +539,7 @@ const testCases: TestCase[] = [
     name: 'adding a column on a new table with unique = false is sent correctly',
     fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'float',
         unique: true
@@ -559,7 +568,7 @@ const testCases: TestCase[] = [
     name: 'adding a column on a new table with nullable = false is sent correctly',
     fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'float',
         nullable: false
@@ -588,7 +597,7 @@ const testCases: TestCase[] = [
     name: 'adding a column on a new table with nullable = false is sent correctly',
     fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'float',
         nullable: false
@@ -617,7 +626,7 @@ const testCases: TestCase[] = [
     name: 'adding a column on a new table with nullable = true is sent correctly',
     fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'float',
         nullable: true
@@ -645,7 +654,7 @@ const testCases: TestCase[] = [
   {
     name: 'deleting a new column deletes all column additions, edit and deletions',
     fx: () => {
-      editCommand.columnAdditions.push(column);
+      createAddition(column);
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
@@ -658,7 +667,7 @@ const testCases: TestCase[] = [
     name: 'deleting a newly created column does not remove other deletes',
     fx: () => {
       editCommand.columnDeletions['table1'] = ['col1'];
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         originalName: 'col2',
         name: 'col3',
@@ -678,7 +687,7 @@ const testCases: TestCase[] = [
   {
     name: 'adding a newly created column and making edit',
     fx: () => {
-      editCommand.columnAdditions.push({
+      createAddition({
         ...column,
         type: 'float'
       });
@@ -709,7 +718,7 @@ const testCases: TestCase[] = [
   {
     name: 'editing a new column in an existing table removes the column edit, and gets sent in add_column',
     fx: () => {
-      editCommand.columnAdditions.push(column);
+      createAddition(column);
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
@@ -740,7 +749,7 @@ const testCases: TestCase[] = [
   {
     name: 'deleting a new column deletes all column additions, edits, and deletions',
     fx: () => {
-      editCommand.columnAdditions.push(column);
+      createAddition(column);
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
@@ -753,7 +762,7 @@ const testCases: TestCase[] = [
     name: 'editing a new column in a new table removes the column edit',
     fx: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
-      editCommand.columnAdditions.push(column);
+      createAddition(column);
       editCommand.columnEdits.push({
         ...column,
         name: 'col2'
@@ -785,5 +794,9 @@ const testCases: TestCase[] = [
 ];
 
 describe('edits to migrations', () => {
-  testCases.forEach(({ name, fx, expectation }) => runTest(name, fx, expectation));
+  const testWithOnly = testCases.some(({ only }) => only);
+  testWithOnly
+    ? testCases.filter(({ only }) => only).forEach(({ name, fx, expectation }) => runTest(name, fx, expectation))
+    : null;
+  !testWithOnly ? testCases.forEach(({ name, fx, expectation }) => runTest(name, fx, expectation)) : null;
 });
