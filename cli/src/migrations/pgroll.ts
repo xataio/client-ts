@@ -1,4 +1,4 @@
-import { Schemas } from '@xata.io/client';
+import { Schemas, XataApiClient } from '@xata.io/client';
 import { migrationsDir, readMigrationsDir } from './files.js';
 import path from 'path';
 import { safeJSONParse, safeReadFile } from '../utils/files.js';
@@ -318,3 +318,26 @@ export const notNullUpValue = (column: Column, notNull: boolean) => {
         )} ELSE "${column.name}" END)`
   };
 };
+
+export async function waitForMigrationToFinish(
+  api: XataApiClient,
+  workspace: string,
+  region: string,
+  database: string,
+  branch: string,
+  jobId: string
+): Promise<void> {
+  const { status, error } = await api.migrations.getMigrationJobStatus({
+    pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, jobId }
+  });
+  if (status === 'failed') {
+    throw new Error(`Migration failed, ${error}`);
+  }
+
+  if (status === 'completed') {
+    return;
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
+}

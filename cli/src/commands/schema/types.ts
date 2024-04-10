@@ -35,20 +35,22 @@ export type EditTablePayload = {
   };
 };
 
+export type DeleteTablePayload = {
+  name: string;
+};
+
 export type AddColumnPayload = {
   type: 'add-column';
   tableName: string;
   column: ColumnData;
 };
 
-export type ColumnAdditionData = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
-
 export type EditColumnPayload = {
   type: 'edit-column';
   column: ColumnData;
 };
 
-export type ColumnEditData = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
+export type DeleteColumnPayload = { [tableName: string]: string[] };
 
 export type FormatPayload = {
   type: 'space' | 'migrate' | 'schema';
@@ -63,10 +65,8 @@ export type SelectChoice = {
   hint?: string;
 };
 
-export type DeleteTablePayload = {
-  name: string;
-};
-
-export type DeleteColumnPayload = { [tableName: string]: string[] };
-
 export type ValidationState = { values: { name: string }; items: { name: string; input: string }[] };
+
+export type ColumnAdditions = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
+
+export type ColumnEdits = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };

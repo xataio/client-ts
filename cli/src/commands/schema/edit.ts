@@ -1,6 +1,6 @@
 import { BaseCommand } from '../../base.js';
 import { Flags } from '@oclif/core';
-import { Schemas, XataApiClient } from '@xata.io/client';
+import { Schemas } from '@xata.io/client';
 import {
   OpAddColumn,
   OpAlterColumn,
@@ -16,8 +16,8 @@ import enquirer from 'enquirer';
 import {
   AddColumnPayload,
   AddTablePayload,
-  ColumnAdditionData,
-  ColumnEditData,
+  ColumnAdditions,
+  ColumnEdits,
   DeleteColumnPayload,
   DeleteTablePayload,
   EditColumnPayload,
@@ -30,6 +30,7 @@ import {
   generateLinkReference,
   getBranchDetailsWithPgRoll,
   requiresUpArgument,
+  waitForMigrationToFinish,
   xataColumnTypeToPgRoll,
   xataColumnTypeToPgRollComment,
   xataColumnTypeToPgRollConstraint,
@@ -78,8 +79,9 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   tableAdditions: AddTablePayload['table'][] = [];
   tableEdits: EditTablePayload['table'][] = [];
   tableDeletions: DeleteTablePayload[] = [];
-  columnEdits: ColumnEditData = {};
-  columnAdditions: ColumnAdditionData = {};
+
+  columnEdits: ColumnEdits = {};
+  columnAdditions: ColumnAdditions = {};
   columnDeletions: DeleteColumnPayload = {};
 
   currentMigration: PgRollMigration = { operations: [] };
@@ -117,20 +119,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           ...Object.values(table.columns)
             .filter(({ name }) => !isReservedXataFieldName(name))
             .map((column) => {
-              const col: EditColumnPayload['column'] = {
-                // todo abstract into function
-                name: column.name,
-                unique: column.unique ?? false,
-                type: column.type,
-                nullable: column.notNull === true ? false : true,
-                tableName: table.name,
-                originalName: column.name,
-                defaultValue: column.defaultValue ?? undefined,
-                vector: column.vector ? { dimension: column.vector.dimension } : undefined,
-                link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
-                file: column.type === 'file' ? { defaultPublicAccess: false } : undefined,
-                'file[]': column.type === 'file[]' ? { defaultPublicAccess: false } : undefined
-              };
+              const col = columnToPgroll({ column, tableName: table.name });
               return {
                 name: {
                   type: 'edit-column',
@@ -202,25 +191,22 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
     try {
       const result: SelectChoice['name'] = await select.run();
+      await select.cancel();
       if (result.type === 'add-table') {
-        await select.cancel();
         await this.showAddTable(result.table);
       } else if (result.type === 'edit-column') {
-        await select.cancel();
         if (editColumnDisabled(result.column, this.columnDeletions)) {
           await this.showSchemaEdit();
         } else {
           await this.showColumnEdit(result.column);
         }
       } else if (result.type === 'edit-table') {
-        await select.cancel();
         if (editTableDisabled(result.table.name, this.tableDeletions)) {
           await this.showSchemaEdit();
         } else {
           await this.showTableEdit({ initialTableName: result.table.name });
         }
       } else if (result.type === 'add-column') {
-        await select.cancel();
         await this.showAddColumn(result);
       } else if (result.type === 'migrate') {
         await this.migrate();
@@ -282,36 +268,35 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     }
   }
 
-  renderColumnNameEdited({ column }: { column: EditColumnPayload['column'] }) {
+  getColumnNameEdit({ column }: { column: EditColumnPayload['column'] }) {
     return this.columnEdits[column.tableName]?.[column.originalName]?.name;
   }
 
-  renderColumnNullable({ column }: { column: EditColumnPayload['column'] }) {
+  getColumnNullable({ column }: { column: EditColumnPayload['column'] }) {
     return this.columnEdits[column.tableName]?.[column.originalName]?.nullable ?? column.nullable;
   }
 
-  renderColumnUnique({ column }: { column: EditColumnPayload['column'] }) {
+  getColumnUnique({ column }: { column: EditColumnPayload['column'] }) {
     return this.columnEdits[column.tableName]?.[column.originalName]?.unique ?? column.unique;
   }
 
   renderColumnMessage({ column }: { column: EditColumnPayload['column'] }) {
-    const maybeNewColumnName = this.renderColumnNameEdited({ column });
+    const maybeNewColumnName = this.getColumnNameEdit({ column });
     const isColumnDeleted = Object.entries(this.columnDeletions)
       .filter((entry) => entry[0] === column.tableName)
       .find((entry) => entry[1].includes(column.originalName));
     const isTableDeleted = this.tableDeletions.find(({ name }) => name === column.tableName);
 
-    const displayUnique = () => {
-      const currentUniqueValue = this.renderColumnUnique({ column });
+    const unique = () => {
+      const currentUniqueValue = this.getColumnUnique({ column });
       if (currentUniqueValue !== column.unique) {
         return currentUniqueValue ? chalk.green('unique') : chalk.green('not unique');
       }
       return currentUniqueValue ? chalk.gray.italic('unique') : '';
     };
 
-    // todo better names, render versus display not obvious
-    const displayNullable = () => {
-      const currentNullableValue = this.renderColumnNullable({ column });
+    const nullable = () => {
+      const currentNullableValue = this.getColumnNullable({ column });
       if (currentNullableValue !== column.nullable) {
         return currentNullableValue ? chalk.green('nullable') : chalk.green('not nullable');
       }
@@ -320,8 +305,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
     const metadata = [
       `${chalk.gray.italic(column.type)}${column.type === 'link' ? ` → ${chalk.gray.italic(column.link?.table)}` : ''}`,
-      displayUnique(),
-      displayNullable(),
+      unique(),
+      nullable(),
       column.defaultValue ? chalk.gray.italic(`default: ${column.defaultValue}`) : ''
     ]
       .filter(Boolean)
@@ -396,21 +381,15 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   }
 
   async toggleColumnDelete({ column }: { column: EditColumnPayload['column'] }) {
-    const existingEntry = Object.entries(this.columnDeletions)
-      .filter((entry) => entry[0] === column.tableName)
-      .find((entry) => entry[1].includes(column.originalName));
-    // todo simplify
-    if (existingEntry) {
-      const index = existingEntry[1].findIndex((name) => name === column.originalName);
-      if (index > -1) {
-        this.columnDeletions[column.tableName].splice(index, 1);
-      }
+    const existingEntryIndex = this.columnDeletions[column.tableName]?.findIndex(
+      (name) => name === column.originalName
+    );
+    if (existingEntryIndex > -1) {
+      this.columnDeletions[column.tableName].splice(existingEntryIndex, 1);
     } else {
-      if (!this.columnDeletions[column.tableName]) {
-        this.columnDeletions[column.tableName] = [column.originalName];
-      } else {
-        this.columnDeletions[column.tableName].push(column.originalName);
-      }
+      !this.columnDeletions[column.tableName]
+        ? (this.columnDeletions[column.tableName] = [column.originalName])
+        : this.columnDeletions[column.tableName].push(column.originalName);
     }
   }
 
@@ -423,7 +402,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   };
 
   columnNameAlreadyExists = (value: string, column: AddColumnPayload['column']) => {
-    // todo simplify
     return this.branchDetails?.schema.tables
       .find(({ name }) => name === column.tableName)
       ?.columns.find(({ name }) => name === value) ||
@@ -449,7 +427,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         {
           name: 'name',
           message: 'The name of the column',
-          initial: this.renderColumnNameEdited({ column }) ?? column.originalName,
+          initial: this.getColumnNameEdit({ column }) ?? column.originalName,
           validate: (value: string, state: ValidationState) => {
             if (column.originalName === value || value === state.values.name) return true;
             return (
@@ -460,17 +438,16 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         {
           name: 'nullable',
           message: `Whether the column can be null.`,
-          initial: this.renderColumnNullable({ column }) ? 'true' : 'false',
+          initial: this.getColumnNullable({ column }) ? 'true' : 'false',
           validate: (value: string) => {
             if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
             return true;
           }
         },
         {
-          // todo abstract into function
           name: 'unique',
           message: `Whether the column is unique.`,
-          initial: this.renderColumnUnique({ column }) ? 'true' : 'false',
+          initial: this.getColumnUnique({ column }) ? 'true' : 'false',
           validate: (value: string) => {
             if (parseBoolean(value) === undefined) return 'Invalid value. Unique field must be a boolean';
             return true;
@@ -500,15 +477,15 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         if (!this.columnEdits[column.tableName]) this.columnEdits[column.tableName] = {};
         if (!this.columnEdits[column.tableName][column.originalName])
           this.columnEdits[column.tableName][column.originalName] = {} as any;
-        this.columnEdits[column.tableName][column.originalName] = {
-          name: values.name,
-          nullable: parseBoolean(values.nullable) ?? true,
-          unique: parseBoolean(values.unique) ?? false,
-          type: column.type,
-          defaultValue: column.defaultValue,
-          originalName: column.originalName,
+        this.columnEdits[column.tableName][column.originalName] = columnToPgroll({
+          column: {
+            ...column,
+            ...values,
+            nullable: parseBoolean(values.nullable) ?? true,
+            unique: parseBoolean(values.unique) ?? false
+          },
           tableName: column.tableName
-        };
+        });
       }
       await this.showSchemaEdit();
     } catch (err) {
@@ -622,26 +599,15 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       const { values } = await snippet.run();
       if (!this.columnAdditions[tableName]) this.columnAdditions[tableName] = {};
       if (!this.columnAdditions[tableName][values.name]) this.columnAdditions[tableName][values.name] = {} as any;
-      this.columnAdditions[tableName][values.name] = {
-        tableName,
-        originalName: values.name,
-        name: values.name,
-        type: values.type,
-        nullable: parseBoolean(values.nullable) ?? true,
-        unique: parseBoolean(values.unique) ?? false,
-        defaultValue: values.default,
-        link: values.link ? { table: values.link } : undefined,
-        vector: values.vectorDimension ? { dimension: values.vectorDimension } : undefined,
-        file:
-          values.type === 'file' && values.defaultPublicAccess
-            ? { defaultPublicAccess: values.defaultPublicAccess }
-            : undefined,
-        'file[]':
-          values.type === 'file[]' && values.defaultPublicAccess
-            ? { defaultPublicAccess: values.defaultPublicAccess }
-            : undefined
-      };
-
+      this.columnAdditions[tableName][values.name] = columnToPgroll({
+        column: {
+          ...column,
+          ...values,
+          nullable: parseBoolean(values.nullable) ?? true,
+          unique: parseBoolean(values.unique) ?? false
+        },
+        tableName: column.tableName
+      });
       await this.showSchemaEdit();
     } catch (err) {
       if (err) throw err;
@@ -701,20 +667,14 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
     try {
       const answer: { values: { name: string } } = await snippet.run();
-
-      // todo abstract into a function
-      if (answer.values.name !== initialTableName) {
-        const existingEntry = this.tableEdits.find(({ name }) => name === initialTableName);
-        if (existingEntry) {
-          existingEntry.newName = answer.values.name;
-        } else {
-          this.tableEdits.push({ name: initialTableName, newName: answer.values.name });
-        }
-      } else {
-        const index = this.tableEdits.findIndex(({ name }) => name === initialTableName);
-        if (index > -1) {
-          this.tableEdits.splice(index, 1);
-        }
+      const existingEntry = this.tableEdits.find(({ name }) => name === initialTableName);
+      const changed = answer.values.name !== initialTableName;
+      if (existingEntry && changed) {
+        existingEntry.newName = answer.values.name;
+      } else if (existingEntry && !changed) {
+        this.tableEdits = this.tableEdits.filter(({ name }) => name !== initialTableName);
+      } else if (!existingEntry && changed) {
+        this.tableEdits.push({ name: initialTableName, newName: answer.values.name });
       }
       await this.showSchemaEdit();
     } catch (err) {
@@ -753,8 +713,8 @@ export const editsToMigrations = (command: EditSchema) => {
   );
   let localTableEdits: EditTablePayload['table'][] = JSON.parse(JSON.stringify(command.tableEdits));
   let localTableDeletions: DeleteTablePayload[] = JSON.parse(JSON.stringify(command.tableDeletions));
-  const localColumnAdditions: ColumnAdditionData = JSON.parse(JSON.stringify(command.columnAdditions));
-  const localColumnEdits: ColumnEditData = JSON.parse(JSON.stringify(command.columnEdits));
+  const localColumnAdditions: ColumnAdditions = JSON.parse(JSON.stringify(command.columnAdditions));
+  const localColumnEdits: ColumnEdits = JSON.parse(JSON.stringify(command.columnEdits));
   const localColumnDeletions: DeleteColumnPayload = JSON.parse(JSON.stringify(command.columnDeletions));
 
   const isTableDeleted = (name: string) => {
@@ -815,7 +775,6 @@ export const editsToMigrations = (command: EditSchema) => {
 
   // bundle edit columns into new columns
   for (const [tableName, columns] of Object.entries(localColumnEdits)) {
-    // TODO multiple edits are not being bundled into one
     for (const [columnName, column] of Object.entries(columns)) {
       const columnIsNew = localColumnAdditions[tableName]?.[columnName];
       if (columnIsNew) {
@@ -937,7 +896,6 @@ export const editsToMigrations = (command: EditSchema) => {
   return [...columnDeletions, ...tableDeletions, ...tableAdditions, ...columnAdditions, ...columnEdits, ...tableEdits];
 };
 
-// todo add to pgroll file?
 const augmentColumns = (
   columns: AddColumnPayload['column'][]
 ): { column: OpAddColumn['column']; tableName: string }[] => {
@@ -963,37 +921,35 @@ const augmentColumns = (
   }));
 };
 
-async function waitForMigrationToFinish(
-  api: XataApiClient,
-  workspace: string,
-  region: string,
-  database: string,
-  branch: string,
-  jobId: string
-): Promise<void> {
-  const { status, error } = await api.migrations.getMigrationJobStatus({
-    pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, jobId }
-  });
-  if (status === 'failed') {
-    throw new Error(`Migration failed, ${error}`);
-  }
-
-  if (status === 'completed') {
-    return;
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
-}
-
 const isReservedXataFieldName = (name: string) => {
   return name.toLowerCase().startsWith('xata_');
 };
 
-// todo add to helpers file?
 function parseBoolean(value?: string) {
   if (!value) return undefined;
   const val = value.toLowerCase();
   if (['true', 't', '1', 'y', 'yes'].includes(val)) return true;
   if (['false', 'f', '0', 'n', 'no'].includes(val)) return false;
 }
+
+const columnToPgroll = ({
+  column,
+  tableName
+}: {
+  column: Schemas.Column;
+  tableName: string;
+}): EditColumnPayload['column'] => {
+  return {
+    name: column.name,
+    unique: column.unique ?? false,
+    type: column.type,
+    nullable: column.notNull === true ? false : true,
+    tableName: tableName,
+    originalName: column.name,
+    defaultValue: column.defaultValue ?? undefined,
+    vector: column.vector ? { dimension: column.vector.dimension } : undefined,
+    link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
+    file: column.type === 'file' ? { defaultPublicAccess: false } : undefined,
+    'file[]': column.type === 'file[]' ? { defaultPublicAccess: false } : undefined
+  };
+};
