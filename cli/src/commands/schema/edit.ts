@@ -454,8 +454,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
             ...column,
             ...values,
             originalName: column.originalName,
-            notNull: parseBoolean(values.nullable) === false ?? false,
-            unique: parseBoolean(values.unique) ?? false
+            notNull: parseBoolean(values.nullable) === false ? true : false,
+            unique: parseBoolean(values.unique) ? true : false
           },
           tableName: column.tableName
         });
@@ -581,8 +581,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
               }
             : undefined,
           defaultValue: values.default,
-          notNull: parseBoolean(values.nullable) === false ?? false,
-          unique: parseBoolean(values.unique) ?? false
+          notNull: parseBoolean(values.nullable) === false ? true : false,
+          unique: parseBoolean(values.unique) ? true : false
         },
         tableName: column.tableName
       });
@@ -916,8 +916,9 @@ const formatSchemaColumnToColumnData = ({
     defaultValue: column.defaultValue ?? undefined,
     vector: column.vector ? { dimension: column.vector.dimension } : undefined,
     link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
-    file: column.type === 'file' ? { defaultPublicAccess: false } : undefined,
-    'file[]': column.type === 'file[]' ? { defaultPublicAccess: false } : undefined
+    file: column.type === 'file' ? { defaultPublicAccess: column.file?.defaultPublicAccess ?? false } : undefined,
+    'file[]':
+      column.type === 'file[]' ? { defaultPublicAccess: column['file[]']?.defaultPublicAccess ?? false } : undefined
   };
 };
 
