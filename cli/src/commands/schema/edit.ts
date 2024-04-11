@@ -17,6 +17,7 @@ import {
   AddColumnPayload,
   AddTablePayload,
   ColumnAdditions,
+  ColumnData,
   ColumnEdits,
   DeleteColumnPayload,
   DeleteTablePayload,
@@ -119,7 +120,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           ...Object.values(table.columns)
             .filter(({ name }) => !isReservedXataFieldName(name))
             .map((column) => {
-              const col = columnToPgroll({ column, tableName: table.name });
+              const col = formatSchemaColumnToColumnData({ column, tableName: table.name });
               return {
                 name: {
                   type: 'edit-column',
@@ -393,24 +394,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     }
   }
 
-  tableNameAlreadyExists = (value: string) => {
-    return this.branchDetails?.schema.tables.find(({ name }) => name === value) ||
-      this.tableEdits.find(({ name }) => name === value) ||
-      this.tableAdditions.find(({ name }) => name === value)
-      ? true
-      : false;
-  };
-
-  columnNameAlreadyExists = (value: string, column: AddColumnPayload['column']) => {
-    return this.branchDetails?.schema.tables
-      .find(({ name }) => name === column.tableName)
-      ?.columns.find(({ name }) => name === value) ||
-      this.columnEdits?.[column.tableName]?.[value] ||
-      this.columnAdditions?.[column.tableName]?.[value]
-      ? true
-      : false;
-  };
-
   async showColumnEdit(column: EditColumnPayload['column']) {
     this.clear();
     const template = `
@@ -428,30 +411,19 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           name: 'name',
           message: 'The name of the column',
           initial: this.getColumnNameEdit({ column }) ?? column.originalName,
-          validate: (value: string, state: ValidationState) => {
-            if (column.originalName === value || value === state.values.name) return true;
-            return (
-              !emptyString(value) && !this.columnNameAlreadyExists(value, column) && !isReservedXataFieldName(value)
-            );
-          }
+          validate: (value: string, state: ValidationState) => this.validateColumnName(value, state, column)
         },
         {
           name: 'nullable',
           message: `Whether the column can be null.`,
           initial: this.getColumnNullable({ column }) ? 'true' : 'false',
-          validate: (value: string) => {
-            if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
-            return true;
-          }
+          validate: this.validateColumnNullable
         },
         {
           name: 'unique',
           message: `Whether the column is unique.`,
           initial: this.getColumnUnique({ column }) ? 'true' : 'false',
-          validate: (value: string) => {
-            if (parseBoolean(value) === undefined) return 'Invalid value. Unique field must be a boolean';
-            return true;
-          }
+          validate: this.validateColumnUnique
         }
       ],
       footer: this.footer,
@@ -473,14 +445,15 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         existingEntry.name = values.name;
         existingEntry.nullable = parseBoolean(values.nullable) ?? true;
         existingEntry.unique = parseBoolean(values.unique) ?? false;
-      } else {
+      } else if (!unchanged && !existingEntry) {
         if (!this.columnEdits[column.tableName]) this.columnEdits[column.tableName] = {};
         if (!this.columnEdits[column.tableName][column.originalName])
           this.columnEdits[column.tableName][column.originalName] = {} as any;
-        this.columnEdits[column.tableName][column.originalName] = columnToPgroll({
+        this.columnEdits[column.tableName][column.originalName] = formatSchemaColumnToColumnData({
           column: {
             ...column,
             ...values,
+            originalName: column.originalName,
             notNull: parseBoolean(values.nullable) === false ?? false,
             unique: parseBoolean(values.unique) ?? false
           },
@@ -519,12 +492,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         {
           name: 'name',
           message: 'The name of the column',
-          validate: (value: string) => {
-            if (value === undefined) return 'Name cannot be undefined';
-            if (emptyString(value)) return 'Name cannot be empty';
-            if (this.columnNameAlreadyExists(value, column)) return 'Column already exists';
-            return !isReservedXataFieldName(value);
-          }
+          validate: (value: string, state: ValidationState) => this.validateColumnName(value, state, column)
         },
         {
           name: 'type',
@@ -539,25 +507,16 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         {
           name: 'nullable',
           message: `Whether the column can be null.`,
-          validate: (value: string) => {
-            if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
-            return true;
-          }
+          validate: this.validateColumnNullable
         },
         {
           name: 'unique',
           message: `Whether the column is unique.`,
-          validate: (value: string) => {
-            if (parseBoolean(value) === undefined) return 'Invalid value. Unique field must be a boolean';
-            return true;
-          }
+          validate: this.validateColumnUnique
         },
         {
           name: 'default',
-          message: `The default for the column.`,
-          validate: (value: string) => {
-            return true;
-          }
+          message: `The default for the column.`
         },
         {
           name: 'link',
@@ -566,7 +525,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
             const columnType = state.items.find(({ name }) => name === 'type')?.input;
             if ((value === undefined || emptyString(value)) && columnType === 'link')
               return 'Cannot be empty string when the type is link';
-            if (columnType === 'link' && !this.tableNameAlreadyExists(value)) return 'Table does not exist';
             return true;
           }
         },
@@ -599,10 +557,11 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       const { values } = await snippet.run();
       if (!this.columnAdditions[tableName]) this.columnAdditions[tableName] = {};
       if (!this.columnAdditions[tableName][values.name]) this.columnAdditions[tableName][values.name] = {} as any;
-      this.columnAdditions[tableName][values.name] = columnToPgroll({
+      this.columnAdditions[tableName][values.name] = formatSchemaColumnToColumnData({
         column: {
           ...column,
           ...values,
+          originalName: column.originalName,
           'file[]':
             values.type === 'file[]'
               ? { defaultPublicAccess: parseBoolean(values.defaultPublicAccess) ?? false }
@@ -642,10 +601,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         {
           name: 'name',
           message: 'The table name',
-          validate: (value: string) => {
-            if (emptyString(value)) return 'Name cannot be empty';
-            return !isReservedXataFieldName(value) && !this.tableNameAlreadyExists(value);
-          }
+          validate: this.validateTableName
         }
       ],
       footer: this.footer,
@@ -672,10 +628,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           name: 'name',
           message: 'The table name',
           initial: this.renderTableNameEdited(initialTableName) ?? initialTableName,
-          validate: (value: string, state: ValidationState) => {
-            if (value === state.values.name) return true;
-            return !emptyString(value) && !isReservedXataFieldName(value) && !this.tableNameAlreadyExists(value);
-          }
+          validate: this.validateTableName
         }
       ],
       footer: this.footer,
@@ -700,6 +653,27 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       if (err) throw err;
     }
   }
+
+  validateTableName = (value: string, state: ValidationState) => {
+    if (value === undefined) return 'Name cannot be undefined';
+    if (emptyString(value)) return 'Name cannot be empty';
+    if (value === state.fields.find((field) => field.name === 'name')?.initial) return true;
+    return !emptyString(value) && !isReservedXataFieldName(value);
+  };
+
+  validateColumnName = (value: string, state: ValidationState, column: ColumnData) => {
+    if (value === undefined) return 'Name cannot be undefined';
+    if (emptyString(value)) return 'Name cannot be empty';
+    return !isReservedXataFieldName(value);
+  };
+  validateColumnNullable = (value: string, state: ValidationState) => {
+    if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
+    return true;
+  };
+  validateColumnUnique = (value: string, state: ValidationState) => {
+    if (parseBoolean(value) === undefined) return 'Invalid value. Unique field must be a boolean';
+    return true;
+  };
 }
 
 const editTableDisabled = (name: string, tableDeletions: DeleteTablePayload[]) => {
@@ -855,7 +829,7 @@ export const editsToMigrations = (command: EditSchema) => {
   const columnAdditions: { add_column: OpAddColumn }[] = [];
   for (const [_, columns] of Object.entries(localColumnAdditions)) {
     columnAdditions.push(
-      ...augmentColumns(Object.values(columns)).map(({ column, tableName }) => {
+      ...formatColumnDataToPgroll(Object.values(columns)).map(({ column, tableName }) => {
         return {
           add_column: {
             column,
@@ -870,7 +844,7 @@ export const editsToMigrations = (command: EditSchema) => {
     return {
       create_table: {
         name: name,
-        columns: augmentColumns(columns ?? []).map(({ column }) => column)
+        columns: formatColumnDataToPgroll(columns ?? []).map(({ column }) => column)
       }
     };
   });
@@ -888,7 +862,7 @@ export const editsToMigrations = (command: EditSchema) => {
   for (const [_, columns] of Object.entries(localColumnEdits)) {
     for (const [_, data] of Object.entries(columns)) {
       const { name, nullable, unique, type, link, originalName } = data;
-      const cols = augmentColumns([data]).map(({ column: _, tableName }) => {
+      const cols = formatColumnDataToPgroll([data]).map(({ column: _, tableName }) => {
         return {
           alter_column: {
             column: originalName,
@@ -901,8 +875,7 @@ export const editsToMigrations = (command: EditSchema) => {
                 },
             name,
             references: type === 'link' ? generateLinkReference({ column: name, table: link?.table ?? '' }) : undefined,
-            // todo if just a rename, no up and down required
-            // todo if notnull changes - notNullUpValue needs to be called
+            // TODO https://github.com/xataio/pgroll/issues/336
             up: `"${name}"`,
             down: `"${name}"`
           }
@@ -915,7 +888,40 @@ export const editsToMigrations = (command: EditSchema) => {
   return [...columnDeletions, ...tableDeletions, ...tableAdditions, ...columnAdditions, ...columnEdits, ...tableEdits];
 };
 
-const augmentColumns = (
+const isReservedXataFieldName = (name: string) => {
+  return name.toLowerCase().startsWith('xata_');
+};
+
+function parseBoolean(value?: string) {
+  if (!value) return undefined;
+  const val = value.toLowerCase();
+  if (['true', 't', '1', 'y', 'yes'].includes(val)) return true;
+  if (['false', 'f', '0', 'n', 'no'].includes(val)) return false;
+}
+
+const formatSchemaColumnToColumnData = ({
+  column,
+  tableName
+}: {
+  column: Schemas.Column;
+  tableName: string;
+}): EditColumnPayload['column'] => {
+  return {
+    name: column.name,
+    unique: column.unique ?? false,
+    type: column.type,
+    nullable: column.notNull === true ? false : true,
+    tableName: tableName,
+    originalName: column.name,
+    defaultValue: column.defaultValue ?? undefined,
+    vector: column.vector ? { dimension: column.vector.dimension } : undefined,
+    link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
+    file: column.type === 'file' ? { defaultPublicAccess: false } : undefined,
+    'file[]': column.type === 'file[]' ? { defaultPublicAccess: false } : undefined
+  };
+};
+
+const formatColumnDataToPgroll = (
   columns: AddColumnPayload['column'][]
 ): { column: OpAddColumn['column']; tableName: string }[] => {
   return columns.map((column) => ({
@@ -938,37 +944,4 @@ const augmentColumns = (
         : undefined
     }
   }));
-};
-
-const isReservedXataFieldName = (name: string) => {
-  return name.toLowerCase().startsWith('xata_');
-};
-
-function parseBoolean(value?: string) {
-  if (!value) return undefined;
-  const val = value.toLowerCase();
-  if (['true', 't', '1', 'y', 'yes'].includes(val)) return true;
-  if (['false', 'f', '0', 'n', 'no'].includes(val)) return false;
-}
-
-const columnToPgroll = ({
-  column,
-  tableName
-}: {
-  column: Schemas.Column;
-  tableName: string;
-}): EditColumnPayload['column'] => {
-  return {
-    name: column.name,
-    unique: column.unique ?? false,
-    type: column.type,
-    nullable: column.notNull === true ? false : true,
-    tableName: tableName,
-    originalName: column.name,
-    defaultValue: column.defaultValue ?? undefined,
-    vector: column.vector ? { dimension: column.vector.dimension } : undefined,
-    link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
-    file: column.type === 'file' ? { defaultPublicAccess: false } : undefined,
-    'file[]': column.type === 'file[]' ? { defaultPublicAccess: false } : undefined
-  };
 };
