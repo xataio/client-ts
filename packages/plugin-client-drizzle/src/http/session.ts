@@ -148,7 +148,6 @@ export class XataHttpSession<
 
   override async transaction<T>(
     _transaction: (tx: XataTransaction<TFullSchema, TSchema>) => Promise<T>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _config: PgTransactionConfig = {}
   ): Promise<T> {
     throw new Error('No transactions support in Xata Http driver');

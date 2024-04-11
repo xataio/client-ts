@@ -56,24 +56,48 @@ type PropertyType<Tables, Properties, PropertyName extends PropertyKey> = Proper
     : never
   : never;
 
-type InnerType<Type, Tables, LinkedTable> = Type extends 'string' | 'text' | 'email'
+type InnerType<Type, Tables, LinkedTable> = Type extends
+  | 'string'
+  | 'text'
+  | 'email'
+  | 'character'
+  | 'varchar'
+  | 'character varying'
+  | `varchar(${number})`
+  | `character(${number})`
   ? string
-  : Type extends 'int' | 'float'
+  : Type extends
+      | 'int'
+      | 'float'
+      | 'bigint'
+      | 'int8'
+      | 'integer'
+      | 'int4'
+      | 'smallint'
+      | 'double precision'
+      | 'float8'
+      | 'real'
+      | 'numeric'
   ? number
-  : Type extends 'bool'
+  : Type extends 'bool' | 'boolean'
   ? boolean
-  : Type extends 'datetime'
+  : Type extends 'datetime' | 'timestamptz'
   ? Date
-  : Type extends 'multiple'
+  : Type extends 'multiple' | 'text[]'
   ? string[]
-  : Type extends 'vector'
+  : Type extends 'vector' | 'real[]' | 'float[]' | 'double precision[]' | 'float8[]' | 'numeric[]'
   ? number[]
-  : Type extends 'file'
+  : Type extends 'int[]' | 'bigint[]' | 'int8[]' | 'integer[]' | 'int4[]' | 'smallint[]'
+  ? number[]
+  : Type extends 'bool[]' | 'boolean[]'
+  ? boolean[]
+  : Type extends 'file' | 'xata_file'
   ? XataFile
-  : Type extends 'file[]'
+  : Type extends 'file[]' | 'xata_file_array'
   ? XataArrayFile[]
-  : Type extends 'json'
+  : Type extends 'json' | 'jsonb'
   ? JSONValue<any>
   : Type extends 'link'
   ? TableType<Tables, LinkedTable> & XataRecord
-  : never;
+  : // This is a fallback for when the type is not recognized
+    string;

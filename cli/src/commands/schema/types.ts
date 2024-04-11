@@ -65,7 +65,11 @@ export type SelectChoice = {
   hint?: string;
 };
 
-export type ValidationState = { values: { name: string }; items: { name: string; input: string }[] };
+export type ValidationState = {
+  values: { name: string };
+  items: { name: string; input: string }[];
+  fields: { name: string; initial: string }[];
+};
 
 export type ColumnAdditions = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
 

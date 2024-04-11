@@ -31,10 +31,10 @@
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
     "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.22.4"
+    "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
     "ts-morph": "^22.0.0",
-    "tsx": "^4.7.1"
+    "tsx": "^4.7.2"
   }
 }

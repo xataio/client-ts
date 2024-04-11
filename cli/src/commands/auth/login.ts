@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import { parseProviderString } from '@xata.io/client';
 import { BaseCommand } from '../../base.js';
-import { hasProfile, setProfile } from '../../credentials.js';
+import { buildProfile, hasProfile, setProfile } from '../../credentials.js';
 
 export default class Login extends BaseCommand<typeof Login> {
   static description = 'Authenticate with Xata';
@@ -12,6 +12,9 @@ export default class Login extends BaseCommand<typeof Login> {
     ...BaseCommand.forceFlag('Overwrite existing credentials if they exist'),
     host: Flags.string({
       description: 'Xata API host provider'
+    }),
+    'web-host': Flags.string({
+      description: 'Xata web host url (app.xata.io)'
     }),
     'api-key': Flags.string({
       description: 'Xata API key to use for authentication'
@@ -42,11 +45,13 @@ export default class Login extends BaseCommand<typeof Login> {
       this.error('Invalid host provider, expected either "production", "staging" or "{apiUrl},{workspacesUrl}"');
     }
 
-    const key = flags['api-key'] ?? (await this.obtainKey());
+    const web = flags['web-host'];
+    const newProfile = buildProfile({ name: profile.name, api: flags.host, web });
+    const key = flags['api-key'] ?? (await this.obtainKey(newProfile.web));
 
     await this.verifyAPIKey({ ...profile, apiKey: key, host });
 
-    await setProfile(profile.name, { apiKey: key, api: flags.host });
+    await setProfile(profile.name, { ...newProfile, apiKey: key });
 
     this.success('All set! you can now start using xata');
   }

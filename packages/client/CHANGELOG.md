@@ -1,5 +1,13 @@
 # @xata.io/client
 
+## 0.29.4
+
+### Patch Changes
+
+- [#1429](https://github.com/xataio/client-ts/pull/1429) [`2140a24`](https://github.com/xataio/client-ts/commit/2140a24f32a94f36bab8c8268033c7dcf235dddc) Thanks [@SferaDev](https://github.com/SferaDev)! - Add more postgres types to inference
+
+- [#1428](https://github.com/xataio/client-ts/pull/1428) [`d8032f2`](https://github.com/xataio/client-ts/commit/d8032f2e07bdcc653db1606796d27f08d397cdbe) Thanks [@SferaDev](https://github.com/SferaDev)! - Remove errors of Buffer in cloudflare
+
 ## 0.29.3
 
 ### Patch Changes
