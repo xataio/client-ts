@@ -44,15 +44,11 @@ class mockEdit {
       tables: [
         {
           name: 'table1',
-          checkConstraints: { two_xata_id_length_xata_id: [Object] },
-          foreignKeys: { link_link: [Object] },
+          checkConstraints: {},
+          foreignKeys: {},
           primaryKey: [],
-          uniqueConstraints: { _pgroll_new_two_xata_id_key: [Object] },
-          columns: [
-            {
-              ...column
-            }
-          ]
+          uniqueConstraints: {},
+          columns: [column]
         }
       ]
     },
@@ -87,9 +83,9 @@ const createEdit = (column: ColumnData) => {
   editCommand.columnEdits[column.tableName][column.originalName] = column;
 };
 
-const runTest = (name: string, fx: () => void, expectation: any) => {
+const runTest = (name: string, setup: () => void, expectation: any) => {
   test(name, () => {
-    fx();
+    setup();
     editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
     expect(editCommand.currentMigration.operations).toEqual(expectation);
   });
@@ -97,7 +93,7 @@ const runTest = (name: string, fx: () => void, expectation: any) => {
 
 type TestCase = {
   name: string;
-  fx: () => void;
+  setup: () => void;
   expectation: any;
   only?: boolean;
 };
@@ -105,28 +101,28 @@ type TestCase = {
 const testCases: TestCase[] = [
   {
     name: 'add table',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
     },
     expectation: [{ create_table: { name: 'table1', columns: [] } }]
   },
   {
     name: 'delete table',
-    fx: () => {
+    setup: () => {
       editCommand.tableDeletions.push({ name: 'table1' });
     },
     expectation: [{ drop_table: { name: 'table1' } }]
   },
   {
     name: 'edit table',
-    fx: () => {
+    setup: () => {
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
     },
     expectation: [{ rename_table: { from: 'table1', to: 'table2' } }]
   },
   {
     name: 'add column',
-    fx: () => {
+    setup: () => {
       createAddition(column);
     },
     expectation: [
@@ -153,7 +149,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'add column default',
-    fx: () => {
+    setup: () => {
       createAddition({
         ...column,
         type: 'int',
@@ -178,7 +174,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'add column not null',
-    fx: () => {
+    setup: () => {
       createAddition({
         ...column,
         type: 'int',
@@ -203,7 +199,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'add column unique',
-    fx: () => {
+    setup: () => {
       createAddition({
         ...column,
         type: 'int',
@@ -228,7 +224,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'add column file',
-    fx: () => {
+    setup: () => {
       createAddition({
         ...column,
         type: 'file',
@@ -256,7 +252,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'add column file[]',
-    fx: () => {
+    setup: () => {
       createAddition({
         ...column,
         type: 'file[]',
@@ -284,7 +280,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'add column vector',
-    fx: () => {
+    setup: () => {
       createAddition({
         ...column,
         type: 'vector',
@@ -317,7 +313,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'add link column',
-    fx: () => {
+    setup: () => {
       createAddition({
         ...column,
         type: 'link',
@@ -349,7 +345,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'edit column',
-    fx: () => {
+    setup: () => {
       createEdit({
         ...column,
         name: 'col2'
@@ -367,7 +363,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'edit column nullable to not nullable',
-    fx: () => {
+    setup: () => {
       createEdit({
         ...column,
         nullable: false
@@ -387,7 +383,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'edit column not unique to unique',
-    fx: () => {
+    setup: () => {
       createEdit({
         ...column,
         unique: true
@@ -409,7 +405,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'deleting an existing table deletes all table edits',
-    fx: () => {
+    setup: () => {
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
       editCommand.tableDeletions.push({ name: 'table1' });
     },
@@ -417,7 +413,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'deleting an existing table deletes all column edits',
-    fx: () => {
+    setup: () => {
       createEdit({
         ...column,
         name: 'col2'
@@ -428,7 +424,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'deleting an existing table deletes all column deletes',
-    fx: () => {
+    setup: () => {
       editCommand.columnDeletions['table1'] = ['col1'];
       editCommand.tableDeletions.push({ name: 'table1' });
     },
@@ -436,7 +432,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'deleting an existing table deletes all column additions',
-    fx: () => {
+    setup: () => {
       createAddition(column);
       editCommand.tableDeletions.push({ name: 'table1' });
     },
@@ -444,7 +440,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'creating a new column and deleting an existing table',
-    fx: () => {
+    setup: () => {
       createAddition(column);
       editCommand.columnDeletions['table1'] = ['col1'];
       createAddition({
@@ -477,7 +473,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'deleting an existing column deletes all column edits',
-    fx: () => {
+    setup: () => {
       createEdit({
         ...column,
         name: 'col2'
@@ -496,7 +492,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'deleting a new table deletes all table edits',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
       editCommand.tableDeletions.push({ name: 'table1' });
@@ -505,7 +501,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'deleting a new table deletes all column edits',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       createEdit({
         ...column,
@@ -518,7 +514,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'deleting a new table deletes all column deletes',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.columnDeletions['table1'] = ['col1'];
       editCommand.tableDeletions.push({ name: 'table1' });
@@ -528,7 +524,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'deleting a new table deletes all column additions',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition(column);
       editCommand.tableDeletions.push({ name: 'table1' });
@@ -537,7 +533,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'editing a new table is bundled with the table addition',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
     },
@@ -549,7 +545,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'editing a new table removes the table edit',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       editCommand.tableEdits.push({ name: 'table1', newName: 'table2' });
     },
@@ -561,7 +557,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'adding a column on a new table with unique = false is sent correctly',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition({
         ...column,
@@ -590,7 +586,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'adding a column on a new table with nullable = false is sent correctly',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition({
         ...column,
@@ -619,7 +615,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'adding a column on a new table with nullable = false is sent correctly',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition({
         ...column,
@@ -648,7 +644,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'adding a column on a new table with nullable = true is sent correctly',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition({
         ...column,
@@ -677,7 +673,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'deleting a new column deletes all column additions, edit and deletions',
-    fx: () => {
+    setup: () => {
       createAddition(column);
       createEdit({
         ...column,
@@ -689,7 +685,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'deleting a newly created column does not remove other deletes',
-    fx: () => {
+    setup: () => {
       editCommand.columnDeletions['table1'] = ['col1'];
       createAddition({
         ...column,
@@ -710,7 +706,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'adding a newly created column and making edit',
-    fx: () => {
+    setup: () => {
       createAddition({
         ...column,
         type: 'float'
@@ -749,7 +745,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'editing a new column in an existing table removes the column edit, and gets sent in add_column',
-    fx: () => {
+    setup: () => {
       createAddition(column);
       createEdit({
         ...column,
@@ -780,7 +776,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'deleting a new column deletes all column additions, edits, and deletions',
-    fx: () => {
+    setup: () => {
       createAddition(column);
       createEdit({
         ...column,
@@ -792,7 +788,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'editing a new column in a new table removes the column edit',
-    fx: () => {
+    setup: () => {
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition(column);
       createAddition({
@@ -851,7 +847,7 @@ const testCases: TestCase[] = [
 describe('edits to migrations', () => {
   const testWithOnly = testCases.some(({ only }) => only);
   testWithOnly
-    ? testCases.filter(({ only }) => only).forEach(({ name, fx, expectation }) => runTest(name, fx, expectation))
+    ? testCases.filter(({ only }) => only).forEach(({ name, setup, expectation }) => runTest(name, setup, expectation))
     : null;
-  !testWithOnly ? testCases.forEach(({ name, fx, expectation }) => runTest(name, fx, expectation)) : null;
+  !testWithOnly ? testCases.forEach(({ name, setup, expectation }) => runTest(name, setup, expectation)) : null;
 });

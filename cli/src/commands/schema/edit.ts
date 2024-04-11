@@ -91,6 +91,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   activeIndex: number = 0;
 
   async showSchemaEdit() {
+    this.clear();
     const tableChoices: SelectChoice[] = [];
     const select = new Select({
       message: 'Schema for database test:main',
@@ -196,7 +197,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
     try {
       const result: SelectChoice['name'] = await select.run();
-      await select.cancel();
       if (result.type === 'add-table') {
         await this.showAddTable(result.table);
       } else if (result.type === 'edit-column') {
@@ -223,6 +223,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     } catch (error) {
       if (error) throw error;
     }
+    this.clear();
   }
 
   async migrate() {
@@ -439,7 +440,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       const existingEntry = this.columnEdits[column.tableName]?.[column.originalName];
 
       const unchanged =
-        column.name === values.name &&
+        column.originalName === values.name &&
         column.nullable === parseBoolean(values.nullable) &&
         column.unique === parseBoolean(values.unique);
       if (unchanged && existingEntry) {
@@ -466,6 +467,9 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       await this.showSchemaEdit();
     } catch (err) {
       if (err) throw err;
+      // User cancelled
+      await this.showSchemaEdit();
+      return;
     }
   }
 
@@ -592,6 +596,9 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       await this.showSchemaEdit();
     } catch (err) {
       if (err) throw err;
+      // User cancelled
+      await this.showSchemaEdit();
+      return;
     }
   }
 
@@ -616,10 +623,10 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     try {
       const answer: { values: { name: string } } = await snippet.run();
       this.tableAdditions.push({ name: answer.values.name });
-      await this.showSchemaEdit();
     } catch (err) {
       if (err) throw err;
     }
+    await this.showSchemaEdit();
   }
 
   async showTableEdit({ initialTableName }: { initialTableName: string }) {
@@ -654,6 +661,9 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       await this.showSchemaEdit();
     } catch (err) {
       if (err) throw err;
+      // User cancelled
+      await this.showSchemaEdit();
+      return;
     }
   }
 
@@ -702,7 +712,7 @@ const createSpace = (): SelectChoice => {
 
 export const editsToMigrations = (command: EditSchema) => {
   // Duplicating here because if we remove items from class state they dont show on UI
-  // todo better way to deep copy? If not surround with try catch
+  // TODO better way to deep copy? If not surround with try catch
 
   let localTableAdditions: (AddTablePayload['table'] & { columns?: AddColumnPayload['column'][] })[] = JSON.parse(
     JSON.stringify(command.tableAdditions)
@@ -731,19 +741,19 @@ export const editsToMigrations = (command: EditSchema) => {
     }
   }
 
-  // if column was deleted then remove edits, and additions and deletions if new
+  // If column was deleted then remove edits, and additions and deletions if new
   for (const [tableName, columns] of Object.entries(localColumnDeletions)) {
     for (const columnName of columns) {
       const columnWasEdited = localColumnEdits[tableName]?.[columnName];
       if (columnWasEdited) {
-        // remove the edit
+        // Remove the edit
         delete localColumnEdits[tableName][columnName];
       }
       const columnWasAdded = localColumnAdditions[tableName]?.[columnName];
       if (columnWasAdded) {
-        // remove deletions
+        // Remove deletions
         localColumnDeletions[tableName] = localColumnDeletions[tableName].filter((col) => col !== columnName);
-        // remove the addition
+        // Remove the addition
         delete localColumnAdditions[tableName][columnName];
       }
     }
@@ -769,19 +779,19 @@ export const editsToMigrations = (command: EditSchema) => {
       : addition;
   });
 
-  // bundle edit columns into new columns
+  // Bundle edit columns into new columns
   for (const [tableName, columns] of Object.entries(localColumnEdits)) {
     for (const [columnName, column] of Object.entries(columns)) {
       const columnIsNew = localColumnAdditions[tableName]?.[columnName];
       if (columnIsNew) {
-        // add to column additions
+        // Add to column additions
         localColumnAdditions[tableName][columnName] = {
           ...column,
           name: column.name,
           unique: column.unique ?? false,
           nullable: column.nullable ?? true
         };
-        // delete column from edits
+        // Delete column from edits
         delete localColumnEdits[tableName][columnName];
         if (Object.keys(localColumnEdits[tableName]).length === 0) {
           delete localColumnEdits[tableName];
@@ -790,7 +800,7 @@ export const editsToMigrations = (command: EditSchema) => {
     }
   }
 
-  // bundle new columns into new tables
+  // Bundle new columns into new tables
   for (const [tableName, columns] of Object.entries(localColumnAdditions)) {
     const tableIsNew = localTableAdditions.find((addition) => addition.name === tableName);
     if (tableIsNew) {
@@ -798,10 +808,10 @@ export const editsToMigrations = (command: EditSchema) => {
         const localTableAddition = localTableAdditions.find((addition) => addition.name === tableName);
         if (localTableAddition) {
           if (!localTableAddition?.columns) localTableAddition.columns = [];
-          // add to table additions
+          // Add to table additions
           localTableAddition?.columns.push(column);
         }
-        // delete from column additions
+        // Delete from column additions
         delete localColumnAdditions[tableName][columnName];
       }
       delete localColumnAdditions[tableName];
@@ -926,8 +936,7 @@ export const editsToMigrations = (command: EditSchema) => {
         }
 
         if (uniqueRemoved) {
-          // should changing the name of a column also change the name of the unique constraint?
-          // we dont do that in the front end either
+          // Should changing the name of a column also change the name of the unique constraint?
           const uniqueConstraintName = Object.values(
             // @ts-ignore
             command.branchDetails?.schema.tables.find((table) => tableName === table.name)?.uniqueConstraints ?? {}
