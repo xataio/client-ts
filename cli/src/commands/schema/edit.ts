@@ -928,8 +928,8 @@ export const editsToMigrations = (command: EditSchema) => {
         if (uniqueRemoved) {
           // should changing the name of a column also change the name of the unique constraint?
           // we dont do that in the front end either
-          // @ts-ignore
           const uniqueConstraintName = Object.values(
+            // @ts-ignore
             command.branchDetails?.schema.tables.find((table) => tableName === table.name)?.uniqueConstraints ?? {}
           ).find(
             (constraint: any) => constraint.columns.length === 1 && constraint.columns[0] === originalField.name
