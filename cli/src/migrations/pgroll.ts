@@ -101,6 +101,10 @@ export async function getBranchDetailsWithPgRoll(
       schema: {
         tables: Object.entries(pgroll.schema.tables ?? []).map(([name, table]: any) => ({
           name,
+          checkConstraints: table.checkConstraints,
+          foreignKeys: table.foreignKeys,
+          primaryKey: table.primaryKey,
+          uniqueConstraints: table.uniqueConstraints,
           columns: Object.values(table.columns ?? {})
             .filter((column: any) => !['_id', '_createdat', '_updatedat', '_version'].includes(column.name))
             .map((column: any) => ({
@@ -301,23 +305,6 @@ export function xataColumnTypeToZeroValue(type: Column['type'], defaultValue: un
       return "''";
   }
 }
-
-export const notNullUpValue = (column: Column, notNull: boolean) => {
-  return {
-    up: notNull
-      ? `(SELECT CASE WHEN "${column.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
-          column.type,
-          column.defaultValue
-        )} ELSE "${column.name}" END)`
-      : `"${column.name}"`,
-    down: notNull
-      ? `"${column.name}"`
-      : `(SELECT CASE WHEN "${column.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
-          column.type,
-          column.defaultValue
-        )} ELSE "${column.name}" END)`
-  };
-};
 
 export async function waitForMigrationToFinish(
   api: XataApiClient,

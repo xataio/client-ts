@@ -6,6 +6,7 @@ import {
   OpAlterColumn,
   OpCreateTable,
   OpDropColumn,
+  OpDropConstraint,
   OpDropTable,
   OpRenameTable,
   PgRollMigration,
@@ -120,7 +121,10 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           ...Object.values(table.columns)
             .filter(({ name }) => !isReservedXataFieldName(name))
             .map((column) => {
-              const col = formatSchemaColumnToColumnData({ column, tableName: table.name });
+              const col = formatSchemaColumnToColumnData({
+                column: { ...column, originalName: column.name },
+                tableName: table.name
+              });
               return {
                 name: {
                   type: 'edit-column',
@@ -438,7 +442,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         column.name === values.name &&
         column.nullable === parseBoolean(values.nullable) &&
         column.unique === parseBoolean(values.unique);
-
       if (unchanged && existingEntry) {
         delete this.columnEdits[column.tableName][column.originalName];
       } else if (!unchanged && existingEntry) {
@@ -858,30 +861,99 @@ export const editsToMigrations = (command: EditSchema) => {
     };
   });
 
-  const columnEdits: { alter_column: OpAlterColumn }[] = [];
+  const columnEdits: ({ alter_column: OpAlterColumn } | { drop_constraint: OpDropConstraint })[] = [];
   for (const [_, columns] of Object.entries(localColumnEdits)) {
     for (const [_, data] of Object.entries(columns)) {
-      const { name, nullable, unique, type, link, originalName } = data;
-      const cols = formatColumnDataToPgroll([data]).map(({ column: _, tableName }) => {
-        return {
+      const { name, nullable, unique, originalName } = data;
+      formatColumnDataToPgroll([data]).map(({ column: _, tableName }) => {
+        const originalField = command.branchDetails?.schema.tables
+          .find((table) => table.name === tableName)
+          ?.columns.find((col) => col.name === originalName);
+        if (!originalField) {
+          throw new Error(`Could not find original field ${originalName} in table ${tableName}`);
+        }
+
+        // TODO these wont work in combination until https://github.com/xataio/pgroll/issues/336
+        const nameChanged = name !== originalField.name;
+        const nullableChanged = nullable !== !originalField.notNull;
+        const uniqueAdded = unique !== originalField.unique && unique === true;
+        const uniqueRemoved = unique !== originalField.unique && unique === false;
+
+        const uniqueValue = uniqueAdded
+          ? {
+              unique: {
+                name: `${tableName}_${name}_unique`
+              },
+              up: `"${name}"`,
+              down: `"${name}"`
+            }
+          : undefined;
+
+        const nameToUse = nameChanged ? name : originalField.name;
+
+        const nullValue = nullableChanged
+          ? {
+              up:
+                nullable === false
+                  ? `(SELECT CASE WHEN "${originalField.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
+                      originalField.type,
+                      originalField.defaultValue
+                    )} ELSE "${nameToUse}" END)`
+                  : `"${nameToUse}"`,
+              down:
+                nullable === true
+                  ? `"${nameToUse}"`
+                  : `(SELECT CASE WHEN "${originalField.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
+                      originalField.type,
+                      originalField.defaultValue
+                    )} ELSE "${nameToUse}" END)`
+            }
+          : undefined;
+
+        const alterStatement = {
           alter_column: {
-            column: originalName,
+            column: originalField.name,
             table: tableName,
-            nullable,
-            unique: !unique
-              ? undefined
-              : {
-                  name: `unique_constraint_${tableName}_${name}`
-                },
-            name,
-            references: type === 'link' ? generateLinkReference({ column: name, table: link?.table ?? '' }) : undefined,
-            // TODO https://github.com/xataio/pgroll/issues/336
-            up: `"${name}"`,
-            down: `"${name}"`
+            name: nameChanged ? name : undefined,
+            nullable: nullableChanged ? nullable : undefined,
+            ...uniqueValue,
+            ...nullValue
           }
         };
+
+        if (nullableChanged || nameChanged || uniqueAdded) {
+          columnEdits.push(alterStatement);
+        }
+
+        if (uniqueRemoved) {
+          // should changing the name of a column also change the name of the unique constraint?
+          // we dont do that in the front end either
+          // @ts-ignore
+          const uniqueConstraintName = Object.values(
+            command.branchDetails?.schema.tables.find((table) => tableName === table.name)?.uniqueConstraints ?? {}
+          ).find(
+            (constraint: any) => constraint.columns.length === 1 && constraint.columns[0] === originalField.name
+            // @ts-ignore
+          )?.name;
+
+          const maybeDropStatement =
+            uniqueRemoved && uniqueConstraintName
+              ? {
+                  drop_constraint: {
+                    table: tableName,
+                    column: originalField.name,
+                    name: uniqueConstraintName,
+                    up: `"${nameToUse}"`,
+                    down: `"${nameToUse}"`
+                  }
+                }
+              : undefined;
+
+          if (maybeDropStatement) {
+            columnEdits.push(maybeDropStatement);
+          }
+        }
       });
-      columnEdits.push(...cols);
     }
   }
 
@@ -903,7 +975,7 @@ const formatSchemaColumnToColumnData = ({
   column,
   tableName
 }: {
-  column: Schemas.Column;
+  column: Schemas.Column & { originalName: string };
   tableName: string;
 }): EditColumnPayload['column'] => {
   return {
@@ -912,7 +984,7 @@ const formatSchemaColumnToColumnData = ({
     type: column.type,
     nullable: column.notNull === true ? false : true,
     tableName: tableName,
-    originalName: column.name,
+    originalName: column.originalName,
     defaultValue: column.defaultValue ?? undefined,
     vector: column.vector ? { dimension: column.vector.dimension } : undefined,
     link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
