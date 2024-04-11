@@ -171,7 +171,7 @@ export function xataColumnTypeToPgRoll(type: Column['type']): string {
     case 'vector':
       return 'real[]';
     default:
-      return exhaustiveCheck(type);
+      return 'text';
   }
 }
 
@@ -227,7 +227,7 @@ export const xataColumnTypeToPgRollConstraint = (column: Column, table: string) 
       case 'json':
         return undefined;
       default:
-        return exhaustiveCheck(column.type);
+        return undefined;
     }
   };
 
@@ -263,7 +263,7 @@ export const xataColumnTypeToPgRollComment = (column: Column) => {
       case 'datetime':
         return undefined;
       default:
-        return exhaustiveCheck(column.type);
+        return 'text';
     }
   };
 
@@ -298,7 +298,7 @@ export function xataColumnTypeToZeroValue(type: Column['type'], defaultValue: un
     case 'file[]':
       return "'{}'";
     default:
-      return exhaustiveCheck(type);
+      return "''";
   }
 }
 
