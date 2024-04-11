@@ -12,6 +12,17 @@ import {
 import { PgRollMigration } from '@xata.io/pgroll';
 import EditSchema, { editsToMigrations } from './edit';
 
+const column: AddColumnPayload['column'] = {
+  name: 'col1',
+  defaultValue: undefined,
+  link: undefined,
+  type: 'string',
+  unique: false,
+  nullable: true,
+  originalName: 'col1',
+  tableName: 'table1'
+};
+
 class mockEdit {
   tableAdditions: AddTablePayload['table'][] = [];
   tableEdits: EditTablePayload['table'][] = [];
@@ -20,6 +31,34 @@ class mockEdit {
   columnEdits: ColumnEdits = {};
   columnDeletions: DeleteColumnPayload = {};
   currentMigration: PgRollMigration = { operations: [] };
+
+  branchDetails: any = {
+    databaseName: 'abc',
+    branchName: 'main',
+    createdAt: '2024-04-11T09:23:20.517Z',
+    id: 'bb_i4b697b2ul4fd29vk5snu5q8ss_guvr8p',
+    clusterID: 'shared-cluster',
+    lastMigrationID: '',
+    version: 1,
+    schema: {
+      tables: [
+        {
+          name: 'table1',
+          checkConstraints: { two_xata_id_length_xata_id: [Object] },
+          foreignKeys: { link_link: [Object] },
+          primaryKey: [],
+          uniqueConstraints: { _pgroll_new_two_xata_id_key: [Object] },
+          columns: [
+            {
+              ...column
+            }
+          ]
+        }
+      ]
+    },
+    metadata: {},
+    usePgRoll: true
+  };
 }
 
 const editCommand = new mockEdit();
@@ -46,17 +85,6 @@ const createEdit = (column: ColumnData) => {
   if (!editCommand.columnEdits[column.tableName][column.originalName])
     editCommand.columnEdits[column.tableName][column.originalName] = {} as any;
   editCommand.columnEdits[column.tableName][column.originalName] = column;
-};
-
-const column: AddColumnPayload['column'] = {
-  name: 'col1',
-  defaultValue: undefined,
-  link: undefined,
-  type: 'string',
-  unique: false,
-  nullable: true,
-  originalName: 'col1',
-  tableName: 'table1'
 };
 
 const runTest = (name: string, fx: () => void, expectation: any) => {
@@ -332,12 +360,7 @@ const testCases: TestCase[] = [
         alter_column: {
           name: 'col2',
           column: 'col1',
-          nullable: true,
-          table: 'table1',
-          // Todo fix this. alter_column should not be boolean
-          unique: undefined,
-          down: '"col2"',
-          up: '"col2"'
+          table: 'table1'
         }
       }
     ]
@@ -353,13 +376,11 @@ const testCases: TestCase[] = [
     expectation: [
       {
         alter_column: {
-          name: 'col1',
           column: 'col1',
           nullable: false,
           table: 'table1',
-          unique: undefined,
-          down: '"col1"',
-          up: '"col1"'
+          up: '(SELECT CASE WHEN "col1" IS NULL THEN \'\' ELSE "col1" END)',
+          down: '(SELECT CASE WHEN "col1" IS NULL THEN \'\' ELSE "col1" END)'
         }
       }
     ]
@@ -375,16 +396,12 @@ const testCases: TestCase[] = [
     expectation: [
       {
         alter_column: {
-          // todo name should not be in here
-          name: 'col1',
           column: 'col1',
-          // todo nullable should not be in here
-          nullable: true,
           down: '"col1"',
           up: '"col1"',
           table: 'table1',
           unique: {
-            name: 'unique_constraint_table1_col1'
+            name: 'table1_col1_unique'
           }
         }
       }
