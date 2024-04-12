@@ -202,10 +202,10 @@ const testCases: TestCase[] = [
             name: 'col1',
             type: 'bigint',
             references: undefined,
-            up: '0',
             nullable: false,
             unique: false
-          }
+          },
+          up: '0'
         }
       }
     ]
@@ -618,8 +618,7 @@ const testCases: TestCase[] = [
               nullable: false,
               unique: false,
               default: undefined,
-              references: undefined,
-              up: '0'
+              references: undefined
             }
           ]
         }
@@ -647,8 +646,7 @@ const testCases: TestCase[] = [
               nullable: false,
               unique: false,
               default: undefined,
-              references: undefined,
-              up: '0'
+              references: undefined
             }
           ]
         }
@@ -749,9 +747,9 @@ const testCases: TestCase[] = [
             nullable: false,
             unique: true,
             default: undefined,
-            references: undefined,
-            up: '0'
-          }
+            references: undefined
+          },
+          up: '0'
         }
       }
     ]

@@ -417,7 +417,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           name: 'name',
           message: 'The name of the column',
           initial: this.getColumnNameEdit({ column }) ?? column.originalName,
-          validate: (value: string, state: ValidationState) => this.validateColumnName(value, state, column)
+          validate: this.validateColumnName
         },
         {
           name: 'nullable',
@@ -500,7 +500,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         {
           name: 'name',
           message: 'The name of the column',
-          validate: (value: string, state: ValidationState) => this.validateColumnName(value, state, column)
+          validate: this.validateColumnName
         },
         {
           name: 'type',
@@ -675,16 +675,16 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     return !emptyString(value) && !isReservedXataFieldName(value);
   };
 
-  validateColumnName = (value: string, state: ValidationState, column: ColumnData) => {
+  validateColumnName = (value: string) => {
     if (value === undefined) return 'Name cannot be undefined';
     if (emptyString(value)) return 'Name cannot be empty';
     return !isReservedXataFieldName(value);
   };
-  validateColumnNullable = (value: string, state: ValidationState) => {
+  validateColumnNullable = (value: string) => {
     if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
     return true;
   };
-  validateColumnUnique = (value: string, state: ValidationState) => {
+  validateColumnUnique = (value: string) => {
     if (parseBoolean(value) === undefined) return 'Invalid value. Unique field must be a boolean';
     return true;
   };
@@ -843,9 +843,10 @@ export const editsToMigrations = (command: EditSchema) => {
   const columnAdditions: { add_column: OpAddColumn }[] = [];
   for (const [_, columns] of Object.entries(localColumnAdditions)) {
     columnAdditions.push(
-      ...formatColumnDataToPgroll(Object.values(columns)).map(({ column, tableName }) => {
+      ...formatColumnDataToPgroll(Object.values(columns)).map(({ column, tableName, up }) => {
         return {
           add_column: {
+            up,
             column,
             table: tableName
           }
@@ -1006,12 +1007,14 @@ const formatSchemaColumnToColumnData = ({
 
 const formatColumnDataToPgroll = (
   columns: AddColumnPayload['column'][]
-): { column: OpAddColumn['column']; tableName: string }[] => {
+): { column: OpAddColumn['column']; tableName: string; up?: string }[] => {
   return columns.map((column) => ({
     tableName: column.tableName,
+    up: requiresUpArgument(column.nullable === false, column.defaultValue)
+      ? xataColumnTypeToZeroValue(column.type as any, column.defaultValue)
+      : undefined,
     column: {
       name: column.name,
-
       type: xataColumnTypeToPgRoll(column.type as any),
       references:
         column.type === 'link'
@@ -1022,10 +1025,7 @@ const formatColumnDataToPgroll = (
       nullable: parseBoolean(String(column.nullable)) ?? true,
       unique: parseBoolean(String(column.unique)) ?? false,
       check: xataColumnTypeToPgRollConstraint(column as any, column.tableName),
-      comment: xataColumnTypeToPgRollComment(column as any),
-      up: requiresUpArgument(column.nullable === false, column.defaultValue)
-        ? xataColumnTypeToZeroValue(column.type as any, column.defaultValue)
-        : undefined
+      comment: xataColumnTypeToPgRollComment(column as any)
     }
   }));
 };
