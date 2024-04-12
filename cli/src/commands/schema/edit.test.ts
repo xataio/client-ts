@@ -49,6 +49,19 @@ class mockEdit {
           primaryKey: [],
           uniqueConstraints: {},
           columns: [column]
+        },
+        {
+          name: 'table2',
+          checkConstraints: {},
+          foreignKeys: {},
+          primaryKey: [],
+          uniqueConstraints: {},
+          columns: [
+            {
+              ...column,
+              type: 'varchar(255)'
+            }
+          ]
         }
       ]
     },

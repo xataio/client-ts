@@ -262,6 +262,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         );
 
         this.success('Migration completed!');
+        process.exit(0);
       } catch (err) {
         if (err) throw err;
         // User cancelled
@@ -1010,6 +1011,7 @@ const formatColumnDataToPgroll = (
     tableName: column.tableName,
     column: {
       name: column.name,
+
       type: xataColumnTypeToPgRoll(column.type as any),
       references:
         column.type === 'link'

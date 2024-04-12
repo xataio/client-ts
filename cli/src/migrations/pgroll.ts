@@ -5,6 +5,7 @@ import { XataClient } from '../base.js';
 import { Column } from '@xata.io/codegen';
 import { MigrationFilePgroll, migrationFilePgroll } from './schema.js';
 import { safeJSONParse, safeReadFile } from '../utils/files.js';
+import z from 'zod';
 
 export const isBranchPgRollEnabled = (details: Schemas.DBBranch) => {
   // @ts-expect-error TODO: Fix this when api is finalized
@@ -48,21 +49,46 @@ const getPgRollLink = (table: any, column: any) => {
   return null;
 };
 
-function pgRollToXataColumnType(type: string): string {
+export const xataStringColumns = ['email', 'text', 'string'] as const;
+
+const XataStringColumn = z.object({
+  ['xata.type']: z.enum(xataStringColumns)
+});
+
+export type XataStringColumnType = z.infer<typeof XataStringColumn>;
+
+const narrowStringType = (comment?: string): Column['type'] => {
+  console.log('..........commmm', comment);
+  if (!comment) return 'text';
+  const result = XataStringColumn.safeParse(JSON.parse(comment));
+  return result.success ? result.data['xata.type'] : 'text';
+};
+
+function pgRollToXataColumnType(type: string, comment?: string): string {
   switch (type) {
     case 'boolean':
+    case 'bool':
       return 'bool';
     case 'bigint':
+    case 'int8':
     case 'integer':
+    case 'int':
+    case 'int4':
+    case 'smallint':
       return 'int';
     case 'double precision':
+    case 'float8':
+    case 'real':
       return 'float';
     case 'text':
-      return 'text';
+    case 'varchar':
+    case 'character varying':
+      return narrowStringType(comment);
     case 'timestamptz':
       return 'datetime';
     case 'text[]':
       return 'multiple';
+    case 'json':
     case 'jsonb':
       return 'json';
     case 'xata_file':
@@ -71,9 +97,12 @@ function pgRollToXataColumnType(type: string): string {
       return 'file[]';
     case 'real[]':
       return 'vector';
-    default:
-      return type;
   }
+
+  if (type.startsWith('character(') || type.startsWith('varchar(')) return 'string';
+  if (type.startsWith('numeric(')) return 'float';
+
+  return type;
 }
 
 export async function getBranchDetailsWithPgRoll(
@@ -109,7 +138,7 @@ export async function getBranchDetailsWithPgRoll(
             .filter((column: any) => !['_id', '_createdat', '_updatedat', '_version'].includes(column.name))
             .map((column: any) => ({
               name: column.name,
-              type: getPgRollLink(table, column) ? 'link' : pgRollToXataColumnType(column.type),
+              type: getPgRollLink(table, column) ? 'link' : pgRollToXataColumnType(column.type, column.comment),
               link: getPgRollLink(table, column) ? { table: getPgRollLink(table, column).referencedTable } : undefined,
               file:
                 pgRollToXataColumnType(column.type) === 'file' || pgRollToXataColumnType(column.type) === 'file[]'
