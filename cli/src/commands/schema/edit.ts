@@ -891,52 +891,6 @@ export const editsToMigrations = (command: EditSchema) => {
         const uniqueAdded = unique !== originalField.unique && unique === true;
         const uniqueRemoved = unique !== originalField.unique && unique === false;
 
-        const uniqueValue = uniqueAdded
-          ? {
-              unique: {
-                name: `${tableName}_${name}_unique`
-              },
-              up: `"${name}"`,
-              down: `"${name}"`
-            }
-          : undefined;
-
-        const nameToUse = nameChanged ? name : originalField.name;
-
-        const nullValue = nullableChanged
-          ? {
-              up:
-                nullable === false
-                  ? `(SELECT CASE WHEN "${originalField.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
-                      originalField.type,
-                      originalField.defaultValue
-                    )} ELSE "${nameToUse}" END)`
-                  : `"${nameToUse}"`,
-              down:
-                nullable === true
-                  ? `"${nameToUse}"`
-                  : `(SELECT CASE WHEN "${originalField.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
-                      originalField.type,
-                      originalField.defaultValue
-                    )} ELSE "${nameToUse}" END)`
-            }
-          : undefined;
-
-        const alterStatement = {
-          alter_column: {
-            column: originalField.name,
-            table: tableName,
-            name: nameChanged ? name : undefined,
-            nullable: nullableChanged ? nullable : undefined,
-            ...uniqueValue,
-            ...nullValue
-          }
-        };
-
-        if (nullableChanged || nameChanged || uniqueAdded) {
-          columnEdits.push(alterStatement);
-        }
-
         if (uniqueRemoved) {
           // Should changing the name of a column also change the name of the unique constraint?
           const uniqueConstraintName = Object.values(
@@ -954,8 +908,8 @@ export const editsToMigrations = (command: EditSchema) => {
                     table: tableName,
                     column: originalField.name,
                     name: uniqueConstraintName,
-                    up: `"${nameToUse}"`,
-                    down: `"${nameToUse}"`
+                    up: `"${originalField.name}"`,
+                    down: `"${originalField.name}"`
                   }
                 }
               : undefined;
@@ -963,6 +917,50 @@ export const editsToMigrations = (command: EditSchema) => {
           if (maybeDropStatement) {
             columnEdits.push(maybeDropStatement);
           }
+        }
+
+        const uniqueValue = uniqueAdded
+          ? {
+              unique: {
+                name: `${tableName}_${originalField.name}_unique`
+              },
+              up: `"${originalField.name}"`,
+              down: `"${originalField.name}"`
+            }
+          : undefined;
+
+        const nullValue = nullableChanged
+          ? {
+              up:
+                nullable === false
+                  ? `(SELECT CASE WHEN "${originalField.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
+                      originalField.type,
+                      originalField.defaultValue
+                    )} ELSE "${originalField.name}" END)`
+                  : `"${originalField.name}"`,
+              down:
+                nullable === true
+                  ? `"${originalField.name}"`
+                  : `(SELECT CASE WHEN "${originalField.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
+                      originalField.type,
+                      originalField.defaultValue
+                    )} ELSE "${originalField.name}" END)`
+            }
+          : undefined;
+
+        const alterStatement = {
+          alter_column: {
+            column: originalField.name,
+            table: tableName,
+            name: nameChanged ? name : undefined,
+            nullable: nullableChanged ? nullable : undefined,
+            ...uniqueValue,
+            ...nullValue
+          }
+        };
+
+        if (nullableChanged || nameChanged || uniqueAdded) {
+          columnEdits.push(alterStatement);
         }
       });
     }
