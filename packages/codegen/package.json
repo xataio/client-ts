@@ -35,7 +35,7 @@
     "case": "^1.6.3",
     "prettier": "=2.8.8",
     "ts-morph": "^22.0.0",
-    "typescript": "^5.4.4",
+    "typescript": "^5.4.5",
     "zod": "^3.22.4"
   },
   "devDependencies": {
