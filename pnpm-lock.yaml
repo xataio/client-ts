@@ -342,6 +342,12 @@ importers:
       any-date-parser:
         specifier: ^1.5.4
         version: 1.5.4
+      case:
+        specifier: ^1.6.3
+        version: 1.6.3
+      change-case:
+        specifier: ^5.4.4
+        version: 5.4.4
       json5:
         specifier: ^2.2.3
         version: 2.2.3
@@ -357,6 +363,9 @@ importers:
       papaparse:
         specifier: ^5.4.1
         version: 5.4.1
+      pluralize:
+        specifier: ^8.0.0
+        version: 8.0.0
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -370,6 +379,9 @@ importers:
       '@types/papaparse':
         specifier: ^5.3.14
         version: 5.3.14
+      '@types/pluralize':
+        specifier: ^0.0.33
+        version: 0.0.33
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -8157,6 +8169,11 @@ packages:
       tslib: 2.6.2
     dev: true
 
+  /change-case@5.4.4:
+    resolution:
+      { integrity: sha512-HRQyTk2/YPEkt9TnUPbOpr64Uw3KOicFWPVBb+xiHvd6eBx/qPr9xqfBFDT8P2vWsvvz4jbEkfDe71W3VyNu2w== }
+    dev: false
+
   /character-entities-legacy@1.1.4:
     resolution:
       { integrity: sha512-3Xnr+7ZFS1uxeiUDvV02wQ+QDbc55o97tIV5zHScSPJpcLm/r0DFPcoY3tYRp+VZukxuMeKgXYmsXQHO05zQeA== }
@@ -13973,7 +13990,6 @@ packages:
     resolution:
       { integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA== }
     engines: { node: '>=4' }
-    dev: true
 
   /postcss-values-parser@6.0.2(postcss@8.4.38):
     resolution:
