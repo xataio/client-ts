@@ -14,8 +14,6 @@ import EditSchema, { editsToMigrations } from './edit';
 
 const column: AddColumnPayload['column'] = {
   name: 'col1',
-  defaultValue: undefined,
-  link: undefined,
   type: 'string',
   unique: false,
   nullable: true,

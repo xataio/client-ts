@@ -66,7 +66,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     ...this.databaseURLFlag,
     branch: this.branchFlag,
     source: Flags.boolean({
-      description: 'Edit a migration as a JSON document in your default editor'
+      description: 'Edit the schema as a JSON document in your default editor'
     })
   };
 

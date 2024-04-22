@@ -58,7 +58,6 @@ const XataStringColumn = z.object({
 export type XataStringColumnType = z.infer<typeof XataStringColumn>;
 
 const narrowStringType = (comment?: string): Column['type'] => {
-  console.log('..........commmm', comment);
   if (!comment) return 'text';
   const result = XataStringColumn.safeParse(JSON.parse(comment));
   return result.success ? result.data['xata.type'] : 'text';
