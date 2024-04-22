@@ -166,8 +166,7 @@ export const schema = {
       required: ['table', 'column'],
       oneOf: [
         {
-          required: ['up', 'down'],
-          oneOf: [
+          anyOf: [
             {
               required: ['check']
             },
@@ -184,20 +183,12 @@ export const schema = {
               required: ['references']
             }
           ],
-          not: {
-            required: ['name']
-          }
+          required: ['up', 'down']
         },
         {
           required: ['name'],
           not: {
             anyOf: [
-              {
-                required: ['up']
-              },
-              {
-                required: ['down']
-              },
               {
                 required: ['check']
               },
@@ -212,6 +203,12 @@ export const schema = {
               },
               {
                 required: ['references']
+              },
+              {
+                required: ['up']
+              },
+              {
+                required: ['down']
               }
             ]
           }
