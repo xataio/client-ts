@@ -158,7 +158,7 @@ export class XataSession<
     // @ts-expect-error getTransactionConfigSQL is internal
     await tx.execute(sql`begin ${tx.getTransactionConfigSQL(config)}`);
     try {
-      const result = await transaction(tx);
+      const result = await transaction(tx as any);
       await tx.execute(sql`commit`);
       return result;
     } catch (error) {
@@ -184,7 +184,7 @@ export class XataTransaction<
     const tx = new XataTransaction(this.dialect, this.session, this.schema, this.nestedIndex + 1);
     await tx.execute(sql.raw(`savepoint ${savepointName}`));
     try {
-      const result = await transaction(tx);
+      const result = await transaction(tx as any);
       await tx.execute(sql.raw(`release savepoint ${savepointName}`));
       return result;
     } catch (e) {

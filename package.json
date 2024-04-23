@@ -6,6 +6,7 @@
   "scripts": {
     "test": "vitest",
     "test:canary": "tsx ./scripts/test-canary.ts",
+    "release:cli": "tsx ./scripts/release-cli.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky install",
@@ -107,5 +108,10 @@
   "engines": {
     "node": "18.x",
     "pnpm": "8.x"
+  },
+  "dependencies": {
+    "@pnpm/exportable-manifest": "^6.0.0",
+    "@pnpm/read-project-manifest": "^6.0.0",
+    "@pnpm/write-project-manifest": "^6.0.0"
   }
 }
