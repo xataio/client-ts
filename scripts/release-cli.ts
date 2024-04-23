@@ -1,7 +1,7 @@
 import { createExportableManifest } from '@pnpm/exportable-manifest';
 import { readProjectManifest } from '@pnpm/read-project-manifest';
 import { writeProjectManifest } from '@pnpm/write-project-manifest';
-import { exec as execRaw } from 'child_process';
+import { execFile, execFileSync, exec as execRaw } from 'child_process';
 import * as util from 'util';
 const exec = util.promisify(execRaw);
 
@@ -42,21 +42,14 @@ async function main() {
 
   process.chdir(PATH_TO_CLI);
 
-  await exec(`rm -rf ${PATH_TO_CLI}/npm-shrinkwrap.json`);
-  const result = await exec(`touch ${PATH_TO_CLI}/npm-shrinkwrap.json`);
-  if (result.stderr) {
-    throw new Error(`Failed to make shrinkwrap: ${result.stderr}`);
-  }
-  console.log('Made shrinkwrap file', result.stdout);
+  execFile('rm', ['-rf', `${PATH_TO_CLI}/npm-shrinkwrap.json`]);
+  execFile('touch', [`${PATH_TO_CLI}/npm-shrinkwrap.json`]);
 
   const pack = await exec(`pnpm oclif pack ${operatingSystem}`);
   if (pack.stderr) {
     throw new Error(`Failed to pack: ${pack.stderr}`);
   }
   console.log('Packed CLI', pack.stdout);
-
-  // TODO add built assets to release
-  // or s3 bucket
 }
 
 main();
