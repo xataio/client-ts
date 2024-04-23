@@ -1,0 +1,45 @@
+name: Release CLI Assets
+
+on:
+  push:
+    branches:
+      - release-assets
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Release CLI Assets
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+          fetch-depth: 0
+          # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ steps.config.outputs.NVMRC }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Release CLI
+        run: pnpm run release:cli
+        env:
+          RUNNER_OS: ${{ runner.os }}

@@ -7,7 +7,24 @@ const exec = util.promisify(execRaw);
 
 const PATH_TO_CLI = process.cwd() + '/cli';
 
+const runnerToOclif = (runner: string) => {
+  switch (runner) {
+    case 'Windows':
+      return 'win';
+    case 'macOS':
+      return 'macos';
+    case 'Linux':
+      return 'deb';
+    default:
+      throw new Error('Unsupported OS');
+  }
+};
+
 async function main() {
+  if (!process.env.RUNNER_OS) throw new Error('RUNNER_OS is not set');
+
+  const operatingSystem = runnerToOclif(process.env.RUNNER_OS);
+
   const { manifest, fileName } = await readProjectManifest(PATH_TO_CLI);
 
   const workspaceProtocolPackageManifest = await createExportableManifest(PATH_TO_CLI, {
@@ -32,7 +49,7 @@ async function main() {
   }
   console.log('Made shrinkwrap file', result.stdout);
 
-  const pack = await exec(`pnpm oclif pack macos`);
+  const pack = await exec(`pnpm oclif pack ${operatingSystem}`);
   if (pack.stderr) {
     throw new Error(`Failed to pack: ${pack.stderr}`);
   }
