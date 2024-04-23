@@ -1,9 +1,9 @@
-import { Schemas } from '@xata.io/client';
-import { migrationsDir, readMigrationsDir } from './files.js';
+import { Schemas, XataApiClient } from '@xata.io/client';
 import path from 'path';
-import { safeJSONParse, safeReadFile } from '../utils/files.js';
-import { migrationFilePgroll, MigrationFilePgroll } from './schema.js';
 import { XataClient } from '../base.js';
+import { safeJSONParse, safeReadFile } from '../utils/files.js';
+import { migrationsDir, readMigrationsDir } from './files.js';
+import { MigrationFilePgroll, migrationFilePgroll } from './schema.js';
 
 export const isBranchPgRollEnabled = (details: Schemas.DBBranch) => {
   // @ts-expect-error TODO: Fix this when api is finalized
@@ -79,10 +79,14 @@ export async function getBranchDetailsWithPgRoll(
   xata: XataClient,
   { workspace, region, database, branch }: { workspace: string; region: string; database: string; branch: string }
 ): Promise<Schemas.DBBranch> {
-  const details = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
+  const details = await xata.api.branch.getBranchDetails({
+    pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+  });
 
   if (isBranchPgRollEnabled(details)) {
-    const pgroll = await xata.api.migrations.getSchema({ workspace, region, database, branch });
+    const pgroll = await xata.api.migrations.getSchema({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
+    });
 
     return {
       ...details,
@@ -116,4 +120,27 @@ export async function getBranchDetailsWithPgRoll(
   }
 
   return details;
+}
+
+export async function waitForMigrationToFinish(
+  api: XataApiClient,
+  workspace: string,
+  region: string,
+  database: string,
+  branch: string,
+  jobId: string
+) {
+  const { status, error } = await api.migrations.getMigrationJobStatus({
+    pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, jobId }
+  });
+  if (status === 'failed') {
+    throw new Error(`Migration failed, ${error}`);
+  }
+
+  if (status === 'completed') {
+    return;
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
 }

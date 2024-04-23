@@ -30,11 +30,11 @@ describe('record update', () => {
   test('update single team', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
-    const updatedTeam = await xata.db.teams.update(team.id, { name: 'Team boats' });
+    const updatedTeam = await xata.db.teams.update(team.xata_id, { name: 'Team boats' });
 
-    expect(updatedTeam?.id).toBe(team.id);
+    expect(updatedTeam?.xata_id).toBe(team.xata_id);
 
-    const apiTeam = await xata.db.teams.filter({ id: team.id }).getFirst();
+    const apiTeam = await xata.db.teams.filter({ xata_id: team.xata_id }).getFirst();
     if (!apiTeam) throw new Error('No team found');
 
     expect(updatedTeam?.name).toBe('Team boats');
@@ -48,7 +48,7 @@ describe('record update', () => {
 
     expect(updatedTeams).toHaveLength(2);
 
-    const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ id: t.id })) }).getAll();
+    const apiTeams = await xata.db.teams.filter({ $any: teams.map((t) => ({ xata_id: t.xata_id })) }).getAll();
 
     expect(apiTeams).toHaveLength(2);
     expect(apiTeams[0].name).toBe('Team boats');
@@ -58,11 +58,11 @@ describe('record update', () => {
   test('update team with inline id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
-    const updatedTeam = await xata.db.teams.update({ id: team.id, name: 'Team boats' });
+    const updatedTeam = await xata.db.teams.update({ xata_id: team.xata_id, name: 'Team boats' });
 
-    expect(updatedTeam?.id).toBe(team.id);
+    expect(updatedTeam?.xata_id).toBe(team.xata_id);
 
-    const apiTeam = await xata.db.teams.filter({ id: team.id }).getFirst();
+    const apiTeam = await xata.db.teams.filter({ xata_id: team.xata_id }).getFirst();
 
     expect(updatedTeam?.name).toBe('Team boats');
     expect(apiTeam?.name).toBe('Team boats');
@@ -77,92 +77,91 @@ describe('record update', () => {
     const valid = await xata.db.teams.create({ name: 'Team ships' });
 
     const team1 = await xata.db.teams.update('invalid', { name: 'Team boats' });
-    const team2 = await xata.db.teams.update({ id: 'invalid', name: 'Team boats' });
+    const team2 = await xata.db.teams.update({ xata_id: 'invalid', name: 'Team boats' });
     const team3 = await xata.db.teams.update([
-      { id: 'invalid', name: 'Team boats' },
-      { id: valid.id, name: 'Team boats 2' }
+      { xata_id: 'invalid', name: 'Team boats' },
+      { xata_id: valid.xata_id, name: 'Team boats 2' }
     ]);
 
     expect(team1).toBeNull();
     expect(team2).toBeNull();
     expect(team3[0]).toBeNull();
     expect(team3[1]).toBeDefined();
-    expect(team3[1]?.id).toBe(valid.id);
+    expect(team3[1]?.xata_id).toBe(valid.xata_id);
     expect(team3[1]?.name).toBe('Team boats 2');
   });
 
   test('update item with if version', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
-    const { version: versionA } = team.getMetadata();
+    const baseVersion = team.xata_version;
 
-    const updatedTeam = await xata.db.teams.update(team.id, { name: 'Team boats' }, { ifVersion: versionA });
-    const { version: versionB } = updatedTeam?.getMetadata() || {};
+    const updatedTeam = await xata.db.teams.update(team.xata_id, { name: 'Team boats' }, { ifVersion: baseVersion });
 
-    expect(updatedTeam?.id).toBe(team.id);
-    expect(versionB).toBe(versionA + 1);
+    expect(updatedTeam?.xata_id).toBe(team.xata_id);
+    expect(updatedTeam?.xata_version).toBe(baseVersion + 1);
 
-    const updatedTeam2 = await xata.db.teams.update(team.id, { name: 'Team planes' }, { ifVersion: versionA });
-    const { version: versionC } = updatedTeam2?.getMetadata() || {};
+    const updatedTeam2 = await xata.db.teams.update(team.xata_id, { name: 'Team planes' }, { ifVersion: baseVersion });
 
     expect(updatedTeam2).toBeNull();
-    expect(versionC).toBe(undefined);
+    expect(updatedTeam2?.xata_version).toBe(undefined);
 
-    const updatedTeam3 = await team.update({ name: 'Team cars' }, { ifVersion: versionA });
-    const { version: versionD } = updatedTeam3?.getMetadata() || {};
+    const updatedTeam3 = await team.update({ name: 'Team cars' }, { ifVersion: baseVersion });
 
     expect(updatedTeam3).toBeNull();
-    expect(versionD).toBe(undefined);
+    expect(updatedTeam3?.xata_version).toBe(undefined);
 
-    expect(xata.db.teams.updateOrThrow(team.id, { name: 'Team cars' }, { ifVersion: versionA })).rejects.toThrow();
+    expect(
+      xata.db.teams.updateOrThrow(team.xata_id, { name: 'Team cars' }, { ifVersion: baseVersion })
+    ).rejects.toThrow();
   });
 
   test('update item with id column', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
-    const update1 = await xata.db.teams.update(team.id, { name: 'Team boats' });
+    const update1 = await xata.db.teams.update(team.xata_id, { name: 'Team boats' });
 
-    expect(update1?.id).toBe(team.id);
+    expect(update1?.xata_id).toBe(team.xata_id);
     expect(update1?.name).toBe('Team boats');
 
-    const update2 = await xata.db.teams.update({ id: team.id, name: 'Team planes' });
+    const update2 = await xata.db.teams.update({ xata_id: team.xata_id, name: 'Team planes' });
 
-    expect(update2?.id).toBe(team.id);
+    expect(update2?.xata_id).toBe(team.xata_id);
     expect(update2?.name).toBe('Team planes');
 
-    const update3 = await xata.db.teams.update([{ id: team.id, name: 'Team cars' }]);
+    const update3 = await xata.db.teams.update([{ xata_id: team.xata_id, name: 'Team cars' }]);
 
-    expect(update3[0]?.id).toBe(team.id);
+    expect(update3[0]?.xata_id).toBe(team.xata_id);
     expect(update3[0]?.name).toBe('Team cars');
 
     const update4 = await update1?.update({ name: 'Team trains' });
 
-    expect(update4?.id).toBe(team.id);
+    expect(update4?.xata_id).toBe(team.xata_id);
     expect(update4?.name).toBe('Team trains');
 
-    const update5 = await update1?.update({ id: update1?.id, name: 'Team boats' });
+    const update5 = await update1?.update({ xata_id: update1?.xata_id, name: 'Team boats' });
 
-    expect(update5?.id).toBe(team.id);
+    expect(update5?.xata_id).toBe(team.xata_id);
     expect(update5?.name).toBe('Team boats');
 
     const copy = await update2?.read();
 
-    expect(copy?.id).toBe(team.id);
+    expect(copy?.xata_id).toBe(team.xata_id);
     expect(copy?.name).toBe('Team boats');
   });
 
   test('update with numeric operations', async () => {
     const pet = await xata.db.pets.create({ name: 'Pet', num_legs: 1 });
 
-    const update1 = await xata.db.pets.update(pet.id, { num_legs: { $increment: 3 } });
+    const update1 = await xata.db.pets.update(pet.xata_id, { num_legs: { $increment: 3 } });
     expect(update1?.num_legs).toBe(4);
 
-    const update2 = await xata.db.pets.update({ id: pet.id, num_legs: { $divide: 2 } });
+    const update2 = await xata.db.pets.update({ xata_id: pet.xata_id, num_legs: { $divide: 2 } });
     expect(update2?.num_legs).toBe(2);
 
-    const update3 = await xata.db.pets.update([{ id: pet.id, num_legs: { $multiply: 2 } }]);
+    const update3 = await xata.db.pets.update([{ xata_id: pet.xata_id, num_legs: { $multiply: 2 } }]);
     expect(update3[0]?.num_legs).toBe(4);
 
-    const update4 = await xata.db.pets.update(pet.id, { num_legs: { $decrement: 4 } });
+    const update4 = await xata.db.pets.update(pet.xata_id, { num_legs: { $decrement: 4 } });
     expect(update4?.num_legs).toBe(0);
   });
 });
