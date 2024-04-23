@@ -44,16 +44,10 @@ jobs:
         env:
           MATRIX_OS: ${{ matrix.os }}
 
-      - name: Upload artifacts MacOS
-        uses: actions/upload-artifact@v3
-        if: matrix.os == 'macos-latest'
-        with:
-          name: upload-macos
-          path: 'cli/dist/macos/*'
-
-      - name: Upload artifacts Linux
-        uses: actions/upload-artifact@v3
-        if: matrix.os == 'ubuntu-latest'
-        with:
-          name: upload-deb
-          path: 'cli/dist/deb/*'
+      # - name: Upload assets to GH
+      #   uses: softprops/action-gh-release@v2
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   with:
+      #     files: |
+      #       cli/macos
+      #       cli/deb

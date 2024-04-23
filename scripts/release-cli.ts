@@ -6,6 +6,10 @@ import * as util from 'util';
 const exec = util.promisify(execRaw);
 
 const PATH_TO_CLI = process.cwd() + '/cli';
+const PATH_TO_CLIENT = process.cwd() + '/packages/client';
+const PATH_TO_CODEGEN = process.cwd() + '/packages/codegen';
+const PATH_TO_IMPORTER = process.cwd() + '/packages/importer';
+const PATH_TO_PGROLL = process.cwd() + '/packages/pgroll';
 
 const matrixToOclif = (os: string) => {
   switch (os) {
@@ -26,15 +30,30 @@ async function main() {
   const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
 
   const { manifest, fileName } = await readProjectManifest(PATH_TO_CLI);
+  const {
+    manifest: { version: clientVersion }
+  } = await readProjectManifest(PATH_TO_CLIENT);
+  const {
+    manifest: { version: codegenVersion }
+  } = await readProjectManifest(PATH_TO_CODEGEN);
+  const {
+    manifest: { version: importerVersion }
+  } = await readProjectManifest(PATH_TO_IMPORTER);
+  const {
+    manifest: { version: pgrollVersion }
+  } = await readProjectManifest(PATH_TO_PGROLL);
+
+  // Assume changeset version has been called and all the
+  // versions in package jsons are up to date
 
   const workspaceProtocolPackageManifest = await createExportableManifest(PATH_TO_CLI, {
     ...manifest,
     dependencies: {
       ...manifest.dependencies,
-      '@xata.io/client': 'next',
-      '@xata.io/codegen': 'next',
-      '@xata.io/importer': 'latest',
-      '@xata.io/pgroll': 'latest'
+      '@xata.io/client': clientVersion ?? 'latest',
+      '@xata.io/codegen': codegenVersion ?? 'latest',
+      '@xata.io/importer': importerVersion ?? 'latest',
+      '@xata.io/pgroll': pgrollVersion ?? 'latest'
     }
   });
 
