@@ -1,11 +1,11 @@
 import { Schemas, XataApiClient } from '@xata.io/client';
-import { migrationsDir, readMigrationsDir } from './files.js';
-import path from 'path';
-import { XataClient } from '../base.js';
 import { Column } from '@xata.io/codegen';
-import { MigrationFilePgroll, migrationFilePgroll } from './schema.js';
-import { safeJSONParse, safeReadFile } from '../utils/files.js';
+import path from 'path';
 import z from 'zod';
+import { XataClient } from '../base.js';
+import { safeJSONParse, safeReadFile } from '../utils/files.js';
+import { migrationsDir, readMigrationsDir } from './files.js';
+import { MigrationFilePgroll, migrationFilePgroll } from './schema.js';
 
 export const isBranchPgRollEnabled = (details: Schemas.DBBranch) => {
   // @ts-expect-error TODO: Fix this when api is finalized
