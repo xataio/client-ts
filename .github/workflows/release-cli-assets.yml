@@ -42,4 +42,4 @@ jobs:
       - name: Release CLI
         run: pnpm run release:cli
         env:
-          RUNNER_OS: ${{ runner.os }}
+          MATRIX_OS: ${{ matrix.os }}

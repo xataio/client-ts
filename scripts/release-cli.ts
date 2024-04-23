@@ -7,13 +7,13 @@ const exec = util.promisify(execRaw);
 
 const PATH_TO_CLI = process.cwd() + '/cli';
 
-const runnerToOclif = (runner: string) => {
-  switch (runner) {
-    case 'Windows':
+const matrixToOclif = (os: string) => {
+  switch (os) {
+    case 'windows-latest':
       return 'win';
-    case 'macOS':
+    case 'macos-latest':
       return 'macos';
-    case 'Linux':
+    case 'ubuntu-latest':
       return 'deb';
     default:
       throw new Error('Unsupported OS');
@@ -21,9 +21,9 @@ const runnerToOclif = (runner: string) => {
 };
 
 async function main() {
-  if (!process.env.RUNNER_OS) throw new Error('RUNNER_OS is not set');
+  if (!process.env.MATRIX_OS) throw new Error('MATRIX_OS is not set');
 
-  const operatingSystem = runnerToOclif(process.env.RUNNER_OS);
+  const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
 
   const { manifest, fileName } = await readProjectManifest(PATH_TO_CLI);
 
