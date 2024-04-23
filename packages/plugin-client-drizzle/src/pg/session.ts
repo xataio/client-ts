@@ -154,7 +154,7 @@ export class XataSession<
       this.client instanceof Pool
         ? new XataSession(await this.client.connect(), this.dialect, this.schema, this.options)
         : this;
-    const tx = new XataTransaction(this.dialect, session, this.schema);
+    const tx = new XataTransaction<TFullSchema, TSchema>(this.dialect, session, this.schema);
     // @ts-expect-error getTransactionConfigSQL is internal
     await tx.execute(sql`begin ${tx.getTransactionConfigSQL(config)}`);
     try {
@@ -181,7 +181,7 @@ export class XataTransaction<
   override async transaction<T>(transaction: (tx: XataTransaction<TFullSchema, TSchema>) => Promise<T>): Promise<T> {
     const savepointName = `sp${this.nestedIndex + 1}`;
     // @ts-expect-error session and dialect are internal
-    const tx = new XataTransaction(this.dialect, this.session, this.schema, this.nestedIndex + 1);
+    const tx = new XataTransaction<TFullSchema, TSchema>(this.dialect, this.session, this.schema, this.nestedIndex + 1);
     await tx.execute(sql.raw(`savepoint ${savepointName}`));
     try {
       const result = await transaction(tx);
