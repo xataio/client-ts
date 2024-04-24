@@ -110,6 +110,7 @@
     "pnpm": "8.x"
   },
   "dependencies": {
+    "@octokit/core": "^6.1.2",
     "@pnpm/exportable-manifest": "^6.0.0",
     "@pnpm/read-project-manifest": "^6.0.0",
     "@pnpm/write-project-manifest": "^6.0.0"

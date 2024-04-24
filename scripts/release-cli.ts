@@ -1,7 +1,9 @@
 import { createExportableManifest } from '@pnpm/exportable-manifest';
 import { readProjectManifest } from '@pnpm/read-project-manifest';
 import { writeProjectManifest } from '@pnpm/write-project-manifest';
-import { execFile, execFileSync, exec as execRaw } from 'child_process';
+import { execFile, exec as execRaw } from 'child_process';
+import { Octokit } from '@octokit/core';
+import fs from 'fs';
 import * as util from 'util';
 const exec = util.promisify(execRaw);
 
@@ -10,6 +12,14 @@ const PATH_TO_CLIENT = process.cwd() + '/packages/client';
 const PATH_TO_CODEGEN = process.cwd() + '/packages/codegen';
 const PATH_TO_IMPORTER = process.cwd() + '/packages/importer';
 const PATH_TO_PGROLL = process.cwd() + '/packages/pgroll';
+
+const base = {
+  owner: 'xataio',
+  repo: 'client-ts',
+  headers: {
+    'X-GitHub-Api-Version': '2022-11-28'
+  }
+};
 
 const matrixToOclif = (os: string) => {
   switch (os) {
@@ -26,6 +36,7 @@ const matrixToOclif = (os: string) => {
 
 async function main() {
   if (!process.env.MATRIX_OS) throw new Error('MATRIX_OS is not set');
+  if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
 
   const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
 
@@ -68,7 +79,37 @@ async function main() {
   if (pack.stderr) {
     throw new Error(`Failed to pack: ${pack.stderr}`);
   }
-  console.log('Packed CLI', pack.stdout);
+  console.log('Successfully packed CLI', pack.stdout);
+
+  const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN
+  });
+
+  const tag = encodeURIComponent(`@xata.io/cli@${manifest.version}`);
+
+  const release = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
+    ...base,
+    tag
+  });
+
+  if (!release.data) throw new Error('Release not found');
+
+  const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem}`;
+
+  const files = fs.readdirSync(pathToAsset);
+
+  for (const file of files) {
+    const data = fs.readFileSync(pathToAsset + `/${file}`);
+    const upload = await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
+      ...base,
+      name: file,
+      label: file,
+      release_id: release.data.id,
+      data: data,
+      baseUrl: 'https://uploads.github.com'
+    });
+    console.log('Finished uploading asset', upload.status);
+  }
 }
 
 main();

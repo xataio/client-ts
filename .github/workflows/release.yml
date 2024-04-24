@@ -66,3 +66,40 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  release-cli-assets:
+    name: Release CLI assets
+    needs: release
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+          fetch-depth: 0
+          # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ steps.config.outputs.NVMRC }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Release CLI Assets
+        run: npx changeset version && pnpm run release:cli
+        env:
+          MATRIX_OS: ${{ matrix.os }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
