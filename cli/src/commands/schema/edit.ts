@@ -324,8 +324,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     }
     // Checking names are not the same because it is possible only nullable or unique changed
     if (maybeNewColumnName && maybeNewColumnName !== column.originalName) {
-      return `  - ${chalk.bold(maybeNewColumnName)} -> ${chalk.yellow.strikethrough(
-        column.originalName
+      return ` - ${chalk.yellow.strikethrough(column.originalName)}  -> ${chalk.bold(
+        maybeNewColumnName
       )} (${metadata})`;
     }
     return `- ${chalk.cyan(column.originalName)} (${metadata})`;
@@ -342,8 +342,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       return `• ${chalk.red.strikethrough(originalName)}`;
     }
     if (tableEdit) {
-      return `• ${chalk.bold(this.renderTableNameEdited(originalName) ?? originalName)} -> ${chalk.yellow.strikethrough(
-        originalName
+      return `• ${chalk.yellow.strikethrough(originalName)} -> ${chalk.bold(
+        this.renderTableNameEdited(originalName) ?? originalName
       )}`;
     }
     return newTable ? `• ${chalk.bold(originalName)}` : `• ${chalk.bold(originalName)}`;
