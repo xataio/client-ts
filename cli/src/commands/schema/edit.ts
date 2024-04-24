@@ -249,7 +249,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
             region: this.region,
             dbBranchName: `${this.database}:${this.branch}`
           },
-          body: this.currentMigration
+          body: { ...this.currentMigration, adaptTables: true }
         });
 
         await waitForMigrationToFinish(
@@ -324,9 +324,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     }
     // Checking names are not the same because it is possible only nullable or unique changed
     if (maybeNewColumnName && maybeNewColumnName !== column.originalName) {
-      return ` - ${chalk.yellow.strikethrough(column.originalName)}  -> ${chalk.bold(
-        maybeNewColumnName
-      )} (${metadata})`;
+      return ` - ${chalk.yellow.strikethrough(column.originalName)} -> ${chalk.bold(maybeNewColumnName)} (${metadata})`;
     }
     return `- ${chalk.cyan(column.originalName)} (${metadata})`;
   }
