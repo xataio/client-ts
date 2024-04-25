@@ -81,18 +81,18 @@ async function main() {
   }
   console.log('Successfully packed CLI', pack.stdout);
 
-  const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN
-  });
+  // const octokit = new Octokit({
+  //   auth: process.env.GITHUB_TOKEN
+  // });
 
-  const tag = encodeURIComponent(`@xata.io/cli@${manifest.version}`);
+  // const tag = encodeURIComponent(`@xata.io/cli@${manifest.version}`);
 
-  const release = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
-    ...base,
-    tag
-  });
+  // const release = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
+  //   ...base,
+  //   tag
+  // });
 
-  if (!release.data) throw new Error('Release not found');
+  // if (!release.data) throw new Error('Release not found');
 
   // windows installer is saved in "win32" folder in cli/dist
   const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem === 'win' ? 'win32' : operatingSystem}`;
@@ -100,16 +100,18 @@ async function main() {
   const files = fs.readdirSync(pathToAsset);
 
   for (const file of files) {
+    console.log('file in directory', file);
     const data = fs.readFileSync(pathToAsset + `/${file}`);
-    const upload = await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
-      ...base,
-      name: file,
-      label: file,
-      release_id: release.data.id,
-      data: data,
-      baseUrl: 'https://uploads.github.com'
-    });
-    console.log('Finished uploading asset', upload.status);
+    console.log('data...', data);
+    // const upload = await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
+    //   ...base,
+    //   name: file,
+    //   label: file,
+    //   release_id: release.data.id,
+    //   data: data,
+    //   baseUrl: 'https://uploads.github.com'
+    // });
+    // console.log('Finished uploading asset', upload.status);
   }
 }
 
