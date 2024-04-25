@@ -70,10 +70,7 @@ jobs:
   release-cli-assets:
     name: Release CLI assets
     # needs: release
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v3
         with:
@@ -100,7 +97,6 @@ jobs:
         run: pnpm build
 
       - name: Install windows dependencies
-        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y nsis
@@ -109,5 +105,4 @@ jobs:
       - name: Release CLI Assets
         run: pnpm run release:cli
         env:
-          MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
