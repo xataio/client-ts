@@ -94,7 +94,8 @@ async function main() {
 
   if (!release.data) throw new Error('Release not found');
 
-  const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem}`;
+  // windows installer is saved in "win32" folder in cli/dist
+  const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem === 'win' ? 'win32' : operatingSystem}`;
 
   const files = fs.readdirSync(pathToAsset);
 
