@@ -3,74 +3,76 @@ name: Release Test
 on:
   push:
     branches:
-      - feat/release-assets
-      # - main
-      # - next
+      - main
+      - next
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  # release:
-  #   name: Release
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
-  #         fetch-depth: 0
-  #         # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
-  #         persist-credentials: false
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+          fetch-depth: 0
+          # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
+          persist-credentials: false
 
-  #     - name: Configure
-  #       run: |
-  #         git config user.email "system@xata.io"
-  #         git config user.name "Xata"
-  #         echo "NVMRC=$(cat .nvmrc)" >> $GITHUB_OUTPUT
-  #         echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
-  #       id: config
-  #       env:
-  #         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Configure
+        run: |
+          git config user.email "system@xata.io"
+          git config user.name "Xata"
+          echo "NVMRC=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+        id: config
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  #     - name: Install pnpm
-  #       uses: pnpm/action-setup@v2
-  #       with:
-  #         version: 8
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
 
-  #     - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: ${{ steps.config.outputs.NVMRC }}
-  #         cache: 'pnpm'
+      - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ steps.config.outputs.NVMRC }}
+          cache: 'pnpm'
 
-  #     - name: Install dependencies
-  #       run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-  #     - name: Build
-  #       run: pnpm build
+      - name: Build
+        run: pnpm build
 
-  #     - name: Update next channel
-  #       if: github.ref_name == 'next'
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
-  #       run: |
-  #         npx changeset version
-  #         npx changeset publish
+      - name: Update next channel
+        if: github.ref_name == 'next'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+        run: |
+          npx changeset version
+          npx changeset publish
 
-  #     - name: Create Release Pull Request or Publish to npm
-  #       uses: changesets/action@v1
-  #       if: github.ref_name == 'main'
-  #       with:
-  #         title: Release tracking
-  #         publish: npx changeset publish
-  #         version: node ./scripts/changeset-version.mjs
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
-  #         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create Release Pull Request or Publish to npm
+        uses: changesets/action@v1
+        if: github.ref_name == 'main'
+        with:
+          title: Release tracking
+          publish: npx changeset publish
+          version: node ./scripts/changeset-version.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   release-cli-assets:
     name: Release CLI assets
-    # needs: release
-    runs-on: 'ubuntu-latest'
+    needs: release
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -97,6 +99,7 @@ jobs:
         run: pnpm build
 
       - name: Install windows dependencies
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y nsis
@@ -105,4 +108,5 @@ jobs:
       - name: Release CLI Assets
         run: pnpm run release:cli
         env:
+          MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

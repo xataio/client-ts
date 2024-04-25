@@ -21,10 +21,22 @@ const base = {
   }
 };
 
+const matrixToOclif = (os: string) => {
+  switch (os) {
+    case 'macos-latest':
+      return 'macos';
+    case 'ubuntu-latest':
+      return 'deb';
+    default:
+      throw new Error('Unsupported OS');
+  }
+};
+
 async function main() {
+  if (!process.env.MATRIX_OS) throw new Error('MATRIX_OS is not set');
   if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
 
-  const operatingSystems = ['deb', 'win', 'macos'];
+  const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
 
   const { manifest, fileName } = await readProjectManifest(PATH_TO_CLI);
   const {
@@ -61,47 +73,76 @@ async function main() {
   execFile('rm', ['-rf', `${PATH_TO_CLI}/npm-shrinkwrap.json`]);
   execFile('touch', [`${PATH_TO_CLI}/npm-shrinkwrap.json`]);
 
-  for (const operatingSystem of operatingSystems) {
-    const build = await exec(`pnpm oclif pack ${operatingSystem}`);
-    if (build.stderr) {
-      throw new Error(`Failed to build: ${build.stderr}`);
-    }
-    console.log('Successfully built CLI', build.stdout);
+  await oclifPack({ os: operatingSystem });
 
-    // windows installer is saved in "win32" folder in cli/dist
-    const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem === 'win' ? 'win32' : operatingSystem}`;
+  const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN
+  });
 
-    const files = fs.readdirSync(pathToAsset);
+  const tag = encodeURIComponent(`@xata.io/cli@${manifest.version}`);
 
-    for (const file of files) {
-      console.log('file in directory', file);
-      const data = fs.readFileSync(pathToAsset + `/${file}`);
-      console.log('data...', data);
-      // TODO debian has redundant packages. Only upload .deb files
-      // const upload = await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
-      //   ...base,
-      //   name: file,
-      //   label: file,
-      //   release_id: release.data.id,
-      //   data: data,
-      //   baseUrl: 'https://uploads.github.com'
-      // });
-      // console.log('Finished uploading asset', upload.status);
-    }
+  const release = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
+    ...base,
+    tag
+  });
+
+  if (!release.data) throw new Error('Release not found');
+
+  const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem}`;
+  // Debian pack results in redundant files. Only upload .deb files
+  const files = fs
+    .readdirSync(pathToAsset)
+    .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
+  for (const file of files) {
+    await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
   }
 
-  // const octokit = new Octokit({
-  //   auth: process.env.GITHUB_TOKEN
-  // });
-
-  // const tag = encodeURIComponent(`@xata.io/cli@${manifest.version}`);
-
-  // const release = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
-  //   ...base,
-  //   tag
-  // });
-
-  // if (!release.data) throw new Error('Release not found');
+  // Pack windows on linux
+  if (operatingSystem === 'deb') {
+    await oclifPack({ os: 'win' });
+    // Windows packs files under "win32" directory
+    const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
+    const files = fs.readdirSync(pathToAssetWindows);
+    for (const file of files) {
+      await uploadFiles({
+        pathToFile: pathToAssetWindows + `/${file}`,
+        fileName: file,
+        octokit,
+        releaseId: release.data.id
+      });
+    }
+  }
 }
+
+const oclifPack = async ({ os }: { os: 'win' | 'macos' | 'deb' }) => {
+  const pack = await exec(`pnpm oclif pack ${os}`);
+  if (pack.stderr) {
+    throw new Error(`Failed to pack: ${pack.stderr}`);
+  }
+  console.log('Successfully packed CLI', pack.stdout);
+};
+
+const uploadFiles = async ({
+  pathToFile,
+  fileName,
+  octokit,
+  releaseId
+}: {
+  pathToFile: string;
+  fileName: string;
+  octokit: Octokit;
+  releaseId: number;
+}) => {
+  const data = fs.readFileSync(pathToFile);
+  const upload = await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
+    ...base,
+    name: fileName,
+    label: fileName,
+    release_id: releaseId,
+    data: data,
+    baseUrl: 'https://uploads.github.com'
+  });
+  console.log('Finished uploading asset', upload.status);
+};
 
 main();
