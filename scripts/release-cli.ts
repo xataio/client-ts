@@ -21,19 +21,6 @@ const base = {
   }
 };
 
-// const matrixToOclif = (os: string) => {
-//   switch (os) {
-//     case 'windows-latest':
-//       return 'win';
-//     case 'macos-latest':
-//       return 'macos';
-//     case 'ubuntu-latest':
-//       return 'deb';
-//     default:
-//       throw new Error('Unsupported OS');
-//   }
-// };
-
 async function main() {
   if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
 
@@ -75,7 +62,7 @@ async function main() {
   execFile('touch', [`${PATH_TO_CLI}/npm-shrinkwrap.json`]);
 
   for (const operatingSystem of operatingSystems) {
-    const build = await exec(`pnpm oclif build ${operatingSystem}`);
+    const build = await exec(`pnpm oclif pack ${operatingSystem}`);
     if (build.stderr) {
       throw new Error(`Failed to build: ${build.stderr}`);
     }
