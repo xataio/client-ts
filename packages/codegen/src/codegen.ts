@@ -44,6 +44,19 @@ function getTypeName(tableName: string) {
   return name;
 }
 
+function getCorrectEnvForModuleType(databaseUrl: string, moduleType?: ModuleType) {
+  switch (moduleType) {
+    case 'cjs':
+      return `process.env.XATA_DATABASE_URL`;
+    case 'deno':
+      return `Deno.env.get('XATA_DATABASE_URL')`;
+    case 'esm':
+      return `import.meta.env.XATA_DATABASE_URL`;
+    default:
+      return `"${databaseUrl}"`;
+  }
+}
+
 export async function generate({
   databaseURL,
   branch,
@@ -226,7 +239,9 @@ export async function generate({
 
   // Add default options
   const defaultOptions = sourceFile.getVariableDeclaration('defaultOptions');
-  const defaultOptionsContent = JSON.stringify({ databaseURL, branch });
+  const defaultOptionsContent = `{
+    databaseURL: ${getCorrectEnvForModuleType(databaseURL, moduleType)}${branch ? `,\nbranch: ${branch}` : ''}
+  }`;
 
   if (!defaultOptions) {
     sourceFile.addVariableStatement({

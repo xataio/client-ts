@@ -158,7 +158,7 @@ export default class Init extends BaseCommand<typeof Init> {
     await this.writeConfig();
     this.log();
 
-    await this.writeEnvFile(workspace, region, database, branch);
+    await this.writeEnvFile(workspace, region, database, branch, databaseURL);
 
     if (ignoreEnvFile) {
       await this.ignoreEnvFile();
@@ -386,7 +386,7 @@ export default class Init extends BaseCommand<typeof Init> {
     return envFile;
   }
 
-  async writeEnvFile(workspace: string, region: string, database: string, branch: string) {
+  async writeEnvFile(workspace: string, region: string, database: string, branch: string, databaseURL: string) {
     const envFile = await this.findEnvFile();
     const doesEnvFileExist = await this.access(envFile);
 
@@ -415,12 +415,15 @@ export default class Init extends BaseCommand<typeof Init> {
       content += '# Make sure your framework/tooling loads this file on startup to have it available for the SDK\n';
       content += `${setBranch}\n`;
       content += `XATA_API_KEY=${apiKey}\n`;
+      content += `XATA_DATABASE_URL=${databaseURL}`;
       if (profile.host !== 'production') content += `XATA_API_PROVIDER=${buildProviderString(profile.host)}\n`;
 
       this.log(`${doesEnvFileExist ? 'Updating' : 'Creating'} ${envFile} file`);
       await writeFile(envFile, content);
       await this.delay(500);
       this.log(`  set XATA_API_KEY=xau_*********************************`);
+      await this.delay(500);
+      this.log(`  set DATABASE_URL=${databaseURL}\n`);
       await this.delay(500);
       this.log(`  set ${setBranch}\n`);
       await this.delay(500);
