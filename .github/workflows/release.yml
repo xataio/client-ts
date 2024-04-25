@@ -103,7 +103,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           choco install nsis
-          choco install p7zip
+          choco install 7zip
 
       - name: Release CLI Assets
         run: pnpm run release:cli
