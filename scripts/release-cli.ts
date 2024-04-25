@@ -117,6 +117,12 @@ async function main() {
   }
   if (pathToAssetWindows) {
     // win is bundled on linux
+    const pack = await exec(`pnpm oclif pack win`);
+    if (pack.stderr) {
+      throw new Error(`Failed to pack: ${pack.stderr}`);
+    }
+    console.log('Successfully packed CLI', pack.stdout);
+
     const files = fs.readdirSync(pathToAssetWindows);
 
     for (const file of files) {
