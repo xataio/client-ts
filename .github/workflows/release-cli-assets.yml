@@ -2,9 +2,6 @@ name: Release CLI Assets
 
 on:
   workflow_call:
-    secrets:
-      GITHUB_TOKEN:
-        required: true
 
 jobs:
   release-cli-assets:

@@ -69,5 +69,4 @@ jobs:
   release-cli-assets:
     needs: release
     uses: ./.github/workflows/release-cli-assets.yml
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+    secrets: inherit
