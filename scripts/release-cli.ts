@@ -95,7 +95,8 @@ async function main() {
   // if (!release.data) throw new Error('Release not found');
 
   // windows installer is saved in "win32" folder in cli/dist
-  const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem === 'win' ? 'win32' : operatingSystem}`;
+  const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem}`;
+  const pathToAssetWindows = operatingSystem === 'deb' ? `${PATH_TO_CLI}/dist/win32` : undefined;
 
   const files = fs.readdirSync(pathToAsset);
 
@@ -103,6 +104,7 @@ async function main() {
     console.log('file in directory', file);
     const data = fs.readFileSync(pathToAsset + `/${file}`);
     console.log('data...', data);
+    // TODO debian has redundant packages. Only upload .deb files
     // const upload = await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
     //   ...base,
     //   name: file,
@@ -112,6 +114,16 @@ async function main() {
     //   baseUrl: 'https://uploads.github.com'
     // });
     // console.log('Finished uploading asset', upload.status);
+  }
+  if (pathToAssetWindows) {
+    // win is bundled on linux
+    const files = fs.readdirSync(pathToAssetWindows);
+
+    for (const file of files) {
+      console.log('file in directory', file);
+      const data = fs.readFileSync(pathToAssetWindows + `/${file}`);
+      console.log('data from win32...', data);
+    }
   }
 }
 
