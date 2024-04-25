@@ -69,7 +69,7 @@ jobs:
 
   release-cli-assets:
     name: Release CLI assets
-    needs: release
+    # needs: release
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
