@@ -55,7 +55,7 @@ export const OpAlterColumnDefinition = z.object({
   table: z.string(),
   type: z.string().optional(),
   unique: UniqueConstraintDefinition.optional(),
-  comment: z.string().optional(),
+  comment: z.union([z.string(), z.null()]).optional(),
   up: z.string().optional()
 });
 

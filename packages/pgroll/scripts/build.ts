@@ -4,8 +4,10 @@ import { z } from 'zod';
 import { PGROLL_JSON_SCHEMA_URL } from '../src';
 import prettier from 'prettier';
 
+type DefintionType = 'string' | 'boolean' | 'number' | 'null';
+
 type Definition =
-  | { type: 'string' | 'boolean' | 'number'; description?: string }
+  | { type: DefintionType | DefintionType[]; description?: string }
   | { $ref: string; description?: string }
   | {
       type: 'object';
@@ -18,10 +20,12 @@ type Definition =
   | { type: 'array'; items: Definition | Definition[]; description?: string }
   | { anyOf: Definition[] };
 
+const DefinitionTypeSchema = z.enum(['string', 'boolean', 'number', 'null']);
+
 const DefinitionSchema: z.ZodSchema<Definition> = z.lazy(() =>
   z.union([
     z.object({
-      type: z.enum(['string', 'boolean', 'number']),
+      type: z.union([DefinitionTypeSchema, z.array(DefinitionTypeSchema)]),
       description: z.string().optional()
     }),
     z.object({
@@ -83,19 +87,17 @@ function buildZodSchema(definition: Definition): string {
     return `z.object({ ${properties.join(', ')} })`;
   }
 
-  if (definition.type === 'string') {
-    return 'z.string()';
-  }
+  const types = typeof definition.type === 'string' ? [definition.type] : definition.type;
+  const zodTypes = types.map((type) => {
+    if (type === 'string') return 'z.string()';
+    if (type === 'boolean') return 'z.boolean()';
+    if (type === 'number') return 'z.number()';
+    if (type === 'null') return 'z.null()';
+    throw new Error(`Unknown type: ${type}`);
+  });
 
-  if (definition.type === 'boolean') {
-    return 'z.boolean()';
-  }
-
-  if (definition.type === 'number') {
-    return 'z.number()';
-  }
-
-  throw new Error(`Unknown type: ${definition.type}`);
+  if (zodTypes.length === 1) return zodTypes[0];
+  return `z.union([${zodTypes.join(', ')}])`;
 }
 
 function getDependencies(definition: Definition): string[] {

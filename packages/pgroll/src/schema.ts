@@ -163,7 +163,12 @@ export const schema = {
         },
         comment: {
           description: 'New comment on the column',
-          type: 'string'
+          type: ['string', 'null'],
+          goJSONSchema: {
+            imports: ['github.com/oapi-codegen/nullable'],
+            nillable: true,
+            type: 'nullable.Nullable[string]'
+          }
         },
         up: {
           default: '',
@@ -183,6 +188,12 @@ export const schema = {
             },
             {
               required: ['nullable']
+            },
+            {
+              required: ['default']
+            },
+            {
+              required: ['comment']
             },
             {
               required: ['unique']
@@ -205,6 +216,12 @@ export const schema = {
               },
               {
                 required: ['nullable']
+              },
+              {
+                required: ['default']
+              },
+              {
+                required: ['comment']
               },
               {
                 required: ['unique']
