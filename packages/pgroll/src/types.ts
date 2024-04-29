@@ -49,6 +49,7 @@ export const OpAlterColumnDefinition = z.object({
   column: z.string(),
   down: z.string().optional(),
   name: z.string().optional(),
+  default: z.string().optional(),
   nullable: z.boolean().optional(),
   references: ForeignKeyReferenceDefinition.optional(),
   table: z.string(),
