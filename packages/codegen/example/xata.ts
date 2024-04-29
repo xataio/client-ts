@@ -71,16 +71,6 @@ const tables = [
 
 export type SchemaTables = typeof tables;
 export type InferredTypes = SchemaInference<SchemaTables>;
-
-export type Teams = InferredTypes['teams'];
-export type TeamsRecord = Teams & XataRecord;
-
-export type Users = InferredTypes['users'];
-export type UsersRecord = Users & XataRecord;
-
-export type Pets = InferredTypes['pets'];
-export type PetsRecord = Pets & XataRecord;
-
 export type DatabaseSchema = {
   teams: TeamsRecord;
   users: UsersRecord;
@@ -103,3 +93,12 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
     );
   }
 }
+
+export type Teams = InferredTypes['teams'];
+export type TeamsRecord = Teams & XataRecord;
+
+export type Users = InferredTypes['users'];
+export type UsersRecord = Users & XataRecord;
+
+export type Pets = InferredTypes['pets'];
+export type PetsRecord = Pets & XataRecord;
