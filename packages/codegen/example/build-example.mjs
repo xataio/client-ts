@@ -21,7 +21,7 @@ async function main() {
     language: 'typescript',
     existingCode: undoReplaceImport(typescriptContents)
   });
-  const { javascript: mjs, types } = await generate({ schema, databaseURL, language: 'javascript', });
+  const { javascript: mjs, types } = await generate({ schema, databaseURL, language: 'javascript' });
   const { javascript: cjs } = await generate({ schema, databaseURL, language: 'javascript', moduleType: 'cjs' });
 
   writeFileSync(join(__dirname, 'xata.ts'), replaceImport(typescript));
