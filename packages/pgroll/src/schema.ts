@@ -161,6 +161,15 @@ export const schema = {
           $ref: '#/$defs/UniqueConstraint',
           description: 'Add unique constraint to the column'
         },
+        comment: {
+          description: 'New comment on the column',
+          type: ['string', 'null'],
+          goJSONSchema: {
+            imports: ['github.com/oapi-codegen/nullable'],
+            nillable: true,
+            type: 'nullable.Nullable[string]'
+          }
+        },
         up: {
           default: '',
           description: 'SQL expression for up migration',
@@ -179,6 +188,12 @@ export const schema = {
             },
             {
               required: ['nullable']
+            },
+            {
+              required: ['default']
+            },
+            {
+              required: ['comment']
             },
             {
               required: ['unique']
@@ -201,6 +216,12 @@ export const schema = {
               },
               {
                 required: ['nullable']
+              },
+              {
+                required: ['default']
+              },
+              {
+                required: ['comment']
               },
               {
                 required: ['unique']
