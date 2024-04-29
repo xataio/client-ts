@@ -161,6 +161,10 @@ export const schema = {
           $ref: '#/$defs/UniqueConstraint',
           description: 'Add unique constraint to the column'
         },
+        comment: {
+          description: 'New comment on the column',
+          type: 'string'
+        },
         up: {
           default: '',
           description: 'SQL expression for up migration',
