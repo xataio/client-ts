@@ -273,7 +273,6 @@ function emitDeclarations(code: string) {
 
   const compilerHost = {
     getSourceFile: (fileName: string) => (fileName === inputFileName ? sourceFile : undefined),
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     writeFile: (_name: string, _text: string) => {},
     getDefaultLibFileName: () => 'lib.d.ts',
     useCaseSensitiveFileNames: () => false,

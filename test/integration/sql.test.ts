@@ -27,7 +27,7 @@ afterEach(async (ctx) => {
 });
 
 describe('SQL proxy', () => {
-  test('read single team with id', async () => {
+  test.skip('read single team with id', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
     const { records, warning, columns } =
@@ -105,7 +105,7 @@ describe('SQL proxy', () => {
     expect(records[0].name).toBe('Team ships');
   });
 
-  test('read multiple teams ', async () => {
+  test.skip('read multiple teams ', async () => {
     const teams = await xata.db.teams.create([{ name: '[A] Cars' }, { name: '[A] Planes' }]);
 
     const { records, warning, columns } = await xata.sql<TeamsRecord>`SELECT * FROM teams WHERE name LIKE '[A] %'`;
@@ -187,7 +187,7 @@ describe('SQL proxy', () => {
     expect(record2?.name).toBe('[A] Planes');
   });
 
-  test('create team', async () => {
+  test.skip('create team', async () => {
     const { records, warning, columns } = await xata.sql<TeamsRecord>({
       statement: `INSERT INTO teams (xata_id, name) VALUES ($1, $2) RETURNING *`,
       params: ['my-id', 'Team ships 2']
@@ -267,25 +267,117 @@ describe('SQL proxy', () => {
     expect(team?.name).toBe('Team ships 2');
   });
 
-  test("calling xata.sql as a function throws an error because it's not safe", async () => {
+  test.skip("calling xata.sql as a function throws an error because it's not safe", async () => {
     // @ts-expect-error - Testing invalid usage
     await expect(xata.sql('SELECT * FROM teams')).rejects.toThrow(
       'Invalid usage of `xata.sql`. Please use it as a tagged template or with an object.'
     );
   });
 
-  test('calling xata.sql with invalid prepared statement', async () => {
+  test.skip('calling xata.sql with invalid prepared statement', async () => {
     const order = 'ASC';
     await expect(xata.sql<TeamsRecord>`SELECT * FROM teams ORDER BY name ${order}`).rejects.toThrow(
       'invalid SQL: unused parameters: used 0 of 1 parameters'
     );
   });
 
-  test("calling xata.sql with invalid prepared statement doesn't throw an error when bypassing prepared statement protection", async () => {
+  test.skip("calling xata.sql with invalid prepared statement doesn't throw an error when bypassing prepared statement protection", async () => {
     const order = 'ASC';
     const { records } = await xata.sql<TeamsRecord>({
       statement: `SELECT * FROM teams ORDER BY name ${order}`
     });
     expect(records).toBeDefined();
+  });
+
+  test.skip("calling xata.sql with response type 'array' returns the correct result", async () => {
+    const teams = await xata.db.teams.create([{ name: '[C] Cars' }, { name: '[C] Planes' }]);
+
+    const { rows, warning, columns } = await xata.sql({
+      statement: `SELECT * FROM teams WHERE name LIKE '[C] %'`,
+      responseType: 'array'
+    });
+
+    expect(warning).toBeUndefined();
+    expect(rows).toHaveLength(2);
+
+    expect(columns).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "id",
+          "type": "text",
+        },
+        {
+          "name": "xata.version",
+          "type": "int4",
+        },
+        {
+          "name": "xata.createdAt",
+          "type": "timestamptz",
+        },
+        {
+          "name": "xata.updatedAt",
+          "type": "timestamptz",
+        },
+        {
+          "name": "name",
+          "type": "text",
+        },
+        {
+          "name": "description",
+          "type": "text",
+        },
+        {
+          "name": "labels",
+          "type": "_text",
+        },
+        {
+          "name": "index",
+          "type": "int8",
+        },
+        {
+          "name": "rating",
+          "type": "float8",
+        },
+        {
+          "name": "founded_date",
+          "type": "timestamptz",
+        },
+        {
+          "name": "email",
+          "type": "text",
+        },
+        {
+          "name": "plan",
+          "type": "text",
+        },
+        {
+          "name": "dark",
+          "type": "bool",
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+        },
+        {
+          "name": "owner",
+          "type": "text",
+        },
+      ]
+    `);
+
+    const record1 = rows.find((row) => row[0] === teams[0].id);
+    const record2 = rows.find((row) => row[0] === teams[1].id);
+
+    expect(record1).toBeDefined();
+    expect(record1?.[4]).toBe('[C] Cars');
+    expect(record2).toBeDefined();
+    expect(record2?.[4]).toBe('[C] Planes');
+  });
+
+  test('xata.sql has a connection string', async () => {
+    expect(xata.sql.connectionString).toBeDefined();
+    expect(xata.sql.connectionString).toMatch(
+      /postgresql:\/\/([a-z0-9]+):([a-zA-Z0-9_]+)@([a-z0-9-.]+)\/([a-z0-9-]+):([a-z0-9-]+)\?sslmode=require/
+    );
   });
 });

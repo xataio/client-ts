@@ -39,3 +39,15 @@ where `08lcul` is your local workspace id and `dev` is the name of your local re
 ```
 xata init --profile local
 ```
+
+# Logging in with a deploy preview
+
+To log in with a deploy preview, you can use the following command:
+
+```
+xata auth login --profile deploy-preview --host staging --web-host https://xata-p9lbsnxlc-xata.vercel.app
+```
+
+where `https://xata-p9lbsnxlc-xata.vercel.app` is the deploy preview URL.
+
+Alternatively you can set the backend of the frontend url with `XATA_WEB_URL` env variable when running any command.

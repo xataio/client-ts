@@ -113,7 +113,6 @@ export type Branch = {
    * The cluster where this branch resides. Value of 'shared-cluster' for branches in shared clusters
    *
    * @minLength 1
-   * @x-internal true
    */
   clusterID?: string;
   createdAt: DateTime;
@@ -125,7 +124,7 @@ export type ListBranchesResponse = {
 };
 
 export type DatabaseSettings = {
-  search_enabled: boolean;
+  searchEnabled: boolean;
 };
 
 /**
@@ -176,20 +175,7 @@ export type ColumnFile = {
 
 export type Column = {
   name: string;
-  type:
-    | 'bool'
-    | 'int'
-    | 'float'
-    | 'string'
-    | 'text'
-    | 'email'
-    | 'multiple'
-    | 'link'
-    | 'datetime'
-    | 'vector'
-    | 'file[]'
-    | 'file'
-    | 'json';
+  type: string;
   link?: ColumnLink;
   vector?: ColumnVector;
   file?: ColumnFile;

@@ -108,6 +108,7 @@ export const schema = {
           type: 'string'
         },
         up: {
+          default: '',
           description: 'SQL expression for up migration',
           type: 'string'
         }
@@ -128,11 +129,16 @@ export const schema = {
           type: 'string'
         },
         down: {
+          default: '',
           description: 'SQL expression for down migration',
           type: 'string'
         },
         name: {
           description: 'New name of the column (for rename column operation)',
+          type: 'string'
+        },
+        default: {
+          description: 'Default value of the column',
           type: 'string'
         },
         nullable: {
@@ -156,6 +162,7 @@ export const schema = {
           description: 'Add unique constraint to the column'
         },
         up: {
+          default: '',
           description: 'SQL expression for up migration',
           type: 'string'
         }
@@ -163,8 +170,7 @@ export const schema = {
       required: ['table', 'column'],
       oneOf: [
         {
-          required: ['up', 'down'],
-          oneOf: [
+          anyOf: [
             {
               required: ['check']
             },
@@ -181,20 +187,12 @@ export const schema = {
               required: ['references']
             }
           ],
-          not: {
-            required: ['name']
-          }
+          required: ['up', 'down']
         },
         {
           required: ['name'],
           not: {
             anyOf: [
-              {
-                required: ['up']
-              },
-              {
-                required: ['down']
-              },
               {
                 required: ['check']
               },
@@ -209,6 +207,12 @@ export const schema = {
               },
               {
                 required: ['references']
+              },
+              {
+                required: ['up']
+              },
+              {
+                required: ['down']
               }
             ]
           }
@@ -271,6 +275,7 @@ export const schema = {
           type: 'string'
         },
         down: {
+          default: '',
           description: 'SQL expression for down migration',
           type: 'string'
         },
@@ -291,6 +296,7 @@ export const schema = {
           type: 'string'
         },
         down: {
+          default: '',
           description: 'SQL expression for down migration',
           type: 'string'
         },

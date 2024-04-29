@@ -665,6 +665,97 @@ export const deleteWorkspace = (variables: DeleteWorkspaceVariables, signal?: Ab
     signal
   });
 
+export type GetWorkspaceSettingsPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+};
+
+export type GetWorkspaceSettingsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 403;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetWorkspaceSettingsVariables = {
+  pathParams: GetWorkspaceSettingsPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Retrieve workspace settings from a workspace ID
+ */
+export const getWorkspaceSettings = (variables: GetWorkspaceSettingsVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.WorkspaceSettings,
+    GetWorkspaceSettingsError,
+    undefined,
+    {},
+    {},
+    GetWorkspaceSettingsPathParams
+  >({ url: '/workspaces/{workspaceId}/settings', method: 'get', ...variables, signal });
+
+export type UpdateWorkspaceSettingsPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+};
+
+export type UpdateWorkspaceSettingsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 403;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type UpdateWorkspaceSettingsRequestBody = {
+  postgresEnabled: boolean;
+};
+
+export type UpdateWorkspaceSettingsVariables = {
+  body: UpdateWorkspaceSettingsRequestBody;
+  pathParams: UpdateWorkspaceSettingsPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Update workspace settings
+ */
+export const updateWorkspaceSettings = (variables: UpdateWorkspaceSettingsVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<
+    Schemas.WorkspaceSettings,
+    UpdateWorkspaceSettingsError,
+    UpdateWorkspaceSettingsRequestBody,
+    {},
+    {},
+    UpdateWorkspaceSettingsPathParams
+  >({ url: '/workspaces/{workspaceId}/settings', method: 'patch', ...variables, signal });
+
 export type GetWorkspaceMembersListPathParams = {
   /**
    * Workspace ID
@@ -1723,6 +1814,8 @@ export const operationsByTag = {
     getWorkspace,
     updateWorkspace,
     deleteWorkspace,
+    getWorkspaceSettings,
+    updateWorkspaceSettings,
     getWorkspaceMembersList,
     updateWorkspaceMemberRole,
     removeWorkspaceMember

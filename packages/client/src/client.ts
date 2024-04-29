@@ -29,7 +29,6 @@ type SafeOptions = AllRequired<Omit<BaseClientOptions, 'clientName' | 'xataAgent
   xataAgentExtra?: Record<string, string>;
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plugins?: Plugins) =>
   class {
     #options: SafeOptions;
@@ -48,7 +47,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const pluginOptions: XataPluginOptions = {
         ...this.#getFetchProps(safeOptions),
         host: safeOptions.host,
-        tables
+        tables,
+        branch: safeOptions.branch
       };
 
       const db = new SchemaPlugin().build(pluginOptions);
@@ -155,7 +155,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   } as unknown as ClientConstructor<Plugins>;
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
-  // eslint-disable-next-line @typescript-eslint/ban-types
   new <Schemas extends Record<string, XataRecord> = {}>(
     options?: Partial<BaseClientOptions>,
     schemaTables?: readonly BaseSchema[]

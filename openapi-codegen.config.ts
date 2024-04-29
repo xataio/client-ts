@@ -103,8 +103,8 @@ function removeDeprecatedObjectType({ openAPIDocument }: { openAPIDocument: Cont
             ...(schema as any).properties,
             type: {
               ...(schema as any).properties.type,
-              // Remove `object` type from enum
-              enum: (schema as any).properties.type.enum.filter((item: string) => item !== 'object')
+              // Make Column type a string without enum values
+              enum: undefined
             }
           }
         };

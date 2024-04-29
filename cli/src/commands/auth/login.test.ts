@@ -142,7 +142,9 @@ describe('auth login', () => {
     expect(fs.mkdir).toHaveBeenCalledWith(dirname(credentialsFilePath), { recursive: true });
     expect(fs.writeFile).toHaveBeenCalledWith(
       credentialsFilePath,
-      ini.stringify({ default: { apiKey: '1234abcdef' } }),
+      ini.stringify({
+        default: { apiKey: '1234abcdef', name: 'default', web: 'https://app.xata.io', host: 'production' }
+      }),
       {
         mode: 0o600
       }
@@ -173,7 +175,7 @@ describe('auth login', () => {
     expect(fs.mkdir).toHaveBeenCalledWith(dirname(credentialsFilePath), { recursive: true });
     expect(fs.writeFile).toHaveBeenCalledWith(
       credentialsFilePath,
-      ini.stringify({ default: { apiKey: 'foobar', api: 'production' } }),
+      ini.stringify({ default: { apiKey: 'foobar', name: 'default', web: 'https://app.xata.io', host: 'production' } }),
       {
         mode: 0o600
       }

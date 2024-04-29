@@ -40,7 +40,7 @@ export type ApplyMigrationRequestBody = {
   operations: {
     [key: string]: any;
   }[];
-  adaptTable?: boolean;
+  adaptTables?: boolean;
 };
 
 export type ApplyMigrationVariables = {
@@ -99,6 +99,45 @@ export type AdaptTableVariables = {
 export const adaptTable = (variables: AdaptTableVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Schemas.ApplyMigrationResponse, AdaptTableError, undefined, {}, {}, AdaptTablePathParams>({
     url: '/db/{dbBranchName}/migrations/adapt/{tableName}',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type AdaptAllTablesPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type AdaptAllTablesError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type AdaptAllTablesVariables = {
+  pathParams: AdaptAllTablesPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Adapt all xata incompatible tables present in the branch, this will add the Xata metadata fields to the table, making them accessible through the data API.
+ */
+export const adaptAllTables = (variables: AdaptAllTablesVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.ApplyMigrationResponse, AdaptAllTablesError, undefined, {}, {}, AdaptAllTablesPathParams>({
+    url: '/db/{dbBranchName}/migrations/adapt',
     method: 'post',
     ...variables,
     signal
@@ -324,8 +363,12 @@ export type UpdateDatabaseSettingsError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type UpdateDatabaseSettingsRequestBody = {
+  searchEnabled?: boolean;
+};
+
 export type UpdateDatabaseSettingsVariables = {
-  body: Schemas.DatabaseSettings;
+  body?: UpdateDatabaseSettingsRequestBody;
   pathParams: UpdateDatabaseSettingsPathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -336,7 +379,7 @@ export const updateDatabaseSettings = (variables: UpdateDatabaseSettingsVariable
   dataPlaneFetch<
     Schemas.DatabaseSettings,
     UpdateDatabaseSettingsError,
-    Schemas.DatabaseSettings,
+    UpdateDatabaseSettingsRequestBody,
     {},
     {},
     UpdateDatabaseSettingsPathParams
@@ -4768,6 +4811,7 @@ export const operationsByTag = {
   migrations: {
     applyMigration,
     adaptTable,
+    adaptAllTables,
     getBranchMigrationJobStatus,
     getMigrationJobStatus,
     getMigrationHistory,

@@ -43,12 +43,10 @@ export class Serializer {
 
   fromJSON<T>(json: string): T {
     return JSON.parse(json, (key, value) => {
-      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (value && typeof value === 'object' && !Array.isArray(value)) {
         const { [META]: clazz, [VALUE]: val, ...rest } = value;
         const constructor = this.classes[clazz];
 
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (constructor) {
           return Object.assign(Object.create(constructor.prototype), rest);
         }

@@ -30,14 +30,14 @@
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
-    "@xata.io/client": "^0.29.1",
+    "@xata.io/client": "^0.29.4",
     "any-date-parser": "^1.5.4",
     "json5": "^2.2.3",
     "lodash.chunk": "^4.2.0",
     "lodash.pick": "^4.4.0",
     "p-queue": "^8.0.1",
     "papaparse": "^5.4.1",
-    "zod": "^3.22.4"
+    "zod": "^3.23.4"
   },
   "devDependencies": {
     "@types/lodash.chunk": "^4.2.9",

@@ -1,5 +1,19 @@
 # @xata.io/codegen
 
+## 0.29.4
+
+### Patch Changes
+
+- Updated dependencies [[`2140a24`](https://github.com/xataio/client-ts/commit/2140a24f32a94f36bab8c8268033c7dcf235dddc), [`d8032f2`](https://github.com/xataio/client-ts/commit/d8032f2e07bdcc653db1606796d27f08d397cdbe)]:
+  - @xata.io/client@0.29.4
+
+## 0.29.3
+
+### Patch Changes
+
+- Updated dependencies [[`02053fb`](https://github.com/xataio/client-ts/commit/02053fbb10479b8e9453691f957d3235762555aa), [`e27cb74`](https://github.com/xataio/client-ts/commit/e27cb74143aa9b6c654713878e5d3776858e5290)]:
+  - @xata.io/client@0.29.3
+
 ## 0.29.2
 
 ### Patch Changes

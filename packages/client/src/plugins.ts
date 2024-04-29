@@ -7,4 +7,5 @@ export abstract class XataPlugin {
 export type XataPluginOptions = ApiExtraProps & {
   host: HostProvider;
   tables: Schemas.Table[];
+  branch: string;
 };
