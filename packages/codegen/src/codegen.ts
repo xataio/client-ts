@@ -60,7 +60,7 @@ export async function generate({
 
   const packageName = moduleType === 'deno' ? 'npm:@xata.io/client@latest' : '@xata.io/client';
   const packageImports = ['buildClient', 'getDeployPreviewBranch'];
-  const typeImports = ['SchemaInference', 'XataRecord'];
+  const typeImports = ['BaseClientOptions', 'SchemaInference', 'XataRecord'];
 
   const importDeclarations = sourceFile
     .getImportDeclarations()
@@ -227,7 +227,13 @@ export async function generate({
           : undefined,
       ctors: [
         {
-          parameters: [],
+          parameters: [
+            {
+              name: 'options',
+              type: 'BaseClientOptions',
+              hasQuestionToken: true
+            }
+          ],
           statements: `super({ 
             apiKey: ${envVariable(moduleType, 'XATA_API_KEY')},
             databaseURL: ${envVariable(moduleType, 'XATA_DATABASE_URL')},
@@ -235,7 +241,8 @@ export async function generate({
             branch: getDeployPreviewBranch(${envLoader(moduleType)}) ?? ${envVariable(
             moduleType,
             'XATA_BRANCH'
-          )} ?? 'main'
+          )} ?? 'main',
+            ...options
            }, tables);`
         }
       ]

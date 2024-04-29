@@ -73,13 +73,14 @@ const DatabaseClient = buildClient();
 /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
 /** @extends DatabaseClient<DatabaseSchema> */
 export class XataClient extends DatabaseClient {
-  constructor() {
+  constructor(options) {
     super(
       {
         apiKey: process.env.XATA_API_KEY,
         databaseURL: process.env.XATA_DATABASE_URL,
         // Use deploy preview branch if available, otherwise use branch from environment
-        branch: getDeployPreviewBranch(process.env) ?? process.env.XATA_BRANCH ?? 'main'
+        branch: getDeployPreviewBranch(process.env) ?? process.env.XATA_BRANCH ?? 'main',
+        ...options
       },
       tables
     );

@@ -76,7 +76,7 @@ const DatabaseClient = (0, client_1.buildClient)();
 /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
 /** @extends DatabaseClient<DatabaseSchema> */
 class XataClient extends DatabaseClient {
-  constructor() {
+  constructor(options) {
     super(
       {
         apiKey: process.env.XATA_API_KEY,
@@ -86,6 +86,7 @@ class XataClient extends DatabaseClient {
           (0, client_1.getDeployPreviewBranch)(process.env) ??
           process.env.XATA_BRANCH ??
           "main",
+        ...options,
       },
       tables
     );

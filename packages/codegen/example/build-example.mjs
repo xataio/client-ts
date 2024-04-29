@@ -21,7 +21,7 @@ async function main() {
     language: 'typescript',
     existingCode: undoReplaceImport(typescriptContents)
   });
-  const { javascript: mjs, types } = await generate({ schema, databaseURL, language: 'javascript' });
+  const { javascript: mjs, types } = await generate({ schema, databaseURL, language: 'javascript', });
   const { javascript: cjs } = await generate({ schema, databaseURL, language: 'javascript', moduleType: 'cjs' });
 
   writeFileSync(join(__dirname, 'xata.ts'), replaceImport(typescript));
@@ -31,11 +31,11 @@ async function main() {
 }
 
 function replaceImport(source) {
-  return source.replaceAll('@xata.io/client', '../../client/src');
+  return source?.replaceAll('@xata.io/client', '../../client/src');
 }
 
 function undoReplaceImport(source) {
-  return source.replaceAll('../../client/src', '@xata.io/client');
+  return source?.replaceAll('../../client/src', '@xata.io/client');
 }
 
 main().catch(console.error);
