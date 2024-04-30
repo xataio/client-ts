@@ -78,13 +78,13 @@
       "init": "./dist/hooks/init/compatibility"
     },
     "macos": {
-      "identifier": "com.xata.cli"
+      "identifier": "io.xata.cli"
     },
     "deb": {
-      "identifier": "com.xata.cli"
+      "identifier": "io.xata.cli"
     },
     "win": {
-      "identifier": "com.xata.cli"
+      "identifier": "io.xata.cli"
     },
     "dirname": "xata",
     "commands": "./dist/commands",
