@@ -52,6 +52,9 @@ async function main() {
     manifest: { version: pgrollVersion }
   } = await readProjectManifest(PATH_TO_PGROLL);
 
+  if (!clientVersion || !codegenVersion || !importerVersion || !pgrollVersion)
+    throw new Error('Missing package versions.');
+
   // Assume changeset version has been called and all the
   // versions in package jsons are up to date
 
@@ -59,10 +62,10 @@ async function main() {
     ...manifest,
     dependencies: {
       ...manifest.dependencies,
-      '@xata.io/client': clientVersion ?? 'latest',
-      '@xata.io/codegen': codegenVersion ?? 'latest',
-      '@xata.io/importer': importerVersion ?? 'latest',
-      '@xata.io/pgroll': pgrollVersion ?? 'latest'
+      '@xata.io/client': clientVersion,
+      '@xata.io/codegen': codegenVersion,
+      '@xata.io/importer': importerVersion,
+      '@xata.io/pgroll': pgrollVersion
     }
   });
 
@@ -70,6 +73,7 @@ async function main() {
 
   process.chdir(PATH_TO_CLI);
 
+  // Oclif pack expects a npm-shrinkwrap.json file and errors if it is not present.
   execFile('rm', ['-rf', `${PATH_TO_CLI}/npm-shrinkwrap.json`]);
   execFile('touch', [`${PATH_TO_CLI}/npm-shrinkwrap.json`]);
 
@@ -79,7 +83,7 @@ async function main() {
     auth: process.env.GITHUB_TOKEN
   });
 
-  const tag = encodeURIComponent(`@xata.io/cli@${manifest.version}`);
+  const tag = `@xata.io/cli@${manifest.version}`;
 
   const release = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
     ...base,
