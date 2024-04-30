@@ -12,6 +12,8 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    outputs:
+      changesets: ${{ steps.changesets.outputs }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -58,6 +60,7 @@ jobs:
 
       - name: Create Release Pull Request or Publish to npm
         uses: changesets/action@v1
+        id: changesets
         if: github.ref_name == 'main'
         with:
           title: Release tracking
@@ -66,3 +69,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-cli-assets:
+    name: Publish CLI assets
+    needs: [release]
+    if: needs.release.outputs.changesets.published == 'true'
+    uses: ./.github/workflows/release-cli-assets.yml
+    with:
+      published-packages: ${{ needs.release.outputs.changesets.publishedPackages }}
+    secrets: inherit

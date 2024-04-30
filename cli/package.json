@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/cli",
-  "version": "0.15.11",
+  "version": "0.15.12",
   "description": "Xata.io CLI",
   "author": "Xata Inc.",
   "bin": {
@@ -76,6 +76,15 @@
     "bin": "xata",
     "hooks": {
       "init": "./dist/hooks/init/compatibility"
+    },
+    "macos": {
+      "identifier": "io.xata.cli"
+    },
+    "deb": {
+      "identifier": "io.xata.cli"
+    },
+    "win": {
+      "identifier": "io.xata.cli"
     },
     "dirname": "xata",
     "commands": "./dist/commands",
