@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.15.12
+
+### Patch Changes
+
+- [#1457](https://github.com/xataio/client-ts/pull/1457) [`b375741`](https://github.com/xataio/client-ts/commit/b37574126a549f35e0c71a8bdf7aac9926e64436) Thanks [@SferaDev](https://github.com/SferaDev)! - Update dependencies
+
 ## 0.15.11
 
 ### Patch Changes
