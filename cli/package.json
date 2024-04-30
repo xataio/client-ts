@@ -77,6 +77,15 @@
     "hooks": {
       "init": "./dist/hooks/init/compatibility"
     },
+    "macos": {
+      "identifier": "io.xata.cli"
+    },
+    "deb": {
+      "identifier": "io.xata.cli"
+    },
+    "win": {
+      "identifier": "io.xata.cli"
+    },
     "dirname": "xata",
     "commands": "./dist/commands",
     "plugins": [
