@@ -2,6 +2,7 @@ name: Release CLI Assets
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   release-cli-assets:
