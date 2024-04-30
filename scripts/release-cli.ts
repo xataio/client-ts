@@ -35,6 +35,17 @@ const matrixToOclif = (os: string) => {
 async function main() {
   if (!process.env.MATRIX_OS) throw new Error('MATRIX_OS is not set');
   if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
+  if (!process.env.PUBLISHED_CHANGESETS) throw new Error('PUBLISHED_CHANGESETS is not set');
+
+  if (
+    process.env.PUBLISHED_CHANGESETS === '' ||
+    !(JSON.parse(process.env.PUBLISHED_CHANGESETS) as Array<{ name: string; version: string }>).find(
+      (change) => change.name === '@xata.io/cli'
+    )
+  ) {
+    console.log('No changes in cli. Skipping asset release.');
+    return;
+  }
 
   const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
 
