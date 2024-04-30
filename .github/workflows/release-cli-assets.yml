@@ -3,6 +3,12 @@ name: Release CLI Assets
 on:
   workflow_call:
   workflow_dispatch:
+    inputs:
+      published-packages:
+        description: 'Published packages'
+        required: true
+        default: '[{"name": "@xx/xx", "version": "1.2.0"}, {"name": "@xx/xy", "version": "0.8.9"}]'
+        type: string
 
 jobs:
   release-cli-assets:
@@ -46,5 +52,6 @@ jobs:
       - name: Release CLI Assets
         run: pnpm run release:cli
         env:
+          PUBLISHED_PACKAGES: ${{ inputs.published-packages }}
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

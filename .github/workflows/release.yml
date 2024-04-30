@@ -12,6 +12,8 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    outputs:
+      changesets: ${{ steps.changesets.outputs }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -67,6 +69,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish CLI assets
-        uses: ./.github/workflows/release-cli-assets.yml
-        if: steps.changesets.outputs.published == true
+  publish-cli-assets:
+    name: Publish CLI assets
+    needs: [release]
+    if: needs.release.outputs.changesets.published == 'true'
+    uses: ./.github/workflows/release-cli-assets.yml
+    with:
+      published-packages: ${{ needs.release.outputs.changesets.publishedPackages }}
+    secrets: inherit
