@@ -88,7 +88,7 @@ async function main() {
   execFile('rm', ['-rf', `${PATH_TO_CLI}/npm-shrinkwrap.json`]);
   execFile('touch', [`${PATH_TO_CLI}/npm-shrinkwrap.json`]);
 
-  await oclifPack({ os: operatingSystem });
+  await exec(`pnpm oclif pack ${operatingSystem}`);
 
   const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN
@@ -114,7 +114,7 @@ async function main() {
 
   // Pack windows on linux
   if (operatingSystem === 'deb') {
-    await oclifPack({ os: 'win' });
+    await exec(`pnpm oclif pack win`);
     // Windows packs files under "win32" directory
     const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
     const files = fs.readdirSync(pathToAssetWindows);
@@ -128,14 +128,6 @@ async function main() {
     }
   }
 }
-
-const oclifPack = async ({ os }: { os: 'win' | 'macos' | 'deb' }) => {
-  const pack = await exec(`pnpm oclif pack ${os}`);
-  if (pack.stderr) {
-    throw new Error(`Failed to pack: ${pack.stderr}`);
-  }
-  console.log('Successfully packed CLI', pack.stdout);
-};
 
 const uploadFiles = async ({
   pathToFile,
