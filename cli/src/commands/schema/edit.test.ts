@@ -14,7 +14,7 @@ import EditSchema, { editsToMigrations } from './edit';
 
 const column: AddColumnPayload['column'] = {
   name: 'col1',
-  type: 'string',
+  type: 'text',
   unique: false,
   nullable: true,
   originalName: 'col1',
@@ -146,11 +146,11 @@ const testCases: TestCase[] = [
             nullable: true,
             unique: false,
             check: {
-              constraint: 'LENGTH("col1") <= 2048',
-              name: 'table1_xata_string_length_col1'
+              constraint: 'OCTET_LENGTH("col1") <= 204800',
+              name: 'table1_xata_text_length_col1'
             },
             up: undefined,
-            comment: '{"xata.type":"string"}',
+            comment: undefined,
             default: undefined,
             references: undefined
           }
@@ -163,7 +163,7 @@ const testCases: TestCase[] = [
     setup: () => {
       createAddition({
         ...column,
-        type: 'int',
+        type: 'bigint',
         defaultValue: '10000'
       });
     },
@@ -188,7 +188,7 @@ const testCases: TestCase[] = [
     setup: () => {
       createAddition({
         ...column,
-        type: 'int',
+        type: 'bigint',
         nullable: false
       });
     },
@@ -213,7 +213,7 @@ const testCases: TestCase[] = [
     setup: () => {
       createAddition({
         ...column,
-        type: 'int',
+        type: 'bigint',
         unique: true
       });
     },
@@ -238,7 +238,7 @@ const testCases: TestCase[] = [
     setup: () => {
       createAddition({
         ...column,
-        type: 'file',
+        type: 'xata.xata_file',
         file: {
           defaultPublicAccess: false
         }
@@ -266,7 +266,7 @@ const testCases: TestCase[] = [
     setup: () => {
       createAddition({
         ...column,
-        type: 'file[]',
+        type: 'xata.xata_file_array',
         'file[]': {
           defaultPublicAccess: true
         }
@@ -294,7 +294,7 @@ const testCases: TestCase[] = [
     setup: () => {
       createAddition({
         ...column,
-        type: 'vector',
+        type: 'real[]',
         vector: {
           dimension: 10
         }
@@ -315,7 +315,6 @@ const testCases: TestCase[] = [
             unique: false,
             comment: '{"xata.search.dimension":10}',
             references: undefined,
-            up: undefined,
             default: undefined
           }
         }
@@ -327,7 +326,7 @@ const testCases: TestCase[] = [
     setup: () => {
       createAddition({
         ...column,
-        type: 'link',
+        type: 'text',
         link: { table: 'table2' }
       });
     },
@@ -340,6 +339,10 @@ const testCases: TestCase[] = [
             type: 'text',
             nullable: true,
             unique: false,
+            check: {
+              constraint: 'OCTET_LENGTH("col1") <= 204800',
+              name: 'table1_xata_text_length_col1'
+            },
             comment: '{"xata.link":"table2"}',
             references: {
               column: 'xata_id',
@@ -470,10 +473,10 @@ const testCases: TestCase[] = [
             nullable: true,
             unique: false,
             check: {
-              constraint: 'LENGTH("col2") <= 2048',
-              name: 'table1_xata_string_length_col2'
+              constraint: 'OCTET_LENGTH("col2") <= 204800',
+              name: 'table1_xata_text_length_col2'
             },
-            comment: '{"xata.type":"string"}',
+            comment: undefined,
             default: undefined,
             references: undefined,
             up: undefined
@@ -572,7 +575,7 @@ const testCases: TestCase[] = [
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition({
         ...column,
-        type: 'float',
+        type: 'float8',
         unique: true
       });
     },
@@ -583,7 +586,7 @@ const testCases: TestCase[] = [
           columns: [
             {
               name: 'col1',
-              type: 'double precision',
+              type: 'float8',
               nullable: true,
               unique: true,
               default: undefined,
@@ -601,7 +604,7 @@ const testCases: TestCase[] = [
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition({
         ...column,
-        type: 'float',
+        type: 'float8',
         nullable: false
       });
     },
@@ -612,7 +615,7 @@ const testCases: TestCase[] = [
           columns: [
             {
               name: 'col1',
-              type: 'double precision',
+              type: 'float8',
               nullable: false,
               unique: false,
               default: undefined,
@@ -629,7 +632,7 @@ const testCases: TestCase[] = [
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition({
         ...column,
-        type: 'float',
+        type: 'float8',
         nullable: false
       });
     },
@@ -640,7 +643,7 @@ const testCases: TestCase[] = [
           columns: [
             {
               name: 'col1',
-              type: 'double precision',
+              type: 'float8',
               nullable: false,
               unique: false,
               default: undefined,
@@ -657,7 +660,7 @@ const testCases: TestCase[] = [
       editCommand.tableAdditions.push({ name: 'table1' });
       createAddition({
         ...column,
-        type: 'float',
+        type: 'float8',
         nullable: true
       });
     },
@@ -668,7 +671,7 @@ const testCases: TestCase[] = [
           columns: [
             {
               name: 'col1',
-              type: 'double precision',
+              type: 'float8',
               nullable: true,
               unique: false,
               default: undefined,
@@ -700,7 +703,7 @@ const testCases: TestCase[] = [
         ...column,
         originalName: 'col2',
         name: 'col3',
-        type: 'float'
+        type: 'float8'
       });
       editCommand.columnDeletions['table1'].push('col2');
     },
@@ -718,18 +721,18 @@ const testCases: TestCase[] = [
     setup: () => {
       createAddition({
         ...column,
-        type: 'float'
+        type: 'float8'
       });
       createEdit({
         ...column,
-        type: 'float',
+        type: 'float8',
         name: 'col5',
         nullable: false,
         unique: true
       });
       createEdit({
         ...column,
-        type: 'float',
+        type: 'float8',
         name: 'col6',
         nullable: false,
         unique: true
@@ -741,7 +744,7 @@ const testCases: TestCase[] = [
           table: 'table1',
           column: {
             name: 'col6',
-            type: 'double precision',
+            type: 'float8',
             nullable: false,
             unique: true,
             default: undefined,
@@ -765,19 +768,19 @@ const testCases: TestCase[] = [
       {
         add_column: {
           table: 'table1',
+          up: undefined,
           column: {
             name: 'col2',
             type: 'text',
             nullable: true,
             unique: false,
             check: {
-              constraint: 'LENGTH("col2") <= 2048',
-              name: 'table1_xata_string_length_col2'
+              constraint: 'OCTET_LENGTH("col2") <= 204800',
+              name: 'table1_xata_text_length_col2'
             },
-            comment: '{"xata.type":"string"}',
+            comment: undefined,
             default: undefined,
-            references: undefined,
-            up: undefined
+            references: undefined
           }
         }
       }
@@ -825,10 +828,10 @@ const testCases: TestCase[] = [
               nullable: true,
               unique: false,
               check: {
-                constraint: 'LENGTH("col3") <= 2048',
-                name: 'table1_xata_string_length_col3'
+                constraint: 'OCTET_LENGTH("col3") <= 204800',
+                name: 'table1_xata_text_length_col3'
               },
-              comment: '{"xata.type":"string"}',
+              comment: undefined,
               default: undefined,
               references: undefined
             },
@@ -838,10 +841,10 @@ const testCases: TestCase[] = [
               nullable: true,
               unique: false,
               check: {
-                constraint: 'LENGTH("col8") <= 2048',
-                name: 'table1_xata_string_length_col8'
+                constraint: 'OCTET_LENGTH("col8") <= 204800',
+                name: 'table1_xata_text_length_col8'
               },
-              comment: '{"xata.type":"string"}',
+              comment: undefined,
               default: undefined,
               references: undefined,
               up: undefined

@@ -90,9 +90,9 @@ function pgRollToXataColumnType(type: string, comment?: string): string {
     case 'json':
     case 'jsonb':
       return 'json';
-    case 'xata_file':
+    case 'xata.xata_file':
       return 'file';
-    case 'xata_file_array':
+    case 'xata.xata_file_array':
       return 'file[]';
     case 'real[]':
       return 'vector';
@@ -137,7 +137,7 @@ export async function getBranchDetailsWithPgRoll(
             .filter((column: any) => !['_id', '_createdat', '_updatedat', '_version'].includes(column.name))
             .map((column: any) => ({
               name: column.name,
-              type: getPgRollLink(table, column) ? 'link' : pgRollToXataColumnType(column.type, column.comment),
+              type: column.type,
               link: getPgRollLink(table, column) ? { table: getPgRollLink(table, column).referencedTable } : undefined,
               file:
                 pgRollToXataColumnType(column.type) === 'file' || pgRollToXataColumnType(column.type) === 'file[]'
@@ -154,59 +154,6 @@ export async function getBranchDetailsWithPgRoll(
 
   return details;
 }
-
-export const isColumnTypeUnsupported = (type: string) => {
-  switch (type) {
-    case 'bool':
-    case 'int':
-    case 'float':
-    case 'datetime':
-    case 'multiple':
-    case 'json':
-    case 'file':
-    case 'file[]':
-    case 'text':
-    case 'link':
-    case 'string':
-    case 'email':
-    case 'vector':
-      return false;
-    default:
-      return true;
-  }
-};
-
-export function xataColumnTypeToPgRoll(type: Column['type']): string {
-  if (isColumnTypeUnsupported(type)) return type;
-  switch (type) {
-    case 'bool':
-      return 'boolean';
-    case 'int':
-      return 'bigint';
-    case 'float':
-      return 'double precision';
-    case 'datetime':
-      return 'timestamptz';
-    case 'multiple':
-      return 'text[]';
-    case 'json':
-      return 'jsonb';
-    case 'file':
-      return 'xata.xata_file';
-    case 'file[]':
-      return 'xata.xata_file_array';
-    case 'text':
-    case 'string':
-    case 'email':
-    case 'link':
-      return 'text';
-    case 'vector':
-      return 'real[]';
-    default:
-      return 'text';
-  }
-}
-
 export const exhaustiveCheck = (x: never): never => {
   throw new Error(`Unhandled discriminated union member: ${x}`);
 };
@@ -233,34 +180,21 @@ export const xataColumnTypeToPgRollConstraintName = (
   columnName: string,
   columnType: Column['type']
 ) => {
-  return `${tableName}_xata_${columnType}_length_${columnName}`;
+  return `${tableName}_xata_${
+    columnType === 'real[]' ? 'vector' : columnType === 'text[]' ? 'multiple' : columnType
+  }_length_${columnName}`;
 };
 
 export const xataColumnTypeToPgRollConstraint = (column: Column, table: string) => {
   const getConstraint = () => {
-    if (isColumnTypeUnsupported(column.type)) return undefined;
-    switch (column.type) {
-      case 'vector':
-        return `ARRAY_LENGTH("${column.name}", 1) = ${column.vector?.dimension}`;
-      case 'string':
-      case 'email':
-        return `LENGTH("${column.name}") <= 2048`;
-      case 'text':
-        return `OCTET_LENGTH("${column.name}") <= 204800`;
-      case 'multiple':
-        return `OCTET_LENGTH(ARRAY_TO_STRING("${column.name}", '')) < 65536`;
-      case 'link':
-      case 'bool':
-      case 'datetime':
-      case 'file':
-      case 'file[]':
-      case 'float':
-      case 'int':
-      case 'json':
-        return undefined;
-      default:
-        return undefined;
+    if (column.vector) {
+      return `ARRAY_LENGTH("${column.name}", 1) = ${column.vector?.dimension}`;
+    } else if (column.type === 'text') {
+      return `OCTET_LENGTH("${column.name}") <= 204800`;
+    } else if (column.type === 'text[]') {
+      return `OCTET_LENGTH(ARRAY_TO_STRING("${column.name}", '')) < 65536`;
     }
+    return undefined;
   };
 
   const constraint = getConstraint();
@@ -274,29 +208,19 @@ export const xataColumnTypeToPgRollConstraint = (column: Column, table: string) 
 
 export const xataColumnTypeToPgRollComment = (column: Column) => {
   const getType = () => {
-    switch (column.type) {
-      case 'vector':
-        return { 'xata.search.dimension': column.vector?.dimension };
-      case 'link':
-        return { 'xata.link': column.link?.table };
-      case 'string':
-      case 'text':
-      case 'email':
-        return { 'xata.type': column.type };
-      case 'file':
-        return { 'xata.file.dpa': column.file?.defaultPublicAccess ?? false };
-      case 'file[]':
-        return { 'xata.file.dpa': column['file[]']?.defaultPublicAccess ?? false };
-      case 'float':
-      case 'int':
-      case 'json':
-      case 'multiple':
-      case 'bool':
-      case 'datetime':
-        return undefined;
-      default:
-        return 'text';
+    if (column.link) {
+      return { 'xata.link': column.link?.table };
     }
+    if (column.vector) {
+      return { 'xata.search.dimension': column.vector?.dimension };
+    }
+    if (column.file) {
+      return { 'xata.file.dpa': column.file?.defaultPublicAccess ?? false };
+    }
+    if (column['file[]']) {
+      return { 'xata.file.dpa': column['file[]']?.defaultPublicAccess ?? false };
+    }
+    return undefined;
   };
 
   const result = getType();
@@ -308,26 +232,28 @@ export const requiresUpArgument = (notNull: Column['notNull'], defaultValue: unk
 
 export function xataColumnTypeToZeroValue(type: Column['type'], defaultValue: unknown): string {
   if (defaultValue !== undefined && defaultValue !== null) return `${defaultValue}`;
-  if (isColumnTypeUnsupported(type)) return "''";
   switch (type) {
     case 'bool':
+    case 'boolean':
       return 'false';
+    case 'bigint':
+    case 'int8':
+    case 'integer':
     case 'int':
-    case 'float':
+    case 'int4':
+    case 'smallint':
+    case 'double precision':
+    case 'float8':
+    case 'real':
       return '0';
-    case 'datetime':
+    case 'timestamptz':
       return 'now()';
-    case 'link':
-      return 'null';
-    case 'email':
-    case 'text':
-    case 'string':
-      return "''";
-    case 'vector':
+    case 'real[]':
     case 'multiple':
-    case 'json':
-    case 'file':
-    case 'file[]':
+    case 'text[]':
+    case 'jsonb':
+    case 'xata.xata_file':
+    case 'xata.xata_file_array':
       return "'{}'";
     default:
       return "''";

@@ -18,7 +18,6 @@ import {
   AddColumnPayload,
   AddTablePayload,
   ColumnAdditions,
-  ColumnData,
   ColumnEdits,
   DeleteColumnPayload,
   DeleteTablePayload,
@@ -33,7 +32,6 @@ import {
   getBranchDetailsWithPgRoll,
   requiresUpArgument,
   waitForMigrationToFinish,
-  xataColumnTypeToPgRoll,
   xataColumnTypeToPgRollComment,
   xataColumnTypeToPgRollConstraint,
   xataColumnTypeToZeroValue
@@ -42,20 +40,34 @@ import {
 const { Select, Snippet, Confirm } = enquirer as any;
 
 const xataTypes = [
-  'string',
-  'int',
-  'float',
+  'boolean',
   'bool',
+  'bigint',
+  'int8',
+  'integer',
+  'int',
+  'int4',
+  'smallint',
+  'double precision',
+  'float8',
+  'real',
   'text',
-  'multiple',
-  'link',
-  'email',
-  'datetime',
-  'vector',
+  'varchar',
+  'character varying',
+  'timestamptz',
+  'text[]',
   'json',
-  'file',
-  'file[]'
+  'jsonb',
+  'xata.xata_file',
+  'xata.xata_file_array',
+  'real[]'
 ];
+
+const isValidXataType = (type: string) => {
+  if (xataTypes.includes(type)) return true;
+  if (type.startsWith('character(') || type.startsWith('varchar(')) return true;
+  if (type.startsWith('numeric(')) return true;
+};
 
 export default class EditSchema extends BaseCommand<typeof EditSchema> {
   static description = 'Edit the schema';
@@ -506,8 +518,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           validate: (value: string) => {
             if (value === undefined) return 'Type cannot be undefined';
             if (emptyString(value)) return 'Type cannot be empty';
-            if (!xataTypes.includes(value))
-              return 'Invalid xata type. Please specify one of the following: ' + xataTypes;
+            if (!isValidXataType(value)) return 'Invalid xata type. Please specify one of the following: ' + xataTypes;
           }
         },
         {
@@ -526,32 +537,36 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         },
         {
           name: 'link',
-          message: 'Linked table. Only required for columns that are links. Will be ignored if type is not link.',
+          message:
+            'Linked table. Only required for columns that are text and foreign keys. Will be ignored if type is not text.',
           validate: (value: string, state: ValidationState) => {
             const columnType = state.items.find(({ name }) => name === 'type')?.input;
-            if ((value === undefined || emptyString(value)) && columnType === 'link')
-              return 'Cannot be empty string when the type is link';
+            if (!(value === undefined || emptyString(value)) && columnType !== 'text')
+              return 'Cannot set a linked table for a non text field';
             return true;
           }
         },
         {
           name: 'vectorDimension',
-          message: 'Vector dimension. Only required for vector columns. Will be ignored if type is not vector.',
+          message: 'Vector dimension. Only required for rea[] columns. Will be ignored if type is not real[].',
           validate: (value: string, state: ValidationState) => {
             const columnType = state.items.find(({ name }) => name === 'type')?.input;
-            if ((value === undefined || emptyString(value)) && columnType === 'vector')
-              return 'Cannot be empty string when the type is vector';
+            if ((value === undefined || emptyString(value)) && columnType === 'real[]')
+              return 'Cannot be empty string when the type is real[]';
             return true;
           }
         },
         {
           name: 'defaultPublicAccess',
           message:
-            'Default public access. Only required for file or file[] columns. Will be ignored if type is not file or file[].',
+            'Default public access. Only required for xata.xata_file or xata.xata_file_array columns. Will be ignored if type is not of that type.',
           validate: (value: string, state: ValidationState) => {
             const columnType = state.items.find(({ name }) => name === 'type')?.input;
-            if ((value === undefined || emptyString(value)) && (columnType === 'file' || columnType === 'file[]'))
-              return 'Cannot be empty string when the type is file or file[]. Please input true or false';
+            if (
+              (value === undefined || emptyString(value)) &&
+              (columnType === 'xata.xata_file' || columnType === 'xata.xata_file_array')
+            )
+              return 'Cannot be empty string when the type is xata.xata_file or xata.xata_file_array. Please input true or false';
             return true;
           }
         }
@@ -569,11 +584,11 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           ...values,
           originalName: column.originalName,
           'file[]':
-            values.type === 'file[]'
+            values.type === 'xata.xata_file_array'
               ? { defaultPublicAccess: parseBoolean(values.defaultPublicAccess) ?? false }
               : undefined,
           file:
-            values.type === 'file'
+            values.type === 'xata.xata_file'
               ? { defaultPublicAccess: parseBoolean(values.defaultPublicAccess) ?? false }
               : undefined,
           vector: values.vectorDimension
@@ -994,10 +1009,9 @@ const formatSchemaColumnToColumnData = ({
     originalName: column.originalName,
     defaultValue: column.defaultValue ?? undefined,
     vector: column.vector ? { dimension: column.vector.dimension } : undefined,
-    link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
-    file: column.type === 'file' ? { defaultPublicAccess: column.file?.defaultPublicAccess ?? false } : undefined,
-    'file[]':
-      column.type === 'file[]' ? { defaultPublicAccess: column['file[]']?.defaultPublicAccess ?? false } : undefined
+    link: column.link?.table ? { table: column.link.table } : undefined,
+    file: column.file ? { defaultPublicAccess: column.file?.defaultPublicAccess ?? false } : undefined,
+    'file[]': column['file[]'] ? { defaultPublicAccess: column['file[]']?.defaultPublicAccess ?? false } : undefined
   };
 };
 
@@ -1011,11 +1025,10 @@ const formatColumnDataToPgroll = (
       : undefined,
     column: {
       name: column.name,
-      type: xataColumnTypeToPgRoll(column.type as any),
-      references:
-        column.type === 'link'
-          ? generateLinkReference({ column: column.name, table: column.link?.table ?? '' })
-          : undefined,
+      type: column.type,
+      references: column.link?.table
+        ? generateLinkReference({ column: column.name, table: column.link?.table ?? '' })
+        : undefined,
       default:
         column.defaultValue !== null && column.defaultValue !== undefined ? `'${column.defaultValue}'` : undefined,
       nullable: parseBoolean(String(column.nullable)) ?? true,
