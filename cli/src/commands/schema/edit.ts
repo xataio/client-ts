@@ -8,8 +8,6 @@ import {
   OpDropColumn,
   OpDropConstraint,
   OpDropTable,
-  OpRawSQL,
-  OpRenameConstraint,
   OpRenameTable,
   PgRollMigration,
   PgRollMigrationDefinition,

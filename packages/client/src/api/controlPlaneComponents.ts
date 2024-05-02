@@ -471,7 +471,12 @@ export const updateOAuthAccessToken = (variables: UpdateOAuthAccessTokenVariable
     {},
     {},
     UpdateOAuthAccessTokenPathParams
-  >({ url: '/user/oauth/tokens/{token}', method: 'patch', ...variables, signal });
+  >({
+    url: '/user/oauth/tokens/{token}',
+    method: 'patch',
+    ...variables,
+    signal
+  });
 
 export type GetWorkspacesListError = Fetcher.ErrorWrapper<
   | {
@@ -706,7 +711,12 @@ export const getWorkspaceSettings = (variables: GetWorkspaceSettingsVariables, s
     {},
     {},
     GetWorkspaceSettingsPathParams
-  >({ url: '/workspaces/{workspaceId}/settings', method: 'get', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/settings',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type UpdateWorkspaceSettingsPathParams = {
   /**
@@ -754,7 +764,12 @@ export const updateWorkspaceSettings = (variables: UpdateWorkspaceSettingsVariab
     {},
     {},
     UpdateWorkspaceSettingsPathParams
-  >({ url: '/workspaces/{workspaceId}/settings', method: 'patch', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/settings',
+    method: 'patch',
+    ...variables,
+    signal
+  });
 
 export type GetWorkspaceMembersListPathParams = {
   /**
@@ -797,7 +812,12 @@ export const getWorkspaceMembersList = (variables: GetWorkspaceMembersListVariab
     {},
     {},
     GetWorkspaceMembersListPathParams
-  >({ url: '/workspaces/{workspaceId}/members', method: 'get', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/members',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type UpdateWorkspaceMemberRolePathParams = {
   /**
@@ -849,7 +869,12 @@ export const updateWorkspaceMemberRole = (variables: UpdateWorkspaceMemberRoleVa
     {},
     {},
     UpdateWorkspaceMemberRolePathParams
-  >({ url: '/workspaces/{workspaceId}/members/{userId}', method: 'put', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/members/{userId}',
+    method: 'put',
+    ...variables,
+    signal
+  });
 
 export type RemoveWorkspaceMemberPathParams = {
   /**
@@ -950,7 +975,12 @@ export const inviteWorkspaceMember = (variables: InviteWorkspaceMemberVariables,
     {},
     {},
     InviteWorkspaceMemberPathParams
-  >({ url: '/workspaces/{workspaceId}/invites', method: 'post', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/invites',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type UpdateWorkspaceMemberInvitePathParams = {
   /**
@@ -1006,7 +1036,12 @@ export const updateWorkspaceMemberInvite = (variables: UpdateWorkspaceMemberInvi
     {},
     {},
     UpdateWorkspaceMemberInvitePathParams
-  >({ url: '/workspaces/{workspaceId}/invites/{inviteId}', method: 'patch', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/invites/{inviteId}',
+    method: 'patch',
+    ...variables,
+    signal
+  });
 
 export type CancelWorkspaceMemberInvitePathParams = {
   /**
@@ -1053,7 +1088,12 @@ export const cancelWorkspaceMemberInvite = (variables: CancelWorkspaceMemberInvi
     {},
     {},
     CancelWorkspaceMemberInvitePathParams
-  >({ url: '/workspaces/{workspaceId}/invites/{inviteId}', method: 'delete', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/invites/{inviteId}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
 
 export type AcceptWorkspaceMemberInvitePathParams = {
   /**
@@ -1100,7 +1140,12 @@ export const acceptWorkspaceMemberInvite = (variables: AcceptWorkspaceMemberInvi
     {},
     {},
     AcceptWorkspaceMemberInvitePathParams
-  >({ url: '/workspaces/{workspaceId}/invites/{inviteKey}/accept', method: 'post', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/invites/{inviteKey}/accept',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type ResendWorkspaceMemberInvitePathParams = {
   /**
@@ -1147,7 +1192,12 @@ export const resendWorkspaceMemberInvite = (variables: ResendWorkspaceMemberInvi
     {},
     {},
     ResendWorkspaceMemberInvitePathParams
-  >({ url: '/workspaces/{workspaceId}/invites/{inviteId}/resend', method: 'post', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/invites/{inviteId}/resend',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type ListClustersPathParams = {
   /**
@@ -1194,7 +1244,12 @@ export const listClusters = (variables: ListClustersVariables, signal?: AbortSig
     {},
     ListClustersQueryParams,
     ListClustersPathParams
-  >({ url: '/workspaces/{workspaceId}/clusters', method: 'get', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/clusters',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type CreateClusterPathParams = {
   /**
@@ -1235,7 +1290,12 @@ export const createCluster = (variables: CreateClusterVariables, signal?: AbortS
     {},
     {},
     CreateClusterPathParams
-  >({ url: '/workspaces/{workspaceId}/clusters', method: 'post', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/clusters',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type GetClusterPathParams = {
   /**
@@ -1312,7 +1372,49 @@ export const updateCluster = (variables: UpdateClusterVariables, signal?: AbortS
     {},
     {},
     UpdateClusterPathParams
-  >({ url: '/workspaces/{workspaceId}/clusters/{clusterId}', method: 'patch', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/clusters/{clusterId}',
+    method: 'patch',
+    ...variables,
+    signal
+  });
+
+export type DeleteClusterPathParams = {
+  /**
+   * Workspace ID
+   */
+  workspaceId: Schemas.WorkspaceID;
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+};
+
+export type DeleteClusterError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type DeleteClusterVariables = {
+  pathParams: DeleteClusterPathParams;
+} & ControlPlaneFetcherExtraProps;
+
+/**
+ * Delete cluster with given cluster ID
+ */
+export const deleteCluster = (variables: DeleteClusterVariables, signal?: AbortSignal) =>
+  controlPlaneFetch<Schemas.ClusterUpdateMetadata, DeleteClusterError, undefined, {}, {}, DeleteClusterPathParams>({
+    url: '/workspaces/{workspaceId}/clusters/{clusterId}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
 
 export type GetDatabaseListPathParams = {
   /**
@@ -1424,7 +1526,12 @@ export const createDatabase = (variables: CreateDatabaseVariables, signal?: Abor
     {},
     {},
     CreateDatabasePathParams
-  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'put', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}',
+    method: 'put',
+    ...variables,
+    signal
+  });
 
 export type DeleteDatabasePathParams = {
   /**
@@ -1512,7 +1619,12 @@ export const getDatabaseMetadata = (variables: GetDatabaseMetadataVariables, sig
     {},
     {},
     GetDatabaseMetadataPathParams
-  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'get', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type UpdateDatabaseMetadataPathParams = {
   /**
@@ -1572,7 +1684,12 @@ export const updateDatabaseMetadata = (variables: UpdateDatabaseMetadataVariable
     {},
     {},
     UpdateDatabaseMetadataPathParams
-  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}', method: 'patch', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}',
+    method: 'patch',
+    ...variables,
+    signal
+  });
 
 export type RenameDatabasePathParams = {
   /**
@@ -1627,7 +1744,12 @@ export const renameDatabase = (variables: RenameDatabaseVariables, signal?: Abor
     {},
     {},
     RenameDatabasePathParams
-  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/rename', method: 'post', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}/rename',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type GetDatabaseGithubSettingsPathParams = {
   /**
@@ -1670,7 +1792,12 @@ export const getDatabaseGithubSettings = (variables: GetDatabaseGithubSettingsVa
     {},
     {},
     GetDatabaseGithubSettingsPathParams
-  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/github', method: 'get', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}/github',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type UpdateDatabaseGithubSettingsPathParams = {
   /**
@@ -1718,7 +1845,12 @@ export const updateDatabaseGithubSettings = (variables: UpdateDatabaseGithubSett
     {},
     {},
     UpdateDatabaseGithubSettingsPathParams
-  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/github', method: 'put', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}/github',
+    method: 'put',
+    ...variables,
+    signal
+  });
 
 export type DeleteDatabaseGithubSettingsPathParams = {
   /**
@@ -1761,7 +1893,12 @@ export const deleteDatabaseGithubSettings = (variables: DeleteDatabaseGithubSett
     {},
     {},
     DeleteDatabaseGithubSettingsPathParams
-  >({ url: '/workspaces/{workspaceId}/dbs/{dbName}/github', method: 'delete', ...variables, signal });
+  >({
+    url: '/workspaces/{workspaceId}/dbs/{dbName}/github',
+    method: 'delete',
+    ...variables,
+    signal
+  });
 
 export type ListRegionsPathParams = {
   /**
@@ -1827,7 +1964,13 @@ export const operationsByTag = {
     acceptWorkspaceMemberInvite,
     resendWorkspaceMemberInvite
   },
-  xbcontrolOther: { listClusters, createCluster, getCluster, updateCluster },
+  xbcontrolOther: {
+    listClusters,
+    createCluster,
+    getCluster,
+    updateCluster,
+    deleteCluster
+  },
   databases: {
     getDatabaseList,
     createDatabase,
