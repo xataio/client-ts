@@ -20,6 +20,7 @@ import enquirer from 'enquirer';
 import {
   AddColumnPayload,
   AddTablePayload,
+  BranchSchemaFormatted,
   ColumnAdditions,
   ColumnEdits,
   DeleteColumnPayload,
@@ -76,7 +77,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
   static args = {};
 
-  branchDetails: Schemas.DBBranch | undefined;
+  branchDetails: BranchSchemaFormatted;
   workspace!: string;
   region!: string;
   database!: string;
@@ -91,8 +92,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   columnDeletions: DeleteColumnPayload = {};
 
   currentMigration: PgRollMigration = { operations: [] };
-  constraintRenames: { rename_constraint: OpRenameConstraint }[] = [];
-  alterLinkColumns: { rawSql: OpRawSQL }[] = [];
 
   activeIndex: number = 0;
 
@@ -121,12 +120,13 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         columns: []
       }))
     ];
+
     for (const table of tables) {
       tableChoices.push({
         name: { type: 'edit-table', table: { name: table.name, newName: table.name } },
         message: this.renderTableMessage(table.name),
         choices: [
-          ...Object.values(table.columns).map((column) => {
+          ...table.columns.map((column) => {
             const col = formatSchemaColumnToColumnData({
               column: { ...column, originalName: column.name },
               tableName: table.name
@@ -249,8 +249,26 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         }
         const xata = await this.getXataClient();
 
+        const submitMigrationRessponse = await xata.api.migrations.applyMigration({
+          pathParams: {
+            workspace: this.workspace,
+            region: this.region,
+            dbBranchName: `${this.database}:${this.branch}`
+          },
+          body: { ...this.currentMigration, adaptTables: true }
+        });
+
+        await waitForMigrationToFinish(
+          xata.api,
+          this.workspace,
+          this.region,
+          this.database,
+          this.branch,
+          submitMigrationRessponse.jobID
+        );
+
         const alterLinkColumns = this.currentMigration.operations.reduce((acc, op) => {
-          const operation = updateLinkComment(this.branchDetails?.schema.tables as any, op);
+          const operation = updateLinkComment(this.branchDetails, op);
           if (operation) acc.push(...operation);
           return acc;
         }, [] as PgRollOperation[]);
@@ -276,7 +294,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         }
 
         const constraintRenames = this.currentMigration.operations.reduce((acc, op) => {
-          const operation = updateConstraint(this.branchDetails?.schema.tables as any, op);
+          const operation = updateConstraint(this.branchDetails, op);
           if (operation) acc.push(...operation);
           return acc;
         }, [] as PgRollOperation[]);
@@ -300,24 +318,6 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
             constraintRenameJobID
           );
         }
-
-        const submitMigrationRessponse = await xata.api.migrations.applyMigration({
-          pathParams: {
-            workspace: this.workspace,
-            region: this.region,
-            dbBranchName: `${this.database}:${this.branch}`
-          },
-          body: { ...this.currentMigration, adaptTables: true }
-        });
-
-        await waitForMigrationToFinish(
-          xata.api,
-          this.workspace,
-          this.region,
-          this.database,
-          this.branch,
-          submitMigrationRessponse.jobID
-        );
 
         this.success('Migration completed!');
         process.exit(0);
@@ -422,7 +422,7 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
       this.warn('Schema source editing is not supported yet. Please run the command without the --source flag.');
       process.exit(0);
     } else {
-      this.branchDetails = branchDetails;
+      this.branchDetails = branchDetails as any;
       await this.showSchemaEdit();
     }
   }

@@ -1,3 +1,26 @@
+import { Schemas } from '@xata.io/client';
+
+export type BranchSchemaFormatted =
+  | {
+      schema: {
+        tables: {
+          name: string;
+          uniqueConstraints: Schemas.BranchSchema['tables'][number]['uniqueConstraints'];
+          checkConstraints: Schemas.BranchSchema['tables'][number]['checkConstraints'];
+          foreignKeys: Schemas.BranchSchema['tables'][number]['foreignKeys'];
+          columns: {
+            name: string;
+            type: string;
+            unique: boolean;
+            notNull: boolean;
+            defaultValue: any;
+            comment: string;
+          }[];
+        }[];
+      };
+    }
+  | undefined;
+
 export type ColumnData = {
   name: string;
   type: string;

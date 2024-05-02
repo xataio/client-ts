@@ -7,6 +7,7 @@ import { safeJSONParse, safeReadFile } from '../utils/files.js';
 import { migrationsDir, readMigrationsDir } from './files.js';
 import { MigrationFilePgroll, migrationFilePgroll } from './schema.js';
 import { OpRawSQL, OpRenameConstraint, PgRollOperation } from '@xata.io/pgroll';
+import { BranchSchemaFormatted } from '../commands/schema/types.js';
 
 export const isBranchPgRollEnabled = (details: Schemas.DBBranch) => {
   // @ts-expect-error TODO: Fix this when api is finalized
@@ -146,7 +147,8 @@ export async function getBranchDetailsWithPgRoll(
                   : undefined,
               notNull: column.nullable === false,
               unique: column.unique === true,
-              defaultValue: column.default
+              defaultValue: column.default,
+              comment: column.comment
             }))
         }))
       } as any
@@ -358,8 +360,12 @@ export async function waitForMigrationToFinish(
   return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
 }
 
+const getTable = (tableName: string, branchDetails: BranchSchemaFormatted) => {
+  return branchDetails?.schema.tables.find((table) => table.name === tableName);
+};
+
 export const updateConstraint = (
-  tables: Schemas.BranchSchema['tables'],
+  branchDetails: BranchSchemaFormatted,
   operation: PgRollOperation
 ): { rename_constraint: OpRenameConstraint }[] | undefined => {
   const migrations: { rename_constraint: OpRenameConstraint }[] = [];
@@ -387,19 +393,15 @@ export const updateConstraint = (
     return arr.join('');
   };
 
-  const getTable = (tableName: string) => {
-    return Object.values(tables).find((table) => table.name === tableName);
-  };
-
   if (
     'alter_column' in operation &&
     operation.alter_column.name &&
     operation.alter_column.name !== operation.alter_column.column
   ) {
-    const table = getTable(operation.alter_column.table);
+    const table = getTable(operation.alter_column.table, branchDetails);
     if (!table) return undefined;
 
-    const oldColumn = Object.values(table.columns)
+    const oldColumn = table.columns
       .map(({ type, name, comment }) => ({ type, name, comment }))
       .find((column) => column.name === operation.alter_column.column);
     if (!oldColumn) return undefined;
@@ -431,7 +433,7 @@ export const updateConstraint = (
   }
 
   if ('rename_table' in operation) {
-    const table = getTable(operation.rename_table.from);
+    const table = getTable(operation.rename_table.from, branchDetails);
     if (!table) return undefined;
 
     Object.values(table.checkConstraints ?? {}).forEach((constraint) => {
@@ -460,28 +462,30 @@ const isValidXataLink = ({ key }: { key: Schemas.BranchSchema['tables'][number][
 };
 
 export const updateLinkComment = (
-  tables: Schemas.BranchSchema['tables'],
+  branchDetails: BranchSchemaFormatted,
   operation: PgRollOperation
 ): { sql: OpRawSQL }[] | undefined => {
   const migrationSql: string[] = [];
 
   if ('rename_table' in operation) {
-    const tablesToUpdate = Object.values(tables).reduce((acc, table) => {
-      const keys = Object.values(table.foreignKeys);
-      for (const key of keys) {
-        if (key.referencedTable === operation.rename_table.from && isValidXataLink({ key })) {
-          acc.push({ [table.name]: key.columns });
+    const tablesToUpdate =
+      branchDetails?.schema.tables.reduce((acc, table) => {
+        const keys = Object.values(table.foreignKeys);
+        for (const key of keys) {
+          if (key.referencedTable === operation.rename_table.from && isValidXataLink({ key })) {
+            acc.push({ [table.name]: key.columns });
+          }
         }
-      }
-      return acc;
-    }, [] as { [tableName: string]: string[] }[]);
+        return acc;
+      }, [] as { [tableName: string]: string[] }[]) ?? [];
 
     for (const key of tablesToUpdate) {
       const tableName = Object.keys(key)[0];
       const columns = key[tableName];
       columns.forEach((column) => {
-        const columnToUpdate = tables[tableName].columns[column];
-        if (tableNameFromLinkComment(columnToUpdate.comment)) {
+        const table = getTable(tableName, branchDetails);
+        const columnToUpdate = table?.columns.find((col) => col.name === column);
+        if (tableNameFromLinkComment(columnToUpdate?.comment ?? '')) {
           migrationSql.push(
             `COMMENT ON COLUMN "${tableName}"."${column}" IS '${JSON.stringify({
               'xata.link': operation.rename_table.to
