@@ -8,9 +8,12 @@ import {
   OpDropColumn,
   OpDropConstraint,
   OpDropTable,
+  OpRawSQL,
+  OpRenameConstraint,
   OpRenameTable,
   PgRollMigration,
-  PgRollMigrationDefinition
+  PgRollMigrationDefinition,
+  PgRollOperation
 } from '@xata.io/pgroll';
 import chalk from 'chalk';
 import enquirer from 'enquirer';
@@ -18,7 +21,6 @@ import {
   AddColumnPayload,
   AddTablePayload,
   ColumnAdditions,
-  ColumnData,
   ColumnEdits,
   DeleteColumnPayload,
   DeleteTablePayload,
@@ -32,6 +34,8 @@ import {
   generateLinkReference,
   getBranchDetailsWithPgRoll,
   requiresUpArgument,
+  updateConstraint,
+  updateLinkComment,
   waitForMigrationToFinish,
   xataColumnTypeToPgRoll,
   xataColumnTypeToPgRollComment,
@@ -87,6 +91,8 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
   columnDeletions: DeleteColumnPayload = {};
 
   currentMigration: PgRollMigration = { operations: [] };
+  constraintRenames: { rename_constraint: OpRenameConstraint }[] = [];
+  alterLinkColumns: { rawSql: OpRawSQL }[] = [];
 
   activeIndex: number = 0;
 
@@ -108,33 +114,32 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
         'Use the ↑ ↓ arrows to move across the schema, enter to edit or add things, delete or backspace to delete things.'
     });
 
-    for (const table of [
-      ...this.branchDetails!.schema.tables,
+    const tables = [
+      ...(this.branchDetails?.schema?.tables ?? []),
       ...this.tableAdditions.map((addition) => ({
         name: addition.name,
         columns: []
       }))
-    ]) {
+    ];
+    for (const table of tables) {
       tableChoices.push({
         name: { type: 'edit-table', table: { name: table.name, newName: table.name } },
         message: this.renderTableMessage(table.name),
         choices: [
-          ...Object.values(table.columns)
-            .filter(({ name }) => !isReservedXataFieldName(name))
-            .map((column) => {
-              const col = formatSchemaColumnToColumnData({
-                column: { ...column, originalName: column.name },
-                tableName: table.name
-              });
-              return {
-                name: {
-                  type: 'edit-column',
-                  column: col
-                },
-                message: this.renderColumnMessage({ column: col }),
-                disabled: editTableDisabled(table.name, this.tableDeletions)
-              } as SelectChoice;
-            }),
+          ...Object.values(table.columns).map((column) => {
+            const col = formatSchemaColumnToColumnData({
+              column: { ...column, originalName: column.name },
+              tableName: table.name
+            });
+            return {
+              name: {
+                type: 'edit-column',
+                column: col
+              },
+              message: this.renderColumnMessage({ column: col }),
+              disabled: editTableDisabled(table.name, this.tableDeletions)
+            } as SelectChoice;
+          }),
           ...Object.values(this.columnAdditions[table.name] ?? []).map((column) => {
             const formatted = { ...column, tableName: table.name, originalName: column.name };
             return {
@@ -243,6 +248,59 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
           return;
         }
         const xata = await this.getXataClient();
+
+        const alterLinkColumns = this.currentMigration.operations.reduce((acc, op) => {
+          const operation = updateLinkComment(this.branchDetails?.schema.tables as any, op);
+          if (operation) acc.push(...operation);
+          return acc;
+        }, [] as PgRollOperation[]);
+
+        if (alterLinkColumns.length > 0) {
+          const { jobID: alterLinkColumnId } = await xata.api.migrations.applyMigration({
+            pathParams: {
+              workspace: this.workspace,
+              region: this.region,
+              dbBranchName: `${this.database}:${this.branch}`
+            },
+            body: { operations: alterLinkColumns }
+          });
+
+          await waitForMigrationToFinish(
+            xata.api,
+            this.workspace,
+            this.region,
+            this.database,
+            this.branch,
+            alterLinkColumnId
+          );
+        }
+
+        const constraintRenames = this.currentMigration.operations.reduce((acc, op) => {
+          const operation = updateConstraint(this.branchDetails?.schema.tables as any, op);
+          if (operation) acc.push(...operation);
+          return acc;
+        }, [] as PgRollOperation[]);
+
+        if (constraintRenames.length > 0) {
+          const { jobID: constraintRenameJobID } = await xata.api.migrations.applyMigration({
+            pathParams: {
+              workspace: this.workspace,
+              region: this.region,
+              dbBranchName: `${this.database}:${this.branch}`
+            },
+            body: { operations: constraintRenames }
+          });
+
+          await waitForMigrationToFinish(
+            xata.api,
+            this.workspace,
+            this.region,
+            this.database,
+            this.branch,
+            constraintRenameJobID
+          );
+        }
+
         const submitMigrationRessponse = await xata.api.migrations.applyMigration({
           pathParams: {
             workspace: this.workspace,
@@ -670,13 +728,13 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     if (value === undefined) return 'Name cannot be undefined';
     if (emptyString(value)) return 'Name cannot be empty';
     if (value === state.fields.find((field) => field.name === 'name')?.initial) return true;
-    return !emptyString(value) && !isReservedXataFieldName(value);
+    return !emptyString(value);
   };
 
   validateColumnName = (value: string) => {
     if (value === undefined) return 'Name cannot be undefined';
     if (emptyString(value)) return 'Name cannot be empty';
-    return !isReservedXataFieldName(value);
+    return true;
   };
   validateColumnNullable = (value: string) => {
     if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
@@ -728,7 +786,7 @@ export const editsToMigrations = (command: EditSchema) => {
   };
 
   // Remove column edits, additions and deletions for tables that are deleted
-  for (const [tableName, _] of Object.entries({
+  for (const tableName of Object.keys({
     ...localColumnAdditions,
     ...localColumnEdits,
     ...localColumnDeletions
@@ -873,9 +931,9 @@ export const editsToMigrations = (command: EditSchema) => {
 
   const columnEdits: ({ alter_column: OpAlterColumn } | { drop_constraint: OpDropConstraint })[] = [];
   for (const [_, columns] of Object.entries(localColumnEdits)) {
-    for (const [_, data] of Object.entries(columns)) {
+    for (const data of Object.values(columns)) {
       const { name, nullable, unique, originalName } = data;
-      formatColumnDataToPgroll([data]).map(({ column: _, tableName }) => {
+      formatColumnDataToPgroll([data]).map(({ tableName }) => {
         const originalField = command.branchDetails?.schema.tables
           .find((table) => table.name === tableName)
           ?.columns.find((col) => col.name === originalName);
@@ -883,20 +941,16 @@ export const editsToMigrations = (command: EditSchema) => {
           throw new Error(`Could not find original field ${originalName} in table ${tableName}`);
         }
 
-        // TODO these wont work in combination until https://github.com/xataio/pgroll/issues/336
         const nameChanged = name !== originalField.name;
         const nullableChanged = nullable !== !originalField.notNull;
         const uniqueAdded = unique !== originalField.unique && unique === true;
         const uniqueRemoved = unique !== originalField.unique && unique === false;
 
         if (uniqueRemoved) {
-          // Should changing the name of a column also change the name of the unique constraint?
-          const uniqueConstraintName = Object.values(
-            // @ts-ignore
-            command.branchDetails?.schema.tables.find((table) => tableName === table.name)?.uniqueConstraints ?? {}
-          ).find(
+          const table = command.branchDetails?.schema.tables.find((table) => tableName === table.name);
+          const uniqueConstraints: { name: string }[] = Object.values((table as any)?.uniqueConstraints ?? {});
+          const uniqueConstraintName = uniqueConstraints.find(
             (constraint: any) => constraint.columns.length === 1 && constraint.columns[0] === originalField.name
-            // @ts-ignore
           )?.name;
 
           const maybeDropStatement =
@@ -965,10 +1019,6 @@ export const editsToMigrations = (command: EditSchema) => {
   }
 
   return [...columnDeletions, ...tableDeletions, ...tableAdditions, ...columnAdditions, ...columnEdits, ...tableEdits];
-};
-
-const isReservedXataFieldName = (name: string) => {
-  return name.toLowerCase().startsWith('xata_');
 };
 
 function parseBoolean(value?: string) {

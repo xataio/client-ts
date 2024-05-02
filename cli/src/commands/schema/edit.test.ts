@@ -50,13 +50,24 @@ class mockEdit {
         },
         {
           name: 'table2',
-          checkConstraints: {},
           foreignKeys: {},
           primaryKey: [],
-          uniqueConstraints: {},
+          uniqueConstraints: {
+            ['table2_col1_unique']: {
+              name: 'table2_col1_unique',
+              columns: ['col1']
+            }
+          },
+          checkConstraints: {
+            ['table2_xata_string_length_col1']: {
+              name: 'table2_xata_string_length_col1',
+              constraint: 'LENGTH("col1") <= 2048'
+            }
+          },
           columns: [
             {
               ...column,
+              unique: true,
               type: 'varchar(255)'
             }
           ]
@@ -372,6 +383,7 @@ const testCases: TestCase[] = [
       }
     ]
   },
+  // TODO update link comment test
   {
     name: 'edit column nullable to not nullable',
     setup: () => {
@@ -410,6 +422,27 @@ const testCases: TestCase[] = [
           unique: {
             name: 'table1_col1_unique'
           }
+        }
+      }
+    ]
+  },
+  {
+    name: 'edit column unique to not unique also drops the constraint',
+    setup: () => {
+      createEdit({
+        ...column,
+        tableName: 'table2',
+        unique: false
+      });
+    },
+    expectation: [
+      {
+        drop_constraint: {
+          table: 'table2',
+          down: '"col1"',
+          up: '"col1"',
+          column: 'col1',
+          name: 'table2_col1_unique'
         }
       }
     ]

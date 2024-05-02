@@ -6,6 +6,7 @@ import { XataClient } from '../base.js';
 import { safeJSONParse, safeReadFile } from '../utils/files.js';
 import { migrationsDir, readMigrationsDir } from './files.js';
 import { MigrationFilePgroll, migrationFilePgroll } from './schema.js';
+import { OpRawSQL, OpRenameConstraint, PgRollOperation } from '@xata.io/pgroll';
 
 export const isBranchPgRollEnabled = (details: Schemas.DBBranch) => {
   // @ts-expect-error TODO: Fix this when api is finalized
@@ -356,3 +357,153 @@ export async function waitForMigrationToFinish(
   await new Promise((resolve) => setTimeout(resolve, 1000));
   return await waitForMigrationToFinish(api, workspace, region, database, branch, jobId);
 }
+
+export const updateConstraint = (
+  tables: Schemas.BranchSchema['tables'],
+  operation: PgRollOperation
+): { rename_constraint: OpRenameConstraint }[] | undefined => {
+  const migrations: { rename_constraint: OpRenameConstraint }[] = [];
+
+  const getUpdatedConstraintName = (params: {
+    constraintName: string;
+    replacement: string;
+    type: 'table' | 'column';
+  }) => {
+    const { constraintName, replacement, type } = params;
+    const baseRegex = '_xata_(?:vector|string|text|multiple|email)_length_';
+    const regex =
+      type === 'table' ? new RegExp(`(.*)${baseRegex}(?:.*)`, 'dgm') : new RegExp(`(?:.*)${baseRegex}(.*)`, 'dgm');
+
+    type RegExpMatchArrayWithIndices = RegExpMatchArray & { indices: Array<[number, number]> };
+
+    const matches = regex.exec(constraintName) as RegExpMatchArrayWithIndices;
+    if (!matches) return constraintName;
+    // e.g. of indices: [ [ 0, 24 ], [ 22, 24 ]
+    if (matches?.indices?.length !== 2 || matches?.indices[0]?.length !== 2) return constraintName;
+    const start = matches.indices[1][0];
+    const finish = matches.indices[1][1];
+    const arr = constraintName.split('');
+    arr.splice(start, finish, replacement);
+    return arr.join('');
+  };
+
+  const getTable = (tableName: string) => {
+    return Object.values(tables).find((table) => table.name === tableName);
+  };
+
+  if (
+    'alter_column' in operation &&
+    operation.alter_column.name &&
+    operation.alter_column.name !== operation.alter_column.column
+  ) {
+    const table = getTable(operation.alter_column.table);
+    if (!table) return undefined;
+
+    const oldColumn = Object.values(table.columns)
+      .map(({ type, name, comment }) => ({ type, name, comment }))
+      .find((column) => column.name === operation.alter_column.column);
+    if (!oldColumn) return undefined;
+
+    const oldColumnType = pgRollToXataColumnType(oldColumn.type, oldColumn.comment);
+    if (!oldColumnType) return undefined;
+
+    const constraint = Object.values(table.checkConstraints ?? {}).find(
+      (constraint) =>
+        constraint.name ===
+        xataColumnTypeToPgRollConstraintName(table.name, operation.alter_column.column, oldColumnType as Column['type'])
+    );
+    if (!constraint) return undefined;
+
+    const newConstraintName = getUpdatedConstraintName({
+      constraintName: constraint.name,
+      replacement: operation.alter_column.name,
+      type: 'column'
+    });
+    if (newConstraintName === constraint.name) return undefined;
+
+    migrations.push({
+      rename_constraint: {
+        table: table.name,
+        from: constraint.name,
+        to: newConstraintName
+      }
+    });
+  }
+
+  if ('rename_table' in operation) {
+    const table = getTable(operation.rename_table.from);
+    if (!table) return undefined;
+
+    Object.values(table.checkConstraints ?? {}).forEach((constraint) => {
+      const newConstraintName = getUpdatedConstraintName({
+        constraintName: constraint.name,
+        replacement: operation.rename_table.to,
+        type: 'table'
+      });
+      if (newConstraintName === constraint.name) return undefined;
+
+      migrations.push({
+        rename_constraint: {
+          table: operation.rename_table.to,
+          from: constraint.name,
+          to: newConstraintName
+        }
+      });
+    });
+  }
+
+  return migrations.length > 0 ? migrations : undefined;
+};
+
+const isValidXataLink = ({ key }: { key: Schemas.BranchSchema['tables'][number]['foreignKeys'][number] }) => {
+  return key.referencedColumns.length === 1 && key.referencedColumns.includes('xata_id');
+};
+
+export const updateLinkComment = (
+  tables: Schemas.BranchSchema['tables'],
+  operation: PgRollOperation
+): { sql: OpRawSQL }[] | undefined => {
+  const migrationSql: string[] = [];
+
+  if ('rename_table' in operation) {
+    const tablesToUpdate = Object.values(tables).reduce((acc, table) => {
+      const keys = Object.values(table.foreignKeys);
+      for (const key of keys) {
+        if (key.referencedTable === operation.rename_table.from && isValidXataLink({ key })) {
+          acc.push({ [table.name]: key.columns });
+        }
+      }
+      return acc;
+    }, [] as { [tableName: string]: string[] }[]);
+
+    for (const key of tablesToUpdate) {
+      const tableName = Object.keys(key)[0];
+      const columns = key[tableName];
+      columns.forEach((column) => {
+        const columnToUpdate = tables[tableName].columns[column];
+        if (tableNameFromLinkComment(columnToUpdate.comment)) {
+          migrationSql.push(
+            `COMMENT ON COLUMN "${tableName}"."${column}" IS '${JSON.stringify({
+              'xata.link': operation.rename_table.to
+            })}'`
+          );
+        }
+      });
+    }
+  }
+  return migrationSql.length > 0 ? [{ sql: { up: migrationSql.join(';') } }] : undefined;
+};
+
+const XataLinkColumn = z.object({
+  ['xata.link']: z.string()
+});
+
+export const tableNameFromLinkComment = (comment: string) => {
+  try {
+    const obj = JSON.parse(comment);
+    const result = XataLinkColumn.safeParse(obj);
+    return result.success ? result.data['xata.link'] : null;
+  } catch (e) {
+    return null;
+  }
+};
