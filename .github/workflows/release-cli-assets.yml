@@ -3,14 +3,13 @@ name: Release CLI Assets
 on:
   workflow_call:
     inputs:
-      published-packages:
+      publishedPackages:
         description: 'Published packages'
         required: true
-        default: '[{"name": "@xata.io/cli", "version": "1.2.0"}]'
         type: string
   workflow_dispatch:
     inputs:
-      published-packages:
+      publishedPackages:
         description: 'Published packages'
         required: true
         default: '[{"name": "@xata.io/cli", "version": "1.2.0"}]'
@@ -30,6 +29,11 @@ jobs:
           fetch-depth: 0
           # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
           persist-credentials: false
+
+      - name: Configure
+        run: |
+          echo "NVMRC=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+        id: config
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -58,6 +62,6 @@ jobs:
       - name: Release CLI Assets
         run: pnpm run release:cli
         env:
-          PUBLISHED_PACKAGES: ${{ inputs.published-packages }}
+          PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
