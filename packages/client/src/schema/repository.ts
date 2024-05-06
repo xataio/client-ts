@@ -806,6 +806,1213 @@ export abstract class Repository<Record extends XataRecord> extends Query<
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
 
+export class KyselyRepository<Record extends XataRecord>
+  extends Query<Record, SelectedPick<Record, ['*']>>
+  implements Repository<Record>
+{
+  #table: string;
+  #getFetchProps: () => ApiExtraProps;
+  #db: SchemaPluginResult<any>;
+  #schemaTables?: Schemas.Table[];
+  #trace: TraceFunction;
+
+  constructor(options: {
+    table: string;
+    db: SchemaPluginResult<any>;
+    pluginOptions: XataPluginOptions;
+    schemaTables?: Schemas.Table[];
+  }) {
+    super(
+      null,
+      { name: options.table, schema: options.schemaTables?.find((table) => table.name === options.table) },
+      {}
+    );
+
+    this.#table = options.table;
+    this.#db = options.db;
+    this.#schemaTables = options.schemaTables;
+    this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
+
+    const trace = options.pluginOptions.trace ?? defaultTrace;
+    this.#trace = async <T>(
+      name: string,
+      fn: (options: { setAttributes: (attrs: AttributeDictionary) => void }) => T,
+      options: AttributeDictionary = {}
+    ) => {
+      return trace<T>(name, fn, {
+        ...options,
+        [TraceAttributes.TABLE]: this.#table,
+        [TraceAttributes.KIND]: 'sdk-operation',
+        [TraceAttributes.VERSION]: VERSION
+      });
+    };
+  }
+
+  async create<K extends SelectableColumn<Record>>(
+    object: EditableData<Record> & Partial<Identifiable>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async create(
+    object: EditableData<Record> & Partial<Identifiable>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create<K extends SelectableColumn<Record>>(
+    id: Identifier,
+    object: EditableData<Record>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async create(
+    id: Identifier,
+    object: EditableData<Record>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create<K extends SelectableColumn<Record>>(
+    objects: Array<EditableData<Record> & Partial<Identifiable>>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
+  async create(
+    objects: Array<EditableData<Record> & Partial<Identifiable>>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
+  async create<K extends SelectableColumn<Record>>(
+    a:
+      | Identifier
+      | (EditableData<Record> & Partial<Identifiable>)
+      | Array<EditableData<Record> & Partial<Identifiable>>,
+    b?: EditableData<Record> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
+  ): Promise<
+    | Readonly<SelectedPick<Record, K[]>>
+    | Readonly<SelectedPick<Record, K[]>>[]
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Readonly<SelectedPick<Record, ['*']>>[]
+  > {
+    return this.#trace('create', async () => {
+      const ifVersion = parseIfVersion(b, c, d);
+
+      // Create many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
+
+        const ids = await this.#insertRecords(a, { ifVersion, createOnly: true });
+
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(ids as string[], columns);
+        return result;
+      }
+
+      // Create one record with id as param
+      if (isString(a) && isObject(b)) {
+        if (a === '') throw new Error("The id can't be empty");
+
+        const columns = isValidSelectableColumns(c) ? c : undefined;
+        return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: true, ifVersion });
+      }
+
+      // Create one record with id as property
+      if (isObject(a) && isString(a.xata_id)) {
+        if (a.xata_id === '') throw new Error("The id can't be empty");
+
+        const columns = isValidSelectableColumns(b) ? b : undefined;
+        return await this.#insertRecordWithId(a.xata_id, { ...a, xata_id: undefined }, columns, {
+          createOnly: true,
+          ifVersion
+        });
+      }
+
+      // Create one record without id
+      if (isObject(a)) {
+        const columns = isValidSelectableColumns(b) ? b : undefined;
+        return this.#insertRecordWithoutId(a, columns);
+      }
+
+      throw new Error('Invalid arguments for create method');
+    });
+  }
+
+  async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
+    const record = await this.#transformObjectToApi(object);
+
+    const response = await insertRecord({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table
+      },
+      queryParams: { columns },
+      body: record,
+      ...this.#getFetchProps()
+    });
+
+    const schemaTables = await this.#getSchemaTables();
+    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+  }
+
+  async #insertRecordWithId(
+    recordId: Identifier,
+    object: EditableData<Record>,
+    columns: SelectableColumn<Record>[] = ['*'],
+    { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
+  ) {
+    if (!recordId) return null;
+
+    const record = await this.#transformObjectToApi(object);
+
+    const response = await insertRecordWithID({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table,
+        recordId
+      },
+      body: record,
+      queryParams: { createOnly, columns, ifVersion },
+      ...this.#getFetchProps()
+    });
+
+    const schemaTables = await this.#getSchemaTables();
+    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+  }
+
+  async #insertRecords(
+    objects: EditableData<Record>[],
+    { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
+  ) {
+    const operations = await promiseMap(objects, async (object) => {
+      const record = await this.#transformObjectToApi(object);
+      return { insert: { table: this.#table, record, createOnly, ifVersion } };
+    });
+
+    const chunkedOperations: TransactionOperation[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
+
+    const ids = [];
+
+    for (const operations of chunkedOperations) {
+      const { results } = await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...this.#getFetchProps()
+      });
+
+      for (const result of results) {
+        if (result.operation === 'insert') {
+          ids.push(result.id);
+        } else {
+          ids.push(null);
+        }
+      }
+    }
+
+    return ids;
+  }
+
+  async read<K extends SelectableColumn<Record>>(
+    id: Identifier,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns> | null>>;
+  async read(id: string): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
+  async read<K extends SelectableColumn<Record>>(
+    ids: ReadonlyArray<Identifier>,
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
+  async read(ids: ReadonlyArray<Identifier>): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  async read<K extends SelectableColumn<Record>>(
+    object: Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns> | null>>;
+  async read(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']> | null>>;
+  async read<K extends SelectableColumn<Record>>(
+    objects: Identifiable[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
+  async read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  async read<K extends SelectableColumn<Record>>(
+    a: Identifier | ReadonlyArray<Identifier> | Identifiable | Identifiable[],
+    b?: K[]
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Array<Readonly<SelectedPick<Record, ['*']>> | null>
+    | Readonly<SelectedPick<Record, K[]>>
+    | Array<Readonly<SelectedPick<Record, K[]>> | null>
+    | null
+  > {
+    return this.#trace('read', async () => {
+      const columns = isValidSelectableColumns(b) ? b : ['*' as const];
+
+      // Read many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
+
+        const ids = a.map((item) => extractId(item));
+
+        const finalObjects = await this.getAll({ filter: { xata_id: { $any: compact(ids) } }, columns });
+
+        // Maintain order of objects
+        const dictionary = finalObjects.reduce((acc, object) => {
+          acc[object.xata_id] = object;
+          return acc;
+        }, {} as Dictionary<any>);
+
+        return ids.map((id) => dictionary[id ?? ''] ?? null);
+      }
+
+      // Read one record
+      const id = extractId(a);
+      if (id) {
+        try {
+          const response = await getRecord({
+            pathParams: {
+              workspace: '{workspaceId}',
+              dbBranchName: '{dbBranch}',
+              region: '{region}',
+              tableName: this.#table,
+              recordId: id
+            },
+            queryParams: { columns },
+            ...this.#getFetchProps()
+          });
+
+          const schemaTables = await this.#getSchemaTables();
+          return initObject<Record>(
+            this.#db,
+            schemaTables,
+            this.#table,
+            response,
+            columns as SelectableColumn<Record>[]
+          ) as any;
+        } catch (e) {
+          if (isObject(e) && e.status === 404) {
+            return null;
+          }
+
+          throw e;
+        }
+      }
+
+      return null;
+    });
+  }
+
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    id: Identifier,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async readOrThrow(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    ids: ReadonlyArray<Identifier>,
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  async readOrThrow(ids: ReadonlyArray<Identifier>): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    object: Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async readOrThrow(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    objects: Identifiable[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  async readOrThrow(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async readOrThrow<K extends SelectableColumn<Record>>(
+    a: Identifier | ReadonlyArray<Identifier> | Identifiable | Identifiable[],
+    b?: K[]
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Readonly<SelectedPick<Record, ['*']>>[]
+    | Readonly<SelectedPick<Record, K[]>>
+    | Readonly<SelectedPick<Record, K[]>>[]
+  > {
+    return this.#trace('readOrThrow', async () => {
+      const result = await this.read(a as any, b as any);
+
+      if (Array.isArray(result)) {
+        const missingIds = compact(
+          (a as Array<string | Identifiable>)
+            .filter((_item, index) => result[index] === null)
+            .map((item) => extractId(item))
+        );
+
+        if (missingIds.length > 0) {
+          throw new Error(`Could not find records with ids: ${missingIds.join(', ')}`);
+        }
+
+        return result as any;
+      }
+
+      if (result === null) {
+        const id = extractId(a) ?? 'unknown';
+        throw new Error(`Record with id ${id} not found`);
+      }
+
+      return result;
+    });
+  }
+
+  async update<K extends SelectableColumn<Record>>(
+    object: Partial<EditableData<Record>> & Identifiable,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
+  async update(
+    object: Partial<EditableData<Record>> & Identifiable,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+  async update<K extends SelectableColumn<Record>>(
+    id: Identifier,
+    object: Partial<EditableData<Record>>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
+  async update(
+    id: Identifier,
+    object: Partial<EditableData<Record>>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+  async update<K extends SelectableColumn<Record>>(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
+  async update(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>
+  ): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  async update<K extends SelectableColumn<Record>>(
+    a:
+      | Identifier
+      | (Partial<EditableData<Record>> & Identifiable)
+      | Array<Partial<EditableData<Record>> & Identifiable>,
+    b?: Partial<EditableData<Record>> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Array<Readonly<SelectedPick<Record, ['*']>> | null>
+    | Readonly<SelectedPick<Record, K[]>>
+    | Array<Readonly<SelectedPick<Record, K[]>> | null>
+    | null
+  > {
+    return this.#trace('update', async () => {
+      const ifVersion = parseIfVersion(b, c, d);
+
+      // Update many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
+
+        // TODO: Transaction API fails fast if one of the records is not found
+        const existing = await this.read(a, ['xata_id'] as SelectableColumn<Record>[]);
+        const updates = a.filter((_item, index) => existing[index] !== null);
+
+        await this.#updateRecords(updates as Array<Partial<EditableData<Record>> & Identifiable>, {
+          ifVersion,
+          upsert: false
+        });
+
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(a, columns);
+        return result;
+      }
+
+      try {
+        // Update one record with id as param
+        if (isString(a) && isObject(b)) {
+          const columns = isValidSelectableColumns(c) ? c : undefined;
+          return await this.#updateRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
+        }
+
+        // Update one record with id as property
+        if (isObject(a) && isString(a.xata_id)) {
+          const columns = isValidSelectableColumns(b) ? b : undefined;
+          return await this.#updateRecordWithID(a.xata_id, { ...a, xata_id: undefined }, columns, { ifVersion });
+        }
+      } catch (error: any) {
+        if (error.status === 422) return null;
+        throw error;
+      }
+
+      throw new Error('Invalid arguments for update method');
+    });
+  }
+
+  async updateOrThrow<K extends SelectableColumn<Record>>(
+    object: Partial<EditableData<Record>> & Identifiable,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async updateOrThrow(
+    object: Partial<EditableData<Record>> & Identifiable,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async updateOrThrow<K extends SelectableColumn<Record>>(
+    id: Identifier,
+    object: Partial<EditableData<Record>>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async updateOrThrow(
+    id: Identifier,
+    object: Partial<EditableData<Record>>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async updateOrThrow<K extends SelectableColumn<Record>>(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
+  async updateOrThrow(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
+  async updateOrThrow<K extends SelectableColumn<Record>>(
+    a:
+      | Identifier
+      | (Partial<EditableData<Record>> & Identifiable)
+      | Array<Partial<EditableData<Record>> & Identifiable>,
+    b?: Partial<EditableData<Record>> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Array<Readonly<SelectedPick<Record, ['*']>>>
+    | Readonly<SelectedPick<Record, K[]>>
+    | Array<Readonly<SelectedPick<Record, K[]>>>
+  > {
+    return this.#trace('updateOrThrow', async () => {
+      const result = await this.update(a as any, b as any, c as any, d as any);
+
+      if (Array.isArray(result)) {
+        const missingIds = compact(
+          (a as Array<string | Identifiable>)
+            .filter((_item, index) => result[index] === null)
+            .map((item) => extractId(item))
+        );
+
+        if (missingIds.length > 0) {
+          throw new Error(`Could not find records with ids: ${missingIds.join(', ')}`);
+        }
+
+        return result as any;
+      }
+
+      if (result === null) {
+        const id = extractId(a) ?? 'unknown';
+        throw new Error(`Record with id ${id} not found`);
+      }
+
+      return result;
+    });
+  }
+
+  async #updateRecordWithID(
+    recordId: Identifier,
+    object: Partial<EditableData<Record>>,
+    columns: SelectableColumn<Record>[] = ['*'],
+    { ifVersion }: { ifVersion?: number }
+  ) {
+    if (!recordId) return null;
+
+    // Ensure id is not present in the update payload
+    const { xata_id: _id, ...record } = await this.#transformObjectToApi(object);
+
+    try {
+      const response = await updateRecordWithID({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table,
+          recordId
+        },
+        queryParams: { columns, ifVersion },
+        body: record,
+        ...this.#getFetchProps()
+      });
+
+      const schemaTables = await this.#getSchemaTables();
+      return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+    } catch (e) {
+      if (isObject(e) && e.status === 404) {
+        return null;
+      }
+
+      throw e;
+    }
+  }
+
+  async #updateRecords(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
+    { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
+  ) {
+    const operations = await promiseMap(objects, async ({ xata_id, ...object }) => {
+      const fields = await this.#transformObjectToApi(object);
+      return { update: { table: this.#table, id: xata_id, ifVersion, upsert, fields } };
+    });
+
+    const chunkedOperations: TransactionOperation[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
+
+    const ids = [];
+
+    for (const operations of chunkedOperations) {
+      const { results } = await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...this.#getFetchProps()
+      });
+
+      for (const result of results) {
+        if (result.operation === 'update') {
+          ids.push(result.id);
+        } else {
+          ids.push(null);
+        }
+      }
+    }
+
+    return ids;
+  }
+
+  async createOrUpdate<K extends SelectableColumn<Record>>(
+    object: EditableData<Record> & Partial<Identifiable>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async createOrUpdate(
+    object: EditableData<Record> & Partial<Identifiable>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async createOrUpdate<K extends SelectableColumn<Record>>(
+    id: Identifier,
+    object: Omit<EditableData<Record>, 'xata_id'>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async createOrUpdate(
+    id: Identifier,
+    object: Omit<EditableData<Record>, 'xata_id'>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async createOrUpdate<K extends SelectableColumn<Record>>(
+    objects: Array<EditableData<Record> & Partial<Identifiable>>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
+  async createOrUpdate(
+    objects: Array<EditableData<Record> & Partial<Identifiable>>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
+  async createOrUpdate<K extends SelectableColumn<Record>>(
+    a: Identifier | EditableData<Record> | EditableData<Record>[],
+    b?: EditableData<Record> | Omit<EditableData<Record>, 'xata_id'> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Array<Readonly<SelectedPick<Record, ['*']>>>
+    | Readonly<SelectedPick<Record, K[]>>
+    | Array<Readonly<SelectedPick<Record, K[]>>>
+  > {
+    return this.#trace('createOrUpdate', async () => {
+      const ifVersion = parseIfVersion(b, c, d);
+
+      // Create or update many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
+
+        await this.#updateRecords(a as Array<Partial<EditableData<Record>> & Identifiable>, {
+          ifVersion,
+          upsert: true
+        });
+
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(a as any[], columns);
+        return result;
+      }
+
+      // Create or update one record with id as param
+      if (isString(a) && isObject(b)) {
+        if (a === '') throw new Error("The id can't be empty");
+
+        const columns = isValidSelectableColumns(c) ? c : undefined;
+        return await this.#upsertRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
+      }
+
+      // Create or update one record with id as property
+      if (isObject(a) && isString(a.xata_id)) {
+        if (a.xata_id === '') throw new Error("The id can't be empty");
+
+        const columns = isValidSelectableColumns(c) ? c : undefined;
+        return await this.#upsertRecordWithID(a.xata_id, { ...a, xata_id: undefined }, columns, { ifVersion });
+      }
+
+      // Create with undefined id as param
+      if (!isDefined(a) && isObject(b)) {
+        return await this.create(b as EditableData<Record>, c as K[]);
+      }
+
+      // Create with undefined id as property
+      if (isObject(a) && !isDefined(a.xata_id)) {
+        return await this.create(a as EditableData<Record>, b as K[]);
+      }
+
+      throw new Error('Invalid arguments for createOrUpdate method');
+    });
+  }
+
+  async #upsertRecordWithID(
+    recordId: Identifier,
+    object: Omit<EditableData<Record>, 'xata_id'>,
+    columns: SelectableColumn<Record>[] = ['*'],
+    { ifVersion }: { ifVersion?: number }
+  ) {
+    if (!recordId) return null;
+
+    const response = await upsertRecordWithID({
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table,
+        recordId
+      },
+      queryParams: { columns, ifVersion },
+      body: object as Schemas.DataInputRecord,
+      ...this.#getFetchProps()
+    });
+
+    const schemaTables = await this.#getSchemaTables();
+    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+  }
+
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    object: EditableData<Record> & Partial<Identifiable>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async createOrReplace(
+    object: EditableData<Record> & Partial<Identifiable>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    id: Identifier | undefined,
+    object: Omit<EditableData<Record>, 'xata_id'>,
+    columns: K[],
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async createOrReplace(
+    id: Identifier | undefined,
+    object: Omit<EditableData<Record>, 'xata_id'>,
+    options?: { ifVersion?: number }
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    objects: Array<EditableData<Record> & Partial<Identifiable>>,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>[]>;
+  async createOrReplace(
+    objects: Array<EditableData<Record> & Partial<Identifiable>>
+  ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
+  async createOrReplace<K extends SelectableColumn<Record>>(
+    a: Identifier | EditableData<Record> | EditableData<Record>[] | undefined,
+    b?: EditableData<Record> | Omit<EditableData<Record>, 'xata_id'> | K[] | { ifVersion?: number },
+    c?: K[] | { ifVersion?: number },
+    d?: { ifVersion?: number }
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Array<Readonly<SelectedPick<Record, ['*']>>>
+    | Readonly<SelectedPick<Record, K[]>>
+    | Array<Readonly<SelectedPick<Record, K[]>>>
+  > {
+    return this.#trace('createOrReplace', async () => {
+      const ifVersion = parseIfVersion(b, c, d);
+
+      // Create or replace many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
+
+        const ids = await this.#insertRecords(a, { ifVersion, createOnly: false });
+
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(ids as string[], columns);
+        return result;
+      }
+
+      // Create or replace one record with id as param
+      if (isString(a) && isObject(b)) {
+        if (a === '') throw new Error("The id can't be empty");
+
+        const columns = isValidSelectableColumns(c) ? c : undefined;
+        return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: false, ifVersion });
+      }
+
+      // Create or replace one record with id as property
+      if (isObject(a) && isString(a.xata_id)) {
+        if (a.xata_id === '') throw new Error("The id can't be empty");
+
+        const columns = isValidSelectableColumns(c) ? c : undefined;
+        return await this.#insertRecordWithId(a.xata_id, { ...a, xata_id: undefined }, columns, {
+          createOnly: false,
+          ifVersion
+        });
+      }
+
+      // Create with undefined id as param
+      if (!isDefined(a) && isObject(b)) {
+        return await this.create(b as EditableData<Record>, c as K[]);
+      }
+
+      // Create with undefined id as property
+      if (isObject(a) && !isDefined(a.xata_id)) {
+        return await this.create(a as EditableData<Record>, b as K[]);
+      }
+
+      throw new Error('Invalid arguments for createOrReplace method');
+    });
+  }
+
+  async delete<K extends SelectableColumn<Record>>(
+    object: Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
+  async delete(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+  async delete<K extends SelectableColumn<Record>>(
+    id: Identifier,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
+  async delete(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
+  async delete<K extends SelectableColumn<Record>>(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
+  async delete(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>
+  ): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  async delete<K extends SelectableColumn<Record>>(
+    objects: Identifier[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>> | null>>;
+  async delete(objects: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>> | null>>;
+  async delete<K extends SelectableColumn<Record>>(
+    a: Identifier | Identifiable | Array<Identifier | Identifiable>,
+    b?: K[]
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Array<Readonly<SelectedPick<Record, ['*']>> | null>
+    | Readonly<SelectedPick<Record, K[]>>
+    | Array<Readonly<SelectedPick<Record, K[]>> | null>
+    | null
+  > {
+    return this.#trace('delete', async () => {
+      // Delete many records
+      if (Array.isArray(a)) {
+        if (a.length === 0) return [];
+
+        const ids = a.map((o) => {
+          if (isString(o)) return o;
+          if (isString(o.xata_id)) return o.xata_id;
+          throw new Error('Invalid arguments for delete method');
+        });
+
+        const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
+
+        // TODO: Transaction API does not support column projection
+        const result = await this.read(a as any, columns);
+
+        await this.#deleteRecords(ids);
+
+        return result;
+      }
+
+      // Delete one record with id as param
+      if (isString(a)) {
+        return this.#deleteRecord(a, b);
+      }
+
+      // Delete one record with id as property
+      if (isObject(a) && isString(a.xata_id)) {
+        return this.#deleteRecord(a.xata_id, b);
+      }
+
+      throw new Error('Invalid arguments for delete method');
+    });
+  }
+
+  async deleteOrThrow<K extends SelectableColumn<Record>>(
+    object: Identifiable,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async deleteOrThrow(object: Identifiable): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async deleteOrThrow<K extends SelectableColumn<Record>>(
+    id: Identifier,
+    columns: K[]
+  ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
+  async deleteOrThrow(id: Identifier): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async deleteOrThrow<K extends SelectableColumn<Record>>(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>,
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  async deleteOrThrow(
+    objects: Array<Partial<EditableData<Record>> & Identifiable>
+  ): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async deleteOrThrow<K extends SelectableColumn<Record>>(
+    objects: Identifier[],
+    columns: K[]
+  ): Promise<Array<Readonly<SelectedPick<Record, typeof columns>>>>;
+  async deleteOrThrow(objects: Identifier[]): Promise<Array<Readonly<SelectedPick<Record, ['*']>>>>;
+  async deleteOrThrow<K extends SelectableColumn<Record>>(
+    a: Identifier | Identifiable | Array<Identifier | Identifiable>,
+    b?: K[]
+  ): Promise<
+    | Readonly<SelectedPick<Record, ['*']>>
+    | Array<Readonly<SelectedPick<Record, ['*']>>>
+    | Readonly<SelectedPick<Record, K[]>>
+    | Array<Readonly<SelectedPick<Record, K[]>>>
+  > {
+    return this.#trace('deleteOrThrow', async () => {
+      const result = await this.delete(a as any, b as any);
+
+      if (Array.isArray(result)) {
+        const missingIds = compact(
+          (a as Array<string | Identifiable>)
+            .filter((_item, index) => result[index] === null)
+            .map((item) => extractId(item))
+        );
+
+        if (missingIds.length > 0) {
+          throw new Error(`Could not find records with ids: ${missingIds.join(', ')}`);
+        }
+
+        return result as any;
+      } else if (result === null) {
+        const id = extractId(a) ?? 'unknown';
+        throw new Error(`Record with id ${id} not found`);
+      }
+
+      return result;
+    });
+  }
+
+  async #deleteRecord(recordId: Identifier, columns: SelectableColumn<Record>[] = ['*']) {
+    if (!recordId) return null;
+
+    try {
+      const response = await deleteRecord({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table,
+          recordId
+        },
+        queryParams: { columns },
+        ...this.#getFetchProps()
+      });
+
+      const schemaTables = await this.#getSchemaTables();
+      return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+    } catch (e) {
+      if (isObject(e) && e.status === 404) {
+        return null;
+      }
+
+      throw e;
+    }
+  }
+
+  async #deleteRecords(recordIds: Identifier[]) {
+    const chunkedOperations: TransactionOperation[][] = chunk(
+      compact(recordIds).map((id) => ({ delete: { table: this.#table, id } })),
+      BULK_OPERATION_MAX_SIZE
+    );
+
+    for (const operations of chunkedOperations) {
+      await branchTransaction({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        body: { operations },
+        ...this.#getFetchProps()
+      });
+    }
+  }
+
+  async search(
+    query: string,
+    options: {
+      fuzziness?: FuzzinessExpression;
+      prefix?: PrefixExpression;
+      highlight?: HighlightExpression;
+      filter?: Filter<Record>;
+      boosters?: Boosters<Record>[];
+      page?: SearchPageConfig;
+      target?: TargetColumn<Record>[];
+    } = {}
+  ) {
+    return this.#trace('search', async () => {
+      const { records, totalCount } = await searchTable({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
+        body: {
+          query,
+          fuzziness: options.fuzziness,
+          prefix: options.prefix,
+          highlight: options.highlight,
+          filter: options.filter as Schemas.FilterExpression,
+          boosters: options.boosters as Schemas.BoosterExpression[],
+          page: options.page,
+          target: options.target as Schemas.TargetExpression
+        },
+        ...this.#getFetchProps()
+      });
+
+      const schemaTables = await this.#getSchemaTables();
+
+      // TODO - Column selection not supported by search endpoint yet
+      return {
+        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any,
+        totalCount
+      };
+    });
+  }
+
+  async vectorSearch<F extends ColumnsByValue<Record, number[]>>(
+    column: F,
+    query: number[],
+    options?:
+      | {
+          similarityFunction?: string | undefined;
+          size?: number | undefined;
+          filter?: Filter<Record> | undefined;
+        }
+      | undefined
+  ): Promise<{ records: SearchXataRecord<SelectedPick<Record, ['*']>>[] } & TotalCount> {
+    return this.#trace('vectorSearch', async () => {
+      const { records, totalCount } = await vectorSearchTable({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
+        body: {
+          column,
+          queryVector: query,
+          similarityFunction: options?.similarityFunction,
+          size: options?.size,
+          filter: options?.filter as Schemas.FilterExpression
+        },
+        ...this.#getFetchProps()
+      });
+
+      const schemaTables = await this.#getSchemaTables();
+
+      // TODO - Column selection not supported by search endpoint yet
+      return {
+        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])),
+        totalCount
+      } as any;
+    });
+  }
+
+  async aggregate<Expression extends Dictionary<AggregationExpression<Record>>>(
+    aggs?: Expression,
+    filter?: Filter<Record>
+  ) {
+    return this.#trace('aggregate', async () => {
+      const result = await aggregateTable({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
+        body: { aggs, filter: filter as Schemas.FilterExpression },
+        ...this.#getFetchProps()
+      });
+
+      return result as any;
+    });
+  }
+
+  async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
+    return this.#trace('query', async () => {
+      const data = query.getQueryOptions();
+
+      const { meta, records: objects } = await queryTable({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
+        body: {
+          filter: cleanFilter(data.filter),
+          sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
+          page: data.pagination,
+          columns: data.columns ?? ['*'],
+          consistency: data.consistency
+        },
+        fetchOptions: data.fetchOptions,
+        ...this.#getFetchProps()
+      });
+
+      const schemaTables = await this.#getSchemaTables();
+      const records = objects.map((record) =>
+        initObject<Result>(
+          this.#db,
+          schemaTables,
+          this.#table,
+          record,
+          (data.columns as SelectableColumn<Result>[]) ?? ['*']
+        )
+      );
+
+      return new Page<Record, Result>(query, meta, records);
+    });
+  }
+
+  async summarizeTable<Result extends XataRecord>(
+    query: Query<Record, Result>,
+    summaries?: Dictionary<SummarizeExpression<Record>>,
+    summariesFilter?: Schemas.FilterExpression
+  ) {
+    return this.#trace('summarize', async () => {
+      const data = query.getQueryOptions();
+
+      const result = await summarizeTable({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}',
+          tableName: this.#table
+        },
+        body: {
+          filter: cleanFilter(data.filter),
+          sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
+          columns: data.columns as SelectableColumn<Record>[],
+          consistency: data.consistency,
+          page: data.pagination?.size !== undefined ? { size: data.pagination?.size } : undefined,
+          summaries,
+          summariesFilter
+        },
+        ...this.#getFetchProps()
+      });
+      const schemaTables = await this.#getSchemaTables();
+      return {
+        ...result,
+        summaries: result.summaries.map((summary) =>
+          initObject(this.#db, schemaTables, this.#table, summary, data.columns ?? [])
+        )
+      };
+    });
+  }
+
+  ask(question: string, options?: AskOptions<Record> & { onMessage?: (message: AskResult) => void }): any {
+    // Ask with session uses message, ask without session uses question param
+    const questionParam = options?.sessionId ? { message: question } : { question };
+    const params = {
+      pathParams: {
+        workspace: '{workspaceId}',
+        dbBranchName: '{dbBranch}',
+        region: '{region}',
+        tableName: this.#table,
+        sessionId: options?.sessionId
+      },
+      body: {
+        ...questionParam,
+        rules: options?.rules,
+        searchType: options?.searchType,
+        search: options?.searchType === 'keyword' ? options?.search : undefined,
+        vectorSearch: options?.searchType === 'vector' ? options?.vectorSearch : undefined
+      },
+      ...this.#getFetchProps()
+    };
+
+    if (options?.onMessage) {
+      fetchSSERequest({
+        endpoint: 'dataPlane',
+        url: '/db/{dbBranchName}/tables/{tableName}/ask/{sessionId}',
+        method: 'POST',
+        onMessage: (message: { text: string; records: string[] }) => {
+          options.onMessage?.({ answer: message.text, records: message.records });
+        },
+        ...params
+      });
+    } else {
+      return askTableSession(params as any);
+    }
+  }
+
+  async #getSchemaTables(): Promise<Schemas.Table[]> {
+    if (this.#schemaTables) return this.#schemaTables;
+
+    const { schema } = await getBranchDetails({
+      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
+      ...this.#getFetchProps()
+    });
+
+    this.#schemaTables = schema.tables;
+    return schema.tables;
+  }
+
+  async #transformObjectToApi(object: any): Promise<Schemas.DataInputRecord> {
+    const schemaTables = await this.#getSchemaTables();
+    const schema = schemaTables.find((table) => table.name === this.#table);
+    if (!schema) throw new Error(`Table ${this.#table} not found in schema`);
+
+    const result: Dictionary<any> = {};
+
+    for (const [key, value] of Object.entries(object)) {
+      // Ignore internal properties
+      if (['xata_version', 'xata_createdat', 'xata_updatedat'].includes(key)) continue;
+
+      const type = schema.columns.find((column) => column.name === key)?.type;
+
+      switch (type) {
+        case 'link': {
+          result[key] = isIdentifiable(value) ? value.xata_id : value;
+          break;
+        }
+        case 'datetime': {
+          result[key] = value instanceof Date ? value.toISOString() : value;
+          break;
+        }
+        case `file`:
+          result[key] = await parseInputFileEntry(value as InputXataFile);
+          break;
+        case 'file[]':
+          result[key] = await promiseMap(value as InputXataFile[], (item) => parseInputFileEntry(item));
+          break;
+        case 'json':
+          result[key] = stringifyJson(value as any);
+          break;
+        default:
+          result[key] = value;
+      }
+    }
+
+    return result;
+  }
+}
+
 export class RestRepository<Record extends XataRecord>
   extends Query<Record, SelectedPick<Record, ['*']>>
   implements Repository<Record>

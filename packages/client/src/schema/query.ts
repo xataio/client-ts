@@ -16,7 +16,7 @@ import {
   RecordArray
 } from './pagination';
 import { XataRecord } from './record';
-import { RestRepository } from './repository';
+import { KyselyRepository } from './repository';
 import { SelectableColumn, SelectableColumnWithObjectNotation, SelectedPick } from './selection';
 import { SortColumns, SortDirection, SortFilter } from './sorting';
 import { SummarizeExpression, SummarizeParams, SummarizeResult } from './summarize';
@@ -49,7 +49,7 @@ export type QueryOptions<T extends XataRecord> = BaseOptions<T> & (CursorQueryOp
  */
 export class Query<Record extends XataRecord, Result extends XataRecord = Record> implements Paginable<Record, Result> {
   #table: { name: string; schema?: Schemas.Table };
-  #repository: RestRepository<Record>;
+  #repository: KyselyRepository<Record>;
   #data: QueryOptions<Record> = { filter: {} };
 
   // Implements pagination
@@ -57,7 +57,7 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
   readonly records: PageRecordArray<Result> = new PageRecordArray<Result>(this, []);
 
   constructor(
-    repository: RestRepository<Record> | null,
+    repository: KyselyRepository<Record> | null,
     table: { name: string; schema?: Schemas.Table },
     data: Partial<QueryOptions<Record>>,
     rawParent?: Partial<QueryOptions<Record>>
