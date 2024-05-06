@@ -249,5 +249,4 @@ declare const DatabaseClient: any;
 export declare class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions);
 }
-export declare const getXataClient: () => XataClient;
 export {};
