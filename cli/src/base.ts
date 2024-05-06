@@ -1,13 +1,5 @@
 import { Command, Flags, Interfaces } from '@oclif/core';
-import {
-  buildClient,
-  getAPIKey,
-  getBranch,
-  getHostUrl,
-  parseWorkspacesUrlParts,
-  Schemas,
-  XataApiPlugin
-} from '@xata.io/client';
+import { buildClient, getHostUrl, parseWorkspacesUrlParts, Schemas, XataApiPlugin } from '@xata.io/client';
 import { XataImportPlugin } from '@xata.io/importer';
 import ansiRegex from 'ansi-regex';
 import chalk from 'chalk';
@@ -192,7 +184,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     const { flags } = await this.parseCommand();
     const profileName = flags.profile || getEnvProfileName();
 
-    const apiKey = getAPIKey();
+    const apiKey = process.env.XATA_API_KEY;
     const useEnv = !ignoreEnv || profileName === 'default';
     if (useEnv && apiKey) return buildProfile({ name: 'default', apiKey });
 
@@ -531,7 +523,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   }
 
   getCurrentBranchName() {
-    return getBranch() ?? 'main';
+    return process.env.XATA_BRANCH ?? 'main';
   }
 
   async updateConfig() {
