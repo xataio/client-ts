@@ -1,11 +1,12 @@
 import { Flags } from '@oclif/core';
 import { generate, isValidJavascriptTarget, javascriptTargets } from '@xata.io/codegen';
 import chalk from 'chalk';
-import { mkdir, readFile, writeFile } from 'fs/promises';
+import { mkdir, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
 import { BaseCommand } from '../../base.js';
 import { ProjectConfig } from '../../config.js';
 import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
+import { safeReadFile } from '../../utils/files.js';
 
 export const languages: Record<string, 'javascript' | 'typescript'> = {
   '.js': 'javascript',
@@ -83,14 +84,14 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
     const { schema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
-    const existingCode = await readFile(output, 'utf8').catch(() => undefined);
+    const existingCode = await safeReadFile(output);
 
     const result = await generate({
       schema,
       language,
       moduleType,
       javascriptTarget,
-      existingCode
+      existingCode: existingCode ?? ''
     });
 
     const { typescript, javascript, types } = result;

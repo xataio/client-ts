@@ -1,5 +1,17 @@
 # @xata.io/cli
 
+## 0.15.13
+
+### Patch Changes
+
+- [#1467](https://github.com/xataio/client-ts/pull/1467) [`93689b4`](https://github.com/xataio/client-ts/commit/93689b490b37f3aef02b7edeb928d8ade40e96da) Thanks [@SferaDev](https://github.com/SferaDev)! - Fix spawn in windows
+
+## 0.15.12
+
+### Patch Changes
+
+- [#1457](https://github.com/xataio/client-ts/pull/1457) [`b375741`](https://github.com/xataio/client-ts/commit/b37574126a549f35e0c71a8bdf7aac9926e64436) Thanks [@SferaDev](https://github.com/SferaDev)! - Update dependencies
+
 ## 0.15.11
 
 ### Patch Changes

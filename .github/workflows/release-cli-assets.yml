@@ -1,0 +1,67 @@
+name: Release CLI Assets
+
+on:
+  workflow_call:
+    inputs:
+      publishedPackages:
+        description: 'Published packages'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      publishedPackages:
+        description: 'Published packages'
+        required: true
+        default: '[{"name": "@xata.io/cli", "version": "1.2.0"}]'
+        type: string
+
+jobs:
+  release-cli-assets:
+    name: Release CLI assets
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+          fetch-depth: 0
+          # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
+          persist-credentials: false
+
+      - name: Configure
+        run: |
+          echo "NVMRC=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+        id: config
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ steps.config.outputs.NVMRC }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Install windows dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nsis
+          sudo apt-get install -y p7zip
+
+      - name: Release CLI Assets
+        run: pnpm run release:cli
+        env:
+          PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
+          MATRIX_OS: ${{ matrix.os }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

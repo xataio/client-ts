@@ -675,7 +675,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       this.error(`Could not find binary ${command} in your PATH`);
     }
     return new Promise((resolve, reject) => {
-      spawn(fullPath, args, { stdio: 'inherit' }).on('exit', (code) => {
+      spawn(fullPath, args, { stdio: 'inherit', shell: true }).on('exit', (code) => {
         if (code && code > 0) return reject(new Error('Command failed'));
         resolve(undefined);
       });

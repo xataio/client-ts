@@ -59,7 +59,12 @@ export const applyMigration = (variables: ApplyMigrationVariables, signal?: Abor
     {},
     {},
     ApplyMigrationPathParams
-  >({ url: '/db/{dbBranchName}/migrations/apply', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/migrations/apply',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type AdaptTablePathParams = {
   /**
@@ -179,7 +184,12 @@ export const getBranchMigrationJobStatus = (variables: GetBranchMigrationJobStat
     {},
     {},
     GetBranchMigrationJobStatusPathParams
-  >({ url: '/db/{dbBranchName}/migrations/status', method: 'get', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/migrations/status',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type GetMigrationJobStatusPathParams = {
   /**
@@ -221,7 +231,12 @@ export const getMigrationJobStatus = (variables: GetMigrationJobStatusVariables,
     {},
     {},
     GetMigrationJobStatusPathParams
-  >({ url: '/db/{dbBranchName}/migrations/jobs/{jobId}', method: 'get', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/migrations/jobs/{jobId}',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type GetMigrationHistoryPathParams = {
   /**
@@ -259,7 +274,12 @@ export const getMigrationHistory = (variables: GetMigrationHistoryVariables, sig
     {},
     {},
     GetMigrationHistoryPathParams
-  >({ url: '/db/{dbBranchName}/migrations/history', method: 'get', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/migrations/history',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type GetBranchListPathParams = {
   /**
@@ -930,7 +950,12 @@ export const removeGitBranchesEntry = (variables: RemoveGitBranchesEntryVariable
     {},
     RemoveGitBranchesEntryQueryParams,
     RemoveGitBranchesEntryPathParams
-  >({ url: '/dbs/{dbName}/gitBranches', method: 'delete', ...variables, signal });
+  >({
+    url: '/dbs/{dbName}/gitBranches',
+    method: 'delete',
+    ...variables,
+    signal
+  });
 
 export type ResolveBranchPathParams = {
   /**
@@ -1009,7 +1034,12 @@ export const resolveBranch = (variables: ResolveBranchVariables, signal?: AbortS
     {},
     ResolveBranchQueryParams,
     ResolveBranchPathParams
-  >({ url: '/dbs/{dbName}/resolveBranch', method: 'get', ...variables, signal });
+  >({
+    url: '/dbs/{dbName}/resolveBranch',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type GetBranchMigrationHistoryPathParams = {
   /**
@@ -1058,7 +1088,12 @@ export const getBranchMigrationHistory = (variables: GetBranchMigrationHistoryVa
     {},
     {},
     GetBranchMigrationHistoryPathParams
-  >({ url: '/db/{dbBranchName}/migrations', method: 'get', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/migrations',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type GetBranchMigrationPlanPathParams = {
   /**
@@ -1100,7 +1135,12 @@ export const getBranchMigrationPlan = (variables: GetBranchMigrationPlanVariable
     {},
     {},
     GetBranchMigrationPlanPathParams
-  >({ url: '/db/{dbBranchName}/migrations/plan', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/migrations/plan',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type ExecuteBranchMigrationPlanPathParams = {
   /**
@@ -1147,7 +1187,12 @@ export const executeBranchMigrationPlan = (variables: ExecuteBranchMigrationPlan
     {},
     {},
     ExecuteBranchMigrationPlanPathParams
-  >({ url: '/db/{dbBranchName}/migrations/execute', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/migrations/execute',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type QueryMigrationRequestsPathParams = {
   /**
@@ -1198,7 +1243,12 @@ export const queryMigrationRequests = (variables: QueryMigrationRequestsVariable
     {},
     {},
     QueryMigrationRequestsPathParams
-  >({ url: '/dbs/{dbName}/migrations/query', method: 'post', ...variables, signal });
+  >({
+    url: '/dbs/{dbName}/migrations/query',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type CreateMigrationRequestPathParams = {
   /**
@@ -1358,7 +1408,12 @@ export const updateMigrationRequest = (variables: UpdateMigrationRequestVariable
     {},
     {},
     UpdateMigrationRequestPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}', method: 'patch', ...variables, signal });
+  >({
+    url: '/dbs/{dbName}/migrations/{mrNumber}',
+    method: 'patch',
+    ...variables,
+    signal
+  });
 
 export type ListMigrationRequestsCommitsPathParams = {
   /**
@@ -1434,7 +1489,12 @@ export const listMigrationRequestsCommits = (variables: ListMigrationRequestsCom
     {},
     {},
     ListMigrationRequestsCommitsPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/commits', method: 'post', ...variables, signal });
+  >({
+    url: '/dbs/{dbName}/migrations/{mrNumber}/commits',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type CompareMigrationRequestPathParams = {
   /**
@@ -1476,7 +1536,12 @@ export const compareMigrationRequest = (variables: CompareMigrationRequestVariab
     {},
     {},
     CompareMigrationRequestPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/compare', method: 'post', ...variables, signal });
+  >({
+    url: '/dbs/{dbName}/migrations/{mrNumber}/compare',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type GetMigrationRequestIsMergedPathParams = {
   /**
@@ -1522,7 +1587,12 @@ export const getMigrationRequestIsMerged = (variables: GetMigrationRequestIsMerg
     {},
     {},
     GetMigrationRequestIsMergedPathParams
-  >({ url: '/dbs/{dbName}/migrations/{mrNumber}/merge', method: 'get', ...variables, signal });
+  >({
+    url: '/dbs/{dbName}/migrations/{mrNumber}/merge',
+    method: 'get',
+    ...variables,
+    signal
+  });
 
 export type MergeMigrationRequestPathParams = {
   /**
@@ -1638,7 +1708,12 @@ export const getBranchSchemaHistory = (variables: GetBranchSchemaHistoryVariable
     {},
     {},
     GetBranchSchemaHistoryPathParams
-  >({ url: '/db/{dbBranchName}/schema/history', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/schema/history',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type CompareBranchWithUserSchemaPathParams = {
   /**
@@ -1683,7 +1758,12 @@ export const compareBranchWithUserSchema = (variables: CompareBranchWithUserSche
     {},
     {},
     CompareBranchWithUserSchemaPathParams
-  >({ url: '/db/{dbBranchName}/schema/compare', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/schema/compare',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type CompareBranchSchemasPathParams = {
   /**
@@ -1731,7 +1811,12 @@ export const compareBranchSchemas = (variables: CompareBranchSchemasVariables, s
     {},
     {},
     CompareBranchSchemasPathParams
-  >({ url: '/db/{dbBranchName}/schema/compare/{branchName}', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/schema/compare/{branchName}',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type UpdateBranchSchemaPathParams = {
   /**
@@ -1770,7 +1855,12 @@ export const updateBranchSchema = (variables: UpdateBranchSchemaVariables, signa
     {},
     {},
     UpdateBranchSchemaPathParams
-  >({ url: '/db/{dbBranchName}/schema/update', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/schema/update',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type PreviewBranchSchemaEditPathParams = {
   /**
@@ -1818,7 +1908,12 @@ export const previewBranchSchemaEdit = (variables: PreviewBranchSchemaEditVariab
     {},
     {},
     PreviewBranchSchemaEditPathParams
-  >({ url: '/db/{dbBranchName}/schema/preview', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/schema/preview',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type ApplyBranchSchemaEditPathParams = {
   /**
@@ -1861,7 +1956,12 @@ export const applyBranchSchemaEdit = (variables: ApplyBranchSchemaEditVariables,
     {},
     {},
     ApplyBranchSchemaEditPathParams
-  >({ url: '/db/{dbBranchName}/schema/apply', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/schema/apply',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type PushBranchMigrationsPathParams = {
   /**
@@ -1916,7 +2016,12 @@ export const pushBranchMigrations = (variables: PushBranchMigrationsVariables, s
     {},
     {},
     PushBranchMigrationsPathParams
-  >({ url: '/db/{dbBranchName}/schema/push', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/schema/push',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type CreateTablePathParams = {
   /**
@@ -2082,7 +2187,12 @@ export const updateTable = (variables: UpdateTableVariables, signal?: AbortSigna
     {},
     {},
     UpdateTablePathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}', method: 'patch', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}',
+    method: 'patch',
+    ...variables,
+    signal
+  });
 
 export type GetTableSchemaPathParams = {
   /**
@@ -2177,7 +2287,12 @@ export const setTableSchema = (variables: SetTableSchemaVariables, signal?: Abor
     {},
     {},
     SetTableSchemaPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/schema', method: 'put', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/schema',
+    method: 'put',
+    ...variables,
+    signal
+  });
 
 export type GetTableColumnsPathParams = {
   /**
@@ -2265,7 +2380,12 @@ export type AddTableColumnVariables = {
  */
 export const addTableColumn = (variables: AddTableColumnVariables, signal?: AbortSignal) =>
   dataPlaneFetch<Responses.SchemaUpdateResponse, AddTableColumnError, Schemas.Column, {}, {}, AddTableColumnPathParams>(
-    { url: '/db/{dbBranchName}/tables/{tableName}/columns', method: 'post', ...variables, signal }
+    {
+      url: '/db/{dbBranchName}/tables/{tableName}/columns',
+      method: 'post',
+      ...variables,
+      signal
+    }
   );
 
 export type GetColumnPathParams = {
@@ -2370,7 +2490,12 @@ export const updateColumn = (variables: UpdateColumnVariables, signal?: AbortSig
     {},
     {},
     UpdateColumnPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}', method: 'patch', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/columns/{columnName}',
+    method: 'patch',
+    ...variables,
+    signal
+  });
 
 export type DeleteColumnPathParams = {
   /**
@@ -2464,7 +2589,12 @@ export const branchTransaction = (variables: BranchTransactionVariables, signal?
     {},
     {},
     BranchTransactionPathParams
-  >({ url: '/db/{dbBranchName}/transaction', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/transaction',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type InsertRecordPathParams = {
   /**
@@ -2518,7 +2648,12 @@ export const insertRecord = (variables: InsertRecordVariables, signal?: AbortSig
     {},
     InsertRecordQueryParams,
     InsertRecordPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/data', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/data',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type GetFileItemPathParams = {
   /**
@@ -2965,7 +3100,12 @@ export const insertRecordWithID = (variables: InsertRecordWithIDVariables, signa
     {},
     InsertRecordWithIDQueryParams,
     InsertRecordWithIDPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'put', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
+    method: 'put',
+    ...variables,
+    signal
+  });
 
 export type UpdateRecordWithIDPathParams = {
   /**
@@ -3025,7 +3165,12 @@ export const updateRecordWithID = (variables: UpdateRecordWithIDVariables, signa
     {},
     UpdateRecordWithIDQueryParams,
     UpdateRecordWithIDPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'patch', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
+    method: 'patch',
+    ...variables,
+    signal
+  });
 
 export type UpsertRecordWithIDPathParams = {
   /**
@@ -3085,7 +3230,12 @@ export const upsertRecordWithID = (variables: UpsertRecordWithIDVariables, signa
     {},
     UpsertRecordWithIDQueryParams,
     UpsertRecordWithIDPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type DeleteRecordPathParams = {
   /**
@@ -3139,7 +3289,12 @@ export const deleteRecord = (variables: DeleteRecordVariables, signal?: AbortSig
     {},
     DeleteRecordQueryParams,
     DeleteRecordPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}', method: 'delete', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/data/{recordId}',
+    method: 'delete',
+    ...variables,
+    signal
+  });
 
 export type BulkInsertTableRecordsPathParams = {
   /**
@@ -3201,7 +3356,12 @@ export const bulkInsertTableRecords = (variables: BulkInsertTableRecordsVariable
     {},
     BulkInsertTableRecordsQueryParams,
     BulkInsertTableRecordsPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/bulk', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/bulk',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type QueryTablePathParams = {
   /**
@@ -4271,7 +4431,12 @@ export const vectorSearchTable = (variables: VectorSearchTableVariables, signal?
     {},
     {},
     VectorSearchTablePathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/vectorSearch', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/vectorSearch',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type AskTablePathParams = {
   /**
@@ -4451,7 +4616,12 @@ export const askTableSession = (variables: AskTableSessionVariables, signal?: Ab
     {},
     {},
     AskTableSessionPathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/ask/{sessionId}', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/ask/{sessionId}',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type SummarizeTablePathParams = {
   /**
@@ -4583,7 +4753,12 @@ export const summarizeTable = (variables: SummarizeTableVariables, signal?: Abor
     {},
     {},
     SummarizeTablePathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/summarize', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/summarize',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type AggregateTablePathParams = {
   /**
@@ -4641,7 +4816,12 @@ export const aggregateTable = (variables: AggregateTableVariables, signal?: Abor
     {},
     {},
     AggregateTablePathParams
-  >({ url: '/db/{dbBranchName}/tables/{tableName}/aggregate', method: 'post', ...variables, signal });
+  >({
+    url: '/db/{dbBranchName}/tables/{tableName}/aggregate',
+    method: 'post',
+    ...variables,
+    signal
+  });
 
 export type FileAccessPathParams = {
   /**
@@ -4874,7 +5054,16 @@ export const operationsByTag = {
     deleteRecord,
     bulkInsertTableRecords
   },
-  files: { getFileItem, putFileItem, deleteFileItem, getFile, putFile, deleteFile, fileAccess, fileUpload },
+  files: {
+    getFileItem,
+    putFileItem,
+    deleteFileItem,
+    getFile,
+    putFile,
+    deleteFile,
+    fileAccess,
+    fileUpload
+  },
   searchAndFilter: {
     queryTable,
     searchBranch,
