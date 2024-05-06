@@ -49,7 +49,7 @@ export default class Shell extends BaseCommand<typeof Shell> {
       const branchDetails = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
       const { schema } = branchDetails;
 
-      const { javascript } = await generate({ language: 'javascript', databaseURL, schema });
+      const { javascript } = await generate({ language: 'javascript', schema });
       await fs.writeFile(tempFile, javascript);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
