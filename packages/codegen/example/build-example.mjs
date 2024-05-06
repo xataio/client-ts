@@ -31,11 +31,11 @@ async function main() {
 }
 
 function replaceImport(source) {
-  return source.replaceAll('@xata.io/client', '../../client/src');
+  return source?.replaceAll('@xata.io/client', '../../client/src');
 }
 
 function undoReplaceImport(source) {
-  return source.replaceAll('../../client/src', '@xata.io/client');
+  return source?.replaceAll('../../client/src', '@xata.io/client');
 }
 
 main().catch(console.error);
