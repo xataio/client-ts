@@ -24,6 +24,7 @@ export const getXataClientWithPlugin = () => {
 
   return new XataClient({
     apiKey: 'xau_test123',
-    databaseURL: 'https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb'
+    databaseURL: 'https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb',
+    branch: 'main'
   });
 };
