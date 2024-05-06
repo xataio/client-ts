@@ -1,6 +1,7 @@
 import { HostProvider, parseWorkspacesUrlParts, sqlQuery } from '../api';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isObject, isString } from '../util/lang';
+import { kyselyDriver } from './kysely';
 import { prepareParams } from './parameters';
 
 export type SQLQueryParams<T = any[]> = {
@@ -93,6 +94,21 @@ export type SQLPluginResult = SQLPluginFunction & {
    */
   connectionString: string;
 };
+
+export class SqlKyselyPlugin extends XataPlugin {
+  build(pluginOptions: XataPluginOptions): SQLPluginFunction {
+    const sqlFunction = async (query: SQLQuery, ...parameters: any[]) => {
+      const { statement, params, consistency, responseType } = prepareParams(query, parameters);
+
+      const driver = kyselyDriver({ pluginOptions })();
+      const { insertId, numAffectedRows, numChangedRows, rows = [] } = await driver.db.executeQuery(statement as any);
+
+      return { rows } as any;
+    };
+
+    return sqlFunction;
+  }
+}
 
 export class SQLPlugin extends XataPlugin {
   build(pluginOptions: XataPluginOptions): SQLPluginResult {

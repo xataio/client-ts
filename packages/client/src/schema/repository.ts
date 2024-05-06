@@ -29,6 +29,7 @@ import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord, TotalCount } from '../search';
 import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
+import { SqlKyselyPlugin } from '../sql';
 import { chunk, compact, isDefined, isNumber, isObject, isString, promiseMap } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
@@ -828,8 +829,12 @@ export class KyselyRepository<Record extends XataRecord>
       {}
     );
 
+    const db = new SqlKyselyPlugin().build(options.pluginOptions);
+
     this.#table = options.table;
-    this.#db = options.db;
+    // @ts-ignore
+    this.#db = db;
+    // pass plugin options here.
     this.#schemaTables = options.schemaTables;
     this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
 
