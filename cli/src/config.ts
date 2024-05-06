@@ -5,7 +5,7 @@ export const projectConfigSchema = z.object({
   databaseURL: z.string(),
   codegen: z.object({
     output: z.string(),
-    moduleType: z.enum(['cjs', 'esm', 'deno']),
+    moduleType: z.enum(['cjs', 'esm', 'deno', 'vite']),
     declarations: z.boolean(),
     javascriptTarget: z.enum([
       'es5',
@@ -21,7 +21,6 @@ export const projectConfigSchema = z.object({
     ])
   }),
   experimental: z.object({
-    incrementalBuild: z.boolean(),
     workflow: z.boolean()
   })
 });
