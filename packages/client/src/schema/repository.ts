@@ -29,7 +29,7 @@ import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord, TotalCount } from '../search';
 import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
-import { SqlKyselyPlugin } from '../sql';
+import { SQLPluginFunction, SQLPluginResult, SQLQuery, SqlKyselyPlugin } from '../sql';
 import { chunk, compact, isDefined, isNumber, isObject, isString, promiseMap } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
@@ -813,13 +813,13 @@ export class KyselyRepository<Record extends XataRecord>
 {
   #table: string;
   #getFetchProps: () => ApiExtraProps;
-  #db: SchemaPluginResult<any>;
+  #db: SQLPluginFunction;
   #schemaTables?: Schemas.Table[];
   #trace: TraceFunction;
 
   constructor(options: {
     table: string;
-    db: SchemaPluginResult<any>;
+    db: SQLPluginFunction;
     pluginOptions: XataPluginOptions;
     schemaTables?: Schemas.Table[];
   }) {
@@ -829,11 +829,8 @@ export class KyselyRepository<Record extends XataRecord>
       {}
     );
 
-    const db = new SqlKyselyPlugin().build(options.pluginOptions);
-
     this.#table = options.table;
-    // @ts-ignore
-    this.#db = db;
+    this.#db = new SqlKyselyPlugin().build(options.pluginOptions);
     // pass plugin options here.
     this.#schemaTables = options.schemaTables;
     this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
@@ -895,6 +892,7 @@ export class KyselyRepository<Record extends XataRecord>
     | Readonly<SelectedPick<Record, ['*']>>[]
   > {
     return this.#trace('create', async () => {
+      console.log('..................');
       const ifVersion = parseIfVersion(b, c, d);
 
       // Create many records
@@ -941,21 +939,20 @@ export class KyselyRepository<Record extends XataRecord>
 
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
     const record = await this.#transformObjectToApi(object);
+    const statement = `INSERT INTO ${this.#table} (${Object.keys(record).join(', ')}) VALUES (${Object.values(
+      record
+    ).join(', ')});`;
+    console.log('rec', statement);
 
-    const response = await insertRecord({
-      pathParams: {
-        workspace: '{workspaceId}',
-        dbBranchName: '{dbBranch}',
-        region: '{region}',
-        tableName: this.#table
-      },
-      queryParams: { columns },
-      body: record,
-      ...this.#getFetchProps()
+    const response = await this.#db({
+      statement,
+      params: []
     });
 
+    console.log('response.....', response);
+
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
   async #insertRecordWithId(
@@ -968,21 +965,15 @@ export class KyselyRepository<Record extends XataRecord>
 
     const record = await this.#transformObjectToApi(object);
 
-    const response = await insertRecordWithID({
-      pathParams: {
-        workspace: '{workspaceId}',
-        dbBranchName: '{dbBranch}',
-        region: '{region}',
-        tableName: this.#table,
-        recordId
-      },
-      body: record,
-      queryParams: { createOnly, columns, ifVersion },
-      ...this.#getFetchProps()
+    const response = await this.#db({
+      statement: `INSERT INTO ${this.#table} (xata_id, ${Object.keys(record).join(
+        ', '
+      )}) VALUES ('${recordId}', ${Object.values(record).join(', ')});`,
+      params: []
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
   async #insertRecords(
@@ -999,22 +990,12 @@ export class KyselyRepository<Record extends XataRecord>
     const ids = [];
 
     for (const operations of chunkedOperations) {
-      const { results } = await branchTransaction({
-        pathParams: {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}'
-        },
-        body: { operations },
-        ...this.#getFetchProps()
+      const { records } = await this.#db({
+        statement: `BEGIN ${operations} COMMIT;`
       });
 
-      for (const result of results) {
-        if (result.operation === 'insert') {
-          ids.push(result.id);
-        } else {
-          ids.push(null);
-        }
+      for (const result of records) {
+        ids.push((result as any)?.xata_id);
       }
     }
 
@@ -1088,7 +1069,7 @@ export class KyselyRepository<Record extends XataRecord>
           });
 
           const schemaTables = await this.#getSchemaTables();
-          return initObject<Record>(
+          return initObjectKysely<Record>(
             this.#db,
             schemaTables,
             this.#table,
@@ -1342,7 +1323,7 @@ export class KyselyRepository<Record extends XataRecord>
       });
 
       const schemaTables = await this.#getSchemaTables();
-      return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+      return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1497,7 +1478,7 @@ export class KyselyRepository<Record extends XataRecord>
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
   async createOrReplace<K extends SelectableColumn<Record>>(
@@ -1726,7 +1707,7 @@ export class KyselyRepository<Record extends XataRecord>
       });
 
       const schemaTables = await this.#getSchemaTables();
-      return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+      return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1792,7 +1773,7 @@ export class KyselyRepository<Record extends XataRecord>
 
       // TODO - Column selection not supported by search endpoint yet
       return {
-        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any,
+        records: records.map((item) => initObjectKysely(this.#db, schemaTables, this.#table, item, ['*'])) as any,
         totalCount
       };
     });
@@ -1831,7 +1812,7 @@ export class KyselyRepository<Record extends XataRecord>
 
       // TODO - Column selection not supported by search endpoint yet
       return {
-        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])),
+        records: records.map((item) => initObjectKysely(this.#db, schemaTables, this.#table, item, ['*'])),
         totalCount
       } as any;
     });
@@ -1881,7 +1862,7 @@ export class KyselyRepository<Record extends XataRecord>
 
       const schemaTables = await this.#getSchemaTables();
       const records = objects.map((record) =>
-        initObject<Result>(
+        initObjectKysely<Result>(
           this.#db,
           schemaTables,
           this.#table,
@@ -1924,7 +1905,7 @@ export class KyselyRepository<Record extends XataRecord>
       return {
         ...result,
         summaries: result.summaries.map((summary) =>
-          initObject(this.#db, schemaTables, this.#table, summary, data.columns ?? [])
+          initObjectKysely(this.#db, schemaTables, this.#table, summary, data.columns ?? [])
         )
       };
     });
@@ -3224,6 +3205,139 @@ export class RestRepository<Record extends XataRecord>
     return result;
   }
 }
+
+export const initObjectKysely = <T>(
+  db: SQLPluginFunction,
+  schemaTables: Schemas.Table[],
+  table: string,
+  object: Record<string, any>,
+  selectedColumns: SelectableColumn<T>[] | SelectableColumnWithObjectNotation<T>[]
+) => {
+  const data: Dictionary<unknown> = {};
+  Object.assign(data, { ...object });
+
+  const { columns } = schemaTables.find(({ name }) => name === table) ?? {};
+  if (!columns) console.error(`Table ${table} not found in schema`);
+
+  for (const column of columns ?? []) {
+    // Ignore columns not selected
+    if (!isValidColumn(selectedColumns, column)) continue;
+
+    const value = data[column.name];
+
+    switch (column.type) {
+      case 'datetime': {
+        const date = value !== undefined ? new Date(value as string) : null;
+
+        if (date !== null && isNaN(date.getTime())) {
+          console.error(`Failed to parse date ${value} for field ${column.name}`);
+        } else {
+          data[column.name] = date;
+        }
+
+        break;
+      }
+      case 'link': {
+        const linkTable = column.link?.table;
+
+        if (!linkTable) {
+          console.error(`Failed to parse link for field ${column.name}`);
+        } else if (isObject(value)) {
+          const selectedLinkColumns = (selectedColumns as string[]).reduce((acc, item) => {
+            if (item === column.name) {
+              return [...acc, '*'];
+            }
+
+            if (isString(item) && item.startsWith(`${column.name}.`)) {
+              const [, ...path] = item.split('.');
+              return [...acc, path.join('.')];
+            }
+
+            return acc;
+          }, [] as string[]);
+
+          data[column.name] = initObjectKysely(
+            db,
+            schemaTables,
+            linkTable,
+            value,
+            selectedLinkColumns as SelectableColumn<unknown>[]
+          );
+        } else {
+          data[column.name] = null;
+        }
+
+        break;
+      }
+      case 'file':
+        data[column.name] = isDefined(value) ? new XataFile(value as any) : null;
+        break;
+      case 'file[]':
+        data[column.name] = (value as XataArrayFile[])?.map((item) => new XataFile(item)) ?? null;
+        break;
+      case 'json':
+        data[column.name] = parseJson(value as string);
+        break;
+      default:
+        data[column.name] = value ?? null;
+
+        if (column.notNull === true && value === null) {
+          console.error(`Parse error, column ${column.name} is non nullable and value resolves null`);
+        }
+        break;
+    }
+  }
+
+  const record = { ...data };
+
+  record.read = async function (columns?: any) {
+    return await db({
+      statement: `SELECT ${columns} FROM ${table} WHERE xata_id = ?`,
+      params: [record['xata_id']]
+    });
+  };
+
+  record.update = async function (data: any, b?: any, c?: any) {
+    const columns = isValidSelectableColumns(b) ? b : ['*'];
+
+    return await db({
+      statement: `UPDATE ${table} SET ${columns} = ${data} WHERE xata_id = ?`,
+      params: [record['xata_id']]
+    });
+  };
+
+  record.replace = async function (data: any, b?: any, c?: any) {
+    const columns = isValidSelectableColumns(b) ? b : ['*'];
+
+    return await db({
+      statement: `CREATE OR REPLACE INTO ${table} ${columns} VALUES ${data} WHERE xata_id = ?`,
+      params: [record['xata_id']]
+    });
+  };
+
+  record.delete = async function () {
+    return await db({
+      statement: `DELETE FROM ${table} WHERE xata_id = ?`,
+      params: [record['xata_id']]
+    });
+  };
+
+  record.toSerializable = function () {
+    return JSON.parse(JSON.stringify(record));
+  };
+
+  record.toString = function () {
+    return JSON.stringify(record);
+  };
+
+  for (const prop of ['read', 'update', 'replace', 'delete', 'toSerializable', 'toString']) {
+    Object.defineProperty(record, prop, { enumerable: false });
+  }
+
+  Object.freeze(record);
+  // `as unkwnown` to avoid TS error on versions prior to 4.9 (can be removed once we drop support for older versions)
+  return record as unknown as T;
+};
 
 export const initObject = <T>(
   db: Record<string, Repository<any>>,

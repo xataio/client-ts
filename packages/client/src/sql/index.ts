@@ -72,7 +72,7 @@ export type SQLQueryResult<T, Mode extends SQLResponseType = 'json'> = Mode exte
   ? SQLQueryResultArray
   : never;
 
-type SQLPluginFunction = <T, Query extends SQLQuery = SQLQuery>(
+export type SQLPluginFunction = <T, Query extends SQLQuery = SQLQuery>(
   query: Query,
   ...parameters: any[]
 ) => Promise<
@@ -101,7 +101,7 @@ export class SqlKyselyPlugin extends XataPlugin {
       const { statement, params, consistency, responseType } = prepareParams(query, parameters);
 
       const driver = kyselyDriver({ pluginOptions })();
-      const { insertId, numAffectedRows, numChangedRows, rows = [] } = await driver.db.executeQuery(statement as any);
+      const { rows = [] } = await driver.db.executeQuery(statement as any);
 
       return { rows } as any;
     };
