@@ -139,7 +139,6 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const { columns } = parseResults;
     await this.migrateSchema({ table, columns, create });
 
-    // TODO fix this data seeding....
     let importSuccessCount = 0;
     const errors: string[] = [];
     let progress = 0;
