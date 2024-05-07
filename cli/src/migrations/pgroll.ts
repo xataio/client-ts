@@ -4,7 +4,7 @@ import { OpRawSQL, OpRenameConstraint, PgRollOperation } from '@xata.io/pgroll';
 import path from 'path';
 import z from 'zod';
 import { XataClient } from '../base.js';
-import { BranchSchemaFormatted } from '../commands/schema/types.js';
+import { BranchSchemaFormatted } from '../commands/schema/edit.js';
 import { safeJSONParse, safeReadFile } from '../utils/files.js';
 import { migrationsDir, readMigrationsDir } from './files.js';
 import { MigrationFilePgroll, migrationFilePgroll } from './schema.js';
