@@ -1,5 +1,7 @@
 import { beforeEach, expect, test, describe } from 'vitest';
-import {
+import { PgRollMigration } from '@xata.io/pgroll';
+import EditSchema, {
+  editsToMigrations,
   AddColumnPayload,
   AddTablePayload,
   ColumnAdditions,
@@ -8,9 +10,7 @@ import {
   DeleteColumnPayload,
   DeleteTablePayload,
   EditTablePayload
-} from './types';
-import { PgRollMigration } from '@xata.io/pgroll';
-import EditSchema, { editsToMigrations } from './edit';
+} from './edit';
 
 const column: AddColumnPayload['column'] = {
   name: 'col1',
