@@ -1,7 +1,7 @@
 import { PgRollOperation } from '@xata.io/pgroll';
 import { PartialDeep } from 'type-fest';
 import { Schemas } from '@xata.io/client';
-import { generateLinkReference, tableNameFromLinkComment, xataColumnTypeToPgRoll } from '../../migrations/pgroll.js';
+import { generateLinkReference, tableNameFromLinkComment, xataColumnTypeToPgRoll } from '../migrations/pgroll.js';
 
 export function compareSchemas(
   source: PartialDeep<Schemas.BranchSchema>,
