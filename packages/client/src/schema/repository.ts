@@ -25,11 +25,12 @@ import {
   SearchPageConfig,
   TransactionOperation
 } from '../api/schemas';
+import { KyselyPlugin, KyselyPluginResult } from '../kysely';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord, TotalCount } from '../search';
 import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
-import { SQLPluginFunction, SQLPluginResult, SQLQuery, SqlKyselyPlugin } from '../sql';
+import { SQLPluginFunction } from '../sql';
 import { chunk, compact, isDefined, isNumber, isObject, isString, promiseMap } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
@@ -813,7 +814,7 @@ export class KyselyRepository<Record extends XataRecord>
 {
   #table: string;
   #getFetchProps: () => ApiExtraProps;
-  #db: SQLPluginFunction;
+  #db: KyselyPluginResult<any>;
   #schemaTables?: Schemas.Table[];
   #trace: TraceFunction;
 
@@ -830,7 +831,7 @@ export class KyselyRepository<Record extends XataRecord>
     );
 
     this.#table = options.table;
-    this.#db = new SqlKyselyPlugin().build(options.pluginOptions);
+    this.#db = new KyselyPlugin().build(options.pluginOptions);
     // pass plugin options here.
     this.#schemaTables = options.schemaTables;
     this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
@@ -892,7 +893,6 @@ export class KyselyRepository<Record extends XataRecord>
     | Readonly<SelectedPick<Record, ['*']>>[]
   > {
     return this.#trace('create', async () => {
-      console.log('..................');
       const ifVersion = parseIfVersion(b, c, d);
 
       // Create many records
@@ -939,17 +939,8 @@ export class KyselyRepository<Record extends XataRecord>
 
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
     const record = await this.#transformObjectToApi(object);
-    const statement = `INSERT INTO ${this.#table} (${Object.keys(record).join(', ')}) VALUES (${Object.values(
-      record
-    ).join(', ')});`;
-    console.log('rec', statement);
 
-    const response = await this.#db({
-      statement,
-      params: []
-    });
-
-    console.log('response.....', response);
+    const response = await this.#db.insertInto(this.#table).values(record).returning(columns).execute();
 
     const schemaTables = await this.#getSchemaTables();
     return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
@@ -965,12 +956,11 @@ export class KyselyRepository<Record extends XataRecord>
 
     const record = await this.#transformObjectToApi(object);
 
-    const response = await this.#db({
-      statement: `INSERT INTO ${this.#table} (xata_id, ${Object.keys(record).join(
-        ', '
-      )}) VALUES ('${recordId}', ${Object.values(record).join(', ')});`,
-      params: []
-    });
+    const response = await this.#db
+      .insertInto(this.#table)
+      .values({ xata_id: recordId, ...record })
+      .returning(columns)
+      .execute();
 
     const schemaTables = await this.#getSchemaTables();
     return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
@@ -990,8 +980,12 @@ export class KyselyRepository<Record extends XataRecord>
     const ids = [];
 
     for (const operations of chunkedOperations) {
-      const { records } = await this.#db({
-        statement: `BEGIN ${operations} COMMIT;`
+      const { rows: records } = await this.#db.transaction().execute(async (trx) => {
+        const results: any = [];
+        for (const operation of operations) {
+          results.push(await trx.executeQuery(operation as any));
+        }
+        return results;
       });
 
       for (const result of records) {
@@ -3207,7 +3201,7 @@ export class RestRepository<Record extends XataRecord>
 }
 
 export const initObjectKysely = <T>(
-  db: SQLPluginFunction,
+  db: KyselyPluginResult<any>,
   schemaTables: Schemas.Table[],
   table: string,
   object: Record<string, any>,
@@ -3291,35 +3285,24 @@ export const initObjectKysely = <T>(
   const record = { ...data };
 
   record.read = async function (columns?: any) {
-    return await db({
-      statement: `SELECT ${columns} FROM ${table} WHERE xata_id = ?`,
-      params: [record['xata_id']]
-    });
+    // TODO fix
+    return await db.selectFrom(table).where('xata_id', '=', '').execute();
   };
 
   record.update = async function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
 
-    return await db({
-      statement: `UPDATE ${table} SET ${columns} = ${data} WHERE xata_id = ?`,
-      params: [record['xata_id']]
-    });
+    return await db.updateTable(table).set(columns).where('xata_id', '=', data.xata_id).execute();
   };
 
   record.replace = async function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
 
-    return await db({
-      statement: `CREATE OR REPLACE INTO ${table} ${columns} VALUES ${data} WHERE xata_id = ?`,
-      params: [record['xata_id']]
-    });
+    return await db.updateTable(table).set(columns).where('xata_id', '=', data.xata_id).execute();
   };
 
   record.delete = async function () {
-    return await db({
-      statement: `DELETE FROM ${table} WHERE xata_id = ?`,
-      params: [record['xata_id']]
-    });
+    return await db.deleteFrom(table).where('xata_id', '=', '').execute();
   };
 
   record.toSerializable = function () {

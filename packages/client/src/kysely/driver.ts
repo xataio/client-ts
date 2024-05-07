@@ -2,7 +2,6 @@ import {
   CompiledQuery,
   DatabaseConnection,
   DatabaseIntrospector,
-  DeduplicateJoinsPlugin,
   Dialect,
   Driver,
   Kysely,
@@ -12,14 +11,13 @@ import {
   QueryCompiler,
   QueryResult
 } from 'kysely';
-import { sqlQuery } from '../api';
-import { XataPluginOptions } from '../plugins';
+import { SQLPluginResult } from '../sql';
 
-type XataDialectConfig = {
-  run: (query: string, params: any[]) => Promise<{ records: any[]; warning?: string }>;
+export type XataDialectConfig = {
+  xata: { sql: SQLPluginResult };
 };
 
-class XataDialect implements Dialect {
+export class XataDialect implements Dialect {
   constructor(private config: XataDialectConfig) {}
 
   createAdapter() {
@@ -39,7 +37,7 @@ class XataDialect implements Dialect {
   }
 }
 
-class XataDriver implements Driver {
+export class XataDriver implements Driver {
   constructor(private config: XataDialectConfig) {}
 
   async init(): Promise<void> {
@@ -71,7 +69,7 @@ class XataDriver implements Driver {
   }
 }
 
-class XataConnection implements DatabaseConnection {
+export class XataConnection implements DatabaseConnection {
   #config: XataDialectConfig;
 
   constructor(config: XataDialectConfig) {
@@ -79,9 +77,10 @@ class XataConnection implements DatabaseConnection {
   }
 
   async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
+    const { sql } = this.#config.xata;
     const { sql: statement, parameters } = compiledQuery;
 
-    const { records, warning } = await this.#config.run(statement, parameters as any[]);
+    const { records, warning } = await sql({ statement, params: parameters as any[] });
     if (warning) {
       console.warn(warning);
     }
@@ -102,21 +101,3 @@ class XataConnection implements DatabaseConnection {
     throw new Error('Driver does not support streaming');
   }
 }
-
-export const kyselyDriver =
-  ({ pluginOptions }: { pluginOptions: XataPluginOptions }) =>
-  () => ({
-    db: new Kysely<Record<string, any>>({
-      dialect: new XataDialect({
-        run: async (query, params) => {
-          const { records = [] } = await sqlQuery({
-            pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-            body: { statement: query, params },
-            ...pluginOptions
-          });
-          return { records };
-        }
-      }),
-      plugins: [new DeduplicateJoinsPlugin()]
-    })
-  });
