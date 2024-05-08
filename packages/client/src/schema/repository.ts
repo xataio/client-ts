@@ -1073,18 +1073,17 @@ export class KyselyRepository<Record extends XataRecord>
       const id = extractId(a);
       if (id) {
         try {
-          const response = await getRecord({
-            pathParams: {
-              workspace: '{workspaceId}',
-              dbBranchName: '{dbBranch}',
-              region: '{region}',
-              tableName: this.#table,
-              recordId: id
-            },
-            queryParams: { columns },
-            ...this.#getFetchProps()
-          });
-
+          let response;
+          if (columns.length === 1 && columns[0] === '*') {
+            response = await this.#db.selectFrom(this.#table).selectAll().where('xata_id', '=', id).executeTakeFirst();
+          } else {
+            response = await this.#db
+              .selectFrom(this.#table)
+              .select(columns as any)
+              .where('xata_id', '=', id)
+              .executeTakeFirst();
+          }
+          if (!response) return null;
           const schemaTables = await this.#getSchemaTables();
           return initObjectKysely<Record>(
             this.#db,
@@ -1326,18 +1325,23 @@ export class KyselyRepository<Record extends XataRecord>
     const { xata_id: _id, ...record } = await this.#transformObjectToApi(object);
 
     try {
-      const response = await updateRecordWithID({
-        pathParams: {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}',
-          tableName: this.#table,
-          recordId
-        },
-        queryParams: { columns, ifVersion },
-        body: record,
-        ...this.#getFetchProps()
-      });
+      let response;
+      if (columns.length === 1 && columns[0] === '*') {
+        response = await this.#db
+          .updateTable(this.#table)
+          .where('xata_id', '=', recordId)
+          .set(record)
+          .returningAll()
+          .executeTakeFirst();
+      } else {
+        response = await this.#db
+          .updateTable(this.#table)
+          .where('xata_id', '=', recordId)
+          .set(record)
+          .returning(columns)
+          .executeTakeFirst();
+      }
+      if (!response) return null;
 
       const schemaTables = await this.#getSchemaTables();
       return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
@@ -3298,20 +3302,36 @@ export const initObjectKysely = <T>(
 
   record.update = async function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
-
-    // TODO return only some columns
-    return await db.updateTable(table).set(columns).where('xata_id', '=', data.xata_id).executeTakeFirst();
+    return !columns || (columns && columns.length > 0 && columns[0] === '*')
+      ? (await db
+          .updateTable(table)
+          .set(data)
+          .where('xata_id', '=', record['xata_id'] as string)
+          .returningAll()
+          .executeTakeFirst()) ?? null
+      : (await db
+          .updateTable(table)
+          .set(data)
+          .where('xata_id', '=', record['xata_id'] as string)
+          .returning(columns)
+          .executeTakeFirst()) ?? null;
   };
 
   record.replace = async function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
-
-    return await db
-      .updateTable(table)
-      .set(columns)
-      .where('xata_id', '=', data.xata_id)
-      .returningAll()
-      .executeTakeFirst();
+    return columns.length > 0 && columns[0] === '*'
+      ? await db
+          .updateTable(table)
+          .set(data)
+          .where('xata_id', '=', record['xata_id'] as string)
+          .returningAll()
+          .executeTakeFirst()
+      : await db
+          .updateTable(table)
+          .set(data)
+          .where('xata_id', '=', record['xata_id'] as string)
+          .returning(columns)
+          .executeTakeFirst();
   };
 
   record.delete = async function () {

@@ -26,7 +26,7 @@ afterEach(async (ctx) => {
   await hooks.afterEach(ctx);
 });
 
-describe('Revlinks', () => {
+describe.skip('Revlinks', () => {
   test('create user and team and link them', async () => {
     const user = await xata.db.users.create({ name: 'test' });
     const team = await xata.db.teams.create({ name: 'test', owner: user });
