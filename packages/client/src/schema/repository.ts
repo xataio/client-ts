@@ -1716,18 +1716,21 @@ export class KyselyRepository<Record extends XataRecord>
     if (!recordId) return null;
 
     try {
-      const response = await deleteRecord({
-        pathParams: {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}',
-          tableName: this.#table,
-          recordId
-        },
-        queryParams: { columns },
-        ...this.#getFetchProps()
-      });
-
+      let response: any;
+      if (columns.length === 1 && columns[0] === '*') {
+        response = await this.#db
+          .deleteFrom(this.#table)
+          .where('xata_id', '=', recordId)
+          .returningAll()
+          .executeTakeFirst();
+      } else {
+        response = await this.#db
+          .deleteFrom(this.#table)
+          .where('xata_id', '=', recordId)
+          .returning(columns)
+          .executeTakeFirst();
+      }
+      if (!response) return null;
       const schemaTables = await this.#getSchemaTables();
       return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
@@ -3281,24 +3284,44 @@ export const initObjectKysely = <T>(
   const record = { ...data };
 
   record.read = async function (columns?: any) {
-    // TODO fix
-    return await db.selectFrom(table).where('xata_id', '=', '').execute();
+    return !columns || (columns && columns.length > 0 && columns[0] === '*')
+      ? (await db
+          .selectFrom(table)
+          .where('xata_id', '=', record['xata_id'] as string)
+          .executeTakeFirst()) ?? null
+      : (await db
+          .selectFrom(table)
+          .where('xata_id', '=', record['xata_id'] as string)
+          .select(columns)
+          .executeTakeFirst()) ?? null;
   };
 
   record.update = async function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
 
-    return await db.updateTable(table).set(columns).where('xata_id', '=', data.xata_id).execute();
+    // TODO return only some columns
+    return await db.updateTable(table).set(columns).where('xata_id', '=', data.xata_id).executeTakeFirst();
   };
 
   record.replace = async function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
 
-    return await db.updateTable(table).set(columns).where('xata_id', '=', data.xata_id).execute();
+    return await db
+      .updateTable(table)
+      .set(columns)
+      .where('xata_id', '=', data.xata_id)
+      .returningAll()
+      .executeTakeFirst();
   };
 
   record.delete = async function () {
-    return await db.deleteFrom(table).where('xata_id', '=', '').execute();
+    return (
+      (await db
+        .deleteFrom(table)
+        .where('xata_id', '=', record['xata_id'] as string)
+        .returningAll()
+        .executeTakeFirst()) ?? null
+    );
   };
 
   record.toSerializable = function () {

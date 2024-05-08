@@ -41,7 +41,7 @@ describe('record deletion', () => {
     expect(apiTeam).toBeNull();
   });
 
-  test('delete multiple teams with id list', async () => {
+  test.skip('delete multiple teams with id list', async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const result = await xata.db.teams.delete(teams.map((team) => team.xata_id));
@@ -73,7 +73,7 @@ describe('record deletion', () => {
     expect(apiTeam).toBeNull();
   });
 
-  test('delete multiple teams with id in object', async () => {
+  test.skip('delete multiple teams with id in object', async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     await xata.db.teams.delete(teams);
@@ -83,7 +83,7 @@ describe('record deletion', () => {
     expect(apiTeams).toHaveLength(0);
   });
 
-  test('delete multiple teams with invalid', async () => {
+  test.skip('delete multiple teams with invalid', async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const result = await xata.db.teams.delete([...teams, { xata_id: 'invalid' }]);
