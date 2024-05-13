@@ -36,7 +36,7 @@
     "prettier": "=2.8.8",
     "ts-morph": "^22.0.0",
     "typescript": "^5.4.5",
-    "zod": "^3.23.6"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/pluralize": "^0.0.33",
