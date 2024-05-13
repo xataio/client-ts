@@ -54,6 +54,7 @@ import {
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
+import { parseQueryFilter } from './parsing';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -852,6 +853,10 @@ export class KyselyRepository<Record extends XataRecord>
     };
   }
 
+  selectAllColumns = (columns: SelectableColumn<Record>[] = ['*']) => {
+    return !columns || (columns && columns.length > 0 && columns[0] === '*');
+  };
+
   async create<K extends SelectableColumn<Record>>(
     object: EditableData<Record> & Partial<Identifiable>,
     columns: K[],
@@ -940,7 +945,7 @@ export class KyselyRepository<Record extends XataRecord>
 
     // TODO fix type
     let response: any;
-    if (columns.length === 1 && columns[0] === '*') {
+    if (this.selectAllColumns(columns)) {
       response = await this.#db.insertInto(this.#table).values(record).returningAll().executeTakeFirst();
     } else {
       response = await this.#db.insertInto(this.#table).values(record).returning(columns).executeTakeFirst();
@@ -963,7 +968,7 @@ export class KyselyRepository<Record extends XataRecord>
     // TODO fix type
     let response: any;
 
-    if (columns.length === 1 && columns[0] === '*') {
+    if (this.selectAllColumns(columns)) {
       response = await this.#db
         .insertInto(this.#table)
         .values({ ...record, xata_id: recordId })
@@ -1074,7 +1079,7 @@ export class KyselyRepository<Record extends XataRecord>
       if (id) {
         try {
           let response;
-          if (columns.length === 1 && columns[0] === '*') {
+          if (this.selectAllColumns(columns)) {
             response = await this.#db.selectFrom(this.#table).selectAll().where('xata_id', '=', id).executeTakeFirst();
           } else {
             response = await this.#db
@@ -1326,7 +1331,7 @@ export class KyselyRepository<Record extends XataRecord>
 
     try {
       let response;
-      if (columns.length === 1 && columns[0] === '*') {
+      if (this.selectAllColumns(columns)) {
         response = await this.#db
           .updateTable(this.#table)
           .where('xata_id', '=', recordId)
@@ -1487,7 +1492,7 @@ export class KyselyRepository<Record extends XataRecord>
 
     let response: any;
     const updates = Object.fromEntries(Object.entries(object).map(([key, value]) => [key, value]));
-    if (columns.length === 1 && columns[0] === '*') {
+    if (this.selectAllColumns(columns)) {
       response = await this.#db
         .insertInto(this.#table)
         .values({ ...object, xata_id: recordId })
@@ -1721,7 +1726,7 @@ export class KyselyRepository<Record extends XataRecord>
 
     try {
       let response: any;
-      if (columns.length === 1 && columns[0] === '*') {
+      if (this.selectAllColumns(columns)) {
         response = await this.#db
           .deleteFrom(this.#table)
           .where('xata_id', '=', recordId)
@@ -1871,23 +1876,26 @@ export class KyselyRepository<Record extends XataRecord>
     return this.#trace('query', async () => {
       const data = query.getQueryOptions();
 
-      const { meta, records: objects } = await queryTable({
-        pathParams: {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}',
-          tableName: this.#table
-        },
-        body: {
-          filter: cleanFilter(data.filter),
-          sort: data.sort !== undefined ? buildSortFilter(data.sort) : undefined,
-          page: data.pagination,
-          columns: data.columns ?? ['*'],
-          consistency: data.consistency
-        },
-        fetchOptions: data.fetchOptions,
-        ...this.#getFetchProps()
-      });
+      const filter = parseQueryFilter(cleanFilter(data.filter));
+      const sort = buildSortFilter(data.sort);
+      const pagination = data.pagination;
+
+      //  if (this.selectAllColumns(data.columns as any)) {
+
+      //  } else {
+
+      //  }
+
+      const objects = await this.#db
+        .selectFrom(this.#table)
+        .select(({ eb, or, not }) => [
+          // eb('first_name', '=', 'Jennifer').as("first_name"),
+          // not(eb('first_name', '=', 'Jennifer')).as("first_name"),
+          eb.and([eb('first_name', '=', 'Jennifer'), eb('last_name', '=', 'Arnold')]).as('first_name'),
+
+          or([eb('last_name', '=', 'Jennifer'), eb('last_name', '=', 'Arnold')]).as('last_name')
+        ])
+        .execute();
 
       const schemaTables = await this.#getSchemaTables();
       const records = objects.map((record) =>
@@ -1900,7 +1908,8 @@ export class KyselyRepository<Record extends XataRecord>
         )
       );
 
-      return new Page<Record, Result>(query, meta, records);
+      // TODO no more meta
+      return new Page<Record, Result>(query, {} as any, records);
     });
   }
 
