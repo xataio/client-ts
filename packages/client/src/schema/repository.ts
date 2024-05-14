@@ -1875,15 +1875,20 @@ export class KyselyRepository<Record extends XataRecord>
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
     return this.#trace('query', async () => {
       const data = query.getQueryOptions();
+
+      // TODO if nextPage(SIZE) then use that
+      // TODO what if user sends after value
+      // TODO check more is correct
       const cursor: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
         ?.pagination?.after
         ? decode(data?.pagination?.after)
         : undefined;
 
       // TODO handle filtering
-      const filter = cursor?.data?.filter ?? cleanFilter(data.filter);
-      const sort = cursor?.data?.sort ?? data.sort ? buildSortFilter(data.sort) : undefined;
-      const pagination = cursor?.data?.pagination ?? data.pagination;
+      const filter = cleanFilter(data.filter) ?? cursor?.data?.filter;
+      const sort = data.sort ? buildSortFilter(data.sort) : cursor?.data?.sort;
+      const size = data?.pagination?.size ?? cursor?.data?.pagination?.size;
+      const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset;
 
       let statement = this.#db.selectFrom(this.#table);
 
@@ -1893,16 +1898,16 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.select(data.columns as any);
       }
 
-      if (pagination?.size) {
-        statement = statement.limit(pagination.size);
+      if (size) {
+        statement = statement.limit(size);
       }
 
       if (cursor) {
         statement = statement.where(cursor.primaryColumn, '>', cursor.lastSeenId);
       }
 
-      if (pagination?.offset) {
-        statement = statement.offset(pagination.offset);
+      if (offset) {
+        statement = statement.offset(offset);
       }
 
       // TODO will "random" be supported as a sort type?
@@ -1927,13 +1932,10 @@ export class KyselyRepository<Record extends XataRecord>
       const lastAllItem = total[total.length - 1];
 
       const more = () => {
-        if (!pagination) {
-          return response.length < total.length;
+        if (offset) {
+          return response.length + offset < total.length;
         }
-        if (pagination?.offset) {
-          return response.length + pagination?.offset < total.length;
-        }
-        if (pagination.size || cursor?.lastSeenId) {
+        if (size || cursor?.lastSeenId) {
           if (cursor?.lastSeenId !== lastAllItem.xata_id) {
             return true;
           }
