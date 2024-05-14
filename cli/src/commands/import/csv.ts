@@ -5,7 +5,13 @@ import { importColumnTypes } from '@xata.io/importer';
 import { open, writeFile } from 'fs/promises';
 import { BaseCommand } from '../../base.js';
 import { enumFlag } from '../../utils/oclif.js';
-import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
+import {
+  getBranchDetailsWithPgRoll,
+  waitForMigrationToFinish,
+  xataColumnTypeToPgRollComment
+} from '../../migrations/pgroll.js';
+import { compareSchemas } from '../../utils/compareSchema.js';
+import keyBy from 'lodash.keyby';
 
 const ERROR_CONSOLE_LOG_LIMIT = 200;
 const ERROR_LOG_FILE = 'errors.log';
@@ -22,6 +28,8 @@ const bufferEncodings: BufferEncoding[] = [
   'binary',
   'hex'
 ];
+
+const INTERNAL_COLUMNS_PGROLL = ['xata_id', 'xata_createdat', 'xata_updatedat', 'xata_version'];
 
 export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
@@ -144,12 +152,26 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
         }
-        const batchRows = parseResults.data.map(({ data }) => data);
+        const batchRows = parseResults.data.map(({ data }) => {
+          const formattedRow: { [k: string]: any } = {};
+          const keys = Object.keys(data);
+          for (const key of keys) {
+            if (INTERNAL_COLUMNS_PGROLL.includes(key) && key !== 'xata_id') continue;
+            formattedRow[key] = data[key];
+          }
+          return formattedRow;
+        });
+
         const importResult = await xata.import.importBatch(
           { workspace, region, database, branch },
-          { columns: parseResults.columns, table, batchRows }
+          {
+            columns: parseResults.columns.filter(
+              ({ name }) => name === 'xata_id' || !INTERNAL_COLUMNS_PGROLL.includes(name)
+            ),
+            table,
+            batchRows
+          }
         );
-
         await xata.import.importFiles(
           { database, branch, region, workspace: workspace },
           {
@@ -212,22 +234,39 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.parseDatabase();
     const { schema: existingSchema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
-    const newSchema = {
-      tables: [
-        ...existingSchema.tables.filter((t) => t.name !== table),
-        { name: table, columns: columns.filter((c) => c.name !== 'id') }
-      ]
-    };
 
-    const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
-      pathParams: { workspace, region, dbBranchName: `${database}:main` },
-      body: { schema: newSchema }
-    });
-    if (edits.operations.length > 0) {
-      const destructiveOperations = edits.operations
+    const { edits } = compareSchemas(
+      {},
+      {
+        tables: {
+          [table]: {
+            name: table,
+            xataCompatible: false,
+            columns: keyBy(
+              columns
+                .filter((c) => !INTERNAL_COLUMNS_PGROLL.includes(c.name as any))
+                .map((c) => {
+                  return {
+                    name: c.name,
+                    type: c.type,
+                    nullable: c.notNull !== false,
+                    default: c.defaultValue ?? null,
+                    unique: c.unique,
+                    comment: xataColumnTypeToPgRollComment(c)
+                  };
+                }),
+              'name'
+            )
+          }
+        }
+      }
+    );
+
+    if (edits.length > 0) {
+      const destructiveOperations = edits
         .map((op) => {
-          if (!('removeColumn' in op)) return undefined;
-          return op.removeColumn.column;
+          if (!('drop_column' in op)) return undefined;
+          return op.drop_column.column;
         })
         .filter((x) => x !== undefined);
 
@@ -262,10 +301,14 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         process.exit(1);
       }
 
-      await xata.api.migrations.applyBranchSchemaEdit({
+      const { jobID } = await xata.api.migrations.applyMigration({
         pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-        body: { edits }
+        body: {
+          adaptTables: true,
+          operations: edits
+        }
       });
+      await waitForMigrationToFinish(xata.api, workspace, region, database, branch, jobID);
     }
   }
 }
