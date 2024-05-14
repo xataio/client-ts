@@ -135,14 +135,15 @@ const includesWithMixOfAnyAndAllInPredicatePosition: Filter<Record> = {
   labels: { $includes: { $any: { $all: [{ $startsWith: 'test' }, { $contains: 'x' }], $any: ['a', 'b'] } } }
 };
 
-// Simple $includesany
-const simpleIncludesAny: Filter<Record> = { labels: { $includesAny: 'test' } };
+// TODO get rid of these??
+// // Simple $includesany
+// const simpleIncludesAny: Filter<Record> = { labels: { $includesAny: 'test' } };
 
-// Simple $includesall
-const simpleIncludesAll: Filter<Record> = { labels: { $includesAll: 'test' } };
+// // Simple $includesall
+// const simpleIncludesAll: Filter<Record> = { labels: { $includesAll: 'test' } };
 
-// Simple $includesnone
-const simpleIncludesNone: Filter<Record> = { labels: { $includesNone: 'test' } };
+// // Simple $includesnone
+// const simpleIncludesNone: Filter<Record> = { labels: { $includesNone: 'test' } };
 
 // Exists value must be string not int
 // @ts-expect-error
@@ -211,12 +212,13 @@ const filterWithArraysComplexNegations: Filter<Record> = {
   }
 };
 
+// TODO remove includesAll?
 // Filters with $includesAll
-const filtersWithIncludesAll: Filter<Record> = {
-  labels: {
-    $includesAll: [{ $contains: 'label' }]
-  }
-};
+// const filtersWithIncludesAll: Filter<Record> = {
+//   labels: {
+//     $includesAll: [{ $contains: 'label' }]
+//   }
+// };
 
 // Filter with invalid property type
 // @ts-expect-error
@@ -228,34 +230,29 @@ const filterWithInvalidOperator: Filter<Record> = { name: { $is: 42 } };
 
 // Filter with wildcard is not allowed
 // @ts-expect-error
-const filterWithWildcardIsNotAllowed: Filter<Record> = { '*': { $is: 'foo' } };
+// const filterWithWildcardIsNotAllowed: Filter<Record> = { '*': { $is: 'foo' } };
 
-// Filter with link wildcard is not allowed
-// @ts-expect-error
-const filterWithLinkWildcardIsNotAllowed: Filter<Record> = { 'owner.*': { $is: 'foo' } };
+// // Filter with link wildcard is not allowed
+// // @ts-expect-error
+// const filterWithLinkWildcardIsNotAllowed: Filter<Record> = { 'owner.*': { $is: 'foo' } };
 
 // Filter on internal column is allowed
 const filterOnInternalColumnIsAllowed: Filter<Record> = { xata_version: { $is: 4 } };
 
 describe('parseFilter', () => {
-  test('should remove empty objects', () => {
+  test('singleColumnWithImplicitIs', () => {
     const filter: Filter<Record> = { name: 'r2' };
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": "r2",
-              },
-            ],
             "field": "name",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": "r2",
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
@@ -263,20 +260,15 @@ describe('parseFilter', () => {
     const filter: Filter<Record> = { name: { $is: 'r2' } };
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": "r2",
-              },
-            ],
             "field": "name",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": "r2",
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
@@ -285,20 +277,15 @@ describe('parseFilter', () => {
 
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": "string",
-              },
-            ],
             "field": "string",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": "string",
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
@@ -307,20 +294,15 @@ describe('parseFilter', () => {
 
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": true,
-              },
-            ],
             "field": "boolean",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": true,
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
@@ -329,20 +311,15 @@ describe('parseFilter', () => {
 
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": false,
-              },
-            ],
             "field": "boolean",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": false,
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
@@ -351,20 +328,15 @@ describe('parseFilter', () => {
 
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": 1234567,
-              },
-            ],
             "field": "number",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": 1234567,
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
@@ -373,20 +345,15 @@ describe('parseFilter', () => {
 
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": -42,
-              },
-            ],
             "field": "number",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": -42,
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
@@ -395,46 +362,37 @@ describe('parseFilter', () => {
 
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": 3.14,
-              },
-            ],
             "field": "number",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": 3.14,
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
-  test.skip('should remove empty objects', () => {
+  test('should remove empty objects', () => {
     const filter: Filter<Record> = { plan: { $any: ['free', 'paid'] } };
 
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [],
+        "NOT": [],
+        "OR": [
           {
-            "and": [],
             "field": "plan",
-            "not": [],
-            "or": [
-              {
-                "operator": "=",
-                "value": "free",
-              },
-              {
-                "operator": "=",
-                "value": "paid",
-              },
-            ],
+            "operator": "=",
+            "value": "free",
+          },
+          {
+            "field": "plan",
+            "operator": "=",
+            "value": "paid",
           },
         ],
-        "field": null,
       }
     `);
   });
@@ -443,31 +401,20 @@ describe('parseFilter', () => {
 
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": true,
-              },
-            ],
             "field": "dark",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": true,
           },
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": "free",
-              },
-            ],
             "field": "plan",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": "free",
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
@@ -478,31 +425,20 @@ describe('parseFilter', () => {
 
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": true,
-              },
-            ],
             "field": "dark",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": true,
           },
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": "free",
-              },
-            ],
             "field": "plan",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": "free",
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
@@ -510,60 +446,480 @@ describe('parseFilter', () => {
     const filter: Filter<Record> = { $all: [{ dark: true }, { plan: 'free' }] };
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": true,
-              },
-            ],
             "field": "dark",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": true,
           },
           {
-            "and": [
-              {
-                "operator": "=",
-                "value": "free",
-              },
-            ],
             "field": "plan",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": "free",
           },
         ],
-        "field": null,
+        "NOT": [],
+        "OR": [],
       }
     `);
   });
   test('anyWithMultipleValues', () => {
+    // const filter: Filter<Record> = { name: { $is: 'r2' } };
     const filter: Filter<Record> = { number: { $any: [1, 2, 3] } };
     expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
       {
-        "and": [
+        "AND": [],
+        "NOT": [],
+        "OR": [
           {
-            "and": [
-              {
-                "and": [],
-                "field": "number",
-                "not": [],
-                "or": [
-                  {
-                    "operator": "=",
-                    "value": 1,
-                  },
-                ],
-              },
-            ],
             "field": "number",
-            "not": [],
-            "or": [],
+            "operator": "=",
+            "value": 1,
+          },
+          {
+            "field": "number",
+            "operator": "=",
+            "value": 2,
+          },
+          {
+            "field": "number",
+            "operator": "=",
+            "value": 3,
           },
         ],
-        "field": null,
       }
     `);
   });
+  test('noneWithMultipleValues', () => {
+    // const filter: Filter<Record> = { name: { $is: 'r2' } };
+    const filter: Filter<Record> = { number: { $none: [1, 2, 3] } };
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [],
+        "NOT": [
+          {
+            "field": "number",
+            "operator": "=",
+            "value": 1,
+          },
+          {
+            "field": "number",
+            "operator": "=",
+            "value": 2,
+          },
+          {
+            "field": "number",
+            "operator": "=",
+            "value": 3,
+          },
+        ],
+        "OR": [],
+      }
+    `);
+  });
+  test('existsFilter', () => {
+    // const filter: Filter<Record> = { name: { $is: 'r2' } };
+    const filter: Filter<Record> = { $exists: 'test' };
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "test",
+            "operator": "exists",
+            "value": "test",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  test('notExistsFilter', () => {
+    // const filter: Filter<Record> = { name: { $is: 'r2' } };
+    const filter: Filter<Record> = { $notExists: 'test' };
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "test",
+            "operator": "not exists",
+            "value": "test",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  test('existsWithAll', () => {
+    const filter: Filter<Record> = { $all: [{ $exists: 'test' }, { $exists: 'name' }] };
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "test",
+            "operator": "exists",
+            "value": "test",
+          },
+          {
+            "field": "name",
+            "operator": "exists",
+            "value": "name",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  test.skip('nestAnyWithNot', () => {
+    const filter: Filter<Record> = { $not: { $any: { dark: true, plan: 'free' } } };
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [],
+        "NOT": [
+          {
+            "OR": [
+              {
+                "field": "dark",
+                "operator": "=",
+                "value": true,
+              },
+              {
+                "field": "plan",
+                "operator": "=",
+                "value": "free",
+              },
+            ]
+          }
+        ],
+        "OR": [],
+      }
+    `);
+  });
+  test.skip('mixAllAndAnyWithExtraKeys', () => {
+    const filter: Filter<Record> = {
+      $all: { $any: { dark: false, plan: 'free' }, name: 'r1' }
+    };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "name",
+            "operator": "=",
+            "value": "r1",
+          },
+        ],
+        "NOT": [],
+        "OR": [
+          {
+            "field": "dark",
+            "operator": "=",
+            "value": false,
+          },
+          {
+            "field": "plan",
+            "operator": "=",
+            "value": "free",
+          },
+        ],
+      }
+    `);
+  });
+  test('rangeQueryWithLessFirst', () => {
+    const filter: Filter<Record> = { age: { $lt: 30, $ge: 20 } };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "age",
+            "operator": "<",
+            "value": 30,
+          },
+          {
+            "field": "age",
+            "operator": "=",
+            "value": 20,
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  test('rangeQueryWithGreaterFirst', () => {
+    const filter: Filter<Record> = { age: { $ge: 20, $lt: 30 } };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "age",
+            "operator": "=",
+            "value": 20,
+          },
+          {
+            "field": "age",
+            "operator": "<",
+            "value": 30,
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  test('orderedOp', () => {
+    const filter: Filter<Record> = { age: { $lt: 30 } };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "age",
+            "operator": "<",
+            "value": 30,
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  test('simpleIncludes', () => {
+    const filter: Filter<Record> = { labels: { $includes: 'test' } };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "labels",
+            "operator": "in",
+            "value": "test",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  // TODO not sure?
+  test('simpleIncludesWithOp', () => {
+    const filter: Filter<Record> = { labels: { $includes: { $contains: 'test' } } };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "labels",
+            "operator": "like",
+            "value": "test",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  test('simpleIncludesMultiple', () => {
+    const filter: Filter<Record> = { labels: { $includes: ['a', 'b', 'c'] } };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "a",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "b",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "c",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  test('simpleIncludesMultipleWithOp', () => {
+    const filter: Filter<Record> = {
+      labels: { $includes: [{ $is: 'a' }, { $is: 'b' }, { $is: 'c' }] }
+    };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "a",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "b",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "c",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  test('includesWithManyComparisons', () => {
+    const filter: Filter<Record> = {
+      labels: { $includes: { $all: [{ $contains: 'a' }, { $contains: 'b' }] } }
+    };
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "labels",
+            "operator": "like",
+            "value": "a",
+          },
+          {
+            "field": "labels",
+            "operator": "like",
+            "value": "b",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  // TODO is this correct?
+  test('simpleIncludesMultipleOpAndValue', () => {
+    const filter: Filter<Record> = { labels: { $includes: [{ $contains: 'a' }, 'b'] } };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "labels",
+            "operator": "like",
+            "value": "a",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "b",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+  // TODO fix this.
+  test('includesWithModeAndArrayOfFilters', () => {
+    const filter: Filter<Record> = {
+      labels: { $includesNone: [{ $contains: 'test' }, 'abc', { $endsWith: 'bad' }] }
+    };
+
+    expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "labels",
+            "operator": "like",
+            "value": "test",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "abc",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "bad",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+  });
+});
+// TODO correct this
+test('includesWithModeAndArrayOfFilters', () => {
+  const filter: Filter<Record> = {
+    labels: { $includesNone: [{ $contains: 'test' }, 'abc', { $endsWith: 'bad' }] }
+  };
+
+  expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "labels",
+            "operator": "like",
+            "value": "test",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "abc",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "bad",
+          },
+        ],
+        "NOT": [],
+        "OR": [],
+      }
+    `);
+});
+
+// TODO fix
+test('includesWithMixOfAnyAndAllInPredicatePosition', () => {
+  const filter: Filter<Record> = {
+    labels: { $includes: { $any: { $all: [{ $startsWith: 'test' }, { $contains: 'x' }], $any: ['a', 'b'] } } }
+  };
+
+  expect(parseFilter(filter as FilterExpression)).toMatchInlineSnapshot(`
+      {
+        "AND": [
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "test",
+          },
+          {
+            "field": "labels",
+            "operator": "like",
+            "value": "x",
+          },
+        ],
+        "NOT": [],
+        "OR": [
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "a",
+          },
+          {
+            "field": "labels",
+            "operator": "=",
+            "value": "b",
+          },
+        ],
+      }
+    `);
 });
