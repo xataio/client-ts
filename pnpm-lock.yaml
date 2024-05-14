@@ -312,9 +312,21 @@ importers:
 
   packages/client:
     dependencies:
+      '@types/pako':
+        specifier: ^2.0.3
+        version: 2.0.3
+      json-stringify-deterministic:
+        specifier: ^1.0.12
+        version: 1.0.12
       kysely:
         specifier: ^0.27.3
         version: 0.27.3
+      pako:
+        specifier: ^2.1.0
+        version: 2.1.0
+      rfc4648:
+        specifier: ^1.5.3
+        version: 1.5.3
       typescript:
         specifier: '>=4.5'
         version: 5.2.2
@@ -6413,6 +6425,11 @@ packages:
     resolution:
       { integrity: sha512-lqa4UEhhv/2sjjIQgjX8B+RBjj47eo0mzGasklVJ78UKGQY1r0VpB9XHDaZZO9qzEFDdy4MrXLuEaSmPrPSe/A== }
 
+  /@types/pako@2.0.3:
+    resolution:
+      { integrity: sha512-bq0hMV9opAcrmE0Byyo0fY3Ew4tgOevJmQ9grUhpXQhYfyLJ1Kqg3P33JT5fdbT2AjeAjR51zqqVjAL/HMkx7Q== }
+    dev: false
+
   /@types/papaparse@5.3.14:
     resolution:
       { integrity: sha512-LxJ4iEFcpqc6METwp9f6BV6VVc43m6MfH0VqFosHvrUgfXiFe6ww7R3itkOQ+TCK6Y+Iv/+RnnvtRZnkc5Kc9g== }
@@ -11489,6 +11506,12 @@ packages:
       { integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw== }
     dev: true
 
+  /json-stringify-deterministic@1.0.12:
+    resolution:
+      { integrity: sha512-q3PN0lbUdv0pmurkBNdJH3pfFvOTL/Zp0lquqpvcjfKzt6Y0j49EPHAmVHCAS4Ceq/Y+PejWTzyiVpoY71+D6g== }
+    engines: { node: '>= 4' }
+    dev: false
+
   /json5@1.0.2:
     resolution:
       { integrity: sha512-g1MWMLBiz8FKi1e4w0UyVL3w+iJceWAFBAaBnnGKOpNa5f8TLktkbre1+s6oICydWAm+HRUGTmI+//xv2hvXYA== }
@@ -13363,6 +13386,11 @@ packages:
       p-timeout: 5.1.0
     dev: false
 
+  /pako@2.1.0:
+    resolution:
+      { integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug== }
+    dev: false
+
   /papaparse@5.4.1:
     resolution:
       { integrity: sha512-HipMsgJkZu8br23pW15uvo6sib6wne/4woLZPlFf3rpDyMe9ywEXUsuD7+6K9PRkJlVT51j/sCOYDKGGS3ZJrw== }
@@ -14514,6 +14542,11 @@ packages:
     resolution:
       { integrity: sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw== }
     engines: { iojs: '>=1.0.0', node: '>=0.10.0' }
+
+  /rfc4648@1.5.3:
+    resolution:
+      { integrity: sha512-MjOWxM065+WswwnmNONOT+bD1nXzY9Km6u3kzvnx8F8/HXGZdz3T6e6vZJ8Q/RIMUSp/nxqjH3GwvJDy8ijeQQ== }
+    dev: false
 
   /rfdc@1.3.0:
     resolution:

@@ -41,7 +41,7 @@ import { AskOptions, AskResult } from './ask';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter } from './filters';
 import { parseJson, stringifyJson } from './json';
-import { Page } from './pagination';
+import { Page, PaginationQueryMeta } from './pagination';
 import { Query } from './query';
 import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
 import {
@@ -51,9 +51,10 @@ import {
   SelectedPick,
   isValidSelectableColumns
 } from './selection';
-import { buildSortFilter } from './sorting';
+import { SortDirection, buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
+import { Cursor, compactRecord } from '../util/cursor';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -1875,38 +1876,71 @@ export class KyselyRepository<Record extends XataRecord>
     return this.#trace('query', async () => {
       const data = query.getQueryOptions();
 
+      // TODO handle filtering
       const filter = cleanFilter(data.filter);
-      const sort = buildSortFilter(data.sort);
+      const sort = data.sort ? buildSortFilter(data.sort) : undefined;
       const pagination = data.pagination;
 
-      //  if (this.selectAllColumns(data.columns as any)) {
+      let statement = this.#db.selectFrom(this.#table);
 
-      //  } else {
+      if (this.selectAllColumns(data.columns as any)) {
+        statement = statement.selectAll();
+      } else {
+        statement = statement.select(data.columns as any);
+      }
 
-      //  }
+      if (pagination?.size) {
+        statement = statement.limit(pagination.size);
+      }
 
-      // TODO pagination and offset
-      // if (pagination?.limit) {
-      //   statement = statement.limit(pagination.limit);
+      // TODO cursor needs to be decoded in order to set this filter correctly.
+      // TODO cursor needs to use a dynamic primary key not  xata_id
+      // if (pagination?.after) {
+      //   statement = statement.where('xata_id', '>', pagination.after)
       // }
 
-      // if (pagination?.offset) {
-      //   statement = statement.offset(pagination.offset);
-      // }
+      if (pagination?.offset) {
+        statement = statement.offset(pagination.offset);
+      }
 
-      const objects = await this.#db
-        .selectFrom(this.#table)
-        .select(({ eb, or, not, and }) => [
-          // eb('first_name', '=', 'Jennifer').as("first_name"),
-          // not(eb('first_name', '=', 'Jennifer')).as("first_name"),
-          eb.and([eb('first_name', '=', 'Jennifer'), eb('last_name', '=', 'Arnold')]).as('first_name'),
+      // TODO will "random" be supported as a sort type?
+      if (isObject(sort)) {
+        for (const [column, order] of Object.entries(sort)) {
+          statement = statement.orderBy(column, order as SortDirection);
+        }
+      } else if (Array.isArray(sort)) {
+        for (const item of sort) {
+          for (const [column, order] of Object.entries(item)) {
+            statement = statement.orderBy(column, order as SortDirection);
+          }
+        }
+      }
 
-          or([eb('last_name', '=', 'Jennifer'), eb('last_name', '=', 'Arnold')]).as('last_name')
-        ])
-        .execute();
+      // TODO: in transaction
+      const response = await statement.execute();
+
+      const total = await this.#db.selectFrom(this.#table).selectAll().execute();
+
+      const lastItem = response[response.length - 1];
+      const lastAllItem = total[total.length - 1];
+
+      const more = () => {
+        if (!pagination) {
+          return response.length < total.length;
+        }
+        if (pagination?.offset) {
+          return response.length + pagination?.offset < total.length;
+        }
+        if (pagination.size || pagination?.after) {
+          if (pagination?.after !== lastAllItem.xata_id) {
+            return true;
+          }
+        }
+        return false;
+      };
 
       const schemaTables = await this.#getSchemaTables();
-      const records = objects.map((record) =>
+      const records = response.map((record) =>
         initObjectKysely<Result>(
           this.#db,
           schemaTables,
@@ -1916,8 +1950,13 @@ export class KyselyRepository<Record extends XataRecord>
         )
       );
 
-      // TODO no more meta
-      return new Page<Record, Result>(query, {} as any, records);
+      const cursor = Cursor.from({
+        id: lastItem?.xata_id,
+        data
+      });
+
+      const meta = { page: { more: more(), size: response.length, cursor } };
+      return new Page<Record, Result>(query, meta as any, records);
     });
   }
 
