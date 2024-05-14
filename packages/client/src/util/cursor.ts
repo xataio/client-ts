@@ -39,3 +39,15 @@ export class Cursor {
 export function compactRecord<T>(record: Record<string, T | undefined>): Record<string, T> {
   return Object.fromEntries(Object.entries(record).filter(([, value]) => !!value)) as Record<string, T>;
 }
+
+export function decode(data: string): Record<string, unknown> {
+  const decoded = base64url.parse(data, { loose: true });
+  const decompressed = pako.inflate(decoded, { to: 'string', raw: true });
+  const [encoding, format, ...rest] = decompressed;
+  if (encoding !== 'j' || format !== '1') {
+    throw new Error('Invalid cursor');
+  }
+
+  const result = JSON.parse(rest.join(''));
+  return result;
+}

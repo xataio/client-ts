@@ -42,7 +42,7 @@ import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter } from './filters';
 import { parseJson, stringifyJson } from './json';
 import { Page, PaginationQueryMeta } from './pagination';
-import { Query } from './query';
+import { Query, QueryOptions } from './query';
 import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
 import {
   ColumnsByValue,
@@ -54,7 +54,7 @@ import {
 import { SortDirection, buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
-import { Cursor, compactRecord } from '../util/cursor';
+import { Cursor, decode } from '../util/cursor';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -1875,11 +1875,15 @@ export class KyselyRepository<Record extends XataRecord>
   async query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>> {
     return this.#trace('query', async () => {
       const data = query.getQueryOptions();
+      const cursor: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
+        ?.pagination?.after
+        ? decode(data?.pagination?.after)
+        : undefined;
 
       // TODO handle filtering
-      const filter = cleanFilter(data.filter);
-      const sort = data.sort ? buildSortFilter(data.sort) : undefined;
-      const pagination = data.pagination;
+      const filter = cursor?.data?.filter ?? cleanFilter(data.filter);
+      const sort = cursor?.data?.sort ?? data.sort ? buildSortFilter(data.sort) : undefined;
+      const pagination = cursor?.data?.pagination ?? data.pagination;
 
       let statement = this.#db.selectFrom(this.#table);
 
@@ -1893,11 +1897,9 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.limit(pagination.size);
       }
 
-      // TODO cursor needs to be decoded in order to set this filter correctly.
-      // TODO cursor needs to use a dynamic primary key not  xata_id
-      // if (pagination?.after) {
-      //   statement = statement.where('xata_id', '>', pagination.after)
-      // }
+      if (cursor) {
+        statement = statement.where(cursor.primaryColumn, '>', cursor.lastSeenId);
+      }
 
       if (pagination?.offset) {
         statement = statement.offset(pagination.offset);
@@ -1931,8 +1933,8 @@ export class KyselyRepository<Record extends XataRecord>
         if (pagination?.offset) {
           return response.length + pagination?.offset < total.length;
         }
-        if (pagination.size || pagination?.after) {
-          if (pagination?.after !== lastAllItem.xata_id) {
+        if (pagination.size || cursor?.lastSeenId) {
+          if (cursor?.lastSeenId !== lastAllItem.xata_id) {
             return true;
           }
         }
@@ -1950,12 +1952,19 @@ export class KyselyRepository<Record extends XataRecord>
         )
       );
 
-      const cursor = Cursor.from({
-        id: lastItem?.xata_id,
-        data
-      });
-
-      const meta = { page: { more: more(), size: response.length, cursor } };
+      const meta = {
+        page: {
+          more: more(),
+          size: response.length,
+          cursor: Cursor.from({
+            // TODO cursor needs to use a dynamic primary key not  xata_id
+            primaryColumn: 'xata_id',
+            // @ts-expect-error
+            lastSeenId: lastItem?.xata_id,
+            data
+          }).toString()
+        }
+      };
       return new Page<Record, Result>(query, meta as any, records);
     });
   }
