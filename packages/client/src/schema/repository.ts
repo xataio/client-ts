@@ -54,7 +54,6 @@ import {
 import { buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
-import { parseQueryFilter } from './parsing';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -1876,7 +1875,7 @@ export class KyselyRepository<Record extends XataRecord>
     return this.#trace('query', async () => {
       const data = query.getQueryOptions();
 
-      const filter = parseQueryFilter(cleanFilter(data.filter));
+      const filter = cleanFilter(data.filter);
       const sort = buildSortFilter(data.sort);
       const pagination = data.pagination;
 
@@ -1886,9 +1885,18 @@ export class KyselyRepository<Record extends XataRecord>
 
       //  }
 
+      // TODO pagination and offset
+      // if (pagination?.limit) {
+      //   statement = statement.limit(pagination.limit);
+      // }
+
+      // if (pagination?.offset) {
+      //   statement = statement.offset(pagination.offset);
+      // }
+
       const objects = await this.#db
         .selectFrom(this.#table)
-        .select(({ eb, or, not }) => [
+        .select(({ eb, or, not, and }) => [
           // eb('first_name', '=', 'Jennifer').as("first_name"),
           // not(eb('first_name', '=', 'Jennifer')).as("first_name"),
           eb.and([eb('first_name', '=', 'Jennifer'), eb('last_name', '=', 'Arnold')]).as('first_name'),
