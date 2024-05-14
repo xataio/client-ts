@@ -66,6 +66,64 @@ export const applyMigration = (variables: ApplyMigrationVariables, signal?: Abor
     signal
   });
 
+export type StartMigrationPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type StartMigrationError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type StartMigrationRequestBody = {
+  /**
+   * Migration name
+   */
+  name?: string;
+  operations: {
+    [key: string]: any;
+  }[];
+  adaptTables?: boolean;
+};
+
+export type StartMigrationVariables = {
+  body: StartMigrationRequestBody;
+  pathParams: StartMigrationPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Starts a pgroll migration on the specified database.
+ */
+export const startMigration = (variables: StartMigrationVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.StartMigrationResponse,
+    StartMigrationError,
+    StartMigrationRequestBody,
+    {},
+    {},
+    StartMigrationPathParams
+  >({
+    url: '/db/{dbBranchName}/migrations/start',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type AdaptTablePathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -4990,6 +5048,7 @@ export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
 export const operationsByTag = {
   migrations: {
     applyMigration,
+    startMigration,
     adaptTable,
     adaptAllTables,
     getBranchMigrationJobStatus,
