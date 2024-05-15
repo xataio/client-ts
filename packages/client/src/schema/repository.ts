@@ -41,7 +41,7 @@ import { AskOptions, AskResult } from './ask';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter } from './filters';
 import { parseJson, stringifyJson } from './json';
-import { Page, PaginationQueryMeta } from './pagination';
+import { PAGINATION_MAX_OFFSET, PAGINATION_MAX_SIZE, Page, PaginationQueryMeta } from './pagination';
 import { Query, QueryOptions } from './query';
 import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
 import {
@@ -1904,12 +1904,18 @@ export class KyselyRepository<Record extends XataRecord>
       const size = data?.pagination?.size ?? cursor?.data?.pagination?.size;
       const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset;
 
+      if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
+      if (offset && offset > PAGINATION_MAX_OFFSET)
+        throw new Error(`page offset must not exceed ${PAGINATION_MAX_OFFSET}`);
+      if (sort && cursor) throw new Error('sort and cursor cannot be used together');
+
       let statement = this.#db.selectFrom(this.#table);
 
       if (this.selectAllColumns(data.columns as any)) {
         statement = statement.selectAll();
       } else {
-        statement = statement.select(data.columns as any);
+        // always expect xata_id to come back if it is back
+        statement = statement.select([...(data.columns as any), 'xata_id']);
       }
 
       if (size) {
@@ -1957,7 +1963,7 @@ export class KyselyRepository<Record extends XataRecord>
 
       const more = () => {
         if (lastItem?.[field] && lastAllItem?.[field]) {
-          return lastItem?.[cursor?.primaryColumn ?? 'xata_id'] !== lastAllItem?.[cursor?.primaryColumn ?? 'xata_id'];
+          return lastItem?.[field] !== lastAllItem?.[field];
         }
         return false;
       };
