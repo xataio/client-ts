@@ -1876,13 +1876,27 @@ export class KyselyRepository<Record extends XataRecord>
     return this.#trace('query', async () => {
       const data = query.getQueryOptions();
 
-      // TODO if nextPage(SIZE) then use that
-      // TODO what if user sends after value
-      // TODO check more is correct
-      const cursor: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
+      const cursorAfter: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
         ?.pagination?.after
         ? decode(data?.pagination?.after)
         : undefined;
+
+      const cursorBefore: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
+        ?.pagination?.before
+        ? decode(data?.pagination?.before)
+        : undefined;
+
+      const cursorStart: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
+        ?.pagination?.start
+        ? decode(data?.pagination?.start)
+        : undefined;
+
+      const cursorEnd: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
+        ?.pagination?.end
+        ? decode(data?.pagination?.end)
+        : undefined;
+
+      const cursor = cursorAfter ?? cursorBefore ?? cursorStart ?? cursorEnd;
 
       // TODO handle filtering
       const filter = cleanFilter(data.filter) ?? cursor?.data?.filter;
@@ -1902,15 +1916,24 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.limit(size);
       }
 
-      if (cursor) {
-        statement = statement.where(cursor.primaryColumn, '>', cursor.lastSeenId);
+      if (cursorAfter) {
+        statement = statement.where(cursorAfter.primaryColumn, '>', cursorAfter.lastSeenId);
+      }
+      if (cursorBefore) {
+        statement = statement.where(cursorBefore.primaryColumn, '<', cursorBefore.lastSeenId);
+      }
+      if (cursorStart) {
+        statement = statement.orderBy(cursorStart.primaryColumn, 'asc');
+      }
+      if (cursorEnd) {
+        statement = statement.orderBy(cursorEnd.primaryColumn, 'desc');
       }
 
       if (offset) {
         statement = statement.offset(offset);
       }
 
-      // TODO will "random" be supported as a sort type?
+      // TODO random fails
       if (isObject(sort)) {
         for (const [column, order] of Object.entries(sort)) {
           statement = statement.orderBy(column, order as SortDirection);
@@ -1930,15 +1953,11 @@ export class KyselyRepository<Record extends XataRecord>
 
       const lastItem = response[response.length - 1];
       const lastAllItem = total[total.length - 1];
+      const field = cursor?.primaryColumn ?? 'xata_id';
 
       const more = () => {
-        if (offset) {
-          return response.length + offset < total.length;
-        }
-        if (size || cursor?.lastSeenId) {
-          if (cursor?.lastSeenId !== lastAllItem.xata_id) {
-            return true;
-          }
+        if (lastItem?.[field] && lastAllItem?.[field]) {
+          return lastItem?.[cursor?.primaryColumn ?? 'xata_id'] !== lastAllItem?.[cursor?.primaryColumn ?? 'xata_id'];
         }
         return false;
       };
@@ -1957,13 +1976,20 @@ export class KyselyRepository<Record extends XataRecord>
       const meta = {
         page: {
           more: more(),
-          size: response.length,
+          size,
           cursor: Cursor.from({
-            // TODO cursor needs to use a dynamic primary key not  xata_id
             primaryColumn: 'xata_id',
             // @ts-expect-error
             lastSeenId: lastItem?.xata_id,
-            data
+            data: {
+              ...data,
+              pagination: {
+                size,
+                offset
+                // remove pagination because I don't want to keep
+                // encoding over and over again
+              }
+            }
           }).toString()
         }
       };
