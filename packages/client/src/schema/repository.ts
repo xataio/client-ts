@@ -25,8 +25,7 @@ import {
   SearchPageConfig,
   TransactionOperation
 } from '../api/schemas';
-import type { InsertResult } from 'kysely';
-import { KyselyPlugin, KyselyPluginResult, Model } from '../kysely';
+import { KyselyPlugin, KyselyPluginResult } from '../kysely';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord, TotalCount } from '../search';
 import { Boosters } from '../search/boosters';
@@ -41,8 +40,8 @@ import { AskOptions, AskResult } from './ask';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter } from './filters';
 import { parseJson, stringifyJson } from './json';
-import { PAGINATION_MAX_OFFSET, PAGINATION_MAX_SIZE, Page, PaginationQueryMeta } from './pagination';
-import { Query, QueryOptions } from './query';
+import { CursorNavigationDecoded, PAGINATION_MAX_OFFSET, PAGINATION_MAX_SIZE, Page } from './pagination';
+import { Query } from './query';
 import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
 import {
   ColumnsByValue,
@@ -1876,24 +1875,20 @@ export class KyselyRepository<Record extends XataRecord>
     return this.#trace('query', async () => {
       const data = query.getQueryOptions();
 
-      const cursorAfter: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
-        ?.pagination?.after
-        ? decode(data?.pagination?.after)
+      const cursorAfter = (data?.pagination as { after: string })?.after
+        ? (decode((data?.pagination as { after: string }).after) as CursorNavigationDecoded)
         : undefined;
 
-      const cursorBefore: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
-        ?.pagination?.before
-        ? decode(data?.pagination?.before)
+      const cursorBefore = (data?.pagination as { before: string })?.before
+        ? (decode((data?.pagination as { before: string }).before) as CursorNavigationDecoded)
         : undefined;
 
-      const cursorStart: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
-        ?.pagination?.start
-        ? decode(data?.pagination?.start)
+      const cursorStart = (data?.pagination as { start: string })?.start
+        ? (decode((data?.pagination as { start: string }).start) as CursorNavigationDecoded)
         : undefined;
 
-      const cursorEnd: { primaryColumn: string; lastSeenId: string; data: QueryOptions<Record> } | undefined = data
-        ?.pagination?.end
-        ? decode(data?.pagination?.end)
+      const cursorEnd = (data?.pagination as { end: string })?.end
+        ? (decode((data?.pagination as { end: string }).end) as CursorNavigationDecoded)
         : undefined;
 
       const cursor = cursorAfter ?? cursorBefore ?? cursorStart ?? cursorEnd;
@@ -1939,7 +1934,6 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.offset(offset);
       }
 
-      // TODO random fails
       if (isObject(sort)) {
         for (const [column, order] of Object.entries(sort)) {
           statement = statement.orderBy(column, order as SortDirection);
@@ -1953,7 +1947,9 @@ export class KyselyRepository<Record extends XataRecord>
       }
 
       // TODO: in transaction
-      const response = await statement.execute();
+      const response: {
+        [key: string]: unknown;
+      }[] = await statement.execute();
 
       const total = await this.#db.selectFrom(this.#table).selectAll().execute();
 
@@ -1989,11 +1985,11 @@ export class KyselyRepository<Record extends XataRecord>
             lastSeenId: lastItem?.xata_id,
             data: {
               ...data,
+              // remove pagination because I don't want to keep
+              // encoding over and over again
               pagination: {
                 size,
                 offset
-                // remove pagination because I don't want to keep
-                // encoding over and over again
               }
             }
           }).toString()

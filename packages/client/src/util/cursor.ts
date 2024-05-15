@@ -1,9 +1,10 @@
 import pako from 'pako';
 import { base64url } from 'rfc4648';
 import stringify from 'json-stringify-deterministic';
+import { CursorNavigationDecoded } from '../schema';
 
 export class Cursor {
-  data: Record<string, unknown>;
+  data: CursorNavigationDecoded;
 
   constructor(cursor: string) {
     const decoded = base64url.parse(cursor, { loose: true });
@@ -17,7 +18,7 @@ export class Cursor {
     this.data = JSON.parse(rest.join(''));
   }
 
-  static #encode(data: Record<string, unknown>): string {
+  static #encode(data: CursorNavigationDecoded): string {
     const compressed = pako.deflate('j1' + stringify(data), {
       raw: true,
       strategy: pako.constants.Z_DEFAULT_STRATEGY,
@@ -27,7 +28,7 @@ export class Cursor {
     return base64url.stringify(compressed, { pad: false });
   }
 
-  static from(data: Record<string, unknown>): Cursor {
+  static from(data: CursorNavigationDecoded): Cursor {
     return new Cursor(this.#encode(data));
   }
 
