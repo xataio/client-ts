@@ -68,7 +68,7 @@ describe('record create or update', () => {
     expect(apiTeam?.name).toBe('Team boats');
   });
 
-  test.skip('create or update multiple teams', async () => {
+  test('create or update multiple teams', async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const updatedTeams = await xata.db.teams.createOrUpdate(

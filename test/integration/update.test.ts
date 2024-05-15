@@ -41,7 +41,7 @@ describe('record update', () => {
     expect(apiTeam.name).toBe('Team boats');
   });
 
-  test.skip('update multiple teams', async () => {
+  test('update multiple teams', async () => {
     const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }]);
 
     const updatedTeams = await xata.db.teams.update(teams.map((team) => ({ ...team, name: 'Team boats' })));
@@ -91,7 +91,7 @@ describe('record update', () => {
     expect(team3[1]?.name).toBe('Team boats 2');
   });
 
-  test.skip('update item with if version', async () => {
+  test('update item with if version', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
     const baseVersion = team.xata_version;
 
@@ -115,8 +115,7 @@ describe('record update', () => {
     ).rejects.toThrow();
   });
 
-  // TODO figure out why record read isn't defined
-  test.skip('update item with id column', async () => {
+  test('update item with id column', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
     const update1 = await xata.db.teams.update(team.xata_id, { name: 'Team boats' });
@@ -150,7 +149,7 @@ describe('record update', () => {
     expect(copy?.name).toBe('Team boats');
   });
 
-  test.skip('update with numeric operations', async () => {
+  test('update with numeric operations', async () => {
     const pet = await xata.db.pets.create({ name: 'Pet', num_legs: 1 });
 
     const update1 = await xata.db.pets.update(pet.xata_id, { num_legs: { $increment: 3 } });

@@ -48,6 +48,5 @@ export function decode(data: string): Record<string, unknown> {
     throw new Error('Invalid cursor');
   }
 
-  const result = JSON.parse(rest.join(''));
-  return result;
+  return JSON.parse(rest.join(''));
 }

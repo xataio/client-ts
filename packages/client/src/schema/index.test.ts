@@ -467,9 +467,16 @@ describe('create', () => {
   test('successful', async () => {
     const { fetch, users } = buildClient();
 
-    const created = { xata_id: 'rec_1234' };
+    const created = { xata_id: 'rec_1234', _version: 0 };
     const object = { name: 'Ada' } as User;
-    const expected = [{ method: 'POST', path: '/db/mydb:main/sql', body: object }];
+    const expected = [
+      { method: 'POST', path: '/tables/users/data', body: object },
+      {
+        method: 'GET',
+        path: '/tables/users/data/rec_1234',
+        body: undefined
+      }
+    ];
 
     const result = await expectRequest(
       fetch,
@@ -486,8 +493,7 @@ describe('create', () => {
         {
           "body": "{"name":"Ada"}",
           "method": "POST",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
-        },
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data?columns=*",        },
       ]
     `);
   });
