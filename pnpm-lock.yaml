@@ -227,6 +227,9 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      lodash.keyby:
+        specifier: ^4.6.0
+        version: 4.6.0
       lodash.set:
         specifier: ^4.3.2
         version: 4.3.2
@@ -254,6 +257,9 @@ importers:
       tslib:
         specifier: ^2.6.2
         version: 2.6.2
+      type-fest:
+        specifier: ^4.18.1
+        version: 4.18.1
       which:
         specifier: ^4.0.0
         version: 4.0.0
@@ -273,6 +279,9 @@ importers:
       '@types/lodash.get':
         specifier: ^4.4.9
         version: 4.4.9
+      '@types/lodash.keyby':
+        specifier: ^4.6.9
+        version: 4.6.9
       '@types/lodash.set':
         specifier: ^4.3.9
         version: 4.3.9
@@ -6373,6 +6382,13 @@ packages:
       '@types/lodash': 4.14.199
     dev: true
 
+  /@types/lodash.keyby@4.6.9:
+    resolution:
+      { integrity: sha512-N8xfQdZ2ADNPDL72TaLozIL4K1xFCMG1C1T9GN4dOFI+sn1cjl8d4U+POp8PRCAnNxDCMkYAZVD/rOBIWYPT5g== }
+    dependencies:
+      '@types/lodash': 4.14.199
+    dev: true
+
   /@types/lodash.pick@4.4.9:
     resolution:
       { integrity: sha512-hDpr96x9xHClwy1KX4/RXRejqjDFTEGbEMT3t6wYSYeFDzxmMnSKB/xHIbktRlPj8Nii2g8L5dtFDRaNFBEzUQ== }
@@ -11873,6 +11889,11 @@ packages:
       { integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA== }
     dev: false
 
+  /lodash.keyby@4.6.0:
+    resolution:
+      { integrity: sha512-PRe4Cn20oJM2Sn6ljcZMeKgyhTHpzvzFmdsp9rK+6K0eJs6Tws0MqgGFpfX/o2HjcoQcBny1Eik9W7BnVTzjIQ== }
+    dev: false
+
   /lodash.merge@4.6.2:
     resolution:
       { integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ== }
@@ -15872,6 +15893,12 @@ packages:
     resolution:
       { integrity: sha512-tLq3bSNx+xSpwvAJnzrK0Ep5CLNWjvFTOp71URMaAEWBfRb9nnJiBoUe0tF8bI4ZFO3omgBR6NvnbzVUT3Ly4g== }
     engines: { node: '>=14.16' }
+
+  /type-fest@4.18.1:
+    resolution:
+      { integrity: sha512-qXhgeNsX15bM63h5aapNFcQid9jRF/l3ojDoDFmekDQEUufZ9U4ErVt6SjDxnHp48Ltrw616R8yNc3giJ3KvVQ== }
+    engines: { node: '>=16' }
+    dev: false
 
   /type-fest@4.9.0:
     resolution:
