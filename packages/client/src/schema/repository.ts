@@ -3441,20 +3441,30 @@ export const initObjectKysely = <T>(
   };
 
   record.replace = async function (data: any, b?: any, c?: any) {
-    const columns = isValidSelectableColumns(b) ? b : ['*'];
-    return columns.length > 0 && columns[0] === '*'
-      ? await db
-          .updateTable(table)
-          .set(data)
-          .where('xata_id', '=', record['xata_id'] as string)
-          .returningAll()
-          .executeTakeFirst()
-      : await db
-          .updateTable(table)
-          .set(data)
-          .where('xata_id', '=', record['xata_id'] as string)
-          .returning(columns)
-          .executeTakeFirst();
+    const validColumns = isValidSelectableColumns(b) ? b : ['*'];
+    const fieldsToSetNull: Dictionary<any> = {};
+
+    for (const [key] of Object.entries(record)) {
+      // Ignore internal properties
+      if (['xata_version', 'xata_createdat', 'xata_updatedat'].includes(key)) continue;
+      if (Object.keys(data).includes(key)) continue;
+      fieldsToSetNull[key] = null;
+    }
+
+    let statement: InsertQueryBuilder<any, any, any> = db
+      .insertInto(table)
+      .values({ ...record, xata_id: record.xata_id });
+
+    if (validColumns?.includes('*')) {
+      statement = statement.returningAll();
+    } else {
+      statement = statement.returning(validColumns);
+    }
+    statement = statement.onConflict((oc) =>
+      oc.column('xata_id').doUpdateSet({ ...fieldsToSetNull, ...data, xata_id: record.xata_id })
+    );
+
+    return await statement.executeTakeFirst();
   };
 
   record.delete = async function () {
