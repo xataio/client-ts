@@ -19,6 +19,7 @@ import {
 } from '../api';
 import { fetchSSERequest } from '../api/fetcher';
 import {
+  DataInputRecord,
   FuzzinessExpression,
   HighlightExpression,
   PrefixExpression,
@@ -54,6 +55,7 @@ import { SortDirection, buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
 import { Cursor, decode } from '../util/cursor';
+import { InsertQueryBuilder } from 'kysely';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -947,7 +949,11 @@ export class KyselyRepository<Record extends XataRecord>
     if (this.selectAllColumns(columns)) {
       response = await this.#db.insertInto(this.#table).values(record).returningAll().executeTakeFirst();
     } else {
-      response = await this.#db.insertInto(this.#table).values(record).returning(columns).executeTakeFirst();
+      response = await this.#db
+        .insertInto(this.#table)
+        .values(record)
+        .returning([...columns, 'xata_id'])
+        .executeTakeFirst();
     }
 
     const schemaTables = await this.#getSchemaTables();
@@ -964,31 +970,21 @@ export class KyselyRepository<Record extends XataRecord>
 
     const record = await this.#transformObjectToApi(object);
 
-    // TODO fix type
-    let response: any;
+    // TODO fix types
+    let statement: InsertQueryBuilder<any, any, any> = this.#db
+      .insertInto(this.#table)
+      .values({ ...record, xata_id: recordId });
 
     if (this.selectAllColumns(columns)) {
-      response = await this.#db
-        .insertInto(this.#table)
-        .values({ ...record, xata_id: recordId })
-        .returningAll()
-        .onConflict((oc) => {
-          return createOnly
-            ? oc.doNothing()
-            : // TODO get this on conflict to work for create or replace
-              oc.doUpdateSet({ ...record, xata_id: recordId });
-        })
-        .executeTakeFirst();
+      statement = statement.returningAll();
     } else {
-      response = await this.#db
-        .insertInto(this.#table)
-        .values({ ...record, xata_id: recordId })
-        .returning(columns)
-        .onConflict((oc) => {
-          return createOnly ? oc.doNothing() : oc.doUpdateSet({ ...record, xata_id: recordId });
-        })
-        .executeTakeFirst();
+      statement = statement.returning(columns);
     }
+    if (!createOnly) {
+      statement = statement.onConflict((oc) => oc.doUpdateSet({ ...record, xata_id: recordId }));
+    }
+
+    const response = await statement.executeTakeFirst();
 
     const schemaTables = await this.#getSchemaTables();
     return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
@@ -1000,24 +996,24 @@ export class KyselyRepository<Record extends XataRecord>
   ) {
     const operations = await promiseMap(objects, async (object) => {
       const record = await this.#transformObjectToApi(object);
-      return { insert: { table: this.#table, record, createOnly, ifVersion } };
+      return record;
     });
 
-    const chunkedOperations: TransactionOperation[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
+    const chunkedOperations: DataInputRecord[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
 
     const ids = [];
 
     for (const operations of chunkedOperations) {
-      const { rows: records } = await this.#db.transaction().execute(async (trx) => {
+      const results = await this.#db.transaction().execute(async (trx) => {
         const results: any = [];
         for (const operation of operations) {
-          results.push(await trx.executeQuery(operation as any));
+          const response = await trx.insertInto(this.#table).values(operation).returningAll().executeTakeFirstOrThrow();
+          results.push(response);
         }
         return results;
       });
-
-      for (const result of records) {
-        ids.push((result as any)?.xata_id);
+      for (const r of results) {
+        ids.push((r as any)?.xata_id);
       }
     }
     return ids;
@@ -1063,7 +1059,6 @@ export class KyselyRepository<Record extends XataRecord>
         const ids = a.map((item) => extractId(item));
 
         const finalObjects = await this.getAll({ filter: { xata_id: { $any: compact(ids) } }, columns });
-
         // Maintain order of objects
         const dictionary = finalObjects.reduce((acc, object) => {
           acc[object.xata_id] = object;
@@ -3383,16 +3378,19 @@ export const initObjectKysely = <T>(
   const record = { ...data };
 
   record.read = async function (columns?: any) {
-    return !columns || (columns && columns.length > 0 && columns[0] === '*')
-      ? (await db
-          .selectFrom(table)
-          .where('xata_id', '=', record['xata_id'] as string)
-          .executeTakeFirst()) ?? null
-      : (await db
-          .selectFrom(table)
-          .where('xata_id', '=', record['xata_id'] as string)
-          .select(columns)
-          .executeTakeFirst()) ?? null;
+    const res =
+      !columns || (columns && columns.length > 0 && columns[0] === '*')
+        ? (await db
+            .selectFrom(table)
+            .where('xata_id', '=', record['xata_id'] as string)
+            .selectAll()
+            .executeTakeFirst()) ?? null
+        : (await db
+            .selectFrom(table)
+            .where('xata_id', '=', record['xata_id'] as string)
+            .select([...columns, 'xata_id'])
+            .executeTakeFirst()) ?? null;
+    return res;
   };
 
   record.update = async function (data: any, b?: any, c?: any) {
