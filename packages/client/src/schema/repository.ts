@@ -55,7 +55,7 @@ import { SortDirection, buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
 import { Cursor, decode } from '../util/cursor';
-import { InsertQueryBuilder } from 'kysely';
+import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder } from 'kysely';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -944,17 +944,14 @@ export class KyselyRepository<Record extends XataRecord>
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
     const record = await this.#transformObjectToApi(object);
 
-    // TODO fix type
-    let response: any;
+    let statement: InsertQueryBuilder<any, any, any> = this.#db.insertInto(this.#table).values(record);
     if (this.selectAllColumns(columns)) {
-      response = await this.#db.insertInto(this.#table).values(record).returningAll().executeTakeFirst();
+      statement = statement.returningAll();
     } else {
-      response = await this.#db
-        .insertInto(this.#table)
-        .values(record)
-        .returning([...columns, 'xata_id'])
-        .executeTakeFirst();
+      statement = statement.returning([...columns, 'xata_id']);
     }
+
+    const response = await statement.executeTakeFirst();
 
     const schemaTables = await this.#getSchemaTables();
     return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
@@ -970,7 +967,6 @@ export class KyselyRepository<Record extends XataRecord>
 
     const record = await this.#transformObjectToApi(object);
 
-    // TODO fix types
     let statement: InsertQueryBuilder<any, any, any> = this.#db
       .insertInto(this.#table)
       .values({ ...record, xata_id: recordId });
@@ -1011,19 +1007,18 @@ export class KyselyRepository<Record extends XataRecord>
       const results = await this.#db.transaction().execute(async (trx) => {
         const results: any = [];
         for (const operation of operations) {
-          let response: { [k: string]: any };
-          if (createOnly) {
-            response = await trx.insertInto(this.#table).values(operation).returningAll().executeTakeFirstOrThrow();
-          } else {
+          let statement: InsertQueryBuilder<any, any, any> = trx
+            .insertInto(this.#table)
+            .values(operation)
+            .returningAll();
+          if (!createOnly) {
             // any fields that are not in the record should be set to null
             const fieldsToSetNull = await this.#transformObjectToApiAllFields(operation);
-            response = await trx
-              .insertInto(this.#table)
-              .values(operation)
-              .returningAll()
-              .onConflict((oc) => oc.column('xata_id').doUpdateSet({ ...fieldsToSetNull, ...operation }))
-              .executeTakeFirstOrThrow();
+            statement = statement.onConflict((oc) =>
+              oc.column('xata_id').doUpdateSet({ ...fieldsToSetNull, ...operation })
+            );
           }
+          const response = await statement.executeTakeFirstOrThrow();
           results.push(response);
         }
         return results;
@@ -1088,16 +1083,13 @@ export class KyselyRepository<Record extends XataRecord>
       const id = extractId(a);
       if (id) {
         try {
-          let response;
+          let statement: SelectQueryBuilder<any, any, any> = this.#db.selectFrom(this.#table).where('xata_id', '=', id);
           if (this.selectAllColumns(columns)) {
-            response = await this.#db.selectFrom(this.#table).selectAll().where('xata_id', '=', id).executeTakeFirst();
+            statement = statement.selectAll();
           } else {
-            response = await this.#db
-              .selectFrom(this.#table)
-              .select(columns as any)
-              .where('xata_id', '=', id)
-              .executeTakeFirst();
+            statement = statement.select(columns as any);
           }
+          const response = await statement.executeTakeFirst();
           if (!response) return null;
           const schemaTables = await this.#getSchemaTables();
           return initObjectKysely<Record>(
@@ -1340,22 +1332,16 @@ export class KyselyRepository<Record extends XataRecord>
     const { xata_id: _id, ...record } = await this.#transformObjectToApi(object);
 
     try {
-      let response;
+      let statement: UpdateQueryBuilder<any, any, any, any> = this.#db
+        .updateTable(this.#table)
+        .where('xata_id', '=', recordId)
+        .set(record);
       if (this.selectAllColumns(columns)) {
-        response = await this.#db
-          .updateTable(this.#table)
-          .where('xata_id', '=', recordId)
-          .set(record)
-          .returningAll()
-          .executeTakeFirst();
+        statement = statement.returningAll();
       } else {
-        response = await this.#db
-          .updateTable(this.#table)
-          .where('xata_id', '=', recordId)
-          .set(record)
-          .returning(columns)
-          .executeTakeFirst();
+        statement = statement.returning(columns);
       }
+      const response = await statement.executeTakeFirst();
       if (!response) return null;
 
       const schemaTables = await this.#getSchemaTables();
@@ -1500,23 +1486,17 @@ export class KyselyRepository<Record extends XataRecord>
   ) {
     if (!recordId) return null;
 
-    let response: any;
     const updates = Object.fromEntries(Object.entries(object).map(([key, value]) => [key, value]));
+    let statement: InsertQueryBuilder<any, any, any> = this.#db
+      .insertInto(this.#table)
+      .values({ ...object, xata_id: recordId })
+      .onConflict((oc) => oc.column('xata_id').doUpdateSet(updates));
     if (this.selectAllColumns(columns)) {
-      response = await this.#db
-        .insertInto(this.#table)
-        .values({ ...object, xata_id: recordId })
-        .returningAll()
-        .onConflict((oc) => oc.column('xata_id').doUpdateSet(updates))
-        .executeTakeFirst();
+      statement = statement.returningAll();
     } else {
-      response = await this.#db
-        .insertInto(this.#table)
-        .values(object)
-        .returning(columns)
-        .onConflict((oc) => oc.column('xata_id').doUpdateSet(updates))
-        .executeTakeFirst();
+      statement = statement.returning(columns);
     }
+    const response = await statement.executeTakeFirst();
 
     const schemaTables = await this.#getSchemaTables();
     return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
@@ -1735,20 +1715,15 @@ export class KyselyRepository<Record extends XataRecord>
     if (!recordId) return null;
 
     try {
-      let response: any;
+      let statement: DeleteQueryBuilder<any, any, any> = this.#db
+        .deleteFrom(this.#table)
+        .where('xata_id', '=', recordId);
       if (this.selectAllColumns(columns)) {
-        response = await this.#db
-          .deleteFrom(this.#table)
-          .where('xata_id', '=', recordId)
-          .returningAll()
-          .executeTakeFirst();
+        statement = statement.returningAll();
       } else {
-        response = await this.#db
-          .deleteFrom(this.#table)
-          .where('xata_id', '=', recordId)
-          .returning(columns)
-          .executeTakeFirst();
+        statement = statement.returning(columns);
       }
+      const response = await statement.executeTakeFirst();
       if (!response) return null;
       const schemaTables = await this.#getSchemaTables();
       return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
