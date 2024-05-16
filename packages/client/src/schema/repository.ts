@@ -981,7 +981,11 @@ export class KyselyRepository<Record extends XataRecord>
       statement = statement.returning(columns);
     }
     if (!createOnly) {
-      statement = statement.onConflict((oc) => oc.doUpdateSet({ ...record, xata_id: recordId }));
+      // any fields that are not in the record should be set to null
+      const fieldsToSetNull = await this.#transformObjectToApiAllFields(record);
+      statement = statement.onConflict((oc) =>
+        oc.column('xata_id').doUpdateSet({ ...fieldsToSetNull, ...record, xata_id: recordId })
+      );
     }
 
     const response = await statement.executeTakeFirst();
@@ -1007,7 +1011,19 @@ export class KyselyRepository<Record extends XataRecord>
       const results = await this.#db.transaction().execute(async (trx) => {
         const results: any = [];
         for (const operation of operations) {
-          const response = await trx.insertInto(this.#table).values(operation).returningAll().executeTakeFirstOrThrow();
+          let response: { [k: string]: any };
+          if (createOnly) {
+            response = await trx.insertInto(this.#table).values(operation).returningAll().executeTakeFirstOrThrow();
+          } else {
+            // any fields that are not in the record should be set to null
+            const fieldsToSetNull = await this.#transformObjectToApiAllFields(operation);
+            response = await trx
+              .insertInto(this.#table)
+              .values(operation)
+              .returningAll()
+              .onConflict((oc) => oc.column('xata_id').doUpdateSet({ ...fieldsToSetNull, ...operation }))
+              .executeTakeFirstOrThrow();
+          }
           results.push(response);
         }
         return results;
@@ -1357,32 +1373,32 @@ export class KyselyRepository<Record extends XataRecord>
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
     { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
   ) {
-    const operations = await promiseMap(objects, async ({ xata_id, ...object }) => {
+    const operations = await promiseMap(objects, async (object) => {
       const fields = await this.#transformObjectToApi(object);
-      return { update: { table: this.#table, id: xata_id, ifVersion, upsert, fields } };
+      return fields;
     });
 
-    const chunkedOperations: TransactionOperation[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
+    const chunkedOperations: DataInputRecord[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
 
     const ids = [];
 
     for (const operations of chunkedOperations) {
-      const { results } = await branchTransaction({
-        pathParams: {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}'
-        },
-        body: { operations },
-        ...this.#getFetchProps()
-      });
-
-      for (const result of results) {
-        if (result.operation === 'update') {
-          ids.push(result.id);
-        } else {
-          ids.push(null);
+      const results = await this.#db.transaction().execute(async (trx) => {
+        const results: any = [];
+        for (const operation of operations) {
+          const { xata_id, ...fields } = operation;
+          const response = await trx
+            .updateTable(this.#table)
+            .where('xata_id', '=', xata_id as string)
+            .set(fields)
+            .returningAll()
+            .executeTakeFirstOrThrow();
+          results.push(response);
         }
+        return results;
+      });
+      for (const r of results) {
+        ids.push((r as any)?.xata_id);
       }
     }
 
@@ -1746,20 +1762,16 @@ export class KyselyRepository<Record extends XataRecord>
   }
 
   async #deleteRecords(recordIds: Identifier[]) {
-    const chunkedOperations: TransactionOperation[][] = chunk(
-      compact(recordIds).map((id) => ({ delete: { table: this.#table, id } })),
+    const chunkedOperations: string[][] = chunk(
+      compact(recordIds).map((id) => id),
       BULK_OPERATION_MAX_SIZE
     );
 
     for (const operations of chunkedOperations) {
-      await branchTransaction({
-        pathParams: {
-          workspace: '{workspaceId}',
-          dbBranchName: '{dbBranch}',
-          region: '{region}'
-        },
-        body: { operations },
-        ...this.#getFetchProps()
+      await this.#db.transaction().execute(async (trx) => {
+        for (const operation of operations) {
+          await trx.deleteFrom(this.#table).where('xata_id', '=', operation).execute();
+        }
       });
     }
   }
@@ -2076,6 +2088,24 @@ export class KyselyRepository<Record extends XataRecord>
 
     this.#schemaTables = schema.tables;
     return schema.tables;
+  }
+
+  async #transformObjectToApiAllFields(object: any): Promise<Schemas.DataInputRecord> {
+    const schemaTables = await this.#getSchemaTables();
+    const schema = schemaTables.find((table) => table.name === this.#table);
+    if (!schema) throw new Error(`Table ${this.#table} not found in schema`);
+
+    const result: Dictionary<any> = {};
+
+    for (const column of schema.columns) {
+      // Ignore internal properties
+      if (['xata_version', 'xata_createdat', 'xata_updatedat'].includes(column.name)) continue;
+      if (Object.keys(object).includes(column.name)) continue;
+
+      result[column.name] = null;
+    }
+
+    return result;
   }
 
   async #transformObjectToApi(object: any): Promise<Schemas.DataInputRecord> {
