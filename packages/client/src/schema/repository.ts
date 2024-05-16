@@ -1373,12 +1373,19 @@ export class KyselyRepository<Record extends XataRecord>
         const results: any = [];
         for (const operation of operations) {
           const { xata_id, ...fields } = operation;
-          const response = await trx
-            .updateTable(this.#table)
-            .where('xata_id', '=', xata_id as string)
-            .set(fields)
-            .returningAll()
-            .executeTakeFirstOrThrow();
+          const response = upsert
+            ? await trx
+                .insertInto(this.#table)
+                .values(fields)
+                .onConflict((oc) => oc.column('xata_id').doUpdateSet(fields))
+                .returningAll()
+                .executeTakeFirstOrThrow()
+            : await trx
+                .updateTable(this.#table)
+                .where('xata_id', '=', xata_id as string)
+                .set(fields)
+                .returningAll()
+                .executeTakeFirstOrThrow();
           results.push(response);
         }
         return results;
