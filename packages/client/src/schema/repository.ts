@@ -55,7 +55,7 @@ import { SortDirection, buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
 import { Cursor, decode } from '../util/cursor';
-import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder } from 'kysely';
+import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -948,7 +948,7 @@ export class KyselyRepository<Record extends XataRecord>
     if (this.selectAllColumns(columns)) {
       statement = statement.returningAll();
     } else {
-      statement = statement.returning([...columns, 'xata_id']);
+      statement = statement.returning(columns);
     }
 
     const response = await statement.executeTakeFirst();
@@ -1916,14 +1916,21 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.offset(offset);
       }
 
+      const sortStatement = (statement: SelectQueryBuilder<any, any, any>, column: string, order: string) => {
+        if (order === 'random') {
+          return statement.orderBy(sql`random()`);
+        }
+        return statement.orderBy(column, order as SortDirection);
+      };
+
       if (isObject(sort)) {
         for (const [column, order] of Object.entries(sort)) {
-          statement = statement.orderBy(column, order as SortDirection);
+          statement = sortStatement(statement, column, order);
         }
       } else if (Array.isArray(sort)) {
         for (const item of sort) {
           for (const [column, order] of Object.entries(item)) {
-            statement = statement.orderBy(column, order as SortDirection);
+            statement = sortStatement(statement, column, order);
           }
         }
       }
@@ -3393,7 +3400,7 @@ export const initObjectKysely = <T>(
         : (await db
             .selectFrom(table)
             .where('xata_id', '=', record['xata_id'] as string)
-            .select([...columns, 'xata_id'])
+            .select(columns)
             .executeTakeFirst()) ?? null;
     return res;
   };
