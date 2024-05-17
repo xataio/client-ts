@@ -16,7 +16,7 @@ export type MigrationJobIDParam = Schemas.MigrationJobID;
  */
 export type TimestampCursorParam = string;
 
-export type LimitParam = Schemas.PageSize;
+export type LimitParam = Schemas.PaginationPageSize;
 
 export type DBNameParam = Schemas.DBName;
 

@@ -405,7 +405,7 @@ export type GetMigrationHistoryQueryParams = {
   /**
    * Page size
    */
-  limit?: Schemas.PageSize;
+  limit?: Schemas.PaginationPageSize;
 };
 
 export type GetMigrationHistoryError = Fetcher.ErrorWrapper<

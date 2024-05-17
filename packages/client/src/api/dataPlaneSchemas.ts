@@ -77,15 +77,6 @@ export type MigrationJobStatusResponse = {
  */
 export type MigrationJobID = string;
 
-/**
- * Page size.
- *
- * @x-internal true
- * @default 25
- * @minimum 0
- */
-export type PageSize = number;
-
 export type MigrationType = 'pgroll' | 'inferred';
 
 export type MigrationHistoryItem = {
@@ -1640,3 +1631,12 @@ export type SQLRecord = {
 export type XataRecord = RecordMeta & {
   [key: string]: any;
 };
+
+/**
+ * Page size.
+ *
+ * @x-internal true
+ * @default 25
+ * @minimum 0
+ */
+export type PaginationPageSize = number;

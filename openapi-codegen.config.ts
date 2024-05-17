@@ -43,6 +43,13 @@ export default defineConfig({
         to: '#/components/schemas/XataRecord'
       });
 
+      // Avoid conflict with duplicated `PageSize` type
+      context.openAPIDocument = renameComponent({
+        openAPIDocument: context.openAPIDocument,
+        from: '#/components/schemas/PageSize',
+        to: '#/components/schemas/PaginationPageSize'
+      });
+
       context.openAPIDocument = removeDeprecatedObjectType({ openAPIDocument: context.openAPIDocument });
 
       // Inject path param in all requests (for now, this should be server url variables)
