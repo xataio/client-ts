@@ -26,6 +26,20 @@ export type StartMigrationResponse = {
   jobID: string;
 };
 
+export type CompleteMigrationResponse = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+};
+
+export type RollbackMigrationResponse = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+};
+
 /**
  * @maxLength 255
  * @minLength 1
@@ -62,6 +76,15 @@ export type MigrationJobStatusResponse = {
  * @pattern [a-zA-Z0-9_\-~]+
  */
 export type MigrationJobID = string;
+
+/**
+ * Page size.
+ *
+ * @x-internal true
+ * @default 25
+ * @minimum 0
+ */
+export type PageSize = number;
 
 export type MigrationType = 'pgroll' | 'inferred';
 
@@ -1616,15 +1639,4 @@ export type SQLRecord = {
  */
 export type XataRecord = RecordMeta & {
   [key: string]: any;
-};
-
-export type GetMigrationHistoryQueryParams = {
-  /**
-   * @format date-time
-   */
-  cursor?: string;
-  /**
-   * Page size
-   */
-  limit?: number;
 };
