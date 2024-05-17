@@ -33,7 +33,7 @@ import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
 import { SQLPluginFunction } from '../sql';
 import { chunk, compact, isDefined, isNumber, isObject, isString, promiseMap } from '../util/lang';
-import { Dictionary } from '../util/types';
+import { Dictionary, ExactlyOne } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
@@ -55,7 +55,15 @@ import { SortDirection, buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
 import { Cursor, decode } from '../util/cursor';
-import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
+import {
+  DeleteQueryBuilder,
+  InsertQueryBuilder,
+  MergeQueryBuilder,
+  SelectQueryBuilder,
+  UpdateQueryBuilder,
+  sql
+} from 'kysely';
+import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -944,16 +952,21 @@ export class KyselyRepository<Record extends XataRecord>
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
     const record = await this.#transformObjectToApi(object);
 
-    let statement: InsertQueryBuilder<any, any, any> = this.#db.insertInto(this.#table).values(record);
+    const schemaTables = await this.#getSchemaTables();
+
+    let statement: InsertQueryBuilder<any, any, any> = this.#db.insertInto(this.#table);
+    if (Object.keys(record).length === 0) {
+      statement = statement.defaultValues();
+    } else {
+      statement = statement.values(record);
+    }
     if (this.selectAllColumns(columns)) {
       statement = statement.returningAll();
     } else {
       statement = statement.returning(columns);
     }
-
     const response = await statement.executeTakeFirst();
 
-    const schemaTables = await this.#getSchemaTables();
     return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
@@ -1331,11 +1344,23 @@ export class KyselyRepository<Record extends XataRecord>
     // Ensure id is not present in the update payload
     const { xata_id: _id, ...record } = await this.#transformObjectToApi(object);
 
+    const numericOperations: NumericOperations[] = [];
+    extractNumericOperations({ current: record, acc: numericOperations, path: [], original: record });
+
     try {
       let statement: UpdateQueryBuilder<any, any, any, any> = this.#db
         .updateTable(this.#table)
-        .where('xata_id', '=', recordId)
-        .set(record);
+        .where('xata_id', '=', recordId);
+
+      if (Object.keys(record).length > 0) {
+        statement = statement.set(record);
+      }
+
+      if (numericOperations.length > 0) {
+        for (const { field, operator, value } of numericOperations) {
+          statement = statement.set((eb) => ({ [field]: eb(field, operatorMap[operator], value) }));
+        }
+      }
       if (this.selectAllColumns(columns)) {
         statement = statement.returningAll();
       } else {
@@ -1373,19 +1398,40 @@ export class KyselyRepository<Record extends XataRecord>
         const results: any = [];
         for (const operation of operations) {
           const { xata_id, ...fields } = operation;
-          const response = upsert
-            ? await trx
-                .insertInto(this.#table)
-                .values(fields)
-                .onConflict((oc) => oc.column('xata_id').doUpdateSet(fields))
-                .returningAll()
-                .executeTakeFirstOrThrow()
-            : await trx
-                .updateTable(this.#table)
-                .where('xata_id', '=', xata_id as string)
-                .set(fields)
-                .returningAll()
-                .executeTakeFirstOrThrow();
+
+          let response;
+          if (upsert) {
+            const numericOperations: NumericOperations[] = [];
+            extractNumericOperations({ current: fields, acc: numericOperations, path: [], original: fields });
+            let statement: InsertQueryBuilder<any, any, any> = trx
+              .insertInto(this.#table)
+              .onConflict((oc) => oc.column('xata_id').doUpdateSet(fields))
+              .returningAll();
+            statement =
+              Object.keys(fields).length === 0 ? statement.defaultValues() : statement.values({ ...fields, xata_id });
+            if (numericOperations.length > 0) {
+              for (const { field, operator, value } of numericOperations) {
+                statement = statement.values((eb) => ({ [field]: eb(field, operatorMap[operator], value) }));
+              }
+            }
+            response = await statement.executeTakeFirstOrThrow();
+          } else {
+            const numericOperations: NumericOperations[] = [];
+            extractNumericOperations({ current: fields, acc: numericOperations, path: [], original: fields });
+            let statement: UpdateQueryBuilder<any, any, any, any> = trx
+              .updateTable(this.#table)
+              .where('xata_id', '=', xata_id as string)
+              .returningAll();
+            if (Object.keys(fields).length > 0) {
+              statement = statement.set(fields);
+            }
+            if (numericOperations.length > 0) {
+              for (const { field, operator, value } of numericOperations) {
+                statement = statement.set((eb) => ({ [field]: eb(field, operatorMap[operator], value) }));
+              }
+            }
+            response = await statement.executeTakeFirstOrThrow();
+          }
           results.push(response);
         }
         return results;
@@ -2106,7 +2152,7 @@ export class KyselyRepository<Record extends XataRecord>
 
     for (const [key, value] of Object.entries(object)) {
       // Ignore internal properties
-      if (['xata_version', 'xata_createdat', 'xata_updatedat'].includes(key)) continue;
+      //if (['xata_version', 'xata_createdat', 'xata_updatedat'].includes(key)) continue;
 
       const type = schema.columns.find((column) => column.name === key)?.type;
 
@@ -3632,3 +3678,50 @@ function parseIfVersion(...args: any[]): number | undefined {
 
   return undefined;
 }
+
+const operatorMap: { [operator: string]: BinaryOperatorExpression } = {
+  $increment: '+',
+  $decrement: '-',
+  $multiply: '*',
+  $divide: '/'
+};
+
+const operatorNames = Object.keys(operatorMap);
+
+type OperatorMap = keyof typeof operatorMap;
+type NumericOperations = { field: string; operator: OperatorMap; value: number };
+
+const removeKeysFromRecord = ({ record, path }: { path: string[]; record: { [k: string]: any } }) => {
+  for (const key of path) {
+    delete record[key];
+  }
+};
+
+const extractNumericOperations = ({
+  current,
+  path,
+  acc,
+  original
+}: {
+  current: { [key: string]: any } | string | number;
+  acc: NumericOperations[];
+  path: string[];
+  original: { [key: string]: any };
+}): any => {
+  if (typeof current === 'number' && path.some((r) => operatorNames.includes(r))) {
+    acc.push({
+      field: path[path.length - 2],
+      operator: path[path.length - 1],
+      value: current
+    });
+    removeKeysFromRecord({ record: original, path });
+    path.pop();
+    path.pop();
+  }
+  if (isObject(current)) {
+    for (const key in current) {
+      path.push(key);
+      extractNumericOperations({ current: (current as any)[key], acc, path, original });
+    }
+  }
+};
