@@ -2,12 +2,10 @@ import { ApiExtraProps, HostProvider, Schemas } from './api';
 import { FilesPlugin, FilesPluginResult } from './files';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
-import { CacheImpl, SimpleCache } from './schema/cache';
 import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { SQLPlugin, SQLPluginResult } from './sql';
 import { TransactionPlugin, TransactionPluginResult } from './transaction';
-import { getAPIKey, getBranch, getDatabaseURL, getEnableBrowserVariable, getPreviewBranch } from './util/environment';
 import { FetchImpl, getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
@@ -18,7 +16,6 @@ export type BaseClientOptions = {
   apiKey?: string;
   databaseURL?: string;
   branch?: string;
-  cache?: CacheImpl;
   trace?: TraceFunction;
   enableBrowser?: boolean;
   clientName?: string;
@@ -49,7 +46,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const pluginOptions: XataPluginOptions = {
         ...this.#getFetchProps(safeOptions),
-        cache: safeOptions.cache,
         host: safeOptions.host,
         tables,
         branch: safeOptions.branch
@@ -86,7 +82,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
     #parseOptions(options?: BaseClientOptions): SafeOptions {
       // If is running from the browser and the user didn't pass `enableBrowser` we throw an error
-      const enableBrowser = options?.enableBrowser ?? getEnableBrowserVariable() ?? false;
+      const enableBrowser = options?.enableBrowser ?? false;
       // @ts-ignore Window, Deno are not globals
       const isBrowser = typeof window !== 'undefined' && typeof Deno === 'undefined';
       if (isBrowser && !enableBrowser) {
@@ -96,9 +92,9 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       }
 
       const fetch = getFetchImplementation(options?.fetch);
-      const databaseURL = options?.databaseURL || getDatabaseURL();
-      const apiKey = options?.apiKey || getAPIKey();
-      const cache = options?.cache ?? new SimpleCache({ defaultQueryTTL: 0 });
+      const databaseURL = options?.databaseURL;
+      const apiKey = options?.apiKey;
+      const branch = options?.branch;
       const trace = options?.trace ?? defaultTrace;
       const clientName = options?.clientName;
       const host = options?.host ?? 'production';
@@ -112,25 +108,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         throw new Error('Option databaseURL is required');
       }
 
-      const envBranch = getBranch();
-      const previewBranch = getPreviewBranch();
-      const branch = options?.branch || previewBranch || envBranch || 'main';
-      if (!!previewBranch && branch !== previewBranch) {
-        console.warn(
-          `Ignoring preview branch ${previewBranch} because branch option was passed to the client constructor with value ${branch}`
-        );
-      } else if (!!envBranch && branch !== envBranch) {
-        console.warn(
-          `Ignoring branch ${envBranch} because branch option was passed to the client constructor with value ${branch}`
-        );
-      } else if (!!previewBranch && !!envBranch && previewBranch !== envBranch) {
-        console.warn(
-          `Ignoring preview branch ${previewBranch} and branch ${envBranch} because branch option was passed to the client constructor with value ${branch}`
-        );
-      } else if (!previewBranch && !envBranch && options?.branch === undefined) {
-        console.warn(
-          `No branch was passed to the client constructor. Using default branch ${branch}. You can set the branch with the environment variable XATA_BRANCH or by passing the branch option to the client constructor.`
-        );
+      if (!branch) {
+        throw new Error('Option branch is required');
       }
 
       return {
@@ -138,7 +117,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         databaseURL,
         apiKey,
         branch,
-        cache,
         trace,
         host,
         clientID: generateUUID(),

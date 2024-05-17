@@ -1,11 +1,14 @@
-import { buildClient } from '../../client/src';
+import { buildClient, getDeployPreviewBranch } from '../../client/src';
 import type { BaseClientOptions, SchemaInference, XataRecord } from '../../client/src';
 
-// This comment should be preserved by the codegen
 const tables = [
   {
     name: 'teams',
     columns: [
+      { name: 'xata_id', type: 'string', notNull: true },
+      { name: 'xata_version', type: 'int', notNull: true },
+      { name: 'xata_createdat', type: 'datetime', notNull: true },
+      { name: 'xata_updatedat', type: 'datetime', notNull: true },
       { name: 'name', type: 'string' },
       { name: 'description', type: 'text' },
       { name: 'labels', type: 'multiple' },
@@ -23,9 +26,13 @@ const tables = [
   {
     name: 'users',
     columns: [
+      { name: 'xata_id', type: 'string', notNull: true },
+      { name: 'xata_version', type: 'int', notNull: true },
+      { name: 'xata_createdat', type: 'datetime', notNull: true },
+      { name: 'xata_updatedat', type: 'datetime', notNull: true },
       { name: 'email', type: 'email', unique: true },
       { name: 'name', type: 'string' },
-      { name: 'photo', type: 'file' },
+      { name: 'photo', type: 'file', file: { defaultPublicAccess: true } },
       { name: 'attachments', type: 'file[]' },
       { name: 'plan', type: 'string' },
       { name: 'dark', type: 'bool' },
@@ -50,6 +57,10 @@ const tables = [
   {
     name: 'pets',
     columns: [
+      { name: 'xata_id', type: 'string', notNull: true },
+      { name: 'xata_version', type: 'int', notNull: true },
+      { name: 'xata_createdat', type: 'datetime', notNull: true },
+      { name: 'xata_updatedat', type: 'datetime', notNull: true },
       { name: 'name', type: 'string' },
       { name: 'type', type: 'string' },
       { name: 'num_legs', type: 'int' }
@@ -68,24 +79,20 @@ export type DatabaseSchema = {
 
 const DatabaseClient = buildClient();
 
-const defaultOptions = {
-  databaseURL: 'https://test-r5vcv5.eu-west-1.xata.sh/db/test'
-};
-
 export class XataClient extends DatabaseClient<DatabaseSchema> {
   constructor(options?: BaseClientOptions) {
-    super({ ...defaultOptions, ...options }, tables);
+    super(
+      {
+        apiKey: process.env.XATA_API_KEY,
+        databaseURL: process.env.XATA_DATABASE_URL,
+        // Use deploy preview branch if available, otherwise use branch from environment
+        branch: getDeployPreviewBranch(process.env) ?? process.env.XATA_BRANCH ?? 'main',
+        ...options
+      },
+      tables
+    );
   }
 }
-
-let instance: XataClient | undefined = undefined;
-
-export const getXataClient = () => {
-  if (instance) return instance;
-
-  instance = new XataClient();
-  return instance;
-};
 
 export type Teams = InferredTypes['teams'];
 export type TeamsRecord = Teams & XataRecord;

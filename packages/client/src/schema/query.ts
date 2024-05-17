@@ -24,7 +24,6 @@ import { SummarizeExpression, SummarizeParams, SummarizeResult } from './summari
 type BaseOptions<T extends XataRecord> = {
   columns?: SelectableColumnWithObjectNotation<T>[];
   consistency?: 'strong' | 'eventual';
-  cache?: number;
   fetchOptions?: Record<string, unknown>;
 };
 
@@ -83,7 +82,6 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     this.#data.columns = data.columns ?? parent?.columns;
     this.#data.consistency = data.consistency ?? parent?.consistency;
     this.#data.pagination = data.pagination ?? parent?.pagination;
-    this.#data.cache = data.cache ?? parent?.cache;
     this.#data.fetchOptions = data.fetchOptions ?? parent?.fetchOptions;
 
     this.any = this.any.bind(this);
@@ -203,8 +201,8 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
       return { $includes: value };
     }
 
-    if (columnType === 'link' && isObject(value) && isString(value.id)) {
-      return value.id;
+    if (columnType === 'link' && isObject(value) && isString(value.xata_id)) {
+      return value.xata_id;
     }
 
     return value;
@@ -487,15 +485,6 @@ export class Query<Record extends XataRecord, Result extends XataRecord = Record
     );
 
     return this.#repository.summarizeTable(query, summaries, summariesFilter as Schemas.FilterExpression) as any;
-  }
-
-  /**
-   * Builds a new query object adding a cache TTL in milliseconds.
-   * @param ttl The cache TTL in milliseconds.
-   * @returns A new Query object.
-   */
-  cache(ttl: number): Query<Record, Result> {
-    return new Query<Record, Result>(this.#repository, this.#table, { cache: ttl }, this.#data);
   }
 
   /**
