@@ -1,5 +1,11 @@
 # @xata.io/pgroll
 
+## 0.6.0
+
+### Minor Changes
+
+- [#1478](https://github.com/xataio/client-ts/pull/1478) [`81a06ca`](https://github.com/xataio/client-ts/commit/81a06ca98f4b46bad8e32bf284cc63ada1ab0dc3) Thanks [@SferaDev](https://github.com/SferaDev)! - Update pgroll package to version 0.6.0
+
 ## 0.5.0
 
 ### Minor Changes
