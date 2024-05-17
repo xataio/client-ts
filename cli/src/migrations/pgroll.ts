@@ -77,12 +77,22 @@ function pgRollToXataColumnType(type: string): string {
 
 export async function getBranchDetailsWithPgRoll(
   xata: XataClient,
-  { workspace, region, database, branch }: { workspace: string; region: string; database: string; branch: string }
+  { workspace, region, database, branch, cursor, limit }: { workspace: string; region: string; database: string; branch: string; cursor?: string; limit?: number }
 ): Promise<Schemas.DBBranch> {
   const details = await xata.api.branches.getBranchDetails({ workspace, region, database, branch });
 
   if (isBranchPgRollEnabled(details)) {
     const pgroll = await xata.api.migrations.getSchema({ workspace, region, database, branch });
+
+    // Fetch migration history with pagination
+    const migrationHistory = await xata.api.migrations.getMigrationHistory({
+      workspace,
+      region,
+      database,
+      branch,
+      cursor,
+      limit
+    });
 
     return {
       ...details,

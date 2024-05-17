@@ -52,14 +52,20 @@ export default class Pull extends BaseCommand<typeof Pull> {
     const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
     let logs: Schemas.MigrationHistoryItem[] | Schemas.Commit[] = [];
+    let cursor = undefined;
     if (isBranchPgRollEnabled(details)) {
-      const { migrations } = await xata.api.branches.pgRollMigrationHistory({
-        workspace,
-        region,
-        database,
-        branch
-      });
-      logs = migrations;
+      do {
+        const { migrations, cursor: newCursor } = await xata.api.branches.pgRollMigrationHistory({
+          workspace,
+          region,
+          database,
+          branch,
+          cursor
+        });
+
+        logs.push(...migrations);
+        cursor = newCursor;
+      } while (cursor);
     } else {
       const data = await xata.api.migrations.getBranchSchemaHistory({
         workspace,

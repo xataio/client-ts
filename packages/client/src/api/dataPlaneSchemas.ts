@@ -99,6 +99,10 @@ export type MigrationHistoryResponse = {
    * The migrations that have been applied to the branch
    */
   migrations: MigrationHistoryItem[];
+  /**
+   * The cursor (timestamp) for the next page of results
+   */
+  cursor?: string;
 };
 
 /**
@@ -1612,4 +1616,15 @@ export type SQLRecord = {
  */
 export type XataRecord = RecordMeta & {
   [key: string]: any;
+};
+
+export type GetMigrationHistoryQueryParams = {
+  /**
+   * @format date-time
+   */
+  cursor?: string;
+  /**
+   * Page size
+   */
+  limit?: number;
 };
