@@ -108,14 +108,7 @@ function pgRollToXataColumnType(type: string, comment?: string): string {
 
 export async function getBranchDetailsWithPgRoll(
   xata: XataClient,
-  {
-    workspace,
-    region,
-    database,
-    branch,
-    cursor,
-    limit
-  }: { workspace: string; region: string; database: string; branch: string; cursor?: string; limit?: number }
+  { workspace, region, database, branch }: { workspace: string; region: string; database: string; branch: string }
 ): Promise<Schemas.DBBranch> {
   const details = await xata.api.branch.getBranchDetails({
     pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
