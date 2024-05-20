@@ -57,7 +57,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
       do {
         const { migrations, cursor: newCursor } = await xata.api.migrations.getMigrationHistory({
           pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-          queryParams: { cursor }
+          queryParams: { cursor, limit: 200 }
         });
 
         logs = logs.concat(migrations);
