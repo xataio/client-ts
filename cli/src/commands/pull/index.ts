@@ -62,7 +62,7 @@ export default class Pull extends BaseCommand<typeof Pull> {
 
         logs = logs.concat(migrations);
         cursor = newCursor;
-      } while (cursor);
+      } while (cursor !== undefined);
     } else {
       const data = await xata.api.migrations.getBranchSchemaHistory({
         pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },

@@ -259,7 +259,7 @@ importers:
         version: 2.6.2
       type-fest:
         specifier: ^4.18.1
-        version: 4.18.1
+        version: 4.18.2
       which:
         specifier: ^4.0.0
         version: 4.0.0
@@ -9933,9 +9933,9 @@ packages:
       eslint: 9.2.0
       eslint-module-utils: 2.8.0(@typescript-eslint/parser@6.21.0)(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@9.2.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0)(eslint-import-resolver-typescript@3.6.1)(eslint@9.2.0)
-      fast-glob: 3.3.1
+      fast-glob: 3.3.2
       get-tsconfig: 4.7.2
-      is-core-module: 2.13.0
+      is-core-module: 2.13.1
       is-glob: 4.0.3
     transitivePeerDependencies:
       - '@typescript-eslint/parser'
@@ -16375,9 +16375,9 @@ packages:
       { integrity: sha512-tLq3bSNx+xSpwvAJnzrK0Ep5CLNWjvFTOp71URMaAEWBfRb9nnJiBoUe0tF8bI4ZFO3omgBR6NvnbzVUT3Ly4g== }
     engines: { node: '>=14.16' }
 
-  /type-fest@4.18.1:
+  /type-fest@4.18.2:
     resolution:
-      { integrity: sha512-qXhgeNsX15bM63h5aapNFcQid9jRF/l3ojDoDFmekDQEUufZ9U4ErVt6SjDxnHp48Ltrw616R8yNc3giJ3KvVQ== }
+      { integrity: sha512-+suCYpfJLAe4OXS6+PPXjW3urOS4IoP9waSiLuXfLgqZODKw/aWwASvzqE886wA0kQgGy0mIWyhd87VpqIy6Xg== }
     engines: { node: '>=16' }
     dev: false
 
