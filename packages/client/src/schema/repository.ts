@@ -39,7 +39,7 @@ import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
 import { AskOptions, AskResult } from './ask';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
-import { Filter, cleanFilter } from './filters';
+import { Filter, cleanFilter, filterToKysely } from './filters';
 import { parseJson, stringifyJson } from './json';
 import { CursorNavigationDecoded, PAGINATION_MAX_OFFSET, PAGINATION_MAX_SIZE, Page } from './pagination';
 import { Query } from './query';
@@ -1929,15 +1929,14 @@ export class KyselyRepository<Record extends XataRecord>
       const cursor = cursorAfter ?? cursorBefore ?? cursorStart ?? cursorEnd;
 
       // TODO handle filtering
-      const filter = cleanFilter(data.filter) ?? cursor?.data?.filter;
-      const sort = data.sort ? buildSortFilter(data.sort) : cursor?.data?.sort;
+      const filter = cleanFilter(data.filter);
+      const sort = data.sort ? buildSortFilter(data.sort) : undefined;
       const size = data?.pagination?.size ?? cursor?.data?.pagination?.size;
       const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset;
 
       if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
       if (offset && offset > PAGINATION_MAX_OFFSET)
         throw new Error(`page offset must not exceed ${PAGINATION_MAX_OFFSET}`);
-      if (sort && cursor) throw new Error('sort and cursor cannot be used together');
 
       let statement = this.#db.selectFrom(this.#table);
 
@@ -1977,15 +1976,27 @@ export class KyselyRepository<Record extends XataRecord>
       };
 
       if (isObject(sort)) {
-        for (const [column, order] of Object.entries(sort)) {
-          statement = sortStatement(statement, column, order);
-        }
-      } else if (Array.isArray(sort)) {
-        for (const item of sort) {
-          for (const [column, order] of Object.entries(item)) {
+        if (sort?.column && sort?.direction) {
+          statement = sortStatement(statement, sort.column, sort.direction);
+        } else {
+          for (const [column, order] of Object.entries(sort)) {
             statement = sortStatement(statement, column, order);
           }
         }
+      } else if (Array.isArray(sort)) {
+        for (const item of sort) {
+          if (item?.column && item?.direction) {
+            statement = sortStatement(statement, item.column, item.direction);
+          } else {
+            for (const [column, order] of Object.entries(item)) {
+              statement = sortStatement(statement, column, order);
+            }
+          }
+        }
+      }
+
+      if (filter) {
+        statement = statement.where(filterToKysely(filter));
       }
 
       // TODO: in transaction
@@ -1993,10 +2004,13 @@ export class KyselyRepository<Record extends XataRecord>
         [key: string]: unknown;
       }[] = await statement.execute();
 
-      const total = await this.#db.selectFrom(this.#table).selectAll().execute();
+      const total = async () => {
+        const statementCopy = statement.clearLimit().clearOffset();
+        return await statementCopy.execute();
+      };
 
       const lastItem = response[response.length - 1];
-      const lastAllItem = total[total.length - 1];
+      const lastAllItem = (await total())[total.length - 1];
       const field = cursor?.primaryColumn ?? 'xata_id';
 
       const more = () => {

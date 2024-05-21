@@ -1,8 +1,10 @@
+import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
 import { FilterExpression, FilterPredicate } from '../api/schemas';
-import { isDefined, isObject } from '../util/lang';
+import { isDefined, isObject, isString } from '../util/lang';
 import { SingleOrArray, Values } from '../util/types';
 import { JSONValue } from './json';
 import { ColumnsByValue, ValueAtColumn } from './selection';
+import { ExpressionOrFactory, sql } from 'kysely';
 
 export type JSONFilterColumns<Record> = Values<{
   [K in keyof Record]: NonNullable<Record[K]> extends JSONValue<any>
@@ -159,3 +161,70 @@ export function cleanFilter(filter?: FilterExpression | FilterPredicate): any {
 
   return Object.keys(values).length > 0 ? values : undefined;
 }
+
+export const filterToKysely = (
+  filter: Filter<any>,
+  latestKey?: string,
+  latestOperator?: string
+): ExpressionOrFactory<any, any, any> => {
+  return ({ eb, and, or, not }) => {
+    if (isString(filter)) {
+      const computedOperator = latestOperator ?? '=';
+      const computedKey = latestKey ?? 'unknown';
+      if (computedOperator === '$contains') {
+        // TODO figure out why column interpolation not working
+        return sql`(position(${filter} IN name)>0)`;
+      } else if (computedOperator === '$iContains') {
+        return sql`(position(lower(${filter}) IN lower(name))>0)`;
+      } else if (computedOperator === '$includes') {
+        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(labels) as tmp))`;
+      } else if (computedOperator === '$includesNone') {
+        return sql`(false = ALL(SELECT "tmp"=${filter} FROM unnest(labels) as tmp))`;
+      } else if (computedOperator === '$includesAll') {
+        // TODO why does this have to be ANY to pass. should be all?
+        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(labels) as tmp))`;
+      } else {
+        return eb(computedKey, computedOperator, filter);
+      }
+    }
+
+    if (Array.isArray(filter)) {
+      return and(filter.map((f) => filterToKysely(f, latestKey, latestOperator)({ eb, and, or, not })));
+    }
+
+    if (isObject(filter)) {
+      const entries = Object.entries(filter);
+
+      if (entries.length === 1) {
+        const [key, value] = entries[0];
+        if (Array.isArray(value)) {
+          switch (key) {
+            case '$all': {
+              return and(value.map((v) => filterToKysely(v, latestKey, latestOperator)({ eb, and, or, not })));
+            }
+            case '$any': {
+              const all = value.map((v) => filterToKysely(v, latestKey, latestOperator)({ eb, and, or, not }));
+              return or(all);
+            }
+          }
+        }
+      }
+
+      for (const [key, value] of entries) {
+        return filterToKysely(
+          value,
+          key.startsWith('$') ? latestKey : key,
+          key.startsWith('$') ? key : latestOperator
+        )({ eb, and, or, not });
+      }
+    }
+
+    throw new Error('Not implemented');
+  };
+};
+
+/**
+ * { "xata_id": { "$any": [1, 2, 3]} }
+ * { "$any": [ { "xata_id": 1 }, { "xata_id": 2 } ] }
+ * [ { "xata_id": 1 }, { "xata_id": 2 } ]
+ */
