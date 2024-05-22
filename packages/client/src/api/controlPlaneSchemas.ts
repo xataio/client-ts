@@ -404,9 +404,15 @@ export type ClusterMetadata = {
 /**
  * @x-internal true
  */
-export type ClusterUpdateMetadata = {
+export type ClusterDeleteMetadata = {
   id: ClusterID;
   state: string;
+  region: string;
+  name: string;
+  /**
+   * @format int64
+   */
+  branches: number;
 };
 
 /**
@@ -417,6 +423,14 @@ export type ClusterUpdateDetails = {
    * @pattern ^[Ss][Tt][Oo][Pp]|[Ss][Tt][Aa][Rr][Tt]$
    */
   command: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterUpdateMetadata = {
+  id: ClusterID;
+  state: string;
 };
 
 /**
