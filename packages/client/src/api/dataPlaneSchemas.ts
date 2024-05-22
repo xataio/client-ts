@@ -26,6 +26,20 @@ export type StartMigrationResponse = {
   jobID: string;
 };
 
+export type CompleteMigrationResponse = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+};
+
+export type RollbackMigrationResponse = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+};
+
 /**
  * @maxLength 255
  * @minLength 1

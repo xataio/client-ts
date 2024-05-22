@@ -1409,7 +1409,7 @@ export type DeleteClusterVariables = {
  * Delete cluster with given cluster ID
  */
 export const deleteCluster = (variables: DeleteClusterVariables, signal?: AbortSignal) =>
-  controlPlaneFetch<Schemas.ClusterUpdateMetadata, DeleteClusterError, undefined, {}, {}, DeleteClusterPathParams>({
+  controlPlaneFetch<Schemas.ClusterDeleteMetadata, DeleteClusterError, undefined, {}, {}, DeleteClusterPathParams>({
     url: '/workspaces/{workspaceId}/clusters/{clusterId}',
     method: 'delete',
     ...variables,
