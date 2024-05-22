@@ -55,14 +55,7 @@ import { SortDirection, buildSortFilter } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
 import { Cursor, decode } from '../util/cursor';
-import {
-  DeleteQueryBuilder,
-  InsertQueryBuilder,
-  MergeQueryBuilder,
-  SelectQueryBuilder,
-  UpdateQueryBuilder,
-  sql
-} from 'kysely';
+import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
 import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
@@ -1936,6 +1929,7 @@ export class KyselyRepository<Record extends XataRecord>
       if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
       if (offset && offset > PAGINATION_MAX_OFFSET)
         throw new Error(`page offset must not exceed ${PAGINATION_MAX_OFFSET}`);
+      if (sort && cursor) throw new Error('sort and cursor cannot be used together');
 
       let statement = this.#db.selectFrom(this.#table);
 
@@ -1950,11 +1944,14 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.limit(size);
       }
 
+      let sortRandom = false;
+
       const sortStatement = (statement: SelectQueryBuilder<any, any, any>, column: string, order: string) => {
         if (order === 'random') {
+          sortRandom = true;
           return statement.orderBy(sql`random()`);
         }
-        return statement.orderBy(column, order as SortDirection);
+        return statement.orderBy(column === '*' ? 'xata_id' : column, order as SortDirection);
       };
 
       if (isObject(sort)) {
@@ -2016,6 +2013,8 @@ export class KyselyRepository<Record extends XataRecord>
       const field = cursor?.primaryColumn ?? 'xata_id';
 
       const more = () => {
+        // How to tell if more items if the sort is random?
+        if (sortRandom === true) return false;
         if (lastItem?.[field] && lastAllItem?.[field]) {
           return lastItem?.[field] !== lastAllItem?.[field];
         }
