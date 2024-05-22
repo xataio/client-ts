@@ -168,22 +168,34 @@ export const filterToKysely = (
   latestOperator?: string
 ): ExpressionOrFactory<any, any, any> => {
   return ({ eb, and, or, not }) => {
-    if (isString(filter)) {
+    if (isString(filter) || typeof filter === 'number' || filter instanceof Date) {
       const computedOperator = latestOperator ?? '=';
-      const computedKey = latestKey ?? 'unknown';
+      const computedKey = eb.ref(latestKey ?? 'unknown');
       if (computedOperator === '$contains') {
-        // TODO figure out why column interpolation not working
-        return sql`(position(${filter} IN name)>0)`;
+        return sql`(position(${filter} IN ${computedKey})>0)`;
       } else if (computedOperator === '$iContains') {
-        return sql`(position(lower(${filter}) IN lower(name))>0)`;
+        return sql`(position(lower(${filter}) IN lower(${computedKey}))>0)`;
       } else if (computedOperator === '$includes') {
-        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(labels) as tmp))`;
+        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
       } else if (computedOperator === '$includesNone') {
-        return sql`(false = ALL(SELECT "tmp"=${filter} FROM unnest(labels) as tmp))`;
+        return sql`(false = ALL(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
       } else if (computedOperator === '$includesAll') {
         // TODO why does this have to be ANY to pass. should be all?
-        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(labels) as tmp))`;
+        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+      } else if (computedOperator === '$startsWith') {
+        return sql`(starts_with(${computedKey}, ${filter}))`;
+      } else if (computedOperator === '$endsWith') {
+        return sql`(${computedKey} LIKE %${filter}%)`;
+      } else if (computedOperator === '$lt') {
+        return sql`${computedKey} < ${filter}`;
+      } else if (computedOperator === '$lte') {
+        return sql`${computedKey} <= ${filter}`;
+      } else if (computedOperator === '$gt') {
+        return sql`${computedKey} > ${filter}`;
+      } else if (computedOperator === '$gte') {
+        return sql`${computedKey} >= ${filter}`;
       } else {
+        // TODO is null, match pattern, in, not in, exists,
         return eb(computedKey, computedOperator, filter);
       }
     }
@@ -205,6 +217,10 @@ export const filterToKysely = (
             case '$any': {
               const all = value.map((v) => filterToKysely(v, latestKey, latestOperator)({ eb, and, or, not }));
               return or(all);
+            }
+            case '$not': {
+              const any = value.map((v) => not(filterToKysely(v, latestKey, latestOperator)({ eb, and, or, not })));
+              return and(any);
             }
           }
         }
