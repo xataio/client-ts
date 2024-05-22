@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } fr
 import {
   BaseClient,
   contains,
+  endsWith,
   iContains,
   includesAll,
   includesNone,
@@ -163,6 +164,37 @@ describe('integration tests', () => {
     **/
 
     await xata.db.teams.delete(teams);
+  });
+
+  test('endsWith filter', async () => {
+    const teams = await xata.db.teams.filter('name', endsWith('& animals')).getAll();
+    expect(teams).toHaveLength(1);
+    expect(teams[0].name).toBe('Mixed team fruits & animals');
+  });
+
+  test('$exists filter', async () => {
+    const teams = await xata.db.teams.filter({ $exists: 'name' }).getAll();
+    expect(teams).toHaveLength(3);
+  });
+
+  test('$notExists filter', async () => {
+    const teams = await xata.db.teams.filter({ $notExists: 'name' }).getAll();
+    expect(teams).toHaveLength(0);
+  });
+
+  test('$pattern filter', async () => {
+    const teams = await xata.db.teams.filter({ name: { $pattern: 'Mixed team fruits & *nimal?' } }).getAll();
+    expect(teams).toHaveLength(1);
+    expect(teams[0].name).toBe('Mixed team fruits & animals');
+
+    const teams2 = await xata.db.teams.filter({ name: { $pattern: 'mixed team fruits & *nimal?' } }).getAll();
+    expect(teams2).toHaveLength(0);
+  });
+
+  test('$iPattern filter', async () => {
+    const teams = await xata.db.teams.filter({ name: { $iPattern: 'mixed team fruits & *nimal?' } }).getAll();
+    expect(teams).toHaveLength(1);
+    expect(teams[0].name).toBe('Mixed team fruits & animals');
   });
 
   test('multiple filter', async () => {

@@ -168,6 +168,19 @@ export const filterToKysely = (
   latestOperator?: string
 ): ExpressionOrFactory<any, any, any> => {
   return ({ eb, and, or, not }) => {
+    const buildPattern = (value: string | number | Date, translatePattern: boolean) => {
+      // if there are special chars like %,_,*, ?, \,  in the value, we should escape them with single slash
+      if (translatePattern) {
+        return `${String(value)
+          .replace(/\\/g, '\\\\')
+          .replace(/%/g, '\\%')
+          .replace(/_/g, '\\_')
+          .replace('*', '%')
+          .replace('?', '_')}`;
+      }
+      return `${String(value).replace('*', '%').replace('?', '_')}`;
+    };
+
     if (isString(filter) || typeof filter === 'number' || filter instanceof Date) {
       const computedOperator = latestOperator ?? '=';
       const computedKey = eb.ref(latestKey ?? 'unknown');
@@ -182,10 +195,13 @@ export const filterToKysely = (
       } else if (computedOperator === '$includesAll') {
         // TODO why does this have to be ANY to pass. should be all?
         return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+      } else if (computedOperator === '$includesAny') {
+        // TODO why does this have to be ANY to pass. should be all?
+        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
       } else if (computedOperator === '$startsWith') {
         return sql`(starts_with(${computedKey}, ${filter}))`;
       } else if (computedOperator === '$endsWith') {
-        return sql`(${computedKey} LIKE %${filter}%)`;
+        return sql`(${computedKey} LIKE ${eb.val('%' + buildPattern(filter, false))})`;
       } else if (computedOperator === '$lt') {
         return sql`${computedKey} < ${filter}`;
       } else if (computedOperator === '$lte') {
@@ -194,8 +210,19 @@ export const filterToKysely = (
         return sql`${computedKey} > ${filter}`;
       } else if (computedOperator === '$gte') {
         return sql`${computedKey} >= ${filter}`;
+      } else if (computedOperator === '$is') {
+        return sql`${computedKey} = ${filter}`;
+      } else if (computedOperator === '$isNot') {
+        return sql`${computedKey} != ${filter}`;
+      } else if (computedOperator === '$pattern') {
+        return sql`${computedKey} LIKE ${buildPattern(filter, true)}`;
+      } else if (computedOperator === '$iPattern') {
+        return sql`${computedKey} ILIKE ${buildPattern(filter, true)}`;
+      } else if (computedOperator === '$exists') {
+        return sql`(${eb.ref(filter as string)} IS NOT NULL)`;
+      } else if (computedOperator === '$notExists') {
+        return sql`(${eb.ref(filter as string)} IS NULL)`;
       } else {
-        // TODO is null, match pattern, in, not in, exists,
         return eb(computedKey, computedOperator, filter);
       }
     }
@@ -218,6 +245,7 @@ export const filterToKysely = (
               const all = value.map((v) => filterToKysely(v, latestKey, latestOperator)({ eb, and, or, not }));
               return or(all);
             }
+            case '$none':
             case '$not': {
               const any = value.map((v) => not(filterToKysely(v, latestKey, latestOperator)({ eb, and, or, not })));
               return and(any);
