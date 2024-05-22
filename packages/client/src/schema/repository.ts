@@ -1928,10 +1928,9 @@ export class KyselyRepository<Record extends XataRecord>
 
       const cursor = cursorAfter ?? cursorBefore ?? cursorStart ?? cursorEnd;
 
-      // TODO handle filtering
       const filter = cleanFilter(data.filter);
       const sort = data.sort ? buildSortFilter(data.sort) : undefined;
-      const size = data?.pagination?.size ?? cursor?.data?.pagination?.size;
+      const size = data?.pagination?.size ?? cursor?.data?.pagination?.size ?? query.meta.page.size;
       const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset;
 
       if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
@@ -1949,23 +1948,6 @@ export class KyselyRepository<Record extends XataRecord>
 
       if (size) {
         statement = statement.limit(size);
-      }
-
-      if (cursorAfter) {
-        statement = statement.where(cursorAfter.primaryColumn, '>', cursorAfter.lastSeenId);
-      }
-      if (cursorBefore) {
-        statement = statement.where(cursorBefore.primaryColumn, '<', cursorBefore.lastSeenId);
-      }
-      if (cursorStart) {
-        statement = statement.orderBy(cursorStart.primaryColumn, 'asc');
-      }
-      if (cursorEnd) {
-        statement = statement.orderBy(cursorEnd.primaryColumn, 'desc');
-      }
-
-      if (offset) {
-        statement = statement.offset(offset);
       }
 
       const sortStatement = (statement: SelectQueryBuilder<any, any, any>, column: string, order: string) => {
@@ -1999,18 +1981,38 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.where(filterToKysely(filter));
       }
 
+      if (offset) {
+        statement = statement.offset(offset);
+      }
+
+      const total = async () => {
+        let statementCopy = statement.clearLimit().clearOffset().clearWhere();
+        statementCopy = filter ? statementCopy.where(filterToKysely(filter)) : statementCopy;
+        const responseTotal = await statementCopy.execute();
+        return responseTotal;
+      };
+
+      if (cursorAfter) {
+        statement = statement.where(cursorAfter.primaryColumn, '>', cursorAfter.lastSeenId);
+      }
+      if (cursorBefore) {
+        statement = statement.where(cursorBefore.primaryColumn, '<', cursorBefore.lastSeenId);
+      }
+      if (cursorStart) {
+        statement = statement.orderBy(cursorStart.primaryColumn, 'asc');
+      }
+      if (cursorEnd) {
+        statement = statement.orderBy(cursorEnd.primaryColumn, 'desc');
+      }
+
       // TODO: in transaction
       const response: {
         [key: string]: unknown;
       }[] = await statement.execute();
 
-      const total = async () => {
-        const statementCopy = statement.clearLimit().clearOffset();
-        return await statementCopy.execute();
-      };
-
       const lastItem = response[response.length - 1];
-      const lastAllItem = (await total())[total.length - 1];
+      const totalItems = await total();
+      const lastAllItem = totalItems[totalItems.length - 1];
       const field = cursor?.primaryColumn ?? 'xata_id';
 
       const more = () => {
