@@ -1982,13 +1982,6 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.offset(offset);
       }
 
-      const total = async () => {
-        let statementCopy = statement.clearLimit().clearOffset().clearWhere();
-        statementCopy = filter ? statementCopy.where(filterToKysely(filter)) : statementCopy;
-        const responseTotal = await statementCopy.execute();
-        return responseTotal;
-      };
-
       if (cursorAfter) {
         statement = statement.where(cursorAfter.primaryColumn, '>', cursorAfter.lastSeenId);
       }
@@ -2002,13 +1995,18 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.orderBy(cursorEnd.primaryColumn, 'desc');
       }
 
-      // TODO: in transaction
-      const response: {
-        [key: string]: unknown;
-      }[] = await statement.execute();
+      const { response, totalItems } = await this.#db.transaction().execute(async (trx) => {
+        let statementCopy = statement.clearLimit().clearOffset().clearWhere();
+        statementCopy = filter ? statementCopy.where(filterToKysely(filter)) : statementCopy;
+        const totalRows = (await trx.executeQuery(statementCopy)).rows;
+        const response: {
+          [key: string]: unknown;
+        }[] = (await trx.executeQuery(statement)).rows;
+
+        return { response, totalItems: totalRows };
+      });
 
       const lastItem = response[response.length - 1];
-      const totalItems = await total();
       const lastAllItem = totalItems[totalItems.length - 1];
       const field = cursor?.primaryColumn ?? 'xata_id';
 
