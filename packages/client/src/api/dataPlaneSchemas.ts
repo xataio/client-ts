@@ -19,6 +19,13 @@ export type ApplyMigrationResponse = {
   jobID: string;
 };
 
+export type StartMigrationResponse = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+};
+
 /**
  * @maxLength 255
  * @minLength 1
