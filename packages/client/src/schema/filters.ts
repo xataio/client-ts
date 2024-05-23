@@ -4,7 +4,7 @@ import { isDefined, isObject, isString } from '../util/lang';
 import { SingleOrArray, Values } from '../util/types';
 import { JSONValue } from './json';
 import { ColumnsByValue, ValueAtColumn } from './selection';
-import { ExpressionBuilder, ExpressionOrFactory, sql } from 'kysely';
+import { ExpressionBuilder, ExpressionOrFactory, JSONPathBuilder, ReferenceExpression, sql } from 'kysely';
 import { ExpressionFactory, isExpressionOrFactory } from 'kysely/dist/cjs/parser/expression-parser';
 
 export type JSONFilterColumns<Record> = Values<{
@@ -163,6 +163,25 @@ export function cleanFilter(filter?: FilterExpression | FilterPredicate): any {
   return Object.keys(values).length > 0 ? values : undefined;
 }
 
+const mapOperator = (operator: Filter<any>): BinaryOperatorExpression => {
+  switch (operator) {
+    case '$is':
+      return '=';
+    case '$isNot':
+      return '!=';
+    case '$gt':
+      return '>';
+    case '$gte':
+      return '>=';
+    case '$lt':
+      return '<';
+    case '$lte':
+      return '<=';
+    default:
+      return '=';
+  }
+};
+
 export const filterToKysely = (
   filter: Filter<any>,
   latestKey?: string,
@@ -172,6 +191,26 @@ export const filterToKysely = (
     if (isString(filter) || typeof filter === 'number' || filter instanceof Date) {
       const computedOperator = latestOperator ?? '=';
       const computedKey = eb.ref(latestKey ?? 'unknown');
+
+      const generateRef = (): JSONPathBuilder<any> => {
+        const keys = latestKey?.split('->');
+        if (keys?.length === 0) throw new Error('Cannot find key');
+        let ref = eb.ref(keys?.[0] ?? 'unknown', '->');
+        keys?.slice(1).forEach((key) => {
+          // @ts-ignore passing in a value for key is causing Kysely to throw ts error
+          ref = ref.key(key);
+        });
+        return ref;
+      };
+      // TODO json field without an arrow?
+      if (latestKey?.includes('->')) {
+        return eb(
+          generateRef() as unknown as ReferenceExpression<any, any>,
+          mapOperator(computedOperator),
+          typeof filter === 'string' ? `"${filter}"` : filter
+        );
+      }
+
       if (computedOperator === '$contains') {
         return sql`(position(${filter} IN ${computedKey})>0)`;
       } else if (computedOperator === '$iContains') {
@@ -237,6 +276,20 @@ export const filterToKysely = (
             case '$not': {
               const any = value.map((v) => eb.not(filterToKysely(v, latestKey, latestOperator)(eb)));
               return eb.and(any);
+            }
+          }
+        } else {
+          // There is one object and it is an object
+          switch (key) {
+            case '$all': {
+              return eb.and(filterToKysely(value, latestKey, latestOperator)(eb));
+            }
+            case '$any': {
+              return eb.or(filterToKysely(value, latestKey, latestOperator)(eb));
+            }
+            case '$none':
+            case '$not': {
+              return eb.not(filterToKysely(value, latestKey, latestOperator)(eb));
             }
           }
         }
