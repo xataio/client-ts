@@ -968,7 +968,7 @@ export class KyselyRepository<Record extends XataRecord>
     }
     const response = await statement.executeTakeFirst();
 
-    return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
   async #insertRecordWithId(
@@ -1001,7 +1001,7 @@ export class KyselyRepository<Record extends XataRecord>
     const response = await statement.executeTakeFirst();
 
     const schemaTables = await this.#getSchemaTables();
-    return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
   async #insertRecords(
@@ -1107,6 +1107,7 @@ export class KyselyRepository<Record extends XataRecord>
           if (!response) return null;
           const schemaTables = await this.#getSchemaTables();
           return initObjectKysely<Record>(
+            this,
             this.#db,
             schemaTables,
             this.#table,
@@ -1371,7 +1372,7 @@ export class KyselyRepository<Record extends XataRecord>
       if (!response) return null;
 
       const schemaTables = await this.#getSchemaTables();
-      return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
+      return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1553,7 +1554,7 @@ export class KyselyRepository<Record extends XataRecord>
     const response = await statement.executeTakeFirst();
 
     const schemaTables = await this.#getSchemaTables();
-    return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
   }
 
   async createOrReplace<K extends SelectableColumn<Record>>(
@@ -1780,7 +1781,7 @@ export class KyselyRepository<Record extends XataRecord>
       const response = await statement.executeTakeFirst();
       if (!response) return null;
       const schemaTables = await this.#getSchemaTables();
-      return initObjectKysely(this.#db, schemaTables, this.#table, response, columns) as any;
+      return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1842,7 +1843,7 @@ export class KyselyRepository<Record extends XataRecord>
 
       // TODO - Column selection not supported by search endpoint yet
       return {
-        records: records.map((item) => initObjectKysely(this.#db, schemaTables, this.#table, item, ['*'])) as any,
+        records: records.map((item) => initObjectKysely(this, this.#db, schemaTables, this.#table, item, ['*'])) as any,
         totalCount
       };
     });
@@ -1881,7 +1882,7 @@ export class KyselyRepository<Record extends XataRecord>
 
       // TODO - Column selection not supported by search endpoint yet
       return {
-        records: records.map((item) => initObjectKysely(this.#db, schemaTables, this.#table, item, ['*'])),
+        records: records.map((item) => initObjectKysely(this, this.#db, schemaTables, this.#table, item, ['*'])),
         totalCount
       } as any;
     });
@@ -2029,6 +2030,7 @@ export class KyselyRepository<Record extends XataRecord>
       const schemaTables = await this.#getSchemaTables();
       const records = response.map((record) =>
         initObjectKysely<Result>(
+          this,
           this.#db,
           schemaTables,
           this.#table,
@@ -2090,7 +2092,7 @@ export class KyselyRepository<Record extends XataRecord>
       return {
         ...result,
         summaries: result.summaries.map((summary) =>
-          initObjectKysely(this.#db, schemaTables, this.#table, summary, data.columns ?? [])
+          initObjectKysely(this, this.#db, schemaTables, this.#table, summary, data.columns ?? [])
         )
       };
     });
@@ -3410,6 +3412,7 @@ export class RestRepository<Record extends XataRecord>
 }
 
 export const initObjectKysely = <T>(
+  repo: KyselyRepository<any>,
   db: KyselyPluginResult<any>,
   schemaTables: Schemas.Table[],
   table: string,
@@ -3462,73 +3465,21 @@ export const initObjectKysely = <T>(
   const record = { ...data };
 
   record.read = async function (columns?: any) {
-    const res =
-      !columns || (columns && columns.length > 0 && columns[0] === '*')
-        ? (await db
-            .selectFrom(table)
-            .where('xata_id', '=', record['xata_id'] as string)
-            .selectAll()
-            .executeTakeFirst()) ?? null
-        : (await db
-            .selectFrom(table)
-            .where('xata_id', '=', record['xata_id'] as string)
-            .select(columns)
-            .executeTakeFirst()) ?? null;
-    return res;
+    return await repo.read(record['xata_id'] as string, columns);
   };
 
   record.update = async function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
-    return !columns || (columns && columns.length > 0 && columns[0] === '*')
-      ? (await db
-          .updateTable(table)
-          .set(data)
-          .where('xata_id', '=', record['xata_id'] as string)
-          .returningAll()
-          .executeTakeFirst()) ?? null
-      : (await db
-          .updateTable(table)
-          .set(data)
-          .where('xata_id', '=', record['xata_id'] as string)
-          .returning(columns)
-          .executeTakeFirst()) ?? null;
+    return await repo.update(record['xata_id'] as string, data, columns, { ifVersion: c });
   };
 
   record.replace = async function (data: any, b?: any, c?: any) {
     const validColumns = isValidSelectableColumns(b) ? b : ['*'];
-    const fieldsToSetNull: Dictionary<any> = {};
-
-    for (const [key] of Object.entries(record)) {
-      // Ignore internal properties
-      if (['xata_version', 'xata_createdat', 'xata_updatedat'].includes(key)) continue;
-      if (Object.keys(data).includes(key)) continue;
-      fieldsToSetNull[key] = null;
-    }
-
-    let statement: InsertQueryBuilder<any, any, any> = db
-      .insertInto(table)
-      .values({ ...record, xata_id: record.xata_id });
-
-    if (validColumns?.includes('*')) {
-      statement = statement.returningAll();
-    } else {
-      statement = statement.returning(validColumns);
-    }
-    statement = statement.onConflict((oc) =>
-      oc.column('xata_id').doUpdateSet({ ...fieldsToSetNull, ...data, xata_id: record.xata_id })
-    );
-
-    return await statement.executeTakeFirst();
+    return await repo.createOrReplace(record['xata_id'] as string, data, validColumns, { ifVersion: c });
   };
 
   record.delete = async function () {
-    return (
-      (await db
-        .deleteFrom(table)
-        .where('xata_id', '=', record['xata_id'] as string)
-        .returningAll()
-        .executeTakeFirst()) ?? null
-    );
+    return await repo.delete(record['xata_id'] as string);
   };
 
   record.toSerializable = function () {
