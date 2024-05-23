@@ -397,6 +397,17 @@ export type GetMigrationHistoryPathParams = {
   region: string;
 };
 
+export type GetMigrationHistoryQueryParams = {
+  /**
+   * @format date-time
+   */
+  cursor?: string;
+  /**
+   * Page size
+   */
+  limit?: Schemas.PageSize;
+};
+
 export type GetMigrationHistoryError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -414,6 +425,7 @@ export type GetMigrationHistoryError = Fetcher.ErrorWrapper<
 
 export type GetMigrationHistoryVariables = {
   pathParams: GetMigrationHistoryPathParams;
+  queryParams?: GetMigrationHistoryQueryParams;
 } & DataPlaneFetcherExtraProps;
 
 export const getMigrationHistory = (variables: GetMigrationHistoryVariables, signal?: AbortSignal) =>
@@ -422,7 +434,7 @@ export const getMigrationHistory = (variables: GetMigrationHistoryVariables, sig
     GetMigrationHistoryError,
     undefined,
     {},
-    {},
+    GetMigrationHistoryQueryParams,
     GetMigrationHistoryPathParams
   >({
     url: '/db/{dbBranchName}/migrations/history',

@@ -11,6 +11,13 @@ export type TableNameParam = Schemas.TableName;
 
 export type MigrationJobIDParam = Schemas.MigrationJobID;
 
+/**
+ * @format date-time
+ */
+export type TimestampCursorParam = string;
+
+export type LimitParam = Schemas.PageSize;
+
 export type DBNameParam = Schemas.DBName;
 
 export type MigrationRequestNumberParam = Schemas.MigrationRequestNumber;

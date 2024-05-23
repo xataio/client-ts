@@ -51,6 +51,97 @@ export type MigrationJobType = 'apply' | 'start' | 'complete' | 'rollback';
 
 export type MigrationJobStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 
+/**
+ * The effect of a migration operation in terms of CRUD operations on the underlying schema
+ */
+export type MigrationOperationDescription = {
+  /**
+   * A new database object created by the operation
+   */
+  create?: {
+    /**
+     * The type of object created
+     */
+    type: 'table' | 'column' | 'index';
+    /**
+     * The name of the object created
+     */
+    name: string;
+    /**
+     * The name of the table on which the object is created, if applicable
+     */
+    table?: string;
+    /**
+     * The mapping between the virtual and physical name of the new object, if applicable
+     */
+    mapping?: Record<string, any>;
+  };
+  /**
+   * A database object updated by the operation
+   */
+  update?: {
+    /**
+     * The type of updated object
+     */
+    type: 'table' | 'column';
+    /**
+     * The name of the updated object
+     */
+    name: string;
+    /**
+     * The name of the table on which the object is updated, if applicable
+     */
+    table?: string;
+    /**
+     * The mapping between the virtual and physical name of the updated object, if applicable
+     */
+    mapping?: Record<string, any>;
+  };
+  /**
+   * A database object renamed by the operation
+   */
+  rename?: {
+    /**
+     * The type of the renamed object
+     */
+    type: 'table' | 'column' | 'constraint';
+    /**
+     * The name of the table on which the object is renamed, if applicable
+     */
+    table?: string;
+    /**
+     * The old name of the renamed object
+     */
+    from: string;
+    /**
+     * The new name of the renamed object
+     */
+    to: string;
+  };
+  /**
+   * A database object deleted by the operation
+   */
+  ['delete']?: {
+    /**
+     * The type of the deleted object
+     */
+    type: 'table' | 'column' | 'constraint' | 'index';
+    /**
+     * The name of the deleted object
+     */
+    name: string;
+    /**
+     * The name of the table on which the object is deleted, if applicable
+     */
+    table: string;
+  };
+};
+
+/**
+ * @minItems 1
+ */
+export type MigrationDescription = MigrationOperationDescription[];
+
 export type MigrationJobStatusResponse = {
   /**
    * The id of the migration job
@@ -65,6 +156,10 @@ export type MigrationJobStatusResponse = {
    */
   status: MigrationJobStatus;
   /**
+   * The effect of any active migration on the schema
+   */
+  description?: MigrationDescription;
+  /**
    * The error message associated with the migration job
    */
   error?: string;
@@ -76,6 +171,15 @@ export type MigrationJobStatusResponse = {
  * @pattern [a-zA-Z0-9_\-~]+
  */
 export type MigrationJobID = string;
+
+/**
+ * Page size.
+ *
+ * @x-internal true
+ * @default 25
+ * @minimum 0
+ */
+export type PageSize = number;
 
 export type MigrationType = 'pgroll' | 'inferred';
 
@@ -113,6 +217,10 @@ export type MigrationHistoryResponse = {
    * The migrations that have been applied to the branch
    */
   migrations: MigrationHistoryItem[];
+  /**
+   * The cursor (timestamp) for the next page of results
+   */
+  cursor?: string;
 };
 
 /**
