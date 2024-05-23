@@ -48,20 +48,22 @@ export default class Push extends BaseCommand<typeof Push> {
 
     const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
-    let logs: Schemas.MigrationHistoryItem[] | Schemas.Commit[] = [];
+    let logs: (Schemas.MigrationHistoryItem | Schemas.Commit)[] = [];
+    let cursor = undefined;
     if (isBranchPgRollEnabled(details)) {
-      const { migrations } = await xata.api.migrations.getMigrationHistory({
-        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
-      });
-      logs = migrations;
+      do {
+        const { migrations, cursor: newCursor } = await xata.api.migrations.getMigrationHistory({
+          pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+          queryParams: { cursor, limit: 200 }
+        });
+
+        logs = logs.concat(migrations);
+        cursor = newCursor;
+      } while (cursor !== undefined);
     } else {
       const data = await xata.api.migrations.getBranchSchemaHistory({
         pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-        body: {
-          // TODO: Fix pagination in the API to start from last known migration and not from the beginning
-          // Also paginate until we get all migrations
-          page: { size: 200 }
-        }
+        body: { page: { size: 200 } }
       });
       logs = data.logs;
     }

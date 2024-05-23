@@ -230,7 +230,7 @@ const pgrollFetchSingle = (url: string, request: any) => {
         schema: { tables: [{ name: 'table1', columns: [{ name: 'a', type: 'string' }] }] }
       })
     };
-  } else if (url === `${baseUrl}/migrations/history` && request.method === 'GET') {
+  } else if (url === `${baseUrl}/migrations/history?limit=200` && request.method === 'GET') {
     return {
       ok: true,
       json: async () => ({
@@ -251,7 +251,7 @@ const pgrollFetchMultiple = (url: string, request: any) => {
         schema: { tables: [{ name: 'table1', columns: [{ name: 'a', type: 'string' }] }] }
       })
     };
-  } else if (url === `${baseUrl}/migrations/history` && request.method === 'GET') {
+  } else if (url === `${baseUrl}/migrations/history?limit=200` && request.method === 'GET') {
     return {
       ok: true,
       json: async () => ({
