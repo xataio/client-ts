@@ -1,10 +1,11 @@
 import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
-import { FilterExpression, FilterPredicate } from '../api/schemas';
+import { FilterColumnIncludes, FilterExpression, FilterPredicate, FilterPredicateOp } from '../api/schemas';
 import { isDefined, isObject, isString } from '../util/lang';
 import { SingleOrArray, Values } from '../util/types';
 import { JSONValue } from './json';
 import { ColumnsByValue, ValueAtColumn } from './selection';
-import { ExpressionOrFactory, sql } from 'kysely';
+import { ExpressionBuilder, ExpressionOrFactory, sql } from 'kysely';
+import { ExpressionFactory, isExpressionOrFactory } from 'kysely/dist/cjs/parser/expression-parser';
 
 export type JSONFilterColumns<Record> = Values<{
   [K in keyof Record]: NonNullable<Record[K]> extends JSONValue<any>
@@ -165,22 +166,9 @@ export function cleanFilter(filter?: FilterExpression | FilterPredicate): any {
 export const filterToKysely = (
   filter: Filter<any>,
   latestKey?: string,
-  latestOperator?: string
-): ExpressionOrFactory<any, any, any> => {
-  return ({ eb, and, or, not }) => {
-    const buildPattern = (value: string | number | Date, translatePattern: boolean) => {
-      // if there are special chars like %,_,*, ?, \,  in the value, we should escape them with single slash
-      if (translatePattern) {
-        return `${String(value)
-          .replace(/\\/g, '\\\\')
-          .replace(/%/g, '\\%')
-          .replace(/_/g, '\\_')
-          .replace('*', '%')
-          .replace('?', '_')}`;
-      }
-      return `${String(value).replace('*', '%').replace('?', '_')}`;
-    };
-
+  latestOperator?: FilterPredicate
+): ((eb: ExpressionBuilder<any, any>) => ExpressionOrFactory<any, any, any>) | ExpressionFactory<any, any, any> => {
+  return (eb) => {
     if (isString(filter) || typeof filter === 'number' || filter instanceof Date) {
       const computedOperator = latestOperator ?? '=';
       const computedKey = eb.ref(latestKey ?? 'unknown');
@@ -223,12 +211,12 @@ export const filterToKysely = (
       } else if (computedOperator === '$notExists') {
         return sql`(${eb.ref(filter as string)} IS NULL)`;
       } else {
-        return eb(computedKey, computedOperator, filter);
+        return eb(computedKey, '=', filter);
       }
     }
 
     if (Array.isArray(filter)) {
-      return and(filter.map((f) => filterToKysely(f, latestKey, latestOperator)({ eb, and, or, not })));
+      return eb.and(filter.map((f) => filterToKysely(f, latestKey, latestOperator)(eb)));
     }
 
     if (isObject(filter)) {
@@ -239,16 +227,16 @@ export const filterToKysely = (
         if (Array.isArray(value)) {
           switch (key) {
             case '$all': {
-              return and(value.map((v) => filterToKysely(v, latestKey, latestOperator)({ eb, and, or, not })));
+              return eb.and(value.map((v) => filterToKysely(v, latestKey, latestOperator)(eb)));
             }
             case '$any': {
-              const all = value.map((v) => filterToKysely(v, latestKey, latestOperator)({ eb, and, or, not }));
-              return or(all);
+              const all = value.map((v) => filterToKysely(v, latestKey, latestOperator)(eb));
+              return eb.or(all);
             }
             case '$none':
             case '$not': {
-              const any = value.map((v) => not(filterToKysely(v, latestKey, latestOperator)({ eb, and, or, not })));
-              return and(any);
+              const any = value.map((v) => eb.not(filterToKysely(v, latestKey, latestOperator)(eb)));
+              return eb.and(any);
             }
           }
         }
@@ -259,7 +247,7 @@ export const filterToKysely = (
           value,
           key.startsWith('$') ? latestKey : key,
           key.startsWith('$') ? key : latestOperator
-        )({ eb, and, or, not });
+        )(eb);
       }
     }
 
@@ -267,8 +255,15 @@ export const filterToKysely = (
   };
 };
 
-/**
- * { "xata_id": { "$any": [1, 2, 3]} }
- * { "$any": [ { "xata_id": 1 }, { "xata_id": 2 } ] }
- * [ { "xata_id": 1 }, { "xata_id": 2 } ]
- */
+const buildPattern = (value: string | number | Date, translatePattern: boolean) => {
+  // if there are special chars like %,_,*, ?, \,  in the value, we should escape them with single slash
+  if (translatePattern) {
+    return `${String(value)
+      .replace(/\\/g, '\\\\')
+      .replace(/%/g, '\\%')
+      .replace(/_/g, '\\_')
+      .replace('*', '%')
+      .replace('?', '_')}`;
+  }
+  return `${String(value).replace('*', '%').replace('?', '_')}`;
+};

@@ -51,12 +51,20 @@ import {
   SelectedPick,
   isValidSelectableColumns
 } from './selection';
-import { SortDirection, buildSortFilter } from './sorting';
+import {
+  ApiSortFilter,
+  SortDirection,
+  buildSortFilter,
+  isSortFilterBase,
+  isSortFilterObject,
+  isSortFilterString
+} from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
 import { Cursor, decode } from '../util/cursor';
 import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
 import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
+import { ExpressionFactory } from 'kysely/dist/cjs/parser/expression-parser';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -1946,36 +1954,32 @@ export class KyselyRepository<Record extends XataRecord>
 
       let sortRandom = false;
 
-      const sortStatement = (statement: SelectQueryBuilder<any, any, any>, column: string, order: string) => {
-        if (order === 'random') {
-          sortRandom = true;
-          return statement.orderBy(sql`random()`);
-        }
-        return statement.orderBy(column === '*' ? 'xata_id' : column, order as SortDirection);
-      };
-
-      if (isObject(sort)) {
-        if (sort?.column && sort?.direction) {
-          statement = sortStatement(statement, sort.column, sort.direction);
-        } else {
-          for (const [column, order] of Object.entries(sort)) {
-            statement = sortStatement(statement, column, order);
+      const buildSortStatement = (sort: ApiSortFilter<any, any>[]) => {
+        const sortStatement = (statement: SelectQueryBuilder<any, any, any>, column: string, order: string) => {
+          if (order === 'random') {
+            sortRandom = true;
+            return statement.orderBy(sql`random()`);
           }
-        }
-      } else if (Array.isArray(sort)) {
-        for (const item of sort) {
-          if (item?.column && item?.direction) {
-            statement = sortStatement(statement, item.column, item.direction);
+          return statement.orderBy(column === '*' ? 'xata_id' : column, order as SortDirection);
+        };
+        for (const element of sort) {
+          if (isSortFilterObject(element)) {
+            statement = sortStatement(statement, element.column, element.direction ?? 'asc');
           } else {
-            for (const [column, order] of Object.entries(item)) {
-              statement = sortStatement(statement, column, order);
+            const keys = Object.keys(element);
+            for (const key of keys) {
+              statement = sortStatement(statement, key, (element as any)[key]);
             }
           }
         }
+      };
+
+      if (sort) {
+        buildSortStatement(Array.isArray(sort) ? sort : [sort]);
       }
 
       if (filter) {
-        statement = statement.where(filterToKysely(filter));
+        statement = statement.where(filterToKysely(filter) as ExpressionFactory<any, any, any>);
       }
 
       if (offset) {
@@ -1997,8 +2001,12 @@ export class KyselyRepository<Record extends XataRecord>
 
       const { response, totalItems } = await this.#db.transaction().execute(async (trx) => {
         let statementCopy = statement.clearLimit().clearOffset().clearWhere();
-        statementCopy = filter ? statementCopy.where(filterToKysely(filter)) : statementCopy;
-        const totalRows = (await trx.executeQuery(statementCopy)).rows;
+        statementCopy = filter
+          ? statementCopy.where(filterToKysely(filter) as ExpressionFactory<any, any, any>)
+          : statementCopy;
+        const totalRows: {
+          [key: string]: unknown;
+        }[] = (await trx.executeQuery(statementCopy)).rows;
         const response: {
           [key: string]: unknown;
         }[] = (await trx.executeQuery(statement)).rows;
@@ -2009,11 +2017,10 @@ export class KyselyRepository<Record extends XataRecord>
       const lastItem = response[response.length - 1];
       const lastAllItem = totalItems[totalItems.length - 1];
       const field = cursor?.primaryColumn ?? 'xata_id';
-
       const more = () => {
         // How to tell if more items if the sort is random?
         if (sortRandom === true) return false;
-        if (lastItem?.[field] && lastAllItem?.[field]) {
+        if (lastItem?.[field] && totalItems[totalItems.length - 1]?.[field]) {
           return lastItem?.[field] !== lastAllItem?.[field];
         }
         return false;
@@ -2036,8 +2043,7 @@ export class KyselyRepository<Record extends XataRecord>
           size,
           cursor: Cursor.from({
             primaryColumn: 'xata_id',
-            // @ts-expect-error
-            lastSeenId: lastItem?.xata_id,
+            lastSeenId: lastItem?.xata_id as string,
             data: {
               ...data,
               // remove pagination because I don't want to keep
