@@ -163,22 +163,89 @@ export function cleanFilter(filter?: FilterExpression | FilterPredicate): any {
   return Object.keys(values).length > 0 ? values : undefined;
 }
 
-const mapOperator = (operator: Filter<any>): BinaryOperatorExpression => {
-  switch (operator) {
-    case '$is':
-      return '=';
-    case '$isNot':
-      return '!=';
-    case '$gt':
-      return '>';
-    case '$gte':
-      return '>=';
-    case '$lt':
-      return '<';
-    case '$lte':
-      return '<=';
-    default:
-      return '=';
+const isJsonColumnFilter = (key?: string): boolean => {
+  if (!key) return false;
+  return key?.includes('->') || key?.includes('->>');
+};
+
+const parseJsonPath = (path: string) => {
+  const token = 'texttoremove';
+  const pathToUse = path.replace(/->>/g, token).replace(/->/g, token).split(token);
+  return {
+    firstCol: pathToUse.shift(),
+    pathToUse: pathToUse.map((i) => `'${i}'`).join(',')
+  };
+};
+
+const buildStatement = ({
+  computedOperator,
+  computedKey,
+  filter,
+  eb
+}: {
+  computedOperator?: FilterPredicate;
+  computedKey: ReferenceExpression<any, any>;
+  filter: string | number | Date;
+  eb: ExpressionBuilder<any, any>;
+}) => {
+  switch (computedOperator) {
+    case '$contains': {
+      return sql`(position(${filter} IN ${computedKey})>0)`;
+    }
+    case '$iContains': {
+      return sql`(position(lower(${filter}) IN lower(${computedKey}))>0)`;
+    }
+    case '$includes': {
+      return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+    }
+    case '$includesNone': {
+      return sql`(false = ALL(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+    }
+    case '$includesAll': {
+      return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+    }
+    case '$includesAny': {
+      return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+    }
+    case '$startsWith': {
+      return sql`(starts_with(${computedKey}, ${filter}))`;
+    }
+    case '$endsWith': {
+      return sql`(${computedKey} LIKE ${eb.val('%' + buildPattern(filter, false))})`;
+    }
+    case '$lt': {
+      return sql`${computedKey} < ${filter}`;
+    }
+    case '$lte': {
+      return sql`${computedKey} <= ${filter}`;
+    }
+    case '$gt': {
+      return sql`${computedKey} > ${filter}`;
+    }
+    case '$gte': {
+      return sql`${computedKey} >= ${filter}`;
+    }
+    case '$is': {
+      return sql`${computedKey} = ${filter}`;
+    }
+    case '$isNot': {
+      return sql`${computedKey} != ${filter}`;
+    }
+    case '$pattern': {
+      return sql`${computedKey} LIKE ${buildPattern(filter, true)}`;
+    }
+    case '$iPattern': {
+      return sql`${computedKey} ILIKE ${buildPattern(filter, true)}`;
+    }
+    case '$exists': {
+      return sql`(${eb.ref(filter as string)} IS NOT NULL)`;
+    }
+    case '$notExists': {
+      return sql`(${eb.ref(filter as string)} IS NULL)`;
+    }
+    default: {
+      return eb(computedKey, '=', filter);
+    }
   }
 };
 
@@ -192,66 +259,22 @@ export const filterToKysely = (
       const computedOperator = latestOperator ?? '=';
       const computedKey = eb.ref(latestKey ?? 'unknown');
 
-      const generateRef = (): JSONPathBuilder<any> => {
-        const keys = latestKey?.split('->');
-        if (keys?.length === 0) throw new Error('Cannot find key');
-        let ref = eb.ref(keys?.[0] ?? 'unknown', '->');
-        keys?.slice(1).forEach((key) => {
-          // @ts-ignore passing in a value for key is causing Kysely to throw ts error
-          ref = ref.key(key);
+      if (isJsonColumnFilter(latestKey)) {
+        const { firstCol, pathToUse } = parseJsonPath(latestKey ?? '');
+        return buildStatement({
+          computedOperator,
+          computedKey: sql.raw(`jsonb_extract_path_text(${firstCol}::jsonb, ${pathToUse})::text`),
+          filter,
+          eb
         });
-        return ref;
-      };
-      // TODO json field without an arrow?
-      if (latestKey?.includes('->')) {
-        return eb(
-          generateRef() as unknown as ReferenceExpression<any, any>,
-          mapOperator(computedOperator),
-          typeof filter === 'string' ? `"${filter}"` : filter
-        );
       }
 
-      if (computedOperator === '$contains') {
-        return sql`(position(${filter} IN ${computedKey})>0)`;
-      } else if (computedOperator === '$iContains') {
-        return sql`(position(lower(${filter}) IN lower(${computedKey}))>0)`;
-      } else if (computedOperator === '$includes') {
-        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
-      } else if (computedOperator === '$includesNone') {
-        return sql`(false = ALL(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
-      } else if (computedOperator === '$includesAll') {
-        // TODO why does this have to be ANY to pass. should be all?
-        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
-      } else if (computedOperator === '$includesAny') {
-        // TODO why does this have to be ANY to pass. should be all?
-        return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
-      } else if (computedOperator === '$startsWith') {
-        return sql`(starts_with(${computedKey}, ${filter}))`;
-      } else if (computedOperator === '$endsWith') {
-        return sql`(${computedKey} LIKE ${eb.val('%' + buildPattern(filter, false))})`;
-      } else if (computedOperator === '$lt') {
-        return sql`${computedKey} < ${filter}`;
-      } else if (computedOperator === '$lte') {
-        return sql`${computedKey} <= ${filter}`;
-      } else if (computedOperator === '$gt') {
-        return sql`${computedKey} > ${filter}`;
-      } else if (computedOperator === '$gte') {
-        return sql`${computedKey} >= ${filter}`;
-      } else if (computedOperator === '$is') {
-        return sql`${computedKey} = ${filter}`;
-      } else if (computedOperator === '$isNot') {
-        return sql`${computedKey} != ${filter}`;
-      } else if (computedOperator === '$pattern') {
-        return sql`${computedKey} LIKE ${buildPattern(filter, true)}`;
-      } else if (computedOperator === '$iPattern') {
-        return sql`${computedKey} ILIKE ${buildPattern(filter, true)}`;
-      } else if (computedOperator === '$exists') {
-        return sql`(${eb.ref(filter as string)} IS NOT NULL)`;
-      } else if (computedOperator === '$notExists') {
-        return sql`(${eb.ref(filter as string)} IS NULL)`;
-      } else {
-        return eb(computedKey, '=', filter);
-      }
+      return buildStatement({
+        computedOperator,
+        computedKey,
+        filter,
+        eb
+      });
     }
 
     if (Array.isArray(filter)) {
