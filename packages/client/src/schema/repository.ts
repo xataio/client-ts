@@ -1931,7 +1931,11 @@ export class KyselyRepository<Record extends XataRecord>
       const cursor = cursorAfter ?? cursorBefore ?? cursorStart ?? cursorEnd;
 
       const filter = cleanFilter(data.filter) ?? cursor?.data?.filter;
-      const sort = data.sort ? buildSortFilter(data.sort) : cursor?.data?.sort;
+      const sort = data.sort
+        ? buildSortFilter(data.sort)
+        : cursor?.data.sort
+        ? buildSortFilter(cursor?.data?.sort)
+        : undefined;
       const size = data?.pagination?.size ?? cursor?.data?.pagination?.size ?? query.meta.page.size;
       const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset;
 
