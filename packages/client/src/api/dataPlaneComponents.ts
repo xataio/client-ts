@@ -124,6 +124,98 @@ export const startMigration = (variables: StartMigrationVariables, signal?: Abor
     signal
   });
 
+export type CompleteMigrationPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type CompleteMigrationError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CompleteMigrationVariables = {
+  pathParams: CompleteMigrationPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Complete an active migration on the specified database
+ */
+export const completeMigration = (variables: CompleteMigrationVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.CompleteMigrationResponse,
+    CompleteMigrationError,
+    undefined,
+    {},
+    {},
+    CompleteMigrationPathParams
+  >({
+    url: '/db/{dbBranchName}/migrations/complete',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type RollbackMigrationPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type RollbackMigrationError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type RollbackMigrationVariables = {
+  pathParams: RollbackMigrationPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Roll back an active migration on the specified database
+ */
+export const rollbackMigration = (variables: RollbackMigrationVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.RollbackMigrationResponse,
+    RollbackMigrationError,
+    undefined,
+    {},
+    {},
+    RollbackMigrationPathParams
+  >({
+    url: '/db/{dbBranchName}/migrations/rollback',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export type AdaptTablePathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -305,6 +397,17 @@ export type GetMigrationHistoryPathParams = {
   region: string;
 };
 
+export type GetMigrationHistoryQueryParams = {
+  /**
+   * @format date-time
+   */
+  cursor?: string;
+  /**
+   * Page size
+   */
+  limit?: Schemas.PaginationPageSize;
+};
+
 export type GetMigrationHistoryError = Fetcher.ErrorWrapper<
   | {
       status: 400;
@@ -322,6 +425,7 @@ export type GetMigrationHistoryError = Fetcher.ErrorWrapper<
 
 export type GetMigrationHistoryVariables = {
   pathParams: GetMigrationHistoryPathParams;
+  queryParams?: GetMigrationHistoryQueryParams;
 } & DataPlaneFetcherExtraProps;
 
 export const getMigrationHistory = (variables: GetMigrationHistoryVariables, signal?: AbortSignal) =>
@@ -330,7 +434,7 @@ export const getMigrationHistory = (variables: GetMigrationHistoryVariables, sig
     GetMigrationHistoryError,
     undefined,
     {},
-    {},
+    GetMigrationHistoryQueryParams,
     GetMigrationHistoryPathParams
   >({
     url: '/db/{dbBranchName}/migrations/history',
@@ -5049,6 +5153,8 @@ export const operationsByTag = {
   migrations: {
     applyMigration,
     startMigration,
+    completeMigration,
+    rollbackMigration,
     adaptTable,
     adaptAllTables,
     getBranchMigrationJobStatus,
