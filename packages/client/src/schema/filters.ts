@@ -190,10 +190,10 @@ const buildStatement = ({
 }) => {
   switch (computedOperator) {
     case '$contains': {
-      return sql`(position(${filter} IN ${computedKey})>0)`;
+      return sql`(position(${filter} IN ${computedKey}::text)>0)`;
     }
     case '$iContains': {
-      return sql`(position(lower(${filter}) IN lower(${computedKey}))>0)`;
+      return sql`(position(lower(${filter}) IN lower(${computedKey}::text))>0)`;
     }
     case '$includes': {
       return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
@@ -268,7 +268,6 @@ export const filterToKysely = (
           eb
         });
       }
-
       return buildStatement({
         computedOperator,
         computedKey,
@@ -286,47 +285,57 @@ export const filterToKysely = (
 
       if (entries.length === 1) {
         const [key, value] = entries[0];
-        if (Array.isArray(value)) {
-          switch (key) {
-            case '$all': {
-              return eb.and(value.map((v) => filterToKysely(v, latestKey, latestOperator)(eb)));
-            }
-            case '$any': {
-              const all = value.map((v) => filterToKysely(v, latestKey, latestOperator)(eb));
-              return eb.or(all);
-            }
-            case '$none':
-            case '$not': {
-              const any = value.map((v) => eb.not(filterToKysely(v, latestKey, latestOperator)(eb)));
-              return eb.and(any);
-            }
+        const valueToUse = Array.isArray(value) ? value : [value];
+        const stmt = valueToUse.map((v) =>
+          filterToKysely(v, key.startsWith('$') ? latestKey : key, key.startsWith('$') ? key : latestOperator)(eb)
+        );
+        switch (key) {
+          case '$all': {
+            return eb.and(stmt);
           }
-        } else {
-          // There is one object and it is an object
-          switch (key) {
-            case '$all': {
-              return eb.and(filterToKysely(value, latestKey, latestOperator)(eb));
-            }
-            case '$any': {
-              return eb.or(filterToKysely(value, latestKey, latestOperator)(eb));
-            }
-            case '$none':
-            case '$not': {
-              return eb.not(filterToKysely(value, latestKey, latestOperator)(eb));
-            }
+          case '$any': {
+            return eb.or(stmt);
+          }
+          case '$includesNone':
+          case '$none':
+          case '$not': {
+            return eb.and(
+              valueToUse.map((v) => eb.not(filterToKysely(v, key.startsWith('$') ? latestKey : key, '$not')(eb)))
+            );
+          }
+          default:
+            return filterToKysely(
+              value,
+              key.startsWith('$') ? latestKey : key,
+              key.startsWith('$') ? key : latestOperator
+            )(eb);
+        }
+      } else {
+        const stmt = entries.map(([key, value]) =>
+          filterToKysely(value, key.startsWith('$') ? latestKey : key, key.startsWith('$') ? key : latestOperator)(eb)
+        );
+        switch (latestOperator) {
+          case '$all': {
+            return eb.and(stmt);
+          }
+          case '$any': {
+            return eb.or(stmt);
+          }
+          case '$none':
+          case '$not':
+          case '$includesNone': {
+            return eb.and(
+              entries.map(([key, value]) =>
+                eb.not(filterToKysely(value, key.startsWith('$') ? latestKey : key, '$not')(eb))
+              )
+            );
+          }
+          default: {
+            return eb.and(stmt);
           }
         }
       }
-
-      for (const [key, value] of entries) {
-        return filterToKysely(
-          value,
-          key.startsWith('$') ? latestKey : key,
-          key.startsWith('$') ? key : latestOperator
-        )(eb);
-      }
     }
-
     throw new Error('Not implemented');
   };
 };
