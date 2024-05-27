@@ -283,7 +283,7 @@ export const filterToKysely = (
         computedKey,
         filter,
         eb,
-        cast: isJsonColumnType ? false : true
+        cast: isJsonColumnType || filter instanceof Date ? false : true
       });
     }
 
