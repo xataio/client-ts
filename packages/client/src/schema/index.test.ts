@@ -399,15 +399,17 @@ describe('read', () => {
     const { fetch, users } = buildClient();
 
     const id = 'rec_1234';
-    const expected = { method: 'GET', path: `/tables/users/data/${id}`, body: undefined };
-    const result = await expectRequest(fetch, expected, () => users.read(id));
+    const result = await expectRequest(fetch, [], () => users.read(id), {
+      records: [{ xata_id: id }],
+      meta: { page: { cursor: '', more: false } }
+    });
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=*",
+          "body": "{"statement":"select * from \\"users\\" where \\"xata_id\\" = $1","params":["rec_1234"]}",
+          "method": "POST",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
       ]
     `);
@@ -417,15 +419,17 @@ describe('read', () => {
     const { fetch, users } = buildClient();
 
     const id = 'rec_1234';
-    const expected = { method: 'GET', path: `/tables/users/data/${id}`, body: undefined };
-    const result = await expectRequest(fetch, expected, () => users.read(id, ['name', 'age']));
+    const result = await expectRequest(fetch, [], () => users.read(id, ['name', 'age']), {
+      records: [{ xata_id: id }],
+      meta: { page: { cursor: '', more: false } }
+    });
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=name%2Cage",
+          "body": "{"statement":"select \\"name\\", \\"age\\" from \\"users\\" where \\"xata_id\\" = $1","params":["rec_1234"]}",
+          "method": "POST",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
       ]
     `);
@@ -437,26 +441,25 @@ describe('Repository.update', () => {
     const { fetch, users } = buildClient();
 
     const object = { xata_id: 'rec_1234', xata_version: 1, name: 'Ada' };
-    const expected = [
-      { method: 'PUT', path: `/tables/users/data/${object.xata_id}`, body: object },
-      { method: 'GET', path: `/tables/users/data/${object.xata_id}` }
-    ];
     const result = await expectRequest(
       fetch,
-      expected,
+      [],
       async () => {
         const result = await users.update(object.xata_id, object);
         expect(result?.xata_id).toBe(object.xata_id);
       },
-      { xata_id: object.xata_id }
+      {
+        records: [{ xata_id: object.xata_id }],
+        meta: { page: { cursor: '', more: false } }
+      }
     );
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": "{"name":"Ada"}",
-          "method": "PATCH",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=*",
+          "body": "{"statement":"update \\"users\\" set \\"xata_version\\" = $1, \\"name\\" = $2 where \\"xata_id\\" = $3 returning *","params":["1","Ada","rec_1234"]}",
+          "method": "POST",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
       ]
     `);
@@ -468,17 +471,24 @@ describe('Repository.delete', () => {
     const { fetch, users } = buildClient();
 
     const id = 'rec_1234';
-    const expected = { method: 'DELETE', path: `/tables/users/data/${id}`, body: undefined };
-    const result = await expectRequest(fetch, expected, async () => {
-      await users.delete(id);
-    });
+    const result = await expectRequest(
+      fetch,
+      [],
+      async () => {
+        await users.delete(id);
+      },
+      {
+        records: [],
+        meta: { page: { cursor: '', more: false } }
+      }
+    );
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": undefined,
-          "method": "DELETE",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=*",
+          "body": "{"statement":"delete from \\"users\\" where \\"xata_id\\" = $1 returning *","params":["rec_1234"]}",
+          "method": "POST",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
       ]
     `);
@@ -491,31 +501,27 @@ describe('create', () => {
 
     const created = { xata_id: 'rec_1234', _version: 0 };
     const object = { name: 'Ada' } as User;
-    const expected = [
-      { method: 'POST', path: '/tables/users/data', body: object },
-      {
-        method: 'GET',
-        path: '/tables/users/data/rec_1234',
-        body: undefined
-      }
-    ];
 
     const result = await expectRequest(
       fetch,
-      expected,
+      [],
       async () => {
         const result = await users.create(object);
         expect(result.xata_id).toBe(created.xata_id);
       },
-      created
+      {
+        records: [created],
+        meta: { page: { cursor: '', more: false } }
+      }
     );
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": "{"name":"Ada"}",
+          "body": "{"statement":"insert into \\"users\\" (\\"name\\") values ($1) returning *","params":["Ada"]}",
           "method": "POST",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data?columns=*",        },
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
+        },
       ]
     `);
   });
