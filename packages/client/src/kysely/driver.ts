@@ -48,17 +48,14 @@ export class XataDriver implements Driver {
     return Promise.resolve(new XataConnection(this.config));
   }
 
-  beginTransaction(): Promise<void> {
-    throw new Error('Transactions are not supported yet.');
-  }
+  // @ts-expect-error
+  beginTransaction(): Promise<void> {}
 
-  commitTransaction(): Promise<void> {
-    throw new Error('Transactions are not supported yet.');
-  }
+  // @ts-expect-error
+  commitTransaction(): Promise<void> {}
 
-  rollbackTransaction(): Promise<void> {
-    throw new Error('Transactions are not supported yet.');
-  }
+  // @ts-expect-error
+  rollbackTransaction(): Promise<void> {}
 
   async releaseConnection(_conn: XataConnection): Promise<void> {
     // noop

@@ -208,10 +208,10 @@ const buildStatement = ({
       return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
     }
     case '$startsWith': {
-      return sql`(starts_with(${computedKey}, ${filter}))`;
+      return sql`(starts_with(${computedKey}::text, ${filter}))`;
     }
     case '$endsWith': {
-      return sql`(${computedKey} LIKE ${eb.val('%' + buildPattern(filter, false))})`;
+      return sql`(${computedKey}::text LIKE ${eb.val('%' + buildPattern(filter, false))})`;
     }
     case '$lt': {
       return sql`${computedKey} < ${filter}`;
@@ -244,7 +244,7 @@ const buildStatement = ({
       return sql`(${eb.ref(filter as string)} IS NULL)`;
     }
     default: {
-      return eb(computedKey, '=', filter);
+      return sql`CAST (${computedKey} AS text) = ${filter}`;
     }
   }
 };
@@ -296,7 +296,11 @@ export const filterToKysely = (
           case '$any': {
             return eb.or(stmt);
           }
-          case '$includesNone':
+          case '$includesNone': {
+            return eb.and(
+              valueToUse.map((v) => eb.not(filterToKysely(v, key.startsWith('$') ? latestKey : key, '$includes')(eb)))
+            );
+          }
           case '$none':
           case '$not': {
             return eb.and(
@@ -321,9 +325,15 @@ export const filterToKysely = (
           case '$any': {
             return eb.or(stmt);
           }
-          case '$none':
-          case '$not':
           case '$includesNone': {
+            return eb.and(
+              entries.map(([key, value]) =>
+                eb.not(filterToKysely(value, key.startsWith('$') ? latestKey : key, '$includes')(eb))
+              )
+            );
+          }
+          case '$none':
+          case '$not': {
             return eb.and(
               entries.map(([key, value]) =>
                 eb.not(filterToKysely(value, key.startsWith('$') ? latestKey : key, '$not')(eb))

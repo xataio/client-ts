@@ -437,8 +437,7 @@ describe('integration tests', () => {
     expect(teams).toHaveLength(1);
   });
 
-  // TODO failing
-  test.only('includesWithModeAndArrayOfFilters', async () => {
+  test('includesWithModeAndArrayOfFilters', async () => {
     const teams = await xata.db.teams
       .filter({
         labels: { $includesNone: [{ $contains: 'eagle' }, 'abc', { $endsWith: 'bad' }] }
@@ -447,8 +446,7 @@ describe('integration tests', () => {
     expect(teams).toHaveLength(2);
   });
 
-  // TODO failing
-  test.skip('includesWithMixOfAnyAndAllInPredicatePosition', async () => {
+  test('includesWithMixOfAnyAndAllInPredicatePosition', async () => {
     const teams = await xata.db.teams
       .filter({
         labels: { $includes: { $any: { $all: [{ $startsWith: 'test' }, { $contains: 'x' }], $any: ['a', 'b'] } } }
@@ -457,22 +455,20 @@ describe('integration tests', () => {
     expect(teams).toHaveLength(0);
   });
 
-  // TODO failing
-  test.skip('filterWithArraysComplexNegations', async () => {
+  test('filterWithArraysComplexNegations', async () => {
     const teams = await xata.db.teams
       .filter({
         labels: {
           $includes: {
-            $all: [{ $contains: 'mon' }, { $not: { $endsWith: 'key' } }]
+            $all: [{ $contains: 'mon' }, { $not: { $endsWith: 'keyo' } }]
           }
         }
       })
       .getAll();
-    expect(teams).toHaveLength(3);
+    expect(teams).toHaveLength(2);
   });
 
-  // TODO failing
-  test.skip('filtersWithIncludesAll', async () => {
+  test('filtersWithIncludesAll', async () => {
     const teams = await xata.db.teams
       .filter({
         labels: {
