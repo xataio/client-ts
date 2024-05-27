@@ -59,13 +59,15 @@ describe('client options', () => {
   test('provide branch as a string', async () => {
     const { fetch, users } = buildClient({ branch: 'branch' });
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
+        json: async () => {
+          return {
+            records: [],
+            meta: { page: { cursor: '', more: false } }
+          };
+        }
       } as Response;
     });
 
@@ -79,9 +81,9 @@ describe('client options', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{"page":{"size":1},"columns":["*"]}",
+        "body": "{"statement":"select * from \\"users\\"","params":[]}",
         "method": "POST",
-        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:branch/tables/users/query",
+        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:branch/sql",
       }
     `);
   });
@@ -91,7 +93,7 @@ describe('request', () => {
   test('builds the right arguments for a GET request', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -111,9 +113,9 @@ describe('request', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{"page":{"size":1},"columns":["*"]}",
+        "body": "{"statement":"select * from \\"users\\"","params":[]}",
         "method": "POST",
-        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
       }
     `);
   });
@@ -121,7 +123,7 @@ describe('request', () => {
   test('builds the right arguments for a POST request', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -141,9 +143,9 @@ describe('request', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{"page":{"size":20},"columns":["*"]}",
+        "body": "{"statement":"select * from \\"users\\"","params":[]}",
         "method": "POST",
-        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
       }
     `);
   });
@@ -166,7 +168,7 @@ describe('request', () => {
     const { fetch, users } = buildClient();
 
     const json = { a: 1 };
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -185,7 +187,7 @@ describe('request', () => {
   test('sets X-Xata-Agent header', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -205,7 +207,7 @@ describe('request', () => {
   test('sets X-Xata-Agent header with service', async () => {
     const { fetch, users } = buildClient({ clientName: 'myService' });
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -227,7 +229,7 @@ describe('request', () => {
 test('sets X-Xata-Agent header with extras', async () => {
   const { fetch, users } = buildClient({ clientName: 'myService', xataAgentExtra: { hello: 'world' } });
 
-  fetch.mockImplementationOnce(async () => {
+  fetch.mockImplementation(async () => {
     return {
       ok: true,
       json: async () => ({
@@ -258,7 +260,7 @@ async function expectRequest(
   callback: () => void,
   response?: any
 ): Promise<any[]> {
-  fetch.mockImplementationOnce(() => {
+  fetch.mockImplementation(() => {
     return {
       ok: true,
       json: async () => response
@@ -289,9 +291,14 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"page":{"size":20},"columns":["*"]}",
+            "body": "{"statement":"select * from \\"users\\"","params":[]}",
             "method": "POST",
-            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
+          },
+          {
+            "body": "{"statement":"select * from \\"users\\" limit $1","params":["20"]}",
+            "method": "POST",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
         ]
       `);
@@ -309,9 +316,14 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"filter":{"$all":[{"name":"foo"}]},"page":{"size":20},"columns":["*"]}",
+            "body": "{"statement":"select * from \\"users\\" where CAST (\\"name\\" AS text) = $1","params":["foo"]}",
             "method": "POST",
-            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
+          },
+          {
+            "body": "{"statement":"select * from \\"users\\" where CAST (\\"name\\" AS text) = $1 limit $2","params":["foo","20"]}",
+            "method": "POST",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
         ]
       `);
@@ -337,9 +349,14 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"page":{"size":1},"columns":["*"]}",
+            "body": "{"statement":"select * from \\"users\\"","params":[]}",
             "method": "POST",
-            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
+          },
+          {
+            "body": "{"statement":"select * from \\"users\\" limit $1","params":["1"]}",
+            "method": "POST",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
         ]
       `);
@@ -362,9 +379,14 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"page":{"size":1},"columns":["*"]}",
+            "body": "{"statement":"select * from \\"users\\"","params":[]}",
             "method": "POST",
-            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
+          },
+          {
+            "body": "{"statement":"select * from \\"users\\" limit $1","params":["1"]}",
+            "method": "POST",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
         ]
       `);
