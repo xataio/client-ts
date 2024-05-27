@@ -5149,6 +5149,80 @@ export const sqlQuery = (variables: SqlQueryVariables, signal?: AbortSignal) =>
     signal
   });
 
+export type SqlBatchQueryPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type SqlBatchQueryError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 503;
+      payload: Responses.ServiceUnavailableError;
+    }
+>;
+
+export type SqlBatchQueryRequestBody = {
+  /**
+   * The SQL statements.
+   */
+  statements: {
+    /**
+     * The SQL statement.
+     *
+     * @minLength 1
+     */
+    statement?: string;
+    /**
+     * The query parameter list.
+     */
+    params?: any[] | null;
+  }[];
+  /**
+   * The consistency level for this request.
+   *
+   * @default strong
+   */
+  consistency?: 'strong' | 'eventual';
+  /**
+   * The response type.
+   *
+   * @default json
+   */
+  responseType?: 'json' | 'array';
+};
+
+export type SqlBatchQueryVariables = {
+  body: SqlBatchQueryRequestBody;
+  pathParams: SqlBatchQueryPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Run multiple SQL queries across the database branch.
+ */
+export const sqlBatchQuery = (variables: SqlBatchQueryVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Responses.SQLResponse, SqlBatchQueryError, SqlBatchQueryRequestBody, {}, {}, SqlBatchQueryPathParams>({
+    url: '/db/{dbBranchName}/sql/batch',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
 export const operationsByTag = {
   migrations: {
     applyMigration,
@@ -5239,5 +5313,5 @@ export const operationsByTag = {
     summarizeTable,
     aggregateTable
   },
-  sql: { sqlQuery }
+  sql: { sqlQuery, sqlBatchQuery }
 };
