@@ -1979,8 +1979,9 @@ export class KyselyRepository<Record extends XataRecord>
         buildSortStatement(Array.isArray(sort) ? sort : [sort]);
       }
 
+      const columnData = this.#schemaTables?.find((table) => table.name === this.#table)?.columns;
       if (filter) {
-        statement = statement.where(filterToKysely(filter) as ExpressionFactory<any, any, any>);
+        statement = statement.where(filterToKysely(filter, columnData ?? []) as ExpressionFactory<any, any, any>);
       }
 
       if (offset) {
@@ -2003,7 +2004,7 @@ export class KyselyRepository<Record extends XataRecord>
       const { response, totalItems } = await this.#db.transaction().execute(async (trx) => {
         let statementCopy = statement.clearLimit().clearOffset().clearWhere();
         statementCopy = filter
-          ? statementCopy.where(filterToKysely(filter) as ExpressionFactory<any, any, any>)
+          ? statementCopy.where(filterToKysely(filter, columnData ?? []) as ExpressionFactory<any, any, any>)
           : statementCopy;
         const totalRows: {
           [key: string]: unknown;

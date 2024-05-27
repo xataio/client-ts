@@ -6,6 +6,7 @@ import { JSONValue } from './json';
 import { ColumnsByValue, ValueAtColumn } from './selection';
 import { ExpressionBuilder, ExpressionOrFactory, JSONPathBuilder, ReferenceExpression, sql } from 'kysely';
 import { ExpressionFactory, isExpressionOrFactory } from 'kysely/dist/cjs/parser/expression-parser';
+import { Schemas } from '../api';
 
 export type JSONFilterColumns<Record> = Values<{
   [K in keyof Record]: NonNullable<Record[K]> extends JSONValue<any>
@@ -181,12 +182,14 @@ const buildStatement = ({
   computedOperator,
   computedKey,
   filter,
-  eb
+  eb,
+  cast = true
 }: {
   computedOperator?: FilterPredicate;
   computedKey: ReferenceExpression<any, any>;
   filter: string | number | Date;
   eb: ExpressionBuilder<any, any>;
+  cast?: boolean;
 }) => {
   switch (computedOperator) {
     case '$contains': {
@@ -244,13 +247,17 @@ const buildStatement = ({
       return sql`(${eb.ref(filter as string)} IS NULL)`;
     }
     default: {
-      return sql`CAST (${computedKey} AS text) = ${filter}`;
+      if (cast) {
+        return sql`CAST (${computedKey} AS text) = ${filter}`;
+      }
+      return eb(computedKey, '=', filter);
     }
   }
 };
 
 export const filterToKysely = (
   filter: Filter<any>,
+  columnData: Schemas.Column[],
   latestKey?: string,
   latestOperator?: FilterPredicate
 ): ((eb: ExpressionBuilder<any, any>) => ExpressionOrFactory<any, any, any>) | ExpressionFactory<any, any, any> => {
@@ -259,25 +266,29 @@ export const filterToKysely = (
       const computedOperator = latestOperator ?? '=';
       const computedKey = eb.ref(latestKey ?? 'unknown');
 
+      const isJsonColumnType = columnData.find((c) => c.name === latestKey)?.type === 'json';
+
       if (isJsonColumnFilter(latestKey)) {
         const { firstCol, pathToUse } = parseJsonPath(latestKey ?? '');
         return buildStatement({
           computedOperator,
           computedKey: sql.raw(`jsonb_extract_path_text(${firstCol}::jsonb, ${pathToUse})::text`),
           filter,
-          eb
+          eb,
+          cast: false
         });
       }
       return buildStatement({
         computedOperator,
         computedKey,
         filter,
-        eb
+        eb,
+        cast: isJsonColumnType ? false : true
       });
     }
 
     if (Array.isArray(filter)) {
-      return eb.and(filter.map((f) => filterToKysely(f, latestKey, latestOperator)(eb)));
+      return eb.and(filter.map((f) => filterToKysely(f, columnData, latestKey, latestOperator)(eb)));
     }
 
     if (isObject(filter)) {
@@ -287,7 +298,12 @@ export const filterToKysely = (
         const [key, value] = entries[0];
         const valueToUse = Array.isArray(value) ? value : [value];
         const stmt = valueToUse.map((v) =>
-          filterToKysely(v, key.startsWith('$') ? latestKey : key, key.startsWith('$') ? key : latestOperator)(eb)
+          filterToKysely(
+            v,
+            columnData,
+            key.startsWith('$') ? latestKey : key,
+            key.startsWith('$') ? key : latestOperator
+          )(eb)
         );
         switch (key) {
           case '$all': {
@@ -298,25 +314,35 @@ export const filterToKysely = (
           }
           case '$includesNone': {
             return eb.and(
-              valueToUse.map((v) => eb.not(filterToKysely(v, key.startsWith('$') ? latestKey : key, '$includes')(eb)))
+              valueToUse.map((v) =>
+                eb.not(filterToKysely(v, columnData, key.startsWith('$') ? latestKey : key, '$includes')(eb))
+              )
             );
           }
           case '$none':
           case '$not': {
             return eb.and(
-              valueToUse.map((v) => eb.not(filterToKysely(v, key.startsWith('$') ? latestKey : key, '$not')(eb)))
+              valueToUse.map((v) =>
+                eb.not(filterToKysely(v, columnData, key.startsWith('$') ? latestKey : key, '$not')(eb))
+              )
             );
           }
           default:
             return filterToKysely(
               value,
+              columnData,
               key.startsWith('$') ? latestKey : key,
               key.startsWith('$') ? key : latestOperator
             )(eb);
         }
       } else {
         const stmt = entries.map(([key, value]) =>
-          filterToKysely(value, key.startsWith('$') ? latestKey : key, key.startsWith('$') ? key : latestOperator)(eb)
+          filterToKysely(
+            value,
+            columnData,
+            key.startsWith('$') ? latestKey : key,
+            key.startsWith('$') ? key : latestOperator
+          )(eb)
         );
         switch (latestOperator) {
           case '$all': {
@@ -328,7 +354,7 @@ export const filterToKysely = (
           case '$includesNone': {
             return eb.and(
               entries.map(([key, value]) =>
-                eb.not(filterToKysely(value, key.startsWith('$') ? latestKey : key, '$includes')(eb))
+                eb.not(filterToKysely(value, columnData, key.startsWith('$') ? latestKey : key, '$includes')(eb))
               )
             );
           }
@@ -336,7 +362,7 @@ export const filterToKysely = (
           case '$not': {
             return eb.and(
               entries.map(([key, value]) =>
-                eb.not(filterToKysely(value, key.startsWith('$') ? latestKey : key, '$not')(eb))
+                eb.not(filterToKysely(value, columnData, key.startsWith('$') ? latestKey : key, '$not')(eb))
               )
             );
           }

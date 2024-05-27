@@ -167,7 +167,6 @@ describe('integration tests', () => {
     await xata.db.teams.delete(teams);
   });
 
-  // START NEW TESTS
   test('endsWith multiple conditions filter', async () => {
     const teams = await xata.db.teams
       .filter({
@@ -478,8 +477,6 @@ describe('integration tests', () => {
       .getAll();
     expect(teams).toHaveLength(2);
   });
-
-  // END NEW TESTS
 
   test('endsWith filter', async () => {
     const teams = await xata.db.teams.filter('name', endsWith('& animals')).getAll();
