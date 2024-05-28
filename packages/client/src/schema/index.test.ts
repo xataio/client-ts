@@ -161,7 +161,7 @@ describe('request', () => {
       } as Response;
     });
 
-    await expect(users.getFirst()).rejects.toMatchInlineSnapshot('[Error: Not Found]');
+    await expect(users.getFirst()).rejects.toMatchInlineSnapshot(`[Error: Not Found]`);
   });
 
   test('returns the json body if the response is ok', async () => {
@@ -457,7 +457,7 @@ describe('Repository.update', () => {
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": "{"statement":"update \\"users\\" set \\"xata_version\\" = $1, \\"name\\" = $2 where \\"xata_id\\" = $3 returning *","params":["1","Ada","rec_1234"]}",
+          "body": "{"statement":"update \\"users\\" set \\"name\\" = $1 where \\"xata_id\\" = $2 returning *","params":["Ada","rec_1234"]}",
           "method": "POST",
           "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
