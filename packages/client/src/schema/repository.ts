@@ -998,7 +998,12 @@ export class KyselyRepository<Record extends XataRecord>
       );
     }
 
-    const response = await statement.executeTakeFirst();
+    const response = await statement.executeTakeFirst().catch((e) => {
+      if (e.status === 400 && e.message.includes('constraint violation')) {
+        e.status = 422;
+      }
+      throw e;
+    });
 
     const schemaTables = await this.#getSchemaTables();
     return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
@@ -2178,7 +2183,7 @@ export class KyselyRepository<Record extends XataRecord>
 
     for (const [key, value] of Object.entries(object)) {
       // Ignore internal properties
-      //if (['xata_version', 'xata_createdat', 'xata_updatedat'].includes(key)) continue;
+      if (['xata_version', 'xata_createdat', 'xata_updatedat'].includes(key)) continue;
 
       const type = schema.columns.find((column) => column.name === key)?.type;
 
@@ -3438,7 +3443,7 @@ export const initObjectKysely = <T>(
 
     switch (column.type) {
       case 'datetime': {
-        const date = value !== undefined ? new Date(value as string) : null;
+        const date = value !== undefined && value !== null ? new Date(value as string) : null;
 
         if (date !== null && isNaN(date.getTime())) {
           console.error(`Failed to parse date ${value} for field ${column.name}`);
