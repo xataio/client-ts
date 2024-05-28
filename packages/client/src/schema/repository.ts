@@ -41,7 +41,14 @@ import { AskOptions, AskResult } from './ask';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter, filterToKysely } from './filters';
 import { parseJson, stringifyJson } from './json';
-import { CursorNavigationDecoded, PAGINATION_MAX_OFFSET, PAGINATION_MAX_SIZE, Page } from './pagination';
+import {
+  CursorNavigationDecoded,
+  PAGINATION_DEFAULT_OFFSET,
+  PAGINATION_DEFAULT_SIZE,
+  PAGINATION_MAX_OFFSET,
+  PAGINATION_MAX_SIZE,
+  Page
+} from './pagination';
 import { Query } from './query';
 import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
 import {
@@ -1941,13 +1948,13 @@ export class KyselyRepository<Record extends XataRecord>
         : cursor?.data.sort
         ? buildSortFilter(cursor?.data?.sort)
         : undefined;
-      const size = data?.pagination?.size ?? cursor?.data?.pagination?.size ?? query.meta.page.size;
-      const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset;
+      const size = data?.pagination?.size ?? cursor?.data?.pagination?.size ?? PAGINATION_DEFAULT_SIZE;
+      const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset ?? PAGINATION_DEFAULT_OFFSET;
 
       if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
       if (offset && offset > PAGINATION_MAX_OFFSET)
         throw new Error(`page offset must not exceed ${PAGINATION_MAX_OFFSET}`);
-      if (sort && cursor) throw new Error('sort and cursor cannot be used together');
+      if (data.sort && cursor) throw new Error('sort and cursor cannot be used together');
 
       let statement = this.#db.selectFrom(this.#table);
 
@@ -2010,35 +2017,34 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.orderBy(cursorEnd.primaryColumn, 'desc');
       }
 
-      const { response, totalItems } = await this.#db.transaction().execute(async (trx) => {
-        let statementCopy = statement.clearLimit().clearOffset().clearWhere();
-        statementCopy = filter
-          ? statementCopy.where(filterToKysely(filter, columnData ?? []) as ExpressionFactory<any, any, any>)
-          : statementCopy;
-        const totalRows: {
-          [key: string]: unknown;
-        }[] = (await trx.executeQuery(statementCopy)).rows;
+      const transactionResult = await this.#db.transaction().execute(async (trx) => {
         const response: {
           [key: string]: unknown;
         }[] = (await trx.executeQuery(statement)).rows;
 
-        return { response, totalItems: totalRows };
+        const field = cursor?.primaryColumn ?? 'xata_id';
+        const lastSeenId: string = response.length > 0 ? (response[response.length - 1][field] as string) : '';
+
+        let statementCopy = statement.clearLimit().clearOffset().clearWhere();
+        statementCopy = filter
+          ? statementCopy.where(filterToKysely(filter, columnData ?? []) as ExpressionFactory<any, any, any>)
+          : statementCopy;
+
+        statementCopy = statement.offset(response.length).limit(1);
+
+        const nextItem: {
+          [key: string]: unknown;
+        }[] = (await trx.executeQuery(statementCopy)).rows;
+
+        return { response, nextItem, lastSeenId };
       });
 
-      const lastItem = response[response.length - 1];
-      const lastAllItem = totalItems[totalItems.length - 1];
-      const field = cursor?.primaryColumn ?? 'xata_id';
       const more = () => {
-        // How to tell if more items if the sort is random?
-        if (sortRandom === true) return false;
-        if (lastItem?.[field] && totalItems[totalItems.length - 1]?.[field]) {
-          return lastItem?.[field] !== lastAllItem?.[field];
-        }
-        return false;
+        return transactionResult.nextItem.length > 0;
       };
 
       const schemaTables = await this.#getSchemaTables();
-      const records = response.map((record) =>
+      const records = transactionResult.response.map((record) =>
         initObjectKysely<Result>(
           this,
           this.#db,
@@ -2048,14 +2054,13 @@ export class KyselyRepository<Record extends XataRecord>
           (data.columns as SelectableColumn<Result>[]) ?? ['*']
         )
       );
-
       const meta = {
         page: {
           more: more(),
           size,
           cursor: Cursor.from({
             primaryColumn: 'xata_id',
-            lastSeenId: lastItem?.xata_id as string,
+            lastSeenId: transactionResult.lastSeenId,
             data: {
               ...data,
               // remove pagination because I don't want to keep
