@@ -132,3 +132,22 @@ export type SQLResponse = {
   total?: number;
   warning?: string;
 };
+
+export type SQLBatchResponse = {
+  results: {
+    records?: Schemas.SQLRecord[];
+    rows?: any[][];
+    /**
+     * Name of the column and its PostgreSQL type
+     */
+    columns?: {
+      name?: string;
+      type?: string;
+    }[];
+    /**
+     * Number of selected columns
+     */
+    total?: number;
+    warning?: string;
+  }[];
+};

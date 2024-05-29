@@ -5216,7 +5216,14 @@ export type SqlBatchQueryVariables = {
  * Run multiple SQL queries across the database branch.
  */
 export const sqlBatchQuery = (variables: SqlBatchQueryVariables, signal?: AbortSignal) =>
-  dataPlaneFetch<Responses.SQLResponse, SqlBatchQueryError, SqlBatchQueryRequestBody, {}, {}, SqlBatchQueryPathParams>({
+  dataPlaneFetch<
+    Responses.SQLBatchResponse,
+    SqlBatchQueryError,
+    SqlBatchQueryRequestBody,
+    {},
+    {},
+    SqlBatchQueryPathParams
+  >({
     url: '/db/{dbBranchName}/sql/batch',
     method: 'post',
     ...variables,
