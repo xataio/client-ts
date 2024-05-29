@@ -162,12 +162,7 @@ export class SQLPlugin extends XataPlugin {
 
     sqlFunction.connectionString = buildConnectionString(pluginOptions);
     sqlFunction.batch = async (query: SQLBatchQuery) => {
-      const {
-        records,
-        rows,
-        warning,
-        columns = []
-      } = await sqlBatchQuery({
+      const { results } = await sqlBatchQuery({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
         body: {
           statements: query.statements.map(({ statement, params }) => ({ statement, params })),
@@ -177,7 +172,7 @@ export class SQLPlugin extends XataPlugin {
         ...pluginOptions
       });
 
-      return { records, rows, warning, columns } as any;
+      return { results } as any;
     };
 
     return sqlFunction;
