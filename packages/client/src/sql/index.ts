@@ -1,4 +1,4 @@
-import { HostProvider, parseWorkspacesUrlParts, sqlQuery } from '../api';
+import { HostProvider, parseWorkspacesUrlParts, sqlBatchQuery, sqlQuery } from '../api';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isObject, isString } from '../util/lang';
 import { prepareParams } from './parameters';
@@ -27,6 +27,30 @@ export type SQLQueryParams<T = any[]> = {
   consistency?: 'strong' | 'eventual';
   /**
    * The response type to use when executing the query.
+   */
+  responseType?: 'json' | 'array';
+};
+
+export type SQLBatchQuery = {
+  /**
+   * The SQL statements to execute.
+   */
+  statements: {
+    /**
+     * The SQL statement to execute.
+     */
+    statement: string;
+    /**
+     * The parameters to pass to the SQL statement.
+     */
+    params?: any[];
+  }[];
+  /**
+   * The consistency level to use when executing the queries.
+   */
+  consistency?: 'strong' | 'eventual';
+  /**
+   * The response type to use when executing the queries.
    */
   responseType?: 'json' | 'array';
 };
@@ -92,6 +116,25 @@ export type SQLPluginResult = SQLPluginFunction & {
    * Connects with the same credentials as the Xata client.
    */
   connectionString: string;
+
+  /**
+   * Executes a batch of SQL statements.
+   * @param query The batch of SQL statements to execute.
+   */
+  batch: <Query extends SQLBatchQuery = SQLBatchQuery>(
+    query: Query
+  ) => Promise<{
+    results: Array<
+      SQLQueryResult<
+        any,
+        Query extends SQLBatchQuery
+          ? Query['responseType'] extends SQLResponseType
+            ? NonNullable<Query['responseType']>
+            : 'json'
+          : 'json'
+      >
+    >;
+  }>;
 };
 
 export class SQLPlugin extends XataPlugin {
@@ -118,6 +161,24 @@ export class SQLPlugin extends XataPlugin {
     };
 
     sqlFunction.connectionString = buildConnectionString(pluginOptions);
+    sqlFunction.batch = async (query: SQLBatchQuery) => {
+      const {
+        records,
+        rows,
+        warning,
+        columns = []
+      } = await sqlBatchQuery({
+        pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
+        body: {
+          statements: query.statements.map(({ statement, params }) => ({ statement, params })),
+          consistency: query.consistency,
+          responseType: query.responseType
+        },
+        ...pluginOptions
+      });
+
+      return { records, rows, warning, columns } as any;
+    };
 
     return sqlFunction;
   }

@@ -372,11 +372,26 @@ describe('SQL proxy', () => {
     expect(record2).toBeDefined();
     expect(record2?.[4]).toBe('[C] Planes');
   });
-  
+
   test('xata.sql has a connection string', async () => {
     expect(xata.sql.connectionString).toBeDefined();
     expect(xata.sql.connectionString).toMatch(
       /postgresql:\/\/([a-z0-9]+):([a-zA-Z0-9_]+)@([a-z0-9-.]+)\/([a-z0-9-]+):([a-z0-9-]+)\?sslmode=require/
     );
+  });
+
+  test('xata.sql has a batch query method', async () => {
+    const { results } = await xata.sql.batch({
+      statements: [
+        { statement: `INSERT INTO teams (name) VALUES ($1) RETURNING *`, params: ['Team ships 3'] },
+        { statement: `INSERT INTO teams (name) VALUES ($1) RETURNING *`, params: ['Team ships 4'] }
+      ]
+    });
+
+    expect(results).toHaveLength(2);
+    expect(results[0].records).toHaveLength(1);
+    expect(results[1].records).toHaveLength(1);
+    expect(results[0].records[0].name).toBe('Team ships 3');
+    expect(results[1].records[0].name).toBe('Team ships 4');
   });
 });
