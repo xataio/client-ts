@@ -65,7 +65,6 @@ import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } fro
 import { Cursor, decode } from '../util/cursor';
 import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
 import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
-import { ExpressionFactory } from 'kysely/dist/cjs/parser/expression-parser';
 import { SQLBatchResponse } from '../api/dataPlaneResponses';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
@@ -895,24 +894,15 @@ export class KyselyRepository<Record extends XataRecord>
 
   async create<K extends SelectableColumn<Record>>(
     object: EditableData<Record> & Partial<Identifiable>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
-  async create(
-    object: EditableData<Record> & Partial<Identifiable>,
-    options?: { ifVersion?: number }
-  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create(object: EditableData<Record> & Partial<Identifiable>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async create<K extends SelectableColumn<Record>>(
     id: Identifier,
     object: EditableData<Record>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
-  async create(
-    id: Identifier,
-    object: EditableData<Record>,
-    options?: { ifVersion?: number }
-  ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
+  async create(id: Identifier, object: EditableData<Record>): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async create<K extends SelectableColumn<Record>>(
     objects: Array<EditableData<Record> & Partial<Identifiable>>,
     columns: K[]
@@ -925,9 +915,8 @@ export class KyselyRepository<Record extends XataRecord>
       | Identifier
       | (EditableData<Record> & Partial<Identifiable>)
       | Array<EditableData<Record> & Partial<Identifiable>>,
-    b?: EditableData<Record> | K[] | { ifVersion?: number },
-    c?: K[] | { ifVersion?: number },
-    d?: { ifVersion?: number }
+    b?: EditableData<Record> | K[],
+    c?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, K[]>>
     | Readonly<SelectedPick<Record, K[]>>[]
@@ -935,11 +924,10 @@ export class KyselyRepository<Record extends XataRecord>
     | Readonly<SelectedPick<Record, ['*']>>[]
   > {
     return this.#trace('create', async () => {
-      const ifVersion = parseIfVersion(b, c, d);
       // Create many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
-        const records = await this.#insertRecords(a, { ifVersion, createOnly: true });
+        const records = await this.#insertRecords(a, { createOnly: true });
         const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
@@ -952,7 +940,7 @@ export class KyselyRepository<Record extends XataRecord>
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
-        return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: true, ifVersion });
+        return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: true });
       }
 
       // Create one record with id as property
@@ -960,8 +948,7 @@ export class KyselyRepository<Record extends XataRecord>
         if (a.xata_id === '') throw new Error("The id can't be empty");
         const columns = isValidSelectableColumns(b) ? b : undefined;
         return await this.#insertRecordWithId(a.xata_id, { ...a, xata_id: undefined }, columns, {
-          createOnly: true,
-          ifVersion
+          createOnly: true
         });
       }
 
@@ -992,14 +979,14 @@ export class KyselyRepository<Record extends XataRecord>
     }
     const response = await statement.executeTakeFirst();
 
-    return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
   }
 
   async #insertRecordWithId(
     recordId: Identifier,
     object: EditableData<Record>,
     columns: SelectableColumn<Record>[] = ['*'],
-    { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
+    { createOnly }: { createOnly: boolean }
   ) {
     if (!recordId) return null;
 
@@ -1030,13 +1017,10 @@ export class KyselyRepository<Record extends XataRecord>
     });
 
     const schemaTables = await this.#getSchemaTables();
-    return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
   }
 
-  async #insertRecords(
-    objects: EditableData<Record>[],
-    { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
-  ) {
+  async #insertRecords(objects: EditableData<Record>[], { createOnly }: { createOnly: boolean }) {
     const operations = await promiseMap(objects, async (object) => {
       const record = await this.#transformObjectToApi(object);
       return record;
@@ -1126,7 +1110,6 @@ export class KyselyRepository<Record extends XataRecord>
           const schemaTables = await this.#getSchemaTables();
           return initObjectKysely<Record>(
             this,
-            this.#db,
             schemaTables,
             this.#table,
             response,
@@ -1202,23 +1185,19 @@ export class KyselyRepository<Record extends XataRecord>
 
   async update<K extends SelectableColumn<Record>>(
     object: Partial<EditableData<Record>> & Identifiable,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
   async update(
-    object: Partial<EditableData<Record>> & Identifiable,
-    options?: { ifVersion?: number }
+    object: Partial<EditableData<Record>> & Identifiable
   ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
   async update<K extends SelectableColumn<Record>>(
     id: Identifier,
     object: Partial<EditableData<Record>>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>> | null>;
   async update(
     id: Identifier,
-    object: Partial<EditableData<Record>>,
-    options?: { ifVersion?: number }
+    object: Partial<EditableData<Record>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>> | null>;
   async update<K extends SelectableColumn<Record>>(
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
@@ -1232,9 +1211,8 @@ export class KyselyRepository<Record extends XataRecord>
       | Identifier
       | (Partial<EditableData<Record>> & Identifiable)
       | Array<Partial<EditableData<Record>> & Identifiable>,
-    b?: Partial<EditableData<Record>> | K[] | { ifVersion?: number },
-    c?: K[] | { ifVersion?: number },
-    d?: { ifVersion?: number }
+    b?: Partial<EditableData<Record>> | K[],
+    c?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
     | Array<Readonly<SelectedPick<Record, ['*']>> | null>
@@ -1243,8 +1221,6 @@ export class KyselyRepository<Record extends XataRecord>
     | null
   > {
     return this.#trace('update', async () => {
-      const ifVersion = parseIfVersion(b, c, d);
-
       // Update many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
@@ -1254,7 +1230,6 @@ export class KyselyRepository<Record extends XataRecord>
         const updates = a.filter((_item, index) => existing[index] !== null);
 
         await this.#updateRecords(updates as Array<Partial<EditableData<Record>> & Identifiable>, {
-          ifVersion,
           upsert: false
         });
 
@@ -1269,13 +1244,13 @@ export class KyselyRepository<Record extends XataRecord>
         // Update one record with id as param
         if (isString(a) && isObject(b)) {
           const columns = isValidSelectableColumns(c) ? c : undefined;
-          return await this.#updateRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
+          return await this.#updateRecordWithID(a, b as EditableData<Record>, columns);
         }
 
         // Update one record with id as property
         if (isObject(a) && isString(a.xata_id)) {
           const columns = isValidSelectableColumns(b) ? b : undefined;
-          return await this.#updateRecordWithID(a.xata_id, { ...a, xata_id: undefined }, columns, { ifVersion });
+          return await this.#updateRecordWithID(a.xata_id, { ...a, xata_id: undefined }, columns);
         }
       } catch (error: any) {
         if (error.status === 422) return null;
@@ -1288,23 +1263,19 @@ export class KyselyRepository<Record extends XataRecord>
 
   async updateOrThrow<K extends SelectableColumn<Record>>(
     object: Partial<EditableData<Record>> & Identifiable,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async updateOrThrow(
-    object: Partial<EditableData<Record>> & Identifiable,
-    options?: { ifVersion?: number }
+    object: Partial<EditableData<Record>> & Identifiable
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
     id: Identifier,
     object: Partial<EditableData<Record>>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async updateOrThrow(
     id: Identifier,
-    object: Partial<EditableData<Record>>,
-    options?: { ifVersion?: number }
+    object: Partial<EditableData<Record>>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<Record>>(
     objects: Array<Partial<EditableData<Record>> & Identifiable>,
@@ -1318,9 +1289,8 @@ export class KyselyRepository<Record extends XataRecord>
       | Identifier
       | (Partial<EditableData<Record>> & Identifiable)
       | Array<Partial<EditableData<Record>> & Identifiable>,
-    b?: Partial<EditableData<Record>> | K[] | { ifVersion?: number },
-    c?: K[] | { ifVersion?: number },
-    d?: { ifVersion?: number }
+    b?: Partial<EditableData<Record>> | K[],
+    c?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
     | Array<Readonly<SelectedPick<Record, ['*']>>>
@@ -1328,7 +1298,7 @@ export class KyselyRepository<Record extends XataRecord>
     | Array<Readonly<SelectedPick<Record, K[]>>>
   > {
     return this.#trace('updateOrThrow', async () => {
-      const result = await this.update(a as any, b as any, c as any, d as any);
+      const result = await this.update(a as any, b as any, c as any);
 
       if (Array.isArray(result)) {
         const missingIds = compact(
@@ -1356,8 +1326,7 @@ export class KyselyRepository<Record extends XataRecord>
   async #updateRecordWithID(
     recordId: Identifier,
     object: Partial<EditableData<Record>>,
-    columns: SelectableColumn<Record>[] = ['*'],
-    { ifVersion }: { ifVersion?: number }
+    columns: SelectableColumn<Record>[] = ['*']
   ) {
     if (!recordId) return null;
 
@@ -1390,7 +1359,7 @@ export class KyselyRepository<Record extends XataRecord>
       if (!response) return null;
 
       const schemaTables = await this.#getSchemaTables();
-      return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
+      return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1400,10 +1369,7 @@ export class KyselyRepository<Record extends XataRecord>
     }
   }
 
-  async #updateRecords(
-    objects: Array<Partial<EditableData<Record>> & Identifiable>,
-    { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
-  ) {
+  async #updateRecords(objects: Array<Partial<EditableData<Record>> & Identifiable>, { upsert }: { upsert: boolean }) {
     const operations = await promiseMap(objects, async (object) => {
       const fields = await this.#transformObjectToApi(object);
       return fields;
@@ -1459,23 +1425,19 @@ export class KyselyRepository<Record extends XataRecord>
 
   async createOrUpdate<K extends SelectableColumn<Record>>(
     object: EditableData<Record> & Partial<Identifiable>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async createOrUpdate(
-    object: EditableData<Record> & Partial<Identifiable>,
-    options?: { ifVersion?: number }
+    object: EditableData<Record> & Partial<Identifiable>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<Record>>(
     id: Identifier,
     object: Omit<EditableData<Record>, 'xata_id'>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async createOrUpdate(
     id: Identifier,
-    object: Omit<EditableData<Record>, 'xata_id'>,
-    options?: { ifVersion?: number }
+    object: Omit<EditableData<Record>, 'xata_id'>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<Record>>(
     objects: Array<EditableData<Record> & Partial<Identifiable>>,
@@ -1486,9 +1448,8 @@ export class KyselyRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async createOrUpdate<K extends SelectableColumn<Record>>(
     a: Identifier | EditableData<Record> | EditableData<Record>[],
-    b?: EditableData<Record> | Omit<EditableData<Record>, 'xata_id'> | K[] | { ifVersion?: number },
-    c?: K[] | { ifVersion?: number },
-    d?: { ifVersion?: number }
+    b?: EditableData<Record> | Omit<EditableData<Record>, 'xata_id'> | K[],
+    c?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
     | Array<Readonly<SelectedPick<Record, ['*']>>>
@@ -1496,14 +1457,11 @@ export class KyselyRepository<Record extends XataRecord>
     | Array<Readonly<SelectedPick<Record, K[]>>>
   > {
     return this.#trace('createOrUpdate', async () => {
-      const ifVersion = parseIfVersion(b, c, d);
-
       // Create or update many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
         await this.#updateRecords(a as Array<Partial<EditableData<Record>> & Identifiable>, {
-          ifVersion,
           upsert: true
         });
 
@@ -1519,7 +1477,7 @@ export class KyselyRepository<Record extends XataRecord>
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
-        return await this.#upsertRecordWithID(a, b as EditableData<Record>, columns, { ifVersion });
+        return await this.#upsertRecordWithID(a, b as EditableData<Record>, columns);
       }
 
       // Create or update one record with id as property
@@ -1527,7 +1485,7 @@ export class KyselyRepository<Record extends XataRecord>
         if (a.xata_id === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
-        return await this.#upsertRecordWithID(a.xata_id, { ...a, xata_id: undefined }, columns, { ifVersion });
+        return await this.#upsertRecordWithID(a.xata_id, { ...a, xata_id: undefined }, columns);
       }
 
       // Create with undefined id as param
@@ -1547,8 +1505,7 @@ export class KyselyRepository<Record extends XataRecord>
   async #upsertRecordWithID(
     recordId: Identifier,
     object: Omit<EditableData<Record>, 'xata_id'>,
-    columns: SelectableColumn<Record>[] = ['*'],
-    { ifVersion }: { ifVersion?: number }
+    columns: SelectableColumn<Record>[] = ['*']
   ) {
     if (!recordId) return null;
 
@@ -1565,28 +1522,24 @@ export class KyselyRepository<Record extends XataRecord>
     const response = await statement.executeTakeFirst();
 
     const schemaTables = await this.#getSchemaTables();
-    return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
   }
 
   async createOrReplace<K extends SelectableColumn<Record>>(
     object: EditableData<Record> & Partial<Identifiable>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async createOrReplace(
-    object: EditableData<Record> & Partial<Identifiable>,
-    options?: { ifVersion?: number }
+    object: EditableData<Record> & Partial<Identifiable>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrReplace<K extends SelectableColumn<Record>>(
     id: Identifier | undefined,
     object: Omit<EditableData<Record>, 'xata_id'>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<Record, typeof columns>>>;
   async createOrReplace(
     id: Identifier | undefined,
-    object: Omit<EditableData<Record>, 'xata_id'>,
-    options?: { ifVersion?: number }
+    object: Omit<EditableData<Record>, 'xata_id'>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>>;
   async createOrReplace<K extends SelectableColumn<Record>>(
     objects: Array<EditableData<Record> & Partial<Identifiable>>,
@@ -1597,9 +1550,8 @@ export class KyselyRepository<Record extends XataRecord>
   ): Promise<Readonly<SelectedPick<Record, ['*']>>[]>;
   async createOrReplace<K extends SelectableColumn<Record>>(
     a: Identifier | EditableData<Record> | EditableData<Record>[] | undefined,
-    b?: EditableData<Record> | Omit<EditableData<Record>, 'xata_id'> | K[] | { ifVersion?: number },
-    c?: K[] | { ifVersion?: number },
-    d?: { ifVersion?: number }
+    b?: EditableData<Record> | Omit<EditableData<Record>, 'xata_id'> | K[],
+    c?: K[]
   ): Promise<
     | Readonly<SelectedPick<Record, ['*']>>
     | Array<Readonly<SelectedPick<Record, ['*']>>>
@@ -1607,13 +1559,11 @@ export class KyselyRepository<Record extends XataRecord>
     | Array<Readonly<SelectedPick<Record, K[]>>>
   > {
     return this.#trace('createOrReplace', async () => {
-      const ifVersion = parseIfVersion(b, c, d);
-
       // Create or replace many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        const records = await this.#insertRecords(a, { ifVersion, createOnly: false });
+        const records = await this.#insertRecords(a, { createOnly: false });
 
         const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
@@ -1627,7 +1577,7 @@ export class KyselyRepository<Record extends XataRecord>
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
-        return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: false, ifVersion });
+        return await this.#insertRecordWithId(a, b as EditableData<Record>, columns, { createOnly: false });
       }
 
       // Create or replace one record with id as property
@@ -1636,8 +1586,7 @@ export class KyselyRepository<Record extends XataRecord>
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
         return await this.#insertRecordWithId(a.xata_id, { ...a, xata_id: undefined }, columns, {
-          createOnly: false,
-          ifVersion
+          createOnly: false
         });
       }
 
@@ -1792,7 +1741,7 @@ export class KyselyRepository<Record extends XataRecord>
       const response = await statement.executeTakeFirst();
       if (!response) return null;
       const schemaTables = await this.#getSchemaTables();
-      return initObjectKysely(this, this.#db, schemaTables, this.#table, response, columns) as any;
+      return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1852,7 +1801,7 @@ export class KyselyRepository<Record extends XataRecord>
 
       // TODO - Column selection not supported by search endpoint yet
       return {
-        records: records.map((item) => initObjectKysely(this, this.#db, schemaTables, this.#table, item, ['*'])) as any,
+        records: records.map((item) => initObjectKysely(this, schemaTables, this.#table, item, ['*'])) as any,
         totalCount
       };
     });
@@ -1891,7 +1840,7 @@ export class KyselyRepository<Record extends XataRecord>
 
       // TODO - Column selection not supported by search endpoint yet
       return {
-        records: records.map((item) => initObjectKysely(this, this.#db, schemaTables, this.#table, item, ['*'])),
+        records: records.map((item) => initObjectKysely(this, schemaTables, this.#table, item, ['*'])),
         totalCount
       } as any;
     });
@@ -2030,7 +1979,6 @@ export class KyselyRepository<Record extends XataRecord>
       const records = response.map((record) =>
         initObjectKysely<Result>(
           this,
-          this.#db,
           schemaTables,
           this.#table,
           record,
@@ -2088,7 +2036,7 @@ export class KyselyRepository<Record extends XataRecord>
       return {
         ...result,
         summaries: result.summaries.map((summary) =>
-          initObjectKysely(this, this.#db, schemaTables, this.#table, summary, data.columns ?? [])
+          initObjectKysely(this, schemaTables, this.#table, summary, data.columns ?? [])
         )
       };
     });
@@ -3409,7 +3357,6 @@ export class RestRepository<Record extends XataRecord>
 
 export const initObjectKysely = <T>(
   repo: KyselyRepository<any>,
-  db: KyselyPluginResult<any>,
   schemaTables: Schemas.Table[],
   table: string,
   object: Record<string, any>,
@@ -3466,12 +3413,12 @@ export const initObjectKysely = <T>(
 
   record.update = async function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
-    return await repo.update(record['xata_id'] as string, data, columns, { ifVersion: c });
+    return await repo.update(record['xata_id'] as string, data, columns);
   };
 
   record.replace = async function (data: any, b?: any, c?: any) {
     const validColumns = isValidSelectableColumns(b) ? b : ['*'];
-    return await repo.createOrReplace(record['xata_id'] as string, data, validColumns, { ifVersion: c });
+    return await repo.createOrReplace(record['xata_id'] as string, data, validColumns);
   };
 
   record.delete = async function () {
