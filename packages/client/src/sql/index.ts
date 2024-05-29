@@ -150,16 +150,14 @@ export class SQLPlugin extends XataPlugin {
 
       const { statement, params, consistency, responseType } = prepareParams(query, parameters);
 
-      const {
-        records,
-        rows,
-        warning,
-        columns = []
-      } = await sqlQuery({
+      const { warning, columns, ...response } = await sqlQuery({
         pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
         body: { statement, params, consistency, responseType },
         ...pluginOptions
       });
+
+      const records = 'records' in response ? response.records : undefined;
+      const rows = 'rows' in response ? response.rows : undefined;
 
       return { records, rows, warning, columns } as any;
     };
