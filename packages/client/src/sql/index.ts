@@ -23,10 +23,12 @@ export type SQLQueryParams<T = any[]> = {
   params?: T;
   /**
    * The consistency level to use when executing the query.
+   * @default 'strong'
    */
   consistency?: 'strong' | 'eventual';
   /**
    * The response type to use when executing the query.
+   * @default 'json'
    */
   responseType?: 'json' | 'array';
 };
@@ -47,10 +49,12 @@ export type SQLBatchQuery = {
   }[];
   /**
    * The consistency level to use when executing the queries.
+   * @default 'strong'
    */
   consistency?: 'strong' | 'eventual';
   /**
    * The response type to use when executing the queries.
+   * @default 'json'
    */
   responseType?: 'json' | 'array';
 };
