@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.29.5
+
+### Patch Changes
+
+- [#1487](https://github.com/xataio/client-ts/pull/1487) [`6b754d2`](https://github.com/xataio/client-ts/commit/6b754d2f6a1f7b9378a96fe27502ff6c29ff5ed8) Thanks [@SferaDev](https://github.com/SferaDev)! - Add batch SQL support
+
 ## 0.29.4
 
 ### Patch Changes
