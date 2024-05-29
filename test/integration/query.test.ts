@@ -921,9 +921,7 @@ describe('integration tests', () => {
     expect(user.email).toBe(apiUser.email);
   });
 
-  // TODO fix
-  // This causes Error: the SQL query has returned too many rows (max allowed: 1000). Try using LIMIT or otherwise limit the number of returned rows.
-  test.skip('returns many records with multiple requests', async () => {
+  test('returns many records with multiple requests', async () => {
     const newUsers = Array.from({ length: PAGINATION_MAX_SIZE + 1 }).map((_, i) => ({ full_name: `user-${i}` }));
     await xata.db.users.create(newUsers);
 

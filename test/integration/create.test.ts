@@ -273,9 +273,7 @@ describe('record creation', () => {
     ).rejects.toThrowError();
   });
 
-  // TODO fix this test
-  // Test keeps timing out
-  test.skip('create more than the operation max', async () => {
+  test('create more than the operation max', async () => {
     const users = await xata.db.users.create(
       Array.from({ length: 1500 }, (_, i) => ({
         full_name: `John Doe ${i}`,

@@ -2,6 +2,7 @@ import { SchemaPluginResult } from '.';
 import {
   ApiExtraProps,
   Schemas,
+  SqlBatchQueryRequestBody,
   aggregateTable,
   askTableSession,
   branchTransaction,
@@ -12,6 +13,7 @@ import {
   insertRecordWithID,
   queryTable,
   searchTable,
+  sqlBatchQuery,
   summarizeTable,
   updateRecordWithID,
   upsertRecordWithID,
@@ -19,7 +21,6 @@ import {
 } from '../api';
 import { fetchSSERequest } from '../api/fetcher';
 import {
-  DataInputRecord,
   FuzzinessExpression,
   HighlightExpression,
   PrefixExpression,
@@ -33,7 +34,7 @@ import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
 import { SQLPluginFunction } from '../sql';
 import { chunk, compact, isDefined, isNumber, isObject, isString, promiseMap } from '../util/lang';
-import { Dictionary, ExactlyOne } from '../util/types';
+import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
@@ -58,20 +59,14 @@ import {
   SelectedPick,
   isValidSelectableColumns
 } from './selection';
-import {
-  ApiSortFilter,
-  SortDirection,
-  buildSortFilter,
-  isSortFilterBase,
-  isSortFilterObject,
-  isSortFilterString
-} from './sorting';
+import { ApiSortFilter, SortDirection, buildSortFilter, isSortFilterObject } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
 import { Cursor, decode } from '../util/cursor';
 import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
 import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
 import { ExpressionFactory } from 'kysely/dist/cjs/parser/expression-parser';
+import { SQLBatchResponse } from '../api/dataPlaneResponses';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -836,6 +831,7 @@ export class KyselyRepository<Record extends XataRecord>
   #db: KyselyPluginResult<any>;
   #schemaTables?: Schemas.Table[];
   #trace: TraceFunction;
+  #runTransaction: (params: SqlBatchQueryRequestBody) => Promise<SQLBatchResponse['results'][number]['records']>;
 
   constructor(options: {
     table: string;
@@ -854,6 +850,29 @@ export class KyselyRepository<Record extends XataRecord>
     // pass plugin options here.
     this.#schemaTables = options.schemaTables;
     this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
+
+    this.#runTransaction = async (body: SqlBatchQueryRequestBody) => {
+      body.statements.unshift({
+        statement: 'BEGIN',
+        params: []
+      });
+      body.statements.push({
+        statement: 'COMMIT',
+        params: []
+      });
+      const { results } = await sqlBatchQuery({
+        pathParams: {
+          workspace: '{workspaceId}',
+          dbBranchName: '{dbBranch}',
+          region: '{region}'
+        },
+        ...this.#getFetchProps(),
+        body
+      });
+      return results.flatMap((result) => {
+        return result.records?.map((record) => record) ?? [];
+      });
+    };
 
     const trace = options.pluginOptions.trace ?? defaultTrace;
     this.#trace = async <T>(
@@ -920,11 +939,11 @@ export class KyselyRepository<Record extends XataRecord>
       // Create many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
-        const ids = await this.#insertRecords(a, { ifVersion, createOnly: true });
+        const records = await this.#insertRecords(a, { ifVersion, createOnly: true });
         const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
-        const result = await this.read(ids as string[], columns);
+        const result = await this.read(records as Identifiable[], columns);
         return result;
       }
 
@@ -1023,35 +1042,25 @@ export class KyselyRepository<Record extends XataRecord>
       return record;
     });
 
-    const chunkedOperations: DataInputRecord[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
-
-    const ids = [];
-
-    for (const operations of chunkedOperations) {
-      const results = await this.#db.transaction().execute(async (trx) => {
-        const results: any = [];
-        for (const operation of operations) {
-          let statement: InsertQueryBuilder<any, any, any> = trx
-            .insertInto(this.#table)
-            .values(operation)
-            .returningAll();
-          if (!createOnly) {
-            // any fields that are not in the record should be set to null
-            const fieldsToSetNull = await this.#transformObjectToApiAllFields(operation);
-            statement = statement.onConflict((oc) =>
-              oc.column('xata_id').doUpdateSet({ ...fieldsToSetNull, ...operation })
-            );
-          }
-          const response = await statement.executeTakeFirstOrThrow();
-          results.push(response);
-        }
-        return results;
-      });
-      for (const r of results) {
-        ids.push((r as any)?.xata_id);
+    const statements: SqlBatchQueryRequestBody['statements'] = [];
+    for (const operation of operations) {
+      let statement: InsertQueryBuilder<any, any, any> = this.#db
+        .insertInto(this.#table)
+        .values(operation)
+        .returningAll();
+      if (!createOnly) {
+        // any fields that are not in the record should be set to null
+        const fieldsToSetNull = await this.#transformObjectToApiAllFields(operation);
+        statement = statement.onConflict((oc) =>
+          oc.column('xata_id').doUpdateSet({ ...fieldsToSetNull, ...operation })
+        );
       }
+      statements.push({ statement: statement.compile().sql, params: statement.compile().parameters as any[] });
     }
-    return ids;
+
+    const results = await this.#runTransaction({ statements });
+
+    return results;
   }
 
   async read<K extends SelectableColumn<Record>>(
@@ -1399,60 +1408,53 @@ export class KyselyRepository<Record extends XataRecord>
       const fields = await this.#transformObjectToApi(object);
       return fields;
     });
+    const statements: SqlBatchQueryRequestBody['statements'] = [];
 
-    const chunkedOperations: DataInputRecord[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
+    for (const operation of operations) {
+      const { xata_id, ...fields } = operation;
 
-    const ids = [];
-
-    for (const operations of chunkedOperations) {
-      const results = await this.#db.transaction().execute(async (trx) => {
-        const results: any = [];
-        for (const operation of operations) {
-          const { xata_id, ...fields } = operation;
-
-          let response;
-          if (upsert) {
-            const numericOperations: NumericOperations[] = [];
-            extractNumericOperations({ current: fields, acc: numericOperations, path: [], original: fields });
-            let statement: InsertQueryBuilder<any, any, any> = trx
-              .insertInto(this.#table)
-              .onConflict((oc) => oc.column('xata_id').doUpdateSet(fields))
-              .returningAll();
-            statement =
-              Object.keys(fields).length === 0 ? statement.defaultValues() : statement.values({ ...fields, xata_id });
-            if (numericOperations.length > 0) {
-              for (const { field, operator, value } of numericOperations) {
-                statement = statement.values((eb) => ({ [field]: eb(field, operatorMap[operator], value) }));
-              }
-            }
-            response = await statement.executeTakeFirstOrThrow();
-          } else {
-            const numericOperations: NumericOperations[] = [];
-            extractNumericOperations({ current: fields, acc: numericOperations, path: [], original: fields });
-            let statement: UpdateQueryBuilder<any, any, any, any> = trx
-              .updateTable(this.#table)
-              .where('xata_id', '=', xata_id as string)
-              .returningAll();
-            if (Object.keys(fields).length > 0) {
-              statement = statement.set(fields);
-            }
-            if (numericOperations.length > 0) {
-              for (const { field, operator, value } of numericOperations) {
-                statement = statement.set((eb) => ({ [field]: eb(field, operatorMap[operator], value) }));
-              }
-            }
-            response = await statement.executeTakeFirstOrThrow();
+      if (upsert) {
+        const numericOperations: NumericOperations[] = [];
+        extractNumericOperations({ current: fields, acc: numericOperations, path: [], original: fields });
+        let statement: InsertQueryBuilder<any, any, any> = this.#db
+          .insertInto(this.#table)
+          .onConflict((oc) => oc.column('xata_id').doUpdateSet(fields))
+          .returningAll();
+        statement =
+          Object.keys(fields).length === 0 ? statement.defaultValues() : statement.values({ ...fields, xata_id });
+        if (numericOperations.length > 0) {
+          for (const { field, operator, value } of numericOperations) {
+            statement = statement.values((eb) => ({ [field]: eb(field, operatorMap[operator], value) }));
           }
-          results.push(response);
         }
-        return results;
-      });
-      for (const r of results) {
-        ids.push((r as any)?.xata_id);
+        statements.push({
+          statement: statement.compile().sql,
+          params: statement.compile().parameters as any[]
+        });
+      } else {
+        const numericOperations: NumericOperations[] = [];
+        extractNumericOperations({ current: fields, acc: numericOperations, path: [], original: fields });
+        let statement: UpdateQueryBuilder<any, any, any, any> = this.#db
+          .updateTable(this.#table)
+          .where('xata_id', '=', xata_id as string)
+          .returningAll();
+        if (Object.keys(fields).length > 0) {
+          statement = statement.set(fields);
+        }
+        if (numericOperations.length > 0) {
+          for (const { field, operator, value } of numericOperations) {
+            statement = statement.set((eb) => ({ [field]: eb(field, operatorMap[operator], value) }));
+          }
+        }
+        statements.push({
+          statement: statement.compile().sql,
+          params: statement.compile().parameters as any[]
+        });
       }
     }
 
-    return ids;
+    const results = await this.#runTransaction({ statements });
+    return results;
   }
 
   async createOrUpdate<K extends SelectableColumn<Record>>(
@@ -1611,12 +1613,12 @@ export class KyselyRepository<Record extends XataRecord>
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        const ids = await this.#insertRecords(a, { ifVersion, createOnly: false });
+        const records = await this.#insertRecords(a, { ifVersion, createOnly: false });
 
         const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
-        const result = await this.read(ids as string[], columns);
+        const result = await this.read(records as Identifiable[], columns);
         return result;
       }
 
@@ -1801,18 +1803,16 @@ export class KyselyRepository<Record extends XataRecord>
   }
 
   async #deleteRecords(recordIds: Identifier[]) {
-    const chunkedOperations: string[][] = chunk(
-      compact(recordIds).map((id) => id),
-      BULK_OPERATION_MAX_SIZE
-    );
-
-    for (const operations of chunkedOperations) {
-      await this.#db.transaction().execute(async (trx) => {
-        for (const operation of operations) {
-          await trx.deleteFrom(this.#table).where('xata_id', '=', operation).execute();
-        }
-      });
-    }
+    const statements: SqlBatchQueryRequestBody['statements'] = recordIds.map((id) => {
+      const statement = this.#db.deleteFrom(this.#table).where('xata_id', '=', id);
+      return {
+        statement: statement.compile().sql,
+        params: statement.compile().parameters as any[]
+      };
+    });
+    return await this.#runTransaction({
+      statements
+    });
   }
 
   async search(
@@ -2013,23 +2013,19 @@ export class KyselyRepository<Record extends XataRecord>
       if (cursorEnd) {
         statement = statement.orderBy(cursorEnd.primaryColumn, 'desc');
       }
-      const transactionResult = await this.#db.transaction().execute(async (trx) => {
-        const response: {
-          [key: string]: unknown;
-        }[] = (await trx.executeQuery(statement)).rows;
+      const response: {
+        [key: string]: unknown;
+      }[] = (await this.#db.executeQuery(statement)).rows;
 
-        const field = cursor?.primaryColumn ?? 'xata_id';
-        const lastSeenId: string = response.length > 0 ? (response[response.length - 1][field] as string) : '';
+      const field = cursor?.primaryColumn ?? 'xata_id';
+      const lastSeenId: string = response.length > 0 ? (response[response.length - 1][field] as string) : '';
 
-        const nextItem: {
-          [key: string]: unknown;
-        }[] = (await trx.executeQuery(statement.clearLimit().clearOffset().offset(response.length).limit(1))).rows;
-
-        return { response, nextItem, lastSeenId };
-      });
+      const nextItem: {
+        [key: string]: unknown;
+      }[] = (await this.#db.executeQuery(statement.clearLimit().clearOffset().offset(response.length).limit(1))).rows;
 
       const schemaTables = await this.#getSchemaTables();
-      const records = transactionResult.response.map((record) =>
+      const records = response.map((record) =>
         initObjectKysely<Result>(
           this,
           this.#db,
@@ -2041,11 +2037,11 @@ export class KyselyRepository<Record extends XataRecord>
       );
       const meta = {
         page: {
-          more: transactionResult.nextItem.length > 0,
+          more: nextItem.length > 0,
           size,
           cursor: Cursor.from({
             primaryColumn: 'xata_id',
-            lastSeenId: transactionResult.lastSeenId,
+            lastSeenId: lastSeenId,
             data: {
               ...data,
               pagination: {
