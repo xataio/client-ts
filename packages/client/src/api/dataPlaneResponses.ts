@@ -116,38 +116,8 @@ export type AggResponse = {
   };
 };
 
-export type SQLResponse = {
-  records?: Schemas.SQLRecord[];
-  rows?: any[][];
-  /**
-   * Name of the column and its PostgreSQL type
-   */
-  columns?: {
-    name?: string;
-    type?: string;
-  }[];
-  /**
-   * Number of selected columns
-   */
-  total?: number;
-  warning?: string;
-};
+export type SQLResponse = Schemas.SQLResponse;
 
 export type SQLBatchResponse = {
-  results: {
-    records?: Schemas.SQLRecord[];
-    rows?: any[][];
-    /**
-     * Name of the column and its PostgreSQL type
-     */
-    columns?: {
-      name?: string;
-      type?: string;
-    }[];
-    /**
-     * Number of selected columns
-     */
-    total?: number;
-    warning?: string;
-  }[];
+  results: Schemas.SQLResponse[];
 };

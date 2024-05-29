@@ -496,6 +496,7 @@ export type GetWorkspacesListError = Fetcher.ErrorWrapper<
 export type GetWorkspacesListResponse = {
   workspaces: {
     id: Schemas.WorkspaceID;
+    unique_id: string;
     name: string;
     slug: string;
     role: Schemas.Role;
