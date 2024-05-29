@@ -917,7 +917,6 @@ export class KyselyRepository<Record extends XataRecord>
   > {
     return this.#trace('create', async () => {
       const ifVersion = parseIfVersion(b, c, d);
-
       // Create many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
@@ -952,7 +951,6 @@ export class KyselyRepository<Record extends XataRecord>
         const columns = isValidSelectableColumns(b) ? b : undefined;
         return this.#insertRecordWithoutId(a, columns);
       }
-
       throw new Error('Invalid arguments for create method');
     });
   }
@@ -1088,7 +1086,6 @@ export class KyselyRepository<Record extends XataRecord>
   > {
     return this.#trace('read', async () => {
       const columns = isValidSelectableColumns(b) ? b : ['*' as const];
-
       // Read many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
@@ -1942,7 +1939,7 @@ export class KyselyRepository<Record extends XataRecord>
 
       const cursor = cursorAfter ?? cursorBefore ?? cursorStart ?? cursorEnd;
 
-      const filter = cleanFilter(data.filter) ?? cursor?.data?.filter;
+      const filter = cleanFilter(data.filter) ?? cleanFilter(cursor?.data?.filter);
       const sort = data.sort
         ? buildSortFilter(data.sort)
         : cursor?.data.sort
@@ -2016,7 +2013,6 @@ export class KyselyRepository<Record extends XataRecord>
       if (cursorEnd) {
         statement = statement.orderBy(cursorEnd.primaryColumn, 'desc');
       }
-
       const transactionResult = await this.#db.transaction().execute(async (trx) => {
         const response: {
           [key: string]: unknown;
@@ -2025,23 +2021,12 @@ export class KyselyRepository<Record extends XataRecord>
         const field = cursor?.primaryColumn ?? 'xata_id';
         const lastSeenId: string = response.length > 0 ? (response[response.length - 1][field] as string) : '';
 
-        let statementCopy = statement.clearLimit().clearOffset().clearWhere();
-        statementCopy = filter
-          ? statementCopy.where(filterToKysely(filter, columnData ?? []) as ExpressionFactory<any, any, any>)
-          : statementCopy;
-
-        statementCopy = statement.offset(response.length).limit(1);
-
         const nextItem: {
           [key: string]: unknown;
-        }[] = (await trx.executeQuery(statementCopy)).rows;
+        }[] = (await trx.executeQuery(statement.clearLimit().clearOffset().offset(response.length).limit(1))).rows;
 
         return { response, nextItem, lastSeenId };
       });
-
-      const more = () => {
-        return transactionResult.nextItem.length > 0;
-      };
 
       const schemaTables = await this.#getSchemaTables();
       const records = transactionResult.response.map((record) =>
@@ -2056,15 +2041,13 @@ export class KyselyRepository<Record extends XataRecord>
       );
       const meta = {
         page: {
-          more: more(),
+          more: transactionResult.nextItem.length > 0,
           size,
           cursor: Cursor.from({
             primaryColumn: 'xata_id',
             lastSeenId: transactionResult.lastSeenId,
             data: {
               ...data,
-              // remove pagination because I don't want to keep
-              // encoding over and over again
               pagination: {
                 size,
                 offset
@@ -2073,7 +2056,7 @@ export class KyselyRepository<Record extends XataRecord>
           }).toString()
         }
       };
-      return new Page<Record, Result>(query, meta as any, records);
+      return new Page<Record, Result>(query, meta, records);
     });
   }
 
