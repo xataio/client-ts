@@ -147,14 +147,6 @@ describe('JSON support', () => {
     const filterNodeIsNot = await xata.db.teams.filter({ 'config->bg->alpha': { $isNot: 0.8 } }).getAll();
     expect(filterNodeIsNot.length).toBe(1);
 
-    const filterNodeIsNotInt = await xata.db.teams.filter({ 'config->bg->>alpha': { $isNot: 0.8 } }).getAll();
-    expect(filterNodeIsNotInt.length).toBe(1);
-
-    const filterWithArrayIndexAsText = await xata.db.teams
-      .filter({ 'config->themes->>0': { $isNot: 'dark' } })
-      .getAll();
-    expect(filterWithArrayIndexAsText.length).toBe(1);
-
     const filterWithArrayIndex = await xata.db.teams.filter({ 'config->themes->0': { $isNot: 'dark' } }).getAll();
     expect(filterWithArrayIndex.length).toBe(1);
 

@@ -1,11 +1,10 @@
-import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
-import { FilterColumnIncludes, FilterExpression, FilterPredicate, FilterPredicateOp } from '../api/schemas';
-import { isDefined, isObject, isString } from '../util/lang';
+import { FilterExpression, FilterPredicate } from '../api/schemas';
+import { isDefined, isNumber, isObject, isString } from '../util/lang';
 import { SingleOrArray, Values } from '../util/types';
 import { JSONValue } from './json';
 import { ColumnsByValue, ValueAtColumn } from './selection';
-import { ExpressionBuilder, ExpressionOrFactory, JSONPathBuilder, ReferenceExpression, sql } from 'kysely';
-import { ExpressionFactory, isExpressionOrFactory } from 'kysely/dist/cjs/parser/expression-parser';
+import { ExpressionBuilder, ExpressionOrFactory, ReferenceExpression, sql } from 'kysely';
+import { ExpressionFactory } from 'kysely/dist/cjs/parser/expression-parser';
 import { Schemas } from '../api';
 
 export type JSONFilterColumns<Record> = Values<{
@@ -164,14 +163,11 @@ export function cleanFilter(filter?: FilterExpression | FilterPredicate): any {
   return Object.keys(values).length > 0 ? values : undefined;
 }
 
-const isJsonColumnFilter = (key?: string): boolean => {
-  if (!key) return false;
-  return key?.includes('->') || key?.includes('->>');
-};
+const isJsonColumnFilter = (key?: string): boolean => (key && key?.includes('->') ? true : false);
 
 const parseJsonPath = (path: string) => {
   const token = 'texttoremove';
-  const pathToUse = path.replace(/->>/g, token).replace(/->/g, token).split(token);
+  const pathToUse = path.replace(/->/g, token).split(token);
   return {
     firstCol: pathToUse.shift(),
     pathToUse: pathToUse.map((i) => `'${i}'`).join(',')
@@ -179,143 +175,152 @@ const parseJsonPath = (path: string) => {
 };
 
 const buildStatement = ({
-  computedOperator,
-  computedKey,
-  filter,
+  column,
+  value,
   eb,
-  cast = true
+  operator,
+  castToText = true
 }: {
-  computedOperator?: FilterPredicate;
-  computedKey: ReferenceExpression<any, any>;
-  filter: string | number | Date;
+  column: ReferenceExpression<any, any>;
+  value: string | number | Date;
   eb: ExpressionBuilder<any, any>;
-  cast?: boolean;
+  operator?: FilterPredicate;
+  castToText?: boolean;
 }) => {
-  switch (computedOperator) {
+  switch (operator) {
     case '$contains': {
-      return sql`(position(${filter} IN ${computedKey}::text)>0)`;
+      return sql`(position(${value} IN ${column}::text)>0)`;
     }
     case '$iContains': {
-      return sql`(position(lower(${filter}) IN lower(${computedKey}::text))>0)`;
+      return sql`(position(lower(${value}) IN lower(${column}::text))>0)`;
     }
     case '$includes': {
-      return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+      return sql`(true = ANY(SELECT "tmp"=${value} FROM unnest(${column}) as tmp))`;
     }
     case '$includesNone': {
-      return sql`(false = ALL(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+      return sql`(false = ALL(SELECT "tmp"=${value} FROM unnest(${column}) as tmp))`;
     }
     case '$includesAll': {
-      return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+      return sql`(true = ANY(SELECT "tmp"=${value} FROM unnest(${column}) as tmp))`;
     }
     case '$includesAny': {
-      return sql`(true = ANY(SELECT "tmp"=${filter} FROM unnest(${computedKey}) as tmp))`;
+      return sql`(true = ANY(SELECT "tmp"=${value} FROM unnest(${column}) as tmp))`;
     }
     case '$startsWith': {
-      return sql`(starts_with(${computedKey}::text, ${filter}))`;
+      return sql`(starts_with(${column}::text, ${value}))`;
     }
     case '$endsWith': {
-      return sql`(${computedKey}::text LIKE ${eb.val('%' + buildPattern(filter, false))})`;
+      return sql`(${column}::text LIKE ${eb.val('%' + buildPattern(value, false))})`;
     }
     case '$lt': {
-      return sql`${computedKey} < ${filter}`;
+      return sql`${column} < ${value}`;
     }
     case '$lte': {
-      return sql`${computedKey} <= ${filter}`;
+      return sql`${column} <= ${value}`;
     }
     case '$gt': {
-      return sql`${computedKey} > ${filter}`;
+      return sql`${column} > ${value}`;
     }
     case '$gte': {
-      return sql`${computedKey} >= ${filter}`;
+      return sql`${column} >= ${value}`;
     }
     case '$is': {
-      return sql`${computedKey} = ${filter}`;
+      return sql`${column} = ${value}`;
     }
     case '$isNot': {
-      return sql`${computedKey} != ${filter}`;
+      return sql`${column} != ${value}`;
     }
     case '$pattern': {
-      return sql`${computedKey} LIKE ${buildPattern(filter, true)}`;
+      return sql`${column} LIKE ${buildPattern(value, true)}`;
     }
     case '$iPattern': {
-      return sql`${computedKey} ILIKE ${buildPattern(filter, true)}`;
+      return sql`${column} ILIKE ${buildPattern(value, true)}`;
     }
     case '$exists': {
-      return sql`(${eb.ref(filter as string)} IS NOT NULL)`;
+      return sql`(${eb.ref(value as string)} IS NOT NULL)`;
     }
     case '$notExists': {
-      return sql`(${eb.ref(filter as string)} IS NULL)`;
+      return sql`(${eb.ref(value as string)} IS NULL)`;
     }
     default: {
-      if (cast) {
-        return sql`CAST (${computedKey} AS text) = ${filter}`;
+      if (castToText) {
+        return sql`CAST (${column} AS text) = ${value}`;
       }
-      return eb(computedKey, '=', filter);
+      return eb(column, '=', value);
     }
   }
 };
 
 export const filterToKysely = (
-  filter: Filter<any>,
-  columnData: Schemas.Column[],
-  latestKey?: string,
-  latestOperator?: FilterPredicate
-): ((eb: ExpressionBuilder<any, any>) => ExpressionOrFactory<any, any, any>) | ExpressionFactory<any, any, any> => {
-  return (eb) => {
-    if (isString(filter) || typeof filter === 'number' || filter instanceof Date) {
-      const computedOperator = latestOperator ?? '=';
-      const computedKey = eb.ref(latestKey ?? 'unknown');
+  value: Filter<any>,
+  columnName?: string,
+  operation?: FilterPredicate
+):
+  | ((eb: ExpressionBuilder<any, any>, columnData: Schemas.Column[]) => ExpressionOrFactory<any, any, any>)
+  | ExpressionFactory<any, any, any> => {
+  return (eb, columnData) => {
+    if (isString(value) || typeof value === 'number' || value instanceof Date) {
+      const operator = operation ?? '=';
+      const column = eb.ref(columnName ?? 'unknown');
 
-      const isJsonColumnType = columnData.find((c) => c.name === latestKey)?.type === 'json';
+      const isJsonColumnType = columnData.find((c) => c.name === columnName)?.type === 'json';
+      const castToText = isJsonColumnType || value instanceof Date || isNumber(value) ? false : true;
 
-      if (isJsonColumnFilter(latestKey)) {
-        const { firstCol, pathToUse } = parseJsonPath(latestKey ?? '');
+      if (isJsonColumnFilter(columnName)) {
+        const { firstCol, pathToUse } = parseJsonPath(columnName ?? '');
         return buildStatement({
-          computedOperator,
-          computedKey: sql.raw(`jsonb_extract_path_text(${firstCol}::jsonb, ${pathToUse})::text`),
-          filter,
+          operator,
+          column: sql.raw(`jsonb_extract_path_text(${firstCol}::jsonb, ${pathToUse})::text`),
+          value,
           eb,
-          cast: false
+          castToText
         });
       }
       return buildStatement({
-        computedOperator,
-        computedKey,
-        filter,
+        operator,
+        column,
+        value,
         eb,
-        cast: isJsonColumnType || filter instanceof Date ? false : true
+        castToText
       });
     }
 
-    if (Array.isArray(filter)) {
-      return eb.and(filter.map((f) => filterToKysely(f, columnData, latestKey, latestOperator)(eb)));
+    if (Array.isArray(value)) {
+      return eb.and(value.map((f) => filterToKysely(f, columnName, operation)(eb, columnData)));
     }
 
-    if (isObject(filter)) {
-      const entries = Object.entries(filter);
+    if (isObject(value)) {
+      const entries = Object.entries(value);
 
-      if (entries.length === 1) {
-        const [key, value] = entries[0];
+      const handleEntries = entries.map(([key, value]) => {
         const valueToUse = Array.isArray(value) ? value : [value];
-        const stmt = valueToUse.map((v) =>
-          filterToKysely(
-            v,
-            columnData,
-            key.startsWith('$') ? latestKey : key,
-            key.startsWith('$') ? key : latestOperator
-          )(eb)
-        );
         switch (key) {
           case '$all': {
-            return eb.and(stmt);
+            return eb.and(
+              valueToUse.map((v) =>
+                filterToKysely(
+                  v,
+                  key.startsWith('$') ? columnName : key,
+                  key.startsWith('$') ? key : operation
+                )(eb, columnData)
+              )
+            );
           }
           case '$any': {
-            return eb.or(stmt);
+            return eb.or(
+              valueToUse.map((v) =>
+                filterToKysely(
+                  v,
+                  key.startsWith('$') ? columnName : key,
+                  key.startsWith('$') ? key : operation
+                )(eb, columnData)
+              )
+            );
           }
           case '$includesNone': {
             return eb.and(
               valueToUse.map((v) =>
-                eb.not(filterToKysely(v, columnData, key.startsWith('$') ? latestKey : key, '$includes')(eb))
+                eb.not(filterToKysely(v, key.startsWith('$') ? columnName : key, '$includes')(eb, columnData))
               )
             );
           }
@@ -323,54 +328,28 @@ export const filterToKysely = (
           case '$not': {
             return eb.and(
               valueToUse.map((v) =>
-                eb.not(filterToKysely(v, columnData, key.startsWith('$') ? latestKey : key, '$not')(eb))
+                eb.not(filterToKysely(v, key.startsWith('$') ? columnName : key, '$not')(eb, columnData))
               )
             );
           }
-          default:
-            return filterToKysely(
-              value,
-              columnData,
-              key.startsWith('$') ? latestKey : key,
-              key.startsWith('$') ? key : latestOperator
-            )(eb);
-        }
-      } else {
-        const stmt = entries.map(([key, value]) =>
-          filterToKysely(
-            value,
-            columnData,
-            key.startsWith('$') ? latestKey : key,
-            key.startsWith('$') ? key : latestOperator
-          )(eb)
-        );
-        switch (latestOperator) {
-          case '$all': {
-            return eb.and(stmt);
-          }
-          case '$any': {
-            return eb.or(stmt);
-          }
-          case '$includesNone': {
-            return eb.and(
-              entries.map(([key, value]) =>
-                eb.not(filterToKysely(value, columnData, key.startsWith('$') ? latestKey : key, '$includes')(eb))
-              )
-            );
-          }
-          case '$none':
-          case '$not': {
-            return eb.and(
-              entries.map(([key, value]) =>
-                eb.not(filterToKysely(value, columnData, key.startsWith('$') ? latestKey : key, '$not')(eb))
-              )
-            );
-          }
+
           default: {
-            return eb.and(stmt);
+            return eb.and(
+              valueToUse.map((v) =>
+                filterToKysely(
+                  v,
+                  key.startsWith('$') ? columnName : key,
+                  key.startsWith('$') ? key : operation
+                )(eb, columnData)
+              )
+            );
           }
         }
+      });
+      if (operation === '$any') {
+        return eb.or(handleEntries);
       }
+      return eb.and(handleEntries);
     }
     throw new Error('Not implemented');
   };

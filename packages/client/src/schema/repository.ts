@@ -1992,9 +1992,11 @@ export class KyselyRepository<Record extends XataRecord>
         buildSortStatement(Array.isArray(sort) ? sort : [sort]);
       }
 
-      const columnData = this.#schemaTables?.find((table) => table.name === this.#table)?.columns;
+      const columnData = this.#schemaTables?.find((table) => table.name === this.#table)?.columns ?? [];
       if (filter) {
-        statement = statement.where(filterToKysely(filter, columnData ?? []) as ExpressionFactory<any, any, any>);
+        statement = statement.where((eb) => {
+          return filterToKysely(filter)(eb, columnData) as any;
+        });
       }
 
       if (offset) {
