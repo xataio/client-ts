@@ -1,5 +1,12 @@
 # @xata.io/codegen
 
+## 0.29.5
+
+### Patch Changes
+
+- Updated dependencies [[`6b754d2`](https://github.com/xataio/client-ts/commit/6b754d2f6a1f7b9378a96fe27502ff6c29ff5ed8)]:
+  - @xata.io/client@0.29.5
+
 ## 0.29.4
 
 ### Patch Changes
