@@ -1915,12 +1915,9 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.limit(size);
       }
 
-      let sortRandom = false;
-
       const buildSortStatement = (sort: ApiSortFilter<any, any>[]) => {
         const sortStatement = (statement: SelectQueryBuilder<any, any, any>, column: string, order: string) => {
           if (order === 'random') {
-            sortRandom = true;
             return statement.orderBy(sql`random()`);
           }
           return statement.orderBy(column === '*' ? 'xata_id' : column, order as SortDirection);
@@ -3411,12 +3408,12 @@ export const initObjectKysely = <T>(
     return await repo.read(record['xata_id'] as string, columns);
   };
 
-  record.update = async function (data: any, b?: any, c?: any) {
+  record.update = async function (data: any, b?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
     return await repo.update(record['xata_id'] as string, data, columns);
   };
 
-  record.replace = async function (data: any, b?: any, c?: any) {
+  record.replace = async function (data: any, b?: any) {
     const validColumns = isValidSelectableColumns(b) ? b : ['*'];
     return await repo.createOrReplace(record['xata_id'] as string, data, validColumns);
   };
