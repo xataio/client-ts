@@ -810,6 +810,107 @@ export const copyBranch = (variables: CopyBranchVariables, signal?: AbortSignal)
     signal
   });
 
+export type GetBranchMoveStatusPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type GetBranchMoveStatusError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetBranchMoveStatusResponse = {
+  state: string;
+  pendingBytes: number;
+};
+
+export type GetBranchMoveStatusVariables = {
+  pathParams: GetBranchMoveStatusPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Get the branch move status (if a move is happening)
+ */
+export const getBranchMoveStatus = (variables: GetBranchMoveStatusVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    GetBranchMoveStatusResponse,
+    GetBranchMoveStatusError,
+    undefined,
+    {},
+    {},
+    GetBranchMoveStatusPathParams
+  >({ url: '/db/{dbBranchName}/move', method: 'get', ...variables, signal });
+
+export type MoveBranchPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type MoveBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 423;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type MoveBranchResponse = {
+  state: string;
+};
+
+export type MoveBranchRequestBody = {
+  /**
+   * Select the cluster to move the branch to. Must be different from the current cluster.
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  to: string;
+};
+
+export type MoveBranchVariables = {
+  body: MoveBranchRequestBody;
+  pathParams: MoveBranchPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const moveBranch = (variables: MoveBranchVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<MoveBranchResponse, MoveBranchError, MoveBranchRequestBody, {}, {}, MoveBranchPathParams>({
+    url: '/db/{dbBranchName}/move',
+    method: 'put',
+    ...variables,
+    signal
+  });
+
 export type UpdateBranchMetadataPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -5108,29 +5209,9 @@ export type SqlQueryError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type SqlQueryRequestBody = {
-  /**
-   * The SQL statement.
-   *
-   * @minLength 1
-   */
-  statement: string;
-  /**
-   * The query parameter list.
-   */
-  params?: any[] | null;
-  /**
-   * The consistency level for this request.
-   *
-   * @default strong
-   */
-  consistency?: 'strong' | 'eventual';
-  /**
-   * The response type.
-   *
-   * @default json
-   */
-  responseType?: 'json' | 'array';
+export type SqlQueryRequestBody = Schemas.PreparedStatement & {
+  consistency?: Schemas.SQLConsistency;
+  responseType?: Schemas.SQLResponseType;
 };
 
 export type SqlQueryVariables = {
@@ -5180,31 +5261,12 @@ export type SqlBatchQueryError = Fetcher.ErrorWrapper<
 export type SqlBatchQueryRequestBody = {
   /**
    * The SQL statements.
-   */
-  statements: {
-    /**
-     * The SQL statement.
-     *
-     * @minLength 1
-     */
-    statement?: string;
-    /**
-     * The query parameter list.
-     */
-    params?: any[] | null;
-  }[];
-  /**
-   * The consistency level for this request.
    *
-   * @default strong
+   * @x-go-type []sqlproxy.PreparedStatement
    */
-  consistency?: 'strong' | 'eventual';
-  /**
-   * The response type.
-   *
-   * @default json
-   */
-  responseType?: 'json' | 'array';
+  statements: Schemas.PreparedStatement[];
+  consistency?: Schemas.SQLConsistency;
+  responseType?: Schemas.SQLResponseType;
 };
 
 export type SqlBatchQueryVariables = {
@@ -5259,6 +5321,8 @@ export const operationsByTag = {
     createBranch,
     deleteBranch,
     copyBranch,
+    getBranchMoveStatus,
+    moveBranch,
     updateBranchMetadata,
     getBranchMetadata,
     getBranchStats,

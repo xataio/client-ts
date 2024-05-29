@@ -1721,6 +1721,64 @@ export type SQLRecord = {
 };
 
 /**
+ * @default strong
+ */
+export type SQLConsistency = 'strong' | 'eventual';
+
+/**
+ * @default json
+ */
+export type SQLResponseType = 'json' | 'array';
+
+export type PreparedStatement = {
+  /**
+   * The SQL statement.
+   *
+   * @minLength 1
+   */
+  statement: string;
+  /**
+   * The query parameter list.
+   *
+   * @x-go-type []any
+   */
+  params?: any[] | null;
+};
+
+export type SQLResponseBase = {
+  /**
+   * Name of the column and its PostgreSQL type
+   *
+   * @x-go-type []sqlproxy.ColumnMeta
+   */
+  columns: {
+    name: string;
+    type: string;
+  }[];
+  /**
+   * Number of selected columns
+   */
+  total: number;
+  warning?: string;
+};
+
+export type SQLResponseJSON = SQLResponseBase & {
+  /**
+   * @x-go-type []xata.Record
+   */
+  records: SQLRecord[];
+};
+
+export type SQLResponseArray = SQLResponseBase & {
+  /**
+   * @x-go-type []xata.Row
+   */
+  rows: any[][];
+};
+
+export type SQLResponse = SQLResponseJSON | SQLResponseArray;
+
+/**
  * Xata Table Record Metadata
  */
 export type XataRecord = RecordMeta & {
