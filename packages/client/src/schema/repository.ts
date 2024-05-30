@@ -828,7 +828,7 @@ export class KyselyRepository<Record extends XataRecord>
   #table: string;
   #getFetchProps: () => ApiExtraProps;
   #db: KyselyPluginResult<any>;
-  #schemaTables?: Schemas.Table[];
+  #schemaTables: Schemas.Table[];
   #trace: TraceFunction;
   #runTransaction: (params: SqlBatchQueryRequestBody) => Promise<SQLBatchResponse['results'][number]['records']>;
 
@@ -836,7 +836,7 @@ export class KyselyRepository<Record extends XataRecord>
     table: string;
     db: SQLPluginFunction;
     pluginOptions: XataPluginOptions;
-    schemaTables?: Schemas.Table[];
+    schemaTables: Schemas.Table[];
   }) {
     super(
       null,
@@ -1904,23 +1904,31 @@ export class KyselyRepository<Record extends XataRecord>
 
       let statement = this.#db.selectFrom(this.#table);
 
+      const primaryKey: string = (this.#schemaTables?.find((table) => table.name === this.#table) as any)
+        ?.primaryKey?.[0];
+
+      if (!primaryKey) throw new Error('Primary key not found for table');
+
       if (this.selectAllColumns(data.columns as any)) {
         statement = statement.selectAll();
       } else {
         // always expect xata_id to come back if it is back
-        statement = statement.select([...(data.columns as any), 'xata_id']);
+        statement = statement.select([...(data.columns as any), primaryKey]);
       }
 
       if (size) {
         statement = statement.limit(size);
       }
 
+      // Necesary for cursor pagination
+      statement = statement.orderBy(primaryKey, 'asc');
+
       const buildSortStatement = (sort: ApiSortFilter<any, any>[]) => {
         const sortStatement = (statement: SelectQueryBuilder<any, any, any>, column: string, order: string) => {
           if (order === 'random') {
             return statement.orderBy(sql`random()`);
           }
-          return statement.orderBy(column === '*' ? 'xata_id' : column, order as SortDirection);
+          return statement.orderBy(column === '*' ? primaryKey : column, order as SortDirection);
         };
         for (const element of sort) {
           if (isSortFilterObject(element)) {
@@ -1950,23 +1958,22 @@ export class KyselyRepository<Record extends XataRecord>
       }
 
       if (cursorAfter) {
-        statement = statement.where(cursorAfter.primaryColumn, '>', cursorAfter.lastSeenId);
+        statement = statement.where(primaryKey, '>', cursorAfter.lastSeenId);
       }
       if (cursorBefore) {
-        statement = statement.where(cursorBefore.primaryColumn, '<', cursorBefore.lastSeenId);
+        statement = statement.where(primaryKey, '<', cursorBefore.lastSeenId);
       }
       if (cursorStart) {
-        statement = statement.orderBy(cursorStart.primaryColumn, 'asc');
+        statement = statement.orderBy(primaryKey, 'asc');
       }
       if (cursorEnd) {
-        statement = statement.orderBy(cursorEnd.primaryColumn, 'desc');
+        statement = statement.orderBy(primaryKey, 'desc');
       }
       const response: {
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement)).rows;
 
-      const field = cursor?.primaryColumn ?? 'xata_id';
-      const lastSeenId: string = response.length > 0 ? (response[response.length - 1][field] as string) : '';
+      const lastSeenId: string = response.length > 0 ? (response[response.length - 1][primaryKey] as string) : '';
 
       const nextItem: {
         [key: string]: unknown;
@@ -1987,7 +1994,6 @@ export class KyselyRepository<Record extends XataRecord>
           more: nextItem.length > 0,
           size,
           cursor: Cursor.from({
-            primaryColumn: 'xata_id',
             lastSeenId: lastSeenId,
             data: {
               ...data,
@@ -2076,15 +2082,7 @@ export class KyselyRepository<Record extends XataRecord>
   }
 
   async #getSchemaTables(): Promise<Schemas.Table[]> {
-    if (this.#schemaTables) return this.#schemaTables;
-
-    const { schema } = await getBranchDetails({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-      ...this.#getFetchProps()
-    });
-
-    this.#schemaTables = schema.tables;
-    return schema.tables;
+    return this.#schemaTables;
   }
 
   async #transformObjectToApiAllFields(object: any): Promise<Schemas.DataInputRecord> {

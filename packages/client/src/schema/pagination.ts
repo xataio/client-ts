@@ -88,9 +88,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
 
 export type CursorNavigationOptions = { start?: string } | { end?: string } | { after?: string; before?: string };
 export type OffsetNavigationOptions = { size?: number; offset?: number };
-export type CursorNavigationDecoded =
-  | { primaryColumn: string; lastSeenId: string; data: QueryOptions<any> }
-  | undefined;
+export type CursorNavigationDecoded = { lastSeenId: string; data: QueryOptions<any> } | undefined;
 
 export const PAGINATION_MAX_SIZE = 1000;
 export const PAGINATION_DEFAULT_SIZE = 20;
