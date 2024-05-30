@@ -965,7 +965,7 @@ export class KyselyRepository<Record extends XataRecord>
   async #insertRecordWithoutId(object: EditableData<Record>, columns: SelectableColumn<Record>[] = ['*']) {
     const record = await this.#transformObjectToApi(object);
 
-    const schemaTables = await this.#getSchemaTables();
+    const schemaTables = this.#getSchemaTables();
 
     let statement: InsertQueryBuilder<any, any, any> = this.#db.insertInto(this.#table);
     if (Object.keys(record).length === 0) {
@@ -1017,7 +1017,7 @@ export class KyselyRepository<Record extends XataRecord>
       throw e;
     });
 
-    const schemaTables = await this.#getSchemaTables();
+    const schemaTables = this.#getSchemaTables();
     return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
   }
 
@@ -1105,7 +1105,7 @@ export class KyselyRepository<Record extends XataRecord>
           }
           const response = await statement.executeTakeFirst();
           if (!response) return null;
-          const schemaTables = await this.#getSchemaTables();
+          const schemaTables = this.#getSchemaTables();
           return initObjectKysely<Record>(
             this,
             schemaTables,
@@ -1356,7 +1356,7 @@ export class KyselyRepository<Record extends XataRecord>
       const response = await statement.executeTakeFirst();
       if (!response) return null;
 
-      const schemaTables = await this.#getSchemaTables();
+      const schemaTables = this.#getSchemaTables();
       return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
@@ -1519,7 +1519,7 @@ export class KyselyRepository<Record extends XataRecord>
     }
     const response = await statement.executeTakeFirst();
 
-    const schemaTables = await this.#getSchemaTables();
+    const schemaTables = this.#getSchemaTables();
     return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
   }
 
@@ -1738,7 +1738,7 @@ export class KyselyRepository<Record extends XataRecord>
       }
       const response = await statement.executeTakeFirst();
       if (!response) return null;
-      const schemaTables = await this.#getSchemaTables();
+      const schemaTables = this.#getSchemaTables();
       return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
@@ -1757,6 +1757,7 @@ export class KyselyRepository<Record extends XataRecord>
         params: statement.compile().parameters as any[]
       };
     });
+
     return await this.#runTransaction({
       statements
     });
@@ -1795,7 +1796,7 @@ export class KyselyRepository<Record extends XataRecord>
         ...this.#getFetchProps()
       });
 
-      const schemaTables = await this.#getSchemaTables();
+      const schemaTables = this.#getSchemaTables();
 
       // TODO - Column selection not supported by search endpoint yet
       return {
@@ -1834,7 +1835,7 @@ export class KyselyRepository<Record extends XataRecord>
         ...this.#getFetchProps()
       });
 
-      const schemaTables = await this.#getSchemaTables();
+      const schemaTables = this.#getSchemaTables();
 
       // TODO - Column selection not supported by search endpoint yet
       return {
@@ -1977,7 +1978,7 @@ export class KyselyRepository<Record extends XataRecord>
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement.clearLimit().clearOffset().offset(response.length).limit(1))).rows;
 
-      const schemaTables = await this.#getSchemaTables();
+      const schemaTables = this.#getSchemaTables();
       const records = response.map((record) =>
         initObjectKysely<Result>(
           this,
@@ -2033,7 +2034,7 @@ export class KyselyRepository<Record extends XataRecord>
         },
         ...this.#getFetchProps()
       });
-      const schemaTables = await this.#getSchemaTables();
+      const schemaTables = this.#getSchemaTables();
       return {
         ...result,
         summaries: result.summaries.map((summary) =>
@@ -2079,12 +2080,12 @@ export class KyselyRepository<Record extends XataRecord>
     }
   }
 
-  async #getSchemaTables(): Promise<Schemas.Table[]> {
+  #getSchemaTables(): Schemas.Table[] {
     return this.#schemaTables;
   }
 
   async #transformObjectToApiAllFields(object: any): Promise<Schemas.DataInputRecord> {
-    const schemaTables = await this.#getSchemaTables();
+    const schemaTables = this.#getSchemaTables();
     const schema = schemaTables.find((table) => table.name === this.#table);
     if (!schema) throw new Error(`Table ${this.#table} not found in schema`);
 
@@ -2102,7 +2103,7 @@ export class KyselyRepository<Record extends XataRecord>
   }
 
   async #transformObjectToApi(object: any): Promise<Schemas.DataInputRecord> {
-    const schemaTables = await this.#getSchemaTables();
+    const schemaTables = this.#getSchemaTables();
     const schema = schemaTables.find((table) => table.name === this.#table);
     if (!schema) throw new Error(`Table ${this.#table} not found in schema`);
 
@@ -3401,21 +3402,21 @@ export const initObjectKysely = <T>(
   const record = { ...data };
 
   record.read = async function (columns?: any) {
-    return await repo.read(record['xata_id'] as string, columns);
+    return repo.read(record['xata_id'] as string, columns);
   };
 
   record.update = async function (data: any, b?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
-    return await repo.update(record['xata_id'] as string, data, columns);
+    return repo.update(record['xata_id'] as string, data, columns);
   };
 
   record.replace = async function (data: any, b?: any) {
     const validColumns = isValidSelectableColumns(b) ? b : ['*'];
-    return await repo.createOrReplace(record['xata_id'] as string, data, validColumns);
+    return repo.createOrReplace(record['xata_id'] as string, data, validColumns);
   };
 
   record.delete = async function () {
-    return await repo.delete(record['xata_id'] as string);
+    return repo.delete(record['xata_id'] as string);
   };
 
   record.toSerializable = function () {
