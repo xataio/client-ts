@@ -7,6 +7,7 @@ const client_1 = require("../../client/src");
 const tables = [
   {
     name: "teams",
+    primaryKey: ["xata_id"],
     columns: [
       { name: "xata_id", type: "string", notNull: true },
       { name: "xata_version", type: "int", notNull: true },
@@ -28,6 +29,7 @@ const tables = [
   },
   {
     name: "users",
+    primaryKey: ["xata_id"],
     columns: [
       { name: "xata_id", type: "string", notNull: true },
       { name: "xata_version", type: "int", notNull: true },
@@ -59,6 +61,7 @@ const tables = [
   },
   {
     name: "pets",
+    primaryKey: ["xata_id"],
     columns: [
       { name: "xata_id", type: "string", notNull: true },
       { name: "xata_version", type: "int", notNull: true },
