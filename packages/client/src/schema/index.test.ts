@@ -22,6 +22,8 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
   const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra }, [
     {
       name: 'users',
+      // @ts-ignore
+      primaryKey: ['xata_id'],
       columns: [
         { name: 'name', type: 'string' },
         { name: 'email', type: 'string' }
@@ -81,7 +83,7 @@ describe('client options', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{"statement":"select * from \\"users\\" limit $1","params":["1"]}",
+        "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["1"]}",
         "method": "POST",
         "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:branch/sql",
       }
@@ -113,7 +115,7 @@ describe('request', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{"statement":"select * from \\"users\\" limit $1","params":["1"]}",
+        "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["1"]}",
         "method": "POST",
         "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
       }
@@ -143,7 +145,7 @@ describe('request', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{"statement":"select * from \\"users\\" limit $1","params":["20"]}",
+        "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["20"]}",
         "method": "POST",
         "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
       }
@@ -291,12 +293,12 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"statement":"select * from \\"users\\" limit $1","params":["20"]}",
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["20"]}",
             "method": "POST",
             "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
           {
-            "body": "{"statement":"select * from \\"users\\" limit $1 offset $2","params":["1","0"]}",
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1 offset $2","params":["1","0"]}",
             "method": "POST",
             "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
@@ -316,12 +318,12 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"statement":"select * from \\"users\\" where CAST (\\"name\\" AS text) = $1 limit $2","params":["foo","20"]}",
+            "body": "{"statement":"select * from \\"users\\" where CAST (\\"name\\" AS text) = $1 order by \\"xata_id\\" asc limit $2","params":["foo","20"]}",
             "method": "POST",
             "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
           {
-            "body": "{"statement":"select * from \\"users\\" where CAST (\\"name\\" AS text) = $1 limit $2 offset $3","params":["foo","1","0"]}",
+            "body": "{"statement":"select * from \\"users\\" where CAST (\\"name\\" AS text) = $1 order by \\"xata_id\\" asc limit $2 offset $3","params":["foo","1","0"]}",
             "method": "POST",
             "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
@@ -349,12 +351,12 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"statement":"select * from \\"users\\" limit $1","params":["1"]}",
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["1"]}",
             "method": "POST",
             "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
           {
-            "body": "{"statement":"select * from \\"users\\" limit $1 offset $2","params":["1","1"]}",
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1 offset $2","params":["1","1"]}",
             "method": "POST",
             "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
@@ -379,12 +381,12 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"statement":"select * from \\"users\\" limit $1","params":["1"]}",
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["1"]}",
             "method": "POST",
             "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
           {
-            "body": "{"statement":"select * from \\"users\\" limit $1 offset $2","params":["1","0"]}",
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1 offset $2","params":["1","0"]}",
             "method": "POST",
             "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
