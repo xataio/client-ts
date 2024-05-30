@@ -869,6 +869,7 @@ export class KyselyRepository<Record extends XataRecord>
         body
       });
       return results.flatMap((result) => {
+        if (result.warning) console.warn(result.warning);
         return result.records?.map((record) => record) ?? [];
       });
     };
@@ -955,7 +956,7 @@ export class KyselyRepository<Record extends XataRecord>
       // Create one record without id
       if (isObject(a)) {
         const columns = isValidSelectableColumns(b) ? b : undefined;
-        return this.#insertRecordWithoutId(a, columns);
+        return await this.#insertRecordWithoutId(a, columns);
       }
       throw new Error('Invalid arguments for create method');
     });
@@ -979,7 +980,7 @@ export class KyselyRepository<Record extends XataRecord>
     }
     const response = await statement.executeTakeFirst();
 
-    return initObjectKysely(this, schemaTables, this.#table, response, columns) as any;
+    return initObjectKysely(this, schemaTables, this.#table, response, columns);
   }
 
   async #insertRecordWithId(
@@ -1021,10 +1022,7 @@ export class KyselyRepository<Record extends XataRecord>
   }
 
   async #insertRecords(objects: EditableData<Record>[], { createOnly }: { createOnly: boolean }) {
-    const operations = await promiseMap(objects, async (object) => {
-      const record = await this.#transformObjectToApi(object);
-      return record;
-    });
+    const operations = await promiseMap(objects, async (object) => await this.#transformObjectToApi(object));
 
     const statements: SqlBatchQueryRequestBody['statements'] = [];
     for (const operation of operations) {
@@ -1659,12 +1657,12 @@ export class KyselyRepository<Record extends XataRecord>
 
       // Delete one record with id as param
       if (isString(a)) {
-        return this.#deleteRecord(a, b);
+        return await this.#deleteRecord(a, b);
       }
 
       // Delete one record with id as property
       if (isObject(a) && isString(a.xata_id)) {
-        return this.#deleteRecord(a.xata_id, b);
+        return await this.#deleteRecord(a.xata_id, b);
       }
 
       throw new Error('Invalid arguments for delete method');
@@ -2157,11 +2155,11 @@ export class RestRepository<Record extends XataRecord>
     table: string;
     db: SchemaPluginResult<any>;
     pluginOptions: XataPluginOptions;
-    schemaTables?: Schemas.Table[];
+    schemaTables: Schemas.Table[];
   }) {
     super(
       null,
-      { name: options.table, schema: options.schemaTables?.find((table) => table.name === options.table) },
+      { name: options.table, schema: options.schemaTables.find((table) => table.name === options.table) },
       {}
     );
 
