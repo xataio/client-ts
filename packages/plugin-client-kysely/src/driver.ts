@@ -15,13 +15,11 @@ import { SQLPluginResult } from '@xata.io/client';
 
 export type XataDialectConfig = {
   xata: { sql: SQLPluginResult };
-  options?: {
-    /**
-     * The consistency level to use when reading data.
-     * @default 'strong'
-     */
-    consistency?: 'strong' | 'eventual';
-  };
+  /**
+   * The consistency level to use when reading data.
+   * @default 'strong'
+   */
+  consistency?: 'strong' | 'eventual';
 };
 
 export class XataDialect implements Dialect {
@@ -90,7 +88,7 @@ export class XataConnection implements DatabaseConnection {
     const { records, warning } = await sql({
       statement,
       params: parameters as any[],
-      consistency: this.#config.options?.consistency
+      consistency: this.#config.consistency
     });
     if (warning) {
       console.warn(warning);
