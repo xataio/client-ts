@@ -1920,9 +1920,6 @@ export class KyselyRepository<Record extends XataRecord>
         statement = statement.limit(size);
       }
 
-      // Necesary for cursor pagination
-      statement = statement.orderBy(primaryKey, 'asc');
-
       const buildSortStatement = (sort: ApiSortFilter<any, any>[]) => {
         const sortStatement = (statement: SelectQueryBuilder<any, any, any>, column: string, order: string) => {
           if (order === 'random') {
@@ -1944,6 +1941,9 @@ export class KyselyRepository<Record extends XataRecord>
 
       if (sort) {
         buildSortStatement(Array.isArray(sort) ? sort : [sort]);
+      } else {
+        // Necesary for cursor pagination
+        statement = statement.orderBy(primaryKey, 'asc');
       }
 
       const columnData = this.#schemaTables?.find((table) => table.name === this.#table)?.columns ?? [];

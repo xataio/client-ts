@@ -2,6 +2,7 @@
   "tables": [
     {
       "name": "teams",
+      "primaryKey": ["xata_id"],
       "columns": [
         {
           "name": "xata_id",
@@ -80,6 +81,7 @@
     },
     {
       "name": "users",
+      "primaryKey": ["xata_id"],
       "columns": [
         {
           "name": "xata_id",
@@ -190,6 +192,7 @@
     },
     {
       "name": "pets",
+      "primaryKey": ["xata_id"],
       "columns": [
         {
           "name": "xata_id",

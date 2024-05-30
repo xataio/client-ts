@@ -63,6 +63,7 @@ export const revlinkSchema = z.object({
 export const tableSchema = z.object({
   name: z.string(),
   columns: z.array(columnSchema),
+  primaryKey: z.array(z.string()).optional(),
   revLinks: z.array(revlinkSchema).optional()
 });
 
