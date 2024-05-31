@@ -1,7 +1,8 @@
 {
-  "name": "@xata.io/client",
-  "version": "0.29.4",
-  "description": "Xata.io SDK for TypeScript and JavaScript",
+  "name": "@xata.io/sql",
+  "version": "0.0.1",
+  "description": "Helpers for SQL connection to Xata",
+  "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -12,20 +13,10 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "browser": {
-    "child_process": false
-  },
   "scripts": {
+    "generate": "tsx scripts/build.ts",
     "build": "rimraf dist && rollup -c",
-    "tsc": "tsc --noEmit",
-    "add-version": "node ../../scripts/add-version-file.mjs"
-  },
-  "dependencies": {
-    "@xata.io/sql": "workspace:*",
-    "@xata.io/kysely": "workspace:*"
-  },
-  "peerDependencies": {
-    "typescript": ">=4.5"
+    "tsc": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -37,12 +28,14 @@
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
-  "homepage": "https://xata.io/docs/sdk/getting-started",
+  "homepage": "https://github.com/xataio/client-ts",
   "dependencies": {
-    "@types/pako": "^2.0.3",
     "json-stringify-deterministic": "^1.0.12",
     "kysely": "^0.27.3",
     "pako": "^2.1.0",
     "rfc4648": "^1.5.3"
+  },
+  "devDependencies": {
+    "@types/pako": "^2.0.3"
   }
 }

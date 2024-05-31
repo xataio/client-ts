@@ -375,7 +375,7 @@ importers:
         version: 8.4.1
       '@xata.io/client':
         specifier: ^0.29.4
-        version: link:../client
+        version: 0.29.5(typescript@5.4.5)
       any-date-parser:
         specifier: ^1.5.4
         version: 1.5.4
@@ -444,10 +444,6 @@ importers:
         version: 8.11.5
 
   packages/plugin-client-kysely:
-    dependencies:
-      '@xata.io/client':
-        specifier: workspace:*
-        version: link:../client
     devDependencies:
       kysely:
         specifier: ^0.27.3
@@ -483,6 +479,25 @@ importers:
       '@xata.io/client':
         specifier: workspace:*
         version: link:../client
+
+  packages/sql:
+    dependencies:
+      json-stringify-deterministic:
+        specifier: ^1.0.12
+        version: 1.0.12
+      kysely:
+        specifier: ^0.27.3
+        version: 0.27.3
+      pako:
+        specifier: ^2.1.0
+        version: 2.1.0
+      rfc4648:
+        specifier: ^1.5.3
+        version: 1.5.3
+    devDependencies:
+      '@types/pako':
+        specifier: ^2.0.3
+        version: 2.0.3
 
 packages:
   /@aashutoshrathi/word-wrap@1.2.6:
@@ -6864,7 +6879,6 @@ packages:
   /@types/pako@2.0.3:
     resolution:
       { integrity: sha512-bq0hMV9opAcrmE0Byyo0fY3Ew4tgOevJmQ9grUhpXQhYfyLJ1Kqg3P33JT5fdbT2AjeAjR51zqqVjAL/HMkx7Q== }
-    dev: false
 
   /@types/papaparse@5.3.14:
     resolution:
@@ -7433,6 +7447,15 @@ packages:
     dependencies:
       tslib: 2.6.2
     dev: true
+
+  /@xata.io/client@0.29.5(typescript@5.4.5):
+    resolution:
+      { integrity: sha512-b55dmPVNVFOE5nj2F2G6t9l/d5yYBhIu5X5w3rznhhsriGHkrzn93tqJexIZPS77E7f/yDXcFz06KbvR3bHK5w== }
+    peerDependencies:
+      typescript: '>=4.5'
+    dependencies:
+      typescript: 5.4.5
+    dev: false
 
   /abbrev@1.1.1:
     resolution:
