@@ -821,6 +821,28 @@ export abstract class Repository<Record extends XataRecord> extends Query<
   abstract query<Result extends XataRecord>(query: Query<Record, Result>): Promise<Page<Record, Result>>;
 }
 
+const computePrimaryKey = (schema: Schemas.Table[], tableName: string): string => {
+  const table = schema.find((table) => table.name === tableName);
+  const primaryKey = (table as any)?.primaryKey ?? [];
+  if (primaryKey.length === 1) {
+    return primaryKey[0];
+  } else if (primaryKey.length > 1) {
+    // composite primary key
+    return `(${primaryKey.join(',')})`;
+  } else {
+    // Find first unique not null column
+    const columns = table?.columns.filter((col) => col.notNull && col.unique).map(({ name }) => name) ?? [];
+    if (columns.length === 0) {
+      throw new Error('Could not find a primary key or unique constraint in the table');
+    }
+    if (columns.length === 1) {
+      return columns[0];
+    } else {
+      return `(${columns.join(',')})`;
+    }
+  }
+};
+
 export class KyselyRepository<Record extends XataRecord>
   extends Query<Record, SelectedPick<Record, ['*']>>
   implements Repository<Record>
@@ -831,7 +853,7 @@ export class KyselyRepository<Record extends XataRecord>
   #schemaTables: Schemas.Table[];
   #trace: TraceFunction;
   #runTransaction: (params: SqlBatchQueryRequestBody) => Promise<SQLBatchResponse['results'][number]['records']>;
-  #primaryKey: string = 'xata_id';
+  #primaryKey: string;
 
   constructor(options: {
     table: string;
@@ -850,8 +872,7 @@ export class KyselyRepository<Record extends XataRecord>
     // pass plugin options here.
     this.#schemaTables = options.schemaTables;
     this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
-    this.#primaryKey = (this.#schemaTables?.find((table) => table.name === this.#table) as any)?.primaryKey?.[0];
-
+    this.#primaryKey = computePrimaryKey(this.#schemaTables, this.#table);
     this.#runTransaction = async (body: SqlBatchQueryRequestBody) => {
       body.statements.unshift({
         statement: 'BEGIN',

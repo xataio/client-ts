@@ -22,9 +22,9 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
   const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra }, [
     {
       name: 'users',
-      // @ts-ignore
-      primaryKey: ['xata_id'],
+      primaryKey: [],
       columns: [
+        { name: 'xata_id', type: 'string', notNull: true, unique: true },
         { name: 'name', type: 'string' },
         { name: 'email', type: 'string' }
       ]
