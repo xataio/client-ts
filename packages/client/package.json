@@ -35,11 +35,7 @@
   },
   "homepage": "https://xata.io/docs/sdk/getting-started",
   "dependencies": {
-    "@types/pako": "^2.0.3",
-    "json-stringify-deterministic": "^1.0.12",
     "kysely": "^0.27.3",
-    "pako": "^2.1.0",
-    "rfc4648": "^1.5.3",
     "@xata.io/sql": "workspace:*",
     "@xata.io/kysely": "workspace:*"
   }
