@@ -955,10 +955,8 @@ describe('integration tests', () => {
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
   });
 
-  // This no longer fails as the integer input is converted to a string
-  test.skip('multiple errors in one response', async () => {
+  test('multiple errors in one response', async () => {
     const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as UsersRecord[];
-
     expect(xata.db.users.create(invalidUsers)).rejects.toHaveProperty('status', 400);
   });
 

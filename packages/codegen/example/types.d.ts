@@ -71,12 +71,6 @@ declare const tables: readonly [
         };
       }
     ];
-    readonly revLinks: readonly [
-      {
-        readonly table: 'users';
-        readonly column: 'team';
-      }
-    ];
   },
   {
     readonly name: 'users';
@@ -181,12 +175,6 @@ declare const tables: readonly [
         };
       }
     ];
-    readonly revLinks: readonly [
-      {
-        readonly table: 'teams';
-        readonly column: 'owner';
-      }
-    ];
   },
   {
     readonly name: 'pets';
@@ -222,12 +210,6 @@ declare const tables: readonly [
       {
         readonly name: 'num_legs';
         readonly type: 'int';
-      }
-    ];
-    readonly revLinks: readonly [
-      {
-        readonly table: 'users';
-        readonly column: 'pet';
       }
     ];
   }
