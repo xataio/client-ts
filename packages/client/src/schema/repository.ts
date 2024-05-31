@@ -27,7 +27,6 @@ import {
   SearchPageConfig,
   TransactionOperation
 } from '../api/schemas';
-import { KyselyPlugin, KyselyPluginResult } from '../kysely';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord, TotalCount } from '../search';
 import { Boosters } from '../search/boosters';
@@ -62,10 +61,11 @@ import {
 import { ApiSortFilter, SortDirection, buildSortFilter, isSortFilterObject } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
-import { Cursor, decode } from '../util/cursor';
 import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
 import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
 import { SQLBatchResponse } from '../api/dataPlaneResponses';
+import { Cursor, decode } from '@xata.io/sql';
+import { KyselyPlugin, KyselyPluginResult } from '../kysely';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 

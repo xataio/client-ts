@@ -1,8 +1,8 @@
 import { Kysely } from 'kysely';
-import { XataDialect } from './driver';
 import { XataPlugin, XataPluginOptions } from '../plugins';
-import { XataRecord, EditableData } from '../schema';
+import { XataRecord } from '../schema';
 import { SQLPlugin } from '../sql';
+import { Model, XataDialect } from '@xata.io/kysely';
 
 export type KyselyPluginResult<Schemas extends Record<string, XataRecord>> = Kysely<Model<Schemas>>;
 
@@ -15,9 +15,3 @@ export class KyselyPlugin<Schemas extends Record<string, XataRecord>> extends Xa
     });
   }
 }
-
-export type Model<Schemas extends Record<string, XataRecord>> = {
-  [Model in keyof Schemas]: EditableData<Schemas[Model]>;
-};
-
-export * from './driver';

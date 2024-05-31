@@ -324,6 +324,12 @@ importers:
       '@types/pako':
         specifier: ^2.0.3
         version: 2.0.3
+      '@xata.io/kysely':
+        specifier: workspace:*
+        version: link:../plugin-client-kysely
+      '@xata.io/sql':
+        specifier: workspace:*
+        version: link:../sql
       json-stringify-deterministic:
         specifier: ^1.0.12
         version: 1.0.12
