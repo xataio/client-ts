@@ -258,13 +258,6 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       body: { schema: newSchema }
     });
     if (edits.operations.length > 0) {
-      const destructiveOperations = edits.operations
-        .map((op) => {
-          if (!('removeColumn' in op)) return undefined;
-          return op.removeColumn.column;
-        })
-        .filter((x) => x !== undefined);
-
       if (this.pgrollEnabled) {
         const { edits } = compareSchemas(
           {},
