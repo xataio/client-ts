@@ -35,6 +35,6 @@
   },
   "devDependencies": {
     "ts-morph": "^22.0.0",
-    "tsx": "^4.11.0"
+    "tsx": "^4.11.2"
   }
 }
