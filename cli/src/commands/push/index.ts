@@ -49,7 +49,7 @@ export default class Push extends BaseCommand<typeof Push> {
     const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
     let logs: (Schemas.MigrationHistoryItem | Schemas.Commit)[] = [];
-    let cursor = undefined;
+    const cursor = undefined;
     if (isBranchPgRollEnabled(details)) {
       const { migrations } = await xata.api.migrations.getMigrationHistory({
         pathParams: { workspace, region, dbBranchName: `${database}:${branch}` }
@@ -105,7 +105,7 @@ export default class Push extends BaseCommand<typeof Push> {
         .flatMap((migration) => PgRollMigrationDefinition.parse(migration));
       for (const migration of migrationsToPush) {
         try {
-          await xata.api.migrations.applyMigration({
+          const { jobID } = await xata.api.migrations.applyMigration({
             pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
             body: migration
           });

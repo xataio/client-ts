@@ -254,12 +254,13 @@ export default class EditSchemaNew extends BaseCommand<typeof EditSchemaNew> {
         }
         const xata = await this.getXataClient();
 
-        const submitMigrationRessponse = await xata.api.branches.applyMigration({
-          workspace: this.workspace,
-          region: this.region,
-          database: this.database,
-          branch: this.branch,
-          migration: { ...this.currentMigration, adaptTables: true } as any
+        const submitMigrationRessponse = await xata.api.migrations.applyMigration({
+          pathParams: {
+            workspace: this.workspace,
+            region: this.region,
+            dbBranchName: `${this.database}:${this.branch}`
+          },
+          body: { ...this.currentMigration, adaptTables: true }
         });
 
         await waitForMigrationToFinish(
@@ -278,12 +279,13 @@ export default class EditSchemaNew extends BaseCommand<typeof EditSchemaNew> {
         }, [] as PgRollOperation[]);
 
         if (alterLinkColumns.length > 0) {
-          const { jobID: alterLinkColumnId } = await xata.api.branches.applyMigration({
-            workspace: this.workspace,
-            region: this.region,
-            database: this.database,
-            branch: this.branch,
-            migration: { operations: alterLinkColumns as any }
+          const { jobID: alterLinkColumnId } = await xata.api.migrations.applyMigration({
+            pathParams: {
+              workspace: this.workspace,
+              region: this.region,
+              dbBranchName: `${this.database}:${this.branch}`
+            },
+            body: { operations: alterLinkColumns }
           });
 
           await waitForMigrationToFinish(
@@ -303,12 +305,13 @@ export default class EditSchemaNew extends BaseCommand<typeof EditSchemaNew> {
         }, [] as PgRollOperation[]);
 
         if (constraintRenames.length > 0) {
-          const { jobID: constraintRenameJobID } = await xata.api.branches.applyMigration({
-            workspace: this.workspace,
-            region: this.region,
-            database: this.database,
-            branch: this.branch,
-            migration: { operations: constraintRenames } as any
+          const { jobID: constraintRenameJobID } = await xata.api.migrations.applyMigration({
+            pathParams: {
+              workspace: this.workspace,
+              region: this.region,
+              dbBranchName: `${this.database}:${this.branch}`
+            },
+            body: { operations: constraintRenames }
           });
 
           await waitForMigrationToFinish(
