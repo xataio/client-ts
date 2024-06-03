@@ -55,11 +55,6 @@ export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
   })
 );
 
-export const revlinkSchema = z.object({
-  table: z.string(),
-  column: z.string()
-});
-
 export const tableSchema = z.object({
   name: z.string(),
   columns: z.array(columnSchema),
