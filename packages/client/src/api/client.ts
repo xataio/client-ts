@@ -573,6 +573,25 @@ class BranchApi {
       ...this.extraProps
     });
   }
+
+  public getMigrationJobStatus({
+    workspace,
+    region,
+    database,
+    branch,
+    jobId
+  }: {
+    workspace: Schemas.WorkspaceID;
+    region: string;
+    database: Schemas.DBName;
+    branch: Schemas.BranchName;
+    jobId: string;
+  }): Promise<Schemas.MigrationJobStatusResponse> {
+    return operationsByTag.migrations.getMigrationJobStatus({
+      pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, jobId },
+      ...this.extraProps
+    });
+  }
 }
 
 class TableApi {

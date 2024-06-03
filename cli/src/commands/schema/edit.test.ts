@@ -10,7 +10,7 @@ import {
   EditTablePayload
 } from './types';
 import { PgRollMigration } from '@xata.io/pgroll';
-import EditSchema, { editsToMigrations } from './edit';
+import EditSchemaNew, { editsToMigrations } from './editNew';
 
 const column: AddColumnPayload['column'] = {
   name: 'col1',
@@ -108,7 +108,7 @@ const createEdit = (column: ColumnData) => {
 const runTest = (name: string, setup: () => void, expectation: any) => {
   test(name, () => {
     setup();
-    editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
+    editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchemaNew);
     expect(editCommand.currentMigration.operations).toEqual(expectation);
   });
 };
