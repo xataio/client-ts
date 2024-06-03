@@ -8,7 +8,7 @@ import {
   DeleteColumnPayload,
   DeleteTablePayload,
   EditTablePayload
-} from './types';
+} from './editNew';
 import { PgRollMigration } from '@xata.io/pgroll';
 import EditSchemaNew, { editsToMigrations } from './editNew';
 

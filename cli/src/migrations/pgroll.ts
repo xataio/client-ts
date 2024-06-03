@@ -7,7 +7,7 @@ import { safeJSONParse, safeReadFile } from '../utils/files.js';
 import { migrationsDir, readMigrationsDir } from './files.js';
 import { MigrationFilePgroll, migrationFilePgroll } from './schema.js';
 import { OpRawSQL, OpRenameConstraint, PgRollOperation } from '@xata.io/pgroll';
-import { BranchSchemaFormatted } from '../commands/schema/types.js';
+import { BranchSchemaFormatted } from '../commands/schema/editNew.js';
 
 export const isBranchPgRollEnabled = (details: Schemas.DBBranch) => {
   // @ts-expect-error TODO: Fix this when api is finalized
