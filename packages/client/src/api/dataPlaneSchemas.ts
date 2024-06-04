@@ -160,6 +160,12 @@ export type MigrationJobStatusResponse = {
    */
   description?: MigrationDescription;
   /**
+   * The timestamp at which the migration job completed or failed
+   *
+   * @format date-time
+   */
+  completedAt?: string;
+  /**
    * The error message associated with the migration job
    */
   error?: string;
