@@ -1,3 +1,4 @@
+import { test } from 'vitest';
 import { NewIdentifiable, NewIdentifierKey, NewIndentifierValue } from './identifiable';
 
 const tables = [
@@ -182,3 +183,7 @@ updateNeither(1);
 
 const identifierValueType: NewIndentifierValue<NewIdentifiable<typeof tables>['users']> = 2;
 const identifierKeyName: NewIdentifierKey<NewIdentifiable<typeof tables>['users']> = 'userdefined';
+
+test('fake test', () => {
+  // This is a fake test to make sure that the type definitions in this file are working
+});
