@@ -135,7 +135,7 @@ export function isIdentifiable(x: any): x is Identifiable & Record<string, unkno
   return isObject(x) && isString(x?.xata_id);
 }
 
-type NumericOperator = ExclusiveOr<
+export type NumericOperator = ExclusiveOr<
   { $increment?: number },
   ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
 >;

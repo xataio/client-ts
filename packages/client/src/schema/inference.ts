@@ -71,7 +71,7 @@ type PropertyType<Tables, Properties, PropertyName extends PropertyKey> = Proper
     : never
   : never;
 
-type InnerType<Type, Tables, LinkedTable> = Type extends
+export type InnerType<Type, Tables, LinkedTable> = Type extends
   | 'string'
   | 'text'
   | 'email'
