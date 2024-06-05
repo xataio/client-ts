@@ -6,7 +6,7 @@ const tables = [
     name: 'teams',
     primaryKey: ['xata_id'],
     columns: [
-      { name: 'xata_id', type: 'string', notNull: true },
+      { name: 'xata_id', type: 'string', notNull: true, unique: true },
       { name: 'xata_version', type: 'int', notNull: true },
       { name: 'xata_createdat', type: 'datetime', notNull: true },
       { name: 'xata_updatedat', type: 'datetime', notNull: true },
@@ -27,7 +27,7 @@ const tables = [
     name: 'users',
     primaryKey: ['xata_id'],
     columns: [
-      { name: 'xata_id', type: 'string', notNull: true },
+      { name: 'xata_id', type: 'string', notNull: true, unique: true },
       { name: 'xata_version', type: 'int', notNull: true },
       { name: 'xata_createdat', type: 'datetime', notNull: true },
       { name: 'xata_updatedat', type: 'datetime', notNull: true },
@@ -58,7 +58,7 @@ const tables = [
     name: 'pets',
     primaryKey: ['xata_id'],
     columns: [
-      { name: 'xata_id', type: 'string', notNull: true },
+      { name: 'xata_id', type: 'string', notNull: true, unique: true },
       { name: 'xata_version', type: 'int', notNull: true },
       { name: 'xata_createdat', type: 'datetime', notNull: true },
       { name: 'xata_updatedat', type: 'datetime', notNull: true },

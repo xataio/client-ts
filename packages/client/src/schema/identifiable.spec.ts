@@ -1,4 +1,4 @@
-import { NewIdentifier, NewIdentifierName } from './identifiable';
+import { NewIdentifiable, NewIdentifierKey, NewIndentifierValue } from './identifiable';
 
 const tables = [
   {
@@ -17,9 +17,9 @@ const tables = [
   },
   {
     name: 'users',
-    primaryKey: ['xata_id'],
+    primaryKey: ['userdefined'],
     columns: [
-      { name: 'xata_id', type: 'int', notNull: true, unique: true },
+      { name: 'userdefined', type: 'int', notNull: true, unique: true },
       { name: 'xata_version', type: 'int', notNull: true },
       { name: 'xata_createdat', type: 'datetime', notNull: true },
       { name: 'xata_updatedat', type: 'datetime', notNull: true },
@@ -28,7 +28,7 @@ const tables = [
   },
   {
     name: 'pets',
-    primaryKey: ['xata_id'],
+    primaryKey: [],
     columns: [
       { name: 'xata_id', type: 'text', notNull: true, unique: true },
       { name: 'xata_version', type: 'int', notNull: true },
@@ -109,52 +109,48 @@ const tables = [
   }
 ] as const;
 
-type DbIndentifiable = NewIdentifier<typeof tables>;
-type DbIndentifiableName = NewIdentifierName<typeof tables>;
-
-const example: DbIndentifiableName['teams'] = 'xata_id';
-example;
+type DbIndentifiable = NewIdentifiable<typeof tables>;
 
 function updateTeams(identifable: DbIndentifiable['teams']) {}
-updateTeams(true);
+updateTeams({ xata_id: true });
 // @ts-ignore
 updateTeams(1);
 // @ts-ignore
 updateTeams('1');
 
 function updateUsers(identifable: DbIndentifiable['users']) {}
-updateUsers(1);
+updateUsers({ userdefined: 1 });
 // @ts-ignore
 updateUsers('1');
 
 function updatePets(identifable: DbIndentifiable['pets']) {}
-updatePets('1');
+updatePets({ xata_id: '1' });
 // @ts-ignore
 updatePets(1);
 
 function updateDatetime(identifable: DbIndentifiable['datetime']) {}
-updateDatetime(new Date());
+updateDatetime({ xata_id: new Date() });
 // @ts-ignore
 updateDatetime('1');
 // @ts-ignore
 updateDatetime(1);
 
 function updateMultiple(identifable: DbIndentifiable['multiple']) {}
-updateMultiple(['1']);
+updateMultiple({ xata_id: ['1'] });
 // @ts-ignore
 updateMultiple('1');
 // @ts-ignore
 updateMultiple(1);
 
 function updateVector(identifable: DbIndentifiable['vector']) {}
-updateVector([1, 2]);
+updateVector({ xata_id: [1, 2] });
 // @ts-ignore
 updateVector('1');
 // @ts-ignore
 updateVector(1);
 
 function updateBoolean(identifable: DbIndentifiable['boolean[]']) {}
-updateBoolean([true, false]);
+updateBoolean({ xata_id: [true, false] });
 // @ts-ignore
 updateBoolean('1');
 // @ts-ignore
@@ -162,7 +158,9 @@ updateBoolean(1);
 
 function updateJsonB(identifable: DbIndentifiable['jsonb']) {}
 updateJsonB({
-  one: 'two'
+  xata_id: {
+    one: 'two'
+  }
 });
 // @ts-ignore
 updateJsonB('1');
@@ -170,7 +168,7 @@ updateJsonB('1');
 updateJsonB(1);
 
 function updateUnknown(identifable: DbIndentifiable['unknown']) {}
-updateUnknown('1');
+updateUnknown({ xata_id: '1' });
 // @ts-ignore
 updateUnknown('1');
 // @ts-ignore
@@ -181,3 +179,6 @@ function updateNeither(identifable: DbIndentifiable['neither']) {}
 updateNeither('1');
 // @ts-ignore
 updateNeither(1);
+
+const identifierValueType: NewIndentifierValue<NewIdentifiable<typeof tables>['users']> = 2;
+const identifierKeyName: NewIdentifierKey<NewIdentifiable<typeof tables>['users']> = 'userdefined';
