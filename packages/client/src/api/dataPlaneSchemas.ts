@@ -228,6 +228,11 @@ export type MigrationHistoryResponse = {
 export type DBName = string;
 
 /**
+ * Represent the state of the branch, used for branch lifecycle management
+ */
+export type BranchState = 'active' | 'move_scheduled' | 'moving';
+
+/**
  * @format date-time
  * @x-go-type string
  */
@@ -241,6 +246,7 @@ export type Branch = {
    * @minLength 1
    */
   clusterID?: string;
+  state: BranchState;
   createdAt: DateTime;
 };
 
@@ -344,6 +350,7 @@ export type DBBranch = {
    */
   clusterID?: string;
   version: number;
+  state: BranchState;
   lastMigrationID: string;
   metadata?: BranchMetadata;
   startedFrom?: StartedFromMetadata;
