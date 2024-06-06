@@ -32,7 +32,7 @@ import { SearchXataRecord, TotalCount } from '../search';
 import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
 import { SQLPluginFunction } from '../sql';
-import { chunk, compact, isDefined, isNumber, isObject, isString, promiseMap } from '../util/lang';
+import { chunk, compact, isDefined, isNumber, isObject, isString, isStringOrNumber, promiseMap } from '../util/lang';
 import { Dictionary } from '../util/types';
 import { generateUUID } from '../util/uuid';
 import { VERSION } from '../version';
@@ -940,14 +940,22 @@ const computePrimaryKey = (schema: Schemas.Table[], tableName: string): string =
   const table = schema.find((table) => table.name === tableName);
   const primaryKeys = (table as any)?.primaryKey ?? [];
   if (primaryKeys.length === 1) {
+    // Throwing an error here if the primary key is not an Int or String instead of silently failing.
+    const primaryKeyType = table?.columns.find((col) => col.name === primaryKeys[0])?.type;
+    const validIdXataTypes = ['string', 'text', 'int', 'float'];
+    if (primaryKeyType && !validIdXataTypes.includes(primaryKeyType)) {
+      throw new Error(
+        `Primary key on ${tableName} must be one of type ${validIdXataTypes.join(', ')} to use the Xata SDK.`
+      );
+    }
     return primaryKeys[0];
   } else if (primaryKeys.length > 1) {
-    throw new Error('Composite primary key is not supported');
+    throw new Error(`Composite primary key on ${tableName} is not supported`);
   } else {
     const xata_id = table?.columns.find((col) => col.name === 'xata_id' && col.notNull && col.unique);
     if (!xata_id) {
       throw new Error(
-        'Could not find a non composite primary key or xata_id on the table. Create a primary key of adapt your table with Xata.'
+        `Could not find a non composite primary key or xata_id on ${tableName} table. Create a primary key of adapt your table with Xata.`
       );
     }
     return 'xata_id';
@@ -1076,7 +1084,7 @@ export class KyselyRepository<Record extends XataRecord>
       }
 
       // Create one record with id as param
-      if (isString(a) && isObject(b)) {
+      if (isStringOrNumber(a) && isObject(b)) {
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
@@ -1084,7 +1092,7 @@ export class KyselyRepository<Record extends XataRecord>
       }
 
       // Create one record with id as property
-      if (isObject(a) && isString(a[this.#primaryKey])) {
+      if (isObject(a) && isStringOrNumber(a[this.#primaryKey])) {
         if (a[this.#primaryKey] === '') {
           throw new Error("The id can't be empty");
         }
@@ -1405,13 +1413,13 @@ export class KyselyRepository<Record extends XataRecord>
 
       try {
         // Update one record with id as param
-        if (isString(a) && isObject(b)) {
+        if (isStringOrNumber(a) && isObject(b)) {
           const columns = isValidSelectableColumns(c) ? c : undefined;
           return await this.#updateRecordWithID(a as any, b as NewEditableData<Record>, columns);
         }
 
         // Update one record with id as property
-        if (isObject(a) && isString(a[this.#primaryKey])) {
+        if (isObject(a) && isStringOrNumber(a[this.#primaryKey])) {
           const columns = isValidSelectableColumns(b) ? b : undefined;
           return await this.#updateRecordWithID(
             a[this.#primaryKey] as any,
@@ -1650,7 +1658,7 @@ export class KyselyRepository<Record extends XataRecord>
       }
 
       // Create or update one record with id as param
-      if (isString(a) && isObject(b)) {
+      if (isStringOrNumber(a) && isObject(b)) {
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
@@ -1658,7 +1666,7 @@ export class KyselyRepository<Record extends XataRecord>
       }
 
       // Create or update one record with id as property
-      if (isObject(a) && isString((a as any)[this.#primaryKey])) {
+      if (isObject(a) && isStringOrNumber((a as any)[this.#primaryKey])) {
         if ((a as any)[this.#primaryKey] === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
@@ -1760,7 +1768,7 @@ export class KyselyRepository<Record extends XataRecord>
       }
 
       // Create or replace one record with id as param
-      if (isString(a) && isObject(b)) {
+      if (isStringOrNumber(a) && isObject(b)) {
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
@@ -1768,7 +1776,7 @@ export class KyselyRepository<Record extends XataRecord>
       }
 
       // Create or replace one record with id as property
-      if (isObject(a) && isString((a as any)[this.#primaryKey])) {
+      if (isObject(a) && isStringOrNumber((a as any)[this.#primaryKey])) {
         if ((a as any)[this.#primaryKey] === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
@@ -1905,8 +1913,8 @@ export class KyselyRepository<Record extends XataRecord>
         if (a.length === 0) return [];
 
         const ids = a.map((o) => {
-          if (isString(o)) return o;
-          if (isString(o[this.#primaryKey])) return o[this.#primaryKey];
+          if (isStringOrNumber(o)) return o;
+          if (isStringOrNumber(o[this.#primaryKey])) return o[this.#primaryKey];
           throw new Error('Invalid arguments for delete method');
         });
 
@@ -1921,12 +1929,12 @@ export class KyselyRepository<Record extends XataRecord>
       }
 
       // Delete one record with id as param
-      if (isString(a)) {
+      if (isStringOrNumber(a)) {
         return await this.#deleteRecord(a as any, b);
       }
 
       // Delete one record with id as property
-      if (isObject(a) && isString(a[this.#primaryKey])) {
+      if (isObject(a) && isStringOrNumber(a[this.#primaryKey])) {
         return await this.#deleteRecord((a as any)[this.#primaryKey], b);
       }
 
@@ -3772,8 +3780,8 @@ function extractIdKysely(
   value: any,
   primaryKey: string
 ): NewIndentifierValue<NewIdentifiable<readonly BaseSchema[]>> | undefined {
-  if (isString(value)) return value as any;
-  if (isObject(value) && isString(value[primaryKey])) return value[primaryKey] as any;
+  if (isStringOrNumber(value)) return value as any;
+  if (isObject(value) && isStringOrNumber(value[primaryKey])) return value[primaryKey] as any;
   return undefined;
 }
 
