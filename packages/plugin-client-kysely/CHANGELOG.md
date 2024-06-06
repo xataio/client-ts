@@ -1,5 +1,11 @@
 # @xata.io/kysely
 
+## 0.1.22
+
+### Patch Changes
+
+- [#1491](https://github.com/xataio/client-ts/pull/1491) [`f4a5ee7`](https://github.com/xataio/client-ts/commit/f4a5ee707dd04280f59919c97ff9cc0b1e9b01e6) Thanks [@SferaDev](https://github.com/SferaDev)! - [Kysely] Add consistency to client initialization
+
 ## 0.1.21
 
 ### Patch Changes
