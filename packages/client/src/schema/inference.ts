@@ -1,4 +1,3 @@
-import { Schemas } from '../api';
 import { UnionToIntersection, Values } from '../util/types';
 import { XataArrayFile, XataFile } from './files';
 import { JSONValue } from './json';
@@ -12,7 +11,7 @@ export type TableSchema = {
   name: string;
   columns: readonly {
     name: string;
-    type: Schemas.Column['type'];
+    type: string;
     notNull?: boolean;
   }[];
 };

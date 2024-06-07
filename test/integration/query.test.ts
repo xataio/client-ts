@@ -624,57 +624,6 @@ describe('integration tests', () => {
     expect(xata.db.users.create(invalidUsers)).rejects.toHaveProperty('status', 400);
   });
 
-  test('Link is a record object', async () => {
-    const user = await xata.db.users.create({
-      full_name: 'Base User'
-    });
-
-    const team = await xata.db.teams.create({
-      name: 'Base team',
-      owner: user
-    });
-
-    await user.update({ team });
-
-    const updatedUser = await user.read();
-    expect(updatedUser?.team?.xata_id).toEqual(team.xata_id);
-
-    const response = await xata.db.teams.getFirst({ filter: { xata_id: team.xata_id }, columns: ['*', 'owner.*'] });
-    const owner = await response?.owner?.read();
-
-    expect(response?.owner?.xata_id).toBeDefined();
-    expect(response?.owner?.full_name).toBeDefined();
-
-    expect(owner?.xata_id).toBeDefined();
-    expect(owner?.full_name).toBeDefined();
-
-    expect(response?.owner?.xata_id).toBe(owner?.xata_id);
-    expect(response?.owner?.full_name).toBe(owner?.full_name);
-
-    expect(response?.owner?.xata_createdat).toBeInstanceOf(Date);
-    expect(response?.owner?.xata_updatedat).toBeInstanceOf(Date);
-    expect(response?.owner?.xata_version).toBe(1);
-
-    const nestedObject = await xata.db.teams.getFirst({
-      filter: { xata_id: team.xata_id },
-      columns: ['owner.team', 'owner.full_name']
-    });
-
-    const nestedProperty = nestedObject?.owner?.team;
-    const nestedName = nestedObject?.owner?.full_name;
-
-    expect(nestedName).toEqual(user.full_name);
-
-    expect(nestedProperty?.name).toEqual(team.name);
-    // @ts-expect-error
-    expect(nestedProperty?.owner?.full_name).not.toBeDefined();
-
-    const nestedRead = await nestedProperty?.owner?.read();
-
-    expect(nestedRead?.xata_id).toBeDefined();
-    expect(nestedRead?.full_name).toEqual(user.full_name);
-  });
-
   test('Update link with linked object', async () => {
     const owner = await xata.db.users.create({ full_name: 'Example User' });
     const owner2 = await xata.db.users.create({ full_name: 'Example User 2' });

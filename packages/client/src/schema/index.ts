@@ -46,7 +46,7 @@ export class SchemaPlugin<Schema extends DatabaseSchema> extends XataPlugin {
     );
 
     // Inject generated tables for shell to auto-complete
-    const tableNames = pluginOptions.schema.tables.map(({ name }) => name) ?? [];
+    const tableNames = pluginOptions.schema.tables.map(({ name }) => name);
     for (const table of tableNames) {
       db[table] = new RestRepository({ db, pluginOptions, table, schema: pluginOptions.schema });
     }

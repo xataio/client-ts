@@ -1,7 +1,7 @@
-import { ApiExtraProps, HostProvider, Schemas } from './api';
+import { ApiExtraProps, HostProvider } from './api';
 import { FilesPlugin, FilesPluginResult } from './files';
 import { XataPlugin, XataPluginOptions } from './plugins';
-import { DatabaseSchema, SchemaInference, SchemaPlugin, SchemaPluginResult, TableSchema } from './schema';
+import { DatabaseSchema, SchemaInference, SchemaPlugin, SchemaPluginResult } from './schema';
 import { TraceFunction, defaultTrace } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { SQLPlugin, SQLPluginResult } from './sql';
@@ -157,6 +157,7 @@ export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
       search: Awaited<ReturnType<SearchPlugin<Schema>['build']>>;
       sql: Awaited<ReturnType<SQLPlugin['build']>>;
       files: Awaited<ReturnType<FilesPlugin<SchemaInference<Schema['tables']>>['build']>>;
+      schema: Schema;
     },
     keyof Plugins
   > & {
@@ -169,4 +170,4 @@ export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
   };
 }
 
-export class BaseClient extends buildClient()<{ tables: TableSchema[] }> {}
+export class BaseClient extends buildClient()<DatabaseSchema> {}

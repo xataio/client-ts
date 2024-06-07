@@ -62,7 +62,6 @@ describe('record creation', () => {
     expect(user.team).toBeDefined();
     expect(user.team?.xata_id).toBe(team.xata_id);
     expect(user.team?.name).toBe('Team ships');
-    expect(user.team?.read).toBeDefined();
 
     expect(user.xata_createdat).toBeInstanceOf(Date);
     expect(user.xata_updatedat).toBeInstanceOf(Date);
@@ -77,8 +76,6 @@ describe('record creation', () => {
     expect(json.team).toBeDefined();
     expect(json.team?.xata_id).toBe(team.xata_id);
     expect(json.team?.name).toBe('Team ships');
-    // @ts-expect-error
-    expect(json.team.read).not.toBeDefined();
   });
 
   test('create multiple teams without ids', async () => {

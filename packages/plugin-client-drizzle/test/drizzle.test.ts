@@ -53,13 +53,16 @@ function getDomain(host: HostProvider) {
 
 function getDrizzleClient(type: string, branch: string) {
   if (type === 'http') {
-    const xata = new BaseClient({
-      apiKey,
-      host,
-      clientName: 'sdk-tests',
-      databaseURL: `https://${workspace}.${region}.${getDomain(host)}/db/${database}`,
-      branch
-    });
+    const xata = new BaseClient(
+      {
+        apiKey,
+        host,
+        clientName: 'sdk-tests',
+        databaseURL: `https://${workspace}.${region}.${getDomain(host)}/db/${database}`,
+        branch
+      },
+      { tables: [] }
+    );
 
     return { db: drizzleHttp(xata, { schema, logger: ENABLE_LOGGING }) };
   } else if (type === 'pg') {
