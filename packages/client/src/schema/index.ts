@@ -1,6 +1,6 @@
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { isString } from '../util/lang';
-import { XataRecord } from './record';
+import { DatabaseSchema, SchemaInference } from './inference';
 import { Repository, RestRepository } from './repository';
 
 export * from './ask';
@@ -19,18 +19,18 @@ export type SchemaDefinition = {
   table: string;
 };
 
-export type SchemaPluginResult<Schemas extends Record<string, XataRecord>> = {
-  [Key in keyof Schemas]: Repository<Schemas[Key]>;
+export type SchemaPluginResult<Schema extends DatabaseSchema> = {
+  [Key in Schema['tables'][number]['name']]: Repository<Schema, Key, SchemaInference<Schema['tables']>[Key]>;
 };
 
-export class SchemaPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
-  #tables: Record<string, Repository<any>> = {};
+export class SchemaPlugin<Schema extends DatabaseSchema> extends XataPlugin {
+  #tables: Record<string, Repository<any, any, any>> = {};
 
   constructor() {
     super();
   }
 
-  build(pluginOptions: XataPluginOptions): SchemaPluginResult<Schemas> {
+  build(pluginOptions: XataPluginOptions): SchemaPluginResult<Schema> {
     const db: any = new Proxy(
       {},
       {

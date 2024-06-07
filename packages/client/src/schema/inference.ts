@@ -4,7 +4,11 @@ import { XataArrayFile, XataFile } from './files';
 import { JSONValue } from './json';
 import { Identifiable, XataRecord } from './record';
 
-export type BaseSchema = {
+export type DatabaseSchema = {
+  tables: readonly TableSchema[];
+};
+
+export type TableSchema = {
   name: string;
   columns: readonly (
     | {
@@ -16,7 +20,7 @@ export type BaseSchema = {
   )[];
 };
 
-export type SchemaInference<T extends readonly BaseSchema[]> = T extends never[]
+export type SchemaInference<T extends readonly TableSchema[]> = T extends never[]
   ? Record<string, Record<string, any>>
   : T extends readonly unknown[]
   ? T[number] extends { name: string; columns: readonly unknown[] }

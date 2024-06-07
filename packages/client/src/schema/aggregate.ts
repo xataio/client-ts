@@ -6,33 +6,30 @@ import { ColumnsByValue } from './selection';
 /**
  * The description of a single aggregation operation. The key represents the
  */
-export type AggregationExpression<O extends XataRecord> = ExactlyOne<{
-  count: CountAggregation<O>;
-  sum: SumAggregation<O>;
-  max: MaxAggregation<O>;
-  min: MinAggregation<O>;
-  average: AverageAggregation<O>;
-  percentiles: PercentilesAggregation<O>;
-  uniqueCount: UniqueCountAggregation<O>;
-  dateHistogram: DateHistogramAggregation<O>;
-  topValues: TopValuesAggregation<O>;
-  numericHistogram: NumericHistogramAggregation<O>;
+export type AggregationExpression<ObjectType> = ExactlyOne<{
+  count: CountAggregation<ObjectType>;
+  sum: SumAggregation<ObjectType>;
+  max: MaxAggregation<ObjectType>;
+  min: MinAggregation<ObjectType>;
+  average: AverageAggregation<ObjectType>;
+  percentiles: PercentilesAggregation<ObjectType>;
+  uniqueCount: UniqueCountAggregation<ObjectType>;
+  dateHistogram: DateHistogramAggregation<ObjectType>;
+  topValues: TopValuesAggregation<ObjectType>;
+  numericHistogram: NumericHistogramAggregation<ObjectType>;
 }>;
 
-export type AggregationResult<
-  Record extends XataRecord,
-  Expression extends Dictionary<AggregationExpression<Record>>
-> = {
+export type AggregationResult<ObjectType, Expression extends Dictionary<AggregationExpression<ObjectType>>> = {
   aggs: {
-    [K in keyof Expression]: AggregationResultItem<Record, Expression[K]>;
+    [K in keyof Expression]: AggregationResultItem<ObjectType, Expression[K]>;
   };
 };
 
 type AggregationExpressionType<T extends AggregationExpression<any>> = keyof T;
 
 type AggregationResultItem<
-  Record extends XataRecord,
-  Expression extends AggregationExpression<Record>
+  ObjectType,
+  Expression extends AggregationExpression<ObjectType>
 > = AggregationExpressionType<Expression> extends infer Type
   ? Type extends keyof AggregationExpressionResultTypes
     ? AggregationExpressionResultTypes[Type]
@@ -42,71 +39,71 @@ type AggregationResultItem<
 /**
  * Count the number of records with an optional filter.
  */
-export type CountAggregation<O extends XataRecord> =
+export type CountAggregation<ObjectType> =
   | {
-      filter?: Filter<O>;
+      filter?: Filter<ObjectType>;
     }
   | '*';
 
 /**
  * The sum of the numeric values in a particular column.
  */
-export type SumAggregation<O extends XataRecord> = {
+export type SumAggregation<ObjectType> = {
   /**
    * The column on which to compute the sum. Must be a numeric type.
    */
-  column: ColumnsByValue<O, number>;
+  column: ColumnsByValue<ObjectType, number>;
 };
 
 /**
  * The max of the numeric values in a particular column.
  */
-export type MaxAggregation<O extends XataRecord> = {
+export type MaxAggregation<ObjectType> = {
   /**
    * The column on which to compute the max. Must be a numeric type.
    */
-  column: ColumnsByValue<O, number>;
+  column: ColumnsByValue<ObjectType, number>;
 };
 
 /**
  * The min of the numeric values in a particular column.
  */
-export type MinAggregation<O extends XataRecord> = {
+export type MinAggregation<ObjectType> = {
   /**
    * The column on which to compute the min. Must be a numeric type.
    */
-  column: ColumnsByValue<O, number>;
+  column: ColumnsByValue<ObjectType, number>;
 };
 
 /**
  * The average of the numeric values in a particular column.
  */
-export type AverageAggregation<O extends XataRecord> = {
+export type AverageAggregation<ObjectType> = {
   /**
    * The column on which to compute the average. Must be a numeric type.
    */
-  column: ColumnsByValue<O, number>;
+  column: ColumnsByValue<ObjectType, number>;
 };
 
 /**
  * Calculate given percentiles of the numeric values in a particular column.
  */
-export type PercentilesAggregation<O extends XataRecord> = {
+export type PercentilesAggregation<ObjectType> = {
   /**
    * The column on which to compute the average. Must be a numeric type.
    */
-  column: ColumnsByValue<O, number>;
+  column: ColumnsByValue<ObjectType, number>;
   percentiles: number[];
 };
 
 /**
  * Count the number of distinct values in a particular column.
  */
-export type UniqueCountAggregation<O extends XataRecord> = {
+export type UniqueCountAggregation<ObjectType> = {
   /**
    * The column from where to count the unique values.
    */
-  column: ColumnsByValue<O, any>;
+  column: ColumnsByValue<ObjectType, any>;
   /**
    * The threshold under which the unique count is exact. If the number of unique
    * values in the column is higher than this threshold, the results are approximative.
@@ -118,11 +115,11 @@ export type UniqueCountAggregation<O extends XataRecord> = {
 /**
  * Split data into buckets by a datetime column. Accepts sub-aggregations for each bucket.
  */
-export type DateHistogramAggregation<O extends XataRecord> = {
+export type DateHistogramAggregation<ObjectType> = {
   /**
    * The column to use for bucketing. Must be of type datetime.
    */
-  column: ColumnsByValue<O, Date>;
+  column: ColumnsByValue<ObjectType, Date>;
   /**
    * The fixed interval to use when bucketing.
    * It is fromatted as number + units, for example: `5d`, `20m`, `10s`.
@@ -143,19 +140,19 @@ export type DateHistogramAggregation<O extends XataRecord> = {
    * @pattern ^[+-][01]\d:[0-5]\d$
    */
   timezone?: string;
-  aggs?: Dictionary<AggregationExpression<O>>;
+  aggs?: Dictionary<AggregationExpression<ObjectType>>;
 };
 
 /**
  * Split data into buckets by the unique values in a column. Accepts sub-aggregations for each bucket.
  * The top values as ordered by the number of records (`$count``) are returned.
  */
-export type TopValuesAggregation<O extends XataRecord> = {
+export type TopValuesAggregation<ObjectType> = {
   /**
    * The column to use for bucketing. Accepted types are `string`, `email`, `int`, `float`, or `bool`.
    */
-  column: ColumnsByValue<O, string | number | boolean>;
-  aggs?: Dictionary<AggregationExpression<O>>;
+  column: ColumnsByValue<ObjectType, string | number | boolean>;
+  aggs?: Dictionary<AggregationExpression<ObjectType>>;
   /**
    * The maximum number of unique values to return.
    *
@@ -168,11 +165,11 @@ export type TopValuesAggregation<O extends XataRecord> = {
 /**
  * Split data into buckets by dynamic numeric ranges. Accepts sub-aggregations for each bucket.
  */
-export type NumericHistogramAggregation<O extends XataRecord> = {
+export type NumericHistogramAggregation<ObjectType> = {
   /**
    * The column to use for bucketing. Must be of numeric type.
    */
-  column: ColumnsByValue<O, number>;
+  column: ColumnsByValue<ObjectType, number>;
   /**
    * The numeric interval to use for bucketing. The resulting buckets will be ranges
    * with this value as size.
@@ -189,7 +186,7 @@ export type NumericHistogramAggregation<O extends XataRecord> = {
    * @default 0
    */
   offset?: number;
-  aggs?: Dictionary<AggregationExpression<O>>;
+  aggs?: Dictionary<AggregationExpression<ObjectType>>;
 };
 
 type AggregationExpressionResultTypes = {

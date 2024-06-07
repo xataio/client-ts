@@ -1,6 +1,6 @@
-import { SelectableColumn, XataRecord } from '../schema';
+import { SelectableColumn } from '../schema';
 
-export type TargetColumn<T extends XataRecord> =
+export type TargetColumn<T> =
   | SelectableColumn<T>
   | {
       /**

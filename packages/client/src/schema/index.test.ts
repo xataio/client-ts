@@ -19,15 +19,21 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
 
   // @ts-expect-error - Fetch doesn't appear in globalThis yet
   const fetch = vi.fn(globalThis.realFetch);
-  const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra }, [
+  const client = new BaseClient(
+    { fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra },
     {
-      name: 'users',
-      columns: [
-        { name: 'name', type: 'string' },
-        { name: 'email', type: 'string' }
+      tables: [
+        {
+          name: 'users',
+          columns: [
+            { name: 'xata_id', type: 'string' },
+            { name: 'name', type: 'string' },
+            { name: 'email', type: 'string' }
+          ]
+        }
       ]
     }
-  ]);
+  );
 
   const users = client.db.users;
 

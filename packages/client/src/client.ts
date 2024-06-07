@@ -1,11 +1,10 @@
 import { ApiExtraProps, HostProvider, Schemas } from './api';
 import { FilesPlugin, FilesPluginResult } from './files';
 import { XataPlugin, XataPluginOptions } from './plugins';
-import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
-import { defaultTrace, TraceFunction } from './schema/tracing';
+import { DatabaseSchema, SchemaInference, SchemaPlugin, SchemaPluginResult, TableSchema } from './schema';
+import { TraceFunction, defaultTrace } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { SQLPlugin, SQLPluginResult } from './sql';
-import { TransactionPlugin, TransactionPluginResult } from './transaction';
 import { FetchImpl, getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
@@ -36,7 +35,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
     schema: Schemas.Schema;
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
-    transactions: TransactionPluginResult<any>;
     sql: SQLPluginResult;
     files: FilesPluginResult<any>;
 
@@ -53,7 +51,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
 
       const db = new SchemaPlugin().build(pluginOptions);
       const search = new SearchPlugin(db).build(pluginOptions);
-      const transactions = new TransactionPlugin().build(pluginOptions);
       const sql = new SQLPlugin().build(pluginOptions);
       const files = new FilesPlugin().build(pluginOptions);
 
@@ -61,7 +58,6 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       this.schema = { tables };
       this.db = db;
       this.search = search;
-      this.transactions = transactions;
       this.sql = sql;
       this.files = files;
 
@@ -155,16 +151,12 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   } as unknown as ClientConstructor<Plugins>;
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
-  new <Schemas extends Record<string, XataRecord> = {}>(
-    options?: Partial<BaseClientOptions>,
-    schemaTables?: readonly BaseSchema[]
-  ): Omit<
+  new <Schema extends DatabaseSchema>(options: BaseClientOptions, schemaTables: Schema): Omit<
     {
-      db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
-      search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
-      transactions: Awaited<ReturnType<TransactionPlugin<Schemas>['build']>>;
+      db: Awaited<ReturnType<SchemaPlugin<Schema>['build']>>;
+      search: Awaited<ReturnType<SearchPlugin<Schema>['build']>>;
       sql: Awaited<ReturnType<SQLPlugin['build']>>;
-      files: Awaited<ReturnType<FilesPlugin<Schemas>['build']>>;
+      files: Awaited<ReturnType<FilesPlugin<SchemaInference<Schema['tables']>>['build']>>;
     },
     keyof Plugins
   > & {
@@ -177,4 +169,4 @@ export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
   };
 }
 
-export class BaseClient extends buildClient()<Record<string, any>> {}
+export class BaseClient extends buildClient()<{ tables: TableSchema[] }> {}

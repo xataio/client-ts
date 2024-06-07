@@ -1,7 +1,7 @@
 import { Responses, searchBranch } from '../api';
 import { FuzzinessExpression, HighlightExpression, PrefixExpression, SearchPageConfig } from '../api/schemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
-import { SchemaPluginResult } from '../schema';
+import { DatabaseSchema, SchemaInference, SchemaPluginResult } from '../schema';
 import { Filter } from '../schema/filters';
 import { BaseData, XataRecord } from '../schema/record';
 import { initObject } from '../schema/repository';
@@ -64,14 +64,17 @@ export type SearchPluginResult<Schemas extends Record<string, BaseData>> = {
   >;
 };
 
-export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
-  constructor(private db: SchemaPluginResult<Schemas>) {
+export class SearchPlugin<Schema extends DatabaseSchema> extends XataPlugin {
+  constructor(private db: SchemaPluginResult<Schema>) {
     super();
   }
 
-  build(pluginOptions: XataPluginOptions): SearchPluginResult<Schemas> {
+  build(pluginOptions: XataPluginOptions): SearchPluginResult<SchemaInference<Schema['tables']>> {
     return {
-      all: async <Tables extends StringKeys<Schemas>>(query: string, options: SearchOptions<Schemas, Tables> = {}) => {
+      all: async <Tables extends StringKeys<SchemaInference<Schema['tables']>>>(
+        query: string,
+        options: SearchOptions<SchemaInference<Schema['tables']>, Tables> = {}
+      ) => {
         const { records, totalCount } = await this.#search(query, options, pluginOptions);
 
         return {
@@ -84,9 +87,9 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
           })
         };
       },
-      byTable: async <Tables extends StringKeys<Schemas>>(
+      byTable: async <Tables extends StringKeys<SchemaInference<Schema['tables']>>>(
         query: string,
-        options: SearchOptions<Schemas, Tables> = {}
+        options: SearchOptions<SchemaInference<Schema['tables']>, Tables> = {}
       ) => {
         const { records: rawRecords, totalCount } = await this.#search(query, options, pluginOptions);
 
@@ -104,9 +107,9 @@ export class SearchPlugin<Schemas extends Record<string, XataRecord>> extends Xa
     };
   }
 
-  async #search<Tables extends StringKeys<Schemas>>(
+  async #search<Tables extends StringKeys<SchemaInference<Schema['tables']>>>(
     query: string,
-    options: SearchOptions<Schemas, Tables>,
+    options: SearchOptions<SchemaInference<Schema['tables']>, Tables>,
     pluginOptions: XataPluginOptions
   ) {
     const { tables, fuzziness, highlight, prefix, page } = options ?? {};
