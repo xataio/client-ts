@@ -1,4 +1,4 @@
-import { DatabaseSchema, SchemaPluginResult } from '.';
+import { DatabaseSchema, SchemaPluginResult, TableSchema } from '.';
 import {
   ApiExtraProps,
   Schemas,
@@ -817,24 +817,24 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   #table: string;
   #getFetchProps: () => ApiExtraProps;
   #db: SchemaPluginResult<any>;
-  #schemaTables?: Schemas.Table[];
+  #schema: DatabaseSchema;
   #trace: TraceFunction;
 
   constructor(options: {
     table: string;
     db: SchemaPluginResult<any>;
     pluginOptions: XataPluginOptions;
-    schemaTables?: Schemas.Table[];
+    schema: DatabaseSchema;
   }) {
     super(
       null,
-      { name: options.table, schema: options.schemaTables?.find((table) => table.name === options.table) },
+      { name: options.table, schema: options.schema.tables.find((table) => table.name === options.table) },
       {}
     );
 
     this.#table = options.table;
     this.#db = options.db;
-    this.#schemaTables = options.schemaTables;
+    this.#schema = options.schema;
     this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
 
     const trace = options.pluginOptions.trace ?? defaultTrace;
@@ -956,8 +956,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
       ...this.#getFetchProps()
     });
 
-    const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObject(this.#db, this.#schema, this.#table, response, columns) as any;
   }
 
   async #insertRecordWithId(
@@ -983,8 +982,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
       ...this.#getFetchProps()
     });
 
-    const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObject(this.#db, this.#schema, this.#table, response, columns) as any;
   }
 
   async #insertRecords(
@@ -1089,10 +1087,9 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
             ...this.#getFetchProps()
           });
 
-          const schemaTables = await this.#getSchemaTables();
           return initObject<ObjectType>(
             this.#db,
-            schemaTables,
+            this.#schema,
             this.#table,
             response,
             columns as SelectableColumn<ObjectType>[]
@@ -1343,8 +1340,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         ...this.#getFetchProps()
       });
 
-      const schemaTables = await this.#getSchemaTables();
-      return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+      return initObject(this.#db, this.#schema, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1498,8 +1494,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
       ...this.#getFetchProps()
     });
 
-    const schemaTables = await this.#getSchemaTables();
-    return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+    return initObject(this.#db, this.#schema, this.#table, response, columns) as any;
   }
 
   async createOrReplace<K extends SelectableColumn<ObjectType>>(
@@ -1730,8 +1725,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         ...this.#getFetchProps()
       });
 
-      const schemaTables = await this.#getSchemaTables();
-      return initObject(this.#db, schemaTables, this.#table, response, columns) as any;
+      return initObject(this.#db, this.#schema, this.#table, response, columns) as any;
     } catch (e) {
       if (isObject(e) && e.status === 404) {
         return null;
@@ -1793,11 +1787,9 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         ...this.#getFetchProps()
       });
 
-      const schemaTables = await this.#getSchemaTables();
-
       // TODO - Column selection not supported by search endpoint yet
       return {
-        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])) as any,
+        records: records.map((item) => initObject(this.#db, this.#schema, this.#table, item, ['*'])) as any,
         totalCount
       };
     });
@@ -1832,11 +1824,9 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         ...this.#getFetchProps()
       });
 
-      const schemaTables = await this.#getSchemaTables();
-
       // TODO - Column selection not supported by search endpoint yet
       return {
-        records: records.map((item) => initObject(this.#db, schemaTables, this.#table, item, ['*'])),
+        records: records.map((item) => initObject(this.#db, this.#schema, this.#table, item, ['*'])),
         totalCount
       } as any;
     });
@@ -1886,11 +1876,10 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         ...this.#getFetchProps()
       });
 
-      const schemaTables = await this.#getSchemaTables();
       const records = objects.map((record) =>
         initObject<Result>(
           this.#db,
-          schemaTables,
+          this.#schema,
           this.#table,
           record,
           (data.columns as SelectableColumn<Result>[]) ?? ['*']
@@ -1927,11 +1916,11 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         },
         ...this.#getFetchProps()
       });
-      const schemaTables = await this.#getSchemaTables();
+
       return {
         ...result,
         summaries: result.summaries.map((summary) =>
-          initObject(this.#db, schemaTables, this.#table, summary, data.columns ?? [])
+          initObject(this.#db, this.#schema, this.#table, summary, data.columns ?? [])
         )
       };
     });
@@ -1973,21 +1962,8 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
     }
   }
 
-  async #getSchemaTables(): Promise<Schemas.Table[]> {
-    if (this.#schemaTables) return this.#schemaTables;
-
-    const { schema } = await getBranchDetails({
-      pathParams: { workspace: '{workspaceId}', dbBranchName: '{dbBranch}', region: '{region}' },
-      ...this.#getFetchProps()
-    });
-
-    this.#schemaTables = schema.tables;
-    return schema.tables;
-  }
-
   async #transformObjectToApi(object: any): Promise<Schemas.DataInputRecord> {
-    const schemaTables = await this.#getSchemaTables();
-    const schema = schemaTables.find((table) => table.name === this.#table);
+    const schema = this.#schema.tables.find((table) => table.name === this.#table);
     if (!schema) throw new Error(`Table ${this.#table} not found in schema`);
 
     const result: Dictionary<any> = {};
@@ -2027,7 +2003,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
 
 export const initObject = <T>(
   db: Record<string, Repository<any, any, any>>,
-  schemaTables: Schemas.Table[],
+  schema: DatabaseSchema,
   table: string,
   object: Record<string, any>,
   selectedColumns: SelectableColumn<T>[] | SelectableColumnWithObjectNotation<T>[]
@@ -2035,7 +2011,7 @@ export const initObject = <T>(
   const data: Dictionary<unknown> = {};
   Object.assign(data, { ...object });
 
-  const { columns } = schemaTables.find(({ name }) => name === table) ?? {};
+  const { columns } = schema.tables.find(({ name }) => name === table) ?? {};
   if (!columns) console.error(`Table ${table} not found in schema`);
 
   for (const column of columns ?? []) {
@@ -2052,38 +2028,6 @@ export const initObject = <T>(
           console.error(`Failed to parse date ${value} for field ${column.name}`);
         } else {
           data[column.name] = date;
-        }
-
-        break;
-      }
-      case 'link': {
-        const linkTable = column.link?.table;
-
-        if (!linkTable) {
-          console.error(`Failed to parse link for field ${column.name}`);
-        } else if (isObject(value)) {
-          const selectedLinkColumns = (selectedColumns as string[]).reduce((acc, item) => {
-            if (item === column.name) {
-              return [...acc, '*'];
-            }
-
-            if (isString(item) && item.startsWith(`${column.name}.`)) {
-              const [, ...path] = item.split('.');
-              return [...acc, path.join('.')];
-            }
-
-            return acc;
-          }, [] as string[]);
-
-          data[column.name] = initObject(
-            db,
-            schemaTables,
-            linkTable,
-            value,
-            selectedLinkColumns as SelectableColumn<unknown>[]
-          );
-        } else {
-          data[column.name] = null;
         }
 
         break;

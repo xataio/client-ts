@@ -32,20 +32,20 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   class {
     #options: SafeOptions;
 
-    schema: Schemas.Schema;
+    schema: DatabaseSchema;
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
     sql: SQLPluginResult;
     files: FilesPluginResult<any>;
 
-    constructor(options: BaseClientOptions = {}, tables: Schemas.Table[]) {
+    constructor(options: BaseClientOptions = {}, schema: DatabaseSchema) {
       const safeOptions = this.#parseOptions(options);
       this.#options = safeOptions;
 
       const pluginOptions: XataPluginOptions = {
         ...this.#getFetchProps(safeOptions),
         host: safeOptions.host,
-        tables,
+        schema,
         branch: safeOptions.branch
       };
 
@@ -55,7 +55,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const files = new FilesPlugin().build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
-      this.schema = { tables };
+      this.schema = schema;
       this.db = db;
       this.search = search;
       this.sql = sql;
@@ -151,7 +151,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   } as unknown as ClientConstructor<Plugins>;
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
-  new <Schema extends DatabaseSchema>(options: BaseClientOptions, schemaTables: Schema): Omit<
+  new <Schema extends DatabaseSchema>(options: BaseClientOptions, schema: Schema): Omit<
     {
       db: Awaited<ReturnType<SchemaPlugin<Schema>['build']>>;
       search: Awaited<ReturnType<SearchPlugin<Schema>['build']>>;

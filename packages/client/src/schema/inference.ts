@@ -10,14 +10,11 @@ export type DatabaseSchema = {
 
 export type TableSchema = {
   name: string;
-  columns: readonly (
-    | {
-        name: string;
-        type: Schemas.Column['type'];
-        notNull?: boolean;
-      }
-    | { name: string; type: 'link'; link: { table: string } }
-  )[];
+  columns: readonly {
+    name: string;
+    type: Schemas.Column['type'];
+    notNull?: boolean;
+  }[];
 };
 
 export type SchemaInference<T extends readonly TableSchema[]> = T extends never[]

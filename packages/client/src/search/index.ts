@@ -83,7 +83,7 @@ export class SearchPlugin<Schema extends DatabaseSchema> extends XataPlugin {
             const table = record.xata_table;
 
             // TODO: Search endpoint doesn't support column selection
-            return { table, record: initObject(this.db, pluginOptions.tables, table, record, ['*']) } as any;
+            return { table, record: initObject(this.db, pluginOptions.schema, table, record, ['*']) } as any;
           })
         };
       },
@@ -98,7 +98,7 @@ export class SearchPlugin<Schema extends DatabaseSchema> extends XataPlugin {
 
           const items = acc[table] ?? [];
           // TODO: Search endpoint doesn't support column selection
-          const item = initObject(this.db, pluginOptions.tables, table, record, ['*']);
+          const item = initObject(this.db, pluginOptions.schema, table, record, ['*']);
 
           return { ...acc, [table]: [...items, item] };
         }, {} as any);

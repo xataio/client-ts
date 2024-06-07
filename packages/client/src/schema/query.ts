@@ -3,7 +3,7 @@ import { FilterExpression } from '../api/schemas';
 import { compact, isDefined, isObject, isString, isStringArray, toBase64 } from '../util/lang';
 import { Dictionary, OmitBy, RequiredBy, SingleOrArray } from '../util/types';
 import { Filter, FilterColumns, FilterValueAtColumn, JSONFilterColumns } from './filters';
-import { DatabaseSchema } from './inference';
+import { DatabaseSchema, TableSchema } from './inference';
 import {
   CursorNavigationOptions,
   OffsetNavigationOptions,
@@ -55,7 +55,7 @@ export class Query<
   Result extends XataRecord = XataRecord<ObjectType>
 > implements Paginable<Schema, TableName, ObjectType, Result>
 {
-  #table: { name: string; schema?: Schemas.Table };
+  #table: { name: string; schema?: TableSchema };
   #repository: RestRepository<Schema, TableName, ObjectType>;
   #data: QueryOptions<ObjectType> = { filter: {} };
 
@@ -65,7 +65,7 @@ export class Query<
 
   constructor(
     repository: RestRepository<Schema, TableName, ObjectType> | null,
-    table: { name: string; schema?: Schemas.Table },
+    table: { name: string; schema?: TableSchema },
     data: Partial<QueryOptions<ObjectType>>,
     rawParent?: Partial<QueryOptions<ObjectType>>
   ) {
