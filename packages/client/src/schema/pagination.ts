@@ -1,6 +1,6 @@
 import { isDefined, isObject } from '../util/lang';
 import { DatabaseSchema } from './inference';
-import { Query } from './query';
+import { Query, QueryOptions } from './query';
 import { JSONData, XataRecord } from './record';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean; size: number } };

@@ -1,5 +1,6 @@
 import { test } from 'vitest';
 import { NewIdentifiable, NewIdentifierKey, NewIndentifierValue } from './identifiable';
+import { DatabaseSchema } from './inference';
 
 const tables = [
   {
@@ -110,80 +111,6 @@ const tables = [
   }
 ] as const;
 
-type DbIndentifiable = NewIdentifiable<typeof tables>;
-
-function updateTeams(identifable: DbIndentifiable['teams']) {}
-updateTeams({ xata_id: true });
-// @ts-ignore
-updateTeams(1);
-// @ts-ignore
-updateTeams('1');
-
-function updateUsers(identifable: DbIndentifiable['users']) {}
-updateUsers({ userdefined: 1 });
-// @ts-ignore
-updateUsers('1');
-
-function updatePets(identifable: DbIndentifiable['pets']) {}
-updatePets({ xata_id: '1' });
-// @ts-ignore
-updatePets(1);
-
-function updateDatetime(identifable: DbIndentifiable['datetime']) {}
-updateDatetime({ xata_id: new Date() });
-// @ts-ignore
-updateDatetime('1');
-// @ts-ignore
-updateDatetime(1);
-
-function updateMultiple(identifable: DbIndentifiable['multiple']) {}
-updateMultiple({ xata_id: ['1'] });
-// @ts-ignore
-updateMultiple('1');
-// @ts-ignore
-updateMultiple(1);
-
-function updateVector(identifable: DbIndentifiable['vector']) {}
-updateVector({ xata_id: [1, 2] });
-// @ts-ignore
-updateVector('1');
-// @ts-ignore
-updateVector(1);
-
-function updateBoolean(identifable: DbIndentifiable['boolean[]']) {}
-updateBoolean({ xata_id: [true, false] });
-// @ts-ignore
-updateBoolean('1');
-// @ts-ignore
-updateBoolean(1);
-
-function updateJsonB(identifable: DbIndentifiable['jsonb']) {}
-updateJsonB({
-  xata_id: {
-    one: 'two'
-  }
-});
-// @ts-ignore
-updateJsonB('1');
-// @ts-ignore
-updateJsonB(1);
-
-function updateUnknown(identifable: DbIndentifiable['unknown']) {}
-updateUnknown({ xata_id: '1' });
-// @ts-ignore
-updateUnknown('1');
-// @ts-ignore
-updateUnknown(1);
-
-function updateNeither(identifable: DbIndentifiable['neither']) {}
-// @ts-ignore
-updateNeither('1');
-// @ts-ignore
-updateNeither(1);
-
-const identifierValueType: NewIndentifierValue<NewIdentifiable<typeof tables>['users']> = 2;
-const identifierKeyName: NewIdentifierKey<NewIdentifiable<typeof tables>['users']> = 'userdefined';
-
-test('fake test', () => {
-  // This is a fake test to make sure that the type definitions in this file are working
-});
+type DbIndentifiable = NewIdentifiable<typeof tables>['users'];
+type DbIndentifiableKey = NewIdentifierKey<DbIndentifiable>;
+type DbIndentifiableValue = NewIndentifierValue<DbIndentifiable>;

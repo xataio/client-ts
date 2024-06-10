@@ -67,6 +67,16 @@ const schema = {
         { name: 'num_legs', type: 'int' }
       ],
       revLinks: [{ table: 'users', column: 'pet' }]
+    },
+    {
+      name: 'numeric',
+      primaryKey: ['xata_id'],
+      columns: [
+        { name: 'xata_id', type: 'int', notNull: true },
+        { name: 'xata_version', type: 'int', notNull: true },
+        { name: 'xata_createdat', type: 'datetime', notNull: true },
+        { name: 'xata_updatedat', type: 'datetime', notNull: true }
+      ]
     }
   ]
 } as const;
@@ -83,10 +93,14 @@ export type UsersRecord = Users & XataRecord;
 export type Pets = InferredTypes['pets'];
 export type PetsRecord = Pets & XataRecord;
 
+export type Numeric = InferredTypes['numeric'];
+export type NumericRecord = Numeric & XataRecord;
+
 export type DatabaseSchema = {
   teams: TeamsRecord;
   users: UsersRecord;
   pets: PetsRecord;
+  numeric: NumericRecord;
 };
 
 const DatabaseClient = buildClient();

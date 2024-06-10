@@ -1,6 +1,6 @@
 import { Values } from '../util/types';
 import { XataFile } from './files';
-import { DatabaseSchema, InnerType } from './inference';
+import { DatabaseSchema, InnerType, TableSchema } from './inference';
 import { InputXataFile, NumericOperator, XataRecord } from './record';
 
 /**
@@ -11,7 +11,7 @@ import { InputXataFile, NumericOperator, XataRecord } from './record';
  *
  * If neither found, or neither column is not unique + notnull, never will be returned.
  */
-export type NewIdentifiable<T extends DatabaseSchema['tables']> = T extends never[]
+export type NewIdentifiable<T extends readonly TableSchema[]> = T extends never[]
   ? never
   : T extends readonly unknown[]
   ? T[number] extends { name: string; columns: readonly unknown[] }
@@ -19,6 +19,14 @@ export type NewIdentifiable<T extends DatabaseSchema['tables']> = T extends neve
         [K in T[number]['name']]: PrimaryKeyType<T[number], K>;
       }
     : never
+  : never;
+
+export type NewIdentifiabletwo<T extends readonly TableSchema[]> = T extends never[]
+  ? never
+  : T[number] extends { name: string; columns: readonly unknown[] }
+  ? {
+      [K in T[number]['name']]: PrimaryKeyType<T[number], K>;
+    }
   : never;
 
 export type PrimaryKeyType<Tables, TableName> = Tables & { name: TableName } extends infer Table
@@ -47,14 +55,11 @@ export type PropertyType<Tables, Properties, PropertyName extends PropertyKey> =
       type: infer Type;
       link?: { table: infer LinkedTable };
       notNull?: infer NotNull;
-      unique?: infer Unique;
     }
     ? NotNull extends true
-      ? Unique extends true
-        ? {
-            [K in PropertyName]: InnerType<Type, Tables, LinkedTable>;
-          }
-        : never
+      ? {
+          [K in PropertyName]: InnerType<Type, Tables, LinkedTable>;
+        }
       : never
     : never
   : never;

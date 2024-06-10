@@ -14,6 +14,7 @@ export type TableSchema = {
     type: string;
     notNull?: boolean;
   }[];
+  primaryKey?: readonly string[];
 };
 
 export type SchemaInference<T extends readonly TableSchema[]> = T extends never[]
