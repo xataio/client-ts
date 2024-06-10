@@ -171,6 +171,56 @@ export type MigrationJobStatusResponse = {
   error?: string;
 };
 
+export type MigrationJobItem = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+  /**
+   * The type of the migration job
+   */
+  type: MigrationJobType;
+  /**
+   * The status of the migration job
+   */
+  status: MigrationJobStatus;
+  /**
+   * The pgroll migration that was applied
+   */
+  migration?: string;
+  /**
+   * The effect of any active migration on the schema
+   */
+  description?: MigrationDescription;
+  /**
+   * The timestamp at which the migration job was enqueued
+   *
+   * @format date-time
+   */
+  enqueuedAt: string;
+  /**
+   * The timestamp at which the migration job completed or failed
+   *
+   * @format date-time
+   */
+  completedAt?: string;
+  /**
+   * The error message associated with the migration job
+   */
+  error?: string;
+};
+
+export type GetMigrationJobsResponse = {
+  /**
+   * The list of migration jobs
+   */
+  jobs: MigrationJobItem[];
+  /**
+   * The cursor (timestamp) for the next page of results
+   */
+  cursor?: string;
+};
+
 /**
  * @maxLength 255
  * @minLength 1
