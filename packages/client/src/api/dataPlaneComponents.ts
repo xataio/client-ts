@@ -341,6 +341,61 @@ export const getBranchMigrationJobStatus = (variables: GetBranchMigrationJobStat
     signal
   });
 
+export type GetMigrationJobsPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type GetMigrationJobsQueryParams = {
+  /**
+   * @format date-time
+   */
+  cursor?: string;
+  /**
+   * Page size
+   */
+  limit?: Schemas.PaginationPageSize;
+};
+
+export type GetMigrationJobsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetMigrationJobsVariables = {
+  pathParams: GetMigrationJobsPathParams;
+  queryParams?: GetMigrationJobsQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+export const getMigrationJobs = (variables: GetMigrationJobsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.GetMigrationJobsResponse,
+    GetMigrationJobsError,
+    undefined,
+    {},
+    GetMigrationJobsQueryParams,
+    GetMigrationJobsPathParams
+  >({
+    url: '/db/{dbBranchName}/migrations/jobs',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type GetMigrationJobStatusPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -5301,6 +5356,7 @@ export const operationsByTag = {
     adaptTable,
     adaptAllTables,
     getBranchMigrationJobStatus,
+    getMigrationJobs,
     getMigrationJobStatus,
     getMigrationHistory,
     getSchema,
