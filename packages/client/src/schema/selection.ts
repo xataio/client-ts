@@ -75,7 +75,7 @@ export type ColumnsByValue<O, Value> = Values<{
 }>;
 
 // Public: Utility type to get the XataRecord built from a list of selected columns
-export type SelectedPick<O extends XataRecord, Key extends SelectableColumnWithObjectNotation<O>[]> = XataRecord<O> &
+export type SelectedPick<O, Key extends SelectableColumnWithObjectNotation<O>[]> = XataRecord<O> &
   // For each column, we get its nested value and join it as an intersection
   UnionToIntersection<
     Values<{

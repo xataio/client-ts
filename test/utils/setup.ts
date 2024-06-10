@@ -135,7 +135,7 @@ export async function setUpTestEnvironment(
   };
 
   const client = new XataClient(clientOptions);
-  const baseClient = new BaseClient(clientOptions);
+  const baseClient = new BaseClient(clientOptions, client.schema);
 
   return { api, client, baseClient, clientOptions, database, workspace, region, hooks };
 }

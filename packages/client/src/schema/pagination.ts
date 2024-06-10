@@ -1,17 +1,23 @@
 import { isDefined, isObject } from '../util/lang';
-import { Query, QueryOptions } from './query';
+import { DatabaseSchema } from './inference';
+import { Query } from './query';
 import { JSONData, XataRecord } from './record';
 
 export type PaginationQueryMeta = { page: { cursor: string; more: boolean; size: number } };
 
-export interface Paginable<Record extends XataRecord, Result extends XataRecord = Record> {
+export interface Paginable<
+  Schema extends DatabaseSchema,
+  TableName extends string,
+  ObjectType,
+  Result extends XataRecord = XataRecord<ObjectType>
+> {
   meta: PaginationQueryMeta;
   records: PageRecordArray<Result>;
 
-  nextPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
-  previousPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
-  startPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
-  endPage(size?: number, offset?: number): Promise<Page<Record, Result>>;
+  nextPage(size?: number, offset?: number): Promise<Page<Schema, TableName, ObjectType, Result>>;
+  previousPage(size?: number, offset?: number): Promise<Page<Schema, TableName, ObjectType, Result>>;
+  startPage(size?: number, offset?: number): Promise<Page<Schema, TableName, ObjectType, Result>>;
+  endPage(size?: number, offset?: number): Promise<Page<Schema, TableName, ObjectType, Result>>;
 
   hasNextPage(): boolean;
 }
@@ -20,8 +26,14 @@ export interface Paginable<Record extends XataRecord, Result extends XataRecord 
  * A Page contains a set of results from a query plus metadata about the retrieved
  * set of values such as the cursor, required to retrieve additional records.
  */
-export class Page<Record extends XataRecord, Result extends XataRecord = Record> implements Paginable<Record, Result> {
-  #query: Query<Record, Result>;
+export class Page<
+  Schema extends DatabaseSchema,
+  TableName extends string,
+  ObjectType,
+  Result extends XataRecord = XataRecord<ObjectType>
+> implements Paginable<Schema, TableName, ObjectType, Result>
+{
+  #query: Query<Schema, TableName, ObjectType, Result>;
   /**
    * Page metadata, required to retrieve additional records.
    */
@@ -31,7 +43,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
    */
   readonly records: PageRecordArray<Result>;
 
-  constructor(query: Query<Record, Result>, meta: PaginationQueryMeta, records: Result[] = []) {
+  constructor(query: Query<Schema, TableName, ObjectType, Result>, meta: PaginationQueryMeta, records: Result[] = []) {
     this.#query = query;
     this.meta = meta;
     this.records = new PageRecordArray(this, records);
@@ -43,7 +55,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
    * @param offset Number of results to skip when retrieving the results.
    * @returns The next page or results.
    */
-  async nextPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+  async nextPage(size?: number, offset?: number): Promise<Page<Schema, TableName, ObjectType, Result>> {
     return this.#query.getPaginated({ pagination: { size, offset, after: this.meta.page.cursor } });
   }
 
@@ -53,7 +65,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
    * @param offset Number of results to skip when retrieving the results.
    * @returns The previous page or results.
    */
-  async previousPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+  async previousPage(size?: number, offset?: number): Promise<Page<Schema, TableName, ObjectType, Result>> {
     return this.#query.getPaginated({ pagination: { size, offset, before: this.meta.page.cursor } });
   }
 
@@ -63,7 +75,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
    * @param offset Number of results to skip when retrieving the results.
    * @returns The start page or results.
    */
-  async startPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+  async startPage(size?: number, offset?: number): Promise<Page<Schema, TableName, ObjectType, Result>> {
     return this.#query.getPaginated({ pagination: { size, offset, start: this.meta.page.cursor } });
   }
 
@@ -73,7 +85,7 @@ export class Page<Record extends XataRecord, Result extends XataRecord = Record>
    * @param offset Number of results to skip when retrieving the results.
    * @returns The end page or results.
    */
-  async endPage(size?: number, offset?: number): Promise<Page<Record, Result>> {
+  async endPage(size?: number, offset?: number): Promise<Page<Schema, TableName, ObjectType, Result>> {
     return this.#query.getPaginated({ pagination: { size, offset, end: this.meta.page.cursor } });
   }
 
@@ -144,9 +156,9 @@ export class RecordArray<Result extends XataRecord> extends Array<Result> {
 }
 
 export class PageRecordArray<Result extends XataRecord> extends Array<Result> {
-  #page: Paginable<Result, Result>;
+  #page: Paginable<any, any, Result, Result>;
 
-  constructor(page: Paginable<any, Result>, overrideRecords?: Result[]);
+  constructor(page: Paginable<any, any, any, Result>, overrideRecords?: Result[]);
   constructor(...args: any[]) {
     super(...PageRecordArray.parseConstructorParams(...args));
 

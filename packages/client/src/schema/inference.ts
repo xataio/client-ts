@@ -1,37 +1,22 @@
-import { Schemas } from '../api';
-import { BranchSchema } from '../api/dataPlaneSchemas';
 import { UnionToIntersection, Values } from '../util/types';
 import { XataArrayFile, XataFile } from './files';
 import { JSONValue } from './json';
 import { Identifiable, XataRecord } from './record';
 
-export type BaseSchema =
-  | {
-      name: string;
-      columns: readonly (
-        | {
-            name: string;
-            type: Schemas.Column['type'];
-            notNull?: boolean;
-          }
-        | { name: string; type: 'link'; link: { table: string } }
-      )[];
-    }
-  | {
-      name: string;
-      primaryKey: BranchSchema['tables'][number]['primaryKey'];
-      columns: readonly (
-        | {
-            name: string;
-            type: Schemas.Column['type'];
-            notNull?: boolean;
-            unique?: boolean;
-          }
-        | { name: string; type: 'link'; link: { table: string } }
-      )[];
-    };
+export type DatabaseSchema = {
+  tables: readonly TableSchema[];
+};
 
-export type SchemaInference<T extends readonly BaseSchema[]> = T extends never[]
+export type TableSchema = {
+  name: string;
+  columns: readonly {
+    name: string;
+    type: string;
+    notNull?: boolean;
+  }[];
+};
+
+export type SchemaInference<T extends readonly TableSchema[]> = T extends never[]
   ? Record<string, Record<string, any>>
   : T extends readonly unknown[]
   ? T[number] extends { name: string; columns: readonly unknown[] }

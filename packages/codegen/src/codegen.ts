@@ -112,14 +112,14 @@ export async function generate({
     typesImport.addNamedImports([...namedImports]);
   }
 
-  // Add tables schema
-  const tablesList = sourceFile.getVariableDeclaration('tables');
-  const tablesListContent = `${JSON.stringify(schema.tables)} as const`;
+  // Add database schema
+  const clientSchema = sourceFile.getVariableDeclaration('schema');
+  const clientSchemaContent = `${JSON.stringify(schema)} as const`;
 
-  if (!tablesList) {
+  if (!clientSchema) {
     sourceFile.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
-      declarations: [{ name: 'tables', initializer: tablesListContent }],
+      declarations: [{ name: 'schema', initializer: clientSchemaContent }],
       leadingTrivia:
         language === 'javascript'
           ? `/** @typedef { import('./types').SchemaTables } SchemaTables */
@@ -128,12 +128,12 @@ export async function generate({
       trailingTrivia: '\n'
     });
   } else {
-    tablesList.setInitializer(tablesListContent);
+    clientSchema.setInitializer(clientSchemaContent);
   }
 
   // Add schema tables types
   const schemaTables = sourceFile.getTypeAlias('SchemaTables');
-  const schemaTablesContent = `typeof tables`;
+  const schemaTablesContent = `typeof schema.tables`;
 
   if (!schemaTables) {
     sourceFile.addTypeAlias({ name: 'SchemaTables', type: schemaTablesContent, isExported: true });
@@ -218,7 +218,7 @@ export async function generate({
   if (!sourceFile.getClass('XataClient')) {
     sourceFile.addClass({
       name: 'XataClient',
-      extends: 'DatabaseClient<DatabaseSchema>',
+      extends: 'DatabaseClient<typeof schema>',
       isExported: true,
       leadingTrivia:
         language === 'javascript'
@@ -243,7 +243,7 @@ export async function generate({
             'XATA_BRANCH'
           )} ?? 'main',
             ...options
-           }, tables);`
+           }, schema);`
         }
       ]
     });

@@ -7,13 +7,9 @@ exports.XataClient = void 0;
 const client_1 = require("@xata.io/client");
 /** @typedef { import('./types').SchemaTables } SchemaTables */
 /** @type { SchemaTables } */
-const tables = [
-  {
-    name: "users",
-    primaryKey: ["xata_id"],
-    columns: [{ name: "name", type: "string" }],
-  },
-];
+const schema = {
+  tables: [{ name: "users", columns: [{ name: "name", type: "string" }] }],
+};
 /** @type { import('@xata.io/client').ClientConstructor<{}> } */
 const DatabaseClient = (0, client_1.buildClient)();
 /** @typedef { import('./types').DatabaseSchema } DatabaseSchema */
@@ -31,7 +27,7 @@ class XataClient extends DatabaseClient {
           "main",
         ...options,
       },
-      tables
+      schema
     );
   }
 }
@@ -50,15 +46,11 @@ import type {
   XataRecord,
 } from "npm:@xata.io/client@latest";
 
-const tables = [
-  {
-    name: "users",
-    primaryKey: ["xata_id"],
-    columns: [{ name: "name", type: "string" }],
-  },
-] as const;
+const schema = {
+  tables: [{ name: "users", columns: [{ name: "name", type: "string" }] }],
+} as const;
 
-export type SchemaTables = typeof tables;
+export type SchemaTables = typeof schema.tables;
 export type InferredTypes = SchemaInference<SchemaTables>;
 
 export type Users = InferredTypes["users"];
@@ -70,7 +62,7 @@ export type DatabaseSchema = {
 
 const DatabaseClient = buildClient();
 
-export class XataClient extends DatabaseClient<DatabaseSchema> {
+export class XataClient extends DatabaseClient<typeof schema> {
   constructor(options?: BaseClientOptions) {
     super(
       {
@@ -83,7 +75,7 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
           "main",
         ...options,
       },
-      tables
+      schema
     );
   }
 }
@@ -98,15 +90,11 @@ import type {
   XataRecord,
 } from "@xata.io/client";
 
-const tables = [
-  {
-    name: "users",
-    primaryKey: ["xata_id"],
-    columns: [{ name: "name", type: "string" }],
-  },
-] as const;
+const schema = {
+  tables: [{ name: "users", columns: [{ name: "name", type: "string" }] }],
+} as const;
 
-export type SchemaTables = typeof tables;
+export type SchemaTables = typeof schema.tables;
 export type InferredTypes = SchemaInference<SchemaTables>;
 
 export type Users = InferredTypes["users"];
@@ -118,7 +106,7 @@ export type DatabaseSchema = {
 
 const DatabaseClient = buildClient();
 
-export class XataClient extends DatabaseClient<DatabaseSchema> {
+export class XataClient extends DatabaseClient<typeof schema> {
   constructor(options?: BaseClientOptions) {
     super(
       {
@@ -131,7 +119,7 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
           "main",
         ...options,
       },
-      tables
+      schema
     );
   }
 }
@@ -146,15 +134,11 @@ import type {
   XataRecord,
 } from "@xata.io/client";
 
-const tables = [
-  {
-    name: "users",
-    primaryKey: ["xata_id"],
-    columns: [{ name: "name", type: "string" }],
-  },
-] as const;
+const schema = {
+  tables: [{ name: "users", columns: [{ name: "name", type: "string" }] }],
+} as const;
 
-export type SchemaTables = typeof tables;
+export type SchemaTables = typeof schema.tables;
 export type InferredTypes = SchemaInference<SchemaTables>;
 
 export type Users = InferredTypes["users"];
@@ -166,7 +150,7 @@ export type DatabaseSchema = {
 
 const DatabaseClient = buildClient();
 
-export class XataClient extends DatabaseClient<DatabaseSchema> {
+export class XataClient extends DatabaseClient<typeof schema> {
   constructor(options?: BaseClientOptions) {
     super(
       {
@@ -179,7 +163,7 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
           "main",
         ...options,
       },
-      tables
+      schema
     );
   }
 }
@@ -194,28 +178,28 @@ import type {
   XataRecord,
 } from "@xata.io/client";
 
-const tables = [
-  {
-    name: "teams_Like",
-    primaryKey: ["xata_id"],
-    columns: [
-      { name: "name-test", type: "string" },
-      { name: "labels_Test", type: "multiple" },
-      { name: "ownerFoo", type: "link", link: { table: "users-foo" } },
-    ],
-  },
-  {
-    name: "users-foo",
-    primaryKey: ["xata_id"],
-    columns: [
-      { name: "email-random", type: "email" },
-      { name: "full_name", type: "string" },
-      { name: "teamLike", type: "link", link: { table: "teams_Like" } },
-    ],
-  },
-] as const;
+const schema = {
+  tables: [
+    {
+      name: "teams_Like",
+      columns: [
+        { name: "name-test", type: "string" },
+        { name: "labels_Test", type: "multiple" },
+        { name: "ownerFoo", type: "link", link: { table: "users-foo" } },
+      ],
+    },
+    {
+      name: "users-foo",
+      columns: [
+        { name: "email-random", type: "email" },
+        { name: "full_name", type: "string" },
+        { name: "teamLike", type: "link", link: { table: "teams_Like" } },
+      ],
+    },
+  ],
+} as const;
 
-export type SchemaTables = typeof tables;
+export type SchemaTables = typeof schema.tables;
 export type InferredTypes = SchemaInference<SchemaTables>;
 
 export type TeamsLike = InferredTypes["teams_Like"];
@@ -231,7 +215,7 @@ export type DatabaseSchema = {
 
 const DatabaseClient = buildClient();
 
-export class XataClient extends DatabaseClient<DatabaseSchema> {
+export class XataClient extends DatabaseClient<typeof schema> {
   constructor(options?: BaseClientOptions) {
     super(
       {
@@ -244,7 +228,7 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
           "main",
         ...options,
       },
-      tables
+      schema
     );
   }
 }
@@ -259,18 +243,19 @@ import type {
   XataRecord,
 } from "@xata.io/client";
 
-const tables = [
-  {
-    name: "1teams-case",
-    primaryKey: ["xata_id"],
-    columns: [
-      { name: "2nameCase", type: "string" },
-      { name: "3Labels", type: "multiple" },
-    ],
-  },
-] as const;
+const schema = {
+  tables: [
+    {
+      name: "1teams-case",
+      columns: [
+        { name: "2nameCase", type: "string" },
+        { name: "3Labels", type: "multiple" },
+      ],
+    },
+  ],
+} as const;
 
-export type SchemaTables = typeof tables;
+export type SchemaTables = typeof schema.tables;
 export type InferredTypes = SchemaInference<SchemaTables>;
 
 export type $1teamsCase = InferredTypes["1teams-case"];
@@ -282,7 +267,7 @@ export type DatabaseSchema = {
 
 const DatabaseClient = buildClient();
 
-export class XataClient extends DatabaseClient<DatabaseSchema> {
+export class XataClient extends DatabaseClient<typeof schema> {
   constructor(options?: BaseClientOptions) {
     super(
       {
@@ -295,7 +280,7 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
           "main",
         ...options,
       },
-      tables
+      schema
     );
   }
 }
@@ -304,16 +289,17 @@ export class XataClient extends DatabaseClient<DatabaseSchema> {
 
 exports[`generate > should respect numbers in names 2`] = `
 "import { buildClient, getDeployPreviewBranch } from "@xata.io/client";
-const tables = [
-  {
-    name: "1teams-case",
-    primaryKey: ["xata_id"],
-    columns: [
-      { name: "2nameCase", type: "string" },
-      { name: "3Labels", type: "multiple" },
-    ],
-  },
-];
+const schema = {
+  tables: [
+    {
+      name: "1teams-case",
+      columns: [
+        { name: "2nameCase", type: "string" },
+        { name: "3Labels", type: "multiple" },
+      ],
+    },
+  ],
+};
 const DatabaseClient = buildClient();
 export class XataClient extends DatabaseClient {
   constructor(options) {
@@ -328,7 +314,7 @@ export class XataClient extends DatabaseClient {
           "main",
         ...options,
       },
-      tables
+      schema
     );
   }
 }
@@ -341,23 +327,24 @@ exports[`generate > should respect numbers in names 3`] = `
   SchemaInference,
   XataRecord,
 } from "@xata.io/client";
-declare const tables: readonly [
-  {
-    readonly name: "1teams-case";
-    readonly primaryKey: readonly ["xata_id"];
-    readonly columns: readonly [
-      {
-        readonly name: "2nameCase";
-        readonly type: "string";
-      },
-      {
-        readonly name: "3Labels";
-        readonly type: "multiple";
-      }
-    ];
-  }
-];
-export type SchemaTables = typeof tables;
+declare const schema: {
+  readonly tables: readonly [
+    {
+      readonly name: "1teams-case";
+      readonly columns: readonly [
+        {
+          readonly name: "2nameCase";
+          readonly type: "string";
+        },
+        {
+          readonly name: "3Labels";
+          readonly type: "multiple";
+        }
+      ];
+    }
+  ];
+};
+export type SchemaTables = typeof schema.tables;
 export type InferredTypes = SchemaInference<SchemaTables>;
 export type $1teamsCase = InferredTypes["1teams-case"];
 export type $1teamsCaseRecord = $1teamsCase & XataRecord;
@@ -365,7 +352,7 @@ export type DatabaseSchema = {
   "1teams-case": $1teamsCaseRecord;
 };
 declare const DatabaseClient: any;
-export declare class XataClient extends DatabaseClient<DatabaseSchema> {
+export declare class XataClient extends DatabaseClient<typeof schema> {
   constructor(options?: BaseClientOptions);
 }
 export {};

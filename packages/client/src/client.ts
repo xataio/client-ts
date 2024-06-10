@@ -1,11 +1,10 @@
-import { ApiExtraProps, HostProvider, Schemas } from './api';
+import { ApiExtraProps, HostProvider } from './api';
 import { FilesPlugin, FilesPluginResult } from './files';
 import { XataPlugin, XataPluginOptions } from './plugins';
-import { BaseSchema, SchemaPlugin, SchemaPluginResult, XataRecord } from './schema';
-import { defaultTrace, TraceFunction } from './schema/tracing';
+import { DatabaseSchema, SchemaInference, SchemaPlugin, SchemaPluginResult } from './schema';
+import { TraceFunction, defaultTrace } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { SQLPlugin, SQLPluginResult } from './sql';
-import { TransactionPlugin, TransactionPluginResult } from './transaction';
 import { FetchImpl, getFetchImplementation } from './util/fetch';
 import { AllRequired, StringKeys } from './util/types';
 import { generateUUID } from './util/uuid';
@@ -33,35 +32,32 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   class {
     #options: SafeOptions;
 
-    schema: Schemas.Schema;
+    schema: DatabaseSchema;
     db: SchemaPluginResult<any>;
     search: SearchPluginResult<any>;
-    transactions: TransactionPluginResult<any>;
     sql: SQLPluginResult;
     files: FilesPluginResult<any>;
 
-    constructor(options: BaseClientOptions = {}, tables: Schemas.Table[]) {
+    constructor(options: BaseClientOptions = {}, schema: DatabaseSchema) {
       const safeOptions = this.#parseOptions(options);
       this.#options = safeOptions;
 
       const pluginOptions: XataPluginOptions = {
         ...this.#getFetchProps(safeOptions),
         host: safeOptions.host,
-        tables,
+        schema,
         branch: safeOptions.branch
       };
 
       const db = new SchemaPlugin().build(pluginOptions);
       const search = new SearchPlugin(db).build(pluginOptions);
-      const transactions = new TransactionPlugin().build(pluginOptions);
       const sql = new SQLPlugin().build(pluginOptions);
       const files = new FilesPlugin().build(pluginOptions);
 
       // We assign the namespaces after creating in case the user overrides the db plugin
-      this.schema = { tables };
+      this.schema = schema;
       this.db = db;
       this.search = search;
-      this.transactions = transactions;
       this.sql = sql;
       this.files = files;
 
@@ -155,16 +151,13 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
   } as unknown as ClientConstructor<Plugins>;
 
 export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
-  new <Schemas extends Record<string, XataRecord> = {}>(
-    options?: Partial<BaseClientOptions>,
-    schemaTables?: readonly BaseSchema[]
-  ): Omit<
+  new <Schema extends DatabaseSchema>(options: BaseClientOptions, schema: Schema): Omit<
     {
-      db: Awaited<ReturnType<SchemaPlugin<Schemas>['build']>>;
-      search: Awaited<ReturnType<SearchPlugin<Schemas>['build']>>;
-      transactions: Awaited<ReturnType<TransactionPlugin<Schemas>['build']>>;
+      db: Awaited<ReturnType<SchemaPlugin<Schema>['build']>>;
+      search: Awaited<ReturnType<SearchPlugin<Schema>['build']>>;
       sql: Awaited<ReturnType<SQLPlugin['build']>>;
-      files: Awaited<ReturnType<FilesPlugin<Schemas>['build']>>;
+      files: Awaited<ReturnType<FilesPlugin<SchemaInference<Schema['tables']>>['build']>>;
+      schema: Schema;
     },
     keyof Plugins
   > & {
@@ -177,4 +170,4 @@ export interface ClientConstructor<Plugins extends Record<string, XataPlugin>> {
   };
 }
 
-export class BaseClient extends buildClient()<Record<string, any>> {}
+export class BaseClient extends buildClient()<DatabaseSchema> {}

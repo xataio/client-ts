@@ -1,6 +1,6 @@
 import { Values } from '../util/types';
 import { XataFile } from './files';
-import { BaseSchema, InnerType } from './inference';
+import { DatabaseSchema, InnerType } from './inference';
 import { InputXataFile, NumericOperator, XataRecord } from './record';
 
 /**
@@ -11,7 +11,7 @@ import { InputXataFile, NumericOperator, XataRecord } from './record';
  *
  * If neither found, or neither column is not unique + notnull, never will be returned.
  */
-export type NewIdentifiable<T extends readonly BaseSchema[]> = T extends never[]
+export type NewIdentifiable<T extends DatabaseSchema['tables']> = T extends never[]
   ? never
   : T extends readonly unknown[]
   ? T[number] extends { name: string; columns: readonly unknown[] }
@@ -67,12 +67,12 @@ export type NewIdentifierKey<T extends object> = {
   [K in keyof T]: T[K] extends never ? never : K;
 }[keyof T];
 
-export type NewEditableDataFields<T> = T extends XataRecord
-  ? NewIdentifiable<readonly BaseSchema[]> | NewIndentifierValue<NewIdentifiable<readonly BaseSchema[]>>
-  : NonNullable<T> extends XataRecord
+export type NewEditableDataFields<T> = T extends object
+  ? NewIdentifiable<DatabaseSchema['tables']> | NewIndentifierValue<NewIdentifiable<DatabaseSchema['tables']>>
+  : NonNullable<T> extends object
   ?
-      | NewIdentifiable<readonly BaseSchema[]>
-      | NewIndentifierValue<NewIdentifiable<readonly BaseSchema[]>>
+      | NewIdentifiable<DatabaseSchema['tables']>
+      | NewIndentifierValue<NewIdentifiable<DatabaseSchema['tables']>>
       | null
       | undefined
   : T extends Date
@@ -87,7 +87,7 @@ export type NewEditableDataFields<T> = T extends XataRecord
   ? number | NumericOperator
   : T;
 
-export type NewEditableData<O extends XataRecord> = NewIdentifiable<readonly BaseSchema[]> &
+export type NewEditableData<O> = NewIdentifiable<DatabaseSchema['tables']> &
   Partial<
     Omit<
       {
