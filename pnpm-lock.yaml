@@ -368,8 +368,8 @@ importers:
         specifier: ^8.4.1
         version: 8.4.1
       '@xata.io/client':
-        specifier: ^0.29.4
-        version: 0.29.5(typescript@5.4.5)
+        specifier: workspace:*
+        version: link:../client
       any-date-parser:
         specifier: ^1.5.4
         version: 1.5.4
@@ -7442,15 +7442,6 @@ packages:
     dependencies:
       tslib: 2.6.2
     dev: true
-
-  /@xata.io/client@0.29.5(typescript@5.4.5):
-    resolution:
-      { integrity: sha512-b55dmPVNVFOE5nj2F2G6t9l/d5yYBhIu5X5w3rznhhsriGHkrzn93tqJexIZPS77E7f/yDXcFz06KbvR3bHK5w== }
-    peerDependencies:
-      typescript: '>=4.5'
-    dependencies:
-      typescript: 5.4.5
-    dev: false
 
   /abbrev@1.1.1:
     resolution:
