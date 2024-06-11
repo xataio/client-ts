@@ -68,7 +68,7 @@
     "size-limit": "^11.1.4",
     "ts-node": "^10.9.2",
     "tsx": "^4.15.2",
-    "turbo": "^2.0.3",
+    "turbo": "^1",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.13.0",
     "vite": "^5.2.13",
