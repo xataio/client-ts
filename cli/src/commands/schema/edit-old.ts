@@ -165,6 +165,7 @@ Beware that this can lead to ${chalk.bold(
     }
 
     const xata = await this.getXataClient();
+
     const branchDetails = await getBranchDetailsWithPgRoll(xata, {
       workspace: this.workspace,
       region: this.region,

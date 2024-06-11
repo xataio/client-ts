@@ -89,7 +89,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     file: Args.string({ description: 'The file to be imported', required: true })
   };
 
-  pgrollEnabled = false;
+  #pgrollEnabled = false;
 
   async run(): Promise<void> {
     const { args, flags } = await this.parseCommand();
@@ -140,7 +140,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     }
 
     const { schema: existingSchema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
-    this.pgrollEnabled = isBranchPgRollEnabled(existingSchema as any);
+    this.#pgrollEnabled = isBranchPgRollEnabled(existingSchema as any);
 
     const { columns } = parseResults;
     await this.migrateSchema({ table, columns, create });
@@ -159,7 +159,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
           throw new Error('Failed to parse CSV file');
         }
         const batchRows = () => {
-          if (this.pgrollEnabled) {
+          if (this.#pgrollEnabled) {
             return parseResults.data.map(({ data }) => {
               const formattedRow: { [k: string]: any } = {};
               const keys = Object.keys(data);
@@ -176,7 +176,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         const importResult = await xata.import.importBatch(
           { workspace, region, database, branch },
           {
-            columns: this.pgrollEnabled
+            columns: this.#pgrollEnabled
               ? parseResults.columns.filter(({ name }) => name === 'xata_id' || !INTERNAL_COLUMNS_PGROLL.includes(name))
               : parseResults.columns,
             table,
@@ -258,7 +258,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       body: { schema: newSchema }
     });
     if (edits.operations.length > 0) {
-      if (this.pgrollEnabled) {
+      if (this.#pgrollEnabled) {
         const { edits } = compareSchemas(
           {},
           {

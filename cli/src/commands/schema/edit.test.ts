@@ -8,9 +8,9 @@ import {
   DeleteColumnPayload,
   DeleteTablePayload,
   EditTablePayload
-} from './editNew';
+} from './edit';
 import { PgRollMigration } from '@xata.io/pgroll';
-import EditSchemaNew, { editsToMigrations } from './editNew';
+import EditSchemaNew, { editsToMigrations } from './edit';
 
 const column: AddColumnPayload['column'] = {
   name: 'col1',
