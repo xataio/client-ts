@@ -31,8 +31,7 @@ type TableType<Tables, TableName> = Tables & { name: TableName } extends infer T
   ? Table extends { name: string; columns: infer Columns }
     ? Columns extends readonly unknown[]
       ? Columns[number] extends { name: string; type: string }
-        ? Identifiable &
-            UnionToIntersection<Values<{ [K in Columns[number]['name']]: PropertyType<Tables, Columns[number], K> }>>
+        ? UnionToIntersection<Values<{ [K in Columns[number]['name']]: PropertyType<Tables, Columns[number], K> }>>
         : never
       : never
     : never

@@ -5,6 +5,7 @@ const schema = {
   tables: [
     {
       name: 'teams',
+      primaryKey: ['xata_id'],
       columns: [
         { name: 'xata_id', type: 'string', notNull: true },
         { name: 'xata_version', type: 'int', notNull: true },
@@ -26,6 +27,7 @@ const schema = {
     },
     {
       name: 'users',
+      primaryKey: ['xata_id'],
       columns: [
         { name: 'xata_id', type: 'string', notNull: true },
         { name: 'xata_version', type: 'int', notNull: true },
@@ -57,6 +59,7 @@ const schema = {
     },
     {
       name: 'pets',
+      primaryKey: [],
       columns: [
         { name: 'xata_id', type: 'string', notNull: true },
         { name: 'xata_version', type: 'int', notNull: true },

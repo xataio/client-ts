@@ -72,15 +72,7 @@ export type NewIdentifierKey<T extends object> = {
   [K in keyof T]: T[K] extends never ? never : K;
 }[keyof T];
 
-export type NewEditableDataFields<T> = T extends object
-  ? NewIdentifiable<DatabaseSchema['tables']> | NewIndentifierValue<NewIdentifiable<DatabaseSchema['tables']>>
-  : NonNullable<T> extends object
-  ?
-      | NewIdentifiable<DatabaseSchema['tables']>
-      | NewIndentifierValue<NewIdentifiable<DatabaseSchema['tables']>>
-      | null
-      | undefined
-  : T extends Date
+export type NewEditableDataFields<T> = T extends Date
   ? string | Date
   : NonNullable<T> extends Date
   ? string | Date | null | undefined
@@ -92,12 +84,22 @@ export type NewEditableDataFields<T> = T extends object
   ? number | NumericOperator
   : T;
 
-export type NewEditableData<O> = NewIdentifiable<DatabaseSchema['tables']> &
-  Partial<
-    Omit<
-      {
-        [K in keyof O]: NewEditableDataFields<O[K]>;
-      },
-      keyof XataRecord
-    >
-  >;
+export type NewEditableData<O> = Partial<{
+  [K in keyof O]: NewEditableDataFields<O[K]>;
+}>;
+
+export type NewEditableDataFieldsWithoutNumeric<T> = T extends Date
+  ? string | Date
+  : NonNullable<T> extends Date
+  ? string | Date | null | undefined
+  : T extends XataFile
+  ? InputXataFile
+  : T extends XataFile[]
+  ? InputXataFile[]
+  : T extends number
+  ? number
+  : T;
+
+export type NewEditableDataWithoutNumeric<O> = Partial<{
+  [K in keyof O]: NewEditableDataFieldsWithoutNumeric<O[K]>;
+}>;
