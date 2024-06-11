@@ -4,6 +4,59 @@
  * @version 1.0
  */
 /**
+ * @x-internal true
+ * @pattern [a-zA-Z0-9_-~:]+
+ */
+export type ClusterID = string;
+
+/**
+ * Page token
+ *
+ * @x-internal true
+ * @maxLength 255
+ * @minLength 24
+ */
+export type PageToken = string;
+
+/**
+ * @x-internal true
+ */
+export type MetricMessage = {
+  code?: string;
+  value?: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type MetricData = {
+  id?: string;
+  label?: string;
+  messages: MetricMessage[];
+  status: 'complete' | 'error' | 'partial' | 'forbidden';
+  timestamps: string[];
+  values: number[];
+};
+
+/**
+ * @x-internal true
+ */
+export type PageResponse = {
+  size: number;
+  hasMore: boolean;
+  token?: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type MetricsResponse = {
+  metrics: MetricData[];
+  messages: MetricMessage[];
+  page?: PageResponse;
+};
+
+/**
  * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
  *
  * @maxLength 511

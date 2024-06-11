@@ -5,6 +5,12 @@
  */
 import type * as Schemas from './dataPlaneSchemas';
 
+export type ClusterIDParam = Schemas.ClusterID;
+
+export type PageSizeParam = Schemas.PaginationPageSize;
+
+export type PageTokenParam = Schemas.PageToken;
+
 export type DBBranchNameParam = Schemas.DBBranchName;
 
 export type TableNameParam = Schemas.TableName;
