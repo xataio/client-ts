@@ -8,6 +8,66 @@ import { dataPlaneFetch, DataPlaneFetcherExtraProps } from './dataPlaneFetcher';
 import type * as Schemas from './dataPlaneSchemas';
 import type * as Responses from './dataPlaneResponses';
 
+export type GetClusterMetricsPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type GetClusterMetricsQueryParams = {
+  startTime?: string;
+  endTime?: string;
+  /**
+   * Page size
+   */
+  page?: Schemas.PageSize;
+  /**
+   * Page token
+   */
+  token?: Schemas.PageToken;
+};
+
+export type GetClusterMetricsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetClusterMetricsVariables = {
+  pathParams: GetClusterMetricsPathParams;
+  queryParams?: GetClusterMetricsQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * retrieve a standard set of RDS cluster metrics
+ */
+export const getClusterMetrics = (variables: GetClusterMetricsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.MetricsResponse,
+    GetClusterMetricsError,
+    undefined,
+    {},
+    GetClusterMetricsQueryParams,
+    GetClusterMetricsPathParams
+  >({
+    url: '/cluster/{clusterId}/metrics',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type ApplyMigrationPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -358,7 +418,7 @@ export type GetMigrationJobsQueryParams = {
   /**
    * Page size
    */
-  limit?: Schemas.PaginationPageSize;
+  limit?: Schemas.PageSize;
 };
 
 export type GetMigrationJobsError = Fetcher.ErrorWrapper<
@@ -460,7 +520,7 @@ export type GetMigrationHistoryQueryParams = {
   /**
    * Page size
    */
-  limit?: Schemas.PaginationPageSize;
+  limit?: Schemas.PageSize;
 };
 
 export type GetMigrationHistoryError = Fetcher.ErrorWrapper<
@@ -5348,6 +5408,7 @@ export const sqlBatchQuery = (variables: SqlBatchQueryVariables, signal?: AbortS
   });
 
 export const operationsByTag = {
+  cluster: { getClusterMetrics },
   migrations: {
     applyMigration,
     startMigration,

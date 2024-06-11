@@ -5,6 +5,12 @@
  */
 import type * as Schemas from './dataPlaneSchemas';
 
+export type ClusterIDParam = Schemas.ClusterID;
+
+export type PageSizeParam = Schemas.PageSize;
+
+export type PageTokenParam = Schemas.PageToken;
+
 export type DBBranchNameParam = Schemas.DBBranchName;
 
 export type TableNameParam = Schemas.TableName;
@@ -14,7 +20,7 @@ export type TableNameParam = Schemas.TableName;
  */
 export type TimestampCursorParam = string;
 
-export type LimitParam = Schemas.PaginationPageSize;
+export type LimitParam = Schemas.PageSize;
 
 export type MigrationJobIDParam = Schemas.MigrationJobID;
 
