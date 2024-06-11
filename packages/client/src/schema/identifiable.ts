@@ -7,9 +7,9 @@ import { InputXataFile, NumericOperator } from './record';
  * Returns an object with a key and type of the column specified in the schema primary key array.
  *
  * If there is more than one column in the primary key array, it will return the name and type of the first column in the array.
- * If empty, it will check for xata_id column and return that key and type provided it is unique and not null.
+ * If empty, it will check for xata_id column and return that key and type provided it is not null.
  *
- * If neither found, or neither column is not unique + notnull, never will be returned.
+ * If neither found, never will be returned.
  */
 export type NewIdentifiable<T extends readonly TableSchema[]> = T extends never[]
   ? never
@@ -21,15 +21,7 @@ export type NewIdentifiable<T extends readonly TableSchema[]> = T extends never[
     : never
   : never;
 
-export type NewIdentifiabletwo<T extends readonly TableSchema[]> = T extends never[]
-  ? never
-  : T[number] extends { name: string; columns: readonly unknown[] }
-  ? {
-      [K in T[number]['name']]: PrimaryKeyType<T[number], K>;
-    }
-  : never;
-
-export type PrimaryKeyType<Tables, TableName> = Tables & { name: TableName } extends infer Table
+type PrimaryKeyType<Tables, TableName> = Tables & { name: TableName } extends infer Table
   ? Table extends { name: string; columns: infer Columns } & { primaryKey: infer primaryKey }
     ? Columns extends readonly unknown[]
       ? Columns[number] extends { name: string; type: string }
@@ -47,7 +39,7 @@ export type PrimaryKeyType<Tables, TableName> = Tables & { name: TableName } ext
     : never
   : never;
 
-export type PropertyType<Properties, PropertyName extends PropertyKey> = Properties & {
+type PropertyType<Properties, PropertyName extends PropertyKey> = Properties & {
   name: PropertyName;
 } extends infer Property
   ? Property extends {
@@ -97,7 +89,7 @@ export type NewIdentifierKey<T extends object> = {
   [K in keyof T]: T[K] extends never ? never : K;
 }[keyof T];
 
-export type NewEditableDataFields<T> = T extends Date
+type NewEditableDataFields<T> = T extends Date
   ? string | Date
   : NonNullable<T> extends Date
   ? string | Date | null | undefined
@@ -113,7 +105,7 @@ export type NewEditableData<O> = Partial<{
   [K in keyof O]: NewEditableDataFields<O[K]>;
 }>;
 
-export type NewEditableDataFieldsWithoutNumeric<T> = T extends Date
+type NewEditableDataFieldsWithoutNumeric<T> = T extends Date
   ? string | Date
   : NonNullable<T> extends Date
   ? string | Date | null | undefined
