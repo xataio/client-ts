@@ -10,6 +10,15 @@
 export type ClusterID = string;
 
 /**
+ * Page size.
+ *
+ * @x-internal true
+ * @default 25
+ * @minimum 0
+ */
+export type PageSize = number;
+
+/**
  * Page token
  *
  * @x-internal true
@@ -1900,12 +1909,3 @@ export type SQLResponse = SQLResponseJSON | SQLResponseArray;
 export type XataRecord = RecordMeta & {
   [key: string]: any;
 };
-
-/**
- * Page size.
- *
- * @x-internal true
- * @default 25
- * @minimum 0
- */
-export type PaginationPageSize = number;

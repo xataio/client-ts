@@ -1,4 +1,15 @@
 export * from './dataPlaneSchemas';
 export * from './controlPlaneSchemas';
 
-export type { BranchMetadata, BranchName, DBName, DateTime, MigrationStatus } from './dataPlaneSchemas';
+// Re-exports to remove ambiguity in the generated code
+export type {
+  BranchMetadata,
+  BranchName,
+  DBName,
+  DateTime,
+  MigrationStatus,
+  ClusterID,
+  PageResponse,
+  PageToken,
+  PageSize
+} from './dataPlaneSchemas';

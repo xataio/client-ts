@@ -23,7 +23,7 @@ export type GetClusterMetricsQueryParams = {
   /**
    * Page size
    */
-  page?: Schemas.PaginationPageSize;
+  page?: Schemas.PageSize;
   /**
    * Page token
    */
@@ -418,7 +418,7 @@ export type GetMigrationJobsQueryParams = {
   /**
    * Page size
    */
-  limit?: Schemas.PaginationPageSize;
+  limit?: Schemas.PageSize;
 };
 
 export type GetMigrationJobsError = Fetcher.ErrorWrapper<
@@ -520,7 +520,7 @@ export type GetMigrationHistoryQueryParams = {
   /**
    * Page size
    */
-  limit?: Schemas.PaginationPageSize;
+  limit?: Schemas.PageSize;
 };
 
 export type GetMigrationHistoryError = Fetcher.ErrorWrapper<
