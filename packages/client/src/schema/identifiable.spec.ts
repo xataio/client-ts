@@ -1,6 +1,5 @@
 import { test } from 'vitest';
 import { NewIdentifiable, NewIdentifierKey, NewIndentifierValue } from './identifiable';
-import { DatabaseSchema } from './inference';
 
 const tables = [
   {
@@ -114,3 +113,7 @@ const tables = [
 type DbIndentifiable = NewIdentifiable<typeof tables>['users'];
 type DbIndentifiableKey = NewIdentifierKey<DbIndentifiable>;
 type DbIndentifiableValue = NewIndentifierValue<DbIndentifiable>;
+
+test('fake test', () => {
+  // This is a fake test to make sure that the type definitions in this file are working
+});
