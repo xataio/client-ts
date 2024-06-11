@@ -56,7 +56,7 @@ type PropertyType<Tables, Properties, PropertyName extends PropertyKey> = Proper
     : never
   : never;
 
-export type InnerType<Type, Tables, LinkedTable> = Type extends
+type InnerType<Type, Tables, LinkedTable> = Type extends
   | 'string'
   | 'text'
   | 'email'
@@ -98,6 +98,6 @@ export type InnerType<Type, Tables, LinkedTable> = Type extends
   : Type extends 'json' | 'jsonb'
   ? JSONValue<any>
   : Type extends 'link'
-  ? TableType<Tables, LinkedTable> & XataRecord
+  ? string
   : // This is a fallback for when the type is not recognized
     string;

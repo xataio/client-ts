@@ -1,7 +1,7 @@
 import { Values } from '../util/types';
 import { XataFile } from './files';
-import { DatabaseSchema, InnerType, TableSchema } from './inference';
-import { InputXataFile, NumericOperator, XataRecord } from './record';
+import { TableSchema } from './inference';
+import { InputXataFile, NumericOperator } from './record';
 
 /**
  * Returns an object with a key and type of the column specified in the schema primary key array.
@@ -36,9 +36,9 @@ export type PrimaryKeyType<Tables, TableName> = Tables & { name: TableName } ext
         ? primaryKey extends readonly string[]
           ? Values<{
               [K in Columns[number]['name']]: K extends primaryKey[0]
-                ? PropertyType<Tables, Columns[number], K>
+                ? PropertyType<Columns[number], K>
                 : K extends 'xata_id'
-                ? PropertyType<Tables, Columns[number], K>
+                ? PropertyType<Columns[number], K>
                 : never;
             }>
           : never
@@ -47,7 +47,7 @@ export type PrimaryKeyType<Tables, TableName> = Tables & { name: TableName } ext
     : never
   : never;
 
-export type PropertyType<Tables, Properties, PropertyName extends PropertyKey> = Properties & {
+export type PropertyType<Properties, PropertyName extends PropertyKey> = Properties & {
   name: PropertyName;
 } extends infer Property
   ? Property extends {
@@ -58,10 +58,35 @@ export type PropertyType<Tables, Properties, PropertyName extends PropertyKey> =
     }
     ? NotNull extends true
       ? {
-          [K in PropertyName]: InnerType<Type, Tables, LinkedTable>;
+          [K in PropertyName]: InnerType<Type>;
         }
       : never
     : never
+  : never;
+
+type InnerType<Type> = Type extends
+  | 'string'
+  | 'text'
+  | 'email'
+  | 'character'
+  | 'varchar'
+  | 'character varying'
+  | `varchar(${number})`
+  | `character(${number})`
+  ? string
+  : Type extends
+      | 'int'
+      | 'float'
+      | 'bigint'
+      | 'int8'
+      | 'integer'
+      | 'int4'
+      | 'smallint'
+      | 'double precision'
+      | 'float8'
+      | 'real'
+      | 'numeric'
+  ? number
   : never;
 
 export type NewIndentifierValue<T extends object> = {
