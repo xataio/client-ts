@@ -25,8 +25,9 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
       tables: [
         {
           name: 'users',
+          primaryKey: [],
           columns: [
-            { name: 'xata_id', type: 'string' },
+            { name: 'xata_id', type: 'string', notNull: true },
             { name: 'name', type: 'string' },
             { name: 'email', type: 'string' }
           ]

@@ -8,7 +8,13 @@ const client_1 = require("@xata.io/client");
 /** @typedef { import('./types').SchemaTables } SchemaTables */
 /** @type { SchemaTables } */
 const schema = {
-  tables: [{ name: "users", columns: [{ name: "name", type: "string" }] }],
+  tables: [
+    {
+      name: "users",
+      primaryKey: ["xata_id"],
+      columns: [{ name: "name", type: "string" }],
+    },
+  ],
 };
 /** @type { import('@xata.io/client').ClientConstructor<{}> } */
 const DatabaseClient = (0, client_1.buildClient)();
@@ -47,7 +53,13 @@ import type {
 } from "npm:@xata.io/client@latest";
 
 const schema = {
-  tables: [{ name: "users", columns: [{ name: "name", type: "string" }] }],
+  tables: [
+    {
+      name: "users",
+      primaryKey: ["xata_id"],
+      columns: [{ name: "name", type: "string" }],
+    },
+  ],
 } as const;
 
 export type SchemaTables = typeof schema.tables;
@@ -91,7 +103,13 @@ import type {
 } from "@xata.io/client";
 
 const schema = {
-  tables: [{ name: "users", columns: [{ name: "name", type: "string" }] }],
+  tables: [
+    {
+      name: "users",
+      primaryKey: ["xata_id"],
+      columns: [{ name: "name", type: "string" }],
+    },
+  ],
 } as const;
 
 export type SchemaTables = typeof schema.tables;
@@ -135,7 +153,13 @@ import type {
 } from "@xata.io/client";
 
 const schema = {
-  tables: [{ name: "users", columns: [{ name: "name", type: "string" }] }],
+  tables: [
+    {
+      name: "users",
+      primaryKey: ["xata_id"],
+      columns: [{ name: "name", type: "string" }],
+    },
+  ],
 } as const;
 
 export type SchemaTables = typeof schema.tables;
@@ -182,6 +206,7 @@ const schema = {
   tables: [
     {
       name: "teams_Like",
+      primaryKey: ["xata_id"],
       columns: [
         { name: "name-test", type: "string" },
         { name: "labels_Test", type: "multiple" },
@@ -190,6 +215,7 @@ const schema = {
     },
     {
       name: "users-foo",
+      primaryKey: ["xata_id"],
       columns: [
         { name: "email-random", type: "email" },
         { name: "full_name", type: "string" },
@@ -247,6 +273,7 @@ const schema = {
   tables: [
     {
       name: "1teams-case",
+      primaryKey: ["xata_id"],
       columns: [
         { name: "2nameCase", type: "string" },
         { name: "3Labels", type: "multiple" },
@@ -293,6 +320,7 @@ const schema = {
   tables: [
     {
       name: "1teams-case",
+      primaryKey: ["xata_id"],
       columns: [
         { name: "2nameCase", type: "string" },
         { name: "3Labels", type: "multiple" },
@@ -331,6 +359,7 @@ declare const schema: {
   readonly tables: readonly [
     {
       readonly name: "1teams-case";
+      readonly primaryKey: readonly ["xata_id"];
       readonly columns: readonly [
         {
           readonly name: "2nameCase";
