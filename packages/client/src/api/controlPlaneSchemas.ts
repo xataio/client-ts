@@ -188,6 +188,8 @@ export type ClusterShortMetadata = {
    * @format int64
    */
   branches: number;
+  createdAt: DateTime;
+  terminatedAt?: DateTime;
 };
 
 /**
