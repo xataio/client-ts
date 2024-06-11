@@ -7,6 +7,8 @@ import {
   removeLocalMigrations,
   writeLocalMigrationFiles
 } from '../../migrations/files.js';
+import { getBranchDetailsWithPgRoll, isBranchPgRollEnabled } from '../../migrations/pgroll.js';
+import { Schemas } from '@xata.io/client';
 
 export default class Rebase extends BaseCommand<typeof Rebase> {
   static description = 'Reapply local migrations on top of a remote branch';
@@ -35,29 +37,55 @@ export default class Rebase extends BaseCommand<typeof Rebase> {
     );
 
     this.info(`Rebase command is experimental, use with caution`);
+    const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
-    const { logs } = await xata.api.migrations.getBranchSchemaHistory({
-      workspace,
-      region,
-      database,
-      branch,
-      // TODO: Fix pagination in the API to start from last known migration and not from the beginning
-      // Also paginate until we get all migrations
-      page: { size: 200 }
-    });
+    if (isBranchPgRollEnabled(details)) {
+      let logs: (Schemas.MigrationHistoryItem | Schemas.Commit)[] = [];
+      let cursor = undefined;
+      do {
+        const { migrations, cursor: newCursor } = await xata.api.migrations.getMigrationHistory({
+          pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+          queryParams: { cursor, limit: 200 }
+        });
 
-    const remoteMigrationFiles = commitToMigrationFile(logs);
-    const localMigrationFiles = await getLocalMigrationFiles();
+        logs = logs.concat(migrations);
+        cursor = newCursor;
+      } while (cursor !== undefined);
 
-    const lastCommonMigrationIndex = getLastCommonIndex(localMigrationFiles, remoteMigrationFiles);
+      const remoteMigrationFiles = commitToMigrationFile(logs);
+      const localMigrationFiles = await getLocalMigrationFiles(isBranchPgRollEnabled(details));
 
-    const migrationsToRebase = localMigrationFiles.slice(lastCommonMigrationIndex);
+      const lastCommonMigrationIndex = getLastCommonIndex(localMigrationFiles, remoteMigrationFiles);
 
-    const newMigrationFiles = [...remoteMigrationFiles, ...migrationsToRebase];
+      const migrationsToRebase = localMigrationFiles.slice(lastCommonMigrationIndex);
 
-    // TODO: Check if there are any conflicts
+      const newMigrationFiles = [...remoteMigrationFiles, ...migrationsToRebase];
 
-    await removeLocalMigrations();
-    await writeLocalMigrationFiles(newMigrationFiles);
+      await removeLocalMigrations();
+      await writeLocalMigrationFiles(newMigrationFiles);
+    } else {
+      const { logs } = await xata.api.migrations.getBranchSchemaHistory({
+        pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+        body: {
+          // TODO: Fix pagination in the API to start from last known migration and not from the beginning
+          // Also paginate until we get all migrations
+          page: { size: 200 }
+        }
+      });
+
+      const remoteMigrationFiles = commitToMigrationFile(logs);
+      const localMigrationFiles = await getLocalMigrationFiles();
+
+      const lastCommonMigrationIndex = getLastCommonIndex(localMigrationFiles, remoteMigrationFiles);
+
+      const migrationsToRebase = localMigrationFiles.slice(lastCommonMigrationIndex);
+
+      const newMigrationFiles = [...remoteMigrationFiles, ...migrationsToRebase];
+
+      // TODO: Check if there are any conflicts
+
+      await removeLocalMigrations();
+      await writeLocalMigrationFiles(newMigrationFiles);
+    }
   }
 }

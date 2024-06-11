@@ -188,6 +188,14 @@ const baseFetch = (url: string, request: any) => {
         }
       })
     };
+  } else if (
+    url === `https://test-1234.us-east-1.xata.sh/db/db1:main/migrations/jobs/1234` &&
+    request.method === 'GET'
+  ) {
+    return {
+      ok: true,
+      json: async () => ({ status: 'completed' })
+    };
   }
 
   throw new Error(`Unexpected fetch request: ${url} ${request.method}`);
@@ -236,7 +244,7 @@ const pgrollFetchSingle = (url: string, request: any, type: 'inferred' | 'pgroll
         schema: { tables: [{ name: 'table1', columns: [{ name: 'a', type: 'string' }] }] }
       })
     };
-  } else if (url === `${baseUrl}/migrations/history` && request.method === 'GET') {
+  } else if (url === `${baseUrl}/migrations/history?limit=200` && request.method === 'GET') {
     return {
       ok: true,
       json: async () => (type === 'inferred' ? { migrations: [pgrollMigration3] } : { migrations: [pgrollMigration1] })
@@ -255,7 +263,7 @@ const pgrollFetchEmpty = (url: string, request: any) => {
         schema: { tables: [{ name: 'table1', columns: [{ name: 'a', type: 'string' }] }] }
       })
     };
-  } else if (url === `${baseUrl}/migrations/history` && request.method === 'GET') {
+  } else if (url === `${baseUrl}/migrations/history?limit=200` && request.method === 'GET') {
     return {
       ok: true,
       json: async () => ({

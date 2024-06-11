@@ -1,107 +1,56 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Flags } from '@oclif/core';
+import { BaseCommand } from '../../base.js';
+import { Config, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
-import { parseSchemaFile } from '@xata.io/codegen';
-import { isValidEmail } from '@xata.io/importer';
+import {
+  OpAddColumn,
+  OpAlterColumn,
+  OpCreateTable,
+  OpDropColumn,
+  OpDropConstraint,
+  OpDropTable,
+  OpRenameTable,
+  PgRollMigration,
+  PgRollMigrationDefinition,
+  PgRollOperation
+} from '@xata.io/pgroll';
 import chalk from 'chalk';
 import enquirer from 'enquirer';
-import { getEditor } from 'env-editor';
-import { readFile, writeFile } from 'fs/promises';
-import tmp from 'tmp';
-import which from 'which';
-import { BaseCommand } from '../../base.js';
-import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
-import { isNil, reportBugURL } from '../../utils.js';
-import Codegen from '../codegen/index.js';
-import Pull from '../pull/index.js';
+import {
+  exhaustiveCheck,
+  generateLinkReference,
+  getBranchDetailsWithPgRoll,
+  isBranchPgRollEnabled,
+  requiresUpArgument,
+  updateConstraint,
+  updateLinkComment,
+  waitForMigrationToFinish,
+  xataColumnTypeToPgRoll,
+  xataColumnTypeToPgRollComment,
+  xataColumnTypeToPgRollConstraint,
+  xataColumnTypeToZeroValue
+} from '../../migrations/pgroll.js';
+import EditSchemaOld from './edit-old.js';
 
-// The enquirer library has type definitions but they are very poor
 const { Select, Snippet, Confirm } = enquirer as any;
 
-type Schema = Schemas.Schema;
-type Table = Schema['tables'][0];
-type Column = Table['columns'][0];
-
-type EditableColumn = Column & {
-  added?: boolean;
-  deleted?: boolean;
-  initialName?: string;
-  description?: string;
-};
-
-type EditableTable = Table & {
-  added?: string;
-  deleted?: boolean;
-  initialName?: string;
-  columns: EditableColumn[];
-};
-
-type ColumnEditState = {
-  initial: {
-    name: string;
-    type: string;
-    link: string | undefined;
-    vectorDimension: string | undefined;
-    notNull: string;
-    defaultValue: string;
-    unique: string;
-    description: string | undefined;
-  };
-  values: {
-    name?: string;
-    type?: string;
-    link?: string;
-    vectorDimension?: string;
-    notNull?: string;
-    defaultValue?: string;
-    unique?: string;
-    description?: string;
-  };
-};
-
-const types = ['string', 'int', 'float', 'bool', 'text', 'multiple', 'link', 'email', 'datetime', 'vector', 'json'];
-const typesList = types.join(', ');
-const identifier = /^[a-zA-Z0-9-_~]+$/;
-
-const uniqueUnsupportedTypes = ['text', 'multiple', 'vector', 'json'];
-const defaultValueUnsupportedTypes = ['multiple', 'link', 'vector'];
-const notNullUnsupportedTypes = defaultValueUnsupportedTypes;
-
-const waitFlags: Record<string, string> = {
-  code: '-w',
-  'code-insiders': '-w',
-  vscodium: '-w',
-  sublime: '-w',
-  textmate: '-w',
-  atom: '--wait',
-  webstorm: '--wait',
-  intellij: '--wait',
-  xcode: '-w'
-};
-
-type SelectChoice = {
-  name:
-    | {
-        type: 'space' | 'schema' | 'add-table' | 'migrate';
-      }
-    | {
-        type: 'add-column' | 'edit-table';
-        table: EditableTable;
-      }
-    | {
-        type: 'edit-column';
-        table: EditableTable;
-        column: EditableColumn;
-      };
-  message: string;
-  role?: string;
-  choices?: SelectChoice[];
-  disabled?: boolean;
-  hint?: string;
-};
+const xataTypes = [
+  'string',
+  'int',
+  'float',
+  'bool',
+  'text',
+  'multiple',
+  'link',
+  'email',
+  'datetime',
+  'vector',
+  'json',
+  'file',
+  'file[]'
+];
 
 export default class EditSchema extends BaseCommand<typeof EditSchema> {
-  static description = 'Edit the schema of the current database';
+  static description = 'Edit the schema';
 
   static examples = [];
 
@@ -115,176 +64,121 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
 
   static args = {};
 
-  branchDetails: Schemas.DBBranch | undefined;
-  tables: EditableTable[] = [];
+  branchDetails: BranchSchemaFormatted;
   workspace!: string;
   region!: string;
   database!: string;
   branch!: string;
 
-  selectItem: EditableColumn | EditableTable | null = null;
+  tableAdditions: AddTablePayload['table'][] = [];
+  tableEdits: EditTablePayload['table'][] = [];
+  tableDeletions: DeleteTablePayload[] = [];
 
-  async run(): Promise<void> {
-    const { flags } = await this.parseCommand();
+  columnEdits: ColumnEdits = {};
+  columnAdditions: ColumnAdditions = {};
+  columnDeletions: DeleteColumnPayload = {};
 
-    if (flags.source) {
-      this.warn(
-        `This way of editing the schema doesn't detect renames of tables or columns. They are interpreted as deleting/adding tables and columns.
-Beware that this can lead to ${chalk.bold(
-          'data loss'
-        )}. Other ways of editing the schema that do not have this limitation are:
-* run the command without ${chalk.bold('--source')}
-* edit the schema in the Web UI. Use ${chalk.bold('xata browse')} to open the Web UI in your browser.`
-      );
-      this.log();
-    }
+  currentMigration: PgRollMigration = { operations: [] };
 
-    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
-    this.workspace = workspace;
-    this.region = region;
-    this.database = database;
-    this.branch = branch;
+  activeIndex: number = 0;
 
-    const xata = await this.getXataClient();
-    const branchDetails = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
-    if (!branchDetails) this.error('Could not get the schema from the current branch');
+  async showSchemaEdit() {
+    this.clear();
+    const tableChoices: SelectChoice[] = [];
+    const select = new Select({
+      message: 'Schema for database test:main',
+      initial: this.activeIndex,
+      choices: [
+        {
+          name: { type: 'schema' },
+          message: 'Tables',
+          role: 'heading',
+          choices: tableChoices
+        }
+      ],
+      footer:
+        'Use the ↑ ↓ arrows to move across the schema, enter to edit or add things, delete or backspace to delete things.'
+    });
 
-    if (flags.source) {
-      await this.showSourceEditing(branchDetails);
-    } else {
-      await this.showInteractiveEditing(branchDetails);
-    }
-  }
+    const tables = [
+      ...(this.branchDetails?.schema?.tables ?? []),
+      ...this.tableAdditions.map((addition) => ({
+        name: addition.name,
+        columns: []
+      }))
+    ];
 
-  async showSourceEditing(branchDetails: Schemas.DBBranch) {
-    const env = process.env.EDITOR || process.env.VISUAL;
-    if (!env) {
-      this.error(
-        `Could not find an editor. Please set the environment variable ${chalk.bold('EDITOR')} or ${chalk.bold(
-          'VISUAL'
-        )}`
-      );
-    }
-
-    const info = await getEditor(env);
-    // This honors the env value. For `code-insiders` for example, we don't want `code` to be used instead.
-    const binary = which.sync(env, { nothrow: true }) ? env : info.binary;
-
-    const tmpobj = tmp.fileSync({ prefix: 'schema-', postfix: 'source.json' });
-    // TODO: add a $schema to the document to allow autocomplete in editors such as vscode
-    await writeFile(tmpobj.name, JSON.stringify(branchDetails.schema, null, 2));
-
-    const waitFlag = waitFlags[info.id] || waitFlags[env];
-
-    if (!info.isTerminalEditor && !waitFlag) {
-      this.error(`The editor ${chalk.bold(env)} is a graphical editor that is not supported.`, {
-        suggestions: [
-          `Set the ${chalk.bold('EDITOR')} or ${chalk.bold('VISUAL')} variables to a different editor`,
-          `Open an issue at ${reportBugURL(`Support \`${info.binary}\` editor for schema editing`)}`
+    for (const table of tables) {
+      tableChoices.push({
+        name: { type: 'edit-table', table: { name: table.name, newName: table.name } },
+        message: this.renderTableMessage(table.name),
+        choices: [
+          ...table.columns.map((column) => {
+            const col = formatSchemaColumnToColumnData({
+              column: { ...column, originalName: column.name },
+              tableName: table.name
+            });
+            return {
+              name: {
+                type: 'edit-column',
+                column: col
+              },
+              message: this.renderColumnMessage({ column: col }),
+              disabled: editTableDisabled(table.name, this.tableDeletions)
+            } as SelectChoice;
+          }),
+          ...Object.values(this.columnAdditions[table.name] ?? []).map((column) => {
+            const formatted = { ...column, tableName: table.name, originalName: column.name };
+            return {
+              name: { type: 'edit-column', column: formatted },
+              message: this.renderColumnMessage({ column: formatted }),
+              disabled: editTableDisabled(table.name, this.tableDeletions)
+            } as SelectChoice;
+          }),
+          {
+            name: {
+              type: 'add-column',
+              tableName: table.name,
+              column: { originalName: '', tableName: table.name, name: '', type: '', unique: false, nullable: true }
+            },
+            message: `${chalk.green('+')} Add a column`,
+            disabled: editTableDisabled(table.name, this.tableDeletions),
+            hint: 'Add a column to a table'
+          }
         ]
       });
     }
 
-    const args = [waitFlag, tmpobj.name].filter(Boolean);
-    await this.runCommand(binary, args);
+    tableChoices.push(
+      createSpace(),
+      {
+        message: `${chalk.green('+')} Add a table`,
+        name: { type: 'add-table', table: { name: '' } }
+      },
+      {
+        message: `${chalk.green('►')} Run migration`,
+        name: { type: 'migrate' },
+        hint: 'Run the migration'
+      }
+    );
 
-    const newSchema = await readFile(tmpobj.name, 'utf8');
-    const result = parseSchemaFile(newSchema);
-    if (!result.success) {
-      this.printZodError(result.error);
-      this.error('The schema is not valid. See the errors above');
-    }
-
-    await this.deploySchema(this.workspace, this.region, this.database, this.branch, result.data);
-
-    // Run pull to retrieve remote migrations
-    await Pull.run([this.branch]);
-  }
-
-  async showInteractiveEditing(branchDetails: Schemas.DBBranch) {
-    this.branchDetails = branchDetails;
-    this.tables = this.branchDetails.schema.tables;
-    await this.showSchema();
-  }
-
-  async showSchema() {
-    this.clear();
-
-    const choices: SelectChoice[] = [
-      this.createSpace() // empty space
-    ];
-    const flatChoices = [...choices];
-
-    const tableChoices: SelectChoice[] = [];
-    const schema: SelectChoice = {
-      name: { type: 'schema' },
-      message: 'Tables',
-      role: 'heading',
-      choices: tableChoices
-    };
-    choices.push(schema);
-    flatChoices.push(schema);
-
-    let index = 0;
-    for (const table of this.tables) {
-      const columnChoices: SelectChoice[] = table.columns.map((column, i) => {
-        if (this.selectItem === column) index = flatChoices.length + i + 1;
-        return {
-          name: { type: 'edit-column', column, table },
-          message: this.getMessageForColumn(table, column)
-        };
-      });
-      columnChoices.push({
-        message: `${chalk.green('+')} Add a column`,
-        name: { type: 'add-column', table },
-        disabled: table.deleted
-      });
-      const tableChoice: SelectChoice = {
-        name: { type: 'edit-table', table },
-        message: this.getMessageForTable(table),
-        choices: columnChoices
-      };
-      tableChoices.push(tableChoice);
-      if (this.selectItem === table) index = flatChoices.length;
-      flatChoices.push(tableChoice);
-      flatChoices.push(...columnChoices);
-      tableChoices.push(this.createSpace());
-      flatChoices.push(this.createSpace());
-    }
-
-    choices.push({ message: `${chalk.green('+')} Add a table`, name: { type: 'add-table' } });
-    choices.push(this.createSpace());
-
-    const overview = this.getOverview();
-    choices.push({
-      message: `${chalk.green('►')} Run migration${overview ? ':' : ''}`,
-      name: { type: 'migrate' },
-      disabled: !overview,
-      hint: overview || 'No changes made so far'
-    });
-    choices.push(this.createSpace());
-
-    const select = new Select({
-      message: 'Schema for database test:main',
-      initial: index,
-      choices,
-      footer:
-        'Use the ↑ ↓ arrows to move across the schema, enter to edit or add things, delete or backspace to delete things.'
-    });
     select.on('keypress', async (char: string, key: { name: string; action: string }) => {
-      const flatChoice = flatChoices[select.state.index];
+      this.activeIndex = select.state.index;
+      const selectedItem = select.state.choices[select.state.index];
       try {
         if (key.name === 'backspace' || key.name === 'delete') {
-          if (!flatChoice) return; // add table is not here for example
-          const choice = flatChoice.name;
+          if (!selectedItem) return;
+          const choice = selectedItem.name;
           if (typeof choice !== 'object') return;
-
           if (choice.type === 'edit-table') {
             await select.cancel();
-            await this.deleteTable(choice.table);
-          } else if (choice.type === 'edit-column' && !choice.table.deleted) {
+            await this.toggleTableDelete({ initialTableName: choice.table.name });
+            await this.showSchemaEdit();
+          }
+          if (choice.type === 'edit-column') {
             await select.cancel();
-            await this.deleteColumn(choice.column, choice.table);
+            await this.toggleColumnDelete(choice);
+            await this.showSchemaEdit();
           }
         }
       } catch (err) {
@@ -294,401 +188,247 @@ Beware that this can lead to ${chalk.bold(
     });
 
     try {
-      const result = await select.run();
-
-      if (result.type === 'edit-column') {
-        await this.showColumnEdit(result.column, result.table);
+      const result: SelectChoice['name'] = await select.run();
+      if (result.type === 'add-table') {
+        await this.showAddTable(result.table);
+      } else if (result.type === 'edit-column') {
+        if (editColumnDisabled(result.column, this.columnDeletions)) {
+          await this.showSchemaEdit();
+        } else {
+          await this.showColumnEdit(result.column);
+        }
       } else if (result.type === 'edit-table') {
-        await this.showTableEdit(result.table);
+        if (editTableDisabled(result.table.name, this.tableDeletions)) {
+          await this.showSchemaEdit();
+        } else {
+          await this.showTableEdit({ initialTableName: result.table.name });
+        }
       } else if (result.type === 'add-column') {
-        await this.showColumnEdit(null, result.table);
-      } else if (result.type === 'add-table') {
-        await this.showTableEdit(null);
-      } else if (result.type === 'delete-table') {
-        await this.deleteTable(result.table);
+        await this.showAddColumn(result);
       } else if (result.type === 'migrate') {
         await this.migrate();
-        await Codegen.runIfConfigured(this.projectConfig);
-        process.exit(0);
+      } else if (result.type === 'schema' || result.type === 'space') {
+        await this.showSchemaEdit();
+      } else {
+        exhaustiveCheck(result.type);
       }
-    } catch (err) {
-      if (err) throw err;
-      // if not, user cancelled
+    } catch (error) {
+      if (error) throw error;
     }
-
     this.clear();
   }
 
-  createSpace(): SelectChoice {
-    return { name: { type: 'space' }, message: ' ', role: 'heading' };
-  }
+  async migrate() {
+    this.clear();
+    this.currentMigration = { operations: [] };
+    this.currentMigration.operations = editsToMigrations(this);
+    const valid = validateMigration(this.currentMigration);
+    if (valid.success) {
+      const prompt = new Confirm({
+        name: 'question',
+        message: `Are you sure you want to run the migration? ${JSON.stringify(this.currentMigration, null, 2)}`
+      });
+      try {
+        const answer = await prompt.run();
+        if (!answer) {
+          await this.showSchemaEdit();
+          return;
+        }
+        const xata = await this.getXataClient();
 
-  getMessageForTable(table: EditableTable) {
-    if (table.deleted) return `• ${chalk.red.strikethrough(table.name)}`;
-    if (table.added) return `• ${chalk.green(table.name)}`;
-    if (table.initialName) return `• ${chalk.bold(table.name)} ${chalk.yellow.strikethrough(table.initialName)}`;
-    return `• ${chalk.bold(table.name)}`;
-  }
+        const submitMigrationRessponse = await xata.api.migrations.applyMigration({
+          pathParams: {
+            workspace: this.workspace,
+            region: this.region,
+            dbBranchName: `${this.database}:${this.branch}`
+          },
+          body: { ...this.currentMigration, adaptTables: true }
+        });
 
-  getMessageForColumn(table: EditableTable, column: EditableColumn) {
-    const linkedTable = this.tables.find((t) => (t.initialName || t.name) === column.link?.table);
-    function getType() {
-      if (!linkedTable) return chalk.gray.italic(column.type);
-      return `${chalk.gray.italic(column.type)} → ${chalk.gray.italic(linkedTable.name)}`;
+        await waitForMigrationToFinish(
+          xata.api,
+          this.workspace,
+          this.region,
+          this.database,
+          this.branch,
+          submitMigrationRessponse.jobID
+        );
+
+        const alterLinkColumns = this.currentMigration.operations.reduce((acc, op) => {
+          const operation = updateLinkComment(this.branchDetails, op);
+          if (operation) acc.push(...operation);
+          return acc;
+        }, [] as PgRollOperation[]);
+
+        if (alterLinkColumns.length > 0) {
+          const { jobID: alterLinkColumnId } = await xata.api.migrations.applyMigration({
+            pathParams: {
+              workspace: this.workspace,
+              region: this.region,
+              dbBranchName: `${this.database}:${this.branch}`
+            },
+            body: { operations: alterLinkColumns }
+          });
+
+          await waitForMigrationToFinish(
+            xata.api,
+            this.workspace,
+            this.region,
+            this.database,
+            this.branch,
+            alterLinkColumnId
+          );
+        }
+
+        const constraintRenames = this.currentMigration.operations.reduce((acc, op) => {
+          const operation = updateConstraint(this.branchDetails, op);
+          if (operation) acc.push(...operation);
+          return acc;
+        }, [] as PgRollOperation[]);
+
+        if (constraintRenames.length > 0) {
+          const { jobID: constraintRenameJobID } = await xata.api.migrations.applyMigration({
+            pathParams: {
+              workspace: this.workspace,
+              region: this.region,
+              dbBranchName: `${this.database}:${this.branch}`
+            },
+            body: { operations: constraintRenames }
+          });
+
+          await waitForMigrationToFinish(
+            xata.api,
+            this.workspace,
+            this.region,
+            this.database,
+            this.branch,
+            constraintRenameJobID
+          );
+        }
+
+        this.success('Migration completed!');
+        process.exit(0);
+      } catch (err) {
+        if (err) throw err;
+        // User cancelled
+        await this.showSchemaEdit();
+        return;
+      }
+    } else {
+      this.logJson(this.currentMigration);
+      this.toErrorJson('Migration is invalid:' + valid.error.errors.flatMap((e) => e.message).join('\n'));
     }
+  }
+
+  getColumnNameEdit({ column }: { column: EditColumnPayload['column'] }) {
+    return this.columnEdits[column.tableName]?.[column.originalName]?.name;
+  }
+
+  getColumnNullable({ column }: { column: EditColumnPayload['column'] }) {
+    return this.columnEdits[column.tableName]?.[column.originalName]?.nullable ?? column.nullable;
+  }
+
+  getColumnUnique({ column }: { column: EditColumnPayload['column'] }) {
+    return this.columnEdits[column.tableName]?.[column.originalName]?.unique ?? column.unique;
+  }
+
+  renderColumnMessage({ column }: { column: EditColumnPayload['column'] }) {
+    const maybeNewColumnName = this.getColumnNameEdit({ column });
+    const isColumnDeleted = Object.entries(this.columnDeletions)
+      .filter((entry) => entry[0] === column.tableName)
+      .find((entry) => entry[1].includes(column.originalName));
+    const isTableDeleted = this.tableDeletions.find(({ name }) => name === column.tableName);
+
+    const unique = () => {
+      const currentUniqueValue = this.getColumnUnique({ column });
+      if (currentUniqueValue !== column.unique) {
+        return currentUniqueValue ? chalk.green('unique') : chalk.green('not unique');
+      }
+      return currentUniqueValue ? chalk.gray.italic('unique') : '';
+    };
+
+    const nullable = () => {
+      const currentNullableValue = this.getColumnNullable({ column });
+      if (currentNullableValue !== column.nullable) {
+        return currentNullableValue ? chalk.green('nullable') : chalk.green('not nullable');
+      }
+      return currentNullableValue ? '' : chalk.gray.italic('not nullable');
+    };
+
     const metadata = [
-      getType(),
-      column.unique ? chalk.gray.italic('unique') : '',
-      column.notNull ? chalk.gray.italic('not null') : '',
+      `${chalk.gray.italic(column.type)}${column.type === 'link' ? ` → ${chalk.gray.italic(column.link?.table)}` : ''}`,
+      unique(),
+      nullable(),
       column.defaultValue ? chalk.gray.italic(`default: ${column.defaultValue}`) : ''
     ]
       .filter(Boolean)
       .join(' ');
-    if (table.deleted || column.deleted || linkedTable?.deleted)
-      return `- ${chalk.red.strikethrough(column.name)} (${metadata})`;
-    if (table.added || column.added) return `- ${chalk.green(column.name)} (${metadata})`;
-    if (column.initialName)
-      return `- ${chalk.cyan(column.name)} ${chalk.yellow.strikethrough(column.initialName)} (${metadata})`;
-    return `- ${chalk.cyan(column.name)} (${metadata})`;
-  }
 
-  getOverview() {
-    const info = {
-      tables: { added: 0, deleted: 0, modified: 0 },
-      columns: { added: 0, deleted: 0, modified: 0 }
-    };
-    for (const table of this.tables) {
-      if (table.added) info.tables.added++;
-      else if (table.deleted) info.tables.deleted++;
-      else if (table.initialName) info.tables.modified++;
-
-      for (const column of table.columns) {
-        const linkedTable = this.tables.find((t) => (t.initialName || t.name) === column.link?.table);
-        if (table.added || column.added) info.columns.added++;
-        else if (table.deleted || column.deleted || linkedTable?.deleted) info.columns.deleted++;
-        else if (column.initialName) info.columns.modified++;
-      }
+    if (isColumnDeleted || isTableDeleted) {
+      return `  - ${chalk.red.strikethrough(column.originalName)} (${metadata})`;
     }
-
-    const tablesOverview = [
-      info.tables.added ? `${chalk.green(`+${info.tables.added}`)}` : null,
-      info.tables.deleted ? `${chalk.red(`-${info.tables.deleted}`)}` : null,
-      info.tables.modified ? `${chalk.yellow(`·${info.tables.modified}`)}` : null
-    ].filter(Boolean);
-
-    const columnsOverview = [
-      info.columns.added ? `${chalk.green(`+${info.columns.added}`)}` : null,
-      info.columns.deleted ? `${chalk.red(`-${info.columns.deleted}`)}` : null,
-      info.columns.modified ? `${chalk.yellow(`·${info.columns.modified}`)}` : null
-    ].filter(Boolean);
-
-    const messages = [
-      tablesOverview.length > 0 ? `${tablesOverview.join(', ')} tables` : null,
-      columnsOverview.length > 0 ? `${columnsOverview.join(', ')} columns` : null
-    ].filter(Boolean);
-
-    return messages.join(', ');
+    // Checking names are not the same because it is possible only nullable or unique changed
+    if (maybeNewColumnName && maybeNewColumnName !== column.originalName) {
+      return ` - ${chalk.yellow.strikethrough(column.originalName)} -> ${chalk.bold(maybeNewColumnName)} (${metadata})`;
+    }
+    return `- ${chalk.cyan(column.originalName)} (${metadata})`;
   }
 
-  async showColumnEdit(column: EditableColumn | null, table: EditableTable) {
-    this.clear();
-    const isColumnAdded = !column || column?.added;
-    const template = `
-           name: \${name}
-           type: \${type}
-           link: \${link}
-vectorDimension: \${vectorDimension}
-    description: \${description}
-         unique: \${unique}
-        notNull: \${notNull}
-   defaultValue: \${defaultValue}`;
+  renderTableNameEdited(tableName: string) {
+    return this.tableEdits.find((edit) => edit.name === tableName)?.newName;
+  }
 
-    const initial: ColumnEditState['initial'] = {
-      name: column?.name || '',
-      type: column?.type || '',
-      link: isColumnAdded ? '' : column?.link?.table,
-      vectorDimension: column?.vector?.dimension ? `${column?.vector?.dimension}` : undefined,
-      notNull: column?.notNull ? 'true' : 'false',
-      defaultValue: column?.defaultValue || '',
-      unique: column?.unique ? 'true' : 'false',
-      description: isColumnAdded ? '' : column?.description
-    };
-    const snippet: any = new Snippet({
-      message: column?.name || 'a new column',
-      initial,
-      fields: [
-        {
-          name: 'name',
-          message: 'The column name',
-          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
-            if (!identifier.test(value || '')) {
-              return snippet.styles.danger(`Column name has to match ${identifier}`);
-            }
-            return true;
-          }
-        },
-        {
-          name: 'type',
-          message: `The column type (${typesList})`,
-          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
-            if (!isColumnAdded && value !== state.initial.type) {
-              return `Cannot change the type of existing columns`;
-            }
-            if (!value || !types.includes(value)) {
-              return `Type needs to be one of ${typesList}`;
-            }
-            return true;
-          }
-        },
-        {
-          name: 'link',
-          message: 'Linked table. Only for columns that are links',
-          validate(
-            value: string | undefined,
-            state: ColumnEditState,
-            item: { value: string | undefined },
-            index: number
-          ) {
-            if (!isColumnAdded && value !== state.initial.link) {
-              return `Cannot change the link of existing link columns`;
-            }
-            if (state.values.type === 'link') {
-              if (!value) {
-                return 'The link field must be filled for columns of type `link`';
-              }
-            } else if (value) {
-              return 'The link field must not be filled unless the type of the column is `link`';
-            }
-            return true;
-          }
-        },
-        {
-          name: 'vectorDimension',
-          message: 'Vector Dimension. Only for columns that are vectors',
-          validate(
-            value: string | undefined,
-            state: ColumnEditState,
-            item: { value: string | undefined },
-            index: number
-          ) {
-            if (!isColumnAdded && value !== state.initial.vectorDimension) {
-              return `Cannot change the vector dimension of existing vector columns`;
-            }
-            if (state.values.type === 'vector') {
-              if (!value) {
-                return 'The vectorDimension field must be filled for columns of type `vector`';
-              }
-            } else if (value) {
-              return 'The vectorDimension field must not be filled unless the type of the column is `vector`';
-            }
-            return true;
-          }
-        },
-        {
-          name: 'unique',
-          message: 'Whether the column is unique (true/false)',
-          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
-            if (!isColumnAdded && parseBoolean(value) !== parseBoolean(state.initial.unique)) {
-              return `Cannot change unique for existing columns`;
-            }
-            const validateOptionalBooleanResult = validateOptionalBoolean(value);
-            if (validateOptionalBooleanResult !== true) {
-              return validateOptionalBooleanResult;
-            }
-            const validateUniqueResult = validateUnique(value, state);
-            if (validateUniqueResult !== true) {
-              return validateUniqueResult;
-            }
-            return true;
-          }
-        },
-        {
-          name: 'notNull',
-          message: 'Whether the column is not nullable (true/false)',
-          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
-            if (!isColumnAdded && parseBoolean(value) !== parseBoolean(state.initial.notNull)) {
-              return `Cannot change notNull for existing columns`;
-            }
-            const validateOptionalBooleanResult = validateOptionalBoolean(value);
-            if (validateOptionalBooleanResult !== true) {
-              return validateOptionalBooleanResult;
-            }
-            const validateNotNullResult = validateNotNull(value, state);
-            if (validateNotNullResult !== true) {
-              return validateNotNullResult;
-            }
-            return true;
-          }
-        },
-        {
-          name: 'description',
-          message: 'An optional column description',
-          validate(value: string | undefined, state: ColumnEditState, item: unknown, index: number) {
-            if (!isColumnAdded && value !== state.initial.description) {
-              return `Cannot change description for existing columns`;
-            }
-            return true;
-          }
-        },
-        {
-          name: 'defaultValue',
-          message: 'Default value',
-          validate(rawDefaultValue: string | undefined, state: ColumnEditState, item: unknown, index: number) {
-            if (
-              !isColumnAdded &&
-              state.values.type &&
-              parseDefaultValue(state.values.type, rawDefaultValue) !==
-                parseDefaultValue(state.values.type, state.initial.defaultValue)
-            ) {
-              return `Cannot change defaultValue for existing columns`;
-            }
-            if (state.values.type) {
-              const isNotNull = parseBoolean(state.values.notNull) === true;
-              const defaultValue = parseDefaultValue(state.values.type, rawDefaultValue);
-              if (isNotNull && (!rawDefaultValue || rawDefaultValue.length === 0)) {
-                return 'defaultValue must be set for `notNull: true` columns';
-              }
-              if (rawDefaultValue && rawDefaultValue.length > 0 && defaultValue === undefined) {
-                return `Invalid defaultValue for Type: ${state.values.type}`;
-              }
-            }
-            return true;
-          }
-        }
-      ],
-      footer() {
-        return '\nUse the ↑ ↓ arrows to move across fields, enter to submit and escape to cancel.';
-      },
-      template
+  renderTableMessage(originalName: string, newTable: boolean = false) {
+    const tableEdit = this.tableEdits.find(({ name }) => name === originalName);
+    const tableDelete = this.tableDeletions.find(({ name }) => name === originalName);
+    if (tableDelete) {
+      return `• ${chalk.red.strikethrough(originalName)}`;
+    }
+    if (tableEdit) {
+      return `• ${chalk.yellow.strikethrough(originalName)} -> ${chalk.bold(
+        this.renderTableNameEdited(originalName) ?? originalName
+      )}`;
+    }
+    return newTable ? `• ${chalk.bold(originalName)}` : `• ${chalk.bold(originalName)}`;
+  }
+
+  async run(): Promise<void> {
+    const { flags } = await this.parseCommand();
+
+    const { workspace, region, database, branch } = await this.getParsedDatabaseURLWithBranch(flags.db, flags.branch);
+    this.workspace = workspace;
+    this.region = region;
+    this.database = database;
+    this.branch = branch;
+
+    const config = await Config.load();
+
+    const xata = await this.getXataClient();
+    const branchDetails = await getBranchDetailsWithPgRoll(xata, {
+      workspace,
+      region,
+      database,
+      branch
     });
+    if (!branchDetails) this.error('Could not get the schema from the current branch');
 
-    try {
-      const { values } = await snippet.run();
-      const unique = parseBoolean(values.unique);
-      const notNull = parseBoolean(values.notNull);
-      const col: Column = {
-        name: values.name,
-        type: values.type,
-        link: values.link && values.type === 'link' ? { table: values.link } : undefined,
-        vector: values.vectorDimension ? { dimension: parseInt(values.vectorDimension, 10) } : undefined,
-        unique: unique || undefined,
-        notNull: notNull || undefined,
-        defaultValue: parseDefaultValue(values.type, values.defaultValue)
-        // TODO: add description once the backend supports it
-        // description: values.description
-      };
-      if (column) {
-        if (!column.initialName && !column.added && column.name !== values.name) {
-          column.initialName = column.name;
-        }
-        Object.assign(column, col);
-        if (column.name === column.initialName) {
-          delete column.initialName;
-        }
+    if (isBranchPgRollEnabled(branchDetails)) {
+      if (flags.source) {
+        this.warn('Schema source editing is not supported yet. Please run the command without the --source flag.');
+        process.exit(0);
       } else {
-        table.columns.push({
-          ...col,
-          added: true
-        });
-        // Override the variable to use it when redefining this.selectItem below
-        column = table.columns[table.columns.length - 1];
+        this.branchDetails = branchDetails as any;
+        await this.showSchemaEdit();
       }
-    } catch (err) {
-      if (err) throw err;
-      // if not, user cancelled
-    }
-
-    this.selectItem = column;
-    await this.showSchema();
-  }
-
-  async showTableEdit(table: EditableTable | null) {
-    this.clear();
-
-    const snippet = new Snippet({
-      message: table ? table.name : 'a new table',
-      initial: {
-        name: table ? table.name : ''
-      },
-      fields: [
-        {
-          name: 'name',
-          message: 'The table name',
-          validate(value: string, state: unknown, item: unknown, index: number) {
-            if (!identifier.test(value || '')) {
-              return snippet.styles.danger(`Table name has to match ${identifier}`);
-            }
-            return true;
-          }
-        },
-        {
-          name: 'description',
-          message: 'An optional table description'
-        }
-      ],
-      footer() {
-        return '\nUse the ↑ ↓ arrows to move across fields, enter to submit and escape to cancel.';
-      },
-      template: `
-         Name: \${name}
-  Description: \${description}`
-    });
-
-    try {
-      const answer = await snippet.run();
-      if (table) {
-        if (!table.initialName && !table.added && table.name !== answer.values.name) {
-          table.initialName = table.name;
-        }
-        Object.assign(table, answer.values);
-        if (table.name === table.initialName) {
-          delete table.initialName;
-        }
-      } else {
-        this.tables.push({
-          ...answer.values,
-          columns: [],
-          added: true
-        });
-        // Override the variable to use it when redefining this.selectItem below
-        table = this.tables[this.tables.length - 1];
-      }
-    } catch (err) {
-      if (err) throw err;
-      // if not, user cancelled
-    }
-
-    this.selectItem = table;
-    await this.showSchema();
-  }
-
-  async deleteTable(table: EditableTable) {
-    if (table.added) {
-      const index = this.tables.indexOf(table);
-      this.tables.splice(index, 1);
-      // TODO: select other table?
     } else {
-      table.deleted = !table.deleted;
-      this.selectItem = table;
+      const editOld = new EditSchemaOld(this.argv, config);
+      editOld.launch({
+        workspace: this.workspace,
+        region: this.region,
+        database: this.database,
+        branch: this.branch
+      });
     }
-
-    this.clear();
-    await this.showSchema();
-  }
-
-  async deleteColumn(column: EditableColumn, table: EditableTable) {
-    if (column.added) {
-      const index = table.columns.indexOf(column);
-      table.columns.splice(index, 1);
-      // TODO: select other column?
-      this.selectItem = table;
-    } else {
-      column.deleted = !column.deleted;
-      this.selectItem = column;
-    }
-
-    this.clear();
-    await this.showSchema();
   }
 
   clear() {
@@ -696,194 +436,744 @@ vectorDimension: \${vectorDimension}
     process.stdout.write('\x1b[0f');
   }
 
-  async migrate() {
+  footer() {
+    return '\nUse the ↑ ↓ arrows to move across fields, enter to submit and escape to cancel.';
+  }
+
+  async toggleTableDelete({ initialTableName }: { initialTableName: string }) {
+    const indexOfExistingEntry = this.tableDeletions.findIndex(({ name }) => name === initialTableName);
+    indexOfExistingEntry > -1
+      ? this.tableDeletions.splice(indexOfExistingEntry, 1)
+      : this.tableDeletions.push({ name: initialTableName });
+  }
+
+  async toggleColumnDelete({ column }: { column: EditColumnPayload['column'] }) {
+    const existingEntryIndex = this.columnDeletions[column.tableName]?.findIndex(
+      (name) => name === column.originalName
+    );
+    if (existingEntryIndex > -1) {
+      this.columnDeletions[column.tableName].splice(existingEntryIndex, 1);
+    } else {
+      !this.columnDeletions[column.tableName]
+        ? (this.columnDeletions[column.tableName] = [column.originalName])
+        : this.columnDeletions[column.tableName].push(column.originalName);
+    }
+  }
+
+  async showColumnEdit(column: EditColumnPayload['column']) {
     this.clear();
-
-    if (!this.branchDetails) this.error('Branch details are not available');
-
-    const prompt = new Confirm({
-      name: 'question',
-      message: `Are you sure you want to run the migration? ${this.getOverview()}`
+    const template = `
+      name: \${name},
+      column: ${column.originalName},
+      nullable: \${nullable},
+      unique: \${unique},
+      `;
+    // TODO support default https://github.com/xataio/pgroll/issues/327
+    // TODO support changing type https://github.com/xataio/pgroll/issues/328
+    const snippet = new Snippet({
+      message: 'Edit a column',
+      fields: [
+        {
+          name: 'name',
+          message: 'The name of the column',
+          initial: this.getColumnNameEdit({ column }) ?? column.originalName,
+          validate: this.validateColumnName
+        },
+        {
+          name: 'nullable',
+          message: `Whether the column can be null.`,
+          initial: this.getColumnNullable({ column }) ? 'true' : 'false',
+          validate: this.validateColumnNullable
+        },
+        {
+          name: 'unique',
+          message: `Whether the column is unique.`,
+          initial: this.getColumnUnique({ column }) ? 'true' : 'false',
+          validate: this.validateColumnUnique
+        }
+      ],
+      footer: this.footer,
+      template
     });
 
     try {
-      const answer = await prompt.run();
-      if (!answer) {
-        await this.showSchema();
-        return;
+      const { values } = await snippet.run();
+      const existingEntry = this.columnEdits[column.tableName]?.[column.originalName];
+
+      const unchanged =
+        column.originalName === values.name &&
+        column.nullable === parseBoolean(values.nullable) &&
+        column.unique === parseBoolean(values.unique);
+      if (unchanged && existingEntry) {
+        delete this.columnEdits[column.tableName][column.originalName];
+      } else if (!unchanged && existingEntry) {
+        existingEntry.name = values.name;
+        existingEntry.nullable = parseBoolean(values.nullable) ?? true;
+        existingEntry.unique = parseBoolean(values.unique) ?? false;
+      } else if (!unchanged && !existingEntry) {
+        if (!this.columnEdits[column.tableName]) this.columnEdits[column.tableName] = {};
+        if (!this.columnEdits[column.tableName][column.originalName])
+          this.columnEdits[column.tableName][column.originalName] = {} as any;
+        this.columnEdits[column.tableName][column.originalName] = formatSchemaColumnToColumnData({
+          column: {
+            ...column,
+            ...values,
+            originalName: column.originalName,
+            notNull: parseBoolean(values.nullable) === false ? true : false,
+            unique: parseBoolean(values.unique) ? true : false
+          },
+          tableName: column.tableName
+        });
       }
+      await this.showSchemaEdit();
     } catch (err) {
       if (err) throw err;
       // User cancelled
-      await this.showSchema();
+      await this.showSchemaEdit();
       return;
     }
+  }
 
-    const workspace = this.workspace;
-    const region = this.region;
-    const database = this.database;
+  async showAddColumn({
+    tableName,
+    column
+  }: {
+    tableName: AddColumnPayload['tableName'];
+    column: AddColumnPayload['column'];
+  }) {
+    this.clear();
+    const template = `
+        name: \${name},
+        nullable: \${nullable},
+        unique: \${unique},
+        type: \${type},
+        default: \${default}
+        link: \${link}
+        vectorDimension: \${vectorDimension}
+        defaultPublicAccess: \${defaultPublicAccess}
+      },
+      table: ${tableName}`;
 
-    const xata = await this.getXataClient();
-    const branch = this.branchDetails.branchName;
-
-    const edits: Schemas.SchemaEditScript = {
-      operations: []
-    };
-
-    // Create tables, update tables, delete columns and update columns
-    for (const table of this.tables) {
-      if (table.added) {
-        this.info(`Creating table ${table.name}`);
-        edits.operations.push({
-          addTable: {
-            table: table.name
+    const snippet = new Snippet({
+      message: 'Add a column',
+      fields: [
+        {
+          name: 'name',
+          message: 'The name of the column',
+          validate: this.validateColumnName
+        },
+        {
+          name: 'type',
+          message: `The type of the column ${xataTypes}`,
+          validate: (value: string) => {
+            if (value === undefined) return 'Type cannot be undefined';
+            if (emptyString(value)) return 'Type cannot be empty';
+            if (!xataTypes.includes(value))
+              return 'Invalid xata type. Please specify one of the following: ' + xataTypes;
           }
-        });
-        // await xata.tables.createTable({ workspace, region, database, branch, table: table.name });
-      } else if (table.initialName) {
-        this.info(`Renaming table ${table.initialName} to ${table.name}`);
-        edits.operations.push({
-          renameTable: {
-            newName: table.name,
-            oldName: table.initialName
+        },
+        {
+          name: 'nullable',
+          message: `Whether the column can be null.`,
+          validate: this.validateColumnNullable
+        },
+        {
+          name: 'unique',
+          message: `Whether the column is unique.`,
+          validate: this.validateColumnUnique
+        },
+        {
+          name: 'default',
+          message: `The default for the column.`
+        },
+        {
+          name: 'link',
+          message: 'Linked table. Only required for columns that are links. Will be ignored if type is not link.',
+          validate: (value: string, state: ValidationState) => {
+            const columnType = state.items.find(({ name }) => name === 'type')?.input;
+            if ((value === undefined || emptyString(value)) && columnType === 'link')
+              return 'Cannot be empty string when the type is link';
+            return true;
           }
-        });
-      }
-
-      for (const column of table.columns) {
-        const linkedTable = this.tables.find((t) => (t.initialName || t.name) === column.link?.table);
-        if (column.deleted || linkedTable?.deleted) {
-          this.info(`Deleting column ${table.name}.${column.name}`);
-          edits.operations.push({
-            removeColumn: {
-              table: table.name,
-              column: column.name
-            }
-          });
-        } else if (column.initialName) {
-          this.info(`Renaming column ${table.name}.${column.initialName} to ${table.name}.${column.name}`);
-          edits.operations.push({
-            renameColumn: {
-              table: table.name,
-              newName: column.name,
-              oldName: column.initialName
-            }
-          });
+        },
+        {
+          name: 'vectorDimension',
+          message: 'Vector dimension. Only required for vector columns. Will be ignored if type is not vector.',
+          validate: (value: string, state: ValidationState) => {
+            const columnType = state.items.find(({ name }) => name === 'type')?.input;
+            if ((value === undefined || emptyString(value)) && columnType === 'vector')
+              return 'Cannot be empty string when the type is vector';
+            return true;
+          }
+        },
+        {
+          name: 'defaultPublicAccess',
+          message:
+            'Default public access. Only required for file or file[] columns. Will be ignored if type is not file or file[].',
+          validate: (value: string, state: ValidationState) => {
+            const columnType = state.items.find(({ name }) => name === 'type')?.input;
+            if ((value === undefined || emptyString(value)) && (columnType === 'file' || columnType === 'file[]'))
+              return 'Cannot be empty string when the type is file or file[]. Please input true or false';
+            return true;
+          }
         }
-      }
-    }
-
-    // Delete tables and create columns
-    for (const table of this.tables) {
-      if (table.deleted) {
-        this.info(`Deleting table ${table.name}`);
-        edits.operations.push({
-          removeTable: {
-            table: table.name
-          }
-        });
-        continue;
-      }
-
-      for (const column of table.columns) {
-        if (table.added || column.added) {
-          this.info(`Adding column ${table.name}.${column.name}`);
-          edits.operations.push({
-            addColumn: {
-              table: table.name,
-              column: {
-                name: column.name,
-                type: column.type,
-                link: column.link,
-                vector: column.vector,
-                unique: column.unique,
-                notNull: column.notNull,
-                defaultValue: column.defaultValue
+      ],
+      footer: this.footer,
+      template
+    });
+    try {
+      const { values } = await snippet.run();
+      if (!this.columnAdditions[tableName]) this.columnAdditions[tableName] = {};
+      if (!this.columnAdditions[tableName][values.name]) this.columnAdditions[tableName][values.name] = {} as any;
+      this.columnAdditions[tableName][values.name] = formatSchemaColumnToColumnData({
+        column: {
+          ...column,
+          ...values,
+          originalName: column.originalName,
+          'file[]':
+            values.type === 'file[]'
+              ? { defaultPublicAccess: parseBoolean(values.defaultPublicAccess) ?? false }
+              : undefined,
+          file:
+            values.type === 'file'
+              ? { defaultPublicAccess: parseBoolean(values.defaultPublicAccess) ?? false }
+              : undefined,
+          vector: values.vectorDimension
+            ? {
+                dimension: values.vectorDimension
               }
-            }
-          });
-        }
-      }
+            : undefined,
+          link: values.link
+            ? {
+                table: values.link
+              }
+            : undefined,
+          defaultValue: values.default,
+          notNull: parseBoolean(values.nullable) === false ? true : false,
+          unique: parseBoolean(values.unique) ? true : false
+        },
+        tableName: column.tableName
+      });
+      await this.showSchemaEdit();
+    } catch (err) {
+      if (err) throw err;
+      // User cancelled
+      await this.showSchemaEdit();
+      return;
     }
+  }
 
-    await xata.api.migrations.applyBranchSchemaEdit({
-      workspace,
-      region,
-      database,
-      branch,
-      edits
+  async showAddTable({ name }: { name: AddTablePayload['table']['name'] }) {
+    this.clear();
+    const snippet = new Snippet({
+      message: 'Add a table',
+      initial: { name: name },
+      fields: [
+        {
+          name: 'name',
+          message: 'The table name',
+          validate: this.validateTableName
+        }
+      ],
+      footer: this.footer,
+      template: `
+       Name: \${name}
+       `
     });
 
-    this.success('Migration completed!');
+    try {
+      const answer: { values: { name: string } } = await snippet.run();
+      this.tableAdditions.push({ name: answer.values.name });
+    } catch (err) {
+      if (err) throw err;
+    }
+    await this.showSchemaEdit();
   }
+
+  async showTableEdit({ initialTableName }: { initialTableName: string }) {
+    this.clear();
+    const snippet = new Snippet({
+      message: 'Edit table name',
+      fields: [
+        {
+          name: 'name',
+          message: 'The table name',
+          initial: this.renderTableNameEdited(initialTableName) ?? initialTableName,
+          validate: this.validateTableName
+        }
+      ],
+      footer: this.footer,
+      template: `
+         Name: \${name}
+         `
+    });
+
+    try {
+      const answer: { values: { name: string } } = await snippet.run();
+      const existingEntry = this.tableEdits.find(({ name }) => name === initialTableName);
+      const changed = answer.values.name !== initialTableName;
+      if (existingEntry && changed) {
+        existingEntry.newName = answer.values.name;
+      } else if (existingEntry && !changed) {
+        this.tableEdits = this.tableEdits.filter(({ name }) => name !== initialTableName);
+      } else if (!existingEntry && changed) {
+        this.tableEdits.push({ name: initialTableName, newName: answer.values.name });
+      }
+      await this.showSchemaEdit();
+    } catch (err) {
+      if (err) throw err;
+      // User cancelled
+      await this.showSchemaEdit();
+      return;
+    }
+  }
+
+  validateTableName = (value: string, state: ValidationState) => {
+    if (value === undefined) return 'Name cannot be undefined';
+    if (emptyString(value)) return 'Name cannot be empty';
+    if (value === state.fields.find((field) => field.name === 'name')?.initial) return true;
+    return !emptyString(value);
+  };
+
+  validateColumnName = (value: string) => {
+    if (value === undefined) return 'Name cannot be undefined';
+    if (emptyString(value)) return 'Name cannot be empty';
+    return true;
+  };
+  validateColumnNullable = (value: string) => {
+    if (parseBoolean(value) === undefined) return 'Invalid value. Nullable field must be a boolean';
+    return true;
+  };
+  validateColumnUnique = (value: string) => {
+    if (parseBoolean(value) === undefined) return 'Invalid value. Unique field must be a boolean';
+    return true;
+  };
 }
+
+const editTableDisabled = (name: string, tableDeletions: DeleteTablePayload[]) => {
+  return tableDeletions.some(({ name: tableName }) => tableName === name);
+};
+
+/** Necessary because disabling prevents the user from "undeleting" a column */
+const editColumnDisabled = (column: EditColumnPayload['column'], columnDeletions: DeleteColumnPayload) => {
+  return columnDeletions[column.tableName]?.includes(column.originalName);
+};
+
+const validateMigration = (migration: object) => {
+  return PgRollMigrationDefinition.safeParse(migration);
+};
+
+const emptyString = (value: string) => {
+  return value === '';
+};
+
+const createSpace = (): SelectChoice => {
+  return { name: { type: 'space' }, message: ' ', role: 'heading' };
+};
+
+export const editsToMigrations = (command: EditSchema) => {
+  // Duplicating here because if we remove items from class state they dont show on UI
+  // TODO better way to deep copy? If not surround with try catch
+
+  let localTableAdditions: (AddTablePayload['table'] & { columns?: AddColumnPayload['column'][] })[] = JSON.parse(
+    JSON.stringify(command.tableAdditions)
+  );
+  let localTableEdits: EditTablePayload['table'][] = JSON.parse(JSON.stringify(command.tableEdits));
+  let localTableDeletions: DeleteTablePayload[] = JSON.parse(JSON.stringify(command.tableDeletions));
+
+  const localColumnAdditions: ColumnAdditions = JSON.parse(JSON.stringify(command.columnAdditions));
+  const localColumnEdits: ColumnEdits = JSON.parse(JSON.stringify(command.columnEdits));
+  const localColumnDeletions: DeleteColumnPayload = JSON.parse(JSON.stringify(command.columnDeletions));
+
+  const isTableDeleted = (name: string) => {
+    return localTableDeletions.find(({ name: tableName }) => tableName === name);
+  };
+
+  // Remove column edits, additions and deletions for tables that are deleted
+  for (const tableName of Object.keys({
+    ...localColumnAdditions,
+    ...localColumnEdits,
+    ...localColumnDeletions
+  })) {
+    if (isTableDeleted(tableName)) {
+      delete localColumnAdditions[tableName];
+      delete localColumnEdits[tableName];
+      delete localColumnDeletions[tableName];
+    }
+  }
+
+  // If column was deleted then remove edits, and additions and deletions if new
+  for (const [tableName, columns] of Object.entries(localColumnDeletions)) {
+    for (const columnName of columns) {
+      const columnWasEdited = localColumnEdits[tableName]?.[columnName];
+      if (columnWasEdited) {
+        // Remove the edit
+        delete localColumnEdits[tableName][columnName];
+      }
+      const columnWasAdded = localColumnAdditions[tableName]?.[columnName];
+      if (columnWasAdded) {
+        // Remove deletions
+        localColumnDeletions[tableName] = localColumnDeletions[tableName].filter((col) => col !== columnName);
+        // Remove the addition
+        delete localColumnAdditions[tableName][columnName];
+      }
+    }
+  }
+
+  // Remove table edits, additions and deletions for tables that are newly added and also deleted
+  localTableAdditions = localTableAdditions.filter(({ name }) => !isTableDeleted(name));
+  localTableEdits = localTableEdits.filter(({ name }) => !isTableDeleted(name));
+  localTableDeletions = localTableDeletions.filter(
+    ({ name }) => !command.tableAdditions.find((addition) => addition.name === name)
+  );
+
+  const editsToNewTable = localTableEdits.filter(({ name }) =>
+    localTableAdditions.find((addition) => addition.name === name)
+  );
+  localTableEdits = localTableEdits.filter(({ name }) => !editsToNewTable.find((edit) => edit.name === name));
+  localTableAdditions = localTableAdditions.map((addition) => {
+    const edit = editsToNewTable.find(({ name }) => name === addition.name);
+    return edit
+      ? {
+          name: edit.newName
+        }
+      : addition;
+  });
+
+  // Bundle edit columns into new columns
+  for (const [tableName, columns] of Object.entries(localColumnEdits)) {
+    for (const [columnName, column] of Object.entries(columns)) {
+      const columnIsNew = localColumnAdditions[tableName]?.[columnName];
+      if (columnIsNew) {
+        // Add to column additions
+        localColumnAdditions[tableName][columnName] = {
+          ...column,
+          name: column.name,
+          unique: column.unique ?? false,
+          nullable: column.nullable ?? true
+        };
+        // Delete column from edits
+        delete localColumnEdits[tableName][columnName];
+        if (Object.keys(localColumnEdits[tableName]).length === 0) {
+          delete localColumnEdits[tableName];
+        }
+      }
+    }
+  }
+
+  // Bundle new columns into new tables
+  for (const [tableName, columns] of Object.entries(localColumnAdditions)) {
+    const tableIsNew = localTableAdditions.find((addition) => addition.name === tableName);
+    if (tableIsNew) {
+      for (const [columnName, column] of Object.entries(columns)) {
+        const localTableAddition = localTableAdditions.find((addition) => addition.name === tableName);
+        if (localTableAddition) {
+          if (!localTableAddition?.columns) localTableAddition.columns = [];
+          // Add to table additions
+          localTableAddition?.columns.push(column);
+        }
+        // Delete from column additions
+        delete localColumnAdditions[tableName][columnName];
+      }
+      delete localColumnAdditions[tableName];
+    }
+  }
+
+  const columnDeletions: { drop_column: OpDropColumn }[] = Object.entries(localColumnDeletions)
+    .map((entry) => {
+      return entry[1].map((e) => {
+        return {
+          drop_column: {
+            column: e,
+            table: entry[0]
+          }
+        };
+      });
+    })
+    .flat();
+
+  const tableDeletions: { drop_table: OpDropTable }[] = localTableDeletions.map(({ name }) => {
+    return {
+      drop_table: {
+        name: name
+      }
+    };
+  });
+
+  const columnAdditions: { add_column: OpAddColumn }[] = [];
+  for (const [_, columns] of Object.entries(localColumnAdditions)) {
+    columnAdditions.push(
+      ...formatColumnDataToPgroll(Object.values(columns)).map(({ column, tableName, up }) => {
+        return {
+          add_column: {
+            up,
+            column,
+            table: tableName
+          }
+        };
+      })
+    );
+  }
+
+  const tableAdditions: { create_table: OpCreateTable }[] = localTableAdditions.map(({ name, columns }) => {
+    return {
+      create_table: {
+        name: name,
+        columns: formatColumnDataToPgroll(columns ?? []).map(({ column }) => column)
+      }
+    };
+  });
+
+  const tableEdits: { rename_table: OpRenameTable }[] = localTableEdits.map(({ name, newName }) => {
+    return {
+      rename_table: {
+        from: name,
+        to: newName
+      }
+    };
+  });
+
+  const columnEdits: ({ alter_column: OpAlterColumn } | { drop_constraint: OpDropConstraint })[] = [];
+  for (const [_, columns] of Object.entries(localColumnEdits)) {
+    for (const data of Object.values(columns)) {
+      const { name, nullable, unique, originalName } = data;
+      formatColumnDataToPgroll([data]).map(({ tableName }) => {
+        const originalField = command.branchDetails?.schema.tables
+          .find((table) => table.name === tableName)
+          ?.columns.find((col) => col.name === originalName);
+        if (!originalField) {
+          throw new Error(`Could not find original field ${originalName} in table ${tableName}`);
+        }
+
+        const nameChanged = name !== originalField.name;
+        const nullableChanged = nullable !== !originalField.notNull;
+        const uniqueAdded = unique !== originalField.unique && unique === true;
+        const uniqueRemoved = unique !== originalField.unique && unique === false;
+
+        if (uniqueRemoved) {
+          const table = command.branchDetails?.schema.tables.find((table) => tableName === table.name);
+          const uniqueConstraints: { name: string }[] = Object.values((table as any)?.uniqueConstraints ?? {});
+          const uniqueConstraintName = uniqueConstraints.find(
+            (constraint: any) => constraint.columns.length === 1 && constraint.columns[0] === originalField.name
+          )?.name;
+
+          const maybeDropStatement =
+            uniqueRemoved && uniqueConstraintName
+              ? {
+                  drop_constraint: {
+                    table: tableName,
+                    column: originalField.name,
+                    name: uniqueConstraintName,
+                    up: `"${originalField.name}"`,
+                    down: `"${originalField.name}"`
+                  }
+                }
+              : undefined;
+
+          if (maybeDropStatement) {
+            columnEdits.push(maybeDropStatement);
+          }
+        }
+
+        const uniqueValue = uniqueAdded
+          ? {
+              unique: {
+                name: `${tableName}_${originalField.name}_unique`
+              },
+              up: `"${originalField.name}"`,
+              down: `"${originalField.name}"`
+            }
+          : undefined;
+
+        const nullValue = nullableChanged
+          ? {
+              up:
+                nullable === false
+                  ? `(SELECT CASE WHEN "${originalField.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
+                      originalField.type,
+                      originalField.defaultValue
+                    )} ELSE "${originalField.name}" END)`
+                  : `"${originalField.name}"`,
+              down:
+                nullable === true
+                  ? `"${originalField.name}"`
+                  : `(SELECT CASE WHEN "${originalField.name}" IS NULL THEN ${xataColumnTypeToZeroValue(
+                      originalField.type,
+                      originalField.defaultValue
+                    )} ELSE "${originalField.name}" END)`
+            }
+          : undefined;
+
+        const alterStatement = {
+          alter_column: {
+            column: originalField.name,
+            table: tableName,
+            name: nameChanged ? name : undefined,
+            nullable: nullableChanged ? nullable : undefined,
+            ...uniqueValue,
+            ...nullValue
+          }
+        };
+
+        if (nullableChanged || nameChanged || uniqueAdded) {
+          columnEdits.push(alterStatement);
+        }
+      });
+    }
+  }
+
+  return [...columnDeletions, ...tableDeletions, ...tableAdditions, ...columnAdditions, ...columnEdits, ...tableEdits];
+};
 
 function parseBoolean(value?: string) {
   if (!value) return undefined;
   const val = value.toLowerCase();
   if (['true', 't', '1', 'y', 'yes'].includes(val)) return true;
   if (['false', 'f', '0', 'n', 'no'].includes(val)) return false;
-  return null;
 }
 
-function validateOptionalBoolean(value?: string) {
-  const bool = parseBoolean(value);
-  if (bool === null) {
-    return 'Please enter a boolean value (e.g. yes, no, true, false) or leave it empty';
-  }
-  return true;
-}
+const formatSchemaColumnToColumnData = ({
+  column,
+  tableName
+}: {
+  column: Schemas.Column & { originalName: string };
+  tableName: string;
+}): EditColumnPayload['column'] => {
+  return {
+    name: column.name,
+    unique: column.unique ?? false,
+    type: column.type,
+    nullable: column.notNull === true ? false : true,
+    tableName: tableName,
+    originalName: column.originalName,
+    defaultValue: column.defaultValue ?? undefined,
+    vector: column.vector ? { dimension: column.vector.dimension } : undefined,
+    link: column.type === 'link' && column.link?.table ? { table: column.link.table } : undefined,
+    file: column.type === 'file' ? { defaultPublicAccess: column.file?.defaultPublicAccess ?? false } : undefined,
+    'file[]':
+      column.type === 'file[]' ? { defaultPublicAccess: column['file[]']?.defaultPublicAccess ?? false } : undefined
+  };
+};
 
-function validateUnique(uniqueValue: string | undefined, state: ColumnEditState) {
-  const isUnique = parseBoolean(uniqueValue);
-  if (isUnique && state.values.type && uniqueUnsupportedTypes.includes(state.values.type)) {
-    return `Column type \`${state.values.type}\` does not support \`unique: true\``;
-  }
-  if (isUnique && parseBoolean(state.values.notNull)) {
-    return 'Column cannot be both `unique: true` and `notNull: true`';
-  }
-  if (isUnique && state.values.defaultValue) {
-    return 'Column cannot be both `unique: true` and have a `defaultValue` set';
-  }
-  return true;
-}
-
-function validateNotNull(notNullValue: string | undefined, state: ColumnEditState) {
-  const isNotNull = parseBoolean(notNullValue);
-  if (isNotNull && state.values.type && notNullUnsupportedTypes.includes(state.values.type)) {
-    return `Column type \`${state.values.type}\` does not support \`notNull: true\``;
-  }
-
-  return true;
-}
-
-function parseDefaultValue(type: string, val?: string): string | undefined {
-  if (val === undefined || defaultValueUnsupportedTypes.includes(type)) {
-    return undefined;
-  }
-  const num = String(val).length > 0 ? +val : undefined;
-
-  if (['text', 'string'].includes(type)) {
-    return val === '' ? undefined : String(val);
-  } else if (type === 'int') {
-    return Number.isSafeInteger(num) && val !== '' ? String(num) : undefined;
-  } else if (type === 'float') {
-    return Number.isFinite(num) && val !== '' ? String(num) : undefined;
-  } else if (type === 'bool') {
-    const booleanValue = parseBoolean(val);
-    return !isNil(booleanValue) ? String(booleanValue) : undefined;
-  } else if (type === 'email') {
-    if (!isValidEmail(val)) {
-      return undefined;
+const formatColumnDataToPgroll = (
+  columns: AddColumnPayload['column'][]
+): { column: OpAddColumn['column']; tableName: string; up?: string }[] => {
+  return columns.map((column) => ({
+    tableName: column.tableName,
+    up: requiresUpArgument(column.nullable === false, column.defaultValue)
+      ? xataColumnTypeToZeroValue(column.type as any, column.defaultValue)
+      : undefined,
+    column: {
+      name: column.name,
+      type: xataColumnTypeToPgRoll(column.type as any),
+      references:
+        column.type === 'link'
+          ? generateLinkReference({ column: column.name, table: column.link?.table ?? '' })
+          : undefined,
+      default:
+        column.defaultValue !== null && column.defaultValue !== undefined ? `'${column.defaultValue}'` : undefined,
+      nullable: parseBoolean(String(column.nullable)) ?? true,
+      unique: parseBoolean(String(column.unique)) ?? false,
+      check: xataColumnTypeToPgRollConstraint(column as any, column.tableName),
+      comment: xataColumnTypeToPgRollComment(column as any)
     }
-    return val;
-  } else if (type === 'datetime') {
-    // Date fields have special values
-    if (['now'].includes(val)) return val;
+  }));
+};
 
-    const date = new Date(val);
-    return isNaN(date.getTime()) ? undefined : date.toISOString();
-  } else {
-    return undefined;
-  }
-}
+export type BranchSchemaFormatted =
+  | {
+      schema: {
+        tables: {
+          name: string;
+          uniqueConstraints: Schemas.BranchSchema['tables'][number]['uniqueConstraints'];
+          checkConstraints: Schemas.BranchSchema['tables'][number]['checkConstraints'];
+          foreignKeys: Schemas.BranchSchema['tables'][number]['foreignKeys'];
+          columns: {
+            name: string;
+            type: string;
+            unique: boolean;
+            notNull: boolean;
+            defaultValue: any;
+            comment: string;
+          }[];
+        }[];
+      };
+    }
+  | undefined;
+
+export type ColumnData = {
+  name: string;
+  type: string;
+  unique: boolean;
+  nullable: boolean;
+  defaultValue?: string;
+  vector?: {
+    dimension: number;
+  };
+  originalName: string;
+  tableName: string;
+  link?: {
+    table: string;
+  };
+  file?: {
+    defaultPublicAccess: boolean;
+  };
+  'file[]'?: {
+    defaultPublicAccess: boolean;
+  };
+};
+
+export type AddTablePayload = {
+  type: 'add-table';
+  table: {
+    name: string;
+  };
+};
+
+export type EditTablePayload = {
+  type: 'edit-table';
+  table: {
+    name: string;
+    newName: string;
+  };
+};
+
+export type DeleteTablePayload = {
+  name: string;
+};
+
+export type AddColumnPayload = {
+  type: 'add-column';
+  tableName: string;
+  column: ColumnData;
+};
+
+export type EditColumnPayload = {
+  type: 'edit-column';
+  column: ColumnData;
+};
+
+export type DeleteColumnPayload = { [tableName: string]: string[] };
+
+export type FormatPayload = {
+  type: 'space' | 'migrate' | 'schema';
+};
+
+export type SelectChoice = {
+  name: FormatPayload | AddTablePayload | EditTablePayload | AddColumnPayload | EditColumnPayload;
+  message: string;
+  role?: string;
+  choices?: SelectChoice[];
+  disabled?: boolean;
+  hint?: string;
+};
+
+export type ValidationState = {
+  values: { name: string };
+  items: { name: string; input: string }[];
+  fields: { name: string; initial: string }[];
+};
+
+export type ColumnAdditions = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
+
+export type ColumnEdits = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
