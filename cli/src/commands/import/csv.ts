@@ -89,7 +89,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     file: Args.string({ description: 'The file to be imported', required: true })
   };
 
-  #pgrollEnabled = false;
+  #pgrollEnabled: boolean = false;
 
   async run(): Promise<void> {
     const { args, flags } = await this.parseCommand();
@@ -139,8 +139,8 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       throw new Error(`Failed to parse CSV file ${parseResults.errors.join(' ')}`);
     }
 
-    const { schema: existingSchema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
-    this.#pgrollEnabled = isBranchPgRollEnabled(existingSchema as any);
+    const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
+    this.#pgrollEnabled = isBranchPgRollEnabled(details);
 
     const { columns } = parseResults;
     await this.migrateSchema({ table, columns, create });
@@ -160,7 +160,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         }
         const batchRows = () => {
           if (this.#pgrollEnabled) {
-            return parseResults.data.map(({ data }) => {
+            const res = parseResults.data.map(({ data }) => {
               const formattedRow: { [k: string]: any } = {};
               const keys = Object.keys(data);
               for (const key of keys) {
@@ -169,6 +169,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
               }
               return formattedRow;
             });
+            return res;
           } else {
             return parseResults.data.map(({ data }) => data);
           }
@@ -183,7 +184,6 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
             batchRows: batchRows()
           }
         );
-
         await xata.import.importFiles(
           { database, branch, region, workspace: workspace },
           {
@@ -253,84 +253,86 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       ]
     };
 
-    const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
-      pathParams: { workspace, region, dbBranchName: `${database}:main` },
-      body: { schema: newSchema }
-    });
-    if (edits.operations.length > 0) {
-      if (this.#pgrollEnabled) {
-        const { edits } = compareSchemas(
-          {},
-          {
-            tables: {
-              [table]: {
-                name: table,
-                xataCompatible: false,
-                columns: keyBy(
-                  columns
-                    .filter((c) => !INTERNAL_COLUMNS_PGROLL.includes(c.name as any))
-                    .map((c) => {
-                      return {
-                        name: c.name,
-                        type: c.type,
-                        nullable: c.notNull !== false,
-                        default: c.defaultValue ?? null,
-                        unique: c.unique,
-                        comment: xataColumnTypeToPgRollComment(c)
-                      };
-                    }),
-                  'name'
-                )
-              }
+    if (this.#pgrollEnabled) {
+      const { edits } = compareSchemas(
+        {},
+        {
+          tables: {
+            [table]: {
+              name: table,
+              xataCompatible: false,
+              columns: keyBy(
+                columns
+                  .filter((c) => !INTERNAL_COLUMNS_PGROLL.includes(c.name as any))
+                  .map((c) => {
+                    return {
+                      name: c.name,
+                      type: c.type,
+                      nullable: c.notNull !== false,
+                      default: c.defaultValue ?? null,
+                      unique: c.unique,
+                      comment: xataColumnTypeToPgRollComment(c)
+                    };
+                  }),
+                'name'
+              )
             }
           }
-        );
-        if (edits.length > 0) {
-          const destructiveOperations = edits
-            .map((op) => {
-              if (!('drop_column' in op)) return undefined;
-              return op.drop_column.column;
-            })
-            .filter((x) => x !== undefined);
+        }
+      );
 
-          if (destructiveOperations.length > 0) {
-            const { destructiveConfirm } = await this.prompt(
-              {
-                type: 'confirm',
-                name: 'destructiveConfirm',
-                message: `WARNING: The following columns will be removed and you will lose data. ${destructiveOperations.join(
-                  ', '
-                )}. \nDo you want to continue?`
-              },
-              create
-            );
-            if (!destructiveConfirm) {
-              process.exit(1);
-            }
-          }
+      if (edits.length > 0) {
+        const destructiveOperations = edits
+          .map((op) => {
+            if (!('drop_column' in op)) return undefined;
+            return op.drop_column.column;
+          })
+          .filter((x) => x !== undefined);
 
-          const doesTableExist = existingSchema.tables.find((t) => t.name === table);
-          const { applyMigrations } = await this.prompt(
+        if (destructiveOperations.length > 0) {
+          const { destructiveConfirm } = await this.prompt(
             {
               type: 'confirm',
-              name: 'applyMigrations',
-              message: `Do you want to ${doesTableExist ? 'update' : 'create'} table: ${table} with columns ${columns
-                .map((c) => c.name)
-                .join(', ')}?`
+              name: 'destructiveConfirm',
+              message: `WARNING: The following columns will be removed and you will lose data. ${destructiveOperations.join(
+                ', '
+              )}. \nDo you want to continue?`
             },
             create
           );
-          if (!applyMigrations) {
+          if (!destructiveConfirm) {
             process.exit(1);
           }
-
-          const { jobID } = await xata.api.migrations.applyMigration({
-            pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-            body: { operations: edits }
-          });
-          await waitForMigrationToFinish(xata.api, workspace, region, database, branch, jobID);
         }
-      } else {
+
+        const doesTableExist = existingSchema.tables.find((t) => t.name === table);
+        const { applyMigrations } = await this.prompt(
+          {
+            type: 'confirm',
+            name: 'applyMigrations',
+            message: `Do you want to ${doesTableExist ? 'update' : 'create'} table: ${table} with columns ${columns
+              .map((c) => c.name)
+              .join(', ')}?`
+          },
+          create
+        );
+        if (!applyMigrations) {
+          process.exit(1);
+        }
+
+        const { jobID } = await xata.api.migrations.applyMigration({
+          pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+          body: { operations: edits, adaptTables: true }
+        });
+        await waitForMigrationToFinish(xata.api, workspace, region, database, branch, jobID);
+      }
+    } else {
+      const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
+        pathParams: { workspace, region, dbBranchName: `${database}:main` },
+        body: { schema: newSchema }
+      });
+
+      if (edits.operations.length > 0) {
         const newSchema = {
           tables: [
             ...existingSchema.tables.filter((t) => t.name !== table),
