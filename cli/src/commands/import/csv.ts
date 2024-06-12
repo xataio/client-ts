@@ -333,70 +333,49 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
       });
 
       if (edits.operations.length > 0) {
-        const newSchema = {
-          tables: [
-            ...existingSchema.tables.filter((t) => t.name !== table),
-            { name: table, columns: columns.filter((c) => c.name !== 'id') }
-          ]
-        };
-        const { edits } = await xata.api.migrations.compareBranchWithUserSchema({
-          pathParams: {
-            workspace,
-            region,
-            dbBranchName: `${database}:main`
-          },
-          body: { schema: newSchema }
-        });
-        if (edits.operations.length > 0) {
-          const destructiveOperations = edits.operations
-            .map((op) => {
-              if (!('removeColumn' in op)) return undefined;
-              return op.removeColumn.column;
-            })
-            .filter((x) => x !== undefined);
+        const destructiveOperations = edits.operations
+          .map((op) => {
+            if (!('removeColumn' in op)) return undefined;
+            return op.removeColumn.column;
+          })
+          .filter((x) => x !== undefined);
 
-          if (destructiveOperations.length > 0) {
-            const { destructiveConfirm } = await this.prompt(
-              {
-                type: 'confirm',
-                name: 'destructiveConfirm',
-                message: `WARNING: The following columns will be removed and you will lose data. ${destructiveOperations.join(
-                  ', '
-                )}. \nDo you want to continue?`
-              },
-              create
-            );
-            if (!destructiveConfirm) {
-              process.exit(1);
-            }
-          }
-
-          const doesTableExist = existingSchema.tables.find((t) => t.name === table);
-          const { applyMigrations } = await this.prompt(
+        if (destructiveOperations.length > 0) {
+          const { destructiveConfirm } = await this.prompt(
             {
               type: 'confirm',
-              name: 'applyMigrations',
-              message: `Do you want to ${doesTableExist ? 'update' : 'create'} table: ${table} with columns ${columns
-                .map((c) => c.name)
-                .join(', ')}?`
+              name: 'destructiveConfirm',
+              message: `WARNING: The following columns will be removed and you will lose data. ${destructiveOperations.join(
+                ', '
+              )}. \nDo you want to continue?`
             },
             create
           );
-          if (!applyMigrations) {
+          if (!destructiveConfirm) {
             process.exit(1);
           }
-          await xata.api.migrations.applyBranchSchemaEdit({
-            pathParams: {
-              workspace,
-              region,
-              dbBranchName: `${database}:${branch}`
-            },
-            body: { edits }
-          });
         }
 
+        const doesTableExist = existingSchema.tables.find((t) => t.name === table);
+        const { applyMigrations } = await this.prompt(
+          {
+            type: 'confirm',
+            name: 'applyMigrations',
+            message: `Do you want to ${doesTableExist ? 'update' : 'create'} table: ${table} with columns ${columns
+              .map((c) => c.name)
+              .join(', ')}?`
+          },
+          create
+        );
+        if (!applyMigrations) {
+          process.exit(1);
+        }
         await xata.api.migrations.applyBranchSchemaEdit({
-          pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
+          pathParams: {
+            workspace,
+            region,
+            dbBranchName: `${database}:${branch}`
+          },
           body: { edits }
         });
       }
