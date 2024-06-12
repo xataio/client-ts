@@ -5,7 +5,7 @@ import { mkdir, readFile, writeFile } from 'fs/promises';
 import path, { dirname, extname, relative } from 'path';
 import { BaseCommand } from '../../base.js';
 import { ProjectConfig } from '../../config.js';
-import { getBranchDetailsWithPgRoll } from '../../migrations/pgroll.js';
+import { getBranchDetailsWithPgRoll, isBranchPgRollEnabled } from '../../migrations/pgroll.js';
 
 export const languages: Record<string, 'javascript' | 'typescript'> = {
   '.js': 'javascript',
@@ -88,7 +88,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
       flags.db,
       flags.branch
     );
-    const { schema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
+    const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
     const codegenBranch = flags['inject-branch'] ? branch : undefined;
 
@@ -98,7 +98,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     const existingCode = incrementalBuild ? await readFile(output, 'utf8').catch(() => undefined) : undefined;
 
     const result = await generate({
-      schema,
+      schema: details.schema,
       databaseURL,
       language,
       moduleType,
@@ -115,6 +115,8 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     if (types && (flags.declarations || this.projectConfig?.codegen?.declarations)) {
       await writeFile(path.join(dir, 'types.d.ts'), types);
     }
+    // TODO: Remove this check when pgroll branches are enabled everywhere
+    await this.config.runHook('codegen:generated', { pgrollEnabled: isBranchPgRollEnabled(details) });
 
     this.log(`Generated Xata code to ./${relative(process.cwd(), output)}`);
   }
