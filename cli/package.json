@@ -75,7 +75,8 @@
   "oclif": {
     "bin": "xata",
     "hooks": {
-      "init": "./dist/hooks/init/compatibility"
+      "init": "./dist/hooks/init/compatibility",
+      "codegen:generated": "./dist/hooks/codegen-generated"
     },
     "macos": {
       "identifier": "io.xata.cli"
