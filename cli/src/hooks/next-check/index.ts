@@ -12,7 +12,7 @@ const hook: Hook<'next-check'> = async function (options: Record<string, unknown
     const sdkVersion = await getSdkVersion();
     if (sdkVersion && sdkVersion !== 'next') {
       this.warn(
-        "You are working with a pgroll enabled branch. We recommend using the 'next' version of the Xata SDK. (@xata.io/client@next)"
+        "You are working with a Postgres enabled branch. We recommend using the 'next' version of the Xata SDK. (@xata.io/client@next)"
       );
     }
   }
