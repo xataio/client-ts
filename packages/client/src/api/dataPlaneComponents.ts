@@ -8,6 +8,60 @@ import { dataPlaneFetch, DataPlaneFetcherExtraProps } from './dataPlaneFetcher';
 import type * as Schemas from './dataPlaneSchemas';
 import type * as Responses from './dataPlaneResponses';
 
+export type ListClusterBranchesPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type ListClusterBranchesQueryParams = {
+  /**
+   * Page size
+   */
+  page?: Schemas.PageSize;
+  /**
+   * Page token
+   */
+  token?: Schemas.PageToken;
+};
+
+export type ListClusterBranchesError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type ListClusterBranchesVariables = {
+  pathParams: ListClusterBranchesPathParams;
+  queryParams?: ListClusterBranchesQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve branches for given cluster ID
+ */
+export const listClusterBranches = (variables: ListClusterBranchesVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.ListClusterBranchesResponse,
+    ListClusterBranchesError,
+    undefined,
+    {},
+    ListClusterBranchesQueryParams,
+    ListClusterBranchesPathParams
+  >({
+    url: '/cluster/{clusterId}/branches',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type GetClusterMetricsPathParams = {
   /**
    * Cluster ID
@@ -5408,7 +5462,7 @@ export const sqlBatchQuery = (variables: SqlBatchQueryVariables, signal?: AbortS
   });
 
 export const operationsByTag = {
-  cluster: { getClusterMetrics },
+  cluster: { listClusterBranches, getClusterMetrics },
   migrations: {
     applyMigration,
     startMigration,
