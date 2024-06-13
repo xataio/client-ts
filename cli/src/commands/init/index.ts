@@ -20,8 +20,6 @@ import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
 import Pull from '../pull/index.js';
 import { isBranchPgRollEnabled } from '../../migrations/pgroll.js';
-import semver from 'semver';
-import { getSdkVersion } from '../../utils/files.js';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 
@@ -169,13 +167,7 @@ export default class Init extends BaseCommand<typeof Init> {
 
     this.log();
     if (packageManager) {
-      // Use the version in the package.json if there is one
-      const version = await getSdkVersion(path.join(process.cwd()));
-      if (version) {
-        await this.installPackage(packageManager, `@xata.io/client@${version}`);
-      } else {
-        await this.installPackage(packageManager, '@xata.io/client');
-      }
+      await this.installPackage(packageManager, '@xata.io/client');
     }
 
     if (schema) {

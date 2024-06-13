@@ -27,7 +27,7 @@ export const check = async ({ pkg, version, compat }: { pkg: Package; version: s
 };
 
 export const getSdkVersion = async (): Promise<null | string> => {
-  const packageJson: PackageJson = JSON.parse(await readFile(`${path.join(process.cwd())}/package.json`, 'utf-8'));
+  const packageJson: PackageJson = JSON.parse(await readFile(`${process.cwd()}/package.json`, 'utf-8'));
   return packageJson?.dependencies?.['@xata.io/client'] ? packageJson.dependencies['@xata.io/client'] : null;
 };
 

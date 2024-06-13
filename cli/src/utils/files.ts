@@ -1,5 +1,4 @@
 import { readFile } from 'fs/promises';
-import path from 'path';
 
 export async function safeReadFile(path: string, encoding: BufferEncoding = 'utf8') {
   try {
@@ -16,10 +15,3 @@ export function safeJSONParse(contents: unknown) {
     return null;
   }
 }
-
-export type PackageJson = { dependencies: Record<string, string> };
-
-export const getSdkVersion = async (pathToPackage: string): Promise<null | string> => {
-  const packageJson: PackageJson = JSON.parse(await readFile(`${pathToPackage}/package.json`, 'utf-8'));
-  return packageJson?.dependencies?.['@xata.io/client'] ? packageJson.dependencies['@xata.io/client'] : null;
-};

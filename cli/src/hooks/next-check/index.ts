@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 
 export const getSdkVersion = async (): Promise<null | string> => {
-  const packageJson: any = JSON.parse(await readFile(`${path.join(process.cwd())}/package.json`, 'utf-8'));
+  const packageJson: any = JSON.parse(await readFile(`${process.cwd()}/package.json`, 'utf-8'));
   return packageJson?.dependencies?.['@xata.io/client'] ? packageJson.dependencies['@xata.io/client'] : null;
 };
 
