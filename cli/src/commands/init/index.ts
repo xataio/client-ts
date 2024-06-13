@@ -19,6 +19,7 @@ import RandomData from '../random-data/index.js';
 import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
 import Pull from '../pull/index.js';
+import { isBranchPgRollEnabled } from '../../migrations/pgroll.js';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 
@@ -185,12 +186,14 @@ export default class Init extends BaseCommand<typeof Init> {
     this.log();
 
     if (this.projectConfig?.codegen?.output) {
-      const { schema: currentSchema } = await (
+      const details = await (
         await this.getXataClient()
       ).api.branches.getBranchDetails({ workspace, database, region, branch });
 
-      const hasTables = currentSchema?.tables && currentSchema?.tables.length > 0;
-      const hasColumns = currentSchema?.tables.some((t) => t.columns.length > 0);
+      await this.config.runHook('next-check', { pgrollEnabled: isBranchPgRollEnabled(details) });
+
+      const hasTables = details.schema?.tables && details.schema?.tables.length > 0;
+      const hasColumns = details.schema?.tables.some((t) => t.columns.length > 0);
       const isSchemaSetup = hasTables && hasColumns;
       if (shouldInstallPackage && !canInstallPackage) {
         this.warn(
@@ -212,7 +215,7 @@ export default class Init extends BaseCommand<typeof Init> {
         this.log(`import { getXataClient } from '${this.projectConfig?.codegen?.output}'`);
         this.log(``);
         this.log(`// server side query`);
-        this.log(`await getXataClient().db${getDbTableExpression(currentSchema?.tables[0].name)}.getPaginated()`);
+        this.log(`await getXataClient().db${getDbTableExpression(details.schema?.tables[0].name)}.getPaginated()`);
       }
     } else {
       this.info(`Here's a list of useful commands:`);

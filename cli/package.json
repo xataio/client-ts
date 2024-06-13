@@ -76,7 +76,7 @@
     "bin": "xata",
     "hooks": {
       "init": "./dist/hooks/init/compatibility",
-      "codegen:generated": "./dist/hooks/codegen-generated"
+      "next-check": "./dist/hooks/next-check"
     },
     "macos": {
       "identifier": "io.xata.cli"
