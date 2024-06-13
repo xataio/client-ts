@@ -19,7 +19,7 @@ export function safeJSONParse(contents: unknown) {
 
 export type PackageJson = { dependencies: Record<string, string> };
 
-export const getSdkVersion = async (): Promise<null | string> => {
-  const packageJson: PackageJson = JSON.parse(await readFile(`${path.join(process.cwd())}/package.json`, 'utf-8'));
+export const getSdkVersion = async (pathToPackage: string): Promise<null | string> => {
+  const packageJson: PackageJson = JSON.parse(await readFile(`${pathToPackage}/package.json`, 'utf-8'));
   return packageJson?.dependencies?.['@xata.io/client'] ? packageJson.dependencies['@xata.io/client'] : null;
 };

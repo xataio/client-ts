@@ -169,11 +169,10 @@ export default class Init extends BaseCommand<typeof Init> {
 
     this.log();
     if (packageManager) {
-      // Use the version in the package.json
-      const version = await getSdkVersion();
+      // Use the version in the package.json if there is one
+      const version = await getSdkVersion(path.join(process.cwd()));
       if (version) {
-        const currentVersion = semver.coerce(version)?.version ?? version;
-        await this.installPackage(packageManager, `@xata.io/client@${currentVersion}`);
+        await this.installPackage(packageManager, `@xata.io/client@${version}`);
       } else {
         await this.installPackage(packageManager, '@xata.io/client');
       }
