@@ -28,6 +28,47 @@ export type PageSize = number;
 export type PageToken = string;
 
 /**
+ * @format date-time
+ * @x-go-type string
+ */
+export type DateTime = string;
+
+/**
+ * @x-internal true
+ */
+export type BranchDetails = {
+  name: string;
+  id: string;
+  /**
+   * The cluster where this branch resides.
+   *
+   * @minLength 1
+   */
+  clusterID: string;
+  state: string;
+  createdAt: DateTime;
+  databaseName: string;
+  databaseID: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type PageResponse = {
+  size: number;
+  hasMore: boolean;
+  token?: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ListClusterBranchesResponse = {
+  branches: BranchDetails[];
+  page?: PageResponse;
+};
+
+/**
  * @x-internal true
  */
 export type MetricMessage = {
@@ -45,15 +86,6 @@ export type MetricData = {
   status: 'complete' | 'error' | 'partial' | 'forbidden';
   timestamps: string[];
   values: number[];
-};
-
-/**
- * @x-internal true
- */
-export type PageResponse = {
-  size: number;
-  hasMore: boolean;
-  token?: string;
 };
 
 /**
@@ -343,12 +375,6 @@ export type DBName = string;
  * Represent the state of the branch, used for branch lifecycle management
  */
 export type BranchState = 'active' | 'move_scheduled' | 'moving';
-
-/**
- * @format date-time
- * @x-go-type string
- */
-export type DateTime = string;
 
 export type Branch = {
   name: string;
