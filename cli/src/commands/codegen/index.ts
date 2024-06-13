@@ -98,7 +98,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     const existingCode = incrementalBuild ? await readFile(output, 'utf8').catch(() => undefined) : undefined;
 
     const result = await generate({
-      schema: schema,
+      schema,
       databaseURL,
       language,
       moduleType,
@@ -115,6 +115,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     if (types && (flags.declarations || this.projectConfig?.codegen?.declarations)) {
       await writeFile(path.join(dir, 'types.d.ts'), types);
     }
+
     this.log(`Generated Xata code to ./${relative(process.cwd(), output)}`);
   }
 
