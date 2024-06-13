@@ -7,12 +7,7 @@ export const getSdkVersion = async (): Promise<null | string> => {
   return packageJson?.dependencies?.['@xata.io/client'] ? packageJson.dependencies['@xata.io/client'] : null;
 };
 
-const hook: Hook<'next-check'> = async function (
-  options: Record<string, unknown> & {
-    config: any;
-    context: any;
-  }
-) {
+const hook: Hook<'next-check'> = async function (options: Record<string, unknown>) {
   if (options.pgrollEnabled) {
     const sdkVersion = await getSdkVersion();
     if (sdkVersion && sdkVersion !== 'next') {

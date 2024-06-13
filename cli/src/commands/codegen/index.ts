@@ -88,7 +88,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
       flags.db,
       flags.branch
     );
-    const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
+    const { schema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
     const codegenBranch = flags['inject-branch'] ? branch : undefined;
 
@@ -98,7 +98,7 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     const existingCode = incrementalBuild ? await readFile(output, 'utf8').catch(() => undefined) : undefined;
 
     const result = await generate({
-      schema: details.schema,
+      schema: schema,
       databaseURL,
       language,
       moduleType,
