@@ -74,6 +74,7 @@ export type GetClusterMetricsPathParams = {
 export type GetClusterMetricsQueryParams = {
   startTime?: string;
   endTime?: string;
+  period?: '5min' | '15min' | '1hour';
   /**
    * Page size
    */
