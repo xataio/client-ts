@@ -5,6 +5,15 @@ const tables = [
   {
     name: 'teams',
     primaryKey: ['xata_id'],
+    foreignKeys: {
+      pet_pet: {
+        name: 'pet_pet',
+        columns: ['pet'],
+        referencedTable: 'pets',
+        referencedColumns: ['xata_id'],
+        onDelete: 'SET NULL'
+      }
+    },
     columns: [
       { name: 'xata_id', type: 'boolean', notNull: true, unique: true },
       { name: 'xata_version', type: 'int', notNull: true },

@@ -153,5 +153,17 @@ export const pgRollMigrations: PgRollOperation[] = [
         references: { name: 'fk_owner_id', table: 'users', column: 'xata_id' }
       }
     }
+  },
+  {
+    add_column: {
+      table: 'teams',
+      column: {
+        name: 'pet',
+        type: 'text',
+        nullable: true,
+        comment: `{ "xata.link": "pets" }`,
+        references: { name: 'fk_pets_id', table: 'pets', column: 'xata_id' }
+      }
+    }
   }
 ];

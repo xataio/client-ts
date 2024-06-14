@@ -2082,8 +2082,20 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       if (this.selectAllColumns(data.columns as any)) {
         statement = statement.selectAll();
       } else {
-        // always expect primary key to come back if it is back
-        statement = statement.select([...(data.columns as any), this.#primaryKey]);
+        // every non relative field needs to be explicitly fetched and aliased with AS tablename_fieldname
+        // every relative field needs to be explicitly fetched and aliased with AS tablename_fieldname
+        for (const col of data.columns ?? []) {
+          const column = col.includes('.') ? col.split('.')[1] : col;
+          const linkedColumnName = col.includes('.') ? col.split('.')[0] : null;
+          const linkedColumnTable = this.#schema.tables
+            .find((table) => table.name === this.#table)
+            ?.columns.find((c) => c.name === linkedColumnName)?.link?.table;
+          if (linkedColumnName && linkedColumnTable) {
+            statement = statement.select([`${linkedColumnTable}.${column} as ${linkedColumnTable}_${column}`]);
+          } else {
+            statement = statement.select([`${this.#table}.${column} as ${this.#table}_${column}`]);
+          }
+        }
       }
 
       if (size) {
@@ -2095,15 +2107,18 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
           if (order === 'random') {
             return statement.orderBy(sql`random()`);
           }
-          return statement.orderBy(column === '*' ? this.#primaryKey : column, order as SortDirection);
+          return statement.orderBy(
+            column === '*' ? `${this.#table}.${this.#primaryKey}` : `${this.#table}.${column}`,
+            order as SortDirection
+          );
         };
         for (const element of sort) {
           if (isSortFilterObject(element)) {
-            statement = sortStatement(statement, element.column, element.direction ?? 'asc');
+            statement = sortStatement(statement, `${this.#table}.${element.column}`, element.direction ?? 'asc');
           } else {
             const keys = Object.keys(element);
             for (const key of keys) {
-              statement = sortStatement(statement, key, (element as any)[key]);
+              statement = sortStatement(statement, `${this.#table}.${key}`, (element as any)[key]);
             }
           }
         }
@@ -2112,8 +2127,9 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       if (sort) {
         buildSortStatement(Array.isArray(sort) ? sort : [sort]);
       } else {
-        // Necesary for cursor pagination
-        statement = statement.orderBy(this.#primaryKey, 'asc');
+        // Necessary for cursor pagination
+        // TODO can you order by link fields?
+        statement = statement.orderBy(`${this.#table}.${this.#primaryKey}`, 'asc');
       }
 
       const columnData = this.#schema?.tables.find((table) => table.name === this.#table)?.columns ?? [];
@@ -2139,6 +2155,30 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       if (cursorEnd) {
         statement = statement.orderBy(this.#primaryKey, 'desc');
       }
+
+      // TODO handle composite foreign key
+      // TODO why are there multiple referenced columns?
+      // TODO map fields back to api names in initObjectKysely
+      const addJoins = () => {
+        const foreignKeyData: Record<string, any>[] = Object.values(
+          (this.#schema?.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? {}
+        );
+        for (const fk of foreignKeyData) {
+          for (const idx in fk.columns) {
+            statement = statement.leftJoin(
+              `${fk.referencedTable}`,
+              `${fk.referencedTable}.${fk.referencedColumns[0]}`,
+              `${this.#table}.${fk.columns[idx]}`
+            );
+          }
+        }
+      };
+
+      // TODO check if there are links before trying to add joins
+      if (!this.selectAllColumns(data.columns as any)) addJoins();
+
+      console.log('', statement.compile().sql);
+
       const response: {
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement)).rows;

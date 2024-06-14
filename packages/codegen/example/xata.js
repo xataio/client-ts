@@ -5,6 +5,22 @@ const schema = {
   tables: [
     {
       name: 'teams',
+      foreignKeys: {
+        owner_owner: {
+          name: 'owner_owner',
+          columns: ['owner'],
+          referencedTable: 'users',
+          referencedColumns: ['xata_id'],
+          onDelete: 'SET NULL'
+        },
+        pet_pet: {
+          name: 'pet_pet',
+          columns: ['pet'],
+          referencedTable: 'pets',
+          referencedColumns: ['xata_id'],
+          onDelete: 'SET NULL'
+        }
+      },
       columns: [
         { name: 'xata_id', type: 'string', notNull: true },
         { name: 'xata_version', type: 'int', notNull: true },
@@ -20,7 +36,8 @@ const schema = {
         { name: 'plan', type: 'string' },
         { name: 'dark', type: 'bool' },
         { name: 'config', type: 'json' },
-        { name: 'owner', type: 'link', link: { table: 'users' } }
+        { name: 'owner', type: 'link', link: { table: 'users' } },
+        { name: 'pet', type: 'link', link: { table: 'pets' } }
       ],
       revLinks: [{ table: 'users', column: 'team' }]
     },
