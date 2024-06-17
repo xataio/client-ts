@@ -20,6 +20,7 @@ import {
 } from '../api';
 import { fetchSSERequest } from '../api/fetcher';
 import {
+  BranchSchema,
   FuzzinessExpression,
   HighlightExpression,
   PrefixExpression,
@@ -71,6 +72,8 @@ import {
   NewIdentifierKey,
   NewIndentifierValue
 } from './identifiable';
+import { Model } from '@xata.io/kysely';
+import { jsonObjectFrom } from 'kysely/helpers/postgres';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -970,7 +973,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   selectAllColumns = (columns: SelectableColumn<ObjectType>[] = ['*']) => {
-    return !columns || (columns && columns.length > 0 && columns[0] === '*');
+    return !columns || (columns && columns.length > 0 && columns[0] === '*') || (columns && columns.length === 0);
   };
 
   async create<K extends SelectableColumn<ObjectType>>(
@@ -2072,6 +2075,78 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       const size = data?.pagination?.size ?? cursor?.data?.pagination?.size ?? PAGINATION_DEFAULT_SIZE;
       const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset ?? PAGINATION_DEFAULT_OFFSET;
 
+      const generateSelectStatement = ({
+        cols,
+        stmt
+      }: {
+        cols: string[];
+        stmt: SelectQueryBuilder<Model<any>, string, {}>;
+      }) => {
+        if (this.selectAllColumns(cols as any)) {
+          return stmt.selectAll();
+        } else {
+          return stmt.select((eb) => {
+            const arr: any[] = [this.#primaryKey];
+            const foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][] =
+              Object.values(
+                (this.#schema.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? {}
+              ) ?? [];
+
+            const columnsThatAreLinks = foreignKeys.flatMap(({ columns }) => columns);
+            const dictionaryOfLinks = cols.reduce(
+              (acc, val) => {
+                const [table, column] = val.split('.');
+                if (columnsThatAreLinks.includes(table) && val.includes('.')) {
+                  // Do not expand links by default
+                  if (!acc['links'][table]) acc['links'][table] = [];
+                  acc['links'][table].push(column);
+                } else {
+                  if (!acc['regular'][table]) acc['regular'][table] = [];
+                  acc['regular'][table].push(column);
+                }
+                return acc;
+              },
+              { links: {}, regular: {} } as {
+                links: Dictionary<string[]>;
+                regular: Dictionary<string[]>;
+              }
+            );
+
+            const regularKeys = Object.keys(dictionaryOfLinks.regular);
+            for (const key of regularKeys) {
+              arr.push(key);
+            }
+
+            const linkKeys = Object.keys(dictionaryOfLinks.links);
+            for (const key of linkKeys) {
+              const fk = foreignKeys.find((fk) => fk.columns.includes(key));
+              if (!fk) continue;
+              const columns = dictionaryOfLinks['links'][key];
+              if (columns.length === 1 && columns[0] === '*') {
+                arr.push(
+                  jsonObjectFrom(
+                    eb
+                      .selectFrom(fk?.referencedTable)
+                      .selectAll()
+                      .where(fk.referencedColumns[0], '=', eb.ref(`${this.#table}.${fk.columns[0]}`))
+                  ).as(`${fk.columns[0]}`)
+                );
+              } else {
+                arr.push(
+                  jsonObjectFrom(
+                    eb
+                      .selectFrom(fk.referencedTable)
+                      .select(columns as any)
+                      .where(fk.referencedColumns[0], '=', eb.ref(`${this.#table}.${fk.columns[0]}`))
+                  ).as(`${fk.columns[0]}`)
+                );
+              }
+            }
+            return arr;
+          });
+        }
+      };
+
       if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
       if (offset && offset > PAGINATION_MAX_OFFSET)
         throw new Error(`page offset must not exceed ${PAGINATION_MAX_OFFSET}`);
@@ -2079,24 +2154,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
 
       let statement = this.#db.selectFrom(this.#table);
 
-      if (this.selectAllColumns(data.columns as any)) {
-        statement = statement.selectAll();
-      } else {
-        // every non relative field needs to be explicitly fetched and aliased with AS tablename_fieldname
-        // every relative field needs to be explicitly fetched and aliased with AS tablename_fieldname
-        for (const col of data.columns ?? []) {
-          const column = col.includes('.') ? col.split('.')[1] : col;
-          const linkedColumnName = col.includes('.') ? col.split('.')[0] : null;
-          const linkedColumnTable = this.#schema.tables
-            .find((table) => table.name === this.#table)
-            ?.columns.find((c) => c.name === linkedColumnName)?.link?.table;
-          if (linkedColumnName && linkedColumnTable) {
-            statement = statement.select([`${linkedColumnTable}.${column} as ${linkedColumnTable}_${column}`]);
-          } else {
-            statement = statement.select([`${this.#table}.${column} as ${this.#table}_${column}`]);
-          }
-        }
-      }
+      statement = generateSelectStatement({ cols: (data.columns as string[]) ?? [], stmt: statement });
 
       if (size) {
         statement = statement.limit(size);
@@ -2107,18 +2165,15 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
           if (order === 'random') {
             return statement.orderBy(sql`random()`);
           }
-          return statement.orderBy(
-            column === '*' ? `${this.#table}.${this.#primaryKey}` : `${this.#table}.${column}`,
-            order as SortDirection
-          );
+          return statement.orderBy(column === '*' ? `${this.#primaryKey}` : `${column}`, order as SortDirection);
         };
         for (const element of sort) {
           if (isSortFilterObject(element)) {
-            statement = sortStatement(statement, `${this.#table}.${element.column}`, element.direction ?? 'asc');
+            statement = sortStatement(statement, `${element.column}`, element.direction ?? 'asc');
           } else {
             const keys = Object.keys(element);
             for (const key of keys) {
-              statement = sortStatement(statement, `${this.#table}.${key}`, (element as any)[key]);
+              statement = sortStatement(statement, `${key}`, (element as any)[key]);
             }
           }
         }
@@ -2129,7 +2184,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       } else {
         // Necessary for cursor pagination
         // TODO can you order by link fields?
-        statement = statement.orderBy(`${this.#table}.${this.#primaryKey}`, 'asc');
+        statement = statement.orderBy(`${this.#primaryKey}`, 'asc');
       }
 
       const columnData = this.#schema?.tables.find((table) => table.name === this.#table)?.columns ?? [];
@@ -2156,29 +2211,6 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         statement = statement.orderBy(this.#primaryKey, 'desc');
       }
 
-      // TODO handle composite foreign key
-      // TODO why are there multiple referenced columns?
-      // TODO map fields back to api names in initObjectKysely
-      const addJoins = () => {
-        const foreignKeyData: Record<string, any>[] = Object.values(
-          (this.#schema?.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? {}
-        );
-        for (const fk of foreignKeyData) {
-          for (const idx in fk.columns) {
-            statement = statement.leftJoin(
-              `${fk.referencedTable}`,
-              `${fk.referencedTable}.${fk.referencedColumns[0]}`,
-              `${this.#table}.${fk.columns[idx]}`
-            );
-          }
-        }
-      };
-
-      // TODO check if there are links before trying to add joins
-      if (!this.selectAllColumns(data.columns as any)) addJoins();
-
-      console.log('', statement.compile().sql);
-
       const response: {
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement)).rows;
@@ -2189,16 +2221,18 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement.clearLimit().clearOffset().offset(response.length).limit(1))).rows;
 
-      const records = response.map((record) =>
-        initObjectKysely<Result>(
-          this,
-          this.#schema,
-          this.#primaryKey,
-          this.#table,
-          record,
-          (data.columns as SelectableColumn<Result>[]) ?? ['*']
-        )
-      );
+      const records = response
+        .filter((record) => Object.keys(record).length > 0)
+        .map((record) =>
+          initObjectKysely<Result>(
+            this,
+            this.#schema,
+            this.#primaryKey,
+            this.#table,
+            record,
+            (data.columns as SelectableColumn<Result>[]) ?? ['*']
+          )
+        );
       const meta = {
         page: {
           more: nextItem.length > 0,
