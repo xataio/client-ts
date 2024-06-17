@@ -935,6 +935,46 @@ export const getSchema = (variables: GetSchemaVariables, signal?: AbortSignal) =
     signal
   });
 
+export type GetSchemasPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type GetSchemasError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetSchemasResponse = {
+  schemas: Schemas.BranchSchema[];
+};
+
+export type GetSchemasVariables = {
+  pathParams: GetSchemasPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const getSchemas = (variables: GetSchemasVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<GetSchemasResponse, GetSchemasError, undefined, {}, {}, GetSchemasPathParams>({
+    url: '/db/{dbBranchName}/schemas',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type CopyBranchPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -5476,6 +5516,7 @@ export const operationsByTag = {
     getMigrationJobStatus,
     getMigrationHistory,
     getSchema,
+    getSchemas,
     getBranchMigrationHistory,
     getBranchMigrationPlan,
     executeBranchMigrationPlan,
