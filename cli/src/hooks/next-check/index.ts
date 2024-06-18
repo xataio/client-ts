@@ -1,6 +1,5 @@
 import { Hook } from '@oclif/core';
 import { readFile } from 'fs/promises';
-import path from 'path';
 
 export const getSdkVersion = async (): Promise<null | string> => {
   const packageJson: any = JSON.parse(await readFile(`${process.cwd()}/package.json`, 'utf-8'));
