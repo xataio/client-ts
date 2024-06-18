@@ -72,9 +72,9 @@ export type GetClusterMetricsPathParams = {
 };
 
 export type GetClusterMetricsQueryParams = {
-  startTime?: string;
-  endTime?: string;
-  period?: '5min' | '15min' | '1hour';
+  startTime: string;
+  endTime: string;
+  period: '5min' | '15min' | '1hour';
   /**
    * Page size
    */
@@ -102,7 +102,7 @@ export type GetClusterMetricsError = Fetcher.ErrorWrapper<
 
 export type GetClusterMetricsVariables = {
   pathParams: GetClusterMetricsPathParams;
-  queryParams?: GetClusterMetricsQueryParams;
+  queryParams: GetClusterMetricsQueryParams;
 } & DataPlaneFetcherExtraProps;
 
 /**
