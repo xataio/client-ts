@@ -51,6 +51,7 @@ import {
 import { Query } from './query';
 import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
 import {
+  ColumnSelectionObject,
   ColumnsByValue,
   SelectableColumn,
   SelectableColumnWithObjectNotation,
@@ -60,7 +61,18 @@ import {
 import { ApiSortFilter, SortDirection, buildSortFilter, isSortFilterObject } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
-import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
+import {
+  AliasedRawBuilder,
+  DeleteQueryBuilder,
+  ExpressionBuilder,
+  InsertQueryBuilder,
+  RawBuilder,
+  SelectExpression,
+  SelectQueryBuilder,
+  Selection,
+  UpdateQueryBuilder,
+  sql
+} from 'kysely';
 import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
 import { SQLBatchResponse } from '../api/dataPlaneResponses';
 import { Cursor, decode } from '@xata.io/sql';
@@ -2075,77 +2087,9 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       const size = data?.pagination?.size ?? cursor?.data?.pagination?.size ?? PAGINATION_DEFAULT_SIZE;
       const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset ?? PAGINATION_DEFAULT_OFFSET;
 
-      const generateSelectStatement = ({
-        cols,
-        stmt
-      }: {
-        cols: string[];
-        stmt: SelectQueryBuilder<Model<any>, string, {}>;
-      }) => {
-        if (this.selectAllColumns(cols as any)) {
-          return stmt.selectAll();
-        } else {
-          return stmt.select((eb) => {
-            const arr: any[] = [this.#primaryKey];
-            const foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][] =
-              Object.values(
-                (this.#schema.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? {}
-              ) ?? [];
-
-            const columnsThatAreLinks = foreignKeys.flatMap(({ columns }) => columns);
-            const dictionaryOfLinks = cols.reduce(
-              (acc, val) => {
-                const [table, column] = val.split('.');
-                if (columnsThatAreLinks.includes(table) && val.includes('.')) {
-                  // Do not expand links by default
-                  if (!acc['links'][table]) acc['links'][table] = [];
-                  acc['links'][table].push(column);
-                } else {
-                  if (!acc['regular'][table]) acc['regular'][table] = [];
-                  acc['regular'][table].push(column);
-                }
-                return acc;
-              },
-              { links: {}, regular: {} } as {
-                links: Dictionary<string[]>;
-                regular: Dictionary<string[]>;
-              }
-            );
-
-            const regularKeys = Object.keys(dictionaryOfLinks.regular);
-            for (const key of regularKeys) {
-              arr.push(key);
-            }
-
-            const linkKeys = Object.keys(dictionaryOfLinks.links);
-            for (const key of linkKeys) {
-              const fk = foreignKeys.find((fk) => fk.columns.includes(key));
-              if (!fk) continue;
-              const columns = dictionaryOfLinks['links'][key];
-              if (columns.length === 1 && columns[0] === '*') {
-                arr.push(
-                  jsonObjectFrom(
-                    eb
-                      .selectFrom(fk?.referencedTable)
-                      .selectAll()
-                      .where(fk.referencedColumns[0], '=', eb.ref(`${this.#table}.${fk.columns[0]}`))
-                  ).as(`${fk.columns[0]}`)
-                );
-              } else {
-                arr.push(
-                  jsonObjectFrom(
-                    eb
-                      .selectFrom(fk.referencedTable)
-                      .select(columns as any)
-                      .where(fk.referencedColumns[0], '=', eb.ref(`${this.#table}.${fk.columns[0]}`))
-                  ).as(`${fk.columns[0]}`)
-                );
-              }
-            }
-            return arr;
-          });
-        }
-      };
+      const foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][] = Object.values(
+        (this.#schema?.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? []
+      );
 
       if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
       if (offset && offset > PAGINATION_MAX_OFFSET)
@@ -2154,7 +2098,17 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
 
       let statement = this.#db.selectFrom(this.#table);
 
-      statement = generateSelectStatement({ cols: (data.columns as string[]) ?? [], stmt: statement });
+      if (this.selectAllColumns(data.columns as any)) {
+        statement = statement.selectAll();
+      } else {
+        statement = generateSelectStatement({
+          columnSelectionObject: columnSelectionObject((data.columns as string[]) ?? [], foreignKeys),
+          stmt: statement,
+          foreignKeys,
+          primaryKey: this.#primaryKey,
+          tableName: this.#table
+        });
+      }
 
       if (size) {
         statement = statement.limit(size);
@@ -2211,6 +2165,8 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         statement = statement.orderBy(this.#primaryKey, 'desc');
       }
 
+      console.log('', statement.compile().sql, statement.compile().parameters);
+
       const response: {
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement)).rows;
@@ -2221,6 +2177,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement.clearLimit().clearOffset().offset(response.length).limit(1))).rows;
 
+      console.log('response direct from kysely....', response);
       const records = response
         .filter((record) => Object.keys(record).length > 0)
         .map((record) =>
@@ -3822,4 +3779,88 @@ const extractNumericOperations = ({
       extractNumericOperations({ current: (current as any)[key], acc, path, original });
     }
   }
+};
+
+export const columnSelectionObject = (
+  col: string[],
+  foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][]
+) => {
+  const atPath = (obj: object, atPath: string[]) => {
+    return atPath.reduce((acc, key) => {
+      if (!acc[key]) {
+        acc[key] = {};
+      }
+      return acc[key];
+    }, obj as { [k: string]: any });
+  };
+  const result: ColumnSelectionObject = { links: {}, regular: [] };
+  const recurse = (columnPath: string, path: string[]) => {
+    const [table, ...rest] = columnPath.split('.');
+    if (!atPath(result, path)['links']) {
+      atPath(result, path)['links'] = {};
+    }
+    if (!atPath(result, path)['regular']) {
+      atPath(result, path)['regular'] = [];
+    }
+    if (foreignKeys.some((fk) => fk.columns.includes(table))) {
+      recurse(rest.join('.'), [...path, 'links', table]);
+    } else {
+      atPath(result, path)['regular'].push(table);
+    }
+  };
+
+  col.forEach((c) => {
+    recurse(c, []);
+  });
+  return result;
+};
+
+export const generateSelectStatement = ({
+  columnSelectionObject,
+  stmt,
+  foreignKeys,
+  tableName,
+  primaryKey
+}: {
+  columnSelectionObject: ColumnSelectionObject;
+  stmt: SelectQueryBuilder<Model<any>, string, {}>;
+  foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][];
+  tableName: string;
+  primaryKey: string;
+}) => {
+  return stmt.select((eb) => {
+    const selection = (
+      fields: Selection<any, any, any>,
+      eb: ExpressionBuilder<any, any>,
+      lastParent: string
+    ): SelectExpression<any, any>[] => {
+      const regularFields = fields.regular.includes('*')
+        ? [sql.raw<string>('*')]
+        : fields.regular.includes(primaryKey)
+        ? fields.regular
+        : [primaryKey, ...fields.regular];
+      if (Object.keys(fields.links).length > 0) {
+        const links: (string | RawBuilder<string> | AliasedRawBuilder<{ [x: string]: any } | null, string>)[] = [
+          ...regularFields
+        ];
+        for (const key in fields.links) {
+          const fk = foreignKeys.find((fk) => fk.columns[0] === key);
+          if (!fk) continue;
+          const nested = selection(fields.links[key], eb, fk?.referencedTable);
+          links.push(
+            jsonObjectFrom(
+              eb
+                .selectFrom(fk.referencedTable)
+                .select(nested)
+                .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`))
+            ).as(`${fk.columns[0]}`)
+          );
+        }
+        return links as SelectExpression<any, any>[];
+      }
+      return regularFields as SelectExpression<any, any>[];
+    };
+
+    return selection(columnSelectionObject, eb, tableName);
+  });
 };
