@@ -2165,8 +2165,6 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         statement = statement.orderBy(this.#primaryKey, 'desc');
       }
 
-      console.log('', statement.compile().sql, statement.compile().parameters);
-
       const response: {
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement)).rows;
@@ -2177,7 +2175,6 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement.clearLimit().clearOffset().offset(response.length).limit(1))).rows;
 
-      console.log('response direct from kysely....', response);
       const records = response
         .filter((record) => Object.keys(record).length > 0)
         .map((record) =>
