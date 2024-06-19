@@ -82,7 +82,7 @@ export type MetricMessage = {
 export type MetricData = {
   id?: string;
   label?: string;
-  messages: MetricMessage[];
+  messages?: MetricMessage[] | null;
   status: 'complete' | 'error' | 'partial' | 'forbidden';
   timestamps: string[];
   values: number[];
