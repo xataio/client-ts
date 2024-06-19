@@ -113,7 +113,7 @@ describe('integration tests', () => {
     expect(teams?.owner).toBeDefined();
     expect(teams?.owner.full_name).toBeDefined();
     expect(teams?.owner.email).toBeDefined();
-    expect(teams?.owner.xata_id).toBeUndefined();
+    expect(teams?.owner.xata_id).toBeDefined();
     expect(teams?.xata_id).toBeDefined();
     expect(teams?.pet).toBeNull();
   });

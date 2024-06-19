@@ -3799,7 +3799,7 @@ export const columnSelectionObject = (
     if (!atPath(result, path)['regular']) {
       atPath(result, path)['regular'] = [];
     }
-    if (foreignKeys.some((fk) => fk.columns.includes(table))) {
+    if (foreignKeys.some((fk) => fk.columns.includes(table)) && rest.length > 0) {
       recurse(rest.join('.'), [...path, 'links', table]);
     } else {
       atPath(result, path)['regular'].push(table);
