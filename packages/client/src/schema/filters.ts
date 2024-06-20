@@ -6,6 +6,7 @@ import { ColumnsByValue, ValueAtColumn } from './selection';
 import { ExpressionBuilder, ExpressionOrFactory, ReferenceExpression, sql } from 'kysely';
 import { ExpressionFactory } from 'kysely/dist/cjs/parser/expression-parser';
 import { Schemas } from '../api';
+import { objectContainsLinkFilter } from './repository';
 
 export type JSONFilterColumns<Record> = Values<{
   [K in keyof Record]: NonNullable<Record[K]> extends JSONValue<any>
@@ -251,14 +252,29 @@ const buildStatement = ({
   }
 };
 
-export const filterToKysely = (
-  value: Filter<any>,
-  columnName?: string,
-  operation?: FilterPredicate
-):
-  | ((eb: ExpressionBuilder<any, any>, columnData: Schemas.Column[]) => ExpressionOrFactory<any, any, any>)
+// TODO get filter to kyself to support links
+// if the filter contains a link key,
+export const filterToKysely = ({
+  value,
+  columnName,
+  operation,
+  path = []
+}: {
+  value: Filter<any>;
+  columnName?: string;
+  operation?: FilterPredicate;
+  path: string[];
+}):
+  | ((
+      eb: ExpressionBuilder<any, any>,
+      columnData: Schemas.Column[],
+      tableName?: string
+    ) => ExpressionOrFactory<any, any, any>)
   | ExpressionFactory<any, any, any> => {
-  return (eb, columnData) => {
+  return (eb, columnData, tableName) => {
+    const continueOnPath = (v: any, key: string) =>
+      path.includes(tableName!) || key === tableName || objectContainsLinkFilter(v, tableName!);
+
     if (isString(value) || typeof value === 'number' || value instanceof Date) {
       const operator = operation ?? '=';
       const column = eb.ref(columnName ?? 'unknown');
@@ -276,51 +292,71 @@ export const filterToKysely = (
           castToText
         });
       }
-      return buildStatement({
+
+      const buildS = buildStatement({
         operator,
         column,
         value,
         eb,
         castToText
       });
+      return buildS;
     }
 
     if (Array.isArray(value)) {
-      return eb.and(value.map((f) => filterToKysely(f, columnName, operation)(eb, columnData)));
+      const valueToUse = value.filter(([key, value]) => key && value && continueOnPath(value, key));
+      return eb.and(
+        valueToUse.map((f) => {
+          return filterToKysely({ value: f, columnName, operation, path: columnName ? [...path, columnName] : path })(
+            eb,
+            columnData,
+            tableName
+          );
+        })
+      );
     }
-
     if (isObject(value)) {
-      const entries = Object.entries(value);
+      const entries = Object.entries(value).filter(([key, value]) => key && value && continueOnPath(value, key));
 
       const handleEntries = entries.map(([key, value]) => {
         const valueToUse = Array.isArray(value) ? value : [value];
+
         switch (key) {
           case '$all': {
             return eb.and(
-              valueToUse.map((v) =>
-                filterToKysely(
-                  v,
-                  key.startsWith('$') ? columnName : key,
-                  key.startsWith('$') ? key : operation
-                )(eb, columnData)
-              )
+              valueToUse.map((v) => {
+                return filterToKysely({
+                  value: v,
+                  columnName: key.startsWith('$') ? columnName : key,
+                  operation: key.startsWith('$') ? key : operation,
+                  path: columnName ? [...path, columnName] : path
+                })(eb, columnData, tableName);
+              })
             );
           }
           case '$any': {
             return eb.or(
-              valueToUse.map((v) =>
-                filterToKysely(
-                  v,
-                  key.startsWith('$') ? columnName : key,
-                  key.startsWith('$') ? key : operation
-                )(eb, columnData)
-              )
+              valueToUse.map((v) => {
+                return filterToKysely({
+                  value: v,
+                  columnName: key.startsWith('$') ? columnName : key,
+                  operation: key.startsWith('$') ? key : operation,
+                  path: columnName ? [...path, columnName] : path
+                })(eb, columnData, tableName);
+              })
             );
           }
           case '$includesNone': {
             return eb.and(
               valueToUse.map((v) =>
-                eb.not(filterToKysely(v, key.startsWith('$') ? columnName : key, '$includes')(eb, columnData))
+                eb.not(
+                  filterToKysely({
+                    value: v,
+                    columnName: key.startsWith('$') ? columnName : key,
+                    operation: '$includes',
+                    path: columnName ? [...path, columnName] : path
+                  })(eb, columnData, tableName)
+                )
               )
             );
           }
@@ -328,7 +364,14 @@ export const filterToKysely = (
           case '$not': {
             return eb.and(
               valueToUse.map((v) =>
-                eb.not(filterToKysely(v, key.startsWith('$') ? columnName : key, '$not')(eb, columnData))
+                eb.not(
+                  filterToKysely({
+                    value: v,
+                    columnName: key.startsWith('$') ? columnName : key,
+                    operation: '$not',
+                    path: columnName ? [...path, columnName] : path
+                  })(eb, columnData, tableName)
+                )
               )
             );
           }
@@ -336,11 +379,12 @@ export const filterToKysely = (
           default: {
             return eb.and(
               valueToUse.map((v) =>
-                filterToKysely(
-                  v,
-                  key.startsWith('$') ? columnName : key,
-                  key.startsWith('$') ? key : operation
-                )(eb, columnData)
+                filterToKysely({
+                  value: v,
+                  columnName: key.startsWith('$') ? columnName : key,
+                  operation: key.startsWith('$') ? key : operation,
+                  path: key ? [...path, key] : path
+                })(eb, columnData, tableName)
               )
             );
           }

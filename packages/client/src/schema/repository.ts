@@ -1218,10 +1218,20 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
           let statement: SelectQueryBuilder<any, any, any> = this.#db
             .selectFrom(this.#table)
             .where(this.#primaryKey, '=', id);
-          if (this.selectAllColumns(columns)) {
+          if (this.selectAllColumns(columns as any)) {
             statement = statement.selectAll();
           } else {
-            statement = statement.select(columns as any);
+            const foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][] = Object.values(
+              (this.#schema?.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? []
+            );
+            statement = generateSelectStatement({
+              filter: {},
+              columnSelectionObject: columnSelectionObject((columns as string[]) ?? [], foreignKeys),
+              stmt: statement,
+              foreignKeys,
+              primaryKey: this.#primaryKey,
+              tableName: this.#table
+            });
           }
           const response = await statement.executeTakeFirst();
           if (!response) return null;
@@ -2102,12 +2112,20 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         statement = statement.selectAll();
       } else {
         statement = generateSelectStatement({
+          filter: filter,
           columnSelectionObject: columnSelectionObject((data.columns as string[]) ?? [], foreignKeys),
           stmt: statement,
           foreignKeys,
           primaryKey: this.#primaryKey,
           tableName: this.#table
         });
+      }
+      // TODO make it so I don't have to explicitly bring back columns when filtering on links
+      // TODO add filters for non links, right now its doubling
+      if (filter) {
+        statement = statement.where((eb) =>
+          relevantConditions({ filter: { [this.#table]: filter }, tableName: this.#table, eb })
+        );
       }
 
       if (size) {
@@ -2139,13 +2157,6 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         // Necessary for cursor pagination
         // TODO can you order by link fields?
         statement = statement.orderBy(`${this.#primaryKey}`, 'asc');
-      }
-
-      const columnData = this.#schema?.tables.find((table) => table.name === this.#table)?.columns ?? [];
-      if (filter) {
-        statement = statement.where((eb) => {
-          return filterToKysely(filter)(eb, columnData as Schemas.Column[]) as any;
-        });
       }
 
       if (offset) {
@@ -3812,13 +3823,52 @@ export const columnSelectionObject = (
   return result;
 };
 
+const relevantConditions = ({
+  filter,
+  tableName,
+  eb
+}: {
+  filter: Filter<any>;
+  tableName: string;
+  eb: ExpressionBuilder<any, any>;
+}) => {
+  if (objectContainsLinkFilter(filter, tableName)) {
+    return filterToKysely({ value: filter, path: [] })(eb, [] as any, tableName) as any;
+  }
+};
+
+export const objectContainsLinkFilter = (filter: any, column: string) => {
+  const relevantFilters: any = [];
+  const traverse = (obj: any, path: string[]) => {
+    if (Array.isArray(obj) && obj.length > 0) {
+      for (const item of obj) {
+        traverse(item, [...path]);
+      }
+    } else if (isObject(obj) && Object.keys(obj).length > 0) {
+      for (const key in obj) {
+        traverse(obj[key], [...path, key]);
+      }
+    } else {
+      if (!path.includes(column)) {
+        return;
+      } else {
+        relevantFilters.push([...path, obj]);
+      }
+    }
+  };
+  traverse(filter, []);
+  return relevantFilters.length === 0 ? false : true;
+};
+
 export const generateSelectStatement = ({
+  filter,
   columnSelectionObject,
   stmt,
   foreignKeys,
   tableName,
   primaryKey
 }: {
+  filter: Filter<any>;
   columnSelectionObject: ColumnSelectionObject;
   stmt: SelectQueryBuilder<Model<any>, string, {}>;
   foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][];
@@ -3844,14 +3894,28 @@ export const generateSelectStatement = ({
           const fk = foreignKeys.find((fk) => fk.columns[0] === key);
           if (!fk) continue;
           const nested = selection(fields.links[key], eb, fk?.referencedTable);
-          links.push(
-            jsonObjectFrom(
-              eb
-                .selectFrom(fk.referencedTable)
-                .select(nested)
-                .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`))
-            ).as(`${fk.columns[0]}`)
-          );
+
+          const conditions = relevantConditions({ filter, tableName: fk.columns[0], eb });
+          if (filter && conditions) {
+            links.push(
+              jsonObjectFrom(
+                eb
+                  .selectFrom(fk.referencedTable)
+                  .select(nested)
+                  .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`))
+                  .where(conditions)
+              ).as(`${fk.columns[0]}`)
+            );
+          } else {
+            links.push(
+              jsonObjectFrom(
+                eb
+                  .selectFrom(fk.referencedTable)
+                  .select(nested)
+                  .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`))
+              ).as(`${fk.columns[0]}`)
+            );
+          }
         }
         return links as SelectExpression<any, any>[];
       }
