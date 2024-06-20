@@ -386,6 +386,8 @@ export type Branch = {
   clusterID?: string;
   state: BranchState;
   createdAt: DateTime;
+  searchDisabled?: boolean;
+  inactiveSharedCluster?: boolean;
 };
 
 export type ListBranchesResponse = {
