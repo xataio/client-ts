@@ -1225,6 +1225,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
               (this.#schema?.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? []
             );
             statement = generateSelectStatement({
+              columnData: (this.#schema?.tables.find((table) => table.name === this.#table)?.columns as any) ?? [],
               filter: {},
               columnSelectionObject: columnSelectionObject((columns as string[]) ?? [], foreignKeys),
               stmt: statement,
@@ -2101,6 +2102,8 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         (this.#schema?.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? []
       );
 
+      const columnData = this.#schema?.tables.find((table) => table.name === this.#table)?.columns ?? [];
+
       if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
       if (offset && offset > PAGINATION_MAX_OFFSET)
         throw new Error(`page offset must not exceed ${PAGINATION_MAX_OFFSET}`);
@@ -2112,7 +2115,10 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         statement = statement.selectAll();
       } else {
         statement = generateSelectStatement({
+          columnData: columnData as any[],
           filter: filter,
+          // TODO if there is a relevant filter condition, add the column to the column selection object
+          // TODO remove it before returned, maybe with returning?
           columnSelectionObject: columnSelectionObject((data.columns as string[]) ?? [], foreignKeys),
           stmt: statement,
           foreignKeys,
@@ -2120,12 +2126,18 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
           tableName: this.#table
         });
       }
-      // TODO make it so I don't have to explicitly bring back columns when filtering on links
-      // TODO add filters for non links, right now its doubling
       if (filter) {
-        statement = statement.where((eb) =>
-          relevantConditions({ filter: { [this.#table]: filter }, tableName: this.#table, eb })
-        );
+        const modifiedFilter = relevantFilters(filter, true, foreignKeys?.flatMap((fk) => fk.columns) ?? []);
+        if (modifiedFilter) {
+          statement = statement.where(
+            (eb) =>
+              filterToKysely({ value: { [this.#table]: modifiedFilter }, path: [] })(
+                eb,
+                columnData as any,
+                this.#table
+              ) as any
+          );
+        }
       }
 
       if (size) {
@@ -3789,18 +3801,19 @@ const extractNumericOperations = ({
   }
 };
 
+const atPath = (obj: object, atPath: string[]) => {
+  return atPath.reduce((acc, key) => {
+    if (!acc[key]) {
+      acc[key] = {};
+    }
+    return acc[key];
+  }, obj as { [k: string]: any });
+};
+
 export const columnSelectionObject = (
   col: string[],
   foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][]
 ) => {
-  const atPath = (obj: object, atPath: string[]) => {
-    return atPath.reduce((acc, key) => {
-      if (!acc[key]) {
-        acc[key] = {};
-      }
-      return acc[key];
-    }, obj as { [k: string]: any });
-  };
   const result: ColumnSelectionObject = { links: {}, regular: [] };
   const recurse = (columnPath: string, path: string[]) => {
     const [table, ...rest] = columnPath.split('.');
@@ -3823,52 +3836,17 @@ export const columnSelectionObject = (
   return result;
 };
 
-const relevantConditions = ({
-  filter,
-  tableName,
-  eb
-}: {
-  filter: Filter<any>;
-  tableName: string;
-  eb: ExpressionBuilder<any, any>;
-}) => {
-  if (objectContainsLinkFilter(filter, tableName)) {
-    return filterToKysely({ value: filter, path: [] })(eb, [] as any, tableName) as any;
-  }
-};
-
-export const objectContainsLinkFilter = (filter: any, column: string) => {
-  const relevantFilters: any = [];
-  const traverse = (obj: any, path: string[]) => {
-    if (Array.isArray(obj) && obj.length > 0) {
-      for (const item of obj) {
-        traverse(item, [...path]);
-      }
-    } else if (isObject(obj) && Object.keys(obj).length > 0) {
-      for (const key in obj) {
-        traverse(obj[key], [...path, key]);
-      }
-    } else {
-      if (!path.includes(column)) {
-        return;
-      } else {
-        relevantFilters.push([...path, obj]);
-      }
-    }
-  };
-  traverse(filter, []);
-  return relevantFilters.length === 0 ? false : true;
-};
-
 export const generateSelectStatement = ({
   filter,
   columnSelectionObject,
   stmt,
   foreignKeys,
   tableName,
-  primaryKey
+  primaryKey,
+  columnData
 }: {
   filter: Filter<any>;
+  columnData: Schemas.Column[];
   columnSelectionObject: ColumnSelectionObject;
   stmt: SelectQueryBuilder<Model<any>, string, {}>;
   foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][];
@@ -3895,7 +3873,10 @@ export const generateSelectStatement = ({
           if (!fk) continue;
           const nested = selection(fields.links[key], eb, fk?.referencedTable);
 
-          const conditions = relevantConditions({ filter, tableName: fk.columns[0], eb });
+          const modifiedFilter = relevantFilters(filter, false, fk?.columns);
+          const conditions = modifiedFilter
+            ? (filterToKysely({ value: modifiedFilter, path: [] })(eb, columnData, tableName) as any)
+            : null;
           if (filter && conditions) {
             links.push(
               jsonObjectFrom(
@@ -3924,4 +3905,25 @@ export const generateSelectStatement = ({
 
     return selection(columnSelectionObject, eb, tableName);
   });
+};
+
+const relevantFilters = (filter: any, firstLevelOnly: boolean, linkFields?: string[]) => {
+  const copy = {};
+
+  const traverse = (filter: any, path: string[]) => {
+    for (const key in filter) {
+      // TODO deal with array?
+      if (isObject(filter[key])) {
+        traverse(filter[key], [...path, key]);
+      } else {
+        if (firstLevelOnly && !linkFields?.some((s) => path.includes(s))) {
+          atPath(copy, path)[key] = filter[key];
+        } else if (!firstLevelOnly && linkFields?.some((s) => path.includes(s))) {
+          atPath(copy, path)[key] = filter[key];
+        }
+      }
+    }
+  };
+  traverse(filter, []);
+  return Object.keys(copy).length > 0 ? copy : null;
 };

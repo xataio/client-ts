@@ -70,6 +70,8 @@ test('link selection to kysely selects', () => {
   let statement = db.selectFrom(tableName);
 
   statement = generateSelectStatement({
+    filter: {},
+    columnData: [],
     columnSelectionObject: input,
     foreignKeys,
     primaryKey: 'xata_id',
@@ -105,6 +107,7 @@ test('filterToKysely', () => {
   let statement = db.selectFrom(tableName);
   statement = generateSelectStatement({
     filter: filter,
+    columnData: [],
     columnSelectionObject: input,
     foreignKeys,
     primaryKey: 'xata_id',
@@ -120,6 +123,7 @@ test('filterToKysely', () => {
   let statement2 = db.selectFrom(tableName);
   statement2 = generateSelectStatement({
     filter: filter2,
+    columnData: [],
     columnSelectionObject: input,
     foreignKeys,
     primaryKey: 'xata_id',
@@ -133,6 +137,7 @@ test('filterToKysely', () => {
   const filter3 = { $not: { pet: { $any: [{ name: 'r1' }, { name: 'r2' }] } } };
   let statement3 = db.selectFrom(tableName);
   statement3 = generateSelectStatement({
+    columnData: [],
     filter: filter3,
     columnSelectionObject: input,
     foreignKeys,
@@ -149,6 +154,7 @@ test('filterToKysely', () => {
   let statement4 = db.selectFrom(tableName);
   statement4 = generateSelectStatement({
     filter: filter4,
+    columnData: [],
     columnSelectionObject: input,
     foreignKeys,
     primaryKey: 'xata_id',

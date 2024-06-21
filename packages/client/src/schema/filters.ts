@@ -6,7 +6,6 @@ import { ColumnsByValue, ValueAtColumn } from './selection';
 import { ExpressionBuilder, ExpressionOrFactory, ReferenceExpression, sql } from 'kysely';
 import { ExpressionFactory } from 'kysely/dist/cjs/parser/expression-parser';
 import { Schemas } from '../api';
-import { objectContainsLinkFilter } from './repository';
 
 export type JSONFilterColumns<Record> = Values<{
   [K in keyof Record]: NonNullable<Record[K]> extends JSONValue<any>
@@ -272,16 +271,12 @@ export const filterToKysely = ({
     ) => ExpressionOrFactory<any, any, any>)
   | ExpressionFactory<any, any, any> => {
   return (eb, columnData, tableName) => {
-    const continueOnPath = (v: any, key: string) =>
-      path.includes(tableName!) || key === tableName || objectContainsLinkFilter(v, tableName!);
-
     if (isString(value) || typeof value === 'number' || value instanceof Date) {
       const operator = operation ?? '=';
       const column = eb.ref(columnName ?? 'unknown');
 
       const isJsonColumnType = columnData.find((c) => c.name === columnName)?.type === 'json';
       const castToText = isJsonColumnType || value instanceof Date || isNumber(value) ? false : true;
-
       if (isJsonColumnFilter(columnName)) {
         const { firstCol, pathToUse } = parseJsonPath(columnName ?? '');
         return buildStatement({
@@ -304,9 +299,8 @@ export const filterToKysely = ({
     }
 
     if (Array.isArray(value)) {
-      const valueToUse = value.filter(([key, value]) => key && value && continueOnPath(value, key));
       return eb.and(
-        valueToUse.map((f) => {
+        value.map((f) => {
           return filterToKysely({ value: f, columnName, operation, path: columnName ? [...path, columnName] : path })(
             eb,
             columnData,
@@ -316,7 +310,7 @@ export const filterToKysely = ({
       );
     }
     if (isObject(value)) {
-      const entries = Object.entries(value).filter(([key, value]) => key && value && continueOnPath(value, key));
+      const entries = Object.entries(value);
 
       const handleEntries = entries.map(([key, value]) => {
         const valueToUse = Array.isArray(value) ? value : [value];
