@@ -9,7 +9,7 @@ export const getSdkVersion = async (): Promise<null | string> => {
 const hook: Hook<'next-check'> = async function (options: Record<string, unknown>) {
   if (options.pgrollEnabled) {
     const sdkVersion = await getSdkVersion();
-    if (sdkVersion && sdkVersion !== 'next' && !sdkVersion.includes('-next.')) {
+    if (sdkVersion && !sdkVersion.includes('next')) {
       this.warn(
         "You are working with a Postgres enabled branch. We recommend using the 'next' version of the Xata SDK. (@xata.io/client@next)"
       );
