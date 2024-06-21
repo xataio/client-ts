@@ -97,7 +97,7 @@ export async function removeLocalMigrations() {
   }
 }
 
-export function commitToMigrationFile(logs: Schemas.Commit[] | Schemas.MigrationHistoryItem[]): LocalMigrationFile[] {
+export function commitToMigrationFile(logs: (Schemas.Commit | Schemas.MigrationHistoryItem)[]): LocalMigrationFile[] {
   // Schema history comes in reverse order, so we need to reverse it
   return logs.reverse().map((log) =>
     isMigrationPgRollFormat(log)
