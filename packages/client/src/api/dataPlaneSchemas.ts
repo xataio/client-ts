@@ -82,7 +82,7 @@ export type MetricMessage = {
 export type MetricData = {
   id?: string;
   label?: string;
-  messages: MetricMessage[];
+  messages?: MetricMessage[] | null;
   status: 'complete' | 'error' | 'partial' | 'forbidden';
   timestamps: string[];
   values: number[];
@@ -386,6 +386,8 @@ export type Branch = {
   clusterID?: string;
   state: BranchState;
   createdAt: DateTime;
+  searchDisabled?: boolean;
+  inactiveSharedCluster?: boolean;
 };
 
 export type ListBranchesResponse = {

@@ -72,8 +72,9 @@ export type GetClusterMetricsPathParams = {
 };
 
 export type GetClusterMetricsQueryParams = {
-  startTime?: string;
-  endTime?: string;
+  startTime: string;
+  endTime: string;
+  period: '5min' | '15min' | '1hour';
   /**
    * Page size
    */
@@ -101,7 +102,7 @@ export type GetClusterMetricsError = Fetcher.ErrorWrapper<
 
 export type GetClusterMetricsVariables = {
   pathParams: GetClusterMetricsPathParams;
-  queryParams?: GetClusterMetricsQueryParams;
+  queryParams: GetClusterMetricsQueryParams;
 } & DataPlaneFetcherExtraProps;
 
 /**
@@ -929,6 +930,46 @@ export type GetSchemaVariables = {
 export const getSchema = (variables: GetSchemaVariables, signal?: AbortSignal) =>
   dataPlaneFetch<GetSchemaResponse, GetSchemaError, undefined, {}, {}, GetSchemaPathParams>({
     url: '/db/{dbBranchName}/schema',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type GetSchemasPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type GetSchemasError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetSchemasResponse = {
+  schemas: Schemas.BranchSchema[];
+};
+
+export type GetSchemasVariables = {
+  pathParams: GetSchemasPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const getSchemas = (variables: GetSchemasVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<GetSchemasResponse, GetSchemasError, undefined, {}, {}, GetSchemasPathParams>({
+    url: '/db/{dbBranchName}/schemas',
     method: 'get',
     ...variables,
     signal
@@ -5475,6 +5516,7 @@ export const operationsByTag = {
     getMigrationJobStatus,
     getMigrationHistory,
     getSchema,
+    getSchemas,
     getBranchMigrationHistory,
     getBranchMigrationPlan,
     executeBranchMigrationPlan,
