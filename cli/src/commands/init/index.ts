@@ -395,14 +395,14 @@ export default class Init extends BaseCommand<typeof Init> {
     const { installNextVersion } = await this.prompt({
       type: 'confirm',
       name: 'installNextVersion',
-      message: `The current version of ${pkg} does not contain the next version. Do you want to install the next version?`
+      message: `You are working with a Postgres enabled branch. We recommend using the 'next' version of the Xata SDK. Do you want to install the recommended version (${pkg}@next)?`
     });
     if (installNextVersion) {
       await this.runCommand(command, [...args.split(' '), `${pkg}@next`]);
       this.log();
     } else {
       await this.runCommand(command, [...args.split(' '), `${pkg}`]);
-      this.warn(`Please install the next version of ${pkg} later`);
+      this.warn(`Please install ${pkg}@next later`);
     }
     return Boolean(installNextVersion);
   }
