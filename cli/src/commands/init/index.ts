@@ -19,6 +19,8 @@ import RandomData from '../random-data/index.js';
 import EditSchema from '../schema/edit.js';
 import Shell from '../shell/index.js';
 import Pull from '../pull/index.js';
+import { PackageJson } from 'type-fest';
+import { getBranchDetailsWithPgRoll, isBranchPgRollEnabled } from '../../migrations/pgroll.js';
 
 const moduleTypeOptions = ['cjs', 'esm'];
 
@@ -112,6 +114,8 @@ export default class Init extends BaseCommand<typeof Init> {
 
   static args = {};
 
+  branchDetails: Schemas.DBBranch | undefined;
+
   async run(): Promise<void> {
     const { flags } = await this.parseCommand();
     this.log('🦋 Initializing project... We will ask you some questions.');
@@ -164,9 +168,21 @@ export default class Init extends BaseCommand<typeof Init> {
       await this.ignoreEnvFile();
     }
 
+    try {
+      const details = await getBranchDetailsWithPgRoll(await this.getXataClient(), {
+        workspace,
+        region,
+        database,
+        branch
+      });
+      this.branchDetails = details;
+    } catch (e) {
+      this.error(`Could not find branch ${branch} in database ${database}`);
+    }
+
     this.log();
     if (packageManager) {
-      await this.installPackage(packageManager, '@xata.io/client');
+      await this.installSdk(packageManager, this.branchDetails);
     }
 
     if (schema) {
@@ -185,12 +201,8 @@ export default class Init extends BaseCommand<typeof Init> {
     this.log();
 
     if (this.projectConfig?.codegen?.output) {
-      const { schema: currentSchema } = await (
-        await this.getXataClient()
-      ).api.branch.getBranchDetails({ pathParams: { workspace, region, dbBranchName: `${database}:${branch}` } });
-
-      const hasTables = currentSchema?.tables && currentSchema?.tables.length > 0;
-      const hasColumns = currentSchema?.tables.some((t) => t.columns.length > 0);
+      const hasTables = this.branchDetails.schema?.tables && this.branchDetails.schema?.tables.length > 0;
+      const hasColumns = this.branchDetails.schema?.tables.some((t) => t.columns.length > 0);
       const isSchemaSetup = hasTables && hasColumns;
       if (shouldInstallPackage && !canInstallPackage) {
         this.warn(
@@ -212,7 +224,9 @@ export default class Init extends BaseCommand<typeof Init> {
         this.log(`import { getXataClient } from '${this.projectConfig?.codegen?.output}'`);
         this.log(``);
         this.log(`// server side query`);
-        this.log(`await getXataClient().db${getDbTableExpression(currentSchema?.tables[0].name)}.getPaginated()`);
+        this.log(
+          `await getXataClient().db${getDbTableExpression(this.branchDetails.schema?.tables[0].name)}.getPaginated()`
+        );
       }
     } else {
       this.info(`Here's a list of useful commands:`);
@@ -365,6 +379,37 @@ export default class Init extends BaseCommand<typeof Init> {
     this.log();
   }
 
+  async installSdk(packageManager: PackageManager, branchDetails: Schemas.DBBranch) {
+    if (isBranchPgRollEnabled(branchDetails)) {
+      const sdkVersion = await this.getSdkVersion();
+      if (!sdkVersion) {
+        await this.installPackage(packageManager, '@xata.io/client@next');
+        return;
+      } else if (!sdkVersion?.includes('next')) {
+        await this.promptForNextVersion(packageManager, '@xata.io/client');
+        return;
+      }
+    }
+    await this.installPackage(packageManager, '@xata.io/client');
+  }
+
+  async promptForNextVersion(packageManager: PackageManager, pkg: string) {
+    const { command, args } = packageManager;
+    const { installNextVersion } = await this.prompt({
+      type: 'confirm',
+      name: 'installNextVersion',
+      message: `You are working with a Postgres enabled branch. We recommend using the 'next' version of the Xata SDK. Do you want to install the recommended version (${pkg}@next)?`
+    });
+    if (installNextVersion) {
+      await this.runCommand(command, [...args.split(' '), `${pkg}@next`]);
+      this.log();
+    } else {
+      await this.runCommand(command, [...args.split(' '), `${pkg}`]);
+      this.warn(`Please install ${pkg}@next later`);
+    }
+    return Boolean(installNextVersion);
+  }
+
   async writeConfig() {
     // Reuse location when using --force
     if (!this.projectConfigLocation) {
@@ -498,5 +543,10 @@ export default class Init extends BaseCommand<typeof Init> {
       return this.error(`Could not parse the schema file at ${file}`);
     }
     return schema.data;
+  }
+
+  async getSdkVersion(): Promise<null | string> {
+    const packageJson: PackageJson = JSON.parse(await readFile(`${process.cwd()}/package.json`, 'utf-8'));
+    return packageJson?.dependencies?.['@xata.io/client'] ? packageJson.dependencies['@xata.io/client'] : null;
   }
 }
