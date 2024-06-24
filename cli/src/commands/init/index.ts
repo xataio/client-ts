@@ -182,18 +182,7 @@ export default class Init extends BaseCommand<typeof Init> {
 
     this.log();
     if (packageManager) {
-      if (isBranchPgRollEnabled(this.branchDetails)) {
-        const sdkVersion = await this.getSdkVersion();
-        if (!sdkVersion || !sdkVersion.includes('next')) {
-          await this.promptForNextVersion(packageManager, '@xata.io/client');
-        } else {
-          // Do not prompt
-          await this.installPackage(packageManager, '@xata.io/client');
-        }
-      } else {
-        // Do not prompt
-        await this.installPackage(packageManager, '@xata.io/client');
-      }
+      await this.installSdk(packageManager, this.branchDetails);
     }
 
     if (schema) {
@@ -388,6 +377,20 @@ export default class Init extends BaseCommand<typeof Init> {
     const { command, args } = packageManager;
     await this.runCommand(command, [...args.split(' '), pkg]);
     this.log();
+  }
+
+  async installSdk(packageManager: PackageManager, branchDetails: Schemas.DBBranch) {
+    if (isBranchPgRollEnabled(branchDetails)) {
+      const sdkVersion = await this.getSdkVersion();
+      if (!sdkVersion) {
+        await this.installPackage(packageManager, '@xata.io/client@next');
+        return;
+      } else if (!sdkVersion?.includes('next')) {
+        await this.promptForNextVersion(packageManager, '@xata.io/client');
+        return;
+      }
+    }
+    await this.installPackage(packageManager, '@xata.io/client');
   }
 
   async promptForNextVersion(packageManager: PackageManager, pkg: string) {
