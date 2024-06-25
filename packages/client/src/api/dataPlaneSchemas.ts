@@ -71,6 +71,32 @@ export type ListClusterBranchesResponse = {
 /**
  * @x-internal true
  */
+export type ExtensionDetails = {
+  name: string;
+  description: string;
+  status: 'installed' | 'not_installed';
+  version: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ListClusterExtensionsResponse = {
+  extensions: ExtensionDetails[];
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterExtensionInstallationResponse = {
+  extension: string;
+  status: 'success' | 'failure';
+  reason?: string;
+};
+
+/**
+ * @x-internal true
+ */
 export type MetricMessage = {
   code?: string;
   value?: string;
