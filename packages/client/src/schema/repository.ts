@@ -1478,9 +1478,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
     // Ensure id is not present in the update payload
     const { [this.#primaryKey]: _id, ...record } = await this.#transformObjectToApi(object);
 
-    const numericOperations: NumericOperations[] = [];
-    extractNumericOperations({ current: record, acc: numericOperations, path: [], original: record });
-
+    const numericOperations: NumericOperations[] = extractNumericOperations({ numericFilters: record });
     try {
       let statement: UpdateQueryBuilder<any, any, any, any> = this.#db
         .updateTable(this.#table)
@@ -1527,8 +1525,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       const { [this.#primaryKey]: id, ...fields } = operation;
 
       if (upsert) {
-        const numericOperations: NumericOperations[] = [];
-        extractNumericOperations({ current: fields, acc: numericOperations, path: [], original: fields });
+        const numericOperations: NumericOperations[] = extractNumericOperations({ numericFilters: fields });
         let statement: InsertQueryBuilder<any, any, any> = this.#db
           .insertInto(this.#table)
           .onConflict((oc) => oc.column(this.#primaryKey).doUpdateSet(fields))
@@ -1547,8 +1544,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
           params: statement.compile().parameters as any[]
         });
       } else {
-        const numericOperations: NumericOperations[] = [];
-        extractNumericOperations({ current: fields, acc: numericOperations, path: [], original: fields });
+        const numericOperations: NumericOperations[] = extractNumericOperations({ numericFilters: fields });
         let statement: UpdateQueryBuilder<any, any, any, any> = this.#db
           .updateTable(this.#table)
           .where(this.#primaryKey, '=', id as string)
@@ -2117,8 +2113,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         statement = generateSelectStatement({
           columnData: columnData as any[],
           filter: filter,
-          // TODO if there is a relevant filter condition, add the column to the column selection object
-          // TODO remove it before returned, maybe with returning?
+          // TODO column filters are only applied if the column is explicitly selected, should not happen
           columnSelectionObject: columnSelectionObject((data.columns as string[]) ?? [], foreignKeys),
           stmt: statement,
           foreignKeys,
@@ -2127,15 +2122,12 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         });
       }
       if (filter) {
-        const modifiedFilter = relevantFilters(filter, true, foreignKeys?.flatMap((fk) => fk.columns) ?? []);
-        if (modifiedFilter) {
+        // Regular top levels are applied separately from nested column filters to avoid duplication
+        const filters = relevantFilters(filter, true, foreignKeys?.flatMap((fk) => fk.columns) ?? []);
+        if (filters) {
           statement = statement.where(
             (eb) =>
-              filterToKysely({ value: { [this.#table]: modifiedFilter }, path: [] })(
-                eb,
-                columnData as any,
-                this.#table
-              ) as any
+              filterToKysely({ value: { [this.#table]: filters }, path: [] })(eb, columnData as any, this.#table) as any
           );
         }
       }
@@ -3772,33 +3764,28 @@ const removeKeysFromRecord = ({ record, path }: { path: string[]; record: { [k: 
   }
 };
 
-const extractNumericOperations = ({
-  current,
-  path,
-  acc,
-  original
-}: {
-  current: { [key: string]: any } | string | number;
-  acc: NumericOperations[];
-  path: string[];
-  original: { [key: string]: any };
-}): any => {
-  if (typeof current === 'number' && path.some((r) => operatorNames.includes(r))) {
-    acc.push({
-      field: path[path.length - 2],
-      operator: path[path.length - 1],
-      value: current
-    });
-    removeKeysFromRecord({ record: original, path });
-    path.pop();
-    path.pop();
-  }
-  if (isObject(current)) {
-    for (const key in current) {
-      path.push(key);
-      extractNumericOperations({ current: (current as any)[key], acc, path, original });
+const extractNumericOperations = ({ numericFilters }: { numericFilters: { [key: string]: any } }) => {
+  const acc: NumericOperations[] = [];
+  const traverse = ({ current, path }: { current: { [key: string]: any } | string | number; path: string[] }) => {
+    if (typeof current === 'number' && path.some((r) => operatorNames.includes(r))) {
+      acc.push({
+        field: path[path.length - 2],
+        operator: path[path.length - 1],
+        value: current
+      });
+      removeKeysFromRecord({ record: numericFilters, path });
+      path.pop();
+      path.pop();
     }
-  }
+    if (isObject(current)) {
+      for (const key in current) {
+        path.push(key);
+        traverse({ current: (current as any)[key], path });
+      }
+    }
+  };
+  traverse({ current: numericFilters, path: [] });
+  return acc;
 };
 
 const atPath = (obj: object, atPath: string[]) => {
@@ -3815,7 +3802,7 @@ export const columnSelectionObject = (
   foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][]
 ) => {
   const result: ColumnSelectionObject = { links: {}, regular: [] };
-  const recurse = (columnPath: string, path: string[]) => {
+  const traverse = (columnPath: string, path: string[]) => {
     const [table, ...rest] = columnPath.split('.');
     if (!atPath(result, path)['links']) {
       atPath(result, path)['links'] = {};
@@ -3824,14 +3811,14 @@ export const columnSelectionObject = (
       atPath(result, path)['regular'] = [];
     }
     if (foreignKeys.some((fk) => fk.columns.includes(table)) && rest.length > 0) {
-      recurse(rest.join('.'), [...path, 'links', table]);
+      traverse(rest.join('.'), [...path, 'links', table]);
     } else {
       atPath(result, path)['regular'].push(table);
     }
   };
 
   col.forEach((c) => {
-    recurse(c, []);
+    traverse(c, []);
   });
   return result;
 };
@@ -3871,32 +3858,28 @@ export const generateSelectStatement = ({
         for (const key in fields.links) {
           const fk = foreignKeys.find((fk) => fk.columns[0] === key);
           if (!fk) continue;
-          const nested = selection(fields.links[key], eb, fk?.referencedTable);
-
-          const modifiedFilter = relevantFilters(filter, false, fk?.columns);
-          const conditions = modifiedFilter
-            ? (filterToKysely({ value: modifiedFilter, path: [] })(eb, columnData, tableName) as any)
+          const selectedColumns = selection(fields.links[key], eb, fk?.referencedTable);
+          // TODO the conditions are occassionally duplicated, needs debugging
+          const filters = relevantFilters(filter, false, fk?.columns);
+          // TODO the conditions should filter out the nested objects instead of returning null
+          const conditions = filters
+            ? (filterToKysely({ value: filters, path: [] })(eb, columnData, tableName) as any)
             : null;
-          if (filter && conditions) {
-            links.push(
-              jsonObjectFrom(
+          const linkObject = conditions
+            ? jsonObjectFrom(
                 eb
                   .selectFrom(fk.referencedTable)
-                  .select(nested)
+                  .select(selectedColumns)
                   .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`))
                   .where(conditions)
               ).as(`${fk.columns[0]}`)
-            );
-          } else {
-            links.push(
-              jsonObjectFrom(
+            : jsonObjectFrom(
                 eb
                   .selectFrom(fk.referencedTable)
-                  .select(nested)
+                  .select(selectedColumns)
                   .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`))
-              ).as(`${fk.columns[0]}`)
-            );
-          }
+              ).as(`${fk.columns[0]}`);
+          links.push(linkObject);
         }
         return links as SelectExpression<any, any>[];
       }
@@ -3907,12 +3890,20 @@ export const generateSelectStatement = ({
   });
 };
 
+/**
+ *
+ * Separates the filter into relevant filters for regular fields and nested linked columns
+ * @param filter original filter
+ * @param firstLevelOnly boolean to only return filters for non link/foreign key fields
+ * @param linkFields a list of the tables linked fields to use for determining if a field is a link
+ * @returns null or object
+ */
 const relevantFilters = (filter: any, firstLevelOnly: boolean, linkFields?: string[]) => {
   const copy = {};
 
   const traverse = (filter: any, path: string[]) => {
     for (const key in filter) {
-      // TODO deal with array?
+      // TODO deal with array (?)
       if (isObject(filter[key])) {
         traverse(filter[key], [...path, key]);
       } else {
