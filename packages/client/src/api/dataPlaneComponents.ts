@@ -62,6 +62,165 @@ export const listClusterBranches = (variables: ListClusterBranchesVariables, sig
     signal
   });
 
+export type ListClusterExtensionsPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type ListClusterExtensionsQueryParams = {
+  extensionType: 'supported' | 'installed';
+};
+
+export type ListClusterExtensionsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type ListClusterExtensionsVariables = {
+  pathParams: ListClusterExtensionsPathParams;
+  queryParams: ListClusterExtensionsQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve extensions for given cluster ID
+ */
+export const listClusterExtensions = (variables: ListClusterExtensionsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.ListClusterExtensionsResponse,
+    ListClusterExtensionsError,
+    undefined,
+    {},
+    ListClusterExtensionsQueryParams,
+    ListClusterExtensionsPathParams
+  >({
+    url: '/cluster/{clusterId}/extensions',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type InstallClusterExtensionPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type InstallClusterExtensionError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type InstallClusterExtensionRequestBody = {
+  /**
+   * Extension name
+   */
+  extension: string;
+  /**
+   * Schema name
+   */
+  schema?: string;
+  /**
+   * install with cascade option
+   */
+  cascade?: boolean;
+};
+
+export type InstallClusterExtensionVariables = {
+  body: InstallClusterExtensionRequestBody;
+  pathParams: InstallClusterExtensionPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Install an extension for given cluster ID
+ */
+export const installClusterExtension = (variables: InstallClusterExtensionVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.ClusterExtensionInstallationResponse,
+    InstallClusterExtensionError,
+    InstallClusterExtensionRequestBody,
+    {},
+    {},
+    InstallClusterExtensionPathParams
+  >({
+    url: '/cluster/{clusterId}/extensions',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type DropClusterExtensionPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type DropClusterExtensionError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type DropClusterExtensionRequestBody = {
+  /**
+   * Extension name
+   */
+  extension: string;
+  /**
+   * drop with cascade option, true by default
+   */
+  cascade?: boolean;
+};
+
+export type DropClusterExtensionVariables = {
+  body: DropClusterExtensionRequestBody;
+  pathParams: DropClusterExtensionPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Drop an extension for given cluster ID
+ */
+export const dropClusterExtension = (variables: DropClusterExtensionVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    undefined,
+    DropClusterExtensionError,
+    DropClusterExtensionRequestBody,
+    {},
+    {},
+    DropClusterExtensionPathParams
+  >({
+    url: '/cluster/{clusterId}/extensions',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
 export type GetClusterMetricsPathParams = {
   /**
    * Cluster ID
@@ -5503,7 +5662,13 @@ export const sqlBatchQuery = (variables: SqlBatchQueryVariables, signal?: AbortS
   });
 
 export const operationsByTag = {
-  cluster: { listClusterBranches, getClusterMetrics },
+  cluster: {
+    listClusterBranches,
+    listClusterExtensions,
+    installClusterExtension,
+    dropClusterExtension,
+    getClusterMetrics
+  },
   migrations: {
     applyMigration,
     startMigration,
