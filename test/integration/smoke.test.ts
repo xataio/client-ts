@@ -18,14 +18,13 @@ const region = process.env.XATA_REGION || 'eu-west-1';
 const clusterId = process.env.XATA_CLUSTER_ID ?? 'shared-cluster';
 const hash = Math.random().toString(36).substr(2, 9);
 
+// For shared-cluster, we create a new workspace with a unique name
+// while in dedicated clusters, we use the provided workspace name
+const workspaceName = clusterId === 'shared-cluster' ? `sdk-smoke-${hash}` : process.env.XATA_WORKSPACE;
+if (!workspaceName) throw new Error('XATA_WORKSPACE environment variable is not set');
+
 describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace with new apiKey', async () => {
-    // For shared-cluster, we create a new workspace with a unique name
-    // while in dedicated clusters, we use the provided workspace name
-    const workspaceName =
-      clusterId === 'shared-cluster' ? `sdk-integration-api-client-${hash}` : process.env.XATA_WORKSPACE;
-    if (!workspaceName) throw new Error('XATA_WORKSPACE environment variable is not set');
-
     const newApiKey = await api.authentication.createUserAPIKey({ pathParams: { keyName: `smoke-${hash}-key` } });
 
     expect(newApiKey).toBeDefined();
