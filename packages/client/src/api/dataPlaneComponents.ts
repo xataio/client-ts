@@ -72,7 +72,7 @@ export type ListClusterExtensionsPathParams = {
 };
 
 export type ListClusterExtensionsQueryParams = {
-  extensionType: 'supported' | 'installed';
+  extensionType: 'available' | 'installed';
 };
 
 export type ListClusterExtensionsError = Fetcher.ErrorWrapper<
