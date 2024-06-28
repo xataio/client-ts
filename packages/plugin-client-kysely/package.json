@@ -28,6 +28,6 @@
     "kysely": "^0.27.3"
   },
   "peerDependencies": {
-    "kysely": "^0.26.1"
+    "kysely": "*"
   }
 }

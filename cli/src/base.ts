@@ -203,9 +203,15 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   }
 
   async getXataClient({ profile }: { profile?: Profile } = {}) {
-    if (this.#xataClient) return this.#xataClient;
+    if (this.#xataClient) {
+      console.log('Using existing client');
+      return this.#xataClient;
+    } else {
+      console.log('Creating new client', profile);
+    }
 
     const { apiKey, host } = profile ?? (await this.getProfile());
+    console.log('apiKey', apiKey, 'host', host);
 
     if (!apiKey) {
       this.error('Could not instantiate Xata client. No API key found.', {
@@ -357,9 +363,12 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     } = {}
   ): Promise<string> {
     const xata = await this.getXataClient();
+    console.log(1, 'workspace', workspace, 'region', region, 'database', database);
     const { branches = [] } = await xata.api.branch.getBranchList({
       pathParams: { workspace, region, dbName: database }
     });
+
+    console.log(2, branches);
 
     const EMPTY_CHOICE = '$empty';
     const CREATE_CHOICE = '$create';

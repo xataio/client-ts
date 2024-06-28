@@ -1,4 +1,12 @@
-import { EditableData, Identifiable, SQLPlugin, XataPlugin, XataPluginOptions, XataRecord } from '@xata.io/client';
+import {
+  Identifiable,
+  SQLPlugin,
+  XataArrayFile,
+  XataFile,
+  XataPlugin,
+  XataPluginOptions,
+  XataRecord
+} from '@xata.io/client';
 import { Kysely } from 'kysely';
 import { XataDialect } from './driver';
 
@@ -14,16 +22,23 @@ export class KyselyPlugin<Schemas extends Record<string, XataRecord>> extends Xa
   }
 }
 
-type ExcludeFromUnionIfNotOnlyType<Union, Type> = Exclude<Union, Type> extends never ? Union : Exclude<Union, Type>;
+type StringKeys<O> = Extract<keyof O, string>;
 
-type RemoveIdentifiable<T extends Record<string, any>> = {
-  [K in keyof T]: T[K] extends any[] // if it's an array
-    ? ExcludeFromUnionIfNotOnlyType<T[K][number], Identifiable>[]
-    : ExcludeFromUnionIfNotOnlyType<T[K], Identifiable>;
+type XataFileFields = Partial<
+  Pick<
+    XataArrayFile,
+    { [K in StringKeys<XataArrayFile>]: XataArrayFile[K] extends Function ? never : K }[keyof XataArrayFile]
+  >
+>;
+
+type RowTypeFields<T> = T extends XataFileFields ? XataFileFields : T;
+
+type RowType<O> = {
+  [K in keyof O]: RowTypeFields<O[K]>;
 };
 
-export type Model<Schemas extends Record<string, XataRecord>> = {
-  [Model in keyof Schemas]: RemoveIdentifiable<EditableData<Schemas[Model]>>;
+export type Model<Schemas extends Record<string, any>> = {
+  [Model in keyof Schemas]: RowType<Schemas[Model]>;
 };
 
 export * from './driver';
