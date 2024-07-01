@@ -25,6 +25,7 @@ const workspace = process.env.XATA_WORKSPACE ?? '';
 if (workspace === '') throw new Error('XATA_WORKSPACE environment variable is not set');
 
 const host = parseProviderString(process.env.XATA_API_PROVIDER);
+const clusterId = process.env.XATA_CLUSTER_ID ?? 'shared-cluster';
 
 const region = process.env.XATA_REGION || 'us-east-1';
 
@@ -79,7 +80,7 @@ export async function setUpTestEnvironment(
 
   const { databaseName: database } = await api.databases.createDatabase({
     pathParams: { workspaceId: workspace, dbName: `sdk-integration-test-${prefix}-${id}` },
-    body: { region },
+    body: { region, defaultClusterID: clusterId },
     headers: { 'X-Features': 'feat-pgroll-migrations=1' }
   });
 
