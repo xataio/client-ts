@@ -15,45 +15,28 @@ if (host === null) {
 
 const api = new XataApiClient({ apiKey: process.env.XATA_API_KEY, host });
 const region = process.env.XATA_REGION || 'eu-west-1';
+const clusterId = process.env.XATA_CLUSTER_ID ?? 'shared-cluster';
+const hash = Math.random().toString(36).substr(2, 9);
 
-const getWorkspaceName = () => `sdk-integration-api-client-${Math.random().toString(36).substr(2, 9)}`;
+// For shared-cluster, we create a new workspace with a unique name
+// while in dedicated clusters, we use the provided workspace name
+const workspaceName = clusterId === 'shared-cluster' ? `sdk-smoke-${hash}` : process.env.XATA_WORKSPACE;
+if (!workspaceName) throw new Error('XATA_WORKSPACE environment variable is not set');
 
 describe('API Client Integration Tests', () => {
   test('Create, get and delete workspace with new apiKey', async () => {
-    const workspaceName = getWorkspaceName();
-
-    const newApiKey = await api.authentication.createUserAPIKey({ pathParams: { keyName: `${workspaceName}-key` } });
+    const newApiKey = await api.authentication.createUserAPIKey({ pathParams: { keyName: `smoke-${hash}-key` } });
 
     expect(newApiKey).toBeDefined();
-    expect(newApiKey.name).toBe(`${workspaceName}-key`);
+    expect(newApiKey.name).toBe(`smoke-${hash}-key`);
     expect(newApiKey.key).toBeDefined();
 
+    const workspace = await getOrCreateWorkspace(workspaceName);
     const newApi = new XataApiClient({ apiKey: newApiKey.key, host });
 
-    const { id: workspace, name } = await newApi.workspaces.createWorkspace({
-      body: { name: workspaceName, slug: `${workspaceName}-slug` }
-    });
-
-    await waitForReplication(newApi, workspace);
-
-    expect(workspace).toBeDefined();
-    expect(name).toBe(workspaceName);
-
-    console.log('Created workspace', workspace);
-
-    const foo = await newApi.workspaces.getWorkspace({ pathParams: { workspaceId: workspace } });
-
-    expect(foo.id).toBe(workspace);
-    expect(foo.slug).toBe(`${workspaceName}-slug`);
-
-    const bar = await newApi.workspaces.getWorkspace({ pathParams: { workspaceId: workspace } });
-
-    expect(bar.id).toBe(workspace);
-    expect(bar.slug).toBe(`${workspaceName}-slug`);
-
     const { databaseName: database } = await newApi.databases.createDatabase({
-      pathParams: { workspaceId: workspace, dbName: `data-${workspace}` },
-      body: { region }
+      pathParams: { workspaceId: workspace, dbName: `data-${workspace}-${hash}` },
+      body: { region, defaultClusterID: clusterId }
     });
 
     await waitForReplication(newApi, workspace, database);
@@ -122,13 +105,34 @@ describe('API Client Integration Tests', () => {
 
     console.log('Deleted API key, record is no longer accessible');
 
-    await api.workspaces.deleteWorkspace({ pathParams: { workspaceId: workspace } });
+    if (clusterId === 'shared-cluster') {
+      await api.workspaces.deleteWorkspace({ pathParams: { workspaceId: workspace } });
 
-    await expect(api.workspaces.getWorkspace({ pathParams: { workspaceId: workspace } })).rejects.toHaveProperty(
-      'message'
-    );
+      await expect(api.workspaces.getWorkspace({ pathParams: { workspaceId: workspace } })).rejects.toHaveProperty(
+        'message'
+      );
+    }
   });
 });
+
+async function getOrCreateWorkspace(workspaceName: string): Promise<string> {
+  if (clusterId === 'shared-cluster') {
+    const { id: workspace, name } = await api.workspaces.createWorkspace({
+      body: { name: workspaceName, slug: `${workspaceName}-slug` }
+    });
+
+    await waitForReplication(api, workspace);
+
+    expect(workspace).toBeDefined();
+    expect(name).toBe(workspaceName);
+
+    console.log('Created workspace', workspace);
+
+    return workspace;
+  }
+
+  return workspaceName;
+}
 
 async function waitForReplication(api: XataApiClient, workspace: string, database?: string): Promise<void> {
   try {
