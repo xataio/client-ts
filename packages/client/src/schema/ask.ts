@@ -2,9 +2,8 @@ import { FuzzinessExpression, PrefixExpression } from '../api/dataPlaneSchemas';
 import { Boosters } from '../search/boosters';
 import { TargetColumn } from '../search/target';
 import { Filter } from './filters';
-import { XataRecord } from './record';
 
-export type KeywordAskOptions<Record extends XataRecord> = {
+export type KeywordAskOptions<Record> = {
   searchType?: 'keyword';
   search?: {
     fuzziness?: FuzzinessExpression;
@@ -15,7 +14,7 @@ export type KeywordAskOptions<Record extends XataRecord> = {
   };
 };
 
-export type VectorAskOptions<Record extends XataRecord> = {
+export type VectorAskOptions<Record> = {
   searchType?: 'vector';
   vectorSearch?: {
     /**
@@ -30,13 +29,13 @@ export type VectorAskOptions<Record extends XataRecord> = {
   };
 };
 
-type TypeAskOptions<Record extends XataRecord> = KeywordAskOptions<Record> | VectorAskOptions<Record>;
+type TypeAskOptions<Record> = KeywordAskOptions<Record> | VectorAskOptions<Record>;
 
 type BaseAskOptions = {
   rules?: string[];
   sessionId?: string;
 };
 
-export type AskOptions<Record extends XataRecord> = TypeAskOptions<Record> & BaseAskOptions;
+export type AskOptions<Record> = TypeAskOptions<Record> & BaseAskOptions;
 
 export type AskResult = { answer?: string; records?: string[]; sessionId?: string };

@@ -28,7 +28,7 @@ import { reportBugURL } from './utils.js';
 export class XataClient extends buildClient({
   api: new XataApiPlugin(),
   import: new XataImportPlugin()
-}) {}
+})<any> {}
 
 export type APIKeyLocation = 'shell' | 'dotenv' | 'profile' | 'new';
 
@@ -212,15 +212,18 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     const databaseURL = flags.db ?? 'https://{workspace}.{region}.xata.sh/db/{database}';
     const branch = flags.branch ?? this.getCurrentBranchName();
 
-    this.#xataClient = new XataClient({
-      databaseURL,
-      branch,
-      apiKey,
-      fetch,
-      host,
-      clientName: 'cli',
-      xataAgentExtra: { cliCommandId: this.id ?? 'unknown' }
-    });
+    this.#xataClient = new XataClient(
+      {
+        databaseURL,
+        branch,
+        apiKey,
+        fetch,
+        host,
+        clientName: 'cli',
+        xataAgentExtra: { cliCommandId: this.id ?? 'unknown' }
+      },
+      { tables: [] }
+    );
 
     return this.#xataClient;
   }

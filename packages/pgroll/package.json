@@ -28,7 +28,7 @@
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
-  "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
+  "homepage": "https://github.com/xataio/client-ts",
   "dependencies": {
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.23.0"

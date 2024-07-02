@@ -38,7 +38,7 @@ export interface BaseData {
 /**
  * Represents a persisted record from the database.
  */
-export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<any>> extends Identifiable {
+export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiable {
   /**
    * Get an object representation of this record.
    */
@@ -135,7 +135,7 @@ export function isIdentifiable(x: any): x is Identifiable & Record<string, unkno
   return isObject(x) && isString(x?.xata_id);
 }
 
-type NumericOperator = ExclusiveOr<
+export type NumericOperator = ExclusiveOr<
   { $increment?: number },
   ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
 >;
@@ -158,7 +158,7 @@ type EditableDataFields<T> = T extends XataRecord
   ? number | NumericOperator
   : T;
 
-export type EditableData<O extends XataRecord> = Identifiable &
+export type EditableData<O> = Identifiable &
   Partial<
     Omit<
       {

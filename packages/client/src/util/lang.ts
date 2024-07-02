@@ -45,6 +45,10 @@ export function isNumber(value: any): value is number {
   return isDefined(value) && typeof value === 'number';
 }
 
+export function isStringOrNumber(value: any): value is string | number {
+  return isString(value) || isNumber(value);
+}
+
 export function parseNumber(value: any): number | undefined {
   if (isNumber(value)) {
     return value;

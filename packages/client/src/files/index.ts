@@ -2,7 +2,7 @@ import { deleteFileItem, getFileItem, putFileItem } from '../api';
 import { FileResponse } from '../api/dataPlaneSchemas';
 import { XataPlugin, XataPluginOptions } from '../plugins';
 import { ColumnsByValue, XataArrayFile, XataFile } from '../schema';
-import { BaseData, XataRecord } from '../schema/record';
+import { BaseData } from '../schema/record';
 import { isBlob } from '../util/lang';
 import { GetArrayInnerType, StringKeys, Values } from '../util/types';
 
@@ -48,7 +48,7 @@ export type DownloadDestination<Schemas extends Record<string, BaseData>, Tables
       };
 }>;
 
-export class FilesPlugin<Schemas extends Record<string, XataRecord>> extends XataPlugin {
+export class FilesPlugin<Schemas extends Record<string, any>> extends XataPlugin {
   build(pluginOptions: XataPluginOptions): FilesPluginResult<Schemas> {
     return {
       download: async (location: Record<string, string | undefined>) => {

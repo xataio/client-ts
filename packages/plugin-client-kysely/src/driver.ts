@@ -11,10 +11,9 @@ import {
   QueryCompiler,
   QueryResult
 } from 'kysely';
-import { SQLPluginResult } from '@xata.io/client';
 
 export type XataDialectConfig = {
-  xata: { sql: SQLPluginResult };
+  xata: { sql: any };
 };
 
 export class XataDialect implements Dialect {
