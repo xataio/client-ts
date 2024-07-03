@@ -1,12 +1,4 @@
-import {
-  Identifiable,
-  SQLPlugin,
-  XataArrayFile,
-  XataFile,
-  XataPlugin,
-  XataPluginOptions,
-  XataRecord
-} from '@xata.io/client';
+import { SQLPlugin, XataPlugin, XataPluginOptions, XataRecord } from '@xata.io/client';
 import { Kysely } from 'kysely';
 import { XataDialect } from './driver';
 
@@ -22,19 +14,27 @@ export class KyselyPlugin<Schemas extends Record<string, XataRecord>> extends Xa
   }
 }
 
-type StringKeys<O> = Extract<keyof O, string>;
+type XataFilePgFields = {
+  id?: string;
+  mediaType?: string;
+  size?: number;
+  name?: string;
+  enablePublicUrl?: boolean;
+  signedUrlTimeout?: number;
+  storageKey?: string;
+  uploadKey?: string;
+  uploadUrlTimeout?: number;
+  version?: number;
+};
 
-type XataFileFields = Partial<
-  Pick<
-    XataArrayFile,
-    { [K in StringKeys<XataArrayFile>]: XataArrayFile[K] extends Function ? never : K }[keyof XataArrayFile]
-  >
->;
-
-type RowTypeFields<T> = T extends XataFileFields ? XataFileFields : T;
+type RowTypeFields<T> = T extends { mediaType?: string }
+  ? XataFilePgFields
+  : T extends Array<{ mediaType?: string }>
+  ? XataFilePgFields[]
+  : T;
 
 type RowType<O> = {
-  [K in keyof O]: RowTypeFields<O[K]>;
+  [K in keyof O]: RowTypeFields<NonNullable<O[K]>>;
 };
 
 export type Model<Schemas extends Record<string, any>> = {
