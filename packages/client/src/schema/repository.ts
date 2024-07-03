@@ -38,7 +38,7 @@ import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
 import { AskOptions, AskResult } from './ask';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
-import { Filter, cleanFilter, filterToKysely } from './filters';
+import { Filter, atPath, cleanFilter, filterToKysely, relevantFilters } from './filters';
 import { parseJson, stringifyJson } from './json';
 import {
   CursorNavigationDecoded,
@@ -64,12 +64,14 @@ import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } fro
 import {
   AliasedRawBuilder,
   DeleteQueryBuilder,
+  Expression,
   ExpressionBuilder,
   InsertQueryBuilder,
   RawBuilder,
   SelectExpression,
   SelectQueryBuilder,
   Selection,
+  Simplify,
   UpdateQueryBuilder,
   sql
 } from 'kysely';
@@ -86,6 +88,7 @@ import {
 } from './identifiable';
 import { Model } from '@xata.io/kysely';
 import { jsonObjectFrom } from 'kysely/helpers/postgres';
+import { ObjectType } from 'typescript';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -984,10 +987,6 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
     };
   }
 
-  selectAllColumns = (columns: SelectableColumn<ObjectType>[] = ['*']) => {
-    return !columns || (columns && columns.length > 0 && columns[0] === '*') || (columns && columns.length === 0);
-  };
-
   async create<K extends SelectableColumn<ObjectType>>(
     object: NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>,
     columns: K[]
@@ -1080,7 +1079,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
     } else {
       statement = statement.values(record);
     }
-    if (this.selectAllColumns(columns)) {
+    if (selectAllColumns(columns)) {
       statement = statement.returningAll();
     } else {
       statement = statement.returning(columns);
@@ -1104,7 +1103,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       .insertInto(this.#table)
       .values({ ...record, [this.#primaryKey]: recordId });
 
-    if (this.selectAllColumns(columns)) {
+    if (selectAllColumns(columns)) {
       statement = statement.returningAll();
     } else {
       statement = statement.returning(columns);
@@ -1218,22 +1217,18 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
           let statement: SelectQueryBuilder<any, any, any> = this.#db
             .selectFrom(this.#table)
             .where(this.#primaryKey, '=', id);
-          if (this.selectAllColumns(columns as any)) {
-            statement = statement.selectAll();
-          } else {
-            const foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][] = Object.values(
-              (this.#schema?.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? []
-            );
-            statement = generateSelectStatement({
-              columnData: (this.#schema?.tables.find((table) => table.name === this.#table)?.columns as any) ?? [],
-              filter: {},
-              columnSelectionObject: columnSelectionObject((columns as string[]) ?? [], foreignKeys),
-              stmt: statement,
-              foreignKeys,
-              primaryKey: this.#primaryKey,
-              tableName: this.#table
-            });
-          }
+
+          statement = generateSelectStatement({
+            columnData: (this.#schema?.tables.find((table) => table.name === this.#table)?.columns as any) ?? [],
+            filter: {},
+            columns,
+            stmt: statement,
+            schema: this.#schema as any,
+            primaryKey: this.#primaryKey,
+            tableName: this.#table,
+            db: this.#db
+          });
+
           const response = await statement.executeTakeFirst();
           if (!response) return null;
           return initObjectKysely<ObjectType>(
@@ -1493,7 +1488,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
           statement = statement.set((eb) => ({ [field]: eb(field, operatorMap[operator], value) }));
         }
       }
-      if (this.selectAllColumns(columns)) {
+      if (selectAllColumns(columns)) {
         statement = statement.returningAll();
       } else {
         statement = statement.returning(columns);
@@ -1669,7 +1664,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       .insertInto(this.#table)
       .values({ ...object, [this.#primaryKey]: recordId })
       .onConflict((oc) => oc.column(this.#primaryKey).doUpdateSet(updates));
-    if (this.selectAllColumns(columns)) {
+    if (selectAllColumns(columns)) {
       statement = statement.returningAll();
     } else {
       statement = statement.returning(columns);
@@ -1928,7 +1923,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       let statement: DeleteQueryBuilder<any, any, any> = this.#db
         .deleteFrom(this.#table)
         .where(this.#primaryKey, '=', recordId);
-      if (this.selectAllColumns(columns)) {
+      if (selectAllColumns(columns)) {
         statement = statement.returningAll();
       } else {
         statement = statement.returning(columns);
@@ -2094,10 +2089,6 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       const size = data?.pagination?.size ?? cursor?.data?.pagination?.size ?? PAGINATION_DEFAULT_SIZE;
       const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset ?? PAGINATION_DEFAULT_OFFSET;
 
-      const foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][] = Object.values(
-        (this.#schema?.tables.find((table) => table.name === this.#table) as any)?.foreignKeys ?? []
-      );
-
       const columnData = this.#schema?.tables.find((table) => table.name === this.#table)?.columns ?? [];
 
       if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
@@ -2107,30 +2098,16 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
 
       let statement = this.#db.selectFrom(this.#table);
 
-      if (this.selectAllColumns(data.columns as any)) {
-        statement = statement.selectAll();
-      } else {
-        statement = generateSelectStatement({
-          columnData: columnData as any[],
-          filter: filter,
-          // TODO column filters are only applied if the column is explicitly selected, should not happen
-          columnSelectionObject: columnSelectionObject((data.columns as string[]) ?? [], foreignKeys),
-          stmt: statement,
-          foreignKeys,
-          primaryKey: this.#primaryKey,
-          tableName: this.#table
-        });
-      }
-      if (filter) {
-        // Regular top levels are applied separately from nested column filters to avoid duplication
-        const filters = relevantFilters(filter, true, foreignKeys?.flatMap((fk) => fk.columns) ?? []);
-        if (filters) {
-          statement = statement.where(
-            (eb) =>
-              filterToKysely({ value: { [this.#table]: filters }, path: [] })(eb, columnData as any, this.#table) as any
-          );
-        }
-      }
+      statement = generateSelectStatement({
+        columnData: columnData as any[],
+        filter,
+        columns: data.columns as any[],
+        stmt: statement,
+        schema: this.#schema as any,
+        primaryKey: this.#primaryKey,
+        tableName: this.#table,
+        db: this.#db
+      });
 
       if (size) {
         statement = statement.limit(size);
@@ -2180,6 +2157,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         statement = statement.orderBy(this.#primaryKey, 'desc');
       }
 
+      console.log('statement before execute', statement.compile().sql, statement.compile().parameters);
       const response: {
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement)).rows;
@@ -3788,19 +3766,7 @@ const extractNumericOperations = ({ numericFilters }: { numericFilters: { [key: 
   return acc;
 };
 
-const atPath = (obj: object, atPath: string[]) => {
-  return atPath.reduce((acc, key) => {
-    if (!acc[key]) {
-      acc[key] = {};
-    }
-    return acc[key];
-  }, obj as { [k: string]: any });
-};
-
-export const columnSelectionObject = (
-  col: string[],
-  foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][]
-) => {
+export const columnSelectionObject = (col: string[]) => {
   const result: ColumnSelectionObject = { links: {}, regular: [] };
   const traverse = (columnPath: string, path: string[]) => {
     const [table, ...rest] = columnPath.split('.');
@@ -3810,7 +3776,8 @@ export const columnSelectionObject = (
     if (!atPath(result, path)['regular']) {
       atPath(result, path)['regular'] = [];
     }
-    if (foreignKeys.some((fk) => fk.columns.includes(table)) && rest.length > 0) {
+
+    if (rest.length > 0) {
       traverse(rest.join('.'), [...path, 'links', table]);
     } else {
       atPath(result, path)['regular'].push(table);
@@ -3823,98 +3790,124 @@ export const columnSelectionObject = (
   return result;
 };
 
+const selectAllColumns = (columns: SelectableColumn<any>[] = ['*']) => {
+  return !columns || (columns && columns.length > 0 && columns[0] === '*') || (columns && columns.length === 0);
+};
+
 export const generateSelectStatement = ({
   filter,
-  columnSelectionObject,
+  columns,
   stmt,
-  foreignKeys,
+  schema,
   tableName,
   primaryKey,
-  columnData
+  columnData,
+  db
 }: {
   filter: Filter<any>;
   columnData: Schemas.Column[];
-  columnSelectionObject: ColumnSelectionObject;
+  columns: any[];
   stmt: SelectQueryBuilder<Model<any>, string, {}>;
-  foreignKeys: BranchSchema['tables'][number]['foreignKeys'][number][];
+  schema: BranchSchema;
   tableName: string;
   primaryKey: string;
+  db: KyselyPluginResult<Record<string, XataRecord<XataRecord<any>>>>;
 }) => {
-  return stmt.select((eb) => {
-    const selection = (
-      fields: Selection<any, any, any>,
-      eb: ExpressionBuilder<any, any>,
-      lastParent: string
-    ): SelectExpression<any, any>[] => {
-      const regularFields = fields.regular.includes('*')
-        ? [sql.raw<string>('*')]
-        : fields.regular.includes(primaryKey)
-        ? fields.regular
-        : [primaryKey, ...fields.regular];
-      if (Object.keys(fields.links).length > 0) {
-        const links: (string | RawBuilder<string> | AliasedRawBuilder<{ [x: string]: any } | null, string>)[] = [
-          ...regularFields
-        ];
-        for (const key in fields.links) {
-          const fk = foreignKeys.find((fk) => fk.columns[0] === key);
-          if (!fk) continue;
-          const selectedColumns = selection(fields.links[key], eb, fk?.referencedTable);
-          // TODO the conditions are occassionally duplicated, needs debugging
-          const filters = relevantFilters(filter, false, fk?.columns);
-          // TODO the conditions should filter out the nested objects instead of returning null
-          const conditions = filters
-            ? (filterToKysely({ value: filters, path: [] })(eb, columnData, tableName) as any)
-            : null;
-          const linkObject = conditions
-            ? jsonObjectFrom(
-                eb
-                  .selectFrom(fk.referencedTable)
-                  .select(selectedColumns)
-                  .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`))
-                  .where(conditions)
-              ).as(`${fk.columns[0]}`)
-            : jsonObjectFrom(
-                eb
-                  .selectFrom(fk.referencedTable)
-                  .select(selectedColumns)
-                  .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`))
-              ).as(`${fk.columns[0]}`);
-          links.push(linkObject);
-        }
-        return links as SelectExpression<any, any>[];
-      }
-      return regularFields as SelectExpression<any, any>[];
-    };
+  const columnsSelected = columnSelectionObject(columns ?? []);
+  const visited: Set<string> = new Set();
 
-    return selection(columnSelectionObject, eb, tableName);
-  });
-};
-
-/**
- *
- * Separates the filter into relevant filters for regular fields and nested linked columns
- * @param filter original filter
- * @param firstLevelOnly boolean to only return filters for non link/foreign key fields
- * @param linkFields a list of the tables linked fields to use for determining if a field is a link
- * @returns null or object
- */
-const relevantFilters = (filter: any, firstLevelOnly: boolean, linkFields?: string[]) => {
-  const copy = {};
-
-  const traverse = (filter: any, path: string[]) => {
-    for (const key in filter) {
-      // TODO deal with array (?)
-      if (isObject(filter[key])) {
-        traverse(filter[key], [...path, key]);
-      } else {
-        if (firstLevelOnly && !linkFields?.some((s) => path.includes(s))) {
-          atPath(copy, path)[key] = filter[key];
-        } else if (!firstLevelOnly && linkFields?.some((s) => path.includes(s))) {
-          atPath(copy, path)[key] = filter[key];
-        }
+  if (selectAllColumns(columns as any)) {
+    stmt = stmt.selectAll();
+    if (filter) {
+      const topLevelFilters = relevantFilters(filter, true, tableName, visited);
+      if (topLevelFilters) {
+        stmt = stmt.where(
+          (eb) =>
+            filterToKysely({ value: { [tableName]: topLevelFilters }, path: [] })(
+              eb,
+              columnData as any,
+              tableName
+            ) as any
+        );
       }
     }
-  };
-  traverse(filter, []);
-  return Object.keys(copy).length > 0 ? copy : null;
+  } else {
+    // TODO separate selection and filtering
+    const select = stmt.select((eb) => {
+      const selection = (
+        fields: Selection<any, any, any>,
+        eb: ExpressionBuilder<any, any>,
+        lastParent: string
+      ): SelectExpression<any, any>[] => {
+        const regularFields = fields.regular.includes('*')
+          ? [sql.raw<string>('*')]
+          : fields.regular.includes(primaryKey)
+          ? fields.regular
+          : [primaryKey, ...fields.regular];
+        if (Object.keys(fields.links).length > 0) {
+          const links: (string | RawBuilder<string> | AliasedRawBuilder<{ [x: string]: any } | null, string>)[] = [
+            ...regularFields
+          ];
+          for (const key in fields.links) {
+            const fk = Object.values(schema.tables[lastParent]?.foreignKeys ?? {})?.find((fk) =>
+              fk.columns.includes(key)
+            );
+            if (!fk) continue;
+            const selectedColumns = selection(fields.links[key], eb, fk?.referencedTable);
+
+            const filters = relevantFilters(filter, false, key, visited);
+
+            const conditions = filters
+              ? (filterToKysely({ value: filters, path: [] })(eb, columnData, tableName) as any)
+              : null;
+            const stmt = eb
+              .selectFrom(fk.referencedTable)
+              .select(selectedColumns)
+              .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`));
+            const linkObject = conditions
+              ? jsonObjectFromCustom(stmt.where(conditions)).as(`${fk.columns[0]}`)
+              : jsonObjectFrom(stmt).as(`${fk.columns[0]}`);
+
+            links.push(linkObject);
+          }
+
+          return links as SelectExpression<any, any>[];
+        }
+
+        // TODO maybe add regular fields filters on here instead of below
+        return regularFields as SelectExpression<any, any>[];
+      };
+      return selection(columnsSelected, eb, tableName);
+    });
+
+    stmt = select;
+
+    if (filter) {
+      const topLevelFilters = relevantFilters(filter, true, tableName, visited);
+      if (topLevelFilters) {
+        stmt = stmt.where(
+          (eb) =>
+            filterToKysely({ value: { [tableName]: topLevelFilters }, path: [] })(
+              eb,
+              columnData as any,
+              tableName
+            ) as any
+        );
+      }
+    }
+    if (Object.keys(columnsSelected.links).length > 0) {
+      stmt = db
+        .selectFrom(sql`${stmt}`.as('tmp'))
+        .selectAll()
+        .where((eb) =>
+          eb.and([...Object.keys(columnsSelected.links).map((link) => sql.raw(`"tmp"."${link}" is not null`))])
+        );
+    }
+  }
+
+  return stmt;
 };
+
+export function jsonObjectFromCustom<O>(expr: Expression<O>): RawBuilder<Simplify<O> | null> {
+  return sql`(select to_json(obj) from ${expr} as obj where obj is not null)`;
+}

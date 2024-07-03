@@ -6,6 +6,7 @@ import { ColumnsByValue, ValueAtColumn } from './selection';
 import { ExpressionBuilder, ExpressionOrFactory, ReferenceExpression, sql } from 'kysely';
 import { ExpressionFactory } from 'kysely/dist/cjs/parser/expression-parser';
 import { Schemas } from '../api';
+import path from 'path';
 
 export type JSONFilterColumns<Record> = Values<{
   [K in keyof Record]: NonNullable<Record[K]> extends JSONValue<any>
@@ -251,8 +252,6 @@ const buildStatement = ({
   }
 };
 
-// TODO get filter to kyself to support links
-// if the filter contains a link key,
 export const filterToKysely = ({
   value,
   columnName,
@@ -404,4 +403,51 @@ const buildPattern = (value: string | number | Date, translatePattern: boolean) 
       .replace('?', '_')}`;
   }
   return `${String(value).replace('*', '%').replace('?', '_')}`;
+};
+
+/**
+ *
+ * Separates the filter into relevant filters for regular fields and nested linked columns.
+ * Removes nested filters for link fields to avoid duplicate conditions.
+ * @param filter original filter
+ * @param firstLevelOnly boolean to only return filters for non link/foreign key fields
+ * @param linkFields a list of the tables linked fields to use for determining if a field is a link
+ * @returns null or object
+ */
+
+export const relevantFilters = (filter: any, topLevelOnly: boolean, originalKey: string, visited: Set<string>) => {
+  const copy = {};
+  const traverse = (filter: any, path: string[]) => {
+    for (const key in filter) {
+      if (isObject(filter[key])) {
+        if (topLevelOnly && !key.startsWith('$')) {
+          continue;
+        }
+        traverse(filter[key], [...path, key]);
+      } else if (!topLevelOnly && path.includes(originalKey)) {
+        path.push(key);
+        const stringifiedPaths = path.join('.');
+        if (visited.has(stringifiedPaths)) {
+          continue;
+        }
+        visited.add(stringifiedPaths);
+        atPath(copy, path)[key] = filter[key];
+      } else if (topLevelOnly && !path.includes(originalKey)) {
+        atPath(copy, path)[key] = filter[key];
+      }
+    }
+  };
+
+  traverse(filter, []);
+
+  return Object.keys(copy).length > 0 ? copy : null;
+};
+
+export const atPath = (obj: object, atPath: string[]) => {
+  return atPath.reduce((acc, key) => {
+    if (!acc[key]) {
+      acc[key] = {};
+    }
+    return acc[key];
+  }, obj as { [k: string]: any });
 };
