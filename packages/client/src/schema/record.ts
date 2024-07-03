@@ -169,8 +169,8 @@ export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> 
 }
 
 type NumericOperator = ExclusiveOr<
-  { $increment?: number },
-  ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
+  { $increment: number },
+  ExclusiveOr<{ $decrement: number }, ExclusiveOr<{ $multiply: number }, { $divide: number }>>
 >;
 
 export type InputXataFile = Partial<XataArrayFile> | Promise<Partial<XataArrayFile>>;
