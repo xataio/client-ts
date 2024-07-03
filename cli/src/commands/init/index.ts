@@ -139,7 +139,6 @@ export default class Init extends BaseCommand<typeof Init> {
     }
 
     const { workspace, region, database, databaseURL } = await this.getParsedDatabaseURL(flags.db, true);
-    console.log({ workspace, region, database, databaseURL });
 
     const detectedBranch = this.getCurrentBranchName();
     const branch =
@@ -150,16 +149,13 @@ export default class Init extends BaseCommand<typeof Init> {
             defaultBranch: DEFAULT_BRANCH
           })
         : detectedBranch;
-    console.log({ branch });
 
     this.projectConfig = { databaseURL };
-    console.log({ projectConfig: this.projectConfig });
     const ignoreEnvFile = await this.promptIgnoreEnvFile();
 
     const { shouldInstallPackage } = await this.configureCodegen();
     const canInstallPackage = await this.access('package.json');
     const packageManager = shouldInstallPackage && canInstallPackage ? await this.getPackageManager() : null;
-    console.log({ packageManager });
 
     this.log('\nSetting up Xata...\n');
     await this.delay(1000);
