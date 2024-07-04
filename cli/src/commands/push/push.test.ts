@@ -67,7 +67,8 @@ const pgrollMigration1: Schemas.MigrationHistoryItem = {
   migrationType: 'pgroll',
   name: 'mig_cmkjcdrj7c92neg7lnmg',
   parent: 'mig_cmkjccmg1th0of00f5n0',
-  startedAt: '2024-01-18T14:31:20.795975Z'
+  startedAt: '2024-01-18T14:31:20.795975Z',
+  schema: 'public'
 };
 
 const pgrollMigration2: Schemas.MigrationHistoryItem = {
@@ -76,7 +77,8 @@ const pgrollMigration2: Schemas.MigrationHistoryItem = {
   migrationType: 'pgroll',
   name: 'mig_abcdcdrj7c92neg7lefg',
   parent: 'mig_cmkjccmg1th0of00f5n0',
-  startedAt: '2024-01-18T14:31:20.795975Z'
+  startedAt: '2024-01-18T14:31:20.795975Z',
+  schema: 'public'
 };
 
 const pgrollMigration3: Schemas.MigrationHistoryItem = {
@@ -86,7 +88,8 @@ const pgrollMigration3: Schemas.MigrationHistoryItem = {
   migrationType: 'inferred',
   name: 'mig_xbcdcdrj7c92neg7lefx',
   parent: 'mig_cmkjccmg1th0of00f5n0',
-  startedAt: '2024-01-18T14:31:20.795975Z'
+  startedAt: '2024-01-18T14:31:20.795975Z',
+  schema: 'public'
 };
 
 const baseFetch = (url: string, request: any) => {
