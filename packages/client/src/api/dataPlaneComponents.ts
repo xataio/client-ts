@@ -372,7 +372,6 @@ export type StartMigrationRequestBody = {
   operations: {
     [key: string]: any;
   }[];
-  adaptTables?: boolean;
 };
 
 export type StartMigrationVariables = {
