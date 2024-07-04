@@ -356,6 +356,10 @@ export type MigrationHistoryItem = {
    */
   name: string;
   /**
+   * The schema in which the migration was applied
+   */
+  schema: string;
+  /**
    * The pgroll migration that was applied
    */
   migration: string;
