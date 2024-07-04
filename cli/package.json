@@ -82,7 +82,7 @@
     },
     "macos": {
       "identifier": "io.xata.cli",
-      "sign": "\"Developer ID Installer: Xatabase Inc (BNRJ8833Y2)\""
+      "sign": "\"Mac Developer ID Installer: Xatabase Inc\""
     },
     "deb": {
       "identifier": "io.xata.cli"
