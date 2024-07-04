@@ -24,7 +24,7 @@ jobs:
           git checkout -b test-branch-${{ github.sha }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 8
 
@@ -189,7 +189,7 @@ jobs:
         id: nvm
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 8
 
