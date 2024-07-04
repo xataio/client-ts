@@ -3899,17 +3899,17 @@ export const generateSelectStatement = ({
       }
     }
     const linkKeys = Object.keys(columnsSelected.links);
+    const visited2: Set<string> = new Set();
     if (linkKeys.length > 0) {
-      if (linkKeys.some((link) => relevantFilters(filter, false, link, visited))) {
+      const linkFilters = linkKeys.filter((link) => relevantFilters(filter, false, link, visited2));
+      if (linkFilters.length > 0) {
         stmt = db
           .selectFrom(sql`${stmt}`.as('tmp'))
           .selectAll()
           .where((eb) =>
             eb.and([
-              ...Object.keys(columnsSelected.links).map((link) => {
-                if (relevantFilters(filter, false, link, visited)) {
-                  sql.raw(`"tmp"."${link}" is not null`);
-                }
+              ...linkFilters.map((link) => {
+                return sql.raw(`"tmp"."${link}" is not null`);
               })
             ])
           );
