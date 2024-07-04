@@ -37,8 +37,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
 
       - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
         uses: actions/setup-node@v3
