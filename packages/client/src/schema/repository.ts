@@ -24,6 +24,7 @@ import {
   FuzzinessExpression,
   HighlightExpression,
   PrefixExpression,
+  Schema,
   SearchPageConfig,
   TransactionOperation
 } from '../api/schemas';
@@ -892,7 +893,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
   ): Promise<Page<Schema, TableName, ObjectType, Result>>;
 }
 
-const computePrimaryKey = (schema: DatabaseSchema, tableName: string): string => {
+const computePrimaryKey = (schema: Schema, tableName: string): string => {
   const table = schema.tables.find((table) => table.name === tableName);
   const primaryKeys = (table as any)?.primaryKey ?? [];
   if (primaryKeys.length === 1) {
@@ -947,7 +948,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
     // pass plugin options here.
     this.#schema = options.schema;
     this.#getFetchProps = () => ({ ...options.pluginOptions, sessionID: generateUUID() });
-    this.#primaryKey = computePrimaryKey(this.#schema, this.#table);
+    this.#primaryKey = computePrimaryKey(this.#schema as any, this.#table);
     this.#runTransaction = async (body: SqlBatchQueryRequestBody) => {
       body.statements.unshift({
         statement: 'BEGIN',
@@ -3808,7 +3809,7 @@ export const generateSelectStatement = ({
   columnData: Schemas.Column[];
   columns: any[];
   stmt: SelectQueryBuilder<Model<any>, string, {}>;
-  schema: BranchSchema;
+  schema: Schema;
   tableName: string;
   primaryKey: string;
   db: KyselyPluginResult<Record<string, XataRecord<XataRecord<any>>>>;
@@ -3849,14 +3850,16 @@ export const generateSelectStatement = ({
             ...regularFields
           ];
           for (const key in fields.links) {
-            const fk = Object.values(schema.tables[lastParent]?.foreignKeys ?? {})?.find((fk) =>
-              fk.columns.includes(key)
-            );
+            const table = schema.tables?.find((table) => table.name === lastParent);
+            const fk: BranchSchema['tables'][number]['foreignKeys'][number] | null = table
+              ? (Object.values((table as any)?.foreignKeys ?? {})?.find((fk) =>
+                  (fk as any).columns.includes(key)
+                ) as any)
+              : null;
             if (!fk) continue;
             const selectedColumns = selection(fields.links[key], eb, fk?.referencedTable);
 
             const filters = relevantFilters(filter, false, key, visited);
-
             const conditions = filters
               ? (filterToKysely({ value: filters, path: [] })(eb, columnData, tableName) as any)
               : null;
@@ -3895,13 +3898,22 @@ export const generateSelectStatement = ({
         );
       }
     }
-    if (Object.keys(columnsSelected.links).length > 0) {
-      stmt = db
-        .selectFrom(sql`${stmt}`.as('tmp'))
-        .selectAll()
-        .where((eb) =>
-          eb.and([...Object.keys(columnsSelected.links).map((link) => sql.raw(`"tmp"."${link}" is not null`))])
-        );
+    const linkKeys = Object.keys(columnsSelected.links);
+    if (linkKeys.length > 0) {
+      if (linkKeys.some((link) => relevantFilters(filter, false, link, visited))) {
+        stmt = db
+          .selectFrom(sql`${stmt}`.as('tmp'))
+          .selectAll()
+          .where((eb) =>
+            eb.and([
+              ...Object.keys(columnsSelected.links).map((link) => {
+                if (relevantFilters(filter, false, link, visited)) {
+                  sql.raw(`"tmp"."${link}" is not null`);
+                }
+              })
+            ])
+          );
+      }
     }
   }
 

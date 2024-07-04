@@ -6,6 +6,15 @@ const schema = {
     {
       name: 'teams',
       primaryKey: ['xata_id'],
+      foreignKeys: {
+        owner_owner: {
+          name: 'owner_owner',
+          columns: ['owner'],
+          referencedTable: 'users',
+          referencedColumns: ['xata_id'],
+          onDelete: 'SET NULL'
+        }
+      },
       columns: [
         { name: 'xata_id', type: 'string', notNull: true },
         { name: 'xata_version', type: 'int', notNull: true },
@@ -55,6 +64,22 @@ const schema = {
         { name: 'account_value', type: 'int' },
         { name: 'vector', type: 'vector', vector: { dimension: 4 } }
       ],
+      foreignKeys: {
+        owner_owner: {
+          name: 'team_team',
+          columns: ['team'],
+          referencedTable: 'teams',
+          referencedColumns: ['xata_id'],
+          onDelete: 'SET NULL'
+        },
+        pet_pet: {
+          name: 'pet_pet',
+          columns: ['pet'],
+          referencedTable: 'pets',
+          referencedColumns: ['xata_id'],
+          onDelete: 'SET NULL'
+        }
+      },
       revLinks: [{ table: 'teams', column: 'owner' }]
     },
     {

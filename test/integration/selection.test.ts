@@ -97,8 +97,8 @@ describe('integration tests', () => {
       columns: ['pet.xata_id', 'xata_id']
     });
     expect(teams2).toBeDefined();
+    expect(teams2?.pet).toBeNull();
     expect(teams2?.pet?.xata_id).toBeUndefined();
-
     const teams3 = await xata.db.teams.filter('name', 'Team fruits').getFirst({
       columns: ['pet.*', 'xata_id']
     });
