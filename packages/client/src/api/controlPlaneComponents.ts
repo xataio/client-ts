@@ -745,12 +745,8 @@ export type UpdateWorkspaceSettingsError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type UpdateWorkspaceSettingsRequestBody = {
-  postgresEnabled: boolean;
-};
-
 export type UpdateWorkspaceSettingsVariables = {
-  body: UpdateWorkspaceSettingsRequestBody;
+  body?: Record<string, any>;
   pathParams: UpdateWorkspaceSettingsPathParams;
 } & ControlPlaneFetcherExtraProps;
 
@@ -761,7 +757,7 @@ export const updateWorkspaceSettings = (variables: UpdateWorkspaceSettingsVariab
   controlPlaneFetch<
     Schemas.WorkspaceSettings,
     UpdateWorkspaceSettingsError,
-    UpdateWorkspaceSettingsRequestBody,
+    Record<string, any>,
     {},
     {},
     UpdateWorkspaceSettingsPathParams
