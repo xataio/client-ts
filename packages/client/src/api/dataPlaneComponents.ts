@@ -314,6 +314,12 @@ export type ApplyMigrationRequestBody = {
   operations: {
     [key: string]: any;
   }[];
+  /**
+   * The schema in which the migration should be applied
+   *
+   * @default public
+   */
+  schema?: string;
   adaptTables?: boolean;
 };
 
@@ -372,7 +378,12 @@ export type StartMigrationRequestBody = {
   operations: {
     [key: string]: any;
   }[];
-  adaptTables?: boolean;
+  /**
+   * The schema in which the migration should be started
+   *
+   * @default public
+   */
+  schema?: string;
 };
 
 export type StartMigrationVariables = {
@@ -422,7 +433,17 @@ export type CompleteMigrationError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type CompleteMigrationRequestBody = {
+  /**
+   * The schema in which the migration should be completed
+   *
+   * @default public
+   */
+  schema?: string;
+};
+
 export type CompleteMigrationVariables = {
+  body?: CompleteMigrationRequestBody;
   pathParams: CompleteMigrationPathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -433,7 +454,7 @@ export const completeMigration = (variables: CompleteMigrationVariables, signal?
   dataPlaneFetch<
     Schemas.CompleteMigrationResponse,
     CompleteMigrationError,
-    undefined,
+    CompleteMigrationRequestBody,
     {},
     {},
     CompleteMigrationPathParams
@@ -468,7 +489,17 @@ export type RollbackMigrationError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type RollbackMigrationRequestBody = {
+  /**
+   * The schema in which the migration should be rolled back
+   *
+   * @default public
+   */
+  schema?: string;
+};
+
 export type RollbackMigrationVariables = {
+  body?: RollbackMigrationRequestBody;
   pathParams: RollbackMigrationPathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -479,7 +510,7 @@ export const rollbackMigration = (variables: RollbackMigrationVariables, signal?
   dataPlaneFetch<
     Schemas.RollbackMigrationResponse,
     RollbackMigrationError,
-    undefined,
+    RollbackMigrationRequestBody,
     {},
     {},
     RollbackMigrationPathParams
