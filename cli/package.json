@@ -81,7 +81,8 @@
       "init": "./dist/hooks/init/compatibility"
     },
     "macos": {
-      "identifier": "io.xata.cli"
+      "identifier": "io.xata.cli",
+      "sign": "\"Developer ID Installer: Xatabase Inc (BNRJ8833Y2)\""
     },
     "deb": {
       "identifier": "io.xata.cli"
