@@ -50,7 +50,6 @@ const clientOptions = {
 test('link selection', () => {
   const input = ['name', 'owner.*', 'owner.pet.*', 'owner.full_name', 'xata_id'];
   const res = columnSelectionObject(input);
-  console.log('res', JSON.stringify(res));
   expect(res).toEqual({
     links: {
       owner: {
@@ -90,30 +89,22 @@ test('link selection to kysely selects', () => {
   );
 });
 
-test.skip('link selection to kysely selects with filter', () => {
-  const columns = ['name', 'owner.pet.*', 'owner.full_name', 'xata_id'];
+test('link selection to kysely selects with filter', () => {
+  const columns = ['owner.pet.*', 'owner.full_name'];
   const db = new KyselyPlugin().build(clientOptions);
   const tableName = 'teams';
   let statement = db.selectFrom(tableName);
 
   const filter = {
-    topLevelProp1: 'Team animals',
-    topLevelProp2: 1,
     owner: {
-      full_name: { $not: 'John Doe' },
+      full_name: { $isNot: 'John Doe' },
       pet: {
-        thirdLevelProp1: 'Dog',
         name: {
-          $contains: ['one', 'two'],
-          $not: 'thirdlevelPropagain'
-        },
-        thirdLevelProp2: 'Dog2'
-      },
-      ownerProp: {
-        $is: 10
+          $isNot: 'thirdlevelPropagain'
+        }
       }
     },
-    topLevelProp3: ''
+    name: 'Team animals'
   };
   statement = generateSelectStatement({
     filter,
@@ -127,6 +118,6 @@ test.skip('link selection to kysely selects with filter', () => {
   }) as any;
 
   expect(statement.compile().sql).toBe(
-    `select * from (select "xata_id", "name", (select to_json(obj) from (select "xata_id", "full_name", (select to_json(obj) from (select * from "pets" where "xata_id" = "users"."pet" and (CAST ("thirdLevelProp1" AS text) = $1 and (((position($2 IN "name"::text)>0) and (position($3 IN "name"::text)>0)) and not CAST ("name" AS text) = $4) and CAST ("thirdLevelProp2" AS text) = $5)) as obj where obj is not null) as "pet" from "users" where "xata_id" = "teams"."owner" and (not CAST ("full_name" AS text) = $6 and "ownerProp" = $7)) as obj where obj is not null) as "owner" from "teams" where (CAST ("topLevelProp1" AS text) = $8 and "topLevelProp2" = $9 and CAST ("topLevelProp3" AS text) = $10)) as "tmp" where "tmp"."owner" is not null`
+    `select * from (select "xata_id", (select to_json(obj) from (select "xata_id", "full_name", (select to_json(obj) from (select * from "pets" where "xata_id" = "users"."pet" and "name" != $1) as obj where obj is not null) as "pet" from "users" where "xata_id" = "teams"."owner" and "full_name" != $2) as obj where obj is not null) as "owner" from "teams" where CAST ("name" AS text) = $3) as "tmp" where "tmp"."owner" is not null`
   );
 });

@@ -2158,7 +2158,6 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         statement = statement.orderBy(this.#primaryKey, 'desc');
       }
 
-      console.log('statement before execute', statement.compile().sql, statement.compile().parameters);
       const response: {
         [key: string]: unknown;
       }[] = (await this.#db.executeQuery(statement)).rows;

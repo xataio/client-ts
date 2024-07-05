@@ -6,7 +6,6 @@ import { ColumnsByValue, ValueAtColumn } from './selection';
 import { ExpressionBuilder, ExpressionOrFactory, ReferenceExpression, sql } from 'kysely';
 import { ExpressionFactory } from 'kysely/dist/cjs/parser/expression-parser';
 import { Schemas } from '../api';
-import path from 'path';
 
 export type JSONFilterColumns<Record> = Values<{
   [K in keyof Record]: NonNullable<Record[K]> extends JSONValue<any>
@@ -420,7 +419,7 @@ export const relevantFilters = (filter: any, topLevelOnly: boolean, originalKey:
   const traverse = (filter: any, path: string[]) => {
     for (const key in filter) {
       if (isObject(filter[key])) {
-        if (topLevelOnly && !key.startsWith('$')) {
+        if (topLevelOnly && !key.startsWith('$') && path?.length > 0 && !path[path.length - 1]?.startsWith('$')) {
           continue;
         }
         traverse(filter[key], [...path, key]);
