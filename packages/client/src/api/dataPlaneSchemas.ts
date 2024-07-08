@@ -4,6 +4,126 @@
  * @version 1.0
  */
 /**
+ * @x-internal true
+ * @pattern [a-zA-Z0-9_-~:]+
+ */
+export type ClusterID = string;
+
+/**
+ * Page size.
+ *
+ * @x-internal true
+ * @default 25
+ * @minimum 0
+ */
+export type PageSize = number;
+
+/**
+ * Page token
+ *
+ * @x-internal true
+ * @maxLength 255
+ * @minLength 24
+ */
+export type PageToken = string;
+
+/**
+ * @format date-time
+ * @x-go-type string
+ */
+export type DateTime = string;
+
+/**
+ * @x-internal true
+ */
+export type BranchDetails = {
+  name: string;
+  id: string;
+  /**
+   * The cluster where this branch resides.
+   *
+   * @minLength 1
+   */
+  clusterID: string;
+  state: string;
+  createdAt: DateTime;
+  databaseName: string;
+  databaseID: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type PageResponse = {
+  size: number;
+  hasMore: boolean;
+  token?: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ListClusterBranchesResponse = {
+  branches: BranchDetails[];
+  page?: PageResponse;
+};
+
+/**
+ * @x-internal true
+ */
+export type ExtensionDetails = {
+  name: string;
+  description: string;
+  status: 'installed' | 'not_installed';
+  version: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type ListClusterExtensionsResponse = {
+  extensions: ExtensionDetails[];
+};
+
+/**
+ * @x-internal true
+ */
+export type ClusterExtensionInstallationResponse = {
+  extension: string;
+  status: 'success' | 'failure';
+  reason?: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type MetricMessage = {
+  code?: string;
+  value?: string;
+};
+
+/**
+ * @x-internal true
+ */
+export type MetricData = {
+  id?: string;
+  label?: string;
+  messages?: MetricMessage[] | null;
+  status: 'complete' | 'error' | 'partial' | 'forbidden';
+  timestamps: string[];
+  values: number[];
+};
+
+/**
+ * @x-internal true
+ */
+export type MetricsResponse = {
+  metrics: MetricData[];
+  messages: MetricMessage[];
+  page?: PageResponse;
+};
+
+/**
  * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
  *
  * @maxLength 511
@@ -160,9 +280,65 @@ export type MigrationJobStatusResponse = {
    */
   description?: MigrationDescription;
   /**
+   * The timestamp at which the migration job completed or failed
+   *
+   * @format date-time
+   */
+  completedAt?: string;
+  /**
    * The error message associated with the migration job
    */
   error?: string;
+};
+
+export type MigrationJobItem = {
+  /**
+   * The id of the migration job
+   */
+  jobID: string;
+  /**
+   * The type of the migration job
+   */
+  type: MigrationJobType;
+  /**
+   * The status of the migration job
+   */
+  status: MigrationJobStatus;
+  /**
+   * The pgroll migration that was applied
+   */
+  migration?: string;
+  /**
+   * The effect of any active migration on the schema
+   */
+  description?: MigrationDescription;
+  /**
+   * The timestamp at which the migration job was enqueued
+   *
+   * @format date-time
+   */
+  enqueuedAt: string;
+  /**
+   * The timestamp at which the migration job completed or failed
+   *
+   * @format date-time
+   */
+  completedAt?: string;
+  /**
+   * The error message associated with the migration job
+   */
+  error?: string;
+};
+
+export type GetMigrationJobsResponse = {
+  /**
+   * The list of migration jobs
+   */
+  jobs: MigrationJobItem[];
+  /**
+   * The cursor (timestamp) for the next page of results
+   */
+  cursor?: string;
 };
 
 /**
@@ -179,6 +355,10 @@ export type MigrationHistoryItem = {
    * The name of the migration
    */
   name: string;
+  /**
+   * The schema in which the migration was applied
+   */
+  schema: string;
   /**
    * The pgroll migration that was applied
    */
@@ -222,10 +402,9 @@ export type MigrationHistoryResponse = {
 export type DBName = string;
 
 /**
- * @format date-time
- * @x-go-type string
+ * Represent the state of the branch, used for branch lifecycle management
  */
-export type DateTime = string;
+export type BranchState = 'active' | 'move_scheduled' | 'moving';
 
 export type Branch = {
   name: string;
@@ -235,7 +414,10 @@ export type Branch = {
    * @minLength 1
    */
   clusterID?: string;
+  state: BranchState;
   createdAt: DateTime;
+  searchDisabled?: boolean;
+  inactiveSharedCluster?: boolean;
 };
 
 export type ListBranchesResponse = {
@@ -338,6 +520,7 @@ export type DBBranch = {
    */
   clusterID?: string;
   version: number;
+  state: BranchState;
   lastMigrationID: string;
   metadata?: BranchMetadata;
   startedFrom?: StartedFromMetadata;
@@ -1721,17 +1904,66 @@ export type SQLRecord = {
 };
 
 /**
+ * @default strong
+ */
+export type SQLConsistency = 'strong' | 'eventual';
+
+/**
+ * @default json
+ */
+export type SQLResponseType = 'json' | 'array';
+
+export type PreparedStatement = {
+  /**
+   * The SQL statement.
+   *
+   * @minLength 1
+   */
+  statement: string;
+  /**
+   * The query parameter list.
+   *
+   * @x-go-type []any
+   */
+  params?: any[] | null;
+};
+
+export type SQLResponseBase = {
+  /**
+   * Name of the column and its PostgreSQL type
+   *
+   * @x-go-type []sqlproxy.ColumnMeta
+   */
+  columns: {
+    name: string;
+    type: string;
+  }[];
+  /**
+   * Number of selected columns
+   */
+  total: number;
+  warning?: string;
+};
+
+export type SQLResponseJSON = SQLResponseBase & {
+  /**
+   * @x-go-type []xata.Record
+   */
+  records: SQLRecord[];
+};
+
+export type SQLResponseArray = SQLResponseBase & {
+  /**
+   * @x-go-type []xata.Row
+   */
+  rows: any[][];
+};
+
+export type SQLResponse = SQLResponseJSON | SQLResponseArray;
+
+/**
  * Xata Table Record Metadata
  */
 export type XataRecord = RecordMeta & {
   [key: string]: any;
 };
-
-/**
- * Page size.
- *
- * @x-internal true
- * @default 25
- * @minimum 0
- */
-export type PaginationPageSize = number;

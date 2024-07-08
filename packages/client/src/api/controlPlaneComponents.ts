@@ -496,6 +496,7 @@ export type GetWorkspacesListError = Fetcher.ErrorWrapper<
 export type GetWorkspacesListResponse = {
   workspaces: {
     id: Schemas.WorkspaceID;
+    unique_id: string;
     name: string;
     slug: string;
     role: Schemas.Role;
@@ -744,12 +745,8 @@ export type UpdateWorkspaceSettingsError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type UpdateWorkspaceSettingsRequestBody = {
-  postgresEnabled: boolean;
-};
-
 export type UpdateWorkspaceSettingsVariables = {
-  body: UpdateWorkspaceSettingsRequestBody;
+  body?: Record<string, any>;
   pathParams: UpdateWorkspaceSettingsPathParams;
 } & ControlPlaneFetcherExtraProps;
 
@@ -760,7 +757,7 @@ export const updateWorkspaceSettings = (variables: UpdateWorkspaceSettingsVariab
   controlPlaneFetch<
     Schemas.WorkspaceSettings,
     UpdateWorkspaceSettingsError,
-    UpdateWorkspaceSettingsRequestBody,
+    Record<string, any>,
     {},
     {},
     UpdateWorkspaceSettingsPathParams

@@ -136,8 +136,8 @@ export function isIdentifiable(x: any): x is Identifiable & Record<string, unkno
 }
 
 export type NumericOperator = ExclusiveOr<
-  { $increment?: number },
-  ExclusiveOr<{ $decrement?: number }, ExclusiveOr<{ $multiply?: number }, { $divide?: number }>>
+  { $increment: number },
+  ExclusiveOr<{ $decrement: number }, ExclusiveOr<{ $multiply: number }, { $divide: number }>>
 >;
 
 export type InputXataFile = Partial<XataArrayFile> | Promise<Partial<XataArrayFile>>;

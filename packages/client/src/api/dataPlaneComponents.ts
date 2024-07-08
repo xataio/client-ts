@@ -8,6 +8,280 @@ import { dataPlaneFetch, DataPlaneFetcherExtraProps } from './dataPlaneFetcher';
 import type * as Schemas from './dataPlaneSchemas';
 import type * as Responses from './dataPlaneResponses';
 
+export type ListClusterBranchesPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type ListClusterBranchesQueryParams = {
+  /**
+   * Page size
+   */
+  page?: Schemas.PageSize;
+  /**
+   * Page token
+   */
+  token?: Schemas.PageToken;
+};
+
+export type ListClusterBranchesError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type ListClusterBranchesVariables = {
+  pathParams: ListClusterBranchesPathParams;
+  queryParams?: ListClusterBranchesQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve branches for given cluster ID
+ */
+export const listClusterBranches = (variables: ListClusterBranchesVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.ListClusterBranchesResponse,
+    ListClusterBranchesError,
+    undefined,
+    {},
+    ListClusterBranchesQueryParams,
+    ListClusterBranchesPathParams
+  >({
+    url: '/cluster/{clusterId}/branches',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type ListClusterExtensionsPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type ListClusterExtensionsQueryParams = {
+  extensionType: 'available' | 'installed';
+};
+
+export type ListClusterExtensionsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type ListClusterExtensionsVariables = {
+  pathParams: ListClusterExtensionsPathParams;
+  queryParams: ListClusterExtensionsQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Retrieve extensions for given cluster ID
+ */
+export const listClusterExtensions = (variables: ListClusterExtensionsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.ListClusterExtensionsResponse,
+    ListClusterExtensionsError,
+    undefined,
+    {},
+    ListClusterExtensionsQueryParams,
+    ListClusterExtensionsPathParams
+  >({
+    url: '/cluster/{clusterId}/extensions',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type InstallClusterExtensionPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type InstallClusterExtensionError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type InstallClusterExtensionRequestBody = {
+  /**
+   * Extension name
+   */
+  extension: string;
+  /**
+   * Schema name
+   */
+  schema?: string;
+  /**
+   * install with cascade option
+   */
+  cascade?: boolean;
+};
+
+export type InstallClusterExtensionVariables = {
+  body: InstallClusterExtensionRequestBody;
+  pathParams: InstallClusterExtensionPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Install an extension for given cluster ID
+ */
+export const installClusterExtension = (variables: InstallClusterExtensionVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.ClusterExtensionInstallationResponse,
+    InstallClusterExtensionError,
+    InstallClusterExtensionRequestBody,
+    {},
+    {},
+    InstallClusterExtensionPathParams
+  >({
+    url: '/cluster/{clusterId}/extensions',
+    method: 'post',
+    ...variables,
+    signal
+  });
+
+export type DropClusterExtensionPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type DropClusterExtensionError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+>;
+
+export type DropClusterExtensionRequestBody = {
+  /**
+   * Extension name
+   */
+  extension: string;
+  /**
+   * drop with cascade option, true by default
+   */
+  cascade?: boolean;
+};
+
+export type DropClusterExtensionVariables = {
+  body: DropClusterExtensionRequestBody;
+  pathParams: DropClusterExtensionPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Drop an extension for given cluster ID
+ */
+export const dropClusterExtension = (variables: DropClusterExtensionVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    undefined,
+    DropClusterExtensionError,
+    DropClusterExtensionRequestBody,
+    {},
+    {},
+    DropClusterExtensionPathParams
+  >({
+    url: '/cluster/{clusterId}/extensions',
+    method: 'delete',
+    ...variables,
+    signal
+  });
+
+export type GetClusterMetricsPathParams = {
+  /**
+   * Cluster ID
+   */
+  clusterId: Schemas.ClusterID;
+  workspace: string;
+  region: string;
+};
+
+export type GetClusterMetricsQueryParams = {
+  startTime: string;
+  endTime: string;
+  period: '5min' | '15min' | '1hour';
+  /**
+   * Page size
+   */
+  page?: Schemas.PageSize;
+  /**
+   * Page token
+   */
+  token?: Schemas.PageToken;
+};
+
+export type GetClusterMetricsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetClusterMetricsVariables = {
+  pathParams: GetClusterMetricsPathParams;
+  queryParams: GetClusterMetricsQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * retrieve a standard set of RDS cluster metrics
+ */
+export const getClusterMetrics = (variables: GetClusterMetricsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.MetricsResponse,
+    GetClusterMetricsError,
+    undefined,
+    {},
+    GetClusterMetricsQueryParams,
+    GetClusterMetricsPathParams
+  >({
+    url: '/cluster/{clusterId}/metrics',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type ApplyMigrationPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -40,6 +314,12 @@ export type ApplyMigrationRequestBody = {
   operations: {
     [key: string]: any;
   }[];
+  /**
+   * The schema in which the migration should be applied
+   *
+   * @default public
+   */
+  schema?: string;
   adaptTables?: boolean;
 };
 
@@ -98,7 +378,12 @@ export type StartMigrationRequestBody = {
   operations: {
     [key: string]: any;
   }[];
-  adaptTables?: boolean;
+  /**
+   * The schema in which the migration should be started
+   *
+   * @default public
+   */
+  schema?: string;
 };
 
 export type StartMigrationVariables = {
@@ -148,7 +433,17 @@ export type CompleteMigrationError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type CompleteMigrationRequestBody = {
+  /**
+   * The schema in which the migration should be completed
+   *
+   * @default public
+   */
+  schema?: string;
+};
+
 export type CompleteMigrationVariables = {
+  body?: CompleteMigrationRequestBody;
   pathParams: CompleteMigrationPathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -159,7 +454,7 @@ export const completeMigration = (variables: CompleteMigrationVariables, signal?
   dataPlaneFetch<
     Schemas.CompleteMigrationResponse,
     CompleteMigrationError,
-    undefined,
+    CompleteMigrationRequestBody,
     {},
     {},
     CompleteMigrationPathParams
@@ -194,7 +489,17 @@ export type RollbackMigrationError = Fetcher.ErrorWrapper<
     }
 >;
 
+export type RollbackMigrationRequestBody = {
+  /**
+   * The schema in which the migration should be rolled back
+   *
+   * @default public
+   */
+  schema?: string;
+};
+
 export type RollbackMigrationVariables = {
+  body?: RollbackMigrationRequestBody;
   pathParams: RollbackMigrationPathParams;
 } & DataPlaneFetcherExtraProps;
 
@@ -205,7 +510,7 @@ export const rollbackMigration = (variables: RollbackMigrationVariables, signal?
   dataPlaneFetch<
     Schemas.RollbackMigrationResponse,
     RollbackMigrationError,
-    undefined,
+    RollbackMigrationRequestBody,
     {},
     {},
     RollbackMigrationPathParams
@@ -341,6 +646,61 @@ export const getBranchMigrationJobStatus = (variables: GetBranchMigrationJobStat
     signal
   });
 
+export type GetMigrationJobsPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type GetMigrationJobsQueryParams = {
+  /**
+   * @format date-time
+   */
+  cursor?: string;
+  /**
+   * Page size
+   */
+  limit?: Schemas.PageSize;
+};
+
+export type GetMigrationJobsError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetMigrationJobsVariables = {
+  pathParams: GetMigrationJobsPathParams;
+  queryParams?: GetMigrationJobsQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+export const getMigrationJobs = (variables: GetMigrationJobsVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.GetMigrationJobsResponse,
+    GetMigrationJobsError,
+    undefined,
+    {},
+    GetMigrationJobsQueryParams,
+    GetMigrationJobsPathParams
+  >({
+    url: '/db/{dbBranchName}/migrations/jobs',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type GetMigrationJobStatusPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -405,7 +765,7 @@ export type GetMigrationHistoryQueryParams = {
   /**
    * Page size
    */
-  limit?: Schemas.PaginationPageSize;
+  limit?: Schemas.PageSize;
 };
 
 export type GetMigrationHistoryError = Fetcher.ErrorWrapper<
@@ -765,6 +1125,46 @@ export const getSchema = (variables: GetSchemaVariables, signal?: AbortSignal) =
     signal
   });
 
+export type GetSchemasPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type GetSchemasError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetSchemasResponse = {
+  schemas: Schemas.BranchSchema[];
+};
+
+export type GetSchemasVariables = {
+  pathParams: GetSchemasPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const getSchemas = (variables: GetSchemasVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<GetSchemasResponse, GetSchemasError, undefined, {}, {}, GetSchemasPathParams>({
+    url: '/db/{dbBranchName}/schemas',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type CopyBranchPathParams = {
   /**
    * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
@@ -806,6 +1206,107 @@ export const copyBranch = (variables: CopyBranchVariables, signal?: AbortSignal)
   dataPlaneFetch<Schemas.BranchWithCopyID, CopyBranchError, CopyBranchRequestBody, {}, {}, CopyBranchPathParams>({
     url: '/db/{dbBranchName}/copy',
     method: 'post',
+    ...variables,
+    signal
+  });
+
+export type GetBranchMoveStatusPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type GetBranchMoveStatusError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetBranchMoveStatusResponse = {
+  state: string;
+  pendingBytes: number;
+};
+
+export type GetBranchMoveStatusVariables = {
+  pathParams: GetBranchMoveStatusPathParams;
+} & DataPlaneFetcherExtraProps;
+
+/**
+ * Get the branch move status (if a move is happening)
+ */
+export const getBranchMoveStatus = (variables: GetBranchMoveStatusVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    GetBranchMoveStatusResponse,
+    GetBranchMoveStatusError,
+    undefined,
+    {},
+    {},
+    GetBranchMoveStatusPathParams
+  >({ url: '/db/{dbBranchName}/move', method: 'get', ...variables, signal });
+
+export type MoveBranchPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type MoveBranchError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 423;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type MoveBranchResponse = {
+  state: string;
+};
+
+export type MoveBranchRequestBody = {
+  /**
+   * Select the cluster to move the branch to. Must be different from the current cluster.
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  to: string;
+};
+
+export type MoveBranchVariables = {
+  body: MoveBranchRequestBody;
+  pathParams: MoveBranchPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const moveBranch = (variables: MoveBranchVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<MoveBranchResponse, MoveBranchError, MoveBranchRequestBody, {}, {}, MoveBranchPathParams>({
+    url: '/db/{dbBranchName}/move',
+    method: 'put',
     ...variables,
     signal
   });
@@ -5108,29 +5609,9 @@ export type SqlQueryError = Fetcher.ErrorWrapper<
     }
 >;
 
-export type SqlQueryRequestBody = {
-  /**
-   * The SQL statement.
-   *
-   * @minLength 1
-   */
-  statement: string;
-  /**
-   * The query parameter list.
-   */
-  params?: any[] | null;
-  /**
-   * The consistency level for this request.
-   *
-   * @default strong
-   */
-  consistency?: 'strong' | 'eventual';
-  /**
-   * The response type.
-   *
-   * @default json
-   */
-  responseType?: 'json' | 'array';
+export type SqlQueryRequestBody = Schemas.PreparedStatement & {
+  consistency?: Schemas.SQLConsistency;
+  responseType?: Schemas.SQLResponseType;
 };
 
 export type SqlQueryVariables = {
@@ -5180,31 +5661,12 @@ export type SqlBatchQueryError = Fetcher.ErrorWrapper<
 export type SqlBatchQueryRequestBody = {
   /**
    * The SQL statements.
-   */
-  statements: {
-    /**
-     * The SQL statement.
-     *
-     * @minLength 1
-     */
-    statement?: string;
-    /**
-     * The query parameter list.
-     */
-    params?: any[] | null;
-  }[];
-  /**
-   * The consistency level for this request.
    *
-   * @default strong
+   * @x-go-type []sqlproxy.PreparedStatement
    */
-  consistency?: 'strong' | 'eventual';
-  /**
-   * The response type.
-   *
-   * @default json
-   */
-  responseType?: 'json' | 'array';
+  statements: Schemas.PreparedStatement[];
+  consistency?: Schemas.SQLConsistency;
+  responseType?: Schemas.SQLResponseType;
 };
 
 export type SqlBatchQueryVariables = {
@@ -5231,6 +5693,13 @@ export const sqlBatchQuery = (variables: SqlBatchQueryVariables, signal?: AbortS
   });
 
 export const operationsByTag = {
+  cluster: {
+    listClusterBranches,
+    listClusterExtensions,
+    installClusterExtension,
+    dropClusterExtension,
+    getClusterMetrics
+  },
   migrations: {
     applyMigration,
     startMigration,
@@ -5239,9 +5708,11 @@ export const operationsByTag = {
     adaptTable,
     adaptAllTables,
     getBranchMigrationJobStatus,
+    getMigrationJobs,
     getMigrationJobStatus,
     getMigrationHistory,
     getSchema,
+    getSchemas,
     getBranchMigrationHistory,
     getBranchMigrationPlan,
     executeBranchMigrationPlan,
@@ -5259,6 +5730,8 @@ export const operationsByTag = {
     createBranch,
     deleteBranch,
     copyBranch,
+    getBranchMoveStatus,
+    moveBranch,
     updateBranchMetadata,
     getBranchMetadata,
     getBranchStats,

@@ -8,8 +8,9 @@ export const importBatch = async (
   pluginOptions: XataPluginOptions,
   errors?: ImportError[],
   maxRetries = 10,
-  retries = 0
+  retries?: number
 ): Promise<{ ids: Array<string | null>; errors?: ImportError[] }> => {
+  if (!retries) retries = 0;
   const { batchRows } = options;
   const operations = batchRows.map((row) => {
     return {
@@ -44,7 +45,16 @@ export const importBatch = async (
 
       // what if errors twice?
       const errors = rowErrors.map((e: any) => ({ row: batchRows[e.index], error: e.message, index: e.index }));
-      return importBatch(location, { ...options, batchRows: rowsToRetry }, pluginOptions, errors, maxRetries, retries);
+      if (retries < maxRetries) {
+        return importBatch(
+          location,
+          { ...options, batchRows: rowsToRetry },
+          pluginOptions,
+          errors,
+          maxRetries,
+          retries + 1
+        );
+      }
     }
     if (retries < maxRetries) {
       // exponential backoff

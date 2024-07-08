@@ -26,7 +26,7 @@ export default class SchemaDump extends BaseCommand<typeof SchemaDump> {
     const branchDetails = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
     if (!branchDetails) return this.error('Could not resolve the current branch');
     if (!flags.file) {
-      ux.styledJSON(branchDetails.schema);
+      ux.stdout(ux.colorizeJson(branchDetails.schema, { pretty: true, theme: this.config.theme?.json }));
       return branchDetails.schema;
     }
 

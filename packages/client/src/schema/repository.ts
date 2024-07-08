@@ -928,7 +928,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   #db: KyselyPluginResult<any>;
   #schema: DatabaseSchema;
   #trace: TraceFunction;
-  #runTransaction: (params: SqlBatchQueryRequestBody) => Promise<SQLBatchResponse['results'][number]['records']>;
+  #runTransaction: (params: SqlBatchQueryRequestBody) => Promise<Schemas.SQLResponseJSON[]>;
   #primaryKey: string;
 
   constructor(options: {
@@ -969,8 +969,8 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       });
       return results.flatMap((result) => {
         if (result.warning) console.warn(result.warning);
-        return result.records?.map((record) => record) ?? [];
-      });
+        return (result as Schemas.SQLResponseJSON).records?.map((record) => record) ?? [];
+      }) as any;
     };
 
     const trace = options.pluginOptions.trace ?? defaultTrace;

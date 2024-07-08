@@ -1,5 +1,5 @@
 import { BaseCommand } from '../../base.js';
-import { Flags } from '@oclif/core';
+import { Config, Flags } from '@oclif/core';
 import { Schemas } from '@xata.io/client';
 import {
   OpAddColumn,
@@ -19,6 +19,7 @@ import {
   exhaustiveCheck,
   generateLinkReference,
   getBranchDetailsWithPgRoll,
+  isBranchPgRollEnabled,
   requiresUpArgument,
   updateConstraint,
   updateLinkComment,
@@ -28,104 +29,7 @@ import {
   xataColumnTypeToPgRollConstraint,
   xataColumnTypeToZeroValue
 } from '../../migrations/pgroll.js';
-
-export type BranchSchemaFormatted =
-  | {
-      schema: {
-        tables: {
-          name: string;
-          uniqueConstraints: Schemas.BranchSchema['tables'][number]['uniqueConstraints'];
-          checkConstraints: Schemas.BranchSchema['tables'][number]['checkConstraints'];
-          foreignKeys: Schemas.BranchSchema['tables'][number]['foreignKeys'];
-          columns: {
-            name: string;
-            type: string;
-            unique: boolean;
-            notNull: boolean;
-            defaultValue: any;
-            comment: string;
-          }[];
-        }[];
-      };
-    }
-  | undefined;
-
-export type ColumnData = {
-  name: string;
-  type: string;
-  unique: boolean;
-  nullable: boolean;
-  defaultValue?: string;
-  vector?: {
-    dimension: number;
-  };
-  originalName: string;
-  tableName: string;
-  link?: {
-    table: string;
-  };
-  file?: {
-    defaultPublicAccess: boolean;
-  };
-  'file[]'?: {
-    defaultPublicAccess: boolean;
-  };
-};
-
-export type AddTablePayload = {
-  type: 'add-table';
-  table: {
-    name: string;
-  };
-};
-
-export type EditTablePayload = {
-  type: 'edit-table';
-  table: {
-    name: string;
-    newName: string;
-  };
-};
-
-export type DeleteTablePayload = {
-  name: string;
-};
-
-export type AddColumnPayload = {
-  type: 'add-column';
-  tableName: string;
-  column: ColumnData;
-};
-
-export type EditColumnPayload = {
-  type: 'edit-column';
-  column: ColumnData;
-};
-
-export type DeleteColumnPayload = { [tableName: string]: string[] };
-
-export type FormatPayload = {
-  type: 'space' | 'migrate' | 'schema';
-};
-
-export type SelectChoice = {
-  name: FormatPayload | AddTablePayload | EditTablePayload | AddColumnPayload | EditColumnPayload;
-  message: string;
-  role?: string;
-  choices?: SelectChoice[];
-  disabled?: boolean;
-  hint?: string;
-};
-
-export type ValidationState = {
-  values: { name: string };
-  items: { name: string; input: string }[];
-  fields: { name: string; initial: string }[];
-};
-
-export type ColumnAdditions = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
-
-export type ColumnEdits = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
+import EditSchemaOld from './edit-old.js';
 
 const { Select, Snippet, Confirm } = enquirer as any;
 
@@ -497,16 +401,33 @@ export default class EditSchema extends BaseCommand<typeof EditSchema> {
     this.database = database;
     this.branch = branch;
 
+    const config = await Config.load();
+
     const xata = await this.getXataClient();
-    const branchDetails = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
+    const branchDetails = await getBranchDetailsWithPgRoll(xata, {
+      workspace,
+      region,
+      database,
+      branch
+    });
     if (!branchDetails) this.error('Could not get the schema from the current branch');
 
-    if (flags.source) {
-      this.warn('Schema source editing is not supported yet. Please run the command without the --source flag.');
-      process.exit(0);
+    if (isBranchPgRollEnabled(branchDetails)) {
+      if (flags.source) {
+        this.warn('Schema source editing is not supported yet. Please run the command without the --source flag.');
+        process.exit(0);
+      } else {
+        this.branchDetails = branchDetails as any;
+        await this.showSchemaEdit();
+      }
     } else {
-      this.branchDetails = branchDetails as any;
-      await this.showSchemaEdit();
+      const editOld = new EditSchemaOld(this.argv, config);
+      editOld.launch({
+        workspace: this.workspace,
+        region: this.region,
+        database: this.database,
+        branch: this.branch
+      });
     }
   }
 
@@ -1158,3 +1079,101 @@ const formatColumnDataToPgroll = (
     }
   }));
 };
+
+export type BranchSchemaFormatted =
+  | {
+      schema: {
+        tables: {
+          name: string;
+          uniqueConstraints: Schemas.BranchSchema['tables'][number]['uniqueConstraints'];
+          checkConstraints: Schemas.BranchSchema['tables'][number]['checkConstraints'];
+          foreignKeys: Schemas.BranchSchema['tables'][number]['foreignKeys'];
+          columns: {
+            name: string;
+            type: string;
+            unique: boolean;
+            notNull: boolean;
+            defaultValue: any;
+            comment: string;
+          }[];
+        }[];
+      };
+    }
+  | undefined;
+
+export type ColumnData = {
+  name: string;
+  type: string;
+  unique: boolean;
+  nullable: boolean;
+  defaultValue?: string;
+  vector?: {
+    dimension: number;
+  };
+  originalName: string;
+  tableName: string;
+  link?: {
+    table: string;
+  };
+  file?: {
+    defaultPublicAccess: boolean;
+  };
+  'file[]'?: {
+    defaultPublicAccess: boolean;
+  };
+};
+
+export type AddTablePayload = {
+  type: 'add-table';
+  table: {
+    name: string;
+  };
+};
+
+export type EditTablePayload = {
+  type: 'edit-table';
+  table: {
+    name: string;
+    newName: string;
+  };
+};
+
+export type DeleteTablePayload = {
+  name: string;
+};
+
+export type AddColumnPayload = {
+  type: 'add-column';
+  tableName: string;
+  column: ColumnData;
+};
+
+export type EditColumnPayload = {
+  type: 'edit-column';
+  column: ColumnData;
+};
+
+export type DeleteColumnPayload = { [tableName: string]: string[] };
+
+export type FormatPayload = {
+  type: 'space' | 'migrate' | 'schema';
+};
+
+export type SelectChoice = {
+  name: FormatPayload | AddTablePayload | EditTablePayload | AddColumnPayload | EditColumnPayload;
+  message: string;
+  role?: string;
+  choices?: SelectChoice[];
+  disabled?: boolean;
+  hint?: string;
+};
+
+export type ValidationState = {
+  values: { name: string };
+  items: { name: string; input: string }[];
+  fields: { name: string; initial: string }[];
+};
+
+export type ColumnAdditions = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
+
+export type ColumnEdits = { [tableName: string]: { [columnName: string]: AddColumnPayload['column'] } };
