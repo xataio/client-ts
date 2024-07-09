@@ -81,12 +81,23 @@ jobs:
           sudo apt-get install -y nsis
           sudo apt-get install -y p7zip
 
+      - name: Write windows certificate to file
+        env:
+          XATA_WINDOWS_CERTIFICATE_KEY: ${{ secrets.WINDOWS_CERTIFICATE_KEY }}
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          # create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/xata.key
+
+          echo -n "$XATA_WINDOWS_CERTIFICATE_KEY" >> $CERTIFICATE_PATH
+
       - name: Release CLI Assets
         run: pnpm run release:cli
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          XATA_WINDOWS_SIGNING_PASS: ${{ secrets.WINDOWS_CERTIFICATE_SECRET }}
 
       - name: Clean up keychain
         if: matrix.os == 'macos-latest'

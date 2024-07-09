@@ -114,6 +114,7 @@ async function main() {
 
   // Pack windows on linux
   if (operatingSystem === 'deb') {
+    if (!process.env.XATA_WINDOWS_SIGNING_PASS) throw new Error('XATA_WINDOWS_SIGNING_PASS is not set');
     await exec(`pnpm oclif pack win`);
     // Windows packs files under "win32" directory
     const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;

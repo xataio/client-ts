@@ -88,7 +88,9 @@
       "identifier": "io.xata.cli"
     },
     "win": {
-      "identifier": "io.xata.cli"
+      "identifier": "io.xata.cli",
+      "name": "Xata",
+      "keypath": "xata.key"
     },
     "dirname": "xata",
     "commands": "./dist/commands",
