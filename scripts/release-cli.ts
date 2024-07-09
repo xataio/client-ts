@@ -7,12 +7,6 @@ import fs from 'fs';
 import * as util from 'util';
 const exec = util.promisify(execRaw);
 
-const PATH_TO_CLI = process.cwd() + '/cli';
-const PATH_TO_CLIENT = process.cwd() + '/packages/client';
-const PATH_TO_CODEGEN = process.cwd() + '/packages/codegen';
-const PATH_TO_IMPORTER = process.cwd() + '/packages/importer';
-const PATH_TO_PGROLL = process.cwd() + '/packages/pgroll';
-
 const base = {
   owner: 'xataio',
   repo: 'client-ts',
@@ -49,44 +43,23 @@ async function main() {
 
   const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
 
+  const PATH_TO_CLI = process.cwd() + '/cli';
   const { manifest, fileName } = await readProjectManifest(PATH_TO_CLI);
-  const {
-    manifest: { version: clientVersion }
-  } = await readProjectManifest(PATH_TO_CLIENT);
-  const {
-    manifest: { version: codegenVersion }
-  } = await readProjectManifest(PATH_TO_CODEGEN);
-  const {
-    manifest: { version: importerVersion }
-  } = await readProjectManifest(PATH_TO_IMPORTER);
-  const {
-    manifest: { version: pgrollVersion }
-  } = await readProjectManifest(PATH_TO_PGROLL);
 
-  if (!clientVersion || !codegenVersion || !importerVersion || !pgrollVersion)
-    throw new Error('Missing package versions.');
+  // Oclif pack expects a npm-shrinkwrap.json file and errors if it is not present.
+  execFile('rm', ['-rf', `${PATH_TO_CLI}/npm-shrinkwrap.json`]);
+  exec(`pnpm ls --prod --json >> ${PATH_TO_CLI}/npm-shrinkwrap.json`);
 
-  // Assume changeset version has been called and all the
-  // versions in package jsons are up to date
+  delete manifest.dependencies?.['@xata.io/client'];
+  delete manifest.dependencies?.['@xata.io/codegen'];
+  delete manifest.dependencies?.['@xata.io/importer'];
+  delete manifest.dependencies?.['@xata.io/pgroll'];
 
-  const workspaceProtocolPackageManifest = await createExportableManifest(PATH_TO_CLI, {
-    ...manifest,
-    dependencies: {
-      ...manifest.dependencies,
-      '@xata.io/client': clientVersion,
-      '@xata.io/codegen': codegenVersion,
-      '@xata.io/importer': importerVersion,
-      '@xata.io/pgroll': pgrollVersion
-    }
-  });
+  const workspaceProtocolPackageManifest = await createExportableManifest(PATH_TO_CLI, manifest, { catalogs: {} });
 
   await writeProjectManifest(`${PATH_TO_CLI}/${fileName}`, workspaceProtocolPackageManifest);
 
   process.chdir(PATH_TO_CLI);
-
-  // Oclif pack expects a npm-shrinkwrap.json file and errors if it is not present.
-  execFile('rm', ['-rf', `${PATH_TO_CLI}/npm-shrinkwrap.json`]);
-  execFile('touch', [`${PATH_TO_CLI}/npm-shrinkwrap.json`]);
 
   await exec(`pnpm oclif pack ${operatingSystem}`);
 
