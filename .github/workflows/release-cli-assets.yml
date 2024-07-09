@@ -90,6 +90,7 @@ jobs:
           CERTIFICATE_PATH=$RUNNER_TEMP/xata.key
 
           echo -n "$XATA_WINDOWS_CERTIFICATE_KEY" >> $CERTIFICATE_PATH
+          echo $CERTIFICATE_PATH
 
       - name: Release CLI Assets
         run: pnpm run release:cli
