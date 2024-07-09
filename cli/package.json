@@ -87,7 +87,7 @@
     "deb": {
       "identifier": "io.xata.cli"
     },
-    "win": {
+    "windows": {
       "identifier": "io.xata.cli",
       "name": "Xata",
       "keypath": "xata.key"
