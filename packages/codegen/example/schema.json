@@ -3,15 +3,6 @@
     {
       "name": "teams",
       "primaryKey": ["xata_id"],
-      "foreignKeys": {
-        "owner_owner": {
-          "name": "team_team",
-          "columns": ["team"],
-          "referencedTable": "teams",
-          "referencedColumns": ["xata_id"],
-          "onDelete": "SET NULL"
-        }
-      },
       "columns": [
         {
           "name": "xata_id",
@@ -85,22 +76,6 @@
     {
       "name": "users",
       "primaryKey": ["xata_id"],
-      "foreignKeys": {
-        "owner_owner": {
-          "name": "team_team",
-          "columns": ["team"],
-          "referencedTable": "teams",
-          "referencedColumns": ["xata_id"],
-          "onDelete": "SET NULL"
-        },
-        "pet_pet": {
-          "name": "pet_pet",
-          "columns": ["pet"],
-          "referencedTable": "pets",
-          "referencedColumns": ["xata_id"],
-          "onDelete": "SET NULL"
-        }
-      },
       "columns": [
         {
           "name": "xata_id",

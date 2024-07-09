@@ -434,7 +434,7 @@ describe('read', () => {
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": "{"statement":"select \\"xata_id\\", \\"name\\", \\"age\\" from \\"users\\" where \\"xata_id\\" = $1","params":["rec_1234"]}",
+          "body": "{"statement":"select \\"name\\", \\"age\\" from \\"users\\" where \\"xata_id\\" = $1","params":["rec_1234"]}",
           "method": "POST",
           "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },

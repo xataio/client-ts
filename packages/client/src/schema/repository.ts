@@ -39,7 +39,7 @@ import { VERSION } from '../version';
 import { AggregationExpression, AggregationResult } from './aggregate';
 import { AskOptions, AskResult } from './ask';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
-import { Filter, atPath, cleanFilter, filterToKysely, relevantFilters } from './filters';
+import { Filter, cleanFilter, filterToKysely } from './filters';
 import { parseJson, stringifyJson } from './json';
 import {
   CursorNavigationDecoded,
@@ -52,7 +52,6 @@ import {
 import { Query } from './query';
 import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
 import {
-  ColumnSelectionObject,
   ColumnsByValue,
   SelectableColumn,
   SelectableColumnWithObjectNotation,
@@ -62,22 +61,8 @@ import {
 import { ApiSortFilter, SortDirection, buildSortFilter, isSortFilterObject } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
-import {
-  AliasedRawBuilder,
-  DeleteQueryBuilder,
-  Expression,
-  ExpressionBuilder,
-  InsertQueryBuilder,
-  RawBuilder,
-  SelectExpression,
-  SelectQueryBuilder,
-  Selection,
-  Simplify,
-  UpdateQueryBuilder,
-  sql
-} from 'kysely';
+import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
 import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
-import { SQLBatchResponse } from '../api/dataPlaneResponses';
 import { Cursor, decode } from '@xata.io/sql';
 import { KyselyPlugin, KyselyPluginResult } from '../kysely';
 import {
@@ -87,9 +72,6 @@ import {
   NewIdentifierKey,
   NewIndentifierValue
 } from './identifiable';
-import { Model } from '@xata.io/kysely';
-import { jsonObjectFrom } from 'kysely/helpers/postgres';
-import { ObjectType } from 'typescript';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
@@ -1218,17 +1200,11 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
           let statement: SelectQueryBuilder<any, any, any> = this.#db
             .selectFrom(this.#table)
             .where(this.#primaryKey, '=', id);
-
-          statement = generateSelectStatement({
-            columnData: (this.#schema?.tables.find((table) => table.name === this.#table)?.columns as any) ?? [],
-            filter: {},
-            columns,
-            stmt: statement,
-            schema: this.#schema as any,
-            primaryKey: this.#primaryKey,
-            tableName: this.#table,
-            db: this.#db
-          });
+          if (selectAllColumns(columns)) {
+            statement = statement.selectAll();
+          } else {
+            statement = statement.select(columns as any);
+          }
 
           const response = await statement.executeTakeFirst();
           if (!response) return null;
@@ -2082,6 +2058,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       const cursor = cursorAfter ?? cursorBefore ?? cursorStart ?? cursorEnd;
 
       const filter = cleanFilter(data.filter) ?? cleanFilter(cursor?.data?.filter);
+
       const sort = data.sort
         ? buildSortFilter(data.sort)
         : cursor?.data.sort
@@ -2090,8 +2067,6 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       const size = data?.pagination?.size ?? cursor?.data?.pagination?.size ?? PAGINATION_DEFAULT_SIZE;
       const offset = data?.pagination?.offset ?? cursor?.data?.pagination?.offset ?? PAGINATION_DEFAULT_OFFSET;
 
-      const columnData = this.#schema?.tables.find((table) => table.name === this.#table)?.columns ?? [];
-
       if (size && size > PAGINATION_MAX_SIZE) throw new Error(`page size exceeds max limit of ${PAGINATION_MAX_SIZE}`);
       if (offset && offset > PAGINATION_MAX_OFFSET)
         throw new Error(`page offset must not exceed ${PAGINATION_MAX_OFFSET}`);
@@ -2099,35 +2074,32 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
 
       let statement = this.#db.selectFrom(this.#table);
 
-      statement = generateSelectStatement({
-        columnData: columnData as any[],
-        filter,
-        columns: data.columns as any[],
-        stmt: statement,
-        schema: this.#schema as any,
-        primaryKey: this.#primaryKey,
-        tableName: this.#table,
-        db: this.#db
-      });
+      if (selectAllColumns(data.columns as any)) {
+        statement = statement.selectAll();
+      } else {
+        statement = statement.select([...(data.columns as any), this.#primaryKey]);
+      }
 
       if (size) {
         statement = statement.limit(size);
       }
+
+      const columnData = this.#schema?.tables.find((table) => table.name === this.#table)?.columns ?? [];
 
       const buildSortStatement = (sort: ApiSortFilter<any, any>[]) => {
         const sortStatement = (statement: SelectQueryBuilder<any, any, any>, column: string, order: string) => {
           if (order === 'random') {
             return statement.orderBy(sql`random()`);
           }
-          return statement.orderBy(column === '*' ? `${this.#primaryKey}` : `${column}`, order as SortDirection);
+          return statement.orderBy(column === '*' ? this.#primaryKey : column, order as SortDirection);
         };
         for (const element of sort) {
           if (isSortFilterObject(element)) {
-            statement = sortStatement(statement, `${element.column}`, element.direction ?? 'asc');
+            statement = sortStatement(statement, element.column, element.direction ?? 'asc');
           } else {
             const keys = Object.keys(element);
             for (const key of keys) {
-              statement = sortStatement(statement, `${key}`, (element as any)[key]);
+              statement = sortStatement(statement, key, (element as any)[key]);
             }
           }
         }
@@ -2136,9 +2108,14 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
       if (sort) {
         buildSortStatement(Array.isArray(sort) ? sort : [sort]);
       } else {
-        // Necessary for cursor pagination
-        // TODO can you order by link fields?
         statement = statement.orderBy(`${this.#primaryKey}`, 'asc');
+      }
+
+      if (filter) {
+        // @ts-ignore
+        statement = statement.where((eb) =>
+          filterToKysely({ value: filter, path: [] })(eb, columnData as Schemas.Column[])
+        );
       }
 
       if (offset) {
@@ -3766,159 +3743,6 @@ const extractNumericOperations = ({ numericFilters }: { numericFilters: { [key: 
   return acc;
 };
 
-export const columnSelectionObject = (col: string[]) => {
-  const result: ColumnSelectionObject = { links: {}, regular: [] };
-  const traverse = (columnPath: string, path: string[]) => {
-    const [table, ...rest] = columnPath.split('.');
-    if (!atPath(result, path)['links']) {
-      atPath(result, path)['links'] = {};
-    }
-    if (!atPath(result, path)['regular']) {
-      atPath(result, path)['regular'] = [];
-    }
-
-    if (rest.length > 0) {
-      traverse(rest.join('.'), [...path, 'links', table]);
-    } else {
-      atPath(result, path)['regular'].push(table);
-    }
-  };
-
-  col.forEach((c) => {
-    traverse(c, []);
-  });
-  return result;
-};
-
 const selectAllColumns = (columns: SelectableColumn<any>[] = ['*']) => {
   return !columns || (columns && columns.length > 0 && columns[0] === '*') || (columns && columns.length === 0);
 };
-
-export const generateSelectStatement = ({
-  filter,
-  columns,
-  stmt,
-  schema,
-  tableName,
-  primaryKey,
-  columnData,
-  db
-}: {
-  filter: Filter<any>;
-  columnData: Schemas.Column[];
-  columns: any[];
-  stmt: SelectQueryBuilder<Model<any>, string, {}>;
-  schema: Schema;
-  tableName: string;
-  primaryKey: string;
-  db: KyselyPluginResult<Record<string, XataRecord<XataRecord<any>>>>;
-}) => {
-  const columnsSelected = columnSelectionObject(columns ?? []);
-  const visited: Set<string> = new Set();
-
-  if (selectAllColumns(columns as any)) {
-    stmt = stmt.selectAll();
-    if (filter) {
-      const topLevelFilters = relevantFilters(filter, true, tableName, visited);
-      if (topLevelFilters) {
-        stmt = stmt.where(
-          (eb) =>
-            filterToKysely({ value: { [tableName]: topLevelFilters }, path: [] })(
-              eb,
-              columnData as any,
-              tableName
-            ) as any
-        );
-      }
-    }
-  } else {
-    // TODO separate selection and filtering
-    const select = stmt.select((eb) => {
-      const selection = (
-        fields: Selection<any, any, any>,
-        eb: ExpressionBuilder<any, any>,
-        lastParent: string
-      ): SelectExpression<any, any>[] => {
-        const regularFields = fields.regular.includes('*')
-          ? [sql.raw<string>('*')]
-          : fields.regular.includes(primaryKey)
-          ? fields.regular
-          : [primaryKey, ...fields.regular];
-        if (Object.keys(fields.links).length > 0) {
-          const links: (string | RawBuilder<string> | AliasedRawBuilder<{ [x: string]: any } | null, string>)[] = [
-            ...regularFields
-          ];
-          for (const key in fields.links) {
-            const table = schema.tables?.find((table) => table.name === lastParent);
-            const fk: BranchSchema['tables'][number]['foreignKeys'][number] | null = table
-              ? (Object.values((table as any)?.foreignKeys ?? {})?.find((fk) =>
-                  (fk as any).columns.includes(key)
-                ) as any)
-              : null;
-            if (!fk) continue;
-            const selectedColumns = selection(fields.links[key], eb, fk?.referencedTable);
-
-            const filters = relevantFilters(filter, false, key, visited);
-            const conditions = filters
-              ? (filterToKysely({ value: filters, path: [] })(eb, columnData, tableName) as any)
-              : null;
-            const stmt = eb
-              .selectFrom(fk.referencedTable)
-              .select(selectedColumns)
-              .where(fk.referencedColumns[0], '=', eb.ref(`${lastParent}.${fk.columns[0]}`));
-            const linkObject = conditions
-              ? jsonObjectFromCustom(stmt.where(conditions)).as(`${fk.columns[0]}`)
-              : jsonObjectFrom(stmt).as(`${fk.columns[0]}`);
-
-            links.push(linkObject);
-          }
-
-          return links as SelectExpression<any, any>[];
-        }
-
-        // TODO maybe add regular fields filters on here instead of below
-        return regularFields as SelectExpression<any, any>[];
-      };
-      return selection(columnsSelected, eb, tableName);
-    });
-
-    stmt = select;
-
-    if (filter) {
-      const topLevelFilters = relevantFilters(filter, true, tableName, visited);
-      if (topLevelFilters) {
-        stmt = stmt.where(
-          (eb) =>
-            filterToKysely({ value: { [tableName]: topLevelFilters }, path: [] })(
-              eb,
-              columnData as any,
-              tableName
-            ) as any
-        );
-      }
-    }
-    const linkKeys = Object.keys(columnsSelected.links);
-    const visited2: Set<string> = new Set();
-    if (linkKeys.length > 0) {
-      const linkFilters = linkKeys.filter((link) => relevantFilters(filter, false, link, visited2));
-      if (linkFilters.length > 0) {
-        stmt = db
-          .selectFrom(sql`${stmt}`.as('tmp'))
-          .selectAll()
-          .where((eb) =>
-            eb.and([
-              ...linkFilters.map((link) => {
-                return sql.raw(`"tmp"."${link}" is not null`);
-              })
-            ])
-          );
-      }
-    }
-  }
-
-  return stmt;
-};
-
-export function jsonObjectFromCustom<O>(expr: Expression<O>): RawBuilder<Simplify<O> | null> {
-  return sql`(select to_json(obj) from ${expr} as obj where obj is not null)`;
-}
