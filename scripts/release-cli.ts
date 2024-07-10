@@ -1,6 +1,4 @@
-import { createExportableManifest } from '@pnpm/exportable-manifest';
 import { readProjectManifest } from '@pnpm/read-project-manifest';
-import { writeProjectManifest } from '@pnpm/write-project-manifest';
 import { execFile, exec as execRaw } from 'child_process';
 import { Octokit } from '@octokit/core';
 import fs from 'fs';
@@ -44,24 +42,19 @@ async function main() {
   const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
 
   const PATH_TO_CLI = process.cwd() + '/cli';
-  const { manifest, fileName } = await readProjectManifest(PATH_TO_CLI);
+  const { manifest } = await readProjectManifest(PATH_TO_CLI);
 
   // Oclif pack expects a npm-shrinkwrap.json file and errors if it is not present.
   execFile('rm', ['-rf', `${PATH_TO_CLI}/npm-shrinkwrap.json`]);
-  exec(`pnpm ls --prod --json >> ${PATH_TO_CLI}/npm-shrinkwrap.json`);
-
-  delete manifest.dependencies?.['@xata.io/client'];
-  delete manifest.dependencies?.['@xata.io/codegen'];
-  delete manifest.dependencies?.['@xata.io/importer'];
-  delete manifest.dependencies?.['@xata.io/pgroll'];
-
-  const workspaceProtocolPackageManifest = await createExportableManifest(PATH_TO_CLI, manifest, { catalogs: {} });
-
-  await writeProjectManifest(`${PATH_TO_CLI}/${fileName}`, workspaceProtocolPackageManifest);
 
   process.chdir(PATH_TO_CLI);
 
-  await exec(`pnpm oclif pack ${operatingSystem}`);
+  await exec(`pnpm ls --prod --json >> npm-shrinkwrap.json`);
+
+  // Build tarball with pnpm. Oclif uses npm which fails
+  await exec(`pnpm pack`);
+
+  await exec(`pnpm oclif pack ${operatingSystem} -t xata.io-cli-${manifest.version}.tgz`);
 
   const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN
