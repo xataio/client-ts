@@ -89,7 +89,7 @@
     },
     "windows": {
       "name": "Xata",
-      "keypath": "~/home/runner/work/_temp/xata.key"
+      "keypath": "~/xata.key"
     },
     "dirname": "xata",
     "commands": "./dist/commands",
