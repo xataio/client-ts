@@ -88,9 +88,8 @@
       "identifier": "io.xata.cli"
     },
     "windows": {
-      "identifier": "io.xata.cli",
       "name": "Xata",
-      "keypath": "/home/runner/work/_temp/xata.key"
+      "keypath": "~/home/runner/work/_temp/xata.key"
     },
     "dirname": "xata",
     "commands": "./dist/commands",
