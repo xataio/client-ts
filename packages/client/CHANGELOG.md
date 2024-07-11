@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.30.0
+
+### Minor Changes
+
+- [#1494](https://github.com/xataio/client-ts/pull/1494) [`cc673c9`](https://github.com/xataio/client-ts/commit/cc673c9a7885351082020e360630eab5db78c652) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - [Breaking] Update `XataApiClient` to use unified parameters
+
 ## 0.29.5
 
 ### Patch Changes

@@ -1,5 +1,20 @@
 # @xata.io/cli
 
+## 0.16.0
+
+### Minor Changes
+
+- [#1535](https://github.com/xataio/client-ts/pull/1535) [`40f97d5`](https://github.com/xataio/client-ts/commit/40f97d53091af3d268fe40b4e027245270d42a26) Thanks [@SferaDev](https://github.com/SferaDev)! - Add support for pgroll enabled branches
+
+### Patch Changes
+
+- [#1500](https://github.com/xataio/client-ts/pull/1500) [`389d57d`](https://github.com/xataio/client-ts/commit/389d57d541518657b64f93d6362de9e8455f34f6) Thanks [@xata-bot](https://github.com/xata-bot)! - Update dependencies
+
+- Updated dependencies [[`cc673c9`](https://github.com/xataio/client-ts/commit/cc673c9a7885351082020e360630eab5db78c652)]:
+  - @xata.io/client@0.30.0
+  - @xata.io/codegen@0.30.0
+  - @xata.io/importer@1.1.6
+
 ## 0.15.15
 
 ### Patch Changes
