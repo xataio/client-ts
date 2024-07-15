@@ -30,7 +30,7 @@ async function main() {
   const platform = matrixToOclif(process.env.MATRIX_OS);
   exec(`pnpm oclif upload ${platform}`);
   exec(
-    `pnpm oclif promote ${platform} --sha=${process.env.COMMIT} --indexes --version=${version} --channel=${process.env.CHANNEL}`
+    `pnpm oclif promote --${platform} --sha=${process.env.COMMIT} --indexes --version=${version} --channel=${process.env.CHANNEL}`
   );
 }
 
