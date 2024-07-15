@@ -75,4 +75,6 @@ jobs:
     uses: ./.github/workflows/release-cli-assets.yml
     with:
       publishedPackages: ${{ needs.release.outputs.publishedPackages }}
+      commitSha: ${{ github.sha }}
+      channel: ${{ github.ref }}
     secrets: inherit

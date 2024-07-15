@@ -5,6 +5,7 @@ import { execFile, exec as execRaw } from 'child_process';
 import { Octokit } from '@octokit/core';
 import fs from 'fs';
 import * as util from 'util';
+import { matrixToOclif } from './utils';
 const exec = util.promisify(execRaw);
 
 const PATH_TO_CLI = process.cwd() + '/cli';
@@ -18,17 +19,6 @@ const base = {
   repo: 'client-ts',
   headers: {
     'X-GitHub-Api-Version': '2022-11-28'
-  }
-};
-
-const matrixToOclif = (os: string) => {
-  switch (os) {
-    case 'macos-latest':
-      return 'macos';
-    case 'ubuntu-latest':
-      return 'deb';
-    default:
-      throw new Error('Unsupported OS');
   }
 };
 
