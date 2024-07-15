@@ -22,7 +22,7 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@babel/core": "^7.24.7",
+    "@babel/core": "^7.24.8",
     "@netlify/build": "=29.20.6",
     "@xata.io/client": "workspace:*"
   },

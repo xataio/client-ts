@@ -19,10 +19,10 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@oclif/core": "^4.0.8",
-    "@oclif/plugin-help": "^6.2.5",
-    "@oclif/plugin-not-found": "^3.2.10",
-    "@oclif/plugin-plugins": "^5.3.4",
+    "@oclif/core": "^4.0.12",
+    "@oclif/plugin-help": "^6.2.6",
+    "@oclif/plugin-not-found": "^3.2.11",
+    "@oclif/plugin-plugins": "^5.3.7",
     "@types/ini": "^4.1.1",
     "@types/prompts": "^2.4.9",
     "@types/semver": "^7.5.8",
@@ -57,7 +57,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@babel/types": "^7.24.7",
+    "@babel/types": "^7.24.8",
     "@types/babel__core": "^7.20.5",
     "@types/lodash.compact": "^3.0.9",
     "@types/lodash.get": "^4.4.9",
@@ -67,10 +67,10 @@
     "@types/text-table": "^0.2.5",
     "@types/tmp": "^0.2.6",
     "@types/which": "^3.0.4",
-    "eslint": "^9.6.0",
+    "eslint": "^9.7.0",
     "eslint-config-oclif": "^5.2.0",
     "eslint-config-oclif-typescript": "^3.1.8",
-    "oclif": "^4.13.16",
+    "oclif": "^4.14.5",
     "shx": "^0.3.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3"
