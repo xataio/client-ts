@@ -33,6 +33,13 @@ on:
         type: string
         default: 'latest'
 
+permissions:
+  id-token: write
+  contents: write
+  packages: write
+  pages: write
+  pull-requests: write
+
 jobs:
   release-cli-assets:
     name: Release CLI assets
@@ -107,9 +114,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS Credentials for production
-        permissions:
-          id-token: write
-          contents: read
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.CLI_ASSETS_UPLOAD_ROLE }}
