@@ -9,6 +9,19 @@ export const matrixToOclif = (os: string) => {
   }
 };
 
+export const platformDistributions = (os: string) => {
+  switch (os) {
+    case 'macos':
+      return 'darwin-arm64,darwin-x64';
+    case 'deb':
+      return 'linux-arm,linux-arm64,linux-x64';
+    case 'win':
+      return 'win32-x64,win32-x86';
+    default:
+      throw new Error('Unsupported Platform');
+  }
+};
+
 export const publishedPackagesContains = (publishedPackages: string, packageName: string) => {
   if (
     publishedPackages === '' ||
