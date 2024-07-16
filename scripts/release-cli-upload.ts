@@ -6,12 +6,9 @@ const exec = util.promisify(execRaw);
 
 async function main() {
   if (!process.env.MATRIX_OS) throw new Error('MATRIX_OS is not set');
-  if (!process.env.AWS_ACCESS_KEY_ID) throw new Error('AWS_ACCESS_KEY_ID is not set');
-  if (!process.env.AWS_SECRET_ACCESS_KEY) throw new Error('AWS_SECRET_ACCESS_KEY is not set');
   if (!process.env.PUBLISHED_PACKAGES) throw new Error('PUBLISHED_PACKAGES is not set');
   if (!process.env.COMMIT) throw new Error('COMMIT is not set');
   if (!process.env.CHANNEL) throw new Error('CHANNEL is not set');
-  if (!process.env.AWS_ROLE_ARN) throw new Error('AWS_ROLE_ARN is not set');
 
   const PATH_TO_CLI = process.cwd() + '/cli';
 

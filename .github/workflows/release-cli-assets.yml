@@ -106,17 +106,21 @@ jobs:
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Configure AWS Credentials for production
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.CLI_ASSETS_UPLOAD_ROLE }}
+          aws-region: us-east-1
+          mask-aws-account-id: 'no'
+
       - name: Upload & Promote CLI Assets to S3
         run: pnpm run release:cli:upload
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_EC2_METADATA_DISABLED: true
           COMMIT_SHA: ${{ inputs.commitSha }}
           CHANNEL: ${{ inputs.channel }}
-          AWS_ROLE_ARN: ${{ secrets.CLI_ASSETS_UPLOAD_ROLE }}
 
       - name: Clean up keychain
         if: matrix.os == 'macos-latest'
