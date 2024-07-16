@@ -22,10 +22,15 @@ async function main() {
 
   process.chdir(PATH_TO_CLI);
 
-  exec(`pnpm oclif upload ${platform}`);
-  exec(
+  const uploadRes = await exec(`pnpm oclif upload ${platform}`);
+
+  console.log('Uploaded release', uploadRes.stdout);
+
+  const promoteRes = await exec(
     `pnpm oclif promote --${platform} --sha=${process.env.COMMIT_SHA} --indexes --version=${version} --channel=${process.env.CHANNEL}`
   );
+
+  console.log('Promoted release', promoteRes.stdout);
 }
 
 main();
