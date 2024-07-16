@@ -17,7 +17,11 @@ async function main() {
   const {
     manifest: { version }
   } = await readProjectManifest(PATH_TO_CLI);
+
   const platform = matrixToOclif(process.env.MATRIX_OS);
+
+  process.chdir(PATH_TO_CLI);
+
   exec(`pnpm oclif upload ${platform}`);
   exec(
     `pnpm oclif promote --${platform} --sha=${process.env.COMMIT_SHA} --indexes --version=${version} --channel=${process.env.CHANNEL}`
