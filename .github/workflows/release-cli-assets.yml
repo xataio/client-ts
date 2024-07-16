@@ -122,6 +122,7 @@ jobs:
 
       - name: Upload & Promote CLI Assets to S3
         run: pnpm run release:cli:upload
+        continue-on-error: true
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}

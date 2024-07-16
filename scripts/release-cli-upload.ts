@@ -26,12 +26,12 @@ async function main() {
 
   await uploadS3(platform);
 
-  await promoteS3(version, platformDistributions(platform));
+  await promoteS3(platform, platformDistributions(platform));
 
   // Upload and promote windows since it is packed on linux
   if (platform === 'deb') {
     await uploadS3('win');
-    await promoteS3(version, platformDistributions('win'));
+    await promoteS3('win', platformDistributions('win'));
   }
 }
 
@@ -40,9 +40,12 @@ const uploadS3 = async (platform: 'macos' | 'deb' | 'win') => {
   console.log('Uploaded release', uploadRes.stdout);
 };
 
-const promoteS3 = async (version: string, distribution: string) => {
+const promoteS3 = async (platform: 'macos' | 'deb' | 'win', version: string) => {
   const promoteRes = await exec(
-    `pnpm oclif promote --sha=${process.env.COMMIT_SHA} --indexes --version=${version} --channel=${process.env.CHANNEL} --targets=${distribution}`
+    `pnpm oclif promote --${platform} --sha=${process.env.COMMIT_SHA?.slice(
+      0,
+      7
+    )} --indexes --version=${version} --channel=${process.env.CHANNEL}`
   );
   console.log('Promoted release', promoteRes.stdout);
 };
