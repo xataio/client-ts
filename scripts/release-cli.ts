@@ -51,16 +51,22 @@ async function main() {
   // Assume changeset version has been called and all the
   // versions in package jsons are up to date
 
-  const workspaceProtocolPackageManifest = await createExportableManifest(PATH_TO_CLI, {
-    ...manifest,
-    dependencies: {
-      ...manifest.dependencies,
-      '@xata.io/client': clientVersion,
-      '@xata.io/codegen': codegenVersion,
-      '@xata.io/importer': importerVersion,
-      '@xata.io/pgroll': pgrollVersion
+  const workspaceProtocolPackageManifest = await createExportableManifest(
+    PATH_TO_CLI,
+    {
+      ...manifest,
+      dependencies: {
+        ...manifest.dependencies,
+        '@xata.io/client': clientVersion,
+        '@xata.io/codegen': codegenVersion,
+        '@xata.io/importer': importerVersion,
+        '@xata.io/pgroll': pgrollVersion
+      }
+    },
+    {
+      catalogs: {}
     }
-  });
+  );
 
   await writeProjectManifest(`${PATH_TO_CLI}/${fileName}`, workspaceProtocolPackageManifest);
 
