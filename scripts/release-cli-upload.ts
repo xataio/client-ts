@@ -26,7 +26,7 @@ async function main() {
 
   await uploadS3(platform);
 
-  await promoteS3(platform, platformDistributions(platform));
+  await promoteS3(platform, version);
 
   // Upload and promote windows since it is packed on linux
   if (platform === 'deb') {
