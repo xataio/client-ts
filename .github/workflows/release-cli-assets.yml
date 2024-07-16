@@ -33,6 +33,10 @@ on:
         type: string
         default: 'latest'
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   release-cli-assets:
     name: Release CLI assets
