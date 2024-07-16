@@ -5,7 +5,7 @@ import { execFile, exec as execRaw } from 'child_process';
 import { Octokit } from '@octokit/core';
 import fs from 'fs';
 import * as util from 'util';
-import { matrixToOclif } from './utils';
+import { matrixToOclif, publishedPackagesContains } from './utils';
 const exec = util.promisify(execRaw);
 
 const PATH_TO_CLI = process.cwd() + '/cli';
@@ -27,15 +27,7 @@ async function main() {
   if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
   if (!process.env.PUBLISHED_PACKAGES) throw new Error('PUBLISHED_PACKAGES is not set');
 
-  if (
-    process.env.PUBLISHED_PACKAGES === '' ||
-    !(JSON.parse(process.env.PUBLISHED_PACKAGES) as Array<{ name: string; version: string }>).find(
-      (change) => change.name === '@xata.io/cli'
-    )
-  ) {
-    console.log('No changes in cli. Skipping asset release.');
-    return;
-  }
+  if (!publishedPackagesContains(process.env.PUBLISHED_PACKAGES, '@xata.io/cli')) return;
 
   const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
 

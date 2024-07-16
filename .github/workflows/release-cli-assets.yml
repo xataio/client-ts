@@ -116,6 +116,7 @@ jobs:
           AWS_EC2_METADATA_DISABLED: true
           COMMIT_SHA: ${{ inputs.commitSha }}
           CHANNEL: ${{ inputs.channel }}
+          AWS_ROLE_ARN: ${{ secrets.CLI_ASSETS_UPLOAD_ROLE }}
 
       - name: Clean up keychain
         if: matrix.os == 'macos-latest'

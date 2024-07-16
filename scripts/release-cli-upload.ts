@@ -1,6 +1,6 @@
 import { exec as execRaw } from 'child_process';
 import * as util from 'util';
-import { matrixToOclif } from './utils';
+import { matrixToOclif, publishedPackagesContains } from './utils';
 import { readProjectManifest } from '@pnpm/read-project-manifest';
 const exec = util.promisify(execRaw);
 
@@ -11,18 +11,11 @@ async function main() {
   if (!process.env.PUBLISHED_PACKAGES) throw new Error('PUBLISHED_PACKAGES is not set');
   if (!process.env.COMMIT) throw new Error('COMMIT is not set');
   if (!process.env.CHANNEL) throw new Error('CHANNEL is not set');
+  if (!process.env.AWS_ROLE_ARN) throw new Error('AWS_ROLE_ARN is not set');
 
   const PATH_TO_CLI = process.cwd() + '/cli';
 
-  if (
-    process.env.PUBLISHED_PACKAGES === '' ||
-    !(JSON.parse(process.env.PUBLISHED_PACKAGES) as Array<{ name: string; version: string }>).find(
-      (change) => change.name === '@xata.io/cli'
-    )
-  ) {
-    console.log('No changes in cli. Skipping asset release.');
-    return;
-  }
+  if (!publishedPackagesContains(process.env.PUBLISHED_PACKAGES, '@xata.io/cli')) return;
 
   const {
     manifest: { version }
