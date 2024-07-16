@@ -89,7 +89,7 @@ jobs:
           # create variables
           CERTIFICATE_PATH=~/xata.key
 
-          echo -n `"$XATA_WINDOWS_CERTIFICATE_KEY"` >> $CERTIFICATE_PATH
+          echo -n `$XATA_WINDOWS_CERTIFICATE_KEY` >> $CERTIFICATE_PATH
           echo $CERTIFICATE_PATH
 
       - name: Release CLI Assets
@@ -98,7 +98,7 @@ jobs:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          XATA_WINDOWS_SIGNING_PASS: "${{ secrets.WINDOWS_CERTIFICATE_SECRET }}"
+          XATA_WINDOWS_SIGNING_PASS: "'${{ secrets.WINDOWS_CERTIFICATE_SECRET }}'"
 
       - name: Clean up keychain
         if: matrix.os == 'macos-latest'
