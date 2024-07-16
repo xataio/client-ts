@@ -81,16 +81,14 @@
     "update": {
       "s3": {
         "host": "https://s3.console.aws.amazon.com/",
-        "bucket": "xata-cli-assets",
-        "acl": "bucket-owner-full-control"
+        "bucket": "xata-cli-assets"
       }
     },
     "hooks": {
       "init": "./dist/hooks/init/compatibility"
     },
     "macos": {
-      "identifier": "io.xata.cli",
-      "sign": "\"Developer ID Installer: Xatabase Inc (BNRJ8833Y2)\""
+      "identifier": "io.xata.cli"
     },
     "deb": {
       "identifier": "io.xata.cli"
