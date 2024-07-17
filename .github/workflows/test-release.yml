@@ -38,5 +38,4 @@ jobs:
     uses: ./.github/workflows/release-cli-assets.yml
     with:
       commitSha: ${{ github.sha }}
-      channel: ${{ github.ref }}
     secrets: inherit
