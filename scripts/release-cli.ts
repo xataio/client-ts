@@ -14,20 +14,19 @@ const PATH_TO_CODEGEN = process.cwd() + '/packages/codegen';
 const PATH_TO_IMPORTER = process.cwd() + '/packages/importer';
 const PATH_TO_PGROLL = process.cwd() + '/packages/pgroll';
 
-// const base = {
-//   owner: 'xataio',
-//   repo: 'client-ts',
-//   headers: {
-//     'X-GitHub-Api-Version': '2022-11-28'
-//   }
-// };
+const base = {
+  owner: 'xataio',
+  repo: 'client-ts',
+  headers: {
+    'X-GitHub-Api-Version': '2022-11-28'
+  }
+};
 
 async function main() {
   if (!process.env.MATRIX_OS) throw new Error('MATRIX_OS is not set');
   if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
   // if (!process.env.PUBLISHED_PACKAGES) throw new Error('PUBLISHED_PACKAGES is not set');
   if (!process.env.COMMIT_SHA) throw new Error('COMMIT_SHA is not set');
-  if (!process.env.CHANNEL) throw new Error('CHANNEL is not set');
   // if (!publishedPackagesContains(process.env.PUBLISHED_PACKAGES, '@xata.io/cli')) return;
 
   const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
@@ -94,27 +93,28 @@ async function main() {
   // Upload packages
   await uploadS3(platform, { pkg: true });
   await promoteS3(platform, version);
-  // const octokit = new Octokit({
-  //   auth: process.env.GITHUB_TOKEN
-  // });
 
-  // const tag = `@xata.io/cli@${manifest.version}`;
+  const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN
+  });
 
-  // const release = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
-  //   ...base,
-  //   tag
-  // });
+  const tag = `@xata.io/cli@${manifest.version}`;
 
-  // if (!release.data) throw new Error('Release not found');
+  const release = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
+    ...base,
+    tag
+  });
 
-  //const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem}`;
+  if (!release.data) throw new Error('Release not found');
+
+  const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem}`;
   // Debian pack results in redundant files. Only upload .deb files
-  // const files = fs
-  //   .readdirSync(pathToAsset)
-  //   .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
-  // for (const file of files) {
-  //   await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
-  // }
+  const files = fs
+    .readdirSync(pathToAsset)
+    .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
+  for (const file of files) {
+    await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
+  }
 
   // Pack windows on linux
   if (operatingSystem === 'deb') {
@@ -129,41 +129,41 @@ async function main() {
     await uploadS3(platform, { pkg: true });
     await promoteS3(platform, version);
     // Windows packs files under "win32" directory
-    // const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
-    // const files = fs.readdirSync(pathToAssetWindows);
-    // for (const file of files) {
-    //   await uploadFiles({
-    //     pathToFile: pathToAssetWindows + `/${file}`,
-    //     fileName: file,
-    //     octokit,
-    //     releaseId: release.data.id
-    //   });
-    // }
+    const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
+    const files = fs.readdirSync(pathToAssetWindows);
+    for (const file of files) {
+      await uploadFiles({
+        pathToFile: pathToAssetWindows + `/${file}`,
+        fileName: file,
+        octokit,
+        releaseId: release.data.id
+      });
+    }
   }
 }
 
-// const uploadFiles = async ({
-//   pathToFile,
-//   fileName,
-//   octokit,
-//   releaseId
-// }: {
-//   pathToFile: string;
-//   fileName: string;
-//   octokit: Octokit;
-//   releaseId: number;
-// }) => {
-//   const data = fs.readFileSync(pathToFile);
-//   const upload = await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
-//     ...base,
-//     name: fileName,
-//     label: fileName,
-//     release_id: releaseId,
-//     data: data,
-//     baseUrl: 'https://uploads.github.com'
-//   });
-//   console.log('Finished uploading asset', upload.status);
-// };
+const uploadFiles = async ({
+  pathToFile,
+  fileName,
+  octokit,
+  releaseId
+}: {
+  pathToFile: string;
+  fileName: string;
+  octokit: Octokit;
+  releaseId: number;
+}) => {
+  const data = fs.readFileSync(pathToFile);
+  const upload = await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
+    ...base,
+    name: fileName,
+    label: fileName,
+    release_id: releaseId,
+    data: data,
+    baseUrl: 'https://uploads.github.com'
+  });
+  console.log('Finished uploading asset', upload.status);
+};
 
 main();
 
@@ -179,7 +179,7 @@ const promoteS3 = async (platform: 'macos' | 'deb' | 'win', version: string) => 
     `pnpm oclif promote --${platform} --sha=${process.env.COMMIT_SHA?.slice(
       0,
       8
-    )} --indexes --version=${version} --channel=latest --targets=${platformDistributions(platform)}`
+    )} --indexes --version=${version} --channel=stable --targets=${platformDistributions(platform)}`
   );
   console.log('Promoted release', promoteRes.stdout);
 };
