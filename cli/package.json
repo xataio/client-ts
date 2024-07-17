@@ -83,7 +83,7 @@
     "bin": "xata",
     "update": {
       "s3": {
-        "host": "https://s3.console.aws.amazon.com/",
+        "host": "https://xata-cli-assets.s3.us-east-1.amazonaws.com/",
         "bucket": "xata-cli-assets"
       }
     },
