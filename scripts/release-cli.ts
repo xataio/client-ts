@@ -82,17 +82,15 @@ async function main() {
   execFile('rm', ['-rf', `${PATH_TO_CLI}/npm-shrinkwrap.json`]);
   execFile('touch', [`${PATH_TO_CLI}/npm-shrinkwrap.json`]);
 
-  const platform = matrixToOclif(process.env.MATRIX_OS);
-
   // Tarballs
-  await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(platform)}`);
+  await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(operatingSystem)}`);
   //Packages
-  await exec(`pnpm oclif pack ${platform}`);
+  await exec(`pnpm oclif pack ${operatingSystem}`);
   // Upload Tarballs
-  await uploadS3(platform);
+  await uploadS3(operatingSystem);
   // Upload packages
-  await uploadS3(platform, { pkg: true });
-  await promoteS3(platform, version);
+  await uploadS3(operatingSystem, { pkg: true });
+  await promoteS3(operatingSystem, version);
 
   const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN
