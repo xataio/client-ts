@@ -18,6 +18,9 @@
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
   ],
+  "engines": {
+    "node": ">=8"
+  },
   "dependencies": {
     "@oclif/core": "^4.0.8",
     "@oclif/plugin-help": "^6.2.5",

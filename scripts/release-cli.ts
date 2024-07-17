@@ -164,7 +164,7 @@ const promoteS3 = async (platform: 'macos' | 'deb' | 'win', version: string) => 
     `pnpm oclif promote --${platform} --sha=${process.env.COMMIT_SHA?.slice(
       0,
       8
-    )} --indexes --version=${version} --channel=${process.env.CHANNEL} --targets=${platformDistributions(platform)}`
+    )} --indexes --version=${version} --channel=latest --targets=${platformDistributions(platform)}`
   );
   console.log('Promoted release', promoteRes.stdout);
 };
