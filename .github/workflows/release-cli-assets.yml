@@ -3,10 +3,10 @@ name: Release CLI Assets
 on:
   workflow_call:
     inputs:
-      publishedPackages:
-        description: 'Published packages'
-        required: true
-        type: string
+      # publishedPackages:
+      #   description: 'Published packages'
+      #   required: true
+      #   type: string
       commitSha:
         description: 'Commit SHA'
         required: true
@@ -18,11 +18,11 @@ on:
         default: 'latest'
   workflow_dispatch:
     inputs:
-      publishedPackages:
-        description: 'Published packages'
-        required: true
-        default: '[{"name": "@xata.io/cli", "version": "1.2.0"}]'
-        type: string
+      # publishedPackages:
+      #   description: 'Published packages'
+      #   required: true
+      #   default: '[{"name": "@xata.io/cli", "version": "1.2.0"}]'
+      #   type: string
       commitSha:
         description: 'Commit SHA'
         required: true
@@ -106,13 +106,6 @@ jobs:
           sudo apt-get install -y nsis
           sudo apt-get install -y p7zip
 
-      - name: Release CLI Assets
-        run: pnpm run release:cli
-        env:
-          PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
-          MATRIX_OS: ${{ matrix.os }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Configure AWS Credentials for production
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -120,15 +113,24 @@ jobs:
           aws-region: us-east-1
           mask-aws-account-id: 'no'
 
-      - name: Upload & Promote CLI Assets to S3
-        run: pnpm run release:cli:upload
-        # continue-on-error: true
+      - name: Release CLI Assets
+        run: pnpm run release:cli
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
-          AWS_EC2_METADATA_DISABLED: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_SHA: ${{ inputs.commitSha }}
           CHANNEL: ${{ inputs.channel }}
+
+      # - name: Upload & Promote CLI Assets to S3
+      #   run: pnpm run release:cli:upload
+      #   # continue-on-error: true
+      #   env:
+      #     PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
+      #     MATRIX_OS: ${{ matrix.os }}
+      #     AWS_EC2_METADATA_DISABLED: true
+      #     COMMIT_SHA: ${{ inputs.commitSha }}
+      #     CHANNEL: ${{ inputs.channel }}
 
       - name: Clean up keychain
         if: matrix.os == 'macos-latest'
