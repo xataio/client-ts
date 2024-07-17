@@ -90,9 +90,7 @@ jobs:
         run: |
           export GPG_TTY=$(tty)
           # import certificate from secrets
-          echo -n "$DEBIAN_GPG_KEY" >> $RUNNER_TEMP/key.gpg
-
-          gpg --import $RUNNER_TEMP/key.gpg
+          echo "$DEBIAN_GPG_KEY" | gpg --batch --import
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
