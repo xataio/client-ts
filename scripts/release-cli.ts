@@ -127,7 +127,7 @@ async function main() {
     await uploadS3(platform);
     // Upload packages
     await uploadS3(platform, { pkg: true });
-
+    await promoteS3(platform, version);
     // Windows packs files under "win32" directory
     // const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
     // const files = fs.readdirSync(pathToAssetWindows);
