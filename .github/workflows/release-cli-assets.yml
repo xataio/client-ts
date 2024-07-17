@@ -88,6 +88,7 @@ jobs:
         env:
           DEBIAN_GPG_KEY: ${{ secrets.DEBIAN_GPG_KEY }}
         run: |
+          export GPG_TTY=$(tty)
           # import certificate from secrets
           echo -n "$DEBIAN_GPG_KEY" >> $RUNNER_TEMP/key.gpg
 
