@@ -155,7 +155,7 @@ async function main() {
 main();
 
 const uploadS3 = async (platform: 'macos' | 'deb' | 'win') => {
-  const uploadRes = await exec(`pnpm oclif upload ${platform}`);
+  const uploadRes = await exec(`pnpm oclif upload tarballs --targets=${platformDistributions(platform)}`);
   console.log('Uploaded release', uploadRes.stdout);
 };
 
