@@ -2,6 +2,7 @@ import { exec as execRaw } from 'child_process';
 import * as util from 'util';
 import { matrixToOclif, platformDistributions, publishedPackagesContains } from './utils';
 import { readProjectManifest } from '@pnpm/read-project-manifest';
+
 const exec = util.promisify(execRaw);
 
 async function main() {
@@ -31,7 +32,7 @@ async function main() {
   // Upload and promote windows since it is packed on linux
   if (platform === 'deb') {
     await uploadS3('win');
-    await promoteS3('win', platformDistributions('win'));
+    await promoteS3('win', version);
   }
 }
 
@@ -45,7 +46,7 @@ const promoteS3 = async (platform: 'macos' | 'deb' | 'win', version: string) => 
     `pnpm oclif promote --${platform} --sha=${process.env.COMMIT_SHA?.slice(
       0,
       8
-    )} --indexes --version=${version} --channel=${process.env.CHANNEL}`
+    )} --indexes --version=${version} --channel=${process.env.CHANNEL} --targets=${platformDistributions(platform)}`
   );
   console.log('Promoted release', promoteRes.stdout);
 };
