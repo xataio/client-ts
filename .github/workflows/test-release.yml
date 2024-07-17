@@ -17,21 +17,6 @@ jobs:
           # This makes the PR pushed to use GITHUB_TOKEN and trigger the checks
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Use Node.js ${{ steps.config.outputs.NVMRC }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ steps.config.outputs.NVMRC }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm build
-
   publish-cli-assets:
     name: Publish CLI assets
     needs: [release]

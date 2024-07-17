@@ -113,7 +113,9 @@ jobs:
           mask-aws-account-id: 'no'
 
       - name: Release CLI Assets
-        run: pnpm run release:cli
+        run: |
+          export GPG_TTY=$(tty)
+          pnpm run release:cli
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
