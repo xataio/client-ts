@@ -11,11 +11,6 @@ on:
         description: 'Commit SHA'
         required: true
         type: string
-      channel:
-        description: 'Channel'
-        required: true
-        type: string
-        default: 'latest'
   workflow_dispatch:
     inputs:
       # publishedPackages:
@@ -27,11 +22,6 @@ on:
         description: 'Commit SHA'
         required: true
         type: string
-      channel:
-        description: 'Channel'
-        required: true
-        type: string
-        default: 'latest'
 
 permissions:
   id-token: write
@@ -120,17 +110,6 @@ jobs:
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_SHA: ${{ inputs.commitSha }}
-          CHANNEL: ${{ inputs.channel }}
-
-      # - name: Upload & Promote CLI Assets to S3
-      #   run: pnpm run release:cli:upload
-      #   # continue-on-error: true
-      #   env:
-      #     PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
-      #     MATRIX_OS: ${{ matrix.os }}
-      #     AWS_EC2_METADATA_DISABLED: true
-      #     COMMIT_SHA: ${{ inputs.commitSha }}
-      #     CHANNEL: ${{ inputs.channel }}
 
       - name: Clean up keychain
         if: matrix.os == 'macos-latest'

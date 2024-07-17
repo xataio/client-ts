@@ -76,5 +76,4 @@ jobs:
     with:
       publishedPackages: ${{ needs.release.outputs.publishedPackages }}
       commitSha: ${{ github.sha }}
-      channel: ${{ github.ref }}
     secrets: inherit
