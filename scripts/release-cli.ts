@@ -85,8 +85,13 @@ async function main() {
 
   const platform = matrixToOclif(process.env.MATRIX_OS);
 
+  // Tarballs
   await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(platform)}`);
   await uploadS3(platform);
+
+  //Packages
+  await exec(`pnpm oclif pack ${platform}`);
+  await uploadS3(platform, { pkg: true });
   await promoteS3(platform, version);
   // const octokit = new Octokit({
   //   auth: process.env.GITHUB_TOKEN
@@ -112,8 +117,14 @@ async function main() {
 
   // Pack windows on linux
   if (operatingSystem === 'deb') {
+    // Tarballs
     await exec(`pnpm oclif pack win --targets=${platformDistributions('win')}`);
     await uploadS3('win');
+
+    //Packages
+    await exec(`pnpm oclif pack win`);
+    await uploadS3('win', { pkg: true });
+
     await promoteS3('win', version);
     // Windows packs files under "win32" directory
     // const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
@@ -154,8 +165,10 @@ async function main() {
 
 main();
 
-const uploadS3 = async (platform: 'macos' | 'deb' | 'win') => {
-  const uploadRes = await exec(`pnpm oclif upload tarballs --targets=${platformDistributions(platform)}`);
+const uploadS3 = async (platform: 'macos' | 'deb' | 'win', options?: { pkg: boolean }) => {
+  const uploadRes = await exec(
+    `pnpm oclif upload ${options?.pkg ? '' : 'tarballs'} --targets=${platformDistributions(platform)}`
+  );
   console.log('Uploaded release', uploadRes.stdout);
 };
 
