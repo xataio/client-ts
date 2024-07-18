@@ -35,7 +35,7 @@ jobs:
     name: Release CLI assets
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -122,14 +122,14 @@ jobs:
         run: |
           set -e -o pipefail
           echo "$DEBIAN_GPG_KEY_PRIVATE" | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS"
-          # gpg --digest-algo SHA512 --clearsign --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o InRelease Release 
-          # gpg --digest-algo SHA512 -abs --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o Release.gpg Release 
-          # echo "Signed debian packages successfully"
-          # echo "sha256 sums:"
-          # sha256sum *Release*
+          gpg --digest-algo SHA512 --clearsign --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o InRelease Release 
+          gpg --digest-algo SHA512 -abs --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o Release.gpg Release 
+          echo "Signed debian packages successfully"
+          echo "sha256 sums:"
+          sha256sum *Release*
 
-          # mkdir -p /home/runner/work/client-ts/client-ts/cli/dist/apt
-          # echo "$DEBIAN_GPG_KEY_PUBLIC" | base64 --decode > /home/runner/work/client-ts/client-ts/cli/dist/apt/release.key
+          mkdir -p /home/runner/work/client-ts/client-ts/cli/dist/apt
+          echo "$DEBIAN_GPG_KEY_PUBLIC" | base64 --decode > /home/runner/work/client-ts/client-ts/cli/dist/apt/release.key
         env:
           DEBIAN_GPG_KEY_PRIVATE: ${{ secrets.DEBIAN_GPG_KEY_PRIVATE }}
           DEBIAN_GPG_KEY_PASS: ${{ secrets.DEBIAN_GPG_KEY_PASS }}
