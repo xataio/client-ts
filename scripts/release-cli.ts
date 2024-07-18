@@ -86,6 +86,9 @@ async function main() {
   await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(operatingSystem)}`);
   //Packages
   await exec(`pnpm oclif pack ${operatingSystem}`);
+  if (operatingSystem === 'deb') {
+    await installDebCert();
+  }
   // Upload Tarballs
   await uploadS3(operatingSystem);
   // Upload packages
@@ -180,4 +183,24 @@ const promoteS3 = async (platform: 'macos' | 'deb' | 'win', version: string) => 
     )} --indexes --version=${version} --channel=stable --targets=${platformDistributions(platform)}`
   );
   console.log('Promoted release', promoteRes.stdout);
+};
+
+// # This will sign files after `oclif pack deb`, this script should be ran from the `dist/deb` folder
+const installDebCert = async () => {
+  await exec(
+    `echo "$DEBIAN_GPG_KEY_PRIVATE" | base64 -d 2> /dev/null | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS" 2> /dev/null`
+  );
+  await exec(
+    `gpg --digest-algo SHA512 --clearsign --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o InRelease Release 2> /dev/null`
+  );
+  await exec(
+    `gpg --digest-algo SHA512 -abs --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o Release`
+  );
+  await exec(`echo "Signed debian packages successfully"`);
+  await exec(`echo "sha256 sums:"`);
+  await exec(`sha256sum *Release*`);
+  await exec(`
+  mkdir -p ./dist/deb/release.key
+  `);
+  await exec(`echo "$DEBIAN_GPG_KEY_PUBLIC" | base64 --decode > ./dist/deb/release.key`);
 };

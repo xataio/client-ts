@@ -83,15 +83,6 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-      - name: Install debian certificate
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          DEBIAN_GPG_KEY: ${{ secrets.DEBIAN_GPG_KEY }}
-        run: |
-          export GPG_TTY=$(tty)
-          # import certificate from secrets
-          echo "$DEBIAN_GPG_KEY" | gpg --batch --import
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -121,7 +112,10 @@ jobs:
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_SHA: ${{ inputs.commitSha }}
-          XATA_DEB_KEY: ${{ secrets.DEBIAN_GPG_KEY_ID }}
+          DEBIAN_GPG_KEY_PRIVATE: ${{ secrets.DEBIAN_GPG_KEY_PRIVATE }}
+          DEBIAN_GPG_KEY_PASS: ${{ secrets.DEBIAN_GPG_KEY_PASS }}
+          DEBIAN_GPG_KEY_PUBLIC: ${{ secrets.DEBIAN_GPG_KEY_PUBLIC }}
+          DEBIAN_GPG_KEY_ID: ${{ secrets.DEBIAN_GPG_KEY_ID }}
 
       - name: Clean up keychain
         if: matrix.os == 'macos-latest'
