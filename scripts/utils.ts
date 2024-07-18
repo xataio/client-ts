@@ -4,6 +4,8 @@ export const matrixToOclif = (os: string) => {
       return 'macos';
     case 'ubuntu-latest':
       return 'deb';
+    case 'windows-latest':
+      return 'win';
     default:
       throw new Error('Unsupported OS');
   }

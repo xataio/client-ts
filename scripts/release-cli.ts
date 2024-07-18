@@ -29,7 +29,7 @@ async function main() {
   if (!process.env.COMMIT_SHA) throw new Error('COMMIT_SHA is not set');
   // if (!publishedPackagesContains(process.env.PUBLISHED_PACKAGES, '@xata.io/cli')) return;
 
-  const operatingSystem = matrixToOclif(process.env.MATRIX_OS);
+  const operatingSystem = matrixToOclif(process.env.OS_OVERRIDE ?? process.env.MATRIX_OS);
 
   const { manifest, fileName } = await readProjectManifest(PATH_TO_CLI);
   const {
@@ -107,27 +107,6 @@ async function main() {
   //   .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
   // for (const file of files) {
   //   // await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
-  // }
-
-  // Pack windows on linux
-  // if (operatingSystem === 'deb') {
-  //   const platform = 'win';
-  //   // Tarballs
-  //   await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(platform)}`);
-  //   //Packages
-  //   await exec(`pnpm oclif pack ${platform}`);
-
-  //   // Windows packs files under "win32" directory
-  //   const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
-  //   const files = fs.readdirSync(pathToAssetWindows);
-  //   for (const file of files) {
-  //     // await uploadFiles({
-  //     //   pathToFile: pathToAssetWindows + `/${file}`,
-  //     //   fileName: file,
-  //     //   octokit,
-  //     //   releaseId: release.data.id
-  //     // });
-  //   }
   // }
 }
 

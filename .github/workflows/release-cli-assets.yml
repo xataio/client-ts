@@ -142,6 +142,27 @@ jobs:
           MATRIX_OS: ${{ matrix.os }}
           COMMIT_SHA: ${{ inputs.commitSha }}
 
+      # Necessary to delete deb packes before
+      # packing windows or machine runs out of space
+      - name: Release CLI Assets (Windows only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          rm -rf  /home/runner/work/client-ts/client-ts/cli/dist/deb
+          pnpm run release:cli
+        env:
+          PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
+          MATRIX_OS: ${{ matrix.os }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ inputs.commitSha }}
+          OS_OVERRIDE: windows-latest
+      - name: Upload and Promote CLI Assets (Windows only)
+        if: matrix.os == 'ubuntu-latest'
+        run: pnpm run release:cli:upload
+        env:
+          MATRIX_OS: ${{ matrix.os }}
+          COMMIT_SHA: ${{ inputs.commitSha }}
+          OS_OVERRIDE: windows-latest
+
       - name: Clean up keychain
         if: matrix.os == 'macos-latest'
         run: |
