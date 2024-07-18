@@ -111,6 +111,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_SHA: ${{ inputs.commitSha }}
 
+      - name: List all the deb files
+        if: matrix.os == 'ubuntu-latest'
+        run: ls -R
+        working-directory: /home/runner/work/client-ts/client-ts/cli/dist/deb
+
       - name: Debian cert
         if: matrix.os == 'ubuntu-latest'
         run: |
