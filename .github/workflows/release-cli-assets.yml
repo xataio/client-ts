@@ -35,7 +35,7 @@ jobs:
     name: Release CLI assets
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -129,7 +129,7 @@ jobs:
           sha256sum *Release*
 
           mkdir -p /home/runner/work/client-ts/client-ts/cli/dist/apt
-          echo "$DEBIAN_GPG_KEY_PUBLIC" | base64 --decode > /home/runner/work/client-ts/client-ts/cli/dist/apt/release.key
+          echo "$DEBIAN_GPG_KEY_PUBLIC" > /home/runner/work/client-ts/client-ts/cli/dist/apt/release.key
         env:
           DEBIAN_GPG_KEY_PRIVATE: ${{ secrets.DEBIAN_GPG_KEY_PRIVATE }}
           DEBIAN_GPG_KEY_PASS: ${{ secrets.DEBIAN_GPG_KEY_PASS }}

@@ -31,15 +31,15 @@ async function main() {
   await promoteS3(operatingSystem, version);
 
   // Pack windows on linux
-  if (operatingSystem === 'deb') {
-    const platform = 'win';
+  // if (operatingSystem === 'deb') {
+  //   const platform = 'win';
 
-    // Upload Tarballs
-    await uploadS3(platform);
-    // Upload packages
-    await uploadS3(platform, { pkg: true });
-    await promoteS3(platform, version);
-  }
+  //   // Upload Tarballs
+  //   await uploadS3(platform);
+  //   // Upload packages
+  //   await uploadS3(platform, { pkg: true });
+  //   await promoteS3(platform, version);
+  // }
 }
 main();
 
