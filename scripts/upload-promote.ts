@@ -22,6 +22,8 @@ async function main() {
 
   if (!version) throw new Error('Missing package version.');
 
+  process.chdir(PATH_TO_CLI);
+
   // Upload Tarballs
   await uploadS3(operatingSystem);
   // Upload packages
