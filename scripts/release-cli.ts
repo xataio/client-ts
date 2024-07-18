@@ -1,7 +1,7 @@
 import { createExportableManifest } from '@pnpm/exportable-manifest';
 import { readProjectManifest } from '@pnpm/read-project-manifest';
 import { writeProjectManifest } from '@pnpm/write-project-manifest';
-import { execFile, execFileSync, exec as execRaw } from 'child_process';
+import { execFile, exec as execRaw } from 'child_process';
 import { Octokit } from '@octokit/core';
 import fs from 'fs';
 import * as util from 'util';
@@ -86,14 +86,6 @@ async function main() {
   await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(operatingSystem)}`);
   //Packages
   await exec(`pnpm oclif pack ${operatingSystem}`);
-  if (operatingSystem === 'deb') {
-    installDebCert();
-  }
-  // Upload Tarballs
-  await uploadS3(operatingSystem);
-  // Upload packages
-  await uploadS3(operatingSystem, { pkg: true });
-  await promoteS3(operatingSystem, version);
 
   const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN
@@ -114,7 +106,7 @@ async function main() {
     .readdirSync(pathToAsset)
     .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
   for (const file of files) {
-    await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
+    // await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
   }
 
   // Pack windows on linux
@@ -124,21 +116,17 @@ async function main() {
     await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(platform)}`);
     //Packages
     await exec(`pnpm oclif pack ${platform}`);
-    // Upload Tarballs
-    await uploadS3(platform);
-    // Upload packages
-    await uploadS3(platform, { pkg: true });
-    await promoteS3(platform, version);
+
     // Windows packs files under "win32" directory
     const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
     const files = fs.readdirSync(pathToAssetWindows);
     for (const file of files) {
-      await uploadFiles({
-        pathToFile: pathToAssetWindows + `/${file}`,
-        fileName: file,
-        octokit,
-        releaseId: release.data.id
-      });
+      // await uploadFiles({
+      //   pathToFile: pathToAssetWindows + `/${file}`,
+      //   fileName: file,
+      //   octokit,
+      //   releaseId: release.data.id
+      // });
     }
   }
 }
@@ -167,31 +155,3 @@ const uploadFiles = async ({
 };
 
 main();
-
-const uploadS3 = async (platform: 'macos' | 'deb' | 'win', options?: { pkg: boolean }) => {
-  const uploadRes = options?.pkg
-    ? await exec(`pnpm oclif upload ${platform}`)
-    : await exec(`pnpm oclif upload tarballs --targets=${platformDistributions(platform)}`);
-  console.log('Uploaded release', uploadRes.stdout);
-};
-
-const promoteS3 = async (platform: 'macos' | 'deb' | 'win', version: string) => {
-  const promoteRes = await exec(
-    `pnpm oclif promote --${platform} --sha=${process.env.COMMIT_SHA?.slice(
-      0,
-      8
-    )} --indexes --version=${version} --channel=stable --targets=${platformDistributions(platform)}`
-  );
-  console.log('Promoted release', promoteRes.stdout);
-};
-
-// # This will sign files after `oclif pack deb`, this script should be ran from the `dist/deb` folder
-const installDebCert = () => {
-  execFileSync('./install-deb-cert.sh', {
-    stdio: 'inherit',
-    cwd: `${PATH_TO_CLI}/dist/deb`,
-    env: {
-      ...process.env
-    }
-  });
-};

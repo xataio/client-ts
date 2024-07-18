@@ -104,18 +104,40 @@ jobs:
           mask-aws-account-id: 'no'
 
       - name: Release CLI Assets
-        run: |
-          export GPG_TTY=$(tty)
-          pnpm run release:cli
+        run: pnpm run release:cli
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_SHA: ${{ inputs.commitSha }}
+
+      - name: Debian cert
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          export GPG_TTY=$(tty)
+
+          # This will sign files after `oclif pack:deb`, this script should be ran from
+          # the `dist/deb` folder
+          echo "$DEBIAN_GPG_KEY_PRIVATE" | base64 -d 2> /dev/null | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS" 2> /dev/null
+          gpg --digest-algo SHA512 --clearsign --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o InRelease Release 2> /dev/null
+          gpg --digest-algo SHA512 -abs --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o Release.gpg Release 2> /dev/null
+          echo "Signed debian packages successfully"
+          echo "sha256 sums:"
+          sha256sum *Release*
+
+          mkdir -p /home/runner/work/client-ts/client-ts/cli/dist/apt
+          echo "$DEBIAN_GPG_KEY_PUBLIC" | base64 --decode > /home/runner/work/client-ts/client-ts/cli/dist/apt/release.key
+        env:
           DEBIAN_GPG_KEY_PRIVATE: ${{ secrets.DEBIAN_GPG_KEY_PRIVATE }}
           DEBIAN_GPG_KEY_PASS: ${{ secrets.DEBIAN_GPG_KEY_PASS }}
           DEBIAN_GPG_KEY_PUBLIC: ${{ secrets.DEBIAN_GPG_KEY_PUBLIC }}
           DEBIAN_GPG_KEY_ID: ${{ secrets.DEBIAN_GPG_KEY_ID }}
+
+      - name: Upload and Promote CLI Assets
+        run: pnpm run release:cli:upload
+        env:
+          MATRIX_OS: ${{ matrix.os }}
+          COMMIT_SHA: ${{ inputs.commitSha }}
 
       - name: Clean up keychain
         if: matrix.os == 'macos-latest'
