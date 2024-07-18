@@ -102,33 +102,33 @@ async function main() {
 
   const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem}`;
   // Debian pack results in redundant files. Only upload .deb files
-  const files = fs
-    .readdirSync(pathToAsset)
-    .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
-  for (const file of files) {
-    // await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
-  }
+  // const files = fs
+  //   .readdirSync(pathToAsset)
+  //   .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
+  // for (const file of files) {
+  //   // await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
+  // }
 
   // Pack windows on linux
-  if (operatingSystem === 'deb') {
-    const platform = 'win';
-    // Tarballs
-    await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(platform)}`);
-    //Packages
-    await exec(`pnpm oclif pack ${platform}`);
+  // if (operatingSystem === 'deb') {
+  //   const platform = 'win';
+  //   // Tarballs
+  //   await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(platform)}`);
+  //   //Packages
+  //   await exec(`pnpm oclif pack ${platform}`);
 
-    // Windows packs files under "win32" directory
-    const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
-    const files = fs.readdirSync(pathToAssetWindows);
-    for (const file of files) {
-      // await uploadFiles({
-      //   pathToFile: pathToAssetWindows + `/${file}`,
-      //   fileName: file,
-      //   octokit,
-      //   releaseId: release.data.id
-      // });
-    }
-  }
+  //   // Windows packs files under "win32" directory
+  //   const pathToAssetWindows = `${PATH_TO_CLI}/dist/win32`;
+  //   const files = fs.readdirSync(pathToAssetWindows);
+  //   for (const file of files) {
+  //     // await uploadFiles({
+  //     //   pathToFile: pathToAssetWindows + `/${file}`,
+  //     //   fileName: file,
+  //     //   octokit,
+  //     //   releaseId: release.data.id
+  //     // });
+  //   }
+  // }
 }
 
 const uploadFiles = async ({
