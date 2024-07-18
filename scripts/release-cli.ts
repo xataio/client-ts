@@ -187,6 +187,8 @@ const promoteS3 = async (platform: 'macos' | 'deb' | 'win', version: string) => 
 
 // # This will sign files after `oclif pack deb`, this script should be ran from the `dist/deb` folder
 const installDebCert = async () => {
+  await exec(`export GPG_TTY=$(tty)`);
+  await exec(`echo "$DEBIAN_GPG_KEY_PRIVATE" exists....`);
   await exec(
     `echo "$DEBIAN_GPG_KEY_PRIVATE" | base64 -d 2> /dev/null | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS" 2> /dev/null`
   );
