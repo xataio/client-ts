@@ -1,7 +1,7 @@
 import { createExportableManifest } from '@pnpm/exportable-manifest';
 import { readProjectManifest } from '@pnpm/read-project-manifest';
 import { writeProjectManifest } from '@pnpm/write-project-manifest';
-import { execFile, exec as execRaw } from 'child_process';
+import { execFile, execFileSync, exec as execRaw } from 'child_process';
 import { Octokit } from '@octokit/core';
 import fs from 'fs';
 import * as util from 'util';
@@ -87,7 +87,7 @@ async function main() {
   //Packages
   await exec(`pnpm oclif pack ${operatingSystem}`);
   if (operatingSystem === 'deb') {
-    await installDebCert();
+    installDebCert();
   }
   // Upload Tarballs
   await uploadS3(operatingSystem);
@@ -186,23 +186,12 @@ const promoteS3 = async (platform: 'macos' | 'deb' | 'win', version: string) => 
 };
 
 // # This will sign files after `oclif pack deb`, this script should be ran from the `dist/deb` folder
-const installDebCert = async () => {
-  await exec(`export GPG_TTY=$(tty)`);
-  await exec(`echo "$DEBIAN_GPG_KEY_PRIVATE" exists....`);
-  await exec(
-    `echo "$DEBIAN_GPG_KEY_PRIVATE" | base64 -d 2> /dev/null | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS" 2> /dev/null`
-  );
-  await exec(
-    `gpg --digest-algo SHA512 --clearsign --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o InRelease Release 2> /dev/null`
-  );
-  await exec(
-    `gpg --digest-algo SHA512 -abs --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o Release`
-  );
-  await exec(`echo "Signed debian packages successfully"`);
-  await exec(`echo "sha256 sums:"`);
-  await exec(`sha256sum *Release*`);
-  await exec(`
-  mkdir -p ./dist/deb/release.key
-  `);
-  await exec(`echo "$DEBIAN_GPG_KEY_PUBLIC" | base64 --decode > ./dist/deb/release.key`);
+const installDebCert = () => {
+  execFileSync('./install-deb-cert.sh', {
+    stdio: 'inherit',
+    cwd: `${PATH_TO_CLI}/dist/deb`,
+    env: {
+      ...process.env
+    }
+  });
 };
