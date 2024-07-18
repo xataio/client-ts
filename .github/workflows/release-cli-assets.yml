@@ -116,6 +116,8 @@ jobs:
         run: |
           export GPG_TTY=$(tty)
 
+          cd /home/runner/work/client-ts/client-ts/cli/dist/deb
+
           # This will sign files after `oclif pack:deb`, this script should be ran from
           # the `dist/deb` folder
           echo "$DEBIAN_GPG_KEY_PRIVATE" | base64 -d 2> /dev/null | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS" 2> /dev/null
