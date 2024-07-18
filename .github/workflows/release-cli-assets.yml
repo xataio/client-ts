@@ -121,7 +121,7 @@ jobs:
         working-directory: /home/runner/work/client-ts/client-ts/cli/dist/deb
         run: |
           set -e -o pipefail
-          echo "$DEBIAN_GPG_KEY_PRIVATE" | base64 -d | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS"
+          echo "$DEBIAN_GPG_KEY_PRIVATE" | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS"
           # gpg --digest-algo SHA512 --clearsign --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o InRelease Release 
           # gpg --digest-algo SHA512 -abs --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o Release.gpg Release 
           # echo "Signed debian packages successfully"
