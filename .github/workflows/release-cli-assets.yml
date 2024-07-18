@@ -118,13 +118,10 @@ jobs:
 
       - name: Debian cert
         if: matrix.os == 'ubuntu-latest'
+        working-directory: /home/runner/work/client-ts/client-ts/cli/dist/deb
         run: |
-          export GPG_TTY=$(tty)
+          # export GPG_TTY=$(tty)
 
-          cd /home/runner/work/client-ts/client-ts/cli/dist/deb
-
-          # This will sign files after `oclif pack:deb`, this script should be ran from
-          # the `dist/deb` folder
           echo "$DEBIAN_GPG_KEY_PRIVATE" | base64 -d 2> /dev/null | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS" 2> /dev/null
           gpg --digest-algo SHA512 --clearsign --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o InRelease Release 2> /dev/null
           gpg --digest-algo SHA512 -abs --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o Release.gpg Release 2> /dev/null
