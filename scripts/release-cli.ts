@@ -99,14 +99,15 @@ async function main() {
   });
 
   if (!release.data) throw new Error('Release not found');
-
-  const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem}`;
+  // Windows packs files under "win32" directory
+  const pathToAssets =
+    operatingSystem === 'win' ? `${PATH_TO_CLI}/dist/win32` : `${PATH_TO_CLI}/dist/${operatingSystem}`;
   // Debian pack results in redundant installer files. Only upload .deb files
   const files = fs
-    .readdirSync(pathToAsset)
+    .readdirSync(pathToAssets)
     .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
   for (const file of files) {
-    await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
+    await uploadFiles({ pathToFile: pathToAssets + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
   }
 }
 
