@@ -3,21 +3,21 @@ name: Release CLI Assets
 on:
   workflow_call:
     inputs:
-      # publishedPackages:
-      #   description: 'Published packages'
-      #   required: true
-      #   type: string
+      publishedPackages:
+        description: 'Published packages'
+        required: true
+        type: string
       commitSha:
         description: 'Commit SHA'
         required: true
         type: string
   workflow_dispatch:
     inputs:
-      # publishedPackages:
-      #   description: 'Published packages'
-      #   required: true
-      #   default: '[{"name": "@xata.io/cli", "version": "1.2.0"}]'
-      #   type: string
+      publishedPackages:
+        description: 'Published packages'
+        required: true
+        default: '[{"name": "@xata.io/cli", "version": "1.2.0"}]'
+        type: string
       commitSha:
         description: 'Commit SHA'
         required: true
@@ -103,13 +103,17 @@ jobs:
           aws-region: us-east-1
           mask-aws-account-id: 'no'
 
-      - name: Release CLI Assets
-        run: pnpm run release:cli
+      - name: Pack
+        run: pnpm run release:cli:pack
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
+
+      - name: Upload CLI Assets to GitHub Releases
+        run: pnpm run release:cli:upload:gh
+        env:
+          MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMIT_SHA: ${{ inputs.commitSha }}
 
       - name: List all the deb files
         if: matrix.os == 'ubuntu-latest'
@@ -136,28 +140,33 @@ jobs:
           DEBIAN_GPG_KEY_PUBLIC: ${{ secrets.DEBIAN_GPG_KEY_PUBLIC }}
           DEBIAN_GPG_KEY_ID: ${{ secrets.DEBIAN_GPG_KEY_ID }}
 
-      - name: Upload and Promote CLI Assets
-        run: pnpm run release:cli:upload
+      - name: Upload and Promote CLI Assets to S3
+        run: pnpm run release:cli:upload:s3
         env:
           MATRIX_OS: ${{ matrix.os }}
           COMMIT_SHA: ${{ inputs.commitSha }}
 
       # Necessary to delete deb packes before
       # packing windows or machine runs out of space
-      - name: Release CLI Assets (Windows only)
+      - name: Pack
         if: matrix.os == 'ubuntu-latest'
         run: |
           rm -rf  /home/runner/work/client-ts/client-ts/cli/dist/deb
-          pnpm run release:cli
+          pnpm run release:cli:pack
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMIT_SHA: ${{ inputs.commitSha }}
           OS_OVERRIDE: windows-latest
-      - name: Upload and Promote CLI Assets (Windows only)
+      - name: Upload CLI Assets to GitHub Releases (Windows only)
+        run: pnpm run release:cli:upload:gh
         if: matrix.os == 'ubuntu-latest'
-        run: pnpm run release:cli:upload
+        env:
+          MATRIX_OS: ${{ matrix.os }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OS_OVERRIDE: windows-latest
+      - name: Upload and Promote CLI Assets to S3 (Windows only)
+        if: matrix.os == 'ubuntu-latest'
+        run: pnpm run release:cli:upload:s3
         env:
           MATRIX_OS: ${{ matrix.os }}
           COMMIT_SHA: ${{ inputs.commitSha }}

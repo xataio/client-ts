@@ -2,10 +2,8 @@ import { createExportableManifest } from '@pnpm/exportable-manifest';
 import { readProjectManifest } from '@pnpm/read-project-manifest';
 import { writeProjectManifest } from '@pnpm/write-project-manifest';
 import { execFile, exec as execRaw } from 'child_process';
-import { Octokit } from '@octokit/core';
-import fs from 'fs';
 import * as util from 'util';
-import { matrixToOclif, platformDistributions } from './utils';
+import { matrixToOclif, platformDistributions, publishedPackagesContains } from './utils';
 const exec = util.promisify(execRaw);
 
 const PATH_TO_CLI = process.cwd() + '/cli';
@@ -14,24 +12,16 @@ const PATH_TO_CODEGEN = process.cwd() + '/packages/codegen';
 const PATH_TO_IMPORTER = process.cwd() + '/packages/importer';
 const PATH_TO_PGROLL = process.cwd() + '/packages/pgroll';
 
-const base = {
-  owner: 'xataio',
-  repo: 'client-ts',
-  headers: {
-    'X-GitHub-Api-Version': '2022-11-28'
-  }
-};
-
 async function main() {
   if (!process.env.MATRIX_OS) throw new Error('MATRIX_OS is not set');
-  if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
-  // if (!process.env.PUBLISHED_PACKAGES) throw new Error('PUBLISHED_PACKAGES is not set');
-  if (!process.env.COMMIT_SHA) throw new Error('COMMIT_SHA is not set');
+  if (!process.env.PUBLISHED_PACKAGES) throw new Error('PUBLISHED_PACKAGES is not set');
 
-  // if (!publishedPackagesContains(process.env.PUBLISHED_PACKAGES, '@xata.io/cli')) return;
+  if (!publishedPackagesContains(process.env.PUBLISHED_PACKAGES, '@xata.io/cli')) return;
 
   const operatingSystem = matrixToOclif(process.env.OS_OVERRIDE ?? process.env.MATRIX_OS);
 
+  // Assume changeset version has been called and all the
+  // versions in package jsons are up to date
   const { manifest, fileName } = await readProjectManifest(PATH_TO_CLI);
   const {
     manifest: { version: clientVersion }
@@ -49,13 +39,7 @@ async function main() {
   if (!clientVersion || !codegenVersion || !importerVersion || !pgrollVersion)
     throw new Error('Missing package versions.');
 
-  // Assume changeset version has been called and all the
-  // versions in package jsons are up to date
-  const {
-    manifest: { version }
-  } = await readProjectManifest(PATH_TO_CLI);
-
-  if (!version) throw new Error('Missing package version.');
+  if (!manifest.version) throw new Error('Missing package version.');
 
   const workspaceProtocolPackageManifest = await createExportableManifest(
     PATH_TO_CLI,
@@ -86,52 +70,6 @@ async function main() {
   await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(operatingSystem)}`);
   // Installers
   await exec(`pnpm oclif pack ${operatingSystem}`);
-
-  const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN
-  });
-
-  const tag = `@xata.io/cli@${manifest.version}`;
-
-  const release = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
-    ...base,
-    tag
-  });
-
-  if (!release.data) throw new Error('Release not found');
-  // Windows packs files under "win32" directory
-  const pathToAssets =
-    operatingSystem === 'win' ? `${PATH_TO_CLI}/dist/win32` : `${PATH_TO_CLI}/dist/${operatingSystem}`;
-  // Debian pack results in redundant installer files. Only upload .deb files
-  const files = fs
-    .readdirSync(pathToAssets)
-    .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
-  for (const file of files) {
-    await uploadFiles({ pathToFile: pathToAssets + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
-  }
 }
-
-const uploadFiles = async ({
-  pathToFile,
-  fileName,
-  octokit,
-  releaseId
-}: {
-  pathToFile: string;
-  fileName: string;
-  octokit: Octokit;
-  releaseId: number;
-}) => {
-  const data = fs.readFileSync(pathToFile);
-  const upload = await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
-    ...base,
-    name: fileName,
-    label: fileName,
-    release_id: releaseId,
-    data: data,
-    baseUrl: 'https://uploads.github.com'
-  });
-  console.log('Finished uploading asset', upload.status);
-};
 
 main();
