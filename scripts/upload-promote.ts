@@ -20,10 +20,11 @@ async function main() {
 
   process.chdir(PATH_TO_CLI);
 
-  // Upload Tarballs
+  // Upload tarballs
   await uploadS3(operatingSystem);
-  // Upload packages
+  // Upload installers
   await uploadS3(operatingSystem, { pkg: true });
+  // Promote to stable
   await promoteS3(operatingSystem, version);
 }
 main();

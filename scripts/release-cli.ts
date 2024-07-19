@@ -27,6 +27,7 @@ async function main() {
   if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
   // if (!process.env.PUBLISHED_PACKAGES) throw new Error('PUBLISHED_PACKAGES is not set');
   if (!process.env.COMMIT_SHA) throw new Error('COMMIT_SHA is not set');
+
   // if (!publishedPackagesContains(process.env.PUBLISHED_PACKAGES, '@xata.io/cli')) return;
 
   const operatingSystem = matrixToOclif(process.env.OS_OVERRIDE ?? process.env.MATRIX_OS);
@@ -50,7 +51,6 @@ async function main() {
 
   // Assume changeset version has been called and all the
   // versions in package jsons are up to date
-
   const {
     manifest: { version }
   } = await readProjectManifest(PATH_TO_CLI);
@@ -84,7 +84,7 @@ async function main() {
 
   // Tarballs
   await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(operatingSystem)}`);
-  //Packages
+  // Installers
   await exec(`pnpm oclif pack ${operatingSystem}`);
 
   const octokit = new Octokit({
@@ -101,13 +101,13 @@ async function main() {
   if (!release.data) throw new Error('Release not found');
 
   const pathToAsset = `${PATH_TO_CLI}/dist/${operatingSystem}`;
-  // Debian pack results in redundant files. Only upload .deb files
-  // const files = fs
-  //   .readdirSync(pathToAsset)
-  //   .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
-  // for (const file of files) {
-  //   // await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
-  // }
+  // Debian pack results in redundant installer files. Only upload .deb files
+  const files = fs
+    .readdirSync(pathToAsset)
+    .filter((file) => (operatingSystem === 'deb' ? file.endsWith('.deb') : true));
+  for (const file of files) {
+    await uploadFiles({ pathToFile: pathToAsset + `/${file}`, fileName: file, octokit, releaseId: release.data.id });
+  }
 }
 
 const uploadFiles = async ({
