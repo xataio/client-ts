@@ -148,7 +148,7 @@ jobs:
 
       # Necessary to delete deb packes before
       # packing windows or machine runs out of space
-      - name: Pack
+      - name: Pack (Windows only)
         if: matrix.os == 'ubuntu-latest'
         run: |
           rm -rf  /home/runner/work/client-ts/client-ts/cli/dist/deb
