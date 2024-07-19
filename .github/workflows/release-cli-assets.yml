@@ -115,16 +115,10 @@ jobs:
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: List all the deb files
-        if: matrix.os == 'ubuntu-latest'
-        run: ls -R
-        working-directory: /home/runner/work/client-ts/client-ts/cli/dist/deb
-
       - name: Debian cert
         if: matrix.os == 'ubuntu-latest'
         working-directory: /home/runner/work/client-ts/client-ts/cli/dist/deb
         run: |
-          set -e -o pipefail
           echo "$DEBIAN_GPG_KEY_PRIVATE" | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS"
           gpg --digest-algo SHA512 --clearsign --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o InRelease Release 
           gpg --digest-algo SHA512 -abs --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o Release.gpg Release 
@@ -146,13 +140,9 @@ jobs:
           MATRIX_OS: ${{ matrix.os }}
           COMMIT_SHA: ${{ inputs.commitSha }}
 
-      # Necessary to delete deb packes before
-      # packing windows or machine runs out of space
       - name: Pack (Windows only)
         if: matrix.os == 'ubuntu-latest'
-        run: |
-          rm -rf  /home/runner/work/client-ts/client-ts/cli/dist/deb
-          pnpm run release:cli:pack
+        run: pnpm run release:cli:pack
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}

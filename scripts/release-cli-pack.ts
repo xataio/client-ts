@@ -66,6 +66,11 @@ async function main() {
   execFile('rm', ['-rf', `${PATH_TO_CLI}/npm-shrinkwrap.json`]);
   execFile('touch', [`${PATH_TO_CLI}/npm-shrinkwrap.json`]);
 
+  // Clean up any old /dist directories if there are some
+  for (const subdir of ['macos', 'deb', 'win32']) {
+    await exec(`rm -rf ${PATH_TO_CLI}/dist/${subdir}`);
+  }
+
   // Tarballs
   await exec(`pnpm oclif pack tarballs --targets=${platformDistributions(operatingSystem)}`);
   // Installers
