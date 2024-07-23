@@ -47,8 +47,18 @@ jobs:
           git config user.name "Xata"
           git config user.email "<>"
 
-    # - name: Update Homebrew Formula in ruby template with
-    #   run:
+      - name: Read template file
+        id: gettemplate
+        run: echo "::set-output name=template::$(cat ./Template/xata.rb)"
+
+      - name: Update Homebrew Formula using template variables
+        run: |
+          echo "${{ steps.gettemplate.outputs.template }}" > ./Formula/xata.rb
+          sed -i 's/VERSION/${{ inputs.version }}/g' ./Formula/xata.rb
+          sed -i 's/MAC_INTEL_SHA/${{ inputs.mac_intel_sha }}/g' ./Formula/xata.rb
+          sed -i 's/MAC_ARM_SHA/${{ inputs.mac_arm_sha }}/g' ./Formula/xata.rb
+          sed -i 's/LINUX_SHA/${{ inputs.linux_sha }}/g' ./Formula/xata.rb
+          sed -i 's/LINUX_ARM_SHA/${{ inputs.linux_arm_sha }}/g' ./Formula/xata.rb
 
     # - name: commit changes
     #     run: |
