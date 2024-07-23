@@ -152,9 +152,8 @@ jobs:
         id: sha-macos
         run: |
           ls -l
-          commit=$(inputs.commitSha | head -c8)
           VER=${{steps.capture-version.outputs.version}}
-          COM=${{inputs.commitSha}}
+          COM=${{inputs.commitSha}} | head -c8
           echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
           echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
 
@@ -164,7 +163,8 @@ jobs:
         id: sha-ubuntu
         run: |
           ls -l
-          commit=$(inputs.commitSha | head -c8)
+          VER=${{steps.capture-version.outputs.version}}
+          COM=${{inputs.commitSha}} | head -c8
           echo "sha-linux=$(sha256sum xata-v${VER}-${COM}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
           echo "sha-linux-arm=$(sha256sum xata-v${VER}-${COM}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
 
