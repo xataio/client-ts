@@ -23,6 +23,20 @@ const promptsMock = prompts as unknown as ReturnType<typeof vi.fn>;
 const REGION = 'us-east-1';
 const baseUrl = `https://test-1234.${REGION}.xata.sh/db/db1:main`;
 
+const fetchNonPgrollDatabase = (url: string, request: any) => {
+  if (url === `${baseUrl}` && request.method === 'GET') {
+    return {
+      ok: true,
+      json: async () => ({
+        usePgRoll: false,
+        schema: { tables: [{ name: 'table1', columns: [{ name: 'description', type: 'string' }] }] }
+      })
+    };
+  } else {
+    return baseFetch(url, request);
+  }
+};
+
 export const fetchEmptyStatus = (url: string, request: any) => {
   if (url === `${baseUrl}/migrations/status` && request.method === 'GET') {
     return {
@@ -125,6 +139,19 @@ const fetchStart_FailedStatus = (url: string, request: any) => {
 promptsMock.mockReturnValue({ confirm: true, database: 'db1', workspace: 'test-1234' });
 
 describe('migration status', () => {
+  test('correctly detects if migration status is run in a project with pgroll disabled', async () => {
+    const config = await Config.load();
+    const command = new MigrationStatus(['main'], config);
+    const error = vi.spyOn(command, 'error');
+    fetchMock.mockImplementation(fetchNonPgrollDatabase);
+    try {
+      await command.run();
+    } catch (e) {
+      console.error(e);
+    }
+    expect(error).toHaveBeenCalledWith(`"xata migration" commands are only supported in Postgres enabled databases`);
+  });
+
   test('correctly detects if migration status is run in a project with no migrations', async () => {
     const config = await Config.load();
     const command = new MigrationStatus(['main'], config);
