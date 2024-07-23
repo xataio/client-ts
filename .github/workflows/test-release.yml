@@ -17,6 +17,8 @@ jobs:
   update-homebrew:
     needs: [publish-cli-assets]
     uses: ./.github/workflows/update-homebrew.yml
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     with:
       commit_sha: ${{ github.sha }}
       version: ${{ needs.release.outputs.version }}
