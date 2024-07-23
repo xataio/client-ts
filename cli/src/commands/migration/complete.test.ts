@@ -193,7 +193,7 @@ describe('migration complete', () => {
     fetchMock.mockImplementation(fetchRunningMigrationWithSuccessfulComplete);
     await command.run();
     expect(log).toHaveBeenCalledWith(
-      `Migration complete started with Job ID mig_job_cqfltm0knc8jbigtjb9g. Please use the xata migration status main command to check its status`
+      `Migration complete started with Job ID mig_job_cqfltm0knc8jbigtjb9g. Please use the "xata migration status main" command to check its status`
     );
   });
 });

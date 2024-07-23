@@ -214,7 +214,7 @@ describe('migration status', () => {
       console.error(e);
     }
     expect(error).toHaveBeenCalledWith(
-      `No migrations found. Please create a new migration with ${chalk.gray('xata migrate start')} command.`
+      `No migrations found. Please create a new migration with "xata migrate start <branch-name>" command.`
     );
   });
 

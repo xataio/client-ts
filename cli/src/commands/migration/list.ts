@@ -33,7 +33,7 @@ export default class MigrationList extends BaseCommand<typeof MigrationList> {
     const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
     if (!isBranchPgRollEnabled(details)) {
-      this.error(`${chalk.gray('xata migration')} commands are only supported in Postgres enabled databases`);
+      this.error(`"${chalk.gray('xata migration')}" commands are only supported in Postgres enabled databases`);
     }
 
     const commonParams = {

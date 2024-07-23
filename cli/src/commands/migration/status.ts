@@ -33,7 +33,7 @@ export default class MigrationStatus extends BaseCommand<typeof MigrationStatus>
     const details = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
 
     if (!isBranchPgRollEnabled(details)) {
-      this.error(`${chalk.gray('xata migration')} commands are only supported in Postgres enabled databases`);
+      this.error(`"${chalk.gray('xata migration')}" commands are only supported in Postgres enabled databases`);
     }
 
     const commonParams = {
@@ -50,7 +50,9 @@ export default class MigrationStatus extends BaseCommand<typeof MigrationStatus>
 
     if (Object.keys(migrationJobStatus).length === 0) {
       this.error(
-        `No migrations found. Please create a new migration with ${chalk.gray('xata migrate start')} command.`
+        `No migrations found. Please create a new migration with "${chalk.gray(
+          'xata migrate start <branch-name>'
+        )}" command.`
       );
     }
 

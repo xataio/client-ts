@@ -203,7 +203,7 @@ describe('migration start', () => {
       console.error(e);
     }
     expect(log).toHaveBeenCalledWith(
-      `Migration started with Job ID mig_job_cqfltm0knc8jbigtjb9g. Please use the xata migration status main command to check its status`
+      `Migration started with Job ID mig_job_cqfltm0knc8jbigtjb9g. Please use the "xata migration status main" command to check its status`
     );
   });
 });
