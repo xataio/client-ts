@@ -153,9 +153,11 @@ jobs:
         run: |
           ls -l
           VER=${{steps.capture-version.outputs.version}}
+          echo $VER
           COM=${{inputs.commitSha}} | head -c8
-          echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo $COM
+          echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-arm64.tar.xz)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-x64.tar.xz)" >> "$GITHUB_OUTPUT"
 
       - name: Create SHA outputs ubuntu
         if: matrix.os == 'ubuntu-latest'
@@ -164,9 +166,11 @@ jobs:
         run: |
           ls -l
           VER=${{steps.capture-version.outputs.version}}
+          echo $VER
           COM=${{inputs.commitSha}} | head -c8
-          echo "sha-linux=$(sha256sum xata-v${VER}-${COM}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-linux-arm=$(sha256sum xata-v${VER}-${COM}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo $COM
+          echo "sha-linux=$(sha256sum xata-v${VER}-${COM}-linux-arm.tar.xz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux-arm=$(sha256sum xata-v${VER}-${COM}-linux-arm64.tar.xz)" >> "$GITHUB_OUTPUT"
 
       # - name: Upload and Promote CLI Assets to S3
       #   run: pnpm run release:cli:upload:s3
