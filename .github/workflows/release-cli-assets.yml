@@ -153,10 +153,8 @@ jobs:
         run: |
           ls -l
           VER="${{steps.capture-version.outputs.version}}"
-          echo $VER
           COMMITSHA="${{inputs.commitSha}}"
           COM="$(echo $COMMITSHA | head -c8)"
-          echo $COM
           echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-arm64.tar.xz)" >> "$GITHUB_OUTPUT"
           echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-x64.tar.xz)" >> "$GITHUB_OUTPUT"
 
@@ -167,10 +165,8 @@ jobs:
         run: |
           ls -l
           VER="${{steps.capture-version.outputs.version}}"
-          echo $VER
           COMMITSHA="${{inputs.commitSha}}"
           COM="$(echo $COMMITSHA | head -c8)"
-          echo $COM
           echo "sha-linux=$(sha256sum xata-v${VER}-${COM}-linux-arm.tar.xz)" >> "$GITHUB_OUTPUT"
           echo "sha-linux-arm=$(sha256sum xata-v${VER}-${COM}-linux-arm64.tar.xz)" >> "$GITHUB_OUTPUT"
 

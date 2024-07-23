@@ -79,8 +79,9 @@ jobs:
           sed -i 's/__CLI_LINUX_DOWNLOAD_URL__/${linux_download_url}/g' ./Formula/xata.rb
           sed -i 's/__CLI_LINUX_ARM_DOWNLOAD_URL__/${linux_arm_download_url}/g' ./Formula/xata.rb
 
-    # - name: commit changes
-    #     run: |
+      - name: commit changes
+        run: |
+          git status
     #       git add .
     #       git commit -m "Update Homebrew Formula"
     #       git push origin main
