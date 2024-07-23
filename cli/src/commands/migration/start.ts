@@ -4,6 +4,7 @@ import { getBranchDetailsWithPgRoll, isBranchPgRollEnabled } from '../../migrati
 import chalk from 'chalk';
 import path from 'path';
 import { safeJSONParse, safeReadFile } from '../../utils/files.js';
+import { isActiveMigration } from '../../utils/migration.js';
 
 export default class MigrationStart extends BaseCommand<typeof MigrationStart> {
   static description = 'Start a new migration';
@@ -95,8 +96,8 @@ export default class MigrationStart extends BaseCommand<typeof MigrationStart> {
       }
     });
 
-    const isActiveMigration = jobStatus.status === 'completed' && jobStatus.type === 'start';
-    if (isActiveMigration) {
+    const isActive = isActiveMigration(jobStatus);
+    if (isActive) {
       this.error(
         `An existing migration with status ${jobStatus.status} found. There can only be one running migration per branch.`
       );

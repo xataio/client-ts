@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
 import prompts from 'prompts';
 import MigrationStatus from './status.js';
-import chalk from 'chalk';
 
 vi.mock('prompts');
 vi.mock('node-fetch');

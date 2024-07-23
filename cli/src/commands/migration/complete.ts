@@ -2,6 +2,7 @@ import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { getBranchDetailsWithPgRoll, isBranchPgRollEnabled } from '../../migrations/pgroll.js';
 import chalk from 'chalk';
+import { isActiveMigration } from '../../utils/migration.js';
 
 export default class MigrationComplete extends BaseCommand<typeof MigrationComplete> {
   static description = 'Start a new migration';
@@ -41,14 +42,14 @@ export default class MigrationComplete extends BaseCommand<typeof MigrationCompl
       dbBranchName: `${database}:${branch}`
     };
 
-    const migrationJobStatus = await xata.api.migrations.getBranchMigrationJobStatus({
+    const jobStatus = await xata.api.migrations.getBranchMigrationJobStatus({
       pathParams: {
         ...commonParams
       }
     });
 
-    const isActiveMigration = migrationJobStatus.status === 'completed' && migrationJobStatus.type === 'start';
-    if (!isActiveMigration) {
+    const isActive = isActiveMigration(jobStatus);
+    if (!isActive) {
       this.error(`No active migration found, there is nothing to complete.`);
     }
 
