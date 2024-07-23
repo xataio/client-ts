@@ -33,6 +33,12 @@ permissions:
 jobs:
   release-cli-assets:
     name: Release CLI assets
+    outputs:
+      mac_intel_sha: ${{steps.sha-macos.outputs.sha-macos-intel}},
+      mac_arm_sha: ${{ steps.sha-macos.outputs.sha-macos-arm }}
+      linux_sha: ${{ steps.sha-ubuntu.outputs.sha-linux }},
+      linux_arm_sha: ${{ steps.sha-ubuntu.outputs.sha-linux-arm }}
+
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -133,6 +139,22 @@ jobs:
           DEBIAN_GPG_KEY_PASS: ${{ secrets.DEBIAN_GPG_KEY_PASS }}
           DEBIAN_GPG_KEY_PUBLIC: ${{ secrets.DEBIAN_GPG_KEY_PUBLIC }}
           DEBIAN_GPG_KEY_ID: ${{ secrets.DEBIAN_GPG_KEY_ID }}
+
+      - name: Create SHA outputs macos
+        if: matrix.os == 'macos-latest'
+        working-directory: /home/runner/work/client-ts/client-ts/cli/dist
+        id: sha-macos
+        run: |
+          echo "sha-macos-arm=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-intel=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
+
+      - name: Create SHA outputs ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: /home/runner/work/client-ts/client-ts/cli/dist
+        id: sha-ubuntu
+        run: |
+          echo "sha-linux=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux-arm=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
 
       - name: Upload and Promote CLI Assets to S3
         run: pnpm run release:cli:upload:s3

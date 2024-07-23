@@ -1,0 +1,57 @@
+name: Update Homebrew Formula
+
+on:
+  workflow_call:
+    inputs:
+      commit_sha:
+        description: 'Commit SHA'
+        required: true
+        type: string
+      published_packages:
+        description: 'Published packages'
+        required: true
+        type: string
+      mac_intel_sha:
+        description: 'Mac Intel SHA'
+        required: true
+        type: string
+      mac_arm_sha:
+        description: 'Mac ARM SHA'
+        required: true
+        type: string
+      linux_sha:
+        description: 'Linux SHA'
+        required: true
+        type: string
+      linux_arm_sha:
+        description: 'Linux ARM SHA'
+        required: true
+        type: string
+
+jobs:
+  update-homebrew:
+    name: Update Homebrew Formula
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: xataio/homebrew-brew
+          ref: 'main'
+          token: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: setup git config
+        run: |
+          git config user.name "Xata"
+          git config user.email "<>"
+
+    # - name: Update Homebrew Formula in ruby template with
+    #   run:
+
+    # - name: commit changes
+    #     run: |
+    #       git add .
+    #       git commit -m "Update Homebrew Formula"
+    #       git push origin main

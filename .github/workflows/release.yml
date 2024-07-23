@@ -77,3 +77,15 @@ jobs:
       publishedPackages: ${{ needs.release.outputs.publishedPackages }}
       commitSha: ${{ github.sha }}
     secrets: inherit
+
+  update-homebrew:
+    needs: [publish-cli-assets]
+    uses: ./.github/workflows/update-homebrew.yml
+    with:
+      commit_sha: ${{ github.sha }}
+      published_packages: ${{ needs.release.outputs.publishedPackages }}
+      mac_intel_sha: ${{ needs.publish-cli-assets.outputs.mac_intel_sha }}
+      mac_arm_sha: ${{ needs.publish-cli-assets.outputs.mac_arm_sha }}
+      linux_sha: ${{ needs.publish-cli-assets.outputs.linux_sha }}
+      linux_arm_sha: ${{ needs.publish-cli-assets.outputs.linux_arm_sha }}
+    secrets: inherit
