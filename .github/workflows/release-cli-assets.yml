@@ -144,24 +144,28 @@ jobs:
       - name: Capture version
         id: capture-version
         run: |
-          echo "VERSION=${{ fromJson(inputs.publishedPackages).version }}" >> $GITHUB_ENV
-          echo $VERSION
+          echo "version=${{ fromJson(inputs.publishedPackages).version }}" >> $GITHUB_ENV
+          echo ${{ env.version }}
 
       - name: Create SHA outputs macos
         if: matrix.os == 'macos-latest'
-        working-directory: /home/runner/work/client-ts/client-ts/cli
+        working-directory: ./cli
         id: sha-macos
         run: |
-          echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
+          ls -l
+          commit=$(inputs.commitSha | head -c8)
+          echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${{ env.version }}-${commit}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${{ env.version }}-${commit}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
 
       - name: Create SHA outputs ubuntu
         if: matrix.os == 'ubuntu-latest'
-        working-directory: /home/runner/work/client-ts/client-ts/cli
+        working-directory: ./cli
         id: sha-ubuntu
         run: |
-          echo "sha-linux=$(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-linux-arm=$(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          ls -l
+          commit=$(inputs.commitSha | head -c8)
+          echo "sha-linux=$(sha256sum xata-v${{ env.version }}-${commit}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux-arm=$(sha256sum xata-v${{ env.version }}-${commit}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
 
       # - name: Upload and Promote CLI Assets to S3
       #   run: pnpm run release:cli:upload:s3
