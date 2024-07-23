@@ -143,9 +143,7 @@ jobs:
 
       - name: Capture version
         id: capture-version
-        env:
-          PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
-        run: echo "VERSION=${{ fromJson(PUBLISHED_PACKAGES).version }}" >> $GITHUB_ENV
+        run: echo "VERSION=${{ fromJson(${{ inputs.publishedPackages }}).version }}" >> $GITHUB_ENV
 
       - name: Create SHA outputs macos
         if: matrix.os == 'macos-latest'
