@@ -39,7 +39,7 @@ jobs:
         with:
           repository: xataio/homebrew-brew
           ref: 'main'
-          token: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: setup git config
