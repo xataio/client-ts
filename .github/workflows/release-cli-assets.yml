@@ -144,7 +144,7 @@ jobs:
       - name: Capture version
         id: capture-version
         working-directory: ./cli
-        run: version=$(cat package.json | jq -r '.version') >> $GITHUB_OUTPUT
+        run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
 
       - name: Create SHA outputs macos
         if: matrix.os == 'macos-latest'
@@ -152,9 +152,9 @@ jobs:
         id: sha-macos
         run: |
           ls -l
-          VER=${{steps.capture-version.outputs.version}}
+          VER="${{steps.capture-version.outputs.version}}"
           echo $VER
-          COM=${{inputs.commitSha}} | head -c8
+          COM="${{inputs.commitSha}} | head -c8"
           echo $COM
           echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-arm64.tar.xz)" >> "$GITHUB_OUTPUT"
           echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-x64.tar.xz)" >> "$GITHUB_OUTPUT"
@@ -165,9 +165,9 @@ jobs:
         id: sha-ubuntu
         run: |
           ls -l
-          VER=${{steps.capture-version.outputs.version}}
+          VER="${{steps.capture-version.outputs.version}}"
           echo $VER
-          COM=${{inputs.commitSha}} | head -c8
+          COM="${{inputs.commitSha}} | head -c8"
           echo $COM
           echo "sha-linux=$(sha256sum xata-v${VER}-${COM}-linux-arm.tar.xz)" >> "$GITHUB_OUTPUT"
           echo "sha-linux-arm=$(sha256sum xata-v${VER}-${COM}-linux-arm64.tar.xz)" >> "$GITHUB_OUTPUT"
