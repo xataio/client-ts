@@ -153,8 +153,8 @@ jobs:
         working-directory: /home/runner/work/client-ts/client-ts/cli/dist
         id: sha-macos
         run: |
-          echo "sha-macos-arm=(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-macos-intel=(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-arm=(shasum -a 256 xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-intel=(shasum -a 256 xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
 
       - name: Create SHA outputs ubuntu
         if: matrix.os == 'ubuntu-latest'
