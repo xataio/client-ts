@@ -75,9 +75,13 @@ jobs:
           sed -i 's/__CLI_LINUX_DOWNLOAD_URL__/${CLI_MAC_INTEL_DOWNLOAD_URL}/g' ./Formula/xata.rb
           sed -i 's/__CLI_LINUX_ARM_DOWNLOAD_URL__/${CLI_MAC_INTEL_DOWNLOAD_URL}/g' ./Formula/xata.rb
 
+      - name: Read updated formula file
+        id: getformula
+        run: echo "::set-output name=formula::$(cat ./Formula/xata.rb)"
+
       - name: commit changes
         run: |
           git status
-    #       git add .
+          git add .
     #       git commit -m "Update Homebrew Formula"
     #       git push origin main
