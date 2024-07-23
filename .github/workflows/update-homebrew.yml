@@ -54,11 +54,16 @@ jobs:
       - name: Update Homebrew Formula using template variables
         run: |
           echo "${{ steps.gettemplate.outputs.template }}" > ./Formula/xata.rb
-          sed -i 's/VERSION/${{ inputs.version }}/g' ./Formula/xata.rb
-          sed -i 's/MAC_INTEL_SHA/${{ inputs.mac_intel_sha }}/g' ./Formula/xata.rb
-          sed -i 's/MAC_ARM_SHA/${{ inputs.mac_arm_sha }}/g' ./Formula/xata.rb
-          sed -i 's/LINUX_SHA/${{ inputs.linux_sha }}/g' ./Formula/xata.rb
-          sed -i 's/LINUX_ARM_SHA/${{ inputs.linux_arm_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_VERSION__/${{ inputs.version }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_MAC_INTEL_SHA256__/${{ inputs.mac_intel_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_MAC_ARM_SHA256__/${{ inputs.mac_arm_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_LINUX_SHA256__/${{ inputs.linux_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_LINUX_ARM_SHA256__/${{ inputs.linux_arm_sha }}/g' ./Formula/xata.rb
+          # todo fill in next correctly
+          sed -i 's/__CLI_MAC_INTEL_DOWNLOAD_URL__/${{ secrets.CLI_MAC_INTEL_DOWNLOAD_URL }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_MAC_ARM_DOWNLOAD_URL__/${{ secrets.CLI_MAC_INTEL_DOWNLOAD_URL }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_LINUX_DOWNLOAD_URL__/${{ secrets.CLI_MAC_INTEL_DOWNLOAD_URL }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_LINUX_ARM_DOWNLOAD_URL__/${{ secrets.CLI_MAC_INTEL_DOWNLOAD_URL }}/g' ./Formula/xata.rb
 
     # - name: commit changes
     #     run: |

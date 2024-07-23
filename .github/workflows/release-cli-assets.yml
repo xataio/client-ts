@@ -143,11 +143,13 @@ jobs:
 
       - name: Capture version
         id: capture-version
-        run: echo "VERSION=${{ fromJson(inputs.publishedPackages).version }}" >> $GITHUB_ENV
+        run: |
+          echo "VERSION=${{ fromJson(inputs.publishedPackages).version }}" >> $GITHUB_ENV
+          echo $VERSION
 
       - name: Create SHA outputs macos
         if: matrix.os == 'macos-latest'
-        working-directory: /home/runner/work/client-ts/client-ts/cli/dist
+        working-directory: /home/runner/work/client-ts/client-ts/cli
         id: sha-macos
         run: |
           echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
@@ -155,7 +157,7 @@ jobs:
 
       - name: Create SHA outputs ubuntu
         if: matrix.os == 'ubuntu-latest'
-        working-directory: /home/runner/work/client-ts/client-ts/cli/dist
+        working-directory: /home/runner/work/client-ts/client-ts/cli
         id: sha-ubuntu
         run: |
           echo "sha-linux=$(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
