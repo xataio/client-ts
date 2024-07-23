@@ -7,8 +7,8 @@ on:
         description: 'Commit SHA'
         required: true
         type: string
-      published_packages:
-        description: 'Published packages'
+      version:
+        description: 'Latest version'
         required: true
         type: string
       mac_intel_sha:

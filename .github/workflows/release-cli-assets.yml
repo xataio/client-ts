@@ -34,6 +34,7 @@ jobs:
   release-cli-assets:
     name: Release CLI assets
     outputs:
+      version: ${{ steps.capture-version.outputs.version }}
       mac_intel_sha: ${{steps.sha-macos.outputs.sha-macos-intel}},
       mac_arm_sha: ${{ steps.sha-macos.outputs.sha-macos-arm }}
       linux_sha: ${{ steps.sha-ubuntu.outputs.sha-linux }},
@@ -140,21 +141,28 @@ jobs:
           DEBIAN_GPG_KEY_PUBLIC: ${{ secrets.DEBIAN_GPG_KEY_PUBLIC }}
           DEBIAN_GPG_KEY_ID: ${{ secrets.DEBIAN_GPG_KEY_ID }}
 
+      - name: Capture version
+        id: capture-version
+        working-directory: /home/runner/work/client-ts/client-ts/cli
+        run: |
+          version=$(pnpm run release:version --silent);
+          echo "$version" >> "$GITHUB_OUTPUT"
+
       - name: Create SHA outputs macos
         if: matrix.os == 'macos-latest'
         working-directory: /home/runner/work/client-ts/client-ts/cli/dist
         id: sha-macos
         run: |
-          echo "sha-macos-arm=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-macos-intel=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-arm=(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-intel=(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
 
       - name: Create SHA outputs ubuntu
         if: matrix.os == 'ubuntu-latest'
         working-directory: /home/runner/work/client-ts/client-ts/cli/dist
         id: sha-ubuntu
         run: |
-          echo "sha-linux=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-linux-arm=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux=(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux-arm=(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
 
       # - name: Upload and Promote CLI Assets to S3
       #   run: pnpm run release:cli:upload:s3
