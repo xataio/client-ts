@@ -143,29 +143,30 @@ jobs:
 
       - name: Capture version
         id: capture-version
-        run: |
-          echo "version=${{ fromJson(inputs.publishedPackages).version }}" >> $GITHUB_ENV
-          echo ${{ env.version }}
+        working-directory: ./cli
+        run: version=$(cat package.json | jq -r '.version') >> $GITHUB_OUTPUT
 
       - name: Create SHA outputs macos
         if: matrix.os == 'macos-latest'
-        working-directory: ./cli
+        working-directory: ./cli/dist
         id: sha-macos
         run: |
           ls -l
           commit=$(inputs.commitSha | head -c8)
-          echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${{ env.version }}-${commit}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${{ env.version }}-${commit}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
+          VER=${{steps.capture-version.outputs.version}}
+          COM=${{inputs.commitSha}}
+          echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-x64.tar.gz)" >> "$GITHUB_OUTPUT"
 
       - name: Create SHA outputs ubuntu
         if: matrix.os == 'ubuntu-latest'
-        working-directory: ./cli
+        working-directory: ./cli/dist
         id: sha-ubuntu
         run: |
           ls -l
           commit=$(inputs.commitSha | head -c8)
-          echo "sha-linux=$(sha256sum xata-v${{ env.version }}-${commit}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-linux-arm=$(sha256sum xata-v${{ env.version }}-${commit}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux=$(sha256sum xata-v${VER}-${COM}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux-arm=$(sha256sum xata-v${VER}-${COM}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
 
       # - name: Upload and Promote CLI Assets to S3
       #   run: pnpm run release:cli:upload:s3
