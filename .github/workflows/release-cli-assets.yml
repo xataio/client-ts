@@ -143,8 +143,10 @@ jobs:
 
       - name: Capture version
         id: capture-version
+        env:
+          PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
         run: |
-          version=$(pnpm run release:version --silent);
+          version=$(pnpm run release:version);
           echo "$version" >> "$GITHUB_OUTPUT"
 
       - name: Create SHA outputs macos
@@ -160,8 +162,8 @@ jobs:
         working-directory: /home/runner/work/client-ts/client-ts/cli/dist
         id: sha-ubuntu
         run: |
-          echo "sha-linux=(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
-          echo "sha-linux-arm=(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux=$(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux-arm=$(sha256sum xata-v${{ steps.capture-version.version }}-${{inputs.commitSha}}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
 
       # - name: Upload and Promote CLI Assets to S3
       #   run: pnpm run release:cli:upload:s3
