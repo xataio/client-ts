@@ -115,11 +115,11 @@ jobs:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
 
-      - name: Upload CLI Assets to GitHub Releases
-        run: pnpm run release:cli:upload:gh
-        env:
-          MATRIX_OS: ${{ matrix.os }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Upload CLI Assets to GitHub Releases
+      #   run: pnpm run release:cli:upload:gh
+      #   env:
+      #     MATRIX_OS: ${{ matrix.os }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Debian cert
         if: matrix.os == 'ubuntu-latest'
@@ -156,11 +156,11 @@ jobs:
           echo "sha-linux=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-linux-arm.tar.gz)" >> "$GITHUB_OUTPUT"
           echo "sha-linux-arm=(sha256sum xata-v0.15.15-${{inputs.commitSha}}-linux-arm64.tar.gz)" >> "$GITHUB_OUTPUT"
 
-      - name: Upload and Promote CLI Assets to S3
-        run: pnpm run release:cli:upload:s3
-        env:
-          MATRIX_OS: ${{ matrix.os }}
-          COMMIT_SHA: ${{ inputs.commitSha }}
+      # - name: Upload and Promote CLI Assets to S3
+      #   run: pnpm run release:cli:upload:s3
+      #   env:
+      #     MATRIX_OS: ${{ matrix.os }}
+      #     COMMIT_SHA: ${{ inputs.commitSha }}
 
       - name: Pack (Windows only)
         if: matrix.os == 'ubuntu-latest'
