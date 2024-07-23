@@ -49,7 +49,7 @@ export default class MigrationRollback extends BaseCommand<typeof MigrationRollb
 
     const isActiveMigration = migrationJobStatus.status === 'completed' && migrationJobStatus.type === 'start';
     if (!isActiveMigration) {
-      this.error(`No migration with ${migrationJobStatus.status} found. There is nothing to rollback.`);
+      this.error(`No active migration found, there is nothing to rollback.`);
     }
 
     const migrationJob = await xata.api.migrations.rollbackMigration({

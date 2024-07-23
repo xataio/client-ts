@@ -49,7 +49,7 @@ export default class MigrationComplete extends BaseCommand<typeof MigrationCompl
 
     const isActiveMigration = migrationJobStatus.status === 'completed' && migrationJobStatus.type === 'start';
     if (!isActiveMigration) {
-      this.error(`No migration with ${migrationJobStatus.status} found. There is nothing to complete.`);
+      this.error(`No active migration found, there is nothing to complete.`);
     }
 
     const migrationJob = await xata.api.migrations.completeMigration({

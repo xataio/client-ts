@@ -67,7 +67,7 @@ export default class MigrationStart extends BaseCommand<typeof MigrationStart> {
     }
 
     if (!operationsJson) {
-      this.error(`Failed to parse the supplied migration operations JSON string`);
+      this.error(`Failed to parse the supplied migration operations JSON string.`);
     }
 
     const xata = await this.getXataClient();

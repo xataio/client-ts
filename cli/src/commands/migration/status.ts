@@ -48,6 +48,12 @@ export default class MigrationStatus extends BaseCommand<typeof MigrationStatus>
       }
     });
 
+    if (Object.keys(migrationJobStatus).length === 0) {
+      this.error(
+        `No migrations found. Please create a new migration with ${chalk.gray('xata migrate start')} command.`
+      );
+    }
+
     const statusChalkColor = match(migrationJobStatus.status)
       .with('completed', () => chalk.green)
       .with('failed', () => chalk.red)
