@@ -1,5 +1,16 @@
 # @xata.io/kysely
 
+## 0.2.0
+
+### Minor Changes
+
+- [#1535](https://github.com/xataio/client-ts/pull/1535) [`40f97d5`](https://github.com/xataio/client-ts/commit/40f97d53091af3d268fe40b4e027245270d42a26) Thanks [@SferaDev](https://github.com/SferaDev)! - Improve types
+
+### Patch Changes
+
+- Updated dependencies [[`cc673c9`](https://github.com/xataio/client-ts/commit/cc673c9a7885351082020e360630eab5db78c652)]:
+  - @xata.io/client@0.30.0
+
 ## 0.1.22
 
 ### Patch Changes
