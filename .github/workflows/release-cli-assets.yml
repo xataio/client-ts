@@ -201,15 +201,83 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
+
   update-homebrew:
-    runs-on: ubuntu-latest
     needs: [release-cli-assets]
-    uses: ./.github/workflows/update-homebrew.yml
-    with:
-      commit_sha: ${{ github.sha }}
-      version: ${{ needs.release-cli-assets.outputs.version }}
-      mac_intel_sha: ${{ needs.release-cli-assets.outputs.mac_intel_sha }}
-      mac_arm_sha: ${{ needs.release-cli-assets.outputs.mac_arm_sha }}
-      linux_sha: ${{ needs.release-cli-assets.outputs.linux_sha }}
-      linux_arm_sha: ${{ needs.release-cli-assets.outputs.linux_arm_sha }}
-    secrets: inherit
+    name: Update Homebrew Formula
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: xataio/homebrew-brew
+          ref: 'main'
+          token: ${{ secrets.GIT_TOKEN }}
+          fetch-depth: 0
+
+      - name: setup git config
+        run: |
+          git config user.email "system@xata.io"
+          git config user.name "Xata"
+
+      - name: Read template file
+        id: gettemplate
+        run: |
+          {
+            echo 'template<<EOF'
+            cat ./Template/xata.rb
+            echo
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update Homebrew Formula using template variables
+        id: updateformula
+        env:
+          TEMPLATE_CONTENTS: ${{ steps.gettemplate.outputs.template }}
+        run: |
+          echo "$TEMPLATE_CONTENTS" > ./Formula/xata.rb
+          sed -i 's/__CLI_VERSION__/${{ jobs.release-cli-assets.outputs.version }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_MAC_INTEL_SHA256__/${{ jobs.release-cli-assets.outputs.mac_intel_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_MAC_ARM_SHA256__/${{ jobs.release-cli-assets.outputs.mac_arm_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_LINUX_SHA256__/${{ jobs.release-cli-assets.outputs.linux_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_LINUX_ARM_SHA256__/${{ jobs.release-cli-assets.outputs.linux_arm_sha }}/g' ./Formula/xata.rb
+
+          VER="${{jobs.release-cli-assets.outputs.version}}"
+          COMMITSHA="${{jobs.release-cli-assets.outputs.commit_sha}}"
+          COM="$(echo $COMMITSHA | head -c8)"
+          BASE_URL="https://xata-cli-assets.s3.us-east-1.amazonaws.com/versions/${VER}/${COM}/xata-v${VER}-${COM}"
+
+          CLI_MAC_INTEL_DOWNLOAD_URL="${BASE_URL}-darwin-x64.tar.xz"
+          CLI_MAC_ARM_DOWNLOAD_URL="${BASE_URL}-darwin-arm64.tar.xz"
+          CLI_LINUX_DOWNLOAD_URL="${BASE_URL}-linux-x64.tar.xz"
+          CLI_LINUX_ARM_DOWNLOAD_URL="${BASE_URL}-linux-arm64.tar.xz"
+
+          sed -i "s|__CLI_MAC_INTEL_DOWNLOAD_URL__|${CLI_MAC_INTEL_DOWNLOAD_URL}|g" ./Formula/xata.rb
+          sed -i "s|__CLI_MAC_ARM_DOWNLOAD_URL__|${CLI_MAC_ARM_DOWNLOAD_URL}|g" ./Formula/xata.rb
+          sed -i "s|__CLI_LINUX_DOWNLOAD_URL__|${CLI_LINUX_DOWNLOAD_URL}|g" ./Formula/xata.rb
+          sed -i "s|__CLI_LINUX_ARM_DOWNLOAD_URL__|${CLI_LINUX_ARM_DOWNLOAD_URL}|g" ./Formula/xata.rb
+
+      - name: Read formula file
+        id: getformula
+        run: |
+          {
+            echo 'formula<<EOF'
+            cat ./Formula/xata.rb
+            echo
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: commit changes
+        run: |
+          status="Update dependencies to version ${{ jobs.release-cli-assets.outputs.version }}"
+          git status
+          git commit -a -m "$status"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GIT_TOKEN }}
+          branch: main
+          repository: xataio/homebrew-brew
+          force: true
