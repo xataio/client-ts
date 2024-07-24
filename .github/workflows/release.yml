@@ -68,24 +68,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  publish-cli-assets:
-    name: Publish CLI assets
+  release-assets:
+    name: Release CLI assets
     needs: [release]
     if: needs.release.outputs.published == 'true' && github.ref_name == 'main'
     uses: ./.github/workflows/release-cli-assets.yml
     with:
       publishedPackages: ${{ needs.release.outputs.publishedPackages }}
       commitSha: ${{ github.sha }}
-    secrets: inherit
-
-  update-homebrew:
-    needs: [publish-cli-assets]
-    uses: ./.github/workflows/update-homebrew.yml
-    with:
-      commit_sha: ${{ github.sha }}
-      version: ${{ needs.release.outputs.version }}
-      mac_intel_sha: ${{ needs.publish-cli-assets.outputs.mac_intel_sha }}
-      mac_arm_sha: ${{ needs.publish-cli-assets.outputs.mac_arm_sha }}
-      linux_sha: ${{ needs.publish-cli-assets.outputs.linux_sha }}
-      linux_arm_sha: ${{ needs.publish-cli-assets.outputs.linux_arm_sha }}
     secrets: inherit
