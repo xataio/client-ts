@@ -83,5 +83,5 @@ jobs:
         run: |
           git status
           git add .
-    #       git commit -m "Update Homebrew Formula"
-    #       git push origin main
+          git commit -m "Update Homebrew Formula"
+          git push origin main
