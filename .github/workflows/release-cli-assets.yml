@@ -32,7 +32,6 @@ permissions:
 
 jobs:
   release-cli-assets:
-    id: release-cli-assets
     name: Release CLI assets
     outputs:
       version: ${{ steps.capture-version.outputs.version }}
@@ -208,9 +207,9 @@ jobs:
     uses: ./.github/workflows/update-homebrew.yml
     with:
       commit_sha: ${{ github.sha }}
-      version: ${{ needs.publish-cli-assets.outputs.version }}
-      mac_intel_sha: ${{ needs.publish-cli-assets.outputs.mac_intel_sha }}
-      mac_arm_sha: ${{ needs.publish-cli-assets.outputs.mac_arm_sha }}
-      linux_sha: ${{ needs.publish-cli-assets.outputs.linux_sha }}
-      linux_arm_sha: ${{ needs.publish-cli-assets.outputs.linux_arm_sha }}
+      version: ${{ needs.release-cli-assets.outputs.version }}
+      mac_intel_sha: ${{ needs.release-cli-assets.outputs.mac_intel_sha }}
+      mac_arm_sha: ${{ needs.release-cli-assets.outputs.mac_arm_sha }}
+      linux_sha: ${{ needs.release-cli-assets.outputs.linux_sha }}
+      linux_arm_sha: ${{ needs.release-cli-assets.outputs.linux_arm_sha }}
     secrets: inherit
