@@ -154,8 +154,8 @@ jobs:
           VER="${{steps.capture-version.outputs.version}}"
           COMMITSHA="${{inputs.commitSha}}"
           COM="$(echo $COMMITSHA | head -c8)"
-          echo "sha-macos-arm=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-arm64.tar.xz)" >> "$GITHUB_OUTPUT"
-          echo "sha-macos-intel=$(sh -c 'shasum < "$1" | cut -d" " -f1' -- xata-v${VER}-${COM}-darwin-x64.tar.xz)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-arm=$(shasum --algorithm 256 xata-v${VER}-${COM}-darwin-arm64.tar.xz | cut -d" " -f1)" >> "$GITHUB_OUTPUT"
+          echo "sha-macos-intel=$(shasum --algorithm 256 xata-v${VER}-${COM}-darwin-x64.tar.xz | cut -d" " -f1)" >> "$GITHUB_OUTPUT"
 
       - name: Create SHA outputs ubuntu
         if: matrix.os == 'ubuntu-latest'
