@@ -50,8 +50,12 @@ jobs:
       - name: Read template file
         id: gettemplate
         run: |
-          template="$(cat ./Template/xata.rb)" 
-          echo "$template" >> $GITHUB_OUTPUT
+          {
+            echo 'template<<EOF'
+            cat ./Template/xata.rb
+            echo
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update Homebrew Formula using template variables
         id: updateformula
