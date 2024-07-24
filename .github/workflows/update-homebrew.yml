@@ -49,9 +49,10 @@ jobs:
 
       - name: Read template file
         id: gettemplate
-        run: echo "::set-output name=template::$(cat ./Template/xata.rb)"
+        run: echo "template=$(cat ./Template/xata.rb)" >> $GITHUB_OUTPUT
 
       - name: Update Homebrew Formula using template variables
+        id: updateformula
         run: |
           echo "${{ steps.gettemplate.outputs.template }}" > ./Formula/xata.rb
           sed -i 's/__CLI_VERSION__/${{ inputs.version }}/g' ./Formula/xata.rb
@@ -75,9 +76,11 @@ jobs:
           sed -i 's/__CLI_LINUX_DOWNLOAD_URL__/${CLI_MAC_INTEL_DOWNLOAD_URL}/g' ./Formula/xata.rb
           sed -i 's/__CLI_LINUX_ARM_DOWNLOAD_URL__/${CLI_MAC_INTEL_DOWNLOAD_URL}/g' ./Formula/xata.rb
 
-      - name: Read updated formula file
+          echo "formula=$(cat ./Formula/xata.rb)" >> $GITHUB_OUTPUT
+
+      - name: Read formula file
         id: getformula
-        run: echo "::set-output name=formula::$(cat ./Formula/xata.rb)"
+        run: echo ${{ steps.updateformula.outputs.formula }}
 
       - name: commit changes
         run: |
