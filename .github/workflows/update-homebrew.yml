@@ -47,20 +47,16 @@ jobs:
           git config user.email "system@xata.io"
           git config user.name "Xata"
 
-      - name: Read template file
-        id: gettemplate
+      - name: Update Homebrew Formula using template variables
+        id: updateformula
         run: |
           {
             echo 'template<<EOF'
             cat ./Template/xata.rb
             echo
             echo EOF
-          } >> "$GITHUB_OUTPUT"
+          } > ./Formula/xata.rb
 
-      - name: Update Homebrew Formula using template variables
-        id: updateformula
-        run: |
-          echo "${{ steps.gettemplate.outputs.template }}" > ./Formula/xata.rb
           sed -i 's/__CLI_VERSION__/${{ inputs.version }}/g' ./Formula/xata.rb
           sed -i 's/__CLI_MAC_INTEL_SHA256__/${{ inputs.mac_intel_sha }}/g' ./Formula/xata.rb
           sed -i 's/__CLI_MAC_ARM_SHA256__/${{ inputs.mac_arm_sha }}/g' ./Formula/xata.rb
@@ -82,12 +78,17 @@ jobs:
           sed -i 's/__CLI_LINUX_DOWNLOAD_URL__/${CLI_MAC_INTEL_DOWNLOAD_URL}/g' ./Formula/xata.rb
           sed -i 's/__CLI_LINUX_ARM_DOWNLOAD_URL__/${CLI_MAC_INTEL_DOWNLOAD_URL}/g' ./Formula/xata.rb
 
-          echo "formula=$(cat ./Formula/xata.rb)" >> $GITHUB_OUTPUT
+          {
+            echo 'formula<<EOF'
+            cat ./Formula/xata.rb
+            echo
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
 
       - name: Read formula file
         id: getformula
         run: |
-          echo ${{ steps.updateformula.outputs.formula }}
+          echo "${{ steps.updateformula.outputs.formula }}"
 
       - name: commit changes
         run: |
