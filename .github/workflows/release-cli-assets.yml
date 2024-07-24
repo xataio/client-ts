@@ -35,9 +35,9 @@ jobs:
     name: Release CLI assets
     outputs:
       version: ${{ steps.capture-version.outputs.version }}
-      mac_intel_sha: ${{steps.sha-macos.outputs.sha-macos-intel}},
+      mac_intel_sha: ${{steps.sha-macos.outputs.sha-macos-intel}}
       mac_arm_sha: ${{ steps.sha-macos.outputs.sha-macos-arm }}
-      linux_sha: ${{ steps.sha-ubuntu.outputs.sha-linux }},
+      linux_sha: ${{ steps.sha-ubuntu.outputs.sha-linux }}
       linux_arm_sha: ${{ steps.sha-ubuntu.outputs.sha-linux-arm }}
     strategy:
       matrix:
