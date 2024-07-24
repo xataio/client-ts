@@ -33,19 +33,19 @@ jobs:
     name: Update Homebrew Formula
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
     steps:
       - uses: actions/checkout@v3
         with:
           repository: xataio/homebrew-brew
           ref: 'main'
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GIT_TOKEN }}
           fetch-depth: 0
 
       - name: setup git config
         run: |
+          git config user.email "system@xata.io"
           git config user.name "Xata"
-          git config user.email "<>"
 
       - name: Read template file
         id: gettemplate
@@ -85,6 +85,10 @@ jobs:
       - name: commit changes
         run: |
           git status
-          git add .
-          git commit -m "Update Homebrew Formula"
-          git push origin main
+          git commit -a -m "Add changes"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          repository: xataio/homebrew-brew
+          force: true
