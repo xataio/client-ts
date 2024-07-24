@@ -7,7 +7,14 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   publish-cli-assets:
-    name: Publish CLI assets Test
+    outputs:
+      version: ${{ jobs.release-cli-assets.capture-version.outputs.version }}
+      mac_intel_sha: ${{ jobs.relase-cli-assets.sha-macos.outputs.sha-macos-intel}},
+      mac_arm_sha: ${{ jobs.relase-cli-assets.sha-macos.outputs.sha-macos-arm }}
+      linux_sha: ${{ jobs.relase-cli-assets.sha-ubuntu.outputs.sha-linux }},
+      linux_arm_sha: ${{ jobs.relase-cli-assets.sha-ubuntu.outputs.sha-linux-arm }}
+      id: publish-cli-assets
+      name: Publish CLI assets Test
     uses: ./.github/workflows/release-cli-assets.yml
     with:
       publishedPackages: '[{"name": "@xata.io/cli", "version": "0.15.15"}]'

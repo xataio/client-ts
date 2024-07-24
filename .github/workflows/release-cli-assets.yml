@@ -32,6 +32,7 @@ permissions:
 
 jobs:
   release-cli-assets:
+    id: release-cli-assets
     name: Release CLI assets
     outputs:
       version: ${{ steps.capture-version.outputs.version }}
@@ -39,7 +40,6 @@ jobs:
       mac_arm_sha: ${{ steps.sha-macos.outputs.sha-macos-arm }}
       linux_sha: ${{ steps.sha-ubuntu.outputs.sha-linux }},
       linux_arm_sha: ${{ steps.sha-ubuntu.outputs.sha-linux-arm }}
-
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]

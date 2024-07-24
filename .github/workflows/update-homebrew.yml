@@ -59,13 +59,15 @@ jobs:
 
       - name: Update Homebrew Formula using template variables
         id: updateformula
+        env:
+          TEMPLATE_CONTENTS: ${{ steps.gettemplate.outputs.template }}
         run: |
-          echo "${{ steps.gettemplate.outputs.template }}" > ./Formula/xata.rb
-          sed -i 's/__CLI_VERSION__/\"${{ inputs.version }}\"/g' ./Formula/xata.rb
-          sed -i 's/__CLI_MAC_INTEL_SHA256__/\"${{ inputs.mac_intel_sha }}\"/g' ./Formula/xata.rb
-          sed -i 's/__CLI_MAC_ARM_SHA256__/\"${{ inputs.mac_arm_sha }}\"/g' ./Formula/xata.rb
-          sed -i 's/__CLI_LINUX_SHA256__/\"${{ inputs.linux_sha }}\"/g' ./Formula/xata.rb
-          sed -i 's/__CLI_LINUX_ARM_SHA256__/\"${{ inputs.linux_arm_sha }}\"/g' ./Formula/xata.rb
+          echo "$TEMPLATE_CONTENTS" > ./Formula/xata.rb
+          sed -i 's/__CLI_VERSION__/${{ inputs.version }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_MAC_INTEL_SHA256__/${{ inputs.mac_intel_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_MAC_ARM_SHA256__/${{ inputs.mac_arm_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_LINUX_SHA256__/${{ inputs.linux_sha }}/g' ./Formula/xata.rb
+          sed -i 's/__CLI_LINUX_ARM_SHA256__/${{ inputs.linux_arm_sha }}/g' ./Formula/xata.rb
 
           VER="${{inputs.version}}"
           COMMITSHA="${{inputs.commit_sha}}"
@@ -77,10 +79,10 @@ jobs:
           CLI_LINUX_DOWNLOAD_URL="${BASE_URL}-linux-x64.tar.xz"
           CLI_LINUX_ARM_DOWNLOAD_URL="${BASE_URL}-linux-arm64.tar.xz"
 
-          sed -i "s|__CLI_MAC_INTEL_DOWNLOAD_URL__|\"${CLI_MAC_INTEL_DOWNLOAD_URL}\"|g" ./Formula/xata.rb
-          sed -i "s|__CLI_MAC_ARM_DOWNLOAD_URL__|\"${CLI_MAC_ARM_DOWNLOAD_URL}\"|g" ./Formula/xata.rb
-          sed -i "s|__CLI_LINUX_DOWNLOAD_URL__|\"${CLI_LINUX_DOWNLOAD_URL}\"|g" ./Formula/xata.rb
-          sed -i "s|__CLI_LINUX_ARM_DOWNLOAD_URL__|\"${CLI_LINUX_ARM_DOWNLOAD_URL}\"|g" ./Formula/xata.rb
+          sed -i "s|__CLI_MAC_INTEL_DOWNLOAD_URL__|${CLI_MAC_INTEL_DOWNLOAD_URL}|g" ./Formula/xata.rb
+          sed -i "s|__CLI_MAC_ARM_DOWNLOAD_URL__|${CLI_MAC_ARM_DOWNLOAD_URL}|g" ./Formula/xata.rb
+          sed -i "s|__CLI_LINUX_DOWNLOAD_URL__|${CLI_LINUX_DOWNLOAD_URL}|g" ./Formula/xata.rb
+          sed -i "s|__CLI_LINUX_ARM_DOWNLOAD_URL__|${CLI_LINUX_ARM_DOWNLOAD_URL}|g" ./Formula/xata.rb
 
       - name: Read formula file
         id: getformula
