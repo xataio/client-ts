@@ -77,10 +77,10 @@ jobs:
           CLI_LINUX_DOWNLOAD_URL="${BASE_URL}-linux-x64.tar.xz"
           CLI_LINUX_ARM_DOWNLOAD_URL="${BASE_URL}-linux-arm64.tar.xz"
 
-          sed -i 's/__CLI_MAC_INTEL_DOWNLOAD_URL__/\"$CLI_MAC_INTEL_DOWNLOAD_URL\"/g' ./Formula/xata.rb
-          sed -i 's/__CLI_MAC_ARM_DOWNLOAD_URL__/\"$CLI_MAC_INTEL_DOWNLOAD_URL\"/g' ./Formula/xata.rb
-          sed -i 's/__CLI_LINUX_DOWNLOAD_URL__/\"$CLI_MAC_INTEL_DOWNLOAD_URL\"/g' ./Formula/xata.rb
-          sed -i 's/__CLI_LINUX_ARM_DOWNLOAD_URL__/\"$CLI_MAC_INTEL_DOWNLOAD_URL\"/g' ./Formula/xata.rb
+          sed -i "s/__CLI_MAC_INTEL_DOWNLOAD_URL__/\"$CLI_MAC_INTEL_DOWNLOAD_URL\"/g" ./Formula/xata.rb
+          sed -i "s/__CLI_MAC_ARM_DOWNLOAD_URL__/\"$CLI_MAC_INTEL_DOWNLOAD_URL\"/g" ./Formula/xata.rb
+          sed -i "s/__CLI_LINUX_DOWNLOAD_URL__/\"$CLI_MAC_INTEL_DOWNLOAD_URL\"/g" ./Formula/xata.rb
+          sed -i "s/__CLI_LINUX_ARM_DOWNLOAD_URL__/\"$CLI_MAC_INTEL_DOWNLOAD_URL\"/g" ./Formula/xata.rb
 
       - name: Read formula file
         id: getformula
