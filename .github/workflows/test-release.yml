@@ -19,7 +19,7 @@ jobs:
     uses: ./.github/workflows/update-homebrew.yml
     with:
       commit_sha: ${{ github.sha }}
-      version: ${{ needs.release.outputs.version }}
+      version: ${{ needs.publish-cli-assets.outputs.version }}
       mac_intel_sha: ${{ needs.publish-cli-assets.outputs.mac_intel_sha }}
       mac_arm_sha: ${{ needs.publish-cli-assets.outputs.mac_arm_sha }}
       linux_sha: ${{ needs.publish-cli-assets.outputs.linux_sha }}

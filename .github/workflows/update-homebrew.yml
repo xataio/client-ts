@@ -90,5 +90,6 @@ jobs:
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
+          branch: main
           repository: xataio/homebrew-brew
           force: true
