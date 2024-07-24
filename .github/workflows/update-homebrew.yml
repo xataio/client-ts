@@ -68,7 +68,7 @@ jobs:
           sed -i 's/__CLI_LINUX_ARM_SHA256__/${{ inputs.linux_arm_sha }}/g' ./Formula/xata.rb
 
           VER="${{inputs.version}}"
-          COMMITSHA="${{inputs.commitSha}}"
+          COMMITSHA="${{inputs.commit_sha}}"
           COM="$(echo $COMMITSHA | head -c8)"
           BASE_URL="https://xata-cli-assets.s3.us-east-1.amazonaws.com/versions/${VER}/${COM}/xata-v${VER}-${COM}"
 
@@ -82,17 +82,15 @@ jobs:
           sed -i 's/__CLI_LINUX_DOWNLOAD_URL__/${CLI_MAC_INTEL_DOWNLOAD_URL}/g' ./Formula/xata.rb
           sed -i 's/__CLI_LINUX_ARM_DOWNLOAD_URL__/${CLI_MAC_INTEL_DOWNLOAD_URL}/g' ./Formula/xata.rb
 
+      - name: Read formula file
+        id: getformula
+        run: |
           {
             echo 'formula<<EOF'
             cat ./Formula/xata.rb
             echo
             echo EOF
           } >> "$GITHUB_OUTPUT"
-
-      - name: Read formula file
-        id: getformula
-        run: |
-          echo ${{ steps.updateformula.outputs.formula }}
 
       - name: commit changes
         run: |
