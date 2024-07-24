@@ -166,8 +166,8 @@ jobs:
           VER="${{steps.capture-version.outputs.version}}"
           COMMITSHA="${{inputs.commitSha}}"
           COM="$(echo $COMMITSHA | head -c8)"
-          echo "sha-linux=$(sha256sum xata-v${VER}-${COM}-linux-arm.tar.xz)" >> "$GITHUB_OUTPUT"
-          echo "sha-linux-arm=$(sha256sum xata-v${VER}-${COM}-linux-arm64.tar.xz)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux=$(sha256sum xata-v${VER}-${COM}-linux-arm.tar.xz | cut -d " " -f1)" >> "$GITHUB_OUTPUT"
+          echo "sha-linux-arm=$(sha256sum xata-v${VER}-${COM}-linux-arm64.tar.xz | cut -d " " -f1)" >> "$GITHUB_OUTPUT"
 
       # - name: Upload and Promote CLI Assets to S3
       #   run: pnpm run release:cli:upload:s3
@@ -244,7 +244,7 @@ jobs:
           sed -i 's/__CLI_LINUX_ARM_SHA256__/${{ needs.release-cli-assets.outputs.linux_arm_sha }}/g' ./Formula/xata.rb
 
           VER="${{needs.release-cli-assets.outputs.version}}"
-          COMMITSHA="${{needs.release-cli-assets.outputs.commit_sha}}"
+          COMMITSHA="${{inputs.commitSha}}"
           COM="$(echo $COMMITSHA | head -c8)"
           BASE_URL="https://xata-cli-assets.s3.us-east-1.amazonaws.com/versions/${VER}/${COM}/xata-v${VER}-${COM}"
 
