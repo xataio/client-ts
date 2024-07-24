@@ -94,8 +94,9 @@ jobs:
 
       - name: commit changes
         run: |
+          status="Update dependencies to version ${{ inputs.version }}"
           git status
-          git commit -a -m "Add changes"
+          git commit -a -m "$status"
 
       - name: Push changes
         uses: ad-m/github-push-action@master
