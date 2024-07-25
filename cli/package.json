@@ -19,7 +19,7 @@
     "/oclif.manifest.json"
   ],
   "engines": {
-    "node": ">=8"
+    "node": ">=18"
   },
   "dependencies": {
     "@oclif/core": "^4.0.8",
