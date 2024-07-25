@@ -269,10 +269,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: commit changes
-        run: |
-          status="Update dependencies to version ${{ needs.release-cli-assets.outputs.version }}"
-          git status
-          git commit -a -m "$status"
+        run: git commit -a -m "Update dependencies to version ${{ needs.release-cli-assets.outputs.version }}"
 
       - name: Push changes
         uses: ad-m/github-push-action@master
@@ -280,4 +277,3 @@ jobs:
           github_token: ${{ secrets.GIT_TOKEN }}
           branch: main
           repository: xataio/homebrew-brew
-          force: true
