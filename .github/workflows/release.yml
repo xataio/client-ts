@@ -68,8 +68,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  publish-cli-assets:
-    name: Publish CLI assets
+  release-assets:
+    name: Release CLI assets
     needs: [release]
     if: needs.release.outputs.published == 'true' && github.ref_name == 'main'
     uses: ./.github/workflows/release-cli-assets.yml
