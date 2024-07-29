@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
 import prompts from 'prompts';
-import MigrationList from './list.js';
+import MigrateList from './list.js';
 import { baseFetch } from './utils.test.js';
 
 vi.mock('prompts');
@@ -116,10 +116,10 @@ const fetchHistoryWithItems = (url: string, request: any) => {
 
 promptsMock.mockReturnValue({ confirm: true, database: 'db1', workspace: 'test-1234' });
 
-describe('migration list', () => {
+describe('migrate list', () => {
   test('correctly lists migration history list for a project in initial state i.e. no custom migrations', async () => {
     const config = await Config.load();
-    const command = new MigrationList(['main'], config);
+    const command = new MigrateList(['main'], config);
     const printTable = vi.spyOn(command, 'printTable');
     fetchMock.mockImplementation(fetchHistoryEmpty);
     await command.run();
@@ -139,7 +139,7 @@ describe('migration list', () => {
 
   test('correctly lists migration history list for a project with some migrations', async () => {
     const config = await Config.load();
-    const command = new MigrationList(['main'], config);
+    const command = new MigrateList(['main'], config);
     const printTable = vi.spyOn(command, 'printTable');
     fetchMock.mockImplementation(fetchHistoryWithItems);
     await command.run();

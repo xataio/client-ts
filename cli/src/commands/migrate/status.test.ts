@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
 import prompts from 'prompts';
-import MigrationStatus from './status.js';
+import MigrateStatus from './status.js';
 import { baseFetch } from './utils.test.js';
 
 vi.mock('prompts');
@@ -138,10 +138,10 @@ const fetchStart_FailedStatus = (url: string, request: any) => {
 
 promptsMock.mockReturnValue({ confirm: true, database: 'db1', workspace: 'test-1234' });
 
-describe('migration status', () => {
+describe('migrate status', () => {
   test('correctly detects if migration status is run in a project with pgroll disabled', async () => {
     const config = await Config.load();
-    const command = new MigrationStatus(['main'], config);
+    const command = new MigrateStatus(['main'], config);
     const error = vi.spyOn(command, 'error');
     fetchMock.mockImplementation(fetchNonPgrollDatabase);
     try {
@@ -154,7 +154,7 @@ describe('migration status', () => {
 
   test('correctly detects if migration status is run in a project with no migrations', async () => {
     const config = await Config.load();
-    const command = new MigrationStatus(['main'], config);
+    const command = new MigrateStatus(['main'], config);
     const error = vi.spyOn(command, 'error');
     fetchMock.mockImplementation(fetchEmptyStatus);
     try {
@@ -169,7 +169,7 @@ describe('migration status', () => {
 
   test('correctly prints the status, if last migration was command complete and the job is completed', async () => {
     const config = await Config.load();
-    const command = new MigrationStatus(['main'], config);
+    const command = new MigrateStatus(['main'], config);
     const printTable = vi.spyOn(command, 'printTable');
     fetchMock.mockImplementation(fetchComplete_CompletedStatus);
     await command.run();
@@ -181,7 +181,7 @@ describe('migration status', () => {
 
   test('correctly prints the status, if last migration was command start and the job is completed', async () => {
     const config = await Config.load();
-    const command = new MigrationStatus(['main'], config);
+    const command = new MigrateStatus(['main'], config);
     const printTable = vi.spyOn(command, 'printTable');
     fetchMock.mockImplementation(fetchStart_CompletedStatus);
     await command.run();
@@ -193,7 +193,7 @@ describe('migration status', () => {
 
   test('correctly prints the status, if last migration was command rollback and the job is completed', async () => {
     const config = await Config.load();
-    const command = new MigrationStatus(['main'], config);
+    const command = new MigrateStatus(['main'], config);
     const printTable = vi.spyOn(command, 'printTable');
     fetchMock.mockImplementation(fetchRollback_CompletedStatus);
     await command.run();
@@ -205,7 +205,7 @@ describe('migration status', () => {
 
   test('correctly prints the status, if last migration was command start and the job failed', async () => {
     const config = await Config.load();
-    const command = new MigrationStatus(['main'], config);
+    const command = new MigrateStatus(['main'], config);
     const printTable = vi.spyOn(command, 'printTable');
     fetchMock.mockImplementation(fetchStart_FailedStatus);
     await command.run();

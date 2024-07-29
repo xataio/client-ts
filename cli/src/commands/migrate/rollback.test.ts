@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
 import prompts from 'prompts';
-import MigrationRollback from './rollback.js';
+import MigrateRollback from './rollback.js';
 import { baseFetch } from './utils.test.js';
 
 vi.mock('prompts');
@@ -76,10 +76,10 @@ export const fetchRunningMigrationWithSuccessfulRollback = (url: string, request
 
 promptsMock.mockReturnValue({ confirm: true, database: 'db1', workspace: 'test-1234' });
 
-describe('migration rollback', () => {
+describe('migrate rollback', () => {
   test('correctly detects if there is no migration to rollback', async () => {
     const config = await Config.load();
-    const command = new MigrationRollback(['main'], config);
+    const command = new MigrateRollback(['main'], config);
     const error = vi.spyOn(command, 'error');
     fetchMock.mockImplementation(fetchEmptyStatus);
     try {
@@ -92,7 +92,7 @@ describe('migration rollback', () => {
 
   test('correctly starts the migration rollback job, if an active migration is found', async () => {
     const config = await Config.load();
-    const command = new MigrationRollback(['main'], config);
+    const command = new MigrateRollback(['main'], config);
     const log = vi.spyOn(command, 'log');
     fetchMock.mockImplementation(fetchRunningMigrationWithSuccessfulRollback);
     await command.run();

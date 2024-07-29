@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
 import prompts from 'prompts';
-import MigrationComplete from './complete.js';
+import MigrateComplete from './complete.js';
 import { baseFetch } from './utils.test.js';
 
 vi.mock('prompts');
@@ -76,10 +76,10 @@ export const fetchRunningMigrationWithSuccessfulComplete = (url: string, request
 
 promptsMock.mockReturnValue({ confirm: true, database: 'db1', workspace: 'test-1234' });
 
-describe('migration complete', () => {
+describe('migrate complete', () => {
   test('correctly detects if there is no migration to complete', async () => {
     const config = await Config.load();
-    const command = new MigrationComplete(['main'], config);
+    const command = new MigrateComplete(['main'], config);
     const error = vi.spyOn(command, 'error');
     fetchMock.mockImplementation(fetchEmptyStatus);
     try {
@@ -92,7 +92,7 @@ describe('migration complete', () => {
 
   test('correctly starts the migration complete job, if an active migration is found', async () => {
     const config = await Config.load();
-    const command = new MigrationComplete(['main'], config);
+    const command = new MigrateComplete(['main'], config);
     const log = vi.spyOn(command, 'log');
     fetchMock.mockImplementation(fetchRunningMigrationWithSuccessfulComplete);
     await command.run();

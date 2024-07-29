@@ -6,7 +6,7 @@ import path from 'path';
 import { safeJSONParse, safeReadFile } from '../../utils/files.js';
 import { isActiveMigration } from '../../utils/migration.js';
 
-export default class MigrationStart extends BaseCommand<typeof MigrationStart> {
+export default class MigrateStart extends BaseCommand<typeof MigrateStart> {
   static description = 'Start a new migration';
 
   static examples = [];
@@ -39,8 +39,6 @@ export default class MigrationStart extends BaseCommand<typeof MigrationStart> {
     branch: Args.string({ description: 'The branch to start the migration in', required: true }),
     migrationFile: Args.string({ description: 'Migration operations JSON as a file', required: false })
   };
-
-  static hidden = true;
 
   async run() {
     const { args, flags } = await this.parseCommand();

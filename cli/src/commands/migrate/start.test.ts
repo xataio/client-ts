@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearEnvVariables } from '../utils.test.js';
 import prompts from 'prompts';
-import MigrationStart from './start.js';
+import MigrateStart from './start.js';
 import * as fs from 'fs/promises';
 import { baseFetch } from './utils.test.js';
 
@@ -53,10 +53,10 @@ export const fetchEmptyStatusAndSuccessfulStart = (url: string, request: any) =>
 
 promptsMock.mockReturnValue({ confirm: true, database: 'db1', workspace: 'test-1234' });
 
-describe('migration start', () => {
+describe('migrate start', () => {
   test('fails if neither a migration file nor an inline migration is supplied', async () => {
     const config = await Config.load();
-    const command = new MigrationStart(['main'], config);
+    const command = new MigrateStart(['main'], config);
     const error = vi.spyOn(command, 'error');
     fetchMock.mockImplementation(fetchEmptyStatus);
     try {
@@ -72,7 +72,7 @@ describe('migration start', () => {
   test('fails if a supplied migration file does not have valid json', async () => {
     const config = await Config.load();
     // Note: we didn't mock the migration.json file, so this will fail with invalid Json as safeFileRead returns undefined
-    const command = new MigrationStart(['main', 'migration.json'], config);
+    const command = new MigrateStart(['main', 'migration.json'], config);
     const error = vi.spyOn(command, 'error');
     fetchMock.mockImplementation(fetchEmptyStatus);
     try {
@@ -85,7 +85,7 @@ describe('migration start', () => {
 
   test('correctly submits the start migration job, if supplied migration file is valid', async () => {
     const config = await Config.load();
-    const command = new MigrationStart(['main', 'migration.json'], config);
+    const command = new MigrateStart(['main', 'migration.json'], config);
     const log = vi.spyOn(command, 'log');
     fetchMock.mockImplementation(fetchEmptyStatusAndSuccessfulStart);
     try {

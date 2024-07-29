@@ -4,7 +4,7 @@ import { getBranchDetailsWithPgRoll, isBranchPgRollEnabled } from '../../migrati
 import chalk from 'chalk';
 import { safeJSONParse, safeJSONStringify } from '../../utils/files.js';
 
-export default class MigrationList extends BaseCommand<typeof MigrationList> {
+export default class MigrateList extends BaseCommand<typeof MigrateList> {
   static description = 'List migrations for a database branch';
 
   static examples = [];
@@ -17,8 +17,6 @@ export default class MigrationList extends BaseCommand<typeof MigrationList> {
   static args = {
     branch: Args.string({ description: 'The branch to list the migrations for', required: true })
   };
-
-  static hidden = true;
 
   async run() {
     const { args, flags } = await this.parseCommand();

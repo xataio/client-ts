@@ -4,7 +4,7 @@ import { getBranchDetailsWithPgRoll, isBranchPgRollEnabled } from '../../migrati
 import chalk from 'chalk';
 import { match } from 'ts-pattern';
 
-export default class MigrationStatus extends BaseCommand<typeof MigrationStatus> {
+export default class MigrateStatus extends BaseCommand<typeof MigrateStatus> {
   static description = 'Get the status of the last pgroll migration';
 
   static examples = [];
@@ -17,8 +17,6 @@ export default class MigrationStatus extends BaseCommand<typeof MigrationStatus>
   static args = {
     branch: Args.string({ description: 'The branch to fetch the status for', required: true })
   };
-
-  static hidden = true;
 
   async run() {
     const { args, flags } = await this.parseCommand();

@@ -4,8 +4,8 @@ import { getBranchDetailsWithPgRoll, isBranchPgRollEnabled } from '../../migrati
 import chalk from 'chalk';
 import { isActiveMigration } from '../../utils/migration.js';
 
-export default class MigrationComplete extends BaseCommand<typeof MigrationComplete> {
-  static description = 'Start a new migration';
+export default class MigrateRollback extends BaseCommand<typeof MigrateRollback> {
+  static description = 'Rollback an active migration';
 
   static examples = [];
 
@@ -15,10 +15,8 @@ export default class MigrationComplete extends BaseCommand<typeof MigrationCompl
   };
 
   static args = {
-    branch: Args.string({ description: 'The branch to complete the migration in', required: true })
+    branch: Args.string({ description: 'The branch to rollback the migration in', required: true })
   };
-
-  static hidden = true;
 
   async run() {
     const { args, flags } = await this.parseCommand();
@@ -50,17 +48,17 @@ export default class MigrationComplete extends BaseCommand<typeof MigrationCompl
 
     const isActive = isActiveMigration(jobStatus);
     if (!isActive) {
-      this.error(`No active migration found, there is nothing to complete.`);
+      this.error(`No active migration found, there is nothing to rollback.`);
     }
 
-    const migrationJob = await xata.api.migrations.completeMigration({
+    const migrationJob = await xata.api.migrations.rollbackMigration({
       pathParams: {
         ...commonParams
       }
     });
 
     this.log(
-      `Migration complete started with Job ID ${chalk.cyan(migrationJob.jobID)}. Please use the "${chalk.gray(
+      `Migration rollback started with Job ID ${chalk.cyan(migrationJob.jobID)}. Please use the "${chalk.gray(
         `xata migration status ${branch}`
       )}" command to check its status`
     );
