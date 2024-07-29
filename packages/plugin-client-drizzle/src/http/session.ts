@@ -12,12 +12,12 @@ import {
 import {
   PgColumn,
   PgDialect,
+  PgPreparedQuery,
+  PgQueryResultHKT,
   PgSession,
   PgTransaction,
   PgTransactionConfig,
-  PgPreparedQuery,
-  PreparedQueryConfig,
-  QueryResultHKT
+  PreparedQueryConfig
 } from 'drizzle-orm/pg-core';
 import { mapResultRow } from '../shared/utils';
 
@@ -165,6 +165,6 @@ export class XataTransaction<
   }
 }
 
-export interface XataHttpQueryResultHKT extends QueryResultHKT {
+export interface XataHttpQueryResultHKT extends PgQueryResultHKT {
   type: SQLQueryResult<this['row']>;
 }
