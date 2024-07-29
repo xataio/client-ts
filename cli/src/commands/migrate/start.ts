@@ -13,18 +13,7 @@ export default class MigrateStart extends BaseCommand<typeof MigrateStart> {
 
   static migrationJsonFlag = {
     'migration-json': Flags.string({
-      helpValue: `
-      [
-        {
-            "alter_column": {
-                "table": "table",
-                "column": "text",
-                "type": "text",
-                "up": "text",
-                "down": "text"
-            }
-        }
-    ]`,
+      helpValue: `[ { "alter_column": { "table": "table", "column": "text", "type": "text", "up": "text", "down": "text" } } ]`,
       description: 'Migration operations as JSON string'
     })
   };
