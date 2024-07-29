@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { BaseClient, BaseClientOptions } from '..';
 import { server } from '../../../../test/mock_server';
-import { Response } from '../util/fetch';
+import { Response, FetchImpl } from '../util/fetch';
 
 interface User {
   id: string;
@@ -18,7 +18,7 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
   } = options;
 
   // @ts-expect-error - Fetch doesn't appear in globalThis yet
-  const fetch = vi.fn(globalThis.realFetch);
+  const fetch = vi.fn<FetchImpl>(globalThis.realFetch);
   const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra }, [
     {
       name: 'users',
