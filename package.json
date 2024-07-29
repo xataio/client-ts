@@ -6,7 +6,9 @@
   "scripts": {
     "test": "vitest",
     "test:canary": "tsx ./scripts/test-canary.ts",
-    "release:cli": "tsx ./scripts/release-cli.ts",
+    "release:cli:pack": "tsx ./scripts/release-cli-pack.ts",
+    "release:cli:upload:gh": "tsx ./scripts/release-cli-upload-gh.ts",
+    "release:cli:upload:s3": "tsx ./scripts/release-cli-upload-s3.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky install",
