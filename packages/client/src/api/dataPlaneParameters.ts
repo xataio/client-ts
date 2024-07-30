@@ -5,6 +5,8 @@
  */
 import type * as Schemas from './dataPlaneSchemas';
 
+export type TaskIDParam = Schemas.TaskID;
+
 export type ClusterIDParam = Schemas.ClusterID;
 
 export type PageSizeParam = Schemas.PageSize;
