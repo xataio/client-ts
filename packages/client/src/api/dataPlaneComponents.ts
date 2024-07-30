@@ -8,6 +8,76 @@ import { dataPlaneFetch, DataPlaneFetcherExtraProps } from './dataPlaneFetcher';
 import type * as Schemas from './dataPlaneSchemas';
 import type * as Responses from './dataPlaneResponses';
 
+export type GetTasksPathParams = {
+  workspace: string;
+  region: string;
+};
+
+export type GetTasksError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetTasksResponse = Schemas.TaskStatusResponse[];
+
+export type GetTasksVariables = {
+  pathParams: GetTasksPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const getTasks = (variables: GetTasksVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<GetTasksResponse, GetTasksError, undefined, {}, {}, GetTasksPathParams>({
+    url: '/tasks',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
+export type GetTaskStatusPathParams = {
+  /**
+   * The id of the branch creation task
+   */
+  taskId: Schemas.TaskID;
+  workspace: string;
+  region: string;
+};
+
+export type GetTaskStatusError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type GetTaskStatusVariables = {
+  pathParams: GetTaskStatusPathParams;
+} & DataPlaneFetcherExtraProps;
+
+export const getTaskStatus = (variables: GetTaskStatusVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<Schemas.TaskStatusResponse, GetTaskStatusError, undefined, {}, {}, GetTaskStatusPathParams>({
+    url: '/tasks/{taskId}',
+    method: 'get',
+    ...variables,
+    signal
+  });
+
 export type ListClusterBranchesPathParams = {
   /**
    * Cluster ID
@@ -926,6 +996,72 @@ export const updateDatabaseSettings = (variables: UpdateDatabaseSettingsVariable
     {},
     UpdateDatabaseSettingsPathParams
   >({ url: '/dbs/{dbName}/settings', method: 'patch', ...variables, signal });
+
+export type CreateBranchAsyncPathParams = {
+  /**
+   * The DBBranchName matches the pattern `{db_name}:{branch_name}`.
+   */
+  dbBranchName: Schemas.DBBranchName;
+  workspace: string;
+  region: string;
+};
+
+export type CreateBranchAsyncQueryParams = {
+  /**
+   * Name of source branch to branch the new schema from
+   */
+  from?: string;
+};
+
+export type CreateBranchAsyncError = Fetcher.ErrorWrapper<
+  | {
+      status: 400;
+      payload: Responses.BadRequestError;
+    }
+  | {
+      status: 401;
+      payload: Responses.AuthError;
+    }
+  | {
+      status: 404;
+      payload: Responses.SimpleError;
+    }
+  | {
+      status: 423;
+      payload: Responses.SimpleError;
+    }
+>;
+
+export type CreateBranchAsyncRequestBody = {
+  /**
+   * Select the branch to fork from. Defaults to 'main'
+   */
+  from?: string;
+  /**
+   * Select the dedicated cluster to create on. Defaults to 'xata-cloud'
+   *
+   * @minLength 1
+   * @x-internal true
+   */
+  clusterID?: string;
+  metadata?: Schemas.BranchMetadata;
+};
+
+export type CreateBranchAsyncVariables = {
+  body?: CreateBranchAsyncRequestBody;
+  pathParams: CreateBranchAsyncPathParams;
+  queryParams?: CreateBranchAsyncQueryParams;
+} & DataPlaneFetcherExtraProps;
+
+export const createBranchAsync = (variables: CreateBranchAsyncVariables, signal?: AbortSignal) =>
+  dataPlaneFetch<
+    Schemas.CreateBranchResponse,
+    CreateBranchAsyncError,
+    CreateBranchAsyncRequestBody,
+    {},
+    CreateBranchAsyncQueryParams,
+    CreateBranchAsyncPathParams
+  >({ url: '/db/{dbBranchName}/async', method: 'put', ...variables, signal });
 
 export type GetBranchDetailsPathParams = {
   /**
@@ -5693,6 +5829,7 @@ export const sqlBatchQuery = (variables: SqlBatchQueryVariables, signal?: AbortS
   });
 
 export const operationsByTag = {
+  tasks: { getTasks, getTaskStatus },
   cluster: {
     listClusterBranches,
     listClusterExtensions,
@@ -5726,6 +5863,7 @@ export const operationsByTag = {
   },
   branch: {
     getBranchList,
+    createBranchAsync,
     getBranchDetails,
     createBranch,
     deleteBranch,
