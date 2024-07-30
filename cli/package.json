@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/cli",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "Xata.io CLI",
   "author": "Xata Inc.",
   "bin": {
