@@ -1,5 +1,13 @@
 # @xata.io/cli
 
+## 0.16.1
+
+### Patch Changes
+
+- [#1542](https://github.com/xataio/client-ts/pull/1542) [`7790588`](https://github.com/xataio/client-ts/commit/7790588733c4003ec9da67600b56b87e88787213) Thanks [@divyenduz](https://github.com/divyenduz)! - add multi-schema aka pgroll to cli
+
+- [#1540](https://github.com/xataio/client-ts/pull/1540) [`cb9f483`](https://github.com/xataio/client-ts/commit/cb9f4837f796c90f4ffd5e13bdcedc5023184e20) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - CLI: Allow binaries to autoupdate
+
 ## 0.16.0
 
 ### Minor Changes
