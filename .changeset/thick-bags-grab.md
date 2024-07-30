@@ -1,5 +1,5 @@
 ---
-"@xata.io/cli": patch
+'@xata.io/cli': patch
 ---
 
 CLI: Allow binaries to autoupdate

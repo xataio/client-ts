@@ -55,6 +55,7 @@
     "semver": "^7.6.2",
     "text-table": "^0.2.0",
     "tmp": "^0.2.3",
+    "ts-pattern": "^5.2.0",
     "tslib": "^2.6.3",
     "type-fest": "^4.21.0",
     "which": "^4.0.0",
