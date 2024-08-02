@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.16.2
+
+### Patch Changes
+
+- [#1534](https://github.com/xataio/client-ts/pull/1534) [`f1f931e`](https://github.com/xataio/client-ts/commit/f1f931e26c695b9bafe530a0c932fd9946dc428c) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Add windows signing
+
 ## 0.16.1
 
 ### Patch Changes
