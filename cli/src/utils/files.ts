@@ -15,3 +15,11 @@ export function safeJSONParse(contents: unknown) {
     return null;
   }
 }
+
+export function safeJSONStringify(contents: unknown) {
+  try {
+    return JSON.stringify(contents as string);
+  } catch (error) {
+    return null;
+  }
+}

@@ -39,7 +39,7 @@ export class SimpleCache implements CacheImpl {
 
     if (this.#map.size > this.capacity) {
       const leastRecentlyUsed = this.#map.keys().next().value;
-      await this.delete(leastRecentlyUsed);
+      if (leastRecentlyUsed) await this.delete(leastRecentlyUsed);
     }
   }
 
