@@ -22,11 +22,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@oclif/core": "^4.0.8",
-    "@oclif/plugin-help": "^6.2.5",
-    "@oclif/plugin-not-found": "^3.2.10",
-    "@oclif/plugin-plugins": "^5.3.4",
-    "@oclif/plugin-update": "^4.4.9",
+    "@oclif/core": "^4.0.17",
+    "@oclif/plugin-help": "^6.2.7",
+    "@oclif/plugin-not-found": "^3.2.14",
+    "@oclif/plugin-plugins": "^5.4.0",
+    "@oclif/plugin-update": "^4.5.0",
     "@types/ini": "^4.1.1",
     "@types/prompts": "^2.4.9",
     "@types/semver": "^7.5.8",
@@ -75,7 +75,7 @@
     "eslint": "^9.6.0",
     "eslint-config-oclif": "^5.2.0",
     "eslint-config-oclif-typescript": "^3.1.8",
-    "oclif": "^4.13.16",
+    "oclif": "^4.14.12",
     "shx": "^0.3.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3"
