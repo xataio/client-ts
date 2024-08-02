@@ -102,6 +102,13 @@ jobs:
           sudo apt-get install -y nsis
           sudo apt-get install -y p7zip
 
+      - name: Write windows certificate to file
+        env:
+          XATA_WINDOWS_CERTIFICATE_KEY: ${{ secrets.WINDOWS_CERTIFICATE_KEY }}
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo -n `$XATA_WINDOWS_CERTIFICATE_KEY` >> ~/xata.key
+
       - name: Configure AWS Credentials for production
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -120,6 +127,7 @@ jobs:
         env:
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          XATA_WINDOWS_SIGNING_PASS: ${{ secrets.WINDOWS_CERTIFICATE_SECRET }}
 
       - name: Debian cert
         if: matrix.os == 'ubuntu-latest'
