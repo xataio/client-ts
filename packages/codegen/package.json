@@ -35,11 +35,11 @@
     "case": "^1.6.3",
     "prettier": "=2.8.8",
     "ts-morph": "^23.0.0",
-    "typescript": "^5.5.3",
+    "typescript": "^5.5.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/pluralize": "^0.0.33",
-    "@types/prettier": "^2.7.3"
+    "@types/prettier": "^3.0.0"
   }
 }
