@@ -22,7 +22,6 @@ const specificVersionCLI = '0.0.8';
 
 const userVersionCLI = '~0.0.1';
 const userVersionSDK = '^0.0.2';
-const userVersionAlpha = `${latestAvailableVersionCLI}-alpha.v927d47c`;
 
 const cliUpdateAvailable = `"✨ A newer version of @xata.io/cli is now available: ${latestAvailableVersionCLI}. You are currently using version: ${semver.coerce(
   userVersionCLI
@@ -39,6 +38,12 @@ const sdkError = `"Incompatible version of @xata.io/client: ${semver.coerce(
 )}. Please upgrade to a version that satisfies: ${latestAvailableVersionSDK}."`;
 
 const compatibilityFile = './compatibility.json';
+
+const userVersionCLIAlpha = '0.0.0-alpha.v927d47c';
+const userVersionSDKAlpha = '0.0.0-alpha.v927d47c';
+
+const userVersionCLINext = '0.0.0-next.v927d47c';
+const userVersionSDKNext = '0.0.0-next.v927d47c';
 
 const compat = {
   '@xata.io/cli': {
@@ -177,11 +182,24 @@ describe('checks', () => {
 
       const sdkResponse = await check({ compat, pkg: '@xata.io/client', version: latestAvailableVersionSDK });
       expect(sdkResponse.error).toBeNull();
+    });
 
-      // Alpha versions
-      const cliResponseAlpha = await check({ compat, pkg: '@xata.io/cli', version: userVersionAlpha });
+    test('returns null if prerelease version', async () => {
+      const cliResponseAlpha = await check({ compat, pkg: '@xata.io/cli', version: userVersionCLIAlpha });
       expect(cliResponseAlpha.error).toBeNull();
       expect(cliResponseAlpha.warn).toBeNull();
+
+      const sdkResponseAlpha = await check({ compat, pkg: '@xata.io/client', version: userVersionSDKAlpha });
+      expect(sdkResponseAlpha.error).toBeNull();
+      expect(sdkResponseAlpha.warn).toBeNull();
+
+      const cliResponseNext = await check({ compat, pkg: '@xata.io/cli', version: userVersionCLINext });
+      expect(cliResponseNext.error).toBeNull();
+      expect(cliResponseNext.warn).toBeNull();
+
+      const sdkResponseNext = await check({ compat, pkg: '@xata.io/client', version: userVersionSDKNext });
+      expect(sdkResponseNext.error).toBeNull();
+      expect(sdkResponseNext.warn).toBeNull();
     });
   });
 });
