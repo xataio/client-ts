@@ -162,7 +162,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
   beforeEach(async (ctx) => {
     ctx.branch = `test-${Math.random().toString(36).substring(7)}`;
     await api.branch.createBranch({
-      pathParams: { workspace, region, dbBranchName: `${database}:${ctx.branch}` },
+      pathParams: { workspace, region, dbBranchName: `${dbName}:${ctx.branch}` },
       body: { from: 'main' }
     });
 
@@ -175,7 +175,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
 
   afterEach(async (ctx) => {
     await ctx.client?.end();
-    await api.branch.deleteBranch({ pathParams: { workspace, region, dbBranchName: `${database}:${ctx.branch}` } });
+    await api.branch.deleteBranch({ pathParams: { workspace, region, dbBranchName: `${dbName}:${ctx.branch}` } });
   });
 
   /*
