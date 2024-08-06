@@ -40,6 +40,6 @@
   },
   "devDependencies": {
     "@types/pluralize": "^0.0.33",
-    "@types/prettier": "^3.0.0"
+    "@types/prettier": "=2.7.3"
   }
 }
