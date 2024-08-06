@@ -79,7 +79,7 @@ function getDrizzleClient(type: string, branch: string) {
 describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({ type }) => {
   beforeAll(async () => {
     await api.databases.createDatabase({
-      pathParams: { workspaceId: workspace, dbName: database },
+      pathParams: { workspaceId: workspace, dbName: `${database}-${type}` },
       body: { region, branchName: 'main' },
       headers: { 'X-Features': 'feat-pgroll-migrations=1' }
     });
