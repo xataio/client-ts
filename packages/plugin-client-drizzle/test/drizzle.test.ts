@@ -51,7 +51,7 @@ function getDomain(host: HostProvider) {
   }
 }
 
-function getDrizzleClient(type: string, branch: string) {
+function getDrizzleClient(type: string, database: string, branch: string) {
   if (type === 'http') {
     const xata = new BaseClient({
       apiKey,
@@ -77,17 +77,19 @@ function getDrizzleClient(type: string, branch: string) {
 }
 
 describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({ type }) => {
+  const dbName = `${database}-${type}`;
+
   beforeAll(async () => {
     await api.databases.createDatabase({
-      pathParams: { workspaceId: workspace, dbName: database },
+      pathParams: { workspaceId: workspace, dbName },
       body: { region, branchName: 'main' },
       headers: { 'X-Features': 'feat-pgroll-migrations=1' }
     });
 
-    await waitForReplication();
+    await waitForReplication(dbName);
 
     // For now, run the migrations via wire protocol
-    const { client, db } = getDrizzleClient('pg', 'main');
+    const { client, db } = getDrizzleClient('pg', dbName, 'main');
     await client?.connect();
 
     await db.execute(
@@ -154,17 +156,17 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
   });
 
   afterAll(async () => {
-    await api.databases.deleteDatabase({ pathParams: { workspaceId: workspace, dbName: database } });
+    await api.databases.deleteDatabase({ pathParams: { workspaceId: workspace, dbName } });
   });
 
   beforeEach(async (ctx) => {
     ctx.branch = `test-${Math.random().toString(36).substring(7)}`;
     await api.branch.createBranch({
-      pathParams: { workspace, region, dbBranchName: `${database}:${ctx.branch}` },
+      pathParams: { workspace, region, dbBranchName: `${dbName}:${ctx.branch}` },
       body: { from: 'main' }
     });
 
-    const { db, client } = getDrizzleClient(type, ctx.branch);
+    const { db, client } = getDrizzleClient(type, dbName, ctx.branch);
     await client?.connect();
 
     ctx.db = db;
@@ -173,7 +175,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
 
   afterEach(async (ctx) => {
     await ctx.client?.end();
-    await api.branch.deleteBranch({ pathParams: { workspace, region, dbBranchName: `${database}:${ctx.branch}` } });
+    await api.branch.deleteBranch({ pathParams: { workspace, region, dbBranchName: `${dbName}:${ctx.branch}` } });
   });
 
   /*
@@ -6284,12 +6286,12 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
   });
 });
 
-async function waitForReplication(): Promise<void> {
+async function waitForReplication(dbName: string): Promise<void> {
   try {
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    await api.branch.getBranchList({ pathParams: { workspace, dbName: database, region } });
+    await api.branch.getBranchList({ pathParams: { workspace, dbName, region } });
   } catch (error) {
     console.log(`Replication not ready yet, retrying...`);
-    return await waitForReplication();
+    return await waitForReplication(dbName);
   }
 }

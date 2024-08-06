@@ -17,7 +17,7 @@ import {
   PgTransactionConfig,
   PgPreparedQuery,
   PreparedQueryConfig,
-  QueryResultHKT
+  PgQueryResultHKT
 } from 'drizzle-orm/pg-core';
 import { mapResultRow } from '../shared/utils';
 
@@ -165,6 +165,6 @@ export class XataTransaction<
   }
 }
 
-export interface XataHttpQueryResultHKT extends QueryResultHKT {
+export interface XataHttpQueryResultHKT extends PgQueryResultHKT {
   type: SQLQueryResult<this['row']>;
 }

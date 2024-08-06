@@ -8,6 +8,5 @@ module.exports = {
   rules: {
     '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/strict-boolean-expressions': ['error', { allowNullableString: true, allowNullableObject: true }],
-    "@typescript-eslint/ban-types": "off",
   }
 };
