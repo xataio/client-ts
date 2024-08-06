@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.16.3
+
+### Patch Changes
+
+- [#1553](https://github.com/xataio/client-ts/pull/1553) [`9b4a68e`](https://github.com/xataio/client-ts/commit/9b4a68ebe1eabb4e25d861442c722b45c064b5e8) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Do not prompt for update on pre release
+
 ## 0.16.2
 
 ### Patch Changes
