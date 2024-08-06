@@ -47,8 +47,8 @@
     "@opentelemetry/semantic-conventions": "^1.25.1",
     "@size-limit/preset-small-lib": "^11.1.4",
     "@types/node": "^22.1.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.1",
+    "@typescript-eslint/parser": "^8.0.1",
     "doctoc": "^2.2.1",
     "dotenv": "^16.4.5",
     "eslint": "^9.8.0",
@@ -72,7 +72,7 @@
     "tsx": "^4.16.5",
     "turbo": "^2.0.11",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.0.0",
+    "typescript-eslint": "^8.0.1",
     "vite": "^5.3.5",
     "vitest": "^2.0.5",
     "zod": "^3.23.8"
@@ -113,9 +113,9 @@
   },
   "dependencies": {
     "@octokit/core": "^6.1.2",
-    "@pnpm/exportable-manifest": "^7.0.1",
-    "@pnpm/read-project-manifest": "^6.0.5",
-    "@pnpm/write-project-manifest": "^6.0.4"
+    "@pnpm/exportable-manifest": "^7.0.2",
+    "@pnpm/read-project-manifest": "^6.0.6",
+    "@pnpm/write-project-manifest": "^6.0.5"
   },
   "packageManager": "pnpm@8.11.0"
 }
