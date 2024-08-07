@@ -2135,9 +2135,14 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         statement = statement.orderBy(this.#primaryKey, 'desc');
       }
 
+      const sqlResponse = await this.#db.executeQuery(statement);
+
       const response: {
         [key: string]: unknown;
-      }[] = (await this.#db.executeQuery(statement)).rows;
+      }[] = sqlResponse.rows;
+
+      // @ts-ignore
+      const columns: string[] = sqlResponse.columns;
 
       const lastSeenId: string = response.length > 0 ? (response[response.length - 1][this.#primaryKey] as string) : '';
 
@@ -2173,7 +2178,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
           }).toString()
         }
       };
-      return new Page<Schema, TableName, ObjectType, Result>(query, meta, records);
+      return new Page<Schema, TableName, ObjectType, Result>(query, meta, records, columns);
     });
   }
 

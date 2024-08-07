@@ -955,6 +955,11 @@ describe('integration tests', () => {
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
   });
 
+  test('paginated call returns data', async () => {
+    const teams = await xata.db.teams.filter('name', 'Team fruits').getPaginated();
+    expect(teams.columns).toBeDefined();
+  });
+
   test('multiple errors in one response', async () => {
     const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as UsersRecord[];
     expect(xata.db.users.create(invalidUsers)).rejects.toHaveProperty('status', 400);

@@ -42,11 +42,21 @@ export class Page<
    * The set of results for this page.
    */
   readonly records: PageRecordArray<Result>;
+  /**
+   * The columns returned in the query.
+   */
+  readonly columns: string[];
 
-  constructor(query: Query<Schema, TableName, ObjectType, Result>, meta: PaginationQueryMeta, records: Result[] = []) {
+  constructor(
+    query: Query<Schema, TableName, ObjectType, Result>,
+    meta: PaginationQueryMeta,
+    records: Result[] = [],
+    columns: string[] = []
+  ) {
     this.#query = query;
     this.meta = meta;
     this.records = new PageRecordArray(this, records);
+    this.columns = columns;
   }
 
   /**
