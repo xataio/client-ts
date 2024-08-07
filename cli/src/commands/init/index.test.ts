@@ -140,7 +140,7 @@ describe('xata init', () => {
       packageManagerName: 'pnpm'
     });
 
-    expect(spawnMock.mock.calls[0].slice(0, 2).flat().join(' ')).toEqual('/usr/bin/pnpm add @xata.io/client');
+    expect(spawnMock.mock.calls[0].slice(0, 2).flat().join(' ')).toEqual('"/usr/bin/pnpm" add @xata.io/client');
     expect(promptsMock.mock.calls.flat().find((p) => p.name === 'packageManagerName')).toBeTruthy();
     expect(outputFiles).toMatchInlineSnapshot(`
       {
@@ -378,7 +378,7 @@ describe('xata init', () => {
       file: 'src/xataCustom.ts',
       declarations: true
     });
-    expect(spawnMock.mock.calls[0].slice(0, 2).flat().join(' ')).toEqual('/usr/bin/pnpm add @xata.io/client');
+    expect(spawnMock.mock.calls[0].slice(0, 2).flat().join(' ')).toEqual('"/usr/bin/pnpm" add @xata.io/client');
     expect(promptsMock.mock.calls.flat().find((p) => p.name === 'packageManagerName')).toBeFalsy();
 
     expect(outputFiles).toMatchInlineSnapshot(`

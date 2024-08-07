@@ -101,14 +101,15 @@ export default class Push extends BaseCommand<typeof Push> {
     if (!confirm) return this.exit(1);
 
     if (isBranchPgRollEnabled(details)) {
-      const migrationsToPush = (newMigrations as MigrationFilePgroll[])
-        .map(({ migration }) => migration)
-        .flatMap((migration) => PgRollMigrationDefinition.parse(migration));
+      const migrationsToPush = (newMigrations as MigrationFilePgroll[]).map(({ migration, schema }) => ({
+        operations: PgRollMigrationDefinition.parse(migration),
+        schema
+      }));
       for (const migration of migrationsToPush) {
         try {
           const { jobID } = await xata.api.migrations.applyMigration({
             pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
-            body: migration
+            body: { ...migration.operations, schema: migration.schema }
           });
 
           await waitForMigrationToFinish(xata.api, workspace, region, database, branch, jobID);
