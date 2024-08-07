@@ -1,22 +1,23 @@
-import { Schemas } from '../api';
 import { UnionToIntersection, Values } from '../util/types';
 import { XataArrayFile, XataFile } from './files';
 import { JSONValue } from './json';
 import { Identifiable, XataRecord } from './record';
 
-export type BaseSchema = {
-  name: string;
-  columns: readonly (
-    | {
-        name: string;
-        type: Schemas.Column['type'];
-        notNull?: boolean;
-      }
-    | { name: string; type: 'link'; link: { table: string } }
-  )[];
+export type DatabaseSchema = {
+  tables: readonly TableSchema[];
 };
 
-export type SchemaInference<T extends readonly BaseSchema[]> = T extends never[]
+export type TableSchema = {
+  name: string;
+  columns: readonly {
+    name: string;
+    type: string;
+    notNull?: boolean;
+  }[];
+  primaryKey?: readonly string[];
+};
+
+export type SchemaInference<T extends readonly TableSchema[]> = T extends never[]
   ? Record<string, Record<string, any>>
   : T extends readonly unknown[]
   ? T[number] extends { name: string; columns: readonly unknown[] }
@@ -30,8 +31,7 @@ type TableType<Tables, TableName> = Tables & { name: TableName } extends infer T
   ? Table extends { name: string; columns: infer Columns }
     ? Columns extends readonly unknown[]
       ? Columns[number] extends { name: string; type: string }
-        ? Identifiable &
-            UnionToIntersection<Values<{ [K in Columns[number]['name']]: PropertyType<Tables, Columns[number], K> }>>
+        ? UnionToIntersection<Values<{ [K in Columns[number]['name']]: PropertyType<Tables, Columns[number], K> }>>
         : never
       : never
     : never
@@ -98,6 +98,6 @@ type InnerType<Type, Tables, LinkedTable> = Type extends
   : Type extends 'json' | 'jsonb'
   ? JSONValue<any>
   : Type extends 'link'
-  ? TableType<Tables, LinkedTable> & XataRecord
+  ? string
   : // This is a fallback for when the type is not recognized
     string;

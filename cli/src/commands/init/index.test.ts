@@ -164,11 +164,11 @@ describe('xata init', () => {
         XataRecord,
       } from "@xata.io/client";
 
-      const tables = [
-        { name: "table1", columns: [{ name: "a", type: "string" }] },
-      ] as const;
+      const schema = {
+        tables: [{ name: "table1", columns: [{ name: "a", type: "string" }] }],
+      } as const;
 
-      export type SchemaTables = typeof tables;
+      export type SchemaTables = typeof schema.tables;
       export type InferredTypes = SchemaInference<SchemaTables>;
 
       export type Table1 = InferredTypes["table1"];
@@ -180,7 +180,7 @@ describe('xata init', () => {
 
       const DatabaseClient = buildClient();
 
-      export class XataClient extends DatabaseClient<DatabaseSchema> {
+      export class XataClient extends DatabaseClient<typeof schema> {
         constructor(options?: BaseClientOptions) {
           super(
             {
@@ -193,7 +193,7 @@ describe('xata init', () => {
                 "main",
               ...options,
             },
-            tables
+            schema
           );
         }
       }
@@ -247,11 +247,11 @@ describe('xata init', () => {
         XataRecord,
       } from "@xata.io/client";
 
-      const tables = [
-        { name: "table1", columns: [{ name: "a", type: "string" }] },
-      ] as const;
+      const schema = {
+        tables: [{ name: "table1", columns: [{ name: "a", type: "string" }] }],
+      } as const;
 
-      export type SchemaTables = typeof tables;
+      export type SchemaTables = typeof schema.tables;
       export type InferredTypes = SchemaInference<SchemaTables>;
 
       export type Table1 = InferredTypes["table1"];
@@ -263,7 +263,7 @@ describe('xata init', () => {
 
       const DatabaseClient = buildClient();
 
-      export class XataClient extends DatabaseClient<DatabaseSchema> {
+      export class XataClient extends DatabaseClient<typeof schema> {
         constructor(options?: BaseClientOptions) {
           super(
             {
@@ -276,7 +276,7 @@ describe('xata init', () => {
                 "main",
               ...options,
             },
-            tables
+            schema
           );
         }
       }
@@ -325,11 +325,11 @@ describe('xata init', () => {
         XataRecord,
       } from "npm:@xata.io/client@latest";
 
-      const tables = [
-        { name: "table1", columns: [{ name: "a", type: "string" }] },
-      ] as const;
+      const schema = {
+        tables: [{ name: "table1", columns: [{ name: "a", type: "string" }] }],
+      } as const;
 
-      export type SchemaTables = typeof tables;
+      export type SchemaTables = typeof schema.tables;
       export type InferredTypes = SchemaInference<SchemaTables>;
 
       export type Table1 = InferredTypes["table1"];
@@ -341,7 +341,7 @@ describe('xata init', () => {
 
       const DatabaseClient = buildClient();
 
-      export class XataClient extends DatabaseClient<DatabaseSchema> {
+      export class XataClient extends DatabaseClient<typeof schema> {
         constructor(options?: BaseClientOptions) {
           super(
             {
@@ -354,7 +354,7 @@ describe('xata init', () => {
                 "main",
               ...options,
             },
-            tables
+            schema
           );
         }
       }
@@ -404,11 +404,11 @@ describe('xata init', () => {
         XataRecord,
       } from "@xata.io/client";
 
-      const tables = [
-        { name: "table1", columns: [{ name: "a", type: "string" }] },
-      ] as const;
+      const schema = {
+        tables: [{ name: "table1", columns: [{ name: "a", type: "string" }] }],
+      } as const;
 
-      export type SchemaTables = typeof tables;
+      export type SchemaTables = typeof schema.tables;
       export type InferredTypes = SchemaInference<SchemaTables>;
 
       export type Table1 = InferredTypes["table1"];
@@ -420,7 +420,7 @@ describe('xata init', () => {
 
       const DatabaseClient = buildClient();
 
-      export class XataClient extends DatabaseClient<DatabaseSchema> {
+      export class XataClient extends DatabaseClient<typeof schema> {
         constructor(options?: BaseClientOptions) {
           super(
             {
@@ -433,7 +433,7 @@ describe('xata init', () => {
                 "main",
               ...options,
             },
-            tables
+            schema
           );
         }
       }

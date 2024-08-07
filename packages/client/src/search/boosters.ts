@@ -1,4 +1,4 @@
-import { XataRecord, SelectableColumn, ValueAtColumn } from '../schema';
+import { SelectableColumn, ValueAtColumn } from '../schema';
 import { Filter } from '../schema/filters';
 import { ExclusiveOr, Values } from '../util/types';
 
@@ -72,7 +72,7 @@ type ValueBooster<T extends string | number | boolean> = {
   modifier?: 'none' | 'log' | 'log1p' | 'ln' | 'ln1p' | 'square' | 'sqrt' | 'reciprocal';
 };
 
-export type Boosters<O extends XataRecord> = Values<{
+export type Boosters<O> = Values<{
   [K in SelectableColumn<O>]: NonNullable<ValueAtColumn<O, K>> extends Date
     ? {
         dateBooster: {

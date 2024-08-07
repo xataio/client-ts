@@ -158,30 +158,24 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
         if (!parseResults.success) {
           throw new Error('Failed to parse CSV file');
         }
-        const batchRows = () => {
-          if (this.#pgrollEnabled) {
-            const res = parseResults.data.map(({ data }) => {
-              const formattedRow: { [k: string]: any } = {};
-              const keys = Object.keys(data);
-              for (const key of keys) {
-                if (INTERNAL_COLUMNS_PGROLL.includes(key) && key !== 'xata_id') continue;
-                formattedRow[key] = data[key];
-              }
-              return formattedRow;
-            });
-            return res;
-          } else {
-            return parseResults.data.map(({ data }) => data);
+        const batchRows = parseResults.data.map(({ data }) => {
+          const formattedRow: { [k: string]: any } = {};
+          const keys = Object.keys(data);
+          for (const key of keys) {
+            if (INTERNAL_COLUMNS_PGROLL.includes(key) && key !== 'xata_id') continue;
+            formattedRow[key] = data[key];
           }
-        };
+          return formattedRow;
+        });
+
         const importResult = await xata.import.importBatch(
           { workspace, region, database, branch },
           {
-            columns: this.#pgrollEnabled
-              ? parseResults.columns.filter(({ name }) => name === 'xata_id' || !INTERNAL_COLUMNS_PGROLL.includes(name))
-              : parseResults.columns,
+            columns: parseResults.columns.filter(
+              ({ name }) => name === 'xata_id' || !INTERNAL_COLUMNS_PGROLL.includes(name)
+            ),
             table,
-            batchRows: batchRows()
+            batchRows
           }
         );
         await xata.import.importFiles(
@@ -246,6 +240,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.parseDatabase();
     const { schema: existingSchema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
+
     const newSchema = {
       tables: [
         ...existingSchema.tables.filter((t) => t.name !== table),
