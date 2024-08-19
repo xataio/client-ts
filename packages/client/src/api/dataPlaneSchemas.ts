@@ -102,6 +102,7 @@ export type ListClusterBranchesResponse = {
 export type ExtensionDetails = {
   name: string;
   description: string;
+  builtIn: boolean;
   status: 'installed' | 'not_installed';
   version: string;
 };
