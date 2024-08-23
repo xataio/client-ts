@@ -288,6 +288,10 @@ export type MaintenanceConfig = {
  */
 export type ClusterConfiguration = {
   engineVersion: string;
+  /**
+   * @default aurora
+   */
+  engineType?: 'aurora' | 'rds';
   instanceType: string;
   /**
    * @format int64
