@@ -374,6 +374,7 @@ export type MaintenanceConfigResponse = {
  */
 export type ClusterConfigurationResponse = {
   engineVersion: string;
+  engineType: 'aurora' | 'rds';
   instanceType: string;
   /**
    * @format int64
