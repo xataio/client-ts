@@ -286,6 +286,30 @@ export type MaintenanceConfig = {
 /**
  * @x-internal true
  */
+export type StorageConfig = {
+  /**
+   * @default gp3
+   */
+  storageType: 'gp3' | 'io1' | 'io2';
+  /**
+   * @format int64
+   * @default 50
+   * @maximum 65536
+   * @minimum 20
+   */
+  allocatedStorageGB?: number;
+  /**
+   * @format int64
+   * @default 3000
+   * @maximum 256000
+   * @minimum 1000
+   */
+  provisionedIOPS?: number;
+};
+
+/**
+ * @x-internal true
+ */
 export type ClusterConfiguration = {
   engineVersion: string;
   /**
@@ -310,6 +334,7 @@ export type ClusterConfiguration = {
   deletionProtection?: boolean;
   autoscaling?: AutoscalingConfig;
   maintenance?: MaintenanceConfig;
+  storage?: StorageConfig;
 };
 
 /**
@@ -372,6 +397,30 @@ export type MaintenanceConfigResponse = {
 /**
  * @x-internal true
  */
+export type StorageConfigResponse = {
+  /**
+   * @default gp3
+   */
+  storageType: 'gp3' | 'io1' | 'io2';
+  /**
+   * @format int64
+   * @default 50
+   * @maximum 65536
+   * @minimum 20
+   */
+  allocatedStorageGB?: number;
+  /**
+   * @format int64
+   * @default 3000
+   * @maximum 256000
+   * @minimum 1000
+   */
+  provisionedIOPS?: number;
+};
+
+/**
+ * @x-internal true
+ */
 export type ClusterConfigurationResponse = {
   engineVersion: string;
   engineType: 'aurora' | 'rds';
@@ -390,6 +439,7 @@ export type ClusterConfigurationResponse = {
   deletionProtection: boolean;
   autoscaling?: AutoscalingConfigResponse;
   maintenance: MaintenanceConfigResponse;
+  storage?: StorageConfigResponse;
 };
 
 /**
