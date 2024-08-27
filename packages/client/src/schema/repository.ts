@@ -970,6 +970,25 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
     };
   }
 
+  async count(filter?: Filter<ObjectType>): Promise<number> {
+    return this.#trace('count', async () => {
+      let statement = this.#db.selectFrom(this.#table);
+
+      const columnData = this.#schema?.tables.find((table) => table.name === this.#table)?.columns ?? [];
+
+      if (filter) {
+        // @ts-expect-error
+        statement = statement.where((eb) =>
+          filterToKysely({ value: filter, path: [] })(eb, columnData as Schemas.Column[])
+        );
+      }
+
+      const response = await statement.select((eb) => eb.fn.countAll().as('count')).execute();
+      // TODO(pgux) deal with string or big int
+      return response[0].count as number;
+    });
+  }
+
   async create<K extends SelectableColumn<ObjectType>>(
     object: NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>,
     columns: K[]

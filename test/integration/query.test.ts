@@ -1001,4 +1001,16 @@ describe('integration tests', () => {
     const hydrated = JSON.parse(string);
     expect(hydrated).toHaveLength(1);
   });
+
+  test('count with no filter', async () => {
+    const count = await xata.db.teams.count();
+    expect(count).toEqual(3);
+  });
+
+  test('count with filter', async () => {
+    const count = await xata.db.teams.count({
+      name: 'Team fruits'
+    });
+    expect(count).toEqual(1);
+  });
 });

@@ -533,6 +533,10 @@ export class Query<
     return this.#repository.summarizeTable(query, summaries, summariesFilter as Schemas.FilterExpression) as any;
   }
 
+  async count(filter?: Filter<ObjectType>): Promise<number> {
+    return await this.#repository.count(filter);
+  }
+
   /**
    * Retrieve next page of records
    *
