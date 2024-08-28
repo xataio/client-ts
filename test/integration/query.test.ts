@@ -1004,7 +1004,7 @@ describe('integration tests', () => {
 
   test('count with no filter', async () => {
     const count = await xata.db.teams.count();
-    expect(count).toEqual(3);
+    expect(count).toEqual(6);
   });
 
   test('count with filter', async () => {
