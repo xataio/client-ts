@@ -1495,6 +1495,12 @@ export type CreateDatabaseRequestBody = {
    */
   region: string;
   /**
+   * Enable postgres access for this database
+   *
+   * @default false
+   */
+  postgresEnabled?: boolean;
+  /**
    * The dedicated cluster where branches from this database will be created. Defaults to 'shared-cluster'.
    *
    * @minLength 1
