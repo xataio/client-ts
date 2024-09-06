@@ -1,5 +1,13 @@
 # @xata.io/cli
 
+## 0.16.3
+
+### Patch Changes
+
+- [#1553](https://github.com/xataio/client-ts/pull/1553) [`9b4a68e`](https://github.com/xataio/client-ts/commit/9b4a68ebe1eabb4e25d861442c722b45c064b5e8) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Do not prompt for update on pre release
+
+- [#1565](https://github.com/xataio/client-ts/pull/1565) [`fab22de`](https://github.com/xataio/client-ts/commit/fab22defa28d2c81545a99942f29c74d8ee16adf) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - Fix overriding client version to latest with Postgres branches if next is already a dependency
+
 ## 0.16.2
 
 ### Patch Changes
