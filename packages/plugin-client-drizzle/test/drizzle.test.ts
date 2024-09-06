@@ -82,8 +82,7 @@ describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({
   beforeAll(async () => {
     await api.databases.createDatabase({
       pathParams: { workspaceId: workspace, dbName },
-      body: { region, branchName: 'main' },
-      headers: { 'X-Features': 'feat-pgroll-migrations=1' }
+      body: { region, branchName: 'main', postgresEnabled: true }
     });
 
     await waitForReplication(dbName);
