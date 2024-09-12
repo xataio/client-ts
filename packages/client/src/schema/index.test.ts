@@ -73,8 +73,8 @@ describe('client options', () => {
 
     const result = {
       url: fetch.mock.calls[0][0],
-      method: fetch.mock.calls[0][1]?.method,
-      body: fetch.mock.calls[0][1]?.body
+      method: (fetch.mock.calls[0][1] as any)?.method,
+      body: (fetch.mock.calls[0][1] as any)?.body
     };
 
     expect(result).toMatchInlineSnapshot(`
@@ -105,8 +105,8 @@ describe('request', () => {
 
     const result = {
       url: fetch.mock.calls[0][0],
-      method: fetch.mock.calls[0][1]?.method,
-      body: fetch.mock.calls[0][1]?.body
+      method: (fetch.mock.calls[0][1] as any)?.method,
+      body: (fetch.mock.calls[0][1] as any)?.body
     };
 
     expect(result).toMatchInlineSnapshot(`
@@ -135,8 +135,8 @@ describe('request', () => {
 
     const result = {
       url: fetch.mock.calls[0][0],
-      method: fetch.mock.calls[0][1]?.method,
-      body: fetch.mock.calls[0][1]?.body
+      method: (fetch.mock.calls[0][1] as any)?.method,
+      body: (fetch.mock.calls[0][1] as any)?.body
     };
 
     expect(result).toMatchInlineSnapshot(`
