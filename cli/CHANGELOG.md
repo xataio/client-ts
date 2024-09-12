@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.16.4
+
+### Patch Changes
+
+- [#1572](https://github.com/xataio/client-ts/pull/1572) [`6fd71f1`](https://github.com/xataio/client-ts/commit/6fd71f1fd8f50c79f60cedfefd61115a44c4f91c) Thanks [@SferaDev](https://github.com/SferaDev)! - Tag new release
+
 ## 0.16.3
 
 ### Patch Changes
