@@ -61,7 +61,7 @@ const generators: Record<string, () => string> = {
   company: () => faker.company.name(),
   firstName: () => faker.person.firstName(),
   lastName: () => faker.person.lastName(),
-  phone: () => faker.phone.number('501-###-###')
+  phone: () => faker.phone.number({ style: 'international' })
 };
 
 function randomString(columnName: string) {
