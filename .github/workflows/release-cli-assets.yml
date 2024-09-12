@@ -190,6 +190,8 @@ jobs:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
           OS_OVERRIDE: windows-latest
+          XATA_WINDOWS_SIGNING_PASS: ${{ secrets.WINDOWS_CERTIFICATE_SECRET }}
+
       - name: Upload CLI Assets to GitHub Releases (Windows only)
         run: pnpm run release:cli:upload:gh
         if: matrix.os == 'ubuntu-latest'
