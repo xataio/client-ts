@@ -1,5 +1,5 @@
 ---
-@xata.io/cli: patch
+"@xata.io/cli": patch
 ---
 
 Tag new release
