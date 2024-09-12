@@ -319,10 +319,6 @@ export type ClusterConfiguration = {
   instanceType: string;
   /**
    * @format int64
-   */
-  replicas?: number;
-  /**
-   * @format int64
    * @default 1
    * @maximum 3
    * @minimum 1
@@ -425,10 +421,6 @@ export type ClusterConfigurationResponse = {
   engineVersion: string;
   engineType: 'aurora' | 'rds';
   instanceType: string;
-  /**
-   * @format int64
-   */
-  replicas: number;
   /**
    * @format int64
    */
