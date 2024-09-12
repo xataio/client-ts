@@ -121,13 +121,13 @@ jobs:
         env:
           PUBLISHED_PACKAGES: ${{ inputs.publishedPackages }}
           MATRIX_OS: ${{ matrix.os }}
+          XATA_WINDOWS_SIGNING_PASS: ${{ secrets.WINDOWS_CERTIFICATE_SECRET }}
 
       - name: Upload CLI Assets to GitHub Releases
         run: pnpm run release:cli:upload:gh
         env:
           MATRIX_OS: ${{ matrix.os }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          XATA_WINDOWS_SIGNING_PASS: ${{ secrets.WINDOWS_CERTIFICATE_SECRET }}
 
       - name: Debian cert
         if: matrix.os == 'ubuntu-latest'
