@@ -11,7 +11,7 @@ import {
   waitForMigrationToFinish,
   xataColumnTypeToPgRollComment
 } from '../../migrations/pgroll.js';
-import { compareSchemas } from '../../utils/compareSchema.js';
+import { compareSchemas, inferOldSchemaToNew } from '../../utils/compareSchema.js';
 import keyBy from 'lodash.keyby';
 
 const ERROR_CONSOLE_LOG_LIMIT = 200;
@@ -30,7 +30,7 @@ const bufferEncodings: BufferEncoding[] = [
   'hex'
 ];
 
-const INTERNAL_COLUMNS_PGROLL = ['xata_id', 'xata_createdat', 'xata_updatedat', 'xata_version'];
+export const INTERNAL_COLUMNS_PGROLL = ['xata_id', 'xata_createdat', 'xata_updatedat', 'xata_version'];
 
 export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
@@ -246,6 +246,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.parseDatabase();
     const { schema: existingSchema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
+
     const newSchema = {
       tables: [
         ...existingSchema.tables.filter((t) => t.name !== table),
@@ -254,9 +255,9 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     };
 
     if (this.#pgrollEnabled) {
-      const { edits } = compareSchemas(
-        {},
-        {
+      const { edits } = compareSchemas({
+        source: inferOldSchemaToNew({ schema: existingSchema }),
+        target: {
           tables: {
             [table]: {
               name: table,
@@ -279,7 +280,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
             }
           }
         }
-      );
+      });
 
       if (edits.length > 0) {
         const destructiveOperations = edits
