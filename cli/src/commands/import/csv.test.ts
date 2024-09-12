@@ -134,6 +134,39 @@ describe('compare schemas', () => {
     });
     expect(edits).toMatchInlineSnapshot(compareSnapshot);
   });
+  test('returns an array with create table if table does not already exist', () => {
+    const { edits } = compareSchemas({ source: {}, target: targetSchemaDefault });
+    expect(edits).toMatchInlineSnapshot(`
+      [
+        {
+          "create_table": {
+            "columns": [
+              {
+                "comment": "",
+                "default": undefined,
+                "name": "id",
+                "nullable": false,
+                "references": undefined,
+                "type": "integer",
+                "unique": true,
+              },
+              {
+                "comment": "",
+                "default": undefined,
+                "name": "newCol",
+                "nullable": false,
+                "references": undefined,
+                "type": "text",
+                "unique": false,
+              },
+            ],
+            "comment": "",
+            "name": "one",
+          },
+        },
+      ]
+    `);
+  });
   test('returns an array with add_column for new columns', () => {
     const { edits } = compareSchemas({ source: sourceSchemaDefault, target: targetSchemaDefault });
     expect(edits).toMatchInlineSnapshot(compareSnapshot);
