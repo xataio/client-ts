@@ -8,11 +8,9 @@ import { enumFlag } from '../../utils/oclif.js';
 import {
   getBranchDetailsWithPgRoll,
   isBranchPgRollEnabled,
-  waitForMigrationToFinish,
-  xataColumnTypeToPgRollComment
+  waitForMigrationToFinish
 } from '../../migrations/pgroll.js';
 import { compareSchemas, inferOldSchemaToNew } from '../../utils/compareSchema.js';
-import keyBy from 'lodash.keyby';
 
 const ERROR_CONSOLE_LOG_LIMIT = 200;
 const ERROR_LOG_FILE = 'errors.log';
@@ -255,33 +253,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     };
 
     if (this.#pgrollEnabled) {
+      const sourceSchema = inferOldSchemaToNew({ schema: existingSchema, branchName: branch });
+      const targetSchema = inferOldSchemaToNew({ schema: newSchema, branchName: branch });
       const { edits } = compareSchemas({
-        source: inferOldSchemaToNew({ schema: existingSchema }),
-        target: {
-          tables: {
-            [table]: {
-              name: table,
-              xataCompatible: false,
-              columns: keyBy(
-                columns
-                  .filter((c) => !INTERNAL_COLUMNS_PGROLL.includes(c.name as any))
-                  .map((c) => {
-                    return {
-                      name: c.name,
-                      type: c.type,
-                      nullable: c.notNull !== false,
-                      default: c.defaultValue ?? null,
-                      unique: c.unique,
-                      comment: xataColumnTypeToPgRollComment(c)
-                    };
-                  }),
-                'name'
-              )
-            }
-          }
-        }
+        source: sourceSchema,
+        target: targetSchema
       });
-
       if (edits.length > 0) {
         const destructiveOperations = edits
           .map((op) => {
@@ -325,6 +302,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
           pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
           body: { operations: edits, adaptTables: true }
         });
+
         await waitForMigrationToFinish(xata.api, workspace, region, database, branch, jobID);
       }
     } else {

@@ -59,45 +59,6 @@ export function compareSchemas({
     for (const column of deletedColumns) {
       edits.push({ drop_column: { table, column } });
     }
-
-    // Compare column properties
-    // for (const column of targetColumns) {
-    //   const sourceProps = source.tables?.[table]?.columns?.[column] ?? {};
-    //   const targetProps = target.tables?.[table]?.columns?.[column] ?? {};
-
-    //   if (sourceProps.type !== targetProps.type) {
-    //     edits.push({
-    //       alter_column: {
-    //         table,
-    //         column,
-    //         type: targetProps.type,
-    //         references:
-    //           targetProps?.type === 'link' && targetProps?.name
-    //             ? generateLinkReference({
-    //                 column: targetProps.name,
-    //                 table: tableNameFromLinkComment(targetProps?.comment ?? '') ?? ''
-    //               })
-    //             : undefined
-    //       }
-    //     });
-    //   }
-
-    //   if (sourceProps.nullable !== targetProps.nullable) {
-    //     edits.push({ alter_column: { table, column, nullable: targetProps.nullable } });
-    //   }
-
-    //   if (sourceProps.unique !== targetProps.unique) {
-    //     edits.push({
-    //       alter_column: {
-    //         table,
-    //         column,
-    //         unique: {
-    //           name: `${table}_${column}_unique`
-    //         }
-    //       }
-    //     });
-    //   }
-    // }
   }
 
   // Delete tables
@@ -112,31 +73,34 @@ export function compareSchemas({
       create_table: {
         name: table,
         comment: props.comment,
-        columns: Object.entries(props.columns ?? {}).map(([name, column]) => {
-          return {
-            name,
-            type: xataColumnTypeToPgRoll(column?.type as any),
-            comment: column?.comment,
-            nullable: !(column?.nullable === false),
-            unique: column?.unique,
-            default: column?.default ?? undefined,
-            references:
-              column?.type === 'link' && column?.name
-                ? generateLinkReference({
-                    column: column?.name,
-                    table: tableNameFromLinkComment(column?.comment ?? '') ?? ''
-                  })
-                : undefined
-          };
-        })
+        columns: Object.entries(props.columns ?? {})
+          .filter(([name, _]) => !INTERNAL_COLUMNS_PGROLL.includes(name))
+          .map(([name, column]) => {
+            return {
+              name,
+              type: xataColumnTypeToPgRoll(column?.type as any),
+              comment: column?.comment,
+              nullable: !(column?.nullable === false),
+              unique: column?.unique,
+              default: column?.default ?? undefined,
+              references:
+                column?.type === 'link' && column?.name
+                  ? generateLinkReference({
+                      column: column?.name,
+                      table: tableNameFromLinkComment(column?.comment ?? '') ?? ''
+                    })
+                  : undefined
+            };
+          })
       }
     });
   }
-
   return { edits };
 }
 
-export const inferOldSchemaToNew = (oldSchema: Schemas.DBBranch): Schemas.BranchSchema => {
+export const inferOldSchemaToNew = (
+  oldSchema: Pick<Schemas.DBBranch, 'schema' | 'branchName'>
+): Schemas.BranchSchema => {
   const schema: Schemas.BranchSchema = {
     name: oldSchema.branchName,
     tables: Object.fromEntries(
