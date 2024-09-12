@@ -3,28 +3,34 @@ import { splitCommas } from './csv';
 import { compareSchemas } from '../../utils/compareSchema';
 import { Schemas } from '@xata.io/client';
 
+const defaultTableInfo = {
+  name: 'one',
+  xataCompatible: true,
+  comment: '',
+  primaryKey: ['id'],
+  uniqueConstraints: {},
+  checkConstraints: {},
+  foreignKeys: {},
+  indexes: {},
+  oid: ''
+};
+const sharedIdCol = {
+  id: {
+    name: 'id',
+    type: 'integer',
+    comment: '',
+    nullable: false,
+    unique: true,
+    default: null
+  }
+};
 const sourceSchemaDefault: Schemas.BranchSchema = {
   name: 'main',
   tables: {
     one: {
-      name: 'one',
-      xataCompatible: true,
-      comment: '',
-      primaryKey: ['id'],
-      uniqueConstraints: {},
-      checkConstraints: {},
-      foreignKeys: {},
-      indexes: {},
-      oid: '',
+      ...defaultTableInfo,
       columns: {
-        id: {
-          name: 'id',
-          type: 'integer',
-          comment: '',
-          nullable: false,
-          unique: true,
-          default: null
-        },
+        ...sharedIdCol,
         colToDelete: {
           name: 'colToDelete',
           type: 'text',
@@ -42,24 +48,9 @@ const targetSchemaDefault: Schemas.BranchSchema = {
   name: 'main',
   tables: {
     one: {
-      name: 'one',
-      xataCompatible: true,
-      comment: '',
-      primaryKey: ['id'],
-      uniqueConstraints: {},
-      checkConstraints: {},
-      foreignKeys: {},
-      indexes: {},
-      oid: '',
+      ...defaultTableInfo,
       columns: {
-        id: {
-          name: 'id',
-          type: 'integer',
-          comment: '',
-          nullable: false,
-          unique: true,
-          default: null
-        },
+        ...sharedIdCol,
         newCol: {
           name: 'newCol',
           type: 'text',
