@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.16.5
+
+### Patch Changes
+
+- [#1577](https://github.com/xataio/client-ts/pull/1577) [`8584cdc`](https://github.com/xataio/client-ts/commit/8584cdcedaeb7029e41c6f28517347a447991fad) Thanks [@SferaDev](https://github.com/SferaDev)! - Updates to windows installer
+
 ## 0.16.4
 
 ### Patch Changes
