@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.16.6
+
+### Patch Changes
+
+- [#1579](https://github.com/xataio/client-ts/pull/1579) [`80188f9`](https://github.com/xataio/client-ts/commit/80188f92bc31d1c0620cab78867d63c388925f36) Thanks [@SferaDev](https://github.com/SferaDev)! - Install osslsigncode
+
 ## 0.16.5
 
 ### Patch Changes
