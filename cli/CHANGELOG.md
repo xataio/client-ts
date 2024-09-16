@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.16.7
+
+### Patch Changes
+
+- [#1582](https://github.com/xataio/client-ts/pull/1582) [`7b28297`](https://github.com/xataio/client-ts/commit/7b282975a48c95fb342ea4c6f7ab85a66710b162) Thanks [@SferaDev](https://github.com/SferaDev)! - Add windows binaries to release channel
+
 ## 0.16.6
 
 ### Patch Changes
