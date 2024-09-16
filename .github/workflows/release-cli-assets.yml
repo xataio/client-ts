@@ -106,7 +106,7 @@ jobs:
           XATA_WINDOWS_CERTIFICATE_KEY: ${{ secrets.WINDOWS_CERTIFICATE_KEY }}
         if: matrix.os == 'ubuntu-latest'
         run: |
-          echo -n `$XATA_WINDOWS_CERTIFICATE_KEY` >> ~/xata.key
+          echo -n $XATA_WINDOWS_CERTIFICATE_KEY | base64 --decode -o ~/xata.key
 
       - name: Configure AWS Credentials for production
         uses: aws-actions/configure-aws-credentials@v4
