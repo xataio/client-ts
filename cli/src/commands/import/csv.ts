@@ -8,11 +8,9 @@ import { enumFlag } from '../../utils/oclif.js';
 import {
   getBranchDetailsWithPgRoll,
   isBranchPgRollEnabled,
-  waitForMigrationToFinish,
-  xataColumnTypeToPgRollComment
+  waitForMigrationToFinish
 } from '../../migrations/pgroll.js';
-import { compareSchemas } from '../../utils/compareSchema.js';
-import keyBy from 'lodash.keyby';
+import { compareSchemas, inferOldSchemaToNew } from '../../utils/compareSchema.js';
 
 const ERROR_CONSOLE_LOG_LIMIT = 200;
 const ERROR_LOG_FILE = 'errors.log';
@@ -30,7 +28,7 @@ const bufferEncodings: BufferEncoding[] = [
   'hex'
 ];
 
-const INTERNAL_COLUMNS_PGROLL = ['xata_id', 'xata_createdat', 'xata_updatedat', 'xata_version'];
+export const INTERNAL_COLUMNS_PGROLL = ['xata_id', 'xata_createdat', 'xata_updatedat', 'xata_version'];
 
 export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
   static description = 'Import a CSV file';
@@ -246,6 +244,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     const xata = await this.getXataClient();
     const { workspace, region, database, branch } = await this.parseDatabase();
     const { schema: existingSchema } = await getBranchDetailsWithPgRoll(xata, { workspace, region, database, branch });
+
     const newSchema = {
       tables: [
         ...existingSchema.tables.filter((t) => t.name !== table),
@@ -254,33 +253,12 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
     };
 
     if (this.#pgrollEnabled) {
-      const { edits } = compareSchemas(
-        {},
-        {
-          tables: {
-            [table]: {
-              name: table,
-              xataCompatible: false,
-              columns: keyBy(
-                columns
-                  .filter((c) => !INTERNAL_COLUMNS_PGROLL.includes(c.name as any))
-                  .map((c) => {
-                    return {
-                      name: c.name,
-                      type: c.type,
-                      nullable: c.notNull !== false,
-                      default: c.defaultValue ?? null,
-                      unique: c.unique,
-                      comment: xataColumnTypeToPgRollComment(c)
-                    };
-                  }),
-                'name'
-              )
-            }
-          }
-        }
-      );
-
+      const sourceSchema = inferOldSchemaToNew({ schema: existingSchema, branchName: branch });
+      const targetSchema = inferOldSchemaToNew({ schema: newSchema, branchName: branch });
+      const { edits } = compareSchemas({
+        source: sourceSchema,
+        target: targetSchema
+      });
       if (edits.length > 0) {
         const destructiveOperations = edits
           .map((op) => {
@@ -324,6 +302,7 @@ export default class ImportCSV extends BaseCommand<typeof ImportCSV> {
           pathParams: { workspace, region, dbBranchName: `${database}:${branch}` },
           body: { operations: edits, adaptTables: true }
         });
+
         await waitForMigrationToFinish(xata.api, workspace, region, database, branch, jobID);
       }
     } else {
