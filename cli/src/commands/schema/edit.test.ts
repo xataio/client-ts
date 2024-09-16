@@ -1,5 +1,5 @@
-import { beforeEach, expect, test, describe } from 'vitest';
 import { PgRollMigration } from '@xata.io/pgroll';
+import { beforeEach, describe, expect, test } from 'vitest';
 import EditSchema, {
   AddColumnPayload,
   AddTablePayload,

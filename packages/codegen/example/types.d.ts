@@ -72,12 +72,7 @@ declare const schema: {
           };
         }
       ];
-      readonly revLinks: readonly [
-        {
-          readonly table: 'users';
-          readonly column: 'team';
-        }
-      ];
+      readonly primaryKey: readonly ['xata_id'];
     },
     {
       readonly name: 'users';
@@ -182,12 +177,7 @@ declare const schema: {
           };
         }
       ];
-      readonly revLinks: readonly [
-        {
-          readonly table: 'teams';
-          readonly column: 'owner';
-        }
-      ];
+      readonly primaryKey: readonly ['xata_id'];
     },
     {
       readonly name: 'pets';
@@ -225,12 +215,7 @@ declare const schema: {
           readonly type: 'int';
         }
       ];
-      readonly revLinks: readonly [
-        {
-          readonly table: 'users';
-          readonly column: 'pet';
-        }
-      ];
+      readonly primaryKey: readonly ['xata_id'];
     }
   ];
 };

@@ -25,7 +25,7 @@ const schema = {
         { name: "config", type: "json" },
         { name: "owner", type: "link", link: { table: "users" } },
       ],
-      revLinks: [{ table: "users", column: "team" }],
+      primaryKey: ["xata_id"],
     },
     {
       name: "users",
@@ -56,7 +56,7 @@ const schema = {
         { name: "account_value", type: "int" },
         { name: "vector", type: "vector", vector: { dimension: 4 } },
       ],
-      revLinks: [{ table: "teams", column: "owner" }],
+      primaryKey: ["xata_id"],
     },
     {
       name: "pets",
@@ -69,18 +69,8 @@ const schema = {
         { name: "type", type: "string" },
         { name: "num_legs", type: "int" },
       ],
-      revLinks: [{ table: "users", column: "pet" }],
-    },
-    {
-      name: "numeric",
       primaryKey: ["xata_id"],
-      columns: [
-        { name: "xata_id", type: "int", notNull: true },
-        { name: "xata_version", type: "int", notNull: true },
-        { name: "xata_createdat", type: "datetime", notNull: true },
-        { name: "xata_updatedat", type: "datetime", notNull: true }
-      ]
-    }
+    },
   ],
 };
 /** @type { import('../../client/src').ClientConstructor<{}> } */

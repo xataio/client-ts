@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/drizzle",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -30,8 +30,8 @@
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
-    "@types/pg": "^8.11.6",
-    "drizzle-orm": "^0.31.2",
+    "@types/pg": "^8.11.8",
+    "drizzle-orm": "^0.33.0",
     "pg": "^8.12.0"
   },
   "peerDependencies": {

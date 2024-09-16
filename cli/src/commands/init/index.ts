@@ -386,7 +386,7 @@ export default class Init extends BaseCommand<typeof Init> {
   async installSdk(packageManager: PackageManager, branchDetails: Schemas.DBBranch) {
     if (isBranchPgRollEnabled(branchDetails)) {
       const sdkVersion = await this.getSdkVersion();
-      if (!sdkVersion) {
+      if (!sdkVersion || sdkVersion?.includes('next')) {
         await this.installPackage(packageManager, '@xata.io/client@next');
         return;
       } else if (!sdkVersion?.includes('next')) {

@@ -2,7 +2,7 @@ import { ApiExtraProps, HostProvider } from './api';
 import { FilesPlugin, FilesPluginResult } from './files';
 import { XataPlugin, XataPluginOptions } from './plugins';
 import { DatabaseSchema, SchemaInference, SchemaPlugin, SchemaPluginResult } from './schema';
-import { TraceFunction, defaultTrace } from './schema/tracing';
+import { defaultTrace, TraceFunction } from './schema/tracing';
 import { SearchPlugin, SearchPluginResult } from './search';
 import { SQLPlugin, SQLPluginResult } from './sql';
 import { FetchImpl, getFetchImplementation } from './util/fetch';

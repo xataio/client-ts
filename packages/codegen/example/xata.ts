@@ -5,7 +5,6 @@ const schema = {
   tables: [
     {
       name: 'teams',
-      primaryKey: ['xata_id'],
       columns: [
         { name: 'xata_id', type: 'string', notNull: true },
         { name: 'xata_version', type: 'int', notNull: true },
@@ -23,11 +22,10 @@ const schema = {
         { name: 'config', type: 'json' },
         { name: 'owner', type: 'link', link: { table: 'users' } }
       ],
-      revLinks: [{ table: 'users', column: 'team' }]
+      primaryKey: ['xata_id']
     },
     {
       name: 'users',
-      primaryKey: ['xata_id'],
       columns: [
         { name: 'xata_id', type: 'string', notNull: true },
         { name: 'xata_version', type: 'int', notNull: true },
@@ -55,11 +53,10 @@ const schema = {
         { name: 'account_value', type: 'int' },
         { name: 'vector', type: 'vector', vector: { dimension: 4 } }
       ],
-      revLinks: [{ table: 'teams', column: 'owner' }]
+      primaryKey: ['xata_id']
     },
     {
       name: 'pets',
-      primaryKey: [],
       columns: [
         { name: 'xata_id', type: 'string', notNull: true },
         { name: 'xata_version', type: 'int', notNull: true },
@@ -69,41 +66,17 @@ const schema = {
         { name: 'type', type: 'string' },
         { name: 'num_legs', type: 'int' }
       ],
-      revLinks: [{ table: 'users', column: 'pet' }]
-    },
-    {
-      name: 'numeric',
-      primaryKey: ['xata_id'],
-      columns: [
-        { name: 'xata_id', type: 'int', notNull: true },
-        { name: 'xata_version', type: 'int', notNull: true },
-        { name: 'xata_createdat', type: 'datetime', notNull: true },
-        { name: 'xata_updatedat', type: 'datetime', notNull: true }
-      ]
+      primaryKey: ['xata_id']
     }
   ]
 } as const;
 
 export type SchemaTables = typeof schema.tables;
 export type InferredTypes = SchemaInference<SchemaTables>;
-
-export type Teams = InferredTypes['teams'];
-export type TeamsRecord = Teams & XataRecord;
-
-export type Users = InferredTypes['users'];
-export type UsersRecord = Users & XataRecord;
-
-export type Pets = InferredTypes['pets'];
-export type PetsRecord = Pets & XataRecord;
-
-export type Numeric = InferredTypes['numeric'];
-export type NumericRecord = Numeric & XataRecord;
-
 export type DatabaseSchema = {
   teams: TeamsRecord;
   users: UsersRecord;
   pets: PetsRecord;
-  numeric: NumericRecord;
 };
 
 const DatabaseClient = buildClient();
@@ -122,3 +95,12 @@ export class XataClient extends DatabaseClient<typeof schema> {
     );
   }
 }
+
+export type Teams = InferredTypes['teams'];
+export type TeamsRecord = Teams & XataRecord;
+
+export type Users = InferredTypes['users'];
+export type UsersRecord = Users & XataRecord;
+
+export type Pets = InferredTypes['pets'];
+export type PetsRecord = Pets & XataRecord;

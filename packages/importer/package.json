@@ -1,6 +1,6 @@
 {
   "name": "@xata.io/importer",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Importer for xata.io",
   "type": "module",
   "main": "./dist/index.cjs",

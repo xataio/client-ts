@@ -44,9 +44,6 @@ export default class Codegen extends BaseCommand<typeof Codegen> {
     }),
     'javascript-output-target': Flags.string({
       description: 'The output target for the generated javascript code.'
-    }),
-    'worker-id': Flags.string({
-      description: 'Xata worker deployment id'
     })
   };
 

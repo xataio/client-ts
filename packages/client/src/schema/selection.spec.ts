@@ -1,15 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { expect, test } from 'vitest';
+import { test } from 'vitest';
+import { XataFile } from './files';
 import { XataRecord } from './record';
 import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
-import { XataFile } from './files';
-import { Dictionary } from '../util/types';
-import path from 'path';
-import { AliasedRawBuilder, ExpressionBuilder, RawBuilder, SelectExpression, SelectQueryBuilder, sql } from 'kysely';
-import { KyselyPlugin } from '../kysely';
-import { Model } from '@xata.io/kysely';
-import { jsonObjectFrom } from 'kysely/helpers/postgres';
 
 interface Team {
   xata_id: string;

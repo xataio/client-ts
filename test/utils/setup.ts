@@ -80,8 +80,7 @@ export async function setUpTestEnvironment(
 
   const { databaseName: database } = await api.databases.createDatabase({
     pathParams: { workspaceId: workspace, dbName: `sdk-integration-test-${prefix}-${id}` },
-    body: { region, defaultClusterID: clusterId },
-    headers: { 'X-Features': 'feat-pgroll-migrations=1' }
+    body: { region, defaultClusterID: clusterId, postgresEnabled: true }
   });
 
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace).replace('{region}', region);

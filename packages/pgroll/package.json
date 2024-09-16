@@ -31,10 +31,10 @@
   "homepage": "https://github.com/xataio/client-ts",
   "dependencies": {
     "zod": "^3.23.8",
-    "zod-to-json-schema": "^3.23.1"
+    "zod-to-json-schema": "^3.23.2"
   },
   "devDependencies": {
     "ts-morph": "^23.0.0",
-    "tsx": "^4.16.2"
+    "tsx": "^4.19.0"
   }
 }

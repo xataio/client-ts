@@ -533,6 +533,10 @@ export class Query<
     return this.#repository.summarizeTable(query, summaries, summariesFilter as Schemas.FilterExpression) as any;
   }
 
+  /**
+   * Count the number of records that match the query.
+   * @returns The number of records that match the query.
+   */
   async count(filter?: Filter<ObjectType>): Promise<number> {
     return await this.#repository.count(filter);
   }

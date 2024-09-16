@@ -16,6 +16,9 @@ export const check = async ({ pkg, version, compat }: { pkg: Package; version: s
   const compatibleRange = compat[pkg].compatibility.map((v) => v.range).join('||');
   const semverCompatible = semver.satisfies(currentVersion, compatibleRange);
 
+  // Preview deployment or 0.0.0-next.version
+  if (semver.prerelease(version)) return { warn: null, error: null };
+
   return {
     warn: updateAvailable
       ? `✨ A newer version of ${pkg} is now available: ${compat[pkg].latest}. You are currently using version: ${currentVersion}`

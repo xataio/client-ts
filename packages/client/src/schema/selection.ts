@@ -91,21 +91,21 @@ export type SelectedPick<O, Key extends SelectableColumnWithObjectNotation<O>[]>
   >;
 
 // Public: Utility type to get the value of a column at a given path
-export type ValueAtColumn<Object, Key, RecursivePath extends any[] = []> = RecursivePath['length'] extends MAX_RECURSION
+export type ValueAtColumn<Obj, Key, RecursivePath extends any[] = []> = RecursivePath['length'] extends MAX_RECURSION
   ? never
   : Key extends '*'
-  ? Values<Object> // Alias for any property
-  : Key extends keyof Object
-  ? Object[Key] // Properties of the current level
+  ? Values<Obj> // Alias for any property
+  : Key extends keyof Obj
+  ? Obj[Key] // Properties of the current level
   : Key extends `${infer K}.${infer V}`
-  ? K extends keyof Object
+  ? K extends keyof Obj
     ? Values<
-        NonNullable<Object[K]> extends infer Item
+        NonNullable<Obj[K]> extends infer Item
           ? Item extends Record<string, any>
             ? V extends SelectableColumn<Item>
               ? { V: ValueAtColumn<Item, V, [...RecursivePath, Item]> }
               : never
-            : Object[K]
+            : Obj[K]
           : never
       >
     : never
