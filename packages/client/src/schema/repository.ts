@@ -1,3 +1,5 @@
+import { Cursor, decode } from '@xata.io/sql';
+import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
 import { DatabaseSchema, SchemaPluginResult } from '.';
 import {
   ApiExtraProps,
@@ -20,7 +22,6 @@ import {
 } from '../api';
 import { fetchSSERequest } from '../api/fetcher';
 import {
-  BranchSchema,
   FuzzinessExpression,
   HighlightExpression,
   PrefixExpression,
@@ -28,6 +29,7 @@ import {
   SearchPageConfig,
   TransactionOperation
 } from '../api/schemas';
+import { KyselyPlugin, KyselyPluginResult } from '../kysely';
 import { XataPluginOptions } from '../plugins';
 import { SearchXataRecord, TotalCount } from '../search';
 import { Boosters } from '../search/boosters';
@@ -40,6 +42,13 @@ import { AggregationExpression, AggregationResult } from './aggregate';
 import { AskOptions, AskResult } from './ask';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter, filterToKysely } from './filters';
+import {
+  NewEditableData,
+  NewEditableDataWithoutNumeric,
+  NewIdentifiable,
+  NewIdentifierKey,
+  NewIndentifierValue
+} from './identifiable';
 import { parseJson, stringifyJson } from './json';
 import {
   CursorNavigationDecoded,
@@ -61,17 +70,7 @@ import {
 import { ApiSortFilter, SortDirection, buildSortFilter, isSortFilterObject } from './sorting';
 import { SummarizeExpression } from './summarize';
 import { AttributeDictionary, TraceAttributes, TraceFunction, defaultTrace } from './tracing';
-import { DeleteQueryBuilder, InsertQueryBuilder, SelectQueryBuilder, UpdateQueryBuilder, sql } from 'kysely';
 import { BinaryOperatorExpression } from 'kysely/dist/cjs/parser/binary-operation-parser';
-import { Cursor, decode } from '@xata.io/sql';
-import { KyselyPlugin, KyselyPluginResult } from '../kysely';
-import {
-  NewEditableData,
-  NewEditableDataWithoutNumeric,
-  NewIdentifiable,
-  NewIdentifierKey,
-  NewIndentifierValue
-} from './identifiable';
 
 const BULK_OPERATION_MAX_SIZE = 1000;
 
