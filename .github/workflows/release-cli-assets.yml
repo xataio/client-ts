@@ -106,7 +106,7 @@ jobs:
           XATA_WINDOWS_CERTIFICATE_KEY: ${{ secrets.WINDOWS_CERTIFICATE_KEY }}
         if: matrix.os == 'ubuntu-latest'
         run: |
-          echo -n $XATA_WINDOWS_CERTIFICATE_KEY | base64 --decode -o ~/xata.key
+          echo -n $XATA_WINDOWS_CERTIFICATE_KEY | base64 --decode > ~/xata.key
 
       - name: Configure AWS Credentials for production
         uses: aws-actions/configure-aws-credentials@v4
@@ -130,7 +130,7 @@ jobs:
 
       - name: Debian cert
         if: matrix.os == 'ubuntu-latest'
-        working-directory: /home/runner/work/client-ts/client-ts/cli/dist/deb
+        working-directory: /home/runner/work/client-ts/client-ts/packages/cli/dist/deb
         run: |
           echo "$DEBIAN_GPG_KEY_PRIVATE" | gpg --import --batch --passphrase "$DEBIAN_GPG_KEY_PASS"
           gpg --digest-algo SHA512 --clearsign --pinentry-mode loopback --passphrase "$DEBIAN_GPG_KEY_PASS" -u $DEBIAN_GPG_KEY_ID -o InRelease Release 
@@ -139,8 +139,8 @@ jobs:
           echo "sha256 sums:"
           sha256sum *Release*
 
-          mkdir -p /home/runner/work/client-ts/client-ts/cli/dist/apt
-          echo "$DEBIAN_GPG_KEY_PUBLIC" > /home/runner/work/client-ts/client-ts/cli/dist/apt/release.key
+          mkdir -p /home/runner/work/client-ts/client-ts/packages/cli/dist/apt
+          echo "$DEBIAN_GPG_KEY_PUBLIC" > /home/runner/work/client-ts/client-ts/packages/cli/dist/apt/release.key
         env:
           DEBIAN_GPG_KEY_PRIVATE: ${{ secrets.DEBIAN_GPG_KEY_PRIVATE }}
           DEBIAN_GPG_KEY_PASS: ${{ secrets.DEBIAN_GPG_KEY_PASS }}
@@ -154,7 +154,7 @@ jobs:
 
       - name: Create SHA outputs macos
         if: matrix.os == 'macos-latest'
-        working-directory: ./cli/dist
+        working-directory: ./packages/cli/dist
         id: sha-macos
         run: |
           ls -l
@@ -166,7 +166,7 @@ jobs:
 
       - name: Create SHA outputs ubuntu
         if: matrix.os == 'ubuntu-latest'
-        working-directory: ./cli/dist
+        working-directory: ./packages/cli/dist
         id: sha-ubuntu
         run: |
           ls -l

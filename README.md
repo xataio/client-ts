@@ -9,7 +9,7 @@
 This is the repository where we develop:
 
 - The [Xata SDK and ORM](./packages/client/README.md)
-- The [Xata CLI](./cli/README.md)
+- The [Xata CLI](./packages/cli/README.md)
 
 There's also other packages that we use internally that might be of your interest:
 

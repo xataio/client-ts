@@ -1,5 +1,5 @@
 import { BaseCommand } from '../../base.js';
-import get from 'lodash.get';
+import { get } from 'lodash';
 import chalk from 'chalk';
 import { Args } from '@oclif/core';
 

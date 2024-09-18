@@ -2,7 +2,7 @@ import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base.js';
 import { getLocalMigrationFiles } from '../../migrations/files.js';
 import { buildMigrationDiff } from '../../utils/diff.js';
-import compact from 'lodash.compact';
+import { compact } from 'lodash';
 
 export default class Diff extends BaseCommand<typeof Diff> {
   static description = 'Compare two local or remote branches';
