@@ -1,5 +1,11 @@
 # @xata.io/cli
 
+## 0.16.10
+
+### Patch Changes
+
+- [#1593](https://github.com/xataio/client-ts/pull/1593) [`621e3e9`](https://github.com/xataio/client-ts/commit/621e3e91345c107d19d22133571728ea39ff432f) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - add ability to import new data to existing tables
+
 ## 0.16.9
 
 ### Patch Changes
