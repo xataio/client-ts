@@ -109,7 +109,7 @@
   ],
   "engines": {
     "node": "18.x",
-    "pnpm": "8.x"
+    "pnpm": "9.x"
   },
   "dependencies": {
     "@octokit/core": "^6.1.2",
@@ -117,7 +117,7 @@
     "@pnpm/read-project-manifest": "^6.0.8",
     "@pnpm/write-project-manifest": "^6.0.7"
   },
-  "packageManager": "pnpm@8.15.9",
+  "packageManager": "pnpm@9.10.0",
   "pnpm": {
     "overrides": {
       "bl@<0.9.5": ">=0.9.5",
