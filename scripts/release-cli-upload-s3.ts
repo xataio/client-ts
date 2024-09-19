@@ -10,7 +10,7 @@ async function main() {
 
   const operatingSystem = matrixToOclif(process.env.OS_OVERRIDE ?? process.env.MATRIX_OS);
 
-  const PATH_TO_CLI = process.cwd() + '/cli';
+  const PATH_TO_CLI = process.cwd() + '/packages/cli';
 
   const {
     manifest: { version }
