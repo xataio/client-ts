@@ -1,4 +1,4 @@
-import { isNil, omit } from 'lodash';
+import { isNil, omit } from 'lodash-es';
 import { Readable } from 'stream';
 import { describe, expect, test } from 'vitest';
 import { CsvResults, ParseCsvOptions, ParseCsvStreamBatchesOptions, ParseMeta, ParseResults } from '../src/types';

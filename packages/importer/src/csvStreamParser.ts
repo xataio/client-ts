@@ -1,4 +1,4 @@
-import { chunk as chunkArray } from 'lodash';
+import { chunk as chunkArray } from 'lodash-es';
 import PQueue from 'p-queue';
 import Papa, { Parser, ParseResult } from 'papaparse';
 import { metaToParseMeta, papaResultToJson, parseCsvOptionsToPapaOptions } from './parsers/csvParser';
