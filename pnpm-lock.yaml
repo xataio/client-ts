@@ -179,8 +179,8 @@ importers:
   packages/cli:
     dependencies:
       '@oclif/core':
-        specifier: ^4.0.22
-        version: 4.0.22
+        specifier: ^4.0.21
+        version: 4.0.21
       '@oclif/plugin-help':
         specifier: ^6.2.11
         version: 6.2.11
@@ -1686,7 +1686,7 @@ packages:
       '@babel/core': 7.25.2
       '@babel/helper-compilation-targets': 7.25.2
       '@babel/helper-plugin-utils': 7.24.8
-      debug: 4.3.6
+      debug: 4.3.7
       lodash.debounce: 4.0.8
       resolve: 1.22.6
     transitivePeerDependencies:
@@ -3084,7 +3084,7 @@ packages:
       '@babel/parser': 7.25.4
       '@babel/template': 7.25.0
       '@babel/types': 7.25.6
-      debug: 4.3.6
+      debug: 4.3.7
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -5303,9 +5303,9 @@ packages:
     engines: { node: '>=12.4.0' }
     dev: true
 
-  /@oclif/core@4.0.22:
+  /@oclif/core@4.0.21:
     resolution:
-      { integrity: sha512-aXM2O4g7f+kPNzhhOfqGOVRVYDxTVrH7Y720MuH0Twq5WHMxI4XwntnyBaRscoCPG6FWhItZLtiZxsvaUdupGg== }
+      { integrity: sha512-SvLTSclf104IVX8BY7nWqess1pBmeNl9qRFTWjOXg7B1/ESemfEtZYBDRAXAp1ILvazDng5IF/7YSbTxDVbwNg== }
     engines: { node: '>=18.0.0' }
     dependencies:
       ansi-escapes: 4.3.2
@@ -5331,7 +5331,7 @@ packages:
       { integrity: sha512-Vo854dALtNhA34g6m4T9uWIrYfm/JFM82LWa5gLrsJGwpUGgeBwBX4P64HLo5ro59LF3YO2xPWViLaoK6gkm3g== }
     engines: { node: '>=18.0.0' }
     dependencies:
-      '@oclif/core': 4.0.22
+      '@oclif/core': 4.0.21
 
   /@oclif/plugin-not-found@3.2.21:
     resolution:
@@ -5339,7 +5339,7 @@ packages:
     engines: { node: '>=18.0.0' }
     dependencies:
       '@inquirer/confirm': 3.2.0
-      '@oclif/core': 4.0.22
+      '@oclif/core': 4.0.21
       ansis: 3.3.2
       fast-levenshtein: 3.0.0
 
@@ -5348,7 +5348,7 @@ packages:
       { integrity: sha512-jDkWedI7HVhkig8UycXpvSq92s08Op0MJqYnumHZv3g3puz3AAMPouESlMOKY8Z0mEnJHSlnOjLyVXQL2BDKWg== }
     engines: { node: '>=18.0.0' }
     dependencies:
-      '@oclif/core': 4.0.22
+      '@oclif/core': 4.0.21
       ansis: 3.3.2
       debug: 4.3.7
       npm: 10.8.3
@@ -5369,7 +5369,7 @@ packages:
     engines: { node: '>=18.0.0' }
     dependencies:
       '@inquirer/select': 2.5.0
-      '@oclif/core': 4.0.22
+      '@oclif/core': 4.0.21
       ansis: 3.3.2
       debug: 4.3.7
       filesize: 6.4.0
@@ -5387,7 +5387,7 @@ packages:
       { integrity: sha512-Pv4EFxhpzspq0n2v0cdfqRwIMwYyd3YOIKny/1Ao71D0pKlpxJ63c9OFDNJAJcUjFOUHzODTtXXNwimOpzfbYg== }
     engines: { node: '>=18.0.0' }
     dependencies:
-      '@oclif/core': 4.0.22
+      '@oclif/core': 4.0.21
       ansis: 3.3.2
       debug: 4.3.7
       http-call: 5.3.0
@@ -10595,7 +10595,7 @@ packages:
         optional: true
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
-      debug: 4.3.6
+      debug: 4.3.7
       enhanced-resolve: 5.15.0
       eslint: 9.10.0
       eslint-module-utils: 2.8.2(@typescript-eslint/parser@6.21.0)(eslint-import-resolver-typescript@3.6.3)(eslint@9.10.0)
@@ -14325,7 +14325,7 @@ packages:
       '@inquirer/confirm': 3.2.0
       '@inquirer/input': 2.2.7
       '@inquirer/select': 2.5.0
-      '@oclif/core': 4.0.22
+      '@oclif/core': 4.0.21
       '@oclif/plugin-help': 6.2.11
       '@oclif/plugin-not-found': 3.2.21
       '@oclif/plugin-warn-if-update-available': 3.1.11

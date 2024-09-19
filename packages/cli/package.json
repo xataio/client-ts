@@ -22,7 +22,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@oclif/core": "^4.0.22",
+    "@oclif/core": "^4.0.21",
     "@oclif/plugin-help": "^6.2.11",
     "@oclif/plugin-not-found": "^3.2.21",
     "@oclif/plugin-plugins": "^5.4.8",
