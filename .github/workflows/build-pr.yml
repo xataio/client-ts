@@ -90,7 +90,7 @@ jobs:
 
       - name: Configure npm registry token
         if: ${{ steps.secrets.outputs.exist == 'true' }}
-        run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+        run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -120,7 +120,6 @@ jobs:
 
           EOF
 
-          npm config set loglevel verbose --global
           npx changeset version --snapshot ${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}
           npx changeset publish --tag ${{ github.ref_name == 'changeset-release/main' && 'dev' || 'canary' }} --no-git-tag
 
