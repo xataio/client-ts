@@ -241,6 +241,9 @@ importers:
       env-editor:
         specifier: ^1.1.0
         version: 1.1.0
+      he:
+        specifier: ^1.2.0
+        version: 1.2.0
       ini:
         specifier: ^5.0.0
         version: 5.0.0
@@ -12002,6 +12005,12 @@ packages:
     engines: { node: '>= 0.4' }
     dependencies:
       function-bind: 1.1.2
+
+  /he@1.2.0:
+    resolution:
+      { integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw== }
+    hasBin: true
+    dev: false
 
   /header-case@2.0.4:
     resolution:
