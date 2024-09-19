@@ -44,7 +44,7 @@
     "enquirer": "^2.4.1",
     "env-editor": "^1.1.0",
     "ini": "^5.0.0",
-    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "node-fetch": "^3.3.2",
     "open": "^10.1.0",
     "prompts": "^2.4.2",
@@ -61,7 +61,7 @@
   "devDependencies": {
     "@babel/types": "^7.25.6",
     "@types/babel__core": "^7.20.5",
-    "@types/lodash": "^4.17.7",
+    "@types/lodash-es": "^4.17.12",
     "@types/relaxed-json": "^1.0.4",
     "@types/text-table": "^0.2.5",
     "@types/tmp": "^0.2.6",
