@@ -1,6 +1,6 @@
 {
   "@xata.io/cli": {
-    "latest": "0.16.8",
+    "latest": "0.16.9",
     "compatibility": [
       {
         "range": ">=0.0.0"
