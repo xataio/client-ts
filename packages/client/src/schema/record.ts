@@ -28,7 +28,7 @@ export interface Identifiable {
   /**
    * Unique id of this record.
    */
-  id: Identifier;
+  xata_id: Identifier;
 }
 
 export interface BaseData {
@@ -38,18 +38,7 @@ export interface BaseData {
 /**
  * Represents a persisted record from the database.
  */
-export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<any>> extends Identifiable {
-  /**
-   * Metadata of this record.
-   */
-  xata: XataRecordMetadata;
-
-  /**
-   * Get metadata of this record.
-   * @deprecated Use `xata` property instead.
-   */
-  getMetadata(): XataRecordMetadata;
-
+export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiable {
   /**
    * Get an object representation of this record.
    */
@@ -136,33 +125,11 @@ export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<
 
 export type Link<Record extends XataRecord> = XataRecord<Record>;
 
-export type XataRecordMetadata = {
-  /**
-   * Number that is increased every time the record is updated.
-   */
-  version: number;
-  /**
-   * Timestamp when the record was created.
-   */
-  createdAt: Date;
-  /**
-   * Timestamp when the record was last updated.
-   */
-  updatedAt: Date;
-};
-
 export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
-  return isObject(x) && isString((x as Partial<Identifiable>)?.id);
+  return isObject(x) && isString(x?.xata_id);
 }
 
-export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> {
-  const record = x as XataRecord & Record<string, unknown>;
-  const metadata = record?.getMetadata();
-
-  return isIdentifiable(x) && isObject(metadata) && typeof metadata.version === 'number';
-}
-
-type NumericOperator = ExclusiveOr<
+export type NumericOperator = ExclusiveOr<
   { $increment: number },
   ExclusiveOr<{ $decrement: number }, ExclusiveOr<{ $multiply: number }, { $divide: number }>>
 >;
@@ -170,9 +137,9 @@ type NumericOperator = ExclusiveOr<
 export type InputXataFile = Partial<XataArrayFile> | Promise<Partial<XataArrayFile>>;
 
 type EditableDataFields<T> = T extends XataRecord
-  ? { id: Identifier } | Identifier
+  ? { xata_id: Identifier } | Identifier
   : NonNullable<T> extends XataRecord
-  ? { id: Identifier } | Identifier | null | undefined
+  ? { xata_id: Identifier } | Identifier | null | undefined
   : T extends Date
   ? string | Date
   : NonNullable<T> extends Date
@@ -185,7 +152,7 @@ type EditableDataFields<T> = T extends XataRecord
   ? number | NumericOperator
   : T;
 
-export type EditableData<O extends XataRecord> = Identifiable &
+export type EditableData<O> = Identifiable &
   Partial<
     Omit<
       {
@@ -199,7 +166,9 @@ type JSONDataFile = {
   [K in keyof XataFile]: XataFile[K] extends Function ? never : XataFile[K];
 };
 
-type JSONDataFields<T> = T extends XataFile
+type JSONDataFields<T> = T extends null | undefined | void
+  ? null | undefined
+  : T extends XataFile
   ? JSONDataFile
   : NonNullable<T> extends XataFile
   ? JSONDataFile | null | undefined
@@ -215,22 +184,17 @@ type JSONDataFields<T> = T extends XataFile
 
 type JSONDataBase = Identifiable & {
   /**
-   * Metadata about the record.
+   * Timestamp when the record was created.
    */
-  xata: {
-    /**
-     * Timestamp when the record was created.
-     */
-    createdAt: string;
-    /**
-     * Timestamp when the record was last updated.
-     */
-    updatedAt: string;
-    /**
-     * Number that is increased every time the record is updated.
-     */
-    version: number;
-  };
+  xata_createdat: string;
+  /**
+   * Timestamp when the record was last updated.
+   */
+  xata_updatedat: string;
+  /**
+   * Number that is increased every time the record is updated.
+   */
+  xata_version: number;
 };
 
 export type JSONData<O> = JSONDataBase &
