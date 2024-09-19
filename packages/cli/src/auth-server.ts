@@ -6,6 +6,7 @@ import { AddressInfo } from 'net';
 import open from 'open';
 import path, { dirname } from 'path';
 import url, { fileURLToPath } from 'url';
+import { escape } from 'he';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,7 +52,7 @@ export function handler(
       callback(apiKey);
     } catch (err) {
       res.writeHead(500);
-      res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
+      res.end(`Something went wrong: ${err instanceof Error ? escape(err.message) : escape(String(err))}`);
     }
   };
 }
