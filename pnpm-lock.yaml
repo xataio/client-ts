@@ -293,6 +293,9 @@ importers:
       '@types/babel__core':
         specifier: ^7.20.5
         version: 7.20.5
+      '@types/he':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@types/lodash':
         specifier: ^4.17.7
         version: 4.17.7
@@ -7249,6 +7252,11 @@ packages:
   /@types/estree@1.0.5:
     resolution:
       { integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw== }
+    dev: true
+
+  /@types/he@1.2.3:
+    resolution:
+      { integrity: sha512-q67/qwlxblDzEDvzHhVkwc1gzVWxaNxeyHUBF4xElrvjL11O+Ytze+1fGpBHlr/H9myiBUaUXNnNPmBHxxfAcA== }
     dev: true
 
   /@types/http-cache-semantics@4.0.2:
