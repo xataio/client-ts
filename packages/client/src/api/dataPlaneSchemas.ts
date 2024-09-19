@@ -3,6 +3,34 @@
  *
  * @version 1.0
  */
+export type TaskStatus = 'scheduled' | 'pending' | 'active' | 'retry' | 'archived' | 'completed';
+
+export type TaskStatusResponse = {
+  /**
+   * The id of the task
+   */
+  taskID: string;
+  /**
+   * The type of the task
+   */
+  type: string;
+  /**
+   * The status of the task
+   */
+  status: TaskStatus;
+  /**
+   * Any error message associated with the task
+   */
+  error?: string;
+};
+
+/**
+ * @maxLength 255
+ * @minLength 1
+ * @pattern [a-zA-Z0-9_\-~]+
+ */
+export type TaskID = string;
+
 /**
  * @x-internal true
  * @pattern [a-zA-Z0-9_-~:]+
@@ -74,6 +102,7 @@ export type ListClusterBranchesResponse = {
 export type ExtensionDetails = {
   name: string;
   description: string;
+  builtIn: boolean;
   status: 'installed' | 'not_installed';
   version: string;
 };
@@ -451,6 +480,13 @@ export type BranchMetadata = {
    */
   stage?: string;
   labels?: string[];
+};
+
+export type CreateBranchResponse = {
+  /**
+   * The id of the branch creation task
+   */
+  taskID: string;
 };
 
 export type StartedFromMetadata = {

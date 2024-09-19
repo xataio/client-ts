@@ -1,7 +1,7 @@
-import pick from 'lodash.pick';
 import CSV, { ParseConfig } from 'papaparse';
 import { ParseCsvOptions, ParseMeta, ParseResults } from '../types';
 import { parseJson } from './jsonParser';
+import { pick } from 'lodash';
 
 export const DEFAULT_CSV_DELIMITERS_TO_GUESS = [',', '\t', '|', ';', '\x1E', '\x1F'];
 

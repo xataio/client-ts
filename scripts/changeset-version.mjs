@@ -10,7 +10,7 @@ const compatibilityPath = path.join(process.cwd(), 'compatibility.json');
 const compatibilityData = fs.readFileSync(compatibilityPath, 'utf8');
 const compatibility = JSON.parse(compatibilityData);
 
-const packages = ['packages/client/package.json', 'cli/package.json'];
+const packages = ['packages/client/package.json', 'packages/cli/package.json'];
 for (const packageJson of packages) {
   const contents = fs.readFileSync(path.join(process.cwd(), packageJson), 'utf8');
   const { name, version } = JSON.parse(contents);
