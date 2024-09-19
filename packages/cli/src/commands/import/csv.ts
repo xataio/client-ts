@@ -12,7 +12,7 @@ import {
   xataColumnTypeToPgRollComment
 } from '../../migrations/pgroll.js';
 import { compareSchemas } from '../../utils/compareSchema.js';
-import keyBy from 'lodash.keyby';
+import { keyBy } from 'lodash-es';
 
 const ERROR_CONSOLE_LOG_LIMIT = 200;
 const ERROR_LOG_FILE = 'errors.log';

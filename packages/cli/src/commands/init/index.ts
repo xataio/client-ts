@@ -4,7 +4,7 @@ import { ModuleType, parseSchemaFile } from '@xata.io/codegen';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { access, readFile, writeFile } from 'fs/promises';
-import compact from 'lodash.compact';
+import { compact } from 'lodash-es';
 import path, { extname } from 'path';
 import which from 'which';
 import { createAPIKeyThroughWebUI } from '../../auth-server.js';

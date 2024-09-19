@@ -1,5 +1,5 @@
 import z from 'zod';
-import set from 'lodash/set.js';
+import { set } from 'lodash-es';
 
 export const projectConfigSchema = z.object({
   databaseURL: z.string(),

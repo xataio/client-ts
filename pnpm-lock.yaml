@@ -243,18 +243,9 @@ importers:
       ini:
         specifier: ^5.0.0
         version: 5.0.0
-      lodash:
+      lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
-      lodash.compact:
-        specifier: ^3.0.1
-        version: 3.0.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.keyby:
-        specifier: ^4.6.0
-        version: 4.6.0
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
@@ -298,18 +289,9 @@ importers:
       '@types/babel__core':
         specifier: ^7.20.5
         version: 7.20.5
-      '@types/lodash':
-        specifier: ^4.17.7
-        version: 4.17.7
-      '@types/lodash.compact':
-        specifier: ^3.0.9
-        version: 3.0.9
-      '@types/lodash.get':
-        specifier: ^4.4.9
-        version: 4.4.9
-      '@types/lodash.keyby':
-        specifier: ^4.6.9
-        version: 4.6.9
+      '@types/lodash-es':
+        specifier: ^4.17.12
+        version: 4.17.12
       '@types/relaxed-json':
         specifier: ^1.0.4
         version: 1.0.4
@@ -392,12 +374,9 @@ importers:
       json5:
         specifier: ^2.2.3
         version: 2.2.3
-      lodash:
+      lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
-      lodash.chunk:
-        specifier: ^4.2.0
-        version: 4.2.0
       p-queue:
         specifier: ^8.0.1
         version: 8.0.1
@@ -408,15 +387,15 @@ importers:
         specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
-      '@types/lodash':
-        specifier: ^4.17.7
-        version: 4.17.7
-      '@types/lodash.chunk':
-        specifier: ^4.2.9
-        version: 4.2.9
+      '@types/lodash-es':
+        specifier: ^4.17.12
+        version: 4.17.12
       '@types/papaparse':
         specifier: ^5.3.14
         version: 5.3.14
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
 
   packages/pgroll:
     dependencies:
@@ -7113,30 +7092,9 @@ packages:
       { integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ== }
     dev: true
 
-  /@types/lodash.chunk@4.2.9:
+  /@types/lodash-es@4.17.12:
     resolution:
-      { integrity: sha512-Z9VtFUSnmT0No/QymqfG9AGbfOA4O5qB/uyP89xeZBqDAsKsB4gQFTqt7d0pHjbsTwtQ4yZObQVHuKlSOhIJ5Q== }
-    dependencies:
-      '@types/lodash': 4.17.7
-    dev: true
-
-  /@types/lodash.compact@3.0.9:
-    resolution:
-      { integrity: sha512-b4uMY3aQri4SnRm4ptQXxE11CCqv//k7DQBSpDepLnoJ7lcunUnIxfvA5uOVidiKEKF8JkSCT9EyjFVszBjgqg== }
-    dependencies:
-      '@types/lodash': 4.17.7
-    dev: true
-
-  /@types/lodash.get@4.4.9:
-    resolution:
-      { integrity: sha512-J5dvW98sxmGnamqf+/aLP87PYXyrha9xIgc2ZlHl6OHMFR2Ejdxep50QfU0abO1+CH6+ugx+8wEUN1toImAinA== }
-    dependencies:
-      '@types/lodash': 4.17.7
-    dev: true
-
-  /@types/lodash.keyby@4.6.9:
-    resolution:
-      { integrity: sha512-N8xfQdZ2ADNPDL72TaLozIL4K1xFCMG1C1T9GN4dOFI+sn1cjl8d4U+POp8PRCAnNxDCMkYAZVD/rOBIWYPT5g== }
+      { integrity: sha512-0NgftHUcV4v34VhXm8QBSftKVXtbkBG3ViCjs6+eJ5a6y6Mi/jiFGPc1sC7QK+9BFhWrURE3EOggmWaSxL9OzQ== }
     dependencies:
       '@types/lodash': 4.17.7
     dev: true
@@ -13093,19 +13051,9 @@ packages:
     resolution:
       { integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA== }
 
-  /lodash.chunk@4.2.0:
-    resolution:
-      { integrity: sha512-ZzydJKfUHJwHa+hF5X66zLFCBrWn5GeF28OHEr4WVWtNDXlQ/IjWKPBiikqKo2ne0+v6JgCgJ0GzJp8k8bHC7w== }
-    dev: false
-
   /lodash.clonedeep@4.5.0:
     resolution:
       { integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ== }
-    dev: false
-
-  /lodash.compact@3.0.1:
-    resolution:
-      { integrity: sha512-2ozeiPi+5eBXW1CLtzjk8XQFhQOEMwwfxblqeq6EGyTxZJ1bPATqilY0e6g2SLQpP4KuMeuioBhEnWz5Pr7ICQ== }
     dev: false
 
   /lodash.debounce@4.0.8:
@@ -13128,19 +13076,9 @@ packages:
       { integrity: sha512-C5N2Z3DgnnKr0LOpv/hKCgKdb7ZZwafIrsesve6lmzvZIRZRGaZ/l6Q8+2W7NaT+ZwO3fFlSCzCzrDCFdJfZ4g== }
     dev: false
 
-  /lodash.get@4.4.2:
-    resolution:
-      { integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ== }
-    dev: false
-
   /lodash.isplainobject@4.0.6:
     resolution:
       { integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA== }
-    dev: false
-
-  /lodash.keyby@4.6.0:
-    resolution:
-      { integrity: sha512-PRe4Cn20oJM2Sn6ljcZMeKgyhTHpzvzFmdsp9rK+6K0eJs6Tws0MqgGFpfX/o2HjcoQcBny1Eik9W7BnVTzjIQ== }
     dev: false
 
   /lodash.merge@4.6.2:
