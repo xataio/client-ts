@@ -73,8 +73,7 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
    */
   update<K extends SelectableColumn<OriginalRecord>>(
     partialUpdate: Partial<EditableData<OriginalRecord>>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>> | null>;
 
   /**
@@ -84,8 +83,7 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
    * @returns The persisted record with all first level properties, null if not found.
    */
   update(
-    partialUpdate: Partial<EditableData<OriginalRecord>>,
-    options?: { ifVersion?: number }
+    partialUpdate: Partial<EditableData<OriginalRecord>>
   ): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 
   /**
@@ -97,8 +95,7 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
    */
   replace<K extends SelectableColumn<OriginalRecord>>(
     object: Partial<EditableData<OriginalRecord>>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>> | null>;
 
   /**
@@ -107,10 +104,7 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
    * @param partialUpdate The columns and their values that have to be updated.
    * @returns The persisted record with all first level properties, null if not found.
    */
-  replace(
-    object: Partial<EditableData<OriginalRecord>>,
-    options?: { ifVersion?: number }
-  ): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
+  replace(object: Partial<EditableData<OriginalRecord>>): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 
   /**
    * Performs a deletion of the current record in the database.

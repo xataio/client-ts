@@ -91,8 +91,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    */
   abstract create<K extends SelectableColumn<ObjectType>>(
     object: NewEditableDataWithoutNumeric<ObjectType>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
   /*
@@ -101,8 +100,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract create(
-    object: NewEditableDataWithoutNumeric<ObjectType>,
-    options?: { ifVersion?: number }
+    object: NewEditableDataWithoutNumeric<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -118,8 +116,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
       NewEditableDataWithoutNumeric<ObjectType>,
       NewIdentifierKey<NewIdentifiable<Schema['tables']>[TableName]>
     >,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
   /**
@@ -133,8 +130,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
     object: Omit<
       NewEditableDataWithoutNumeric<ObjectType>,
       NewIdentifierKey<NewIdentifiable<Schema['tables']>[TableName]>
-    >,
-    options?: { ifVersion?: number }
+    >
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -333,8 +329,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    */
   abstract update<K extends SelectableColumn<ObjectType>>(
     object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
 
   /**
@@ -343,8 +338,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record, null if the record could not be found.
    */
   abstract update(
-    object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
-    options?: { ifVersion?: number }
+    object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
 
   /**
@@ -357,8 +351,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
   abstract update<K extends SelectableColumn<ObjectType>>(
     id: NewIndentifierValue<NewIdentifiable<Schema['tables']>[TableName]>,
     object: NewEditableData<ObjectType>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
 
   /**
@@ -369,8 +362,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    */
   abstract update(
     id: NewIndentifierValue<NewIdentifiable<Schema['tables']>[TableName]>,
-    object: Omit<NewEditableData<ObjectType>, NewIdentifierKey<NewIdentifiable<Schema['tables']>[TableName]>>,
-    options?: { ifVersion?: number }
+    object: Omit<NewEditableData<ObjectType>, NewIdentifierKey<NewIdentifiable<Schema['tables']>[TableName]>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
 
   /**
@@ -402,8 +394,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    */
   abstract updateOrThrow<K extends SelectableColumn<ObjectType>>(
     object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
   /**
@@ -413,8 +404,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract updateOrThrow(
-    object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
-    options?: { ifVersion?: number }
+    object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -428,8 +418,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
   abstract updateOrThrow<K extends SelectableColumn<ObjectType>>(
     id: NewIndentifierValue<NewIdentifiable<Schema['tables']>[TableName]>,
     object: NewEditableData<ObjectType>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
   /**
@@ -441,8 +430,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    */
   abstract updateOrThrow(
     id: NewIndentifierValue<NewIdentifiable<Schema['tables']>[TableName]>,
-    object: NewEditableData<ObjectType>,
-    options?: { ifVersion?: number }
+    object: NewEditableData<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -476,8 +464,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    */
   abstract createOrUpdate<K extends SelectableColumn<ObjectType>>(
     object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
   /**
@@ -487,8 +474,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrUpdate(
-    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
-    options?: { ifVersion?: number }
+    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -505,8 +491,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
       NewEditableDataWithoutNumeric<ObjectType>,
       NewIdentifierKey<NewIdentifiable<Schema['tables']>[TableName]>
     >,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
   /**
@@ -521,8 +506,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
     object: Omit<
       NewEditableDataWithoutNumeric<ObjectType>,
       NewIdentifierKey<NewIdentifiable<Schema['tables']>[TableName]>
-    >,
-    options?: { ifVersion?: number }
+    >
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -556,8 +540,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    */
   abstract createOrReplace<K extends SelectableColumn<ObjectType>>(
     object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
   /**
@@ -567,8 +550,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrReplace(
-    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
-    options?: { ifVersion?: number }
+    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -585,8 +567,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
       NewEditableDataWithoutNumeric<ObjectType>,
       NewIdentifierKey<NewIdentifiable<Schema['tables']>[TableName]>
     >,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
   /**
@@ -601,8 +582,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
     object: Omit<
       NewEditableDataWithoutNumeric<ObjectType>,
       NewIdentifierKey<NewIdentifiable<Schema['tables']>[TableName]>
-    >,
-    options?: { ifVersion?: number }
+    >
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -2406,13 +2386,11 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
     | Readonly<SelectedPick<ObjectType, ['*']>>[]
   > {
     return this.#trace('create', async () => {
-      const ifVersion = parseIfVersion(b, c, undefined);
-
       // Create many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        const ids = await this.#insertRecords(a as any, { ifVersion, createOnly: true });
+        const ids = await this.#insertRecords(a as any, { createOnly: true });
 
         const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
@@ -2427,8 +2405,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
         return await this.#insertRecordWithId(a, b as EditableData<ObjectType>, columns, {
-          createOnly: true,
-          ifVersion
+          createOnly: true
         });
       }
 
@@ -2438,8 +2415,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
 
         const columns = isValidSelectableColumns(b) ? b : undefined;
         return await this.#insertRecordWithId((a as any).xata_id, { ...(a as any), xata_id: undefined }, columns, {
-          createOnly: true,
-          ifVersion
+          createOnly: true
         });
       }
 
@@ -2475,7 +2451,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
     recordId: Identifier,
     object: EditableData<ObjectType>,
     columns: SelectableColumn<ObjectType>[] = ['*'],
-    { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
+    { createOnly }: { createOnly: boolean }
   ) {
     if (!recordId) return null;
 
@@ -2490,20 +2466,17 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         recordId
       },
       body: record,
-      queryParams: { createOnly, columns, ifVersion },
+      queryParams: { createOnly, columns },
       ...this.#getFetchProps()
     });
 
     return initObject(this.#db, this.#schema, this.#table, response, columns) as any;
   }
 
-  async #insertRecords(
-    objects: EditableData<ObjectType>[],
-    { createOnly, ifVersion }: { createOnly: boolean; ifVersion?: number }
-  ) {
+  async #insertRecords(objects: EditableData<ObjectType>[], { createOnly }: { createOnly: boolean }) {
     const operations = await promiseMap(objects, async (object) => {
       const record = await this.#transformObjectToApi(object);
-      return { insert: { table: this.#table, record, createOnly, ifVersion } };
+      return { insert: { table: this.#table, record, createOnly } };
     });
 
     const chunkedOperations: TransactionOperation[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
@@ -2712,8 +2685,6 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
     | null
   > {
     return this.#trace('update', async () => {
-      const ifVersion = parseIfVersion(b, c, undefined);
-
       // Update many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
@@ -2723,7 +2694,6 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         const updates = a.filter((_item, index) => existing[index] !== null);
 
         await this.#updateRecords(updates as Array<Partial<EditableData<ObjectType>> & Identifiable>, {
-          ifVersion,
           upsert: false
         });
 
@@ -2738,15 +2708,13 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         // Update one record with id as param
         if (isString(a) && isObject(b)) {
           const columns = isValidSelectableColumns(c) ? c : undefined;
-          return await this.#updateRecordWithID(a, b as EditableData<ObjectType>, columns, { ifVersion });
+          return await this.#updateRecordWithID(a, b as EditableData<ObjectType>, columns);
         }
 
         // Update one record with id as property
         if (isObject(a) && isString((a as any).xata_id)) {
           const columns = isValidSelectableColumns(b) ? b : undefined;
-          return await this.#updateRecordWithID((a as any).xata_id, { ...(a as any), xata_id: undefined }, columns, {
-            ifVersion
-          });
+          return await this.#updateRecordWithID((a as any).xata_id, { ...(a as any), xata_id: undefined }, columns);
         }
       } catch (error: any) {
         if (error.status === 422) return null;
@@ -2822,8 +2790,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   async #updateRecordWithID(
     recordId: Identifier,
     object: Partial<EditableData<ObjectType>>,
-    columns: SelectableColumn<ObjectType>[] = ['*'],
-    { ifVersion }: { ifVersion?: number }
+    columns: SelectableColumn<ObjectType>[] = ['*']
   ) {
     if (!recordId) return null;
 
@@ -2839,7 +2806,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
           tableName: this.#table,
           recordId
         },
-        queryParams: { columns, ifVersion },
+        queryParams: { columns },
         body: record,
         ...this.#getFetchProps()
       });
@@ -2856,11 +2823,11 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
 
   async #updateRecords(
     objects: Array<Partial<EditableData<ObjectType>> & Identifiable>,
-    { ifVersion, upsert }: { ifVersion?: number; upsert: boolean }
+    { upsert }: { upsert: boolean }
   ) {
     const operations = await promiseMap(objects, async ({ xata_id, ...object }) => {
       const fields = await this.#transformObjectToApi(object);
-      return { update: { table: this.#table, id: xata_id, ifVersion, upsert, fields } };
+      return { update: { table: this.#table, id: xata_id, upsert, fields } };
     });
 
     const chunkedOperations: TransactionOperation[][] = chunk(operations, BULK_OPERATION_MAX_SIZE);
@@ -2930,14 +2897,11 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
     | Array<Readonly<SelectedPick<ObjectType, K[]>>>
   > {
     return this.#trace('createOrUpdate', async () => {
-      const ifVersion = parseIfVersion(b, c, undefined);
-
       // Create or update many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
         await this.#updateRecords(a as Array<Partial<EditableData<ObjectType>> & Identifiable>, {
-          ifVersion,
           upsert: true
         });
 
@@ -2953,7 +2917,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         if (a === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
-        return await this.#upsertRecordWithID(a, b as EditableData<ObjectType>, columns, { ifVersion });
+        return await this.#upsertRecordWithID(a, b as EditableData<ObjectType>, columns);
       }
 
       // Create or update one record with id as property
@@ -2961,9 +2925,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         if ((a as any).xata_id === '') throw new Error("The id can't be empty");
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
-        return await this.#upsertRecordWithID((a as any).xata_id, { ...(a as any), xata_id: undefined }, columns, {
-          ifVersion
-        });
+        return await this.#upsertRecordWithID((a as any).xata_id, { ...(a as any), xata_id: undefined }, columns);
       }
 
       // Create with undefined id as param
@@ -2983,8 +2945,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   async #upsertRecordWithID(
     recordId: Identifier,
     object: Omit<EditableData<ObjectType>, 'xata_id'>,
-    columns: SelectableColumn<ObjectType>[] = ['*'],
-    { ifVersion }: { ifVersion?: number }
+    columns: SelectableColumn<ObjectType>[] = ['*']
   ) {
     if (!recordId) return null;
 
@@ -2996,7 +2957,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         tableName: this.#table,
         recordId
       },
-      queryParams: { columns, ifVersion },
+      queryParams: { columns },
       body: object as Schemas.DataInputRecord,
       ...this.#getFetchProps()
     });
@@ -3045,13 +3006,11 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
     | Array<Readonly<SelectedPick<ObjectType, K[]>>>
   > {
     return this.#trace('createOrReplace', async () => {
-      const ifVersion = parseIfVersion(b, c, undefined);
-
       // Create or replace many records
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        const ids = await this.#insertRecords(a as any, { ifVersion, createOnly: false });
+        const ids = await this.#insertRecords(a as any, { createOnly: false });
 
         const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
@@ -3066,8 +3025,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
         return await this.#insertRecordWithId(a, b as EditableData<ObjectType>, columns, {
-          createOnly: false,
-          ifVersion
+          createOnly: false
         });
       }
 
@@ -3077,8 +3035,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
 
         const columns = isValidSelectableColumns(c) ? c : undefined;
         return await this.#insertRecordWithId((a as any).xata_id, { ...(a as any), xata_id: undefined }, columns, {
-          createOnly: false,
-          ifVersion
+          createOnly: false
         });
       }
 
@@ -3657,17 +3614,15 @@ export const initObject = <T>(
 
   record.update = function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
-    const ifVersion = parseIfVersion(b, c);
 
     // @ts-ignore
-    return db[table].update(record['xata_id'] as any, data, columns, { ifVersion });
+    return db[table].update(record['xata_id'] as any, data, columns);
   };
 
   record.replace = function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
-    const ifVersion = parseIfVersion(b, c);
 
-    return db[table].createOrReplace(record['xata_id'] as any, data, columns, { ifVersion });
+    return db[table].createOrReplace(record['xata_id'] as any, data, columns);
   };
 
   record.delete = function () {
@@ -3712,16 +3667,6 @@ function isValidColumn(
 
   // Match column name and all its children (foo, foo.bar, foo.bar.baz)
   return columns.filter((item) => isString(item) && item.startsWith(column.name)).length > 0;
-}
-
-function parseIfVersion(...args: any[]): number | undefined {
-  for (const arg of args) {
-    if (isObject(arg) && isNumber(arg.ifVersion)) {
-      return arg.ifVersion;
-    }
-  }
-
-  return undefined;
 }
 
 const operatorMap: { [operator: string]: BinaryOperatorExpression } = {
