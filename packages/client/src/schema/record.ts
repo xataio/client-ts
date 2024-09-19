@@ -28,7 +28,7 @@ export interface Identifiable {
   /**
    * Unique id of this record.
    */
-  xata_id: Identifier;
+  id: Identifier;
 }
 
 export interface BaseData {
@@ -38,7 +38,18 @@ export interface BaseData {
 /**
  * Represents a persisted record from the database.
  */
-export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiable {
+export interface XataRecord<OriginalRecord extends XataRecord<any> = XataRecord<any>> extends Identifiable {
+  /**
+   * Metadata of this record.
+   */
+  xata: XataRecordMetadata;
+
+  /**
+   * Get metadata of this record.
+   * @deprecated Use `xata` property instead.
+   */
+  getMetadata(): XataRecordMetadata;
+
   /**
    * Get an object representation of this record.
    */
@@ -73,8 +84,7 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
    */
   update<K extends SelectableColumn<OriginalRecord>>(
     partialUpdate: Partial<EditableData<OriginalRecord>>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>> | null>;
 
   /**
@@ -84,8 +94,7 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
    * @returns The persisted record with all first level properties, null if not found.
    */
   update(
-    partialUpdate: Partial<EditableData<OriginalRecord>>,
-    options?: { ifVersion?: number }
+    partialUpdate: Partial<EditableData<OriginalRecord>>
   ): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 
   /**
@@ -97,8 +106,7 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
    */
   replace<K extends SelectableColumn<OriginalRecord>>(
     object: Partial<EditableData<OriginalRecord>>,
-    columns: K[],
-    options?: { ifVersion?: number }
+    columns: K[]
   ): Promise<Readonly<SelectedPick<OriginalRecord, typeof columns>> | null>;
 
   /**
@@ -107,10 +115,7 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
    * @param partialUpdate The columns and their values that have to be updated.
    * @returns The persisted record with all first level properties, null if not found.
    */
-  replace(
-    object: Partial<EditableData<OriginalRecord>>,
-    options?: { ifVersion?: number }
-  ): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
+  replace(object: Partial<EditableData<OriginalRecord>>): Promise<Readonly<SelectedPick<OriginalRecord, ['*']>> | null>;
 
   /**
    * Performs a deletion of the current record in the database.
@@ -131,11 +136,33 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
 
 export type Link<Record extends XataRecord> = XataRecord<Record>;
 
+export type XataRecordMetadata = {
+  /**
+   * Number that is increased every time the record is updated.
+   */
+  version: number;
+  /**
+   * Timestamp when the record was created.
+   */
+  createdAt: Date;
+  /**
+   * Timestamp when the record was last updated.
+   */
+  updatedAt: Date;
+};
+
 export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
-  return isObject(x) && isString(x?.xata_id);
+  return isObject(x) && isString((x as Partial<Identifiable>)?.id);
 }
 
-export type NumericOperator = ExclusiveOr<
+export function isXataRecord(x: any): x is XataRecord & Record<string, unknown> {
+  const record = x as XataRecord & Record<string, unknown>;
+  const metadata = record?.getMetadata();
+
+  return isIdentifiable(x) && isObject(metadata) && typeof metadata.version === 'number';
+}
+
+type NumericOperator = ExclusiveOr<
   { $increment: number },
   ExclusiveOr<{ $decrement: number }, ExclusiveOr<{ $multiply: number }, { $divide: number }>>
 >;
@@ -143,9 +170,9 @@ export type NumericOperator = ExclusiveOr<
 export type InputXataFile = Partial<XataArrayFile> | Promise<Partial<XataArrayFile>>;
 
 type EditableDataFields<T> = T extends XataRecord
-  ? { xata_id: Identifier } | Identifier
+  ? { id: Identifier } | Identifier
   : NonNullable<T> extends XataRecord
-  ? { xata_id: Identifier } | Identifier | null | undefined
+  ? { id: Identifier } | Identifier | null | undefined
   : T extends Date
   ? string | Date
   : NonNullable<T> extends Date
@@ -158,7 +185,7 @@ type EditableDataFields<T> = T extends XataRecord
   ? number | NumericOperator
   : T;
 
-export type EditableData<O> = Identifiable &
+export type EditableData<O extends XataRecord> = Identifiable &
   Partial<
     Omit<
       {
@@ -172,9 +199,7 @@ type JSONDataFile = {
   [K in keyof XataFile]: XataFile[K] extends Function ? never : XataFile[K];
 };
 
-type JSONDataFields<T> = T extends null | undefined | void
-  ? null | undefined
-  : T extends XataFile
+type JSONDataFields<T> = T extends XataFile
   ? JSONDataFile
   : NonNullable<T> extends XataFile
   ? JSONDataFile | null | undefined
@@ -190,17 +215,22 @@ type JSONDataFields<T> = T extends null | undefined | void
 
 type JSONDataBase = Identifiable & {
   /**
-   * Timestamp when the record was created.
+   * Metadata about the record.
    */
-  xata_createdat: string;
-  /**
-   * Timestamp when the record was last updated.
-   */
-  xata_updatedat: string;
-  /**
-   * Number that is increased every time the record is updated.
-   */
-  xata_version: number;
+  xata: {
+    /**
+     * Timestamp when the record was created.
+     */
+    createdAt: string;
+    /**
+     * Timestamp when the record was last updated.
+     */
+    updatedAt: string;
+    /**
+     * Number that is increased every time the record is updated.
+     */
+    version: number;
+  };
 };
 
 export type JSONData<O> = JSONDataBase &
