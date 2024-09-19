@@ -1,4 +1,4 @@
-import pick from 'lodash/pick';
+import pick from 'lodash/pick.js';
 import CSV, { ParseConfig } from 'papaparse';
 import { ParseCsvOptions, ParseMeta, ParseResults } from '../types';
 import { parseJson } from './jsonParser';
