@@ -30,6 +30,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
+          cache: 'pnpm'
 
       - name: Set build version
         run: echo "TAG=0.0.0-${{ github.ref_name == 'changeset-release/main' && 'beta' || 'alpha' }}.v$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
