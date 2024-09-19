@@ -1,5 +1,5 @@
 ---
-"@xata.io/cli": patch
+'@xata.io/cli': patch
 ---
 
 Update dependencies and fix vulnerabilities
