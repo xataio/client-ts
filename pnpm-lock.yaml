@@ -156,7 +156,7 @@ importers:
         specifier: ^3.23.8
         version: 3.23.8
 
-  cli:
+  packages/cli:
     dependencies:
       '@oclif/core':
         specifier: ^4.0.22
@@ -184,16 +184,16 @@ importers:
         version: 7.5.8
       '@xata.io/client':
         specifier: workspace:*
-        version: link:../packages/client
+        version: link:../client
       '@xata.io/codegen':
         specifier: workspace:*
-        version: link:../packages/codegen
+        version: link:../codegen
       '@xata.io/importer':
         specifier: workspace:*
-        version: link:../packages/importer
+        version: link:../importer
       '@xata.io/pgroll':
         specifier: workspace:*
-        version: link:../packages/pgroll
+        version: link:../pgroll
       ansi-regex:
         specifier: ^6.1.0
         version: 6.1.0
@@ -1677,7 +1677,7 @@ packages:
       '@babel/core': 7.25.2
       '@babel/helper-compilation-targets': 7.25.2
       '@babel/helper-plugin-utils': 7.24.8
-      debug: 4.3.6
+      debug: 4.3.7
       lodash.debounce: 4.0.8
       resolve: 1.22.6
     transitivePeerDependencies:
@@ -1693,7 +1693,7 @@ packages:
       '@babel/core': 7.25.2
       '@babel/helper-compilation-targets': 7.25.2
       '@babel/helper-plugin-utils': 7.24.8
-      debug: 4.3.6
+      debug: 4.3.7
       lodash.debounce: 4.0.8
       resolve: 1.22.6
     transitivePeerDependencies:
@@ -1939,14 +1939,6 @@ packages:
       '@babel/types': 7.25.6
     dev: true
 
-  /@babel/parser@7.24.7:
-    resolution:
-      { integrity: sha512-9uUYRm6OqQrCqQdG1iCBwBPZgN8ciDBro2nIOFaiRz1/BCxaI7CNvQbDHvsArAC7Tw9Hda/B3U+6ui9u4HWXPw== }
-    engines: { node: '>=6.0.0' }
-    hasBin: true
-    dependencies:
-      '@babel/types': 7.25.6
-
   /@babel/parser@7.25.3:
     resolution:
       { integrity: sha512-iLTJKDbJ4hMvFPgQwwsVoxtHyWpKKPBrxkANrSYewDPaPpT5py5yeVkgPIJ7XYXhndxJpaA3PyALSXQ7u8e/Dw== }
@@ -1962,7 +1954,6 @@ packages:
     hasBin: true
     dependencies:
       '@babel/types': 7.25.6
-    dev: true
 
   /@babel/plugin-bugfix-firefox-class-in-computed-class-key@7.25.3(@babel/core@7.25.2):
     resolution:
@@ -3045,7 +3036,7 @@ packages:
     engines: { node: '>=6.9.0' }
     dependencies:
       '@babel/code-frame': 7.24.7
-      '@babel/parser': 7.25.3
+      '@babel/parser': 7.25.4
       '@babel/types': 7.25.6
 
   /@babel/template@7.25.0:
@@ -3068,7 +3059,7 @@ packages:
       '@babel/helper-function-name': 7.24.7
       '@babel/helper-hoist-variables': 7.24.7
       '@babel/helper-split-export-declaration': 7.24.7
-      '@babel/parser': 7.24.7
+      '@babel/parser': 7.25.4
       '@babel/types': 7.25.6
       debug: 4.3.7
       globals: 11.12.0
@@ -3082,10 +3073,10 @@ packages:
     dependencies:
       '@babel/code-frame': 7.24.7
       '@babel/generator': 7.25.0
-      '@babel/parser': 7.25.3
+      '@babel/parser': 7.25.4
       '@babel/template': 7.25.0
       '@babel/types': 7.25.6
-      debug: 4.3.6
+      debug: 4.3.7
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -3100,7 +3091,7 @@ packages:
       '@babel/parser': 7.25.4
       '@babel/template': 7.25.0
       '@babel/types': 7.25.6
-      debug: 4.3.6
+      debug: 4.3.7
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -4588,18 +4579,6 @@ packages:
       '@inquirer/type': 1.5.3
     dev: true
 
-  /@inquirer/select@2.4.7:
-    resolution:
-      { integrity: sha512-JH7XqPEkBpNWp3gPCqWqY8ECbyMoFcCZANlL6pV9hf59qK6dGmkOlx1ydyhY+KZ0c5X74+W6Mtp+nm2QX0/MAQ== }
-    engines: { node: '>=18' }
-    dependencies:
-      '@inquirer/core': 9.1.0
-      '@inquirer/figures': 1.0.5
-      '@inquirer/type': 1.5.3
-      ansi-escapes: 4.3.2
-      yoctocolors-cjs: 2.1.2
-    dev: true
-
   /@inquirer/select@2.5.0:
     resolution:
       { integrity: sha512-YmDobTItPP3WcEI86GvPo+T2sRHkxxOq/kXmsBjHS5BVXUgvgZ5AfJjkvQvZr03T81NnI3KrrRuMzeuYUQRFOA== }
@@ -4610,7 +4589,6 @@ packages:
       '@inquirer/type': 1.5.3
       ansi-escapes: 4.3.2
       yoctocolors-cjs: 2.1.2
-    dev: false
 
   /@inquirer/type@1.5.3:
     resolution:
@@ -5202,7 +5180,7 @@ packages:
     engines: { node: ^14.18.0 || >=16.0.0 }
     hasBin: true
     dependencies:
-      '@babel/parser': 7.24.7
+      '@babel/parser': 7.25.4
       '@netlify/binary-info': 1.0.0
       '@netlify/esbuild': 0.14.39-1
       '@netlify/serverless-functions-api': 1.7.3
@@ -5245,7 +5223,7 @@ packages:
     engines: { node: ^14.18.0 || >=16.0.0 }
     hasBin: true
     dependencies:
-      '@babel/parser': 7.24.7
+      '@babel/parser': 7.25.4
       '@netlify/binary-info': 1.0.0
       '@netlify/serverless-functions-api': 1.7.3
       '@vercel/nft': 0.23.1(supports-color@9.4.0)
@@ -7234,7 +7212,7 @@ packages:
     resolution:
       { integrity: sha512-/AVzPICMhMOMYoSx9MoKpGDKdBRsIXMNByh1PXSZoa+v6ZoLa8xxtsT/uLQ/NJm0XVAWl/BvId4MlDeXJaeIZQ== }
     dependencies:
-      '@babel/parser': 7.24.7
+      '@babel/parser': 7.25.4
       '@babel/types': 7.25.6
     dev: true
 
@@ -7490,7 +7468,7 @@ packages:
       '@typescript-eslint/type-utils': 6.21.0(eslint@9.10.0)(typescript@5.6.2)
       '@typescript-eslint/utils': 6.21.0(eslint@9.10.0)(typescript@5.6.2)
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.3.6
+      debug: 4.3.7
       eslint: 9.10.0
       graphemer: 1.4.0
       ignore: 5.3.1
@@ -7545,7 +7523,7 @@ packages:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/typescript-estree': 6.21.0(typescript@5.6.2)
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.3.6
+      debug: 4.3.7
       eslint: 9.10.0
       typescript: 5.6.2
     transitivePeerDependencies:
@@ -9383,7 +9361,7 @@ packages:
       cp-file: 9.1.0
       globby: 13.2.2
       junk: 4.0.1
-      micromatch: 4.0.7
+      micromatch: 4.0.8
       nested-error-stacks: 2.1.1
       p-filter: 3.0.0
       p-map: 5.5.0
@@ -10930,7 +10908,7 @@ packages:
       eslint-plugin-es: 4.1.0(eslint@9.10.0)
       eslint-utils: 3.0.0(eslint@9.10.0)
       ignore: 5.3.1
-      is-core-module: 2.13.1
+      is-core-module: 2.15.1
       minimatch: 3.1.2
       resolve: 1.22.6
       semver: 7.6.3
@@ -12476,7 +12454,6 @@ packages:
     engines: { node: '>= 0.4' }
     dependencies:
       hasown: 2.0.2
-    dev: true
 
   /is-data-view@1.0.1:
     resolution:
@@ -14078,7 +14055,7 @@ packages:
       { integrity: sha512-jn9vOIK/nfqoFCcpK89/VCVaLg1IHE6UVfDOzvqmANaJ/rWCTEdH8RZ1V278nv2jr36BJdyQXIAavBLXpzdlag== }
     engines: { node: '>=14' }
     dependencies:
-      '@babel/parser': 7.24.7
+      '@babel/parser': 7.25.4
     dev: false
 
   /node-stream-zip@1.15.0:
@@ -14112,7 +14089,7 @@ packages:
     engines: { node: '>=10' }
     dependencies:
       hosted-git-info: 4.1.0
-      is-core-module: 2.13.1
+      is-core-module: 2.15.1
       semver: 7.6.3
       validate-npm-package-license: 3.0.4
     dev: false
@@ -14419,7 +14396,7 @@ packages:
       '@aws-sdk/client-s3': 3.651.1
       '@inquirer/confirm': 3.2.0
       '@inquirer/input': 2.2.7
-      '@inquirer/select': 2.4.7
+      '@inquirer/select': 2.5.0
       '@oclif/core': 4.0.22
       '@oclif/plugin-help': 6.2.11
       '@oclif/plugin-not-found': 3.2.21
@@ -17585,7 +17562,7 @@ packages:
     dependencies:
       browserslist: 4.23.3
       escalade: 3.1.2
-      picocolors: 1.0.1
+      picocolors: 1.1.0
 
   /update-section@0.3.3:
     resolution:
