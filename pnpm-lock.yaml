@@ -156,7 +156,7 @@ importers:
         specifier: ^3.23.8
         version: 3.23.8
 
-  packages/cli:
+  cli:
     dependencies:
       '@oclif/core':
         specifier: ^4.0.21
@@ -184,16 +184,16 @@ importers:
         version: 7.5.8
       '@xata.io/client':
         specifier: workspace:*
-        version: link:../client
+        version: link:../packages/client
       '@xata.io/codegen':
         specifier: workspace:*
-        version: link:../codegen
+        version: link:../packages/codegen
       '@xata.io/importer':
         specifier: workspace:*
-        version: link:../importer
+        version: link:../packages/importer
       '@xata.io/pgroll':
         specifier: workspace:*
-        version: link:../pgroll
+        version: link:../packages/pgroll
       ansi-regex:
         specifier: ^6.1.0
         version: 6.1.0
