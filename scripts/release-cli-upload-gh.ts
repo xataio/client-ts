@@ -3,7 +3,7 @@ import { Octokit } from '@octokit/core';
 import fs from 'fs';
 import { matrixToOclif } from './utils';
 
-const PATH_TO_CLI = process.cwd() + '/cli';
+const PATH_TO_CLI = process.cwd() + '/packages/cli';
 
 const base = {
   owner: 'xataio',

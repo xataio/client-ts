@@ -1,5 +1,23 @@
 # @xata.io/cli
 
+## 0.16.10
+
+### Patch Changes
+
+- [#1593](https://github.com/xataio/client-ts/pull/1593) [`621e3e9`](https://github.com/xataio/client-ts/commit/621e3e91345c107d19d22133571728ea39ff432f) Thanks [@eemmiillyy](https://github.com/eemmiillyy)! - add ability to import new data to existing tables
+
+## 0.16.9
+
+### Patch Changes
+
+- [#1594](https://github.com/xataio/client-ts/pull/1594) [`d2eeebf`](https://github.com/xataio/client-ts/commit/d2eeebf18a2f4078ffdcbedd4e4a4d5ba15db3a7) Thanks [@SferaDev](https://github.com/SferaDev)! - Update release scripts
+
+## 0.16.8
+
+### Patch Changes
+
+- [#1584](https://github.com/xataio/client-ts/pull/1584) [`75f5653`](https://github.com/xataio/client-ts/commit/75f5653f6217f57fdc95245d5679e3e30b03ca3e) Thanks [@xata-bot](https://github.com/xata-bot)! - Update dependencies and fix vulnerabilities
+
 ## 0.16.7
 
 ### Patch Changes

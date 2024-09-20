@@ -149,7 +149,7 @@ jobs:
 
       - name: Capture version
         id: capture-version
-        working-directory: ./cli
+        working-directory: ./packages/cli
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
 
       - name: Create SHA outputs macos
