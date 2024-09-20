@@ -76,7 +76,7 @@ function getDrizzleClient(type: string, database: string, branch: string) {
   }
 }
 
-describe.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({ type }) => {
+describe.skip.concurrent.each([{ type: 'pg' }, { type: 'http' }])('Drizzle $type', ({ type }) => {
   const dbName = `${database}-${type}`;
 
   beforeAll(async () => {

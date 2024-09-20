@@ -26,7 +26,7 @@ const resolveUrl = (
   // We need to encode the path params because they can contain special characters
   // Special case, `:` does not need to be encoded as we use it as a separator
   const cleanPathParams = Object.entries(pathParams).reduce((acc, [key, value]) => {
-    return { ...acc, [key]: encodeURIComponent(String(value ?? '')).replace('%3A', ':') };
+    return { ...acc, [key]: encodeURIComponent(String(value ?? '')).replace(/%3A/g, ':') };
   }, {} as Record<string, string>);
 
   return url.replace(/\{\w*\}/g, (key) => cleanPathParams[key.slice(1, -1)]) + queryString;
