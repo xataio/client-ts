@@ -6,7 +6,7 @@ import * as util from 'util';
 import { matrixToOclif, platformDistributions, publishedPackagesContains } from './utils';
 const exec = util.promisify(execRaw);
 
-const PATH_TO_CLI = process.cwd() + '/cli';
+const PATH_TO_CLI = process.cwd() + '/packages/cli';
 const PATH_TO_CLIENT = process.cwd() + '/packages/client';
 const PATH_TO_CODEGEN = process.cwd() + '/packages/codegen';
 const PATH_TO_IMPORTER = process.cwd() + '/packages/importer';
