@@ -51,7 +51,8 @@ export function handler(
       callback(apiKey);
     } catch (err) {
       res.writeHead(500);
-      res.end(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
+      console.error(err);
+      res.end('Something went wrong');
     }
   };
 }
