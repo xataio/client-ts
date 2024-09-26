@@ -56,6 +56,7 @@ test('PrimaryKey', () => {
   type Type = NewIdentifiable<typeof tables>['PrimaryKey'];
 
   const user: Type = { pk: 1 };
+  const user1: Type = 1;
   // @ts-expect-error
   const user2: Type = { pk: '1' };
   // @ts-expect-error
@@ -66,6 +67,7 @@ test('NullablePrimaryKey', () => {
   type Type = NewIdentifiable<typeof tables>['NullablePrimaryKey'];
 
   const user: Type = { pk: 1 };
+  const user1: Type = 1;
   // @ts-expect-error
   const user2: Type = { pk: '1' };
   // @ts-expect-error
@@ -77,9 +79,9 @@ test('UniqueNotNull', () => {
 
   const user: Type = { foo: 'bar' };
   // @ts-expect-error
-  const user2: Type = { foo: 1 };
+  const user1: Type = { foo: 1 };
   // @ts-expect-error
-  const user3: Type = { foo: 'bar', xata_version: 1 };
+  const user2: Type = { foo: 'bar', xata_version: 1 };
 });
 
 test('CompositePrimaryKey', () => {
@@ -87,9 +89,9 @@ test('CompositePrimaryKey', () => {
 
   const user: Type = { a: 1, b: '2' };
   // @ts-expect-error
-  const user2: Type = { a: '1', b: '2' };
+  const user1: Type = { a: '1', b: '2' };
   // @ts-expect-error
-  const user3: Type = { a: 1, b: '2', xata_version: 1 };
+  const user2: Type = { a: 1, b: '2', xata_version: 1 };
 });
 
 test('Mixture', () => {
@@ -97,7 +99,7 @@ test('Mixture', () => {
 
   const user: Type = { a: 1, b: '2', c: '3' };
   // @ts-expect-error
-  const user2: Type = { a: '1', b: '2', c: '3' };
+  const user1: Type = { a: '1', b: '2', c: '3' };
   // @ts-expect-error
-  const user3: Type = { a: 1, b: '2', c: '3', xata_version: 1 };
+  const user2: Type = { a: 1, b: '2', c: '3', xata_version: 1 };
 });

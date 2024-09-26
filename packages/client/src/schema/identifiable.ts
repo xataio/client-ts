@@ -15,7 +15,10 @@ export type NewIdentifiable<T extends readonly TableSchema[]> = T extends never[
   : T extends readonly unknown[]
   ? T[number] extends { name: string; columns: readonly unknown[] }
     ? {
-        [K in T[number]['name']]: PrimaryKeyType<T[number], K> | UniqueNotNullType<T[number], K>;
+        [K in T[number]['name']]:
+          | PrimaryKeyType<T[number], K>
+          | UniqueNotNullType<T[number], K>
+          | SinglePrimaryKeyType<T[number], K>;
       }
     : never
   : never;
@@ -28,6 +31,22 @@ type PrimaryKeyType<Tables, TableName> = Tables & { name: TableName } extends in
           ? {
               [P in PrimaryKey[number]]: PropertyType<Columns[number], P>[P];
             }
+          : never
+        : never
+      : never
+    : never
+  : never;
+
+type SinglePrimaryKeyType<Tables, TableName> = Tables & { name: TableName } extends infer Table
+  ? Table extends { name: string; columns: infer Columns } & { primaryKey: infer PrimaryKey }
+    ? Columns extends readonly unknown[]
+      ? Columns[number] extends { name: string; type: string }
+        ? PrimaryKey extends readonly string[] & { length: 1 }
+          ? NonNullable<
+              {
+                [P in PrimaryKey[number]]: PropertyType<Columns[number], P>[P];
+              }[PrimaryKey[number]]
+            >
           : never
         : never
       : never
