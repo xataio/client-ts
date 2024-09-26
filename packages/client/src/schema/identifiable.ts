@@ -63,7 +63,9 @@ type PropertyType<Properties, PropertyName extends PropertyKey> = Properties & {
       ? {
           [K in PropertyName]: InnerType<Type>;
         }
-      : never
+      : {
+          [K in PropertyName]: InnerType<Type> | null;
+        }
     : never
   : never;
 

@@ -11,7 +11,7 @@ const tables = [
     ]
   },
   {
-    name: 'InvalidPrimaryKey',
+    name: 'NullablePrimaryKey',
     primaryKey: ['pk'],
     columns: [
       { name: 'pk', type: 'int', notNull: false, unique: true },
@@ -62,10 +62,9 @@ test('PrimaryKey', () => {
   const user3: Type = { pk: 1, xata_version: 1 };
 });
 
-test('InvalidPrimaryKey', () => {
-  type Type = NewIdentifiable<typeof tables>['InvalidPrimaryKey'];
+test('NullablePrimaryKey', () => {
+  type Type = NewIdentifiable<typeof tables>['NullablePrimaryKey'];
 
-  // @ts-expect-error
   const user: Type = { pk: 1 };
   // @ts-expect-error
   const user2: Type = { pk: '1' };
