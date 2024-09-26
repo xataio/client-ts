@@ -1,119 +1,104 @@
 import { test } from 'vitest';
-import { NewIdentifiable, NewIdentifierKey, NewIndentifierValue } from './identifiable';
+import { NewIdentifiable } from './identifiable';
 
 const tables = [
   {
-    name: 'teams',
-    primaryKey: ['xata_id'],
+    name: 'PrimaryKey',
+    primaryKey: ['pk'],
     columns: [
-      { name: 'xata_id', type: 'boolean', notNull: true, unique: true },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true },
-      { name: 'email', type: 'email', unique: true },
-      { name: 'pet', type: 'link', link: { table: 'pets' } },
-      { name: 'account_value', type: 'int' },
-      { name: 'vector', type: 'vector', vector: { dimension: 4 } }
-    ]
-  },
-  {
-    name: 'users',
-    primaryKey: ['userdefined'],
-    columns: [
-      { name: 'userdefined', type: 'int', notNull: true, unique: true },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true },
+      { name: 'pk', type: 'int', notNull: true, unique: true },
       { name: 'email', type: 'email', unique: true }
     ]
   },
   {
-    name: 'pets',
+    name: 'InvalidPrimaryKey',
+    primaryKey: ['pk'],
+    columns: [
+      { name: 'pk', type: 'int', notNull: false, unique: true },
+      { name: 'name', type: 'string' }
+    ]
+  },
+  {
+    name: 'UniqueNotNull',
     primaryKey: [],
     columns: [
-      { name: 'xata_id', type: 'text', notNull: true, unique: true },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true },
-      { name: 'name', type: 'string', notNull: true, unique: true }
+      { name: 'foo', type: 'string', notNull: true, unique: true },
+      { name: 'name', type: 'string' }
     ]
   },
   {
-    name: 'datetime',
-    primaryKey: ['xata_id'],
+    name: 'CompositePrimaryKey',
+    primaryKey: ['a', 'b'],
     columns: [
-      { name: 'xata_id', type: 'datetime', notNull: true, unique: true },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true }
+      { name: 'a', type: 'int', notNull: true, unique: true },
+      { name: 'b', type: 'string', notNull: true, unique: true },
+      { name: 'name', type: 'string' }
     ]
   },
   {
-    name: 'multiple',
-    primaryKey: ['xata_id'],
+    name: 'Mixture',
+    primaryKey: ['a', 'b'],
     columns: [
-      { name: 'xata_id', type: 'multiple', notNull: true, unique: true },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true }
+      { name: 'a', type: 'int', notNull: true, unique: true },
+      { name: 'b', type: 'string', notNull: true, unique: true },
+      { name: 'c', type: 'string', notNull: true, unique: true },
+      { name: 'name', type: 'string' }
     ]
   },
   {
-    name: 'vector',
-    primaryKey: ['xata_id'],
-    columns: [
-      { name: 'xata_id', type: 'vector', notNull: true, unique: true },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true }
-    ]
-  },
-  {
-    name: 'boolean[]',
-    primaryKey: ['xata_id'],
-    columns: [
-      { name: 'xata_id', type: 'boolean[]', notNull: true, unique: true },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true }
-    ]
-  },
-  {
-    name: 'jsonb',
-    primaryKey: ['xata_id'],
-    columns: [
-      { name: 'xata_id', type: 'json', notNull: true, unique: true },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true }
-    ]
-  },
-  {
-    name: 'unknown',
+    name: 'None',
     primaryKey: [],
-    columns: [
-      { name: 'xata_id', type: 'text', notNull: true, unique: true },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true }
-    ]
-  },
-  {
-    name: 'neither',
-    primaryKey: [],
-    columns: [
-      { name: 'xata_id', type: 'text' },
-      { name: 'xata_version', type: 'int', notNull: true },
-      { name: 'xata_createdat', type: 'datetime', notNull: true },
-      { name: 'xata_updatedat', type: 'datetime', notNull: true }
-    ]
+    columns: [{ name: 'name', type: 'string' }]
   }
 ] as const;
 
-type DbIndentifiable = NewIdentifiable<typeof tables>['users'];
-type DbIndentifiableKey = NewIdentifierKey<DbIndentifiable>;
-type DbIndentifiableValue = NewIndentifierValue<DbIndentifiable>;
+test('PrimaryKey', () => {
+  type Type = NewIdentifiable<typeof tables>['PrimaryKey'];
 
-test('fake test', () => {
-  // This is a fake test to make sure that the type definitions in this file are working
+  const user: Type = { pk: 1 };
+  // @ts-expect-error
+  const user2: Type = { pk: '1' };
+  // @ts-expect-error
+  const user3: Type = { pk: 1, xata_version: 1 };
+});
+
+test('InvalidPrimaryKey', () => {
+  type Type = NewIdentifiable<typeof tables>['InvalidPrimaryKey'];
+
+  // @ts-expect-error
+  const user: Type = { pk: 1 };
+  // @ts-expect-error
+  const user2: Type = { pk: '1' };
+  // @ts-expect-error
+  const user3: Type = { pk: 1, xata_version: 1 };
+});
+
+test('UniqueNotNull', () => {
+  type Type = NewIdentifiable<typeof tables>['UniqueNotNull'];
+
+  const user: Type = { foo: 'bar' };
+  // @ts-expect-error
+  const user2: Type = { foo: 1 };
+  // @ts-expect-error
+  const user3: Type = { foo: 'bar', xata_version: 1 };
+});
+
+test('CompositePrimaryKey', () => {
+  type Type = NewIdentifiable<typeof tables>['CompositePrimaryKey'];
+
+  const user: Type = { a: 1, b: '2' };
+  // @ts-expect-error
+  const user2: Type = { a: '1', b: '2' };
+  // @ts-expect-error
+  const user3: Type = { a: 1, b: '2', xata_version: 1 };
+});
+
+test('Mixture', () => {
+  type Type = NewIdentifiable<typeof tables>['Mixture'];
+
+  const user: Type = { a: 1, b: '2', c: '3' };
+  // @ts-expect-error
+  const user2: Type = { a: '1', b: '2', c: '3' };
+  // @ts-expect-error
+  const user3: Type = { a: 1, b: '2', c: '3', xata_version: 1 };
 });
