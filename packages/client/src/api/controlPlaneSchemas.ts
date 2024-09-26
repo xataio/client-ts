@@ -498,10 +498,6 @@ export type DatabaseMetadata = {
    */
   createdAt: DateTime;
   /**
-   * @x-internal true
-   */
-  newMigrations?: boolean;
-  /**
    * The default cluster ID where branches from this database reside. Value of 'shared-cluster' for branches in shared clusters.
    */
   defaultClusterID?: string;
