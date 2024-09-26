@@ -10,7 +10,7 @@ import { InputXataFile, NumericOperator } from './record';
  *
  * If neither found, never will be returned.
  */
-export type NewIdentifiable<T extends readonly TableSchema[]> = T extends never[]
+export type Identifiers<T extends readonly TableSchema[]> = T extends never[]
   ? never
   : T extends readonly unknown[]
   ? T[number] extends { name: string; columns: readonly unknown[] }

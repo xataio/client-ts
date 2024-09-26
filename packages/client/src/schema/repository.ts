@@ -43,7 +43,7 @@ import { AggregationExpression, AggregationResult } from './aggregate';
 import { AskOptions, AskResult } from './ask';
 import { XataArrayFile, XataFile, parseInputFileEntry } from './files';
 import { Filter, cleanFilter, filterToKysely } from './filters';
-import { NewEditableData, NewEditableDataWithoutNumeric, NewIdentifiable } from './identifiable';
+import { NewEditableData, NewEditableDataWithoutNumeric, Identifiers } from './identifiable';
 import { parseJson, stringifyJson } from './json';
 import {
   CursorNavigationDecoded,
@@ -105,7 +105,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract create<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
@@ -117,7 +117,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract create(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
@@ -148,7 +148,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The persisted record for the given id or null if the record could not be found.
    */
   abstract read<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns> | null>>;
 
@@ -158,7 +158,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The persisted record for the given id or null if the record could not be found.
    */
   abstract read(
-    identifier: NewIdentifiable<Schema['tables']>[TableName]
+    identifier: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']> | null>>;
 
   /**
@@ -168,7 +168,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
   abstract read<K extends SelectableColumn<ObjectType>>(
-    identifiers: ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>,
+    identifiers: ReadonlyArray<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
 
@@ -178,7 +178,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
   abstract read(
-    identifiers: ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>
+    identifiers: ReadonlyArray<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
 
   /**
@@ -188,7 +188,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The persisted record for the given id or null if the record could not be found.
    */
   abstract read<K extends SelectableColumn<ObjectType>>(
-    object: NewIdentifiable<Schema['tables']>[TableName],
+    object: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns> | null>>;
 
@@ -198,7 +198,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The persisted record for the given id or null if the record could not be found.
    */
   abstract read(
-    object: NewIdentifiable<Schema['tables']>[TableName]
+    object: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']> | null>>;
 
   /**
@@ -208,7 +208,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
   abstract read<K extends SelectableColumn<ObjectType>>(
-    objects: NewIdentifiable<Schema['tables']>[TableName][],
+    objects: Identifiers<Schema['tables']>[TableName][],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
 
@@ -218,7 +218,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The persisted records for the given ids in order (if a record could not be found null is returned).
    */
   abstract read(
-    objects: NewIdentifiable<Schema['tables']>[TableName][]
+    objects: Identifiers<Schema['tables']>[TableName][]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
 
   /**
@@ -229,7 +229,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
@@ -240,7 +240,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract readOrThrow(
-    identifier: NewIdentifiable<Schema['tables']>[TableName]
+    identifier: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -251,7 +251,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<ObjectType>>(
-    identifiers: ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>,
+    identifiers: ReadonlyArray<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
 
@@ -262,7 +262,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract readOrThrow(
-    identifiers: ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>
+    identifiers: ReadonlyArray<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
 
   /**
@@ -273,7 +273,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<ObjectType>>(
-    object: NewIdentifiable<Schema['tables']>[TableName],
+    object: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
@@ -284,7 +284,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract readOrThrow(
-    object: NewIdentifiable<Schema['tables']>[TableName]
+    object: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -295,7 +295,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract readOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: NewIdentifiable<Schema['tables']>[TableName][],
+    objects: Identifiers<Schema['tables']>[TableName][],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
 
@@ -306,7 +306,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract readOrThrow(
-    objects: NewIdentifiable<Schema['tables']>[TableName][]
+    objects: Identifiers<Schema['tables']>[TableName][]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
 
   /**
@@ -316,7 +316,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record, null if the record could not be found.
    */
   abstract update<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
+    object: NewEditableData<ObjectType> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
 
@@ -326,7 +326,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record, null if the record could not be found.
    */
   abstract update(
-    object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]
+    object: NewEditableData<ObjectType> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
 
   /**
@@ -337,7 +337,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record, null if the record could not be found.
    */
   abstract update<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableData<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
@@ -349,7 +349,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record, null if the record could not be found.
    */
   abstract update(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableData<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
 
@@ -360,7 +360,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the persisted records in order (if a record could not be found null is returned).
    */
   abstract update<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<NewEditableData<ObjectType> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
 
@@ -370,7 +370,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the persisted records in order (if a record could not be found null is returned).
    */
   abstract update(
-    objects: Array<NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<NewEditableData<ObjectType> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
 
   /**
@@ -381,7 +381,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract updateOrThrow<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
+    object: NewEditableData<ObjectType> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
@@ -392,7 +392,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract updateOrThrow(
-    object: NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]
+    object: NewEditableData<ObjectType> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -404,7 +404,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract updateOrThrow<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableData<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
@@ -417,7 +417,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract updateOrThrow(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableData<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
@@ -429,7 +429,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract updateOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<NewEditableData<ObjectType> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
 
@@ -440,7 +440,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract updateOrThrow(
-    objects: Array<NewEditableData<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<NewEditableData<ObjectType> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
 
   /**
@@ -451,7 +451,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
+    object: NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
@@ -462,7 +462,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrUpdate(
-    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]
+    object: NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -474,7 +474,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
@@ -487,7 +487,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrUpdate(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
@@ -499,7 +499,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the persisted records.
    */
   abstract createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
 
@@ -510,7 +510,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the persisted records.
    */
   abstract createOrUpdate(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
 
   /**
@@ -521,7 +521,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrReplace<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
+    object: NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
@@ -532,7 +532,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrReplace(
-    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]
+    object: NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -544,7 +544,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrReplace<K extends SelectableColumn<ObjectType>>(
-    id: NewIdentifiable<Schema['tables']>[TableName],
+    id: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
@@ -557,7 +557,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The full persisted record.
    */
   abstract createOrReplace(
-    id: NewIdentifiable<Schema['tables']>[TableName],
+    id: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
@@ -569,7 +569,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the persisted records.
    */
   abstract createOrReplace<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
 
@@ -580,7 +580,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the persisted records.
    */
   abstract createOrReplace(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
 
   /**
@@ -590,7 +590,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The deleted record, null if the record could not be found.
    */
   abstract delete<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName],
+    object: NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
 
@@ -600,7 +600,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The deleted record, null if the record could not be found.
    */
   abstract delete(
-    object: NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]
+    object: NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
 
   /**
@@ -610,7 +610,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The deleted record, null if the record could not be found.
    */
   abstract delete<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
 
@@ -620,7 +620,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns The deleted record, null if the record could not be found.
    */
   abstract delete(
-    identifier: NewIdentifiable<Schema['tables']>[TableName]
+    identifier: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
 
   /**
@@ -630,7 +630,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the deleted records in order (if a record could not be found null is returned).
    */
   abstract delete<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
 
@@ -640,7 +640,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the deleted records in order (if a record could not be found null is returned).
    */
   abstract delete(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
 
   /**
@@ -650,7 +650,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the deleted records in order (if a record could not be found null is returned).
    */
   abstract delete<K extends SelectableColumn<ObjectType>>(
-    objects: NewIdentifiable<Schema['tables']>[TableName][],
+    objects: Identifiers<Schema['tables']>[TableName][],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
 
@@ -660,7 +660,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @returns Array of the deleted records in order (if a record could not be found null is returned).
    */
   abstract delete(
-    objects: NewIdentifiable<Schema['tables']>[TableName][]
+    objects: Identifiers<Schema['tables']>[TableName][]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
 
   /**
@@ -671,7 +671,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    object: NewIdentifiable<Schema['tables']>[TableName],
+    object: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
@@ -682,7 +682,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract deleteOrThrow(
-    object: NewIdentifiable<Schema['tables']>[TableName]
+    object: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -693,7 +693,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
 
@@ -704,7 +704,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If the record could not be found.
    */
   abstract deleteOrThrow(
-    identifier: NewIdentifiable<Schema['tables']>[TableName]
+    identifier: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
 
   /**
@@ -715,7 +715,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
 
@@ -726,7 +726,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract deleteOrThrow(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
 
   /**
@@ -737,7 +737,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: NewIdentifiable<Schema['tables']>[TableName][],
+    objects: Identifiers<Schema['tables']>[TableName][],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
 
@@ -748,7 +748,7 @@ export abstract class Repository<Schema extends DatabaseSchema, TableName extend
    * @throws If one or more records could not be found.
    */
   abstract deleteOrThrow(
-    objects: NewIdentifiable<Schema['tables']>[TableName][]
+    objects: Identifiers<Schema['tables']>[TableName][]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
 
   /**
@@ -945,33 +945,33 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async create<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>,
+    object: NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async create(
-    object: NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>
+    object: NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async create<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async create(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async create<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>,
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
   async create(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
   async create<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | (NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>)
-      | Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>,
+      | Identifiers<Schema['tables']>[TableName]
+      | (NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>)
+      | Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>,
     b?: NewEditableDataWithoutNumeric<ObjectType> | K[],
     c?: K[]
   ): Promise<
@@ -988,7 +988,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
-        const result = await this.read(records as NewIdentifiable<Schema['tables']>[TableName][], columns);
+        const result = await this.read(records as Identifiers<Schema['tables']>[TableName][], columns);
         return result;
       }
 
@@ -1047,7 +1047,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async #insertRecordWithId(
-    recordId: NewIdentifiable<Schema['tables']>[TableName],
+    recordId: Identifiers<Schema['tables']>[TableName],
     object: NewEditableData<ObjectType>,
     columns: SelectableColumn<ObjectType>[] = ['*'],
     { createOnly }: { createOnly: boolean }
@@ -1108,39 +1108,39 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async read<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns> | null>>;
   async read(
-    identifier: NewIdentifiable<Schema['tables']>[TableName]
+    identifier: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']> | null>>;
   async read<K extends SelectableColumn<ObjectType>>(
-    ids: ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>,
+    ids: ReadonlyArray<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
   async read(
-    ids: ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>
+    ids: ReadonlyArray<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async read<K extends SelectableColumn<ObjectType>>(
-    object: NewIdentifiable<Schema['tables']>[TableName],
+    object: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns> | null>>;
   async read(
-    object: NewIdentifiable<Schema['tables']>[TableName]
+    object: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']> | null>>;
   async read<K extends SelectableColumn<ObjectType>>(
-    objects: NewIdentifiable<Schema['tables']>[TableName][],
+    objects: Identifiers<Schema['tables']>[TableName][],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
   async read(
-    objects: NewIdentifiable<Schema['tables']>[TableName][]
+    objects: Identifiers<Schema['tables']>[TableName][]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async read<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | NewIdentifiable<Schema['tables']>[TableName][],
+      | Identifiers<Schema['tables']>[TableName]
+      | ReadonlyArray<Identifiers<Schema['tables']>[TableName]>
+      | Identifiers<Schema['tables']>[TableName]
+      | Identifiers<Schema['tables']>[TableName][],
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<ObjectType, ['*']>>
@@ -1204,39 +1204,39 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async readOrThrow(
-    identifier: NewIdentifiable<Schema['tables']>[TableName]
+    identifier: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
-    ids: ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>,
+    ids: ReadonlyArray<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
   async readOrThrow(
-    ids: ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>
+    ids: ReadonlyArray<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
-    object: NewIdentifiable<Schema['tables']>[TableName],
+    object: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async readOrThrow(
-    object: NewIdentifiable<Schema['tables']>[TableName]
+    object: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: NewIdentifiable<Schema['tables']>[TableName][],
+    objects: Identifiers<Schema['tables']>[TableName][],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
   async readOrThrow(
-    objects: NewIdentifiable<Schema['tables']>[TableName][]
+    objects: Identifiers<Schema['tables']>[TableName][]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | ReadonlyArray<NewIdentifiable<Schema['tables']>[TableName]>
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | NewIdentifiable<Schema['tables']>[TableName][],
+      | Identifiers<Schema['tables']>[TableName]
+      | ReadonlyArray<Identifiers<Schema['tables']>[TableName]>
+      | Identifiers<Schema['tables']>[TableName]
+      | Identifiers<Schema['tables']>[TableName][],
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<ObjectType, ['*']>>
@@ -1249,7 +1249,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
 
       if (Array.isArray(result)) {
         const missingIds = compact(
-          (a as Array<string | NewIdentifiable<Schema['tables']>[TableName]>)
+          (a as Array<string | Identifiers<Schema['tables']>[TableName]>)
             .filter((_item, index) => result[index] === null)
             .map((item) => extractIdKysely(item, this.#primaryKey))
         );
@@ -1271,33 +1271,33 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async update<K extends SelectableColumn<ObjectType>>(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName],
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
   async update(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
   async update<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: Partial<NewEditableData<ObjectType>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
   async update(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: Partial<NewEditableData<ObjectType>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
   async update<K extends SelectableColumn<ObjectType>>(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
   async update(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async update<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | (Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName])
-      | Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+      | Identifiers<Schema['tables']>[TableName]
+      | (Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName])
+      | Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     b?: Partial<NewEditableData<ObjectType>> | K[],
     c?: K[]
   ): Promise<
@@ -1353,33 +1353,33 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async updateOrThrow<K extends SelectableColumn<ObjectType>>(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName],
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async updateOrThrow(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: Partial<NewEditableData<ObjectType>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async updateOrThrow(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: Partial<NewEditableData<ObjectType>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
   async updateOrThrow(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
   async updateOrThrow<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | (Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName])
-      | Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+      | Identifiers<Schema['tables']>[TableName]
+      | (Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName])
+      | Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     b?: Partial<NewEditableData<ObjectType>> | K[],
     c?: K[]
   ): Promise<
@@ -1393,7 +1393,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
 
       if (Array.isArray(result)) {
         const missingIds = compact(
-          (a as Array<string | NewIdentifiable<Schema['tables']>[TableName]>)
+          (a as Array<string | Identifiers<Schema['tables']>[TableName]>)
             .filter((_item, index) => result[index] === null)
             .map((item) => extractIdKysely(item, this.#primaryKey))
         );
@@ -1415,7 +1415,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async #updateRecordWithID(
-    recordId: NewIdentifiable<Schema['tables']>[TableName],
+    recordId: Identifiers<Schema['tables']>[TableName],
     object: Partial<NewEditableData<ObjectType>>,
     columns: SelectableColumn<ObjectType>[] = ['*']
   ) {
@@ -1458,7 +1458,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async #updateRecords(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     { upsert }: { upsert: boolean }
   ) {
     const operations = await promiseMap(objects, async (object) => {
@@ -1515,30 +1515,30 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>,
+    object: NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async createOrUpdate(
-    object: NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>
+    object: NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableData<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async createOrUpdate(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableData<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>,
+    objects: Array<NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
   async createOrUpdate(
-    objects: Array<NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>
+    objects: Array<NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
   async createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    a: NewIdentifiable<Schema['tables']>[TableName] | NewEditableData<ObjectType> | NewEditableData<ObjectType>[],
+    a: Identifiers<Schema['tables']>[TableName] | NewEditableData<ObjectType> | NewEditableData<ObjectType>[],
     b?: NewEditableData<ObjectType> | K[],
     c?: K[]
   ): Promise<
@@ -1598,7 +1598,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async #upsertRecordWithID(
-    recordId: NewIdentifiable<Schema['tables']>[TableName],
+    recordId: Identifiers<Schema['tables']>[TableName],
     object: Omit<EditableData<ObjectType>, 'xata_id'>,
     columns: SelectableColumn<ObjectType>[] = ['*']
   ) {
@@ -1620,31 +1620,31 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async createOrReplace<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>,
+    object: NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async createOrReplace(
-    object: NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>
+    object: NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async createOrReplace<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName] | undefined,
+    identifier: Identifiers<Schema['tables']>[TableName] | undefined,
     object: NewEditableData<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async createOrReplace(
-    identifier: NewIdentifiable<Schema['tables']>[TableName] | undefined,
+    identifier: Identifiers<Schema['tables']>[TableName] | undefined,
     object: NewEditableData<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async createOrReplace<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>,
+    objects: Array<NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
   async createOrReplace(
-    objects: Array<NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>
+    objects: Array<NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
   async createOrReplace<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
+      | Identifiers<Schema['tables']>[TableName]
       | NewEditableData<ObjectType>
       | NewEditableData<ObjectType>[]
       | undefined,
@@ -1666,7 +1666,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
         const columns = isValidSelectableColumns(b) ? b : (['*'] as K[]);
 
         // TODO: Transaction API does not support column projection
-        const result = await this.read(records as NewIdentifiable<Schema['tables']>[TableName][], columns);
+        const result = await this.read(records as Identifiers<Schema['tables']>[TableName][], columns);
         return result;
       }
 
@@ -1710,38 +1710,38 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    object: NewIdentifiable<Schema['tables']>[TableName],
+    object: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async deleteOrThrow(
-    object: NewIdentifiable<Schema['tables']>[TableName]
+    object: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async deleteOrThrow(
-    identifier: NewIdentifiable<Schema['tables']>[TableName]
+    identifier: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
   async deleteOrThrow(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: NewIdentifiable<Schema['tables']>[TableName][],
+    objects: Identifiers<Schema['tables']>[TableName][],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
   async deleteOrThrow(
-    objects: NewIdentifiable<Schema['tables']>[TableName][]
+    objects: Identifiers<Schema['tables']>[TableName][]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | Array<NewIdentifiable<Schema['tables']>[TableName] | NewIdentifiable<Schema['tables']>[TableName]>,
+      | Identifiers<Schema['tables']>[TableName]
+      | Identifiers<Schema['tables']>[TableName]
+      | Array<Identifiers<Schema['tables']>[TableName] | Identifiers<Schema['tables']>[TableName]>,
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<ObjectType, ['*']>>
@@ -1754,7 +1754,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
 
       if (Array.isArray(result)) {
         const missingIds = compact(
-          (a as Array<string | NewIdentifiable<Schema['tables']>[TableName]>)
+          (a as Array<string | Identifiers<Schema['tables']>[TableName]>)
             .filter((_item, index) => result[index] === null)
             .map((item) => extractIdKysely(item, this.#primaryKey))
         );
@@ -1774,38 +1774,38 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async delete<K extends SelectableColumn<ObjectType>>(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName],
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
   async delete(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
   async delete<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
   async delete(
-    identifier: NewIdentifiable<Schema['tables']>[TableName]
+    identifier: Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
   async delete<K extends SelectableColumn<ObjectType>>(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
   async delete(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async delete<K extends SelectableColumn<ObjectType>>(
-    objects: NewIdentifiable<Schema['tables']>[TableName][],
+    objects: Identifiers<Schema['tables']>[TableName][],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
   async delete(
-    objects: NewIdentifiable<Schema['tables']>[TableName][]
+    objects: Identifiers<Schema['tables']>[TableName][]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async delete<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | Array<NewIdentifiable<Schema['tables']>[TableName] | NewIdentifiable<Schema['tables']>[TableName]>,
+      | Identifiers<Schema['tables']>[TableName]
+      | Identifiers<Schema['tables']>[TableName]
+      | Array<Identifiers<Schema['tables']>[TableName] | Identifiers<Schema['tables']>[TableName]>,
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<ObjectType, ['*']>>
@@ -1850,7 +1850,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
   }
 
   async #deleteRecord(
-    recordId: NewIdentifiable<Schema['tables']>[TableName],
+    recordId: Identifiers<Schema['tables']>[TableName],
     columns: SelectableColumn<ObjectType>[] = ['*']
   ) {
     if (!recordId) return null;
@@ -1876,7 +1876,7 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
     }
   }
 
-  async #deleteRecords(recordIds: NewIdentifiable<Schema['tables']>[TableName][]) {
+  async #deleteRecords(recordIds: Identifiers<Schema['tables']>[TableName][]) {
     const statements: SqlBatchQueryRequestBody['statements'] = recordIds.map((id) => {
       const statement = this.#db.deleteFrom(this.#table).where(this.#primaryKey, '=', id);
       return {
@@ -2311,33 +2311,33 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async create<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>,
+    object: NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async create(
-    object: NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>
+    object: NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async create<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async create(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableDataWithoutNumeric<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async create<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>,
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
   async create(
-    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>
+    objects: Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
   async create<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | (NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>)
-      | Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>,
+      | Identifiers<Schema['tables']>[TableName]
+      | (NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>)
+      | Array<NewEditableDataWithoutNumeric<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>,
     b?: NewEditableDataWithoutNumeric<ObjectType> | K[],
     c?: K[]
   ): Promise<
@@ -2609,33 +2609,33 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async update<K extends SelectableColumn<ObjectType>>(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName],
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
   async update(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
   async update<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: Partial<NewEditableData<ObjectType>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
   async update(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: Partial<NewEditableData<ObjectType>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
   async update<K extends SelectableColumn<ObjectType>>(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
   async update(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async update<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | (Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName])
-      | Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+      | Identifiers<Schema['tables']>[TableName]
+      | (Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName])
+      | Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     b?: Partial<NewEditableData<ObjectType>> | K[],
     c?: K[]
   ): Promise<
@@ -2687,33 +2687,33 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async updateOrThrow<K extends SelectableColumn<ObjectType>>(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName],
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName],
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async updateOrThrow(
-    object: Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]
+    object: Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: Partial<NewEditableData<ObjectType>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async updateOrThrow(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: Partial<NewEditableData<ObjectType>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async updateOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
   async updateOrThrow(
-    objects: Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>
+    objects: Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
   async updateOrThrow<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
-      | (Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName])
-      | Array<Partial<NewEditableData<ObjectType>> & NewIdentifiable<Schema['tables']>[TableName]>,
+      | Identifiers<Schema['tables']>[TableName]
+      | (Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName])
+      | Array<Partial<NewEditableData<ObjectType>> & Identifiers<Schema['tables']>[TableName]>,
     b?: Partial<NewEditableData<ObjectType>> | K[],
     c?: K[]
   ): Promise<
@@ -2819,30 +2819,30 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>,
+    object: NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async createOrUpdate(
-    object: NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>
+    object: NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableData<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async createOrUpdate(
-    identifier: NewIdentifiable<Schema['tables']>[TableName],
+    identifier: Identifiers<Schema['tables']>[TableName],
     object: NewEditableData<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>,
+    objects: Array<NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
   async createOrUpdate(
-    objects: Array<NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>
+    objects: Array<NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
   async createOrUpdate<K extends SelectableColumn<ObjectType>>(
-    a: NewIdentifiable<Schema['tables']>[TableName] | NewEditableData<ObjectType> | NewEditableData<ObjectType>[],
+    a: Identifiers<Schema['tables']>[TableName] | NewEditableData<ObjectType> | NewEditableData<ObjectType>[],
     b?: NewEditableData<ObjectType> | K[],
     c?: K[]
   ): Promise<
@@ -2921,31 +2921,31 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async createOrReplace<K extends SelectableColumn<ObjectType>>(
-    object: NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>,
+    object: NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async createOrReplace(
-    object: NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>
+    object: NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async createOrReplace<K extends SelectableColumn<ObjectType>>(
-    identifier: NewIdentifiable<Schema['tables']>[TableName] | undefined,
+    identifier: Identifiers<Schema['tables']>[TableName] | undefined,
     object: NewEditableData<ObjectType>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
   async createOrReplace(
-    identifier: NewIdentifiable<Schema['tables']>[TableName] | undefined,
+    identifier: Identifiers<Schema['tables']>[TableName] | undefined,
     object: NewEditableData<ObjectType>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async createOrReplace<K extends SelectableColumn<ObjectType>>(
-    objects: Array<NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>,
+    objects: Array<NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>[]>;
   async createOrReplace(
-    objects: Array<NewEditableData<ObjectType> & Partial<NewIdentifiable<Schema['tables']>[TableName]>>
+    objects: Array<NewEditableData<ObjectType> & Partial<Identifiers<Schema['tables']>[TableName]>>
   ): Promise<Readonly<SelectedPick<ObjectType, ['*']>>[]>;
   async createOrReplace<K extends SelectableColumn<ObjectType>>(
     a:
-      | NewIdentifiable<Schema['tables']>[TableName]
+      | Identifiers<Schema['tables']>[TableName]
       | NewEditableData<ObjectType>
       | NewEditableData<ObjectType>[]
       | undefined,

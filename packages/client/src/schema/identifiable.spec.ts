@@ -1,5 +1,5 @@
 import { test } from 'vitest';
-import { NewIdentifiable } from './identifiable';
+import { Identifiers } from './identifiable';
 
 const tables = [
   {
@@ -53,7 +53,7 @@ const tables = [
 ] as const;
 
 test('PrimaryKey', () => {
-  type Type = NewIdentifiable<typeof tables>['PrimaryKey'];
+  type Type = Identifiers<typeof tables>['PrimaryKey'];
 
   const user: Type = { pk: 1 };
   const user1: Type = 1;
@@ -64,7 +64,7 @@ test('PrimaryKey', () => {
 });
 
 test('NullablePrimaryKey', () => {
-  type Type = NewIdentifiable<typeof tables>['NullablePrimaryKey'];
+  type Type = Identifiers<typeof tables>['NullablePrimaryKey'];
 
   const user: Type = { pk: 1 };
   const user1: Type = 1;
@@ -75,7 +75,7 @@ test('NullablePrimaryKey', () => {
 });
 
 test('UniqueNotNull', () => {
-  type Type = NewIdentifiable<typeof tables>['UniqueNotNull'];
+  type Type = Identifiers<typeof tables>['UniqueNotNull'];
 
   const user: Type = { foo: 'bar' };
   // @ts-expect-error
@@ -85,7 +85,7 @@ test('UniqueNotNull', () => {
 });
 
 test('CompositePrimaryKey', () => {
-  type Type = NewIdentifiable<typeof tables>['CompositePrimaryKey'];
+  type Type = Identifiers<typeof tables>['CompositePrimaryKey'];
 
   const user: Type = { a: 1, b: '2' };
   // @ts-expect-error
@@ -95,7 +95,7 @@ test('CompositePrimaryKey', () => {
 });
 
 test('Mixture', () => {
-  type Type = NewIdentifiable<typeof tables>['Mixture'];
+  type Type = Identifiers<typeof tables>['Mixture'];
 
   const user: Type = { a: 1, b: '2', c: '3' };
   // @ts-expect-error
