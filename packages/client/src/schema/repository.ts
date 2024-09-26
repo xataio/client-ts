@@ -3574,6 +3574,7 @@ export const initObject = <T>(
   record.replace = function (data: any, b?: any, c?: any) {
     const columns = isValidSelectableColumns(b) ? b : ['*'];
 
+    // @ts-ignore
     return db[table].createOrReplace(record['xata_id'] as any, data, columns);
   };
 
