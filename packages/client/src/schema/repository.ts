@@ -54,7 +54,7 @@ import {
   Page
 } from './pagination';
 import { Query } from './query';
-import { EditableData, Identifiable, Identifier, InputXataFile, XataRecord, isIdentifiable } from './record';
+import { EditableData, OldIdentifiable, OldIdentifier, InputXataFile, XataRecord, isIdentifiable } from './record';
 import {
   ColumnsByValue,
   SelectableColumn,
@@ -2409,7 +2409,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async #insertRecordWithId(
-    recordId: Identifier,
+    recordId: OldIdentifier,
     object: EditableData<ObjectType>,
     columns: SelectableColumn<ObjectType>[] = ['*'],
     { createOnly }: { createOnly: boolean }
@@ -2468,27 +2468,27 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async read<K extends SelectableColumn<ObjectType>>(
-    id: Identifier,
+    id: OldIdentifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns> | null>>;
   async read(id: string): Promise<Readonly<SelectedPick<ObjectType, ['*']> | null>>;
   async read<K extends SelectableColumn<ObjectType>>(
-    ids: ReadonlyArray<Identifier>,
+    ids: ReadonlyArray<OldIdentifier>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
-  async read(ids: ReadonlyArray<Identifier>): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
+  async read(ids: ReadonlyArray<OldIdentifier>): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async read<K extends SelectableColumn<ObjectType>>(
-    object: Identifiable,
+    object: OldIdentifiable,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns> | null>>;
-  async read(object: Identifiable): Promise<Readonly<SelectedPick<ObjectType, ['*']> | null>>;
+  async read(object: OldIdentifiable): Promise<Readonly<SelectedPick<ObjectType, ['*']> | null>>;
   async read<K extends SelectableColumn<ObjectType>>(
-    objects: Identifiable[],
+    objects: OldIdentifiable[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
-  async read(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
+  async read(objects: OldIdentifiable[]): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async read<K extends SelectableColumn<ObjectType>>(
-    a: Identifier | ReadonlyArray<Identifier> | Identifiable | Identifiable[],
+    a: OldIdentifier | ReadonlyArray<OldIdentifier> | OldIdentifiable | OldIdentifiable[],
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<ObjectType, ['*']>>
@@ -2554,27 +2554,27 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
-    id: Identifier,
+    id: OldIdentifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
-  async readOrThrow(id: Identifier): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
+  async readOrThrow(id: OldIdentifier): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
-    ids: ReadonlyArray<Identifier>,
+    ids: ReadonlyArray<OldIdentifier>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
-  async readOrThrow(ids: ReadonlyArray<Identifier>): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
+  async readOrThrow(ids: ReadonlyArray<OldIdentifier>): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
-    object: Identifiable,
+    object: OldIdentifiable,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
-  async readOrThrow(object: Identifiable): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
+  async readOrThrow(object: OldIdentifiable): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: Identifiable[],
+    objects: OldIdentifiable[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
-  async readOrThrow(objects: Identifiable[]): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
+  async readOrThrow(objects: OldIdentifiable[]): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
   async readOrThrow<K extends SelectableColumn<ObjectType>>(
-    a: Identifier | ReadonlyArray<Identifier> | Identifiable | Identifiable[],
+    a: OldIdentifier | ReadonlyArray<OldIdentifier> | OldIdentifiable | OldIdentifiable[],
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<ObjectType, ['*']>>
@@ -2587,7 +2587,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
 
       if (Array.isArray(result)) {
         const missingIds = compact(
-          (a as Array<string | Identifiable>)
+          (a as Array<string | OldIdentifiable>)
             .filter((_item, index) => result[index] === null)
             .map((item) => extractId(item))
         );
@@ -2654,7 +2654,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
         const existing = await this.read(a, ['xata_id'] as SelectableColumn<ObjectType>[]);
         const updates = a.filter((_item, index) => existing[index] !== null);
 
-        await this.#updateRecords(updates as Array<Partial<EditableData<ObjectType>> & Identifiable>, {
+        await this.#updateRecords(updates as Array<Partial<EditableData<ObjectType>> & OldIdentifiable>, {
           upsert: false
         });
 
@@ -2727,7 +2727,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
 
       if (Array.isArray(result)) {
         const missingIds = compact(
-          (a as Array<string | Identifiable>)
+          (a as Array<string | OldIdentifiable>)
             .filter((_item, index) => result[index] === null)
             .map((item) => extractId(item))
         );
@@ -2749,7 +2749,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async #updateRecordWithID(
-    recordId: Identifier,
+    recordId: OldIdentifier,
     object: Partial<EditableData<ObjectType>>,
     columns: SelectableColumn<ObjectType>[] = ['*']
   ) {
@@ -2783,7 +2783,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async #updateRecords(
-    objects: Array<Partial<EditableData<ObjectType>> & Identifiable>,
+    objects: Array<Partial<EditableData<ObjectType>> & OldIdentifiable>,
     { upsert }: { upsert: boolean }
   ) {
     const operations = await promiseMap(objects, async ({ xata_id, ...object }) => {
@@ -2856,7 +2856,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
       if (Array.isArray(a)) {
         if (a.length === 0) return [];
 
-        await this.#updateRecords(a as Array<Partial<EditableData<ObjectType>> & Identifiable>, {
+        await this.#updateRecords(a as Array<Partial<EditableData<ObjectType>> & OldIdentifiable>, {
           upsert: true
         });
 
@@ -2898,7 +2898,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async #upsertRecordWithID(
-    recordId: Identifier,
+    recordId: OldIdentifier,
     object: Omit<EditableData<ObjectType>, 'xata_id'>,
     columns: SelectableColumn<ObjectType>[] = ['*']
   ) {
@@ -3006,29 +3006,29 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async delete<K extends SelectableColumn<ObjectType>>(
-    object: Identifiable,
+    object: OldIdentifiable,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
-  async delete(object: Identifiable): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
+  async delete(object: OldIdentifiable): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
   async delete<K extends SelectableColumn<ObjectType>>(
-    id: Identifier,
+    id: OldIdentifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>> | null>;
-  async delete(id: Identifier): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
+  async delete(id: OldIdentifier): Promise<Readonly<SelectedPick<ObjectType, ['*']>> | null>;
   async delete<K extends SelectableColumn<ObjectType>>(
-    objects: Array<Partial<EditableData<ObjectType>> & Identifiable>,
+    objects: Array<Partial<EditableData<ObjectType>> & OldIdentifiable>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
   async delete(
-    objects: Array<Partial<EditableData<ObjectType>> & Identifiable>
+    objects: Array<Partial<EditableData<ObjectType>> & OldIdentifiable>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async delete<K extends SelectableColumn<ObjectType>>(
-    objects: Identifier[],
+    objects: OldIdentifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>> | null>>;
-  async delete(objects: Identifier[]): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
+  async delete(objects: OldIdentifier[]): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>> | null>>;
   async delete<K extends SelectableColumn<ObjectType>>(
-    a: Identifier | Identifiable | Array<Identifier | Identifiable>,
+    a: OldIdentifier | OldIdentifiable | Array<OldIdentifier | OldIdentifiable>,
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<ObjectType, ['*']>>
@@ -3073,29 +3073,29 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
   }
 
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    object: Identifiable,
+    object: OldIdentifiable,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
-  async deleteOrThrow(object: Identifiable): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
+  async deleteOrThrow(object: OldIdentifiable): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    id: Identifier,
+    id: OldIdentifier,
     columns: K[]
   ): Promise<Readonly<SelectedPick<ObjectType, typeof columns>>>;
-  async deleteOrThrow(id: Identifier): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
+  async deleteOrThrow(id: OldIdentifier): Promise<Readonly<SelectedPick<ObjectType, ['*']>>>;
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: Array<Partial<EditableData<ObjectType>> & Identifiable>,
+    objects: Array<Partial<EditableData<ObjectType>> & OldIdentifiable>,
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
   async deleteOrThrow(
-    objects: Array<Partial<EditableData<ObjectType>> & Identifiable>
+    objects: Array<Partial<EditableData<ObjectType>> & OldIdentifiable>
   ): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    objects: Identifier[],
+    objects: OldIdentifier[],
     columns: K[]
   ): Promise<Array<Readonly<SelectedPick<ObjectType, typeof columns>>>>;
-  async deleteOrThrow(objects: Identifier[]): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
+  async deleteOrThrow(objects: OldIdentifier[]): Promise<Array<Readonly<SelectedPick<ObjectType, ['*']>>>>;
   async deleteOrThrow<K extends SelectableColumn<ObjectType>>(
-    a: Identifier | Identifiable | Array<Identifier | Identifiable>,
+    a: OldIdentifier | OldIdentifiable | Array<OldIdentifier | OldIdentifiable>,
     b?: K[]
   ): Promise<
     | Readonly<SelectedPick<ObjectType, ['*']>>
@@ -3108,7 +3108,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
 
       if (Array.isArray(result)) {
         const missingIds = compact(
-          (a as Array<string | Identifiable>)
+          (a as Array<string | OldIdentifiable>)
             .filter((_item, index) => result[index] === null)
             .map((item) => extractId(item))
         );
@@ -3127,7 +3127,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
     });
   }
 
-  async #deleteRecord(recordId: Identifier, columns: SelectableColumn<ObjectType>[] = ['*']) {
+  async #deleteRecord(recordId: OldIdentifier, columns: SelectableColumn<ObjectType>[] = ['*']) {
     if (!recordId) return null;
 
     try {
@@ -3153,7 +3153,7 @@ export class RestRepository<Schema extends DatabaseSchema, TableName extends str
     }
   }
 
-  async #deleteRecords(recordIds: Identifier[]) {
+  async #deleteRecords(recordIds: OldIdentifier[]) {
     const chunkedOperations: TransactionOperation[][] = chunk(
       compact(recordIds).map((id) => ({ delete: { table: this.#table, id } })),
       BULK_OPERATION_MAX_SIZE
@@ -3599,7 +3599,7 @@ export const initObject = <T>(
   return record as unknown as T;
 };
 
-function extractId(value: any): Identifier | undefined {
+function extractId(value: any): OldIdentifier | undefined {
   if (isString(value)) return value;
   if (isObject(value) && isString(value.xata_id)) return value.xata_id;
   return undefined;
