@@ -67,6 +67,19 @@ const schema = {
         { name: 'num_legs', type: 'int' }
       ],
       primaryKey: ['xata_id']
+    },
+    {
+      name: 'accounts',
+      columns: [
+        { name: 'id', type: 'int', unique: true, notNull: true },
+        { name: 'username', type: 'string', notNull: true },
+        { name: 'email', type: 'email', notNull: true },
+        { name: 'password', type: 'string', notNull: true },
+        { name: 'full_name', type: 'string', notNull: true },
+        { name: 'created_at', type: 'datetime', notNull: true },
+        { name: 'updated_at', type: 'datetime', notNull: true }
+      ],
+      primaryKey: ['username', 'email']
     }
   ]
 } as const;
@@ -77,6 +90,7 @@ export type DatabaseSchema = {
   teams: TeamsRecord;
   users: UsersRecord;
   pets: PetsRecord;
+  accounts: AccountsRecord;
 };
 
 const DatabaseClient = buildClient();
@@ -104,3 +118,6 @@ export type UsersRecord = Users & XataRecord;
 
 export type Pets = InferredTypes['pets'];
 export type PetsRecord = Pets & XataRecord;
+
+export type Accounts = InferredTypes['accounts'];
+export type AccountsRecord = Accounts & XataRecord;

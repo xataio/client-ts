@@ -71,6 +71,19 @@ const schema = {
       ],
       primaryKey: ["xata_id"],
     },
+    {
+      name: "accounts",
+      columns: [
+        { name: "id", type: "int", unique: true, notNull: true },
+        { name: "username", type: "string", notNull: true },
+        { name: "email", type: "email", notNull: true },
+        { name: "password", type: "string", notNull: true },
+        { name: "full_name", type: "string", notNull: true },
+        { name: "created_at", type: "datetime", notNull: true },
+        { name: "updated_at", type: "datetime", notNull: true },
+      ],
+      primaryKey: ["username", "email"],
+    },
   ],
 };
 /** @type { import('../../client/src').ClientConstructor<{}> } */
