@@ -3,7 +3,7 @@ import { ImageTransformations, transformImage } from '../files/transformations';
 import { Buffer } from '../util/buffer';
 import { compactObject, isDefined } from '../util/lang';
 import { StringKeys } from '../util/types';
-import { Identifiable, InputXataFile } from './record';
+import { OldIdentifiable, InputXataFile } from './record';
 
 export type XataFileEditableFields = Partial<Pick<XataArrayFile, keyof InputFileEntry>>;
 export type XataFileFields = Partial<
@@ -195,7 +195,7 @@ export class XataFile {
   }
 }
 
-export type XataArrayFile = Identifiable & XataFile;
+export type XataArrayFile = OldIdentifiable & XataFile;
 
 export const parseInputFileEntry = async (entry: InputXataFile): Promise<InputFileEntry | null> => {
   if (!isDefined(entry)) return null;

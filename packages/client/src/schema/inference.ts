@@ -1,7 +1,6 @@
 import { UnionToIntersection, Values } from '../util/types';
 import { XataArrayFile, XataFile } from './files';
 import { JSONValue } from './json';
-import { Identifiable, XataRecord } from './record';
 
 export type DatabaseSchema = {
   tables: readonly TableSchema[];

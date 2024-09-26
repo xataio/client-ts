@@ -1,4 +1,3 @@
-import { Values } from '../util/types';
 import { XataFile } from './files';
 import { TableSchema } from './inference';
 import { InputXataFile, NumericOperator } from './record';
@@ -11,29 +10,60 @@ import { InputXataFile, NumericOperator } from './record';
  *
  * If neither found, never will be returned.
  */
-export type NewIdentifiable<T extends readonly TableSchema[]> = T extends never[]
+export type Identifiers<T extends readonly TableSchema[]> = T extends never[]
   ? never
   : T extends readonly unknown[]
   ? T[number] extends { name: string; columns: readonly unknown[] }
     ? {
-        [K in T[number]['name']]: PrimaryKeyType<T[number], K>;
+        [K in T[number]['name']]:
+          | PrimaryKeyType<T[number], K>
+          | UniqueNotNullType<T[number], K>
+          | SinglePrimaryKeyType<T[number], K>;
       }
     : never
   : never;
 
 type PrimaryKeyType<Tables, TableName> = Tables & { name: TableName } extends infer Table
-  ? Table extends { name: string; columns: infer Columns } & { primaryKey: infer primaryKey }
+  ? Table extends { name: string; columns: infer Columns } & { primaryKey: infer PrimaryKey }
     ? Columns extends readonly unknown[]
       ? Columns[number] extends { name: string; type: string }
-        ? primaryKey extends readonly string[]
-          ? Values<{
-              [K in Columns[number]['name']]: K extends primaryKey[0]
-                ? PropertyType<Columns[number], K>
-                : K extends 'xata_id'
-                ? PropertyType<Columns[number], K>
-                : never;
-            }>
+        ? PrimaryKey extends readonly string[] & { 0: string }
+          ? {
+              [P in PrimaryKey[number]]: PropertyType<Columns[number], P>[P];
+            }
           : never
+        : never
+      : never
+    : never
+  : never;
+
+type SinglePrimaryKeyType<Tables, TableName> = Tables & { name: TableName } extends infer Table
+  ? Table extends { name: string; columns: infer Columns } & { primaryKey: infer PrimaryKey }
+    ? Columns extends readonly unknown[]
+      ? Columns[number] extends { name: string; type: string }
+        ? PrimaryKey extends readonly string[] & { length: 1 }
+          ? NonNullable<
+              {
+                [P in PrimaryKey[number]]: PropertyType<Columns[number], P>[P];
+              }[PrimaryKey[number]]
+            >
+          : never
+        : never
+      : never
+    : never
+  : never;
+
+type UniqueNotNullType<Tables, TableName> = Tables & { name: TableName } extends infer Table
+  ? Table extends { name: string; columns: infer Columns }
+    ? Columns extends readonly unknown[]
+      ? Columns[number] extends { name: string; type: string; unique?: boolean; notNull?: boolean }
+        ? {
+            [K in Columns[number]['name']]: Columns[number] & { name: K } extends infer Column
+              ? Column extends { name: string; type: string; unique: true; notNull: true }
+                ? { [T in K]: InnerType<Column['type']> }
+                : never
+              : never;
+          }[Columns[number]['name']]
         : never
       : never
     : never
@@ -45,14 +75,16 @@ type PropertyType<Properties, PropertyName extends PropertyKey> = Properties & {
   ? Property extends {
       name: string;
       type: infer Type;
-      link?: { table: infer LinkedTable };
+      link?: { table: string };
       notNull?: infer NotNull;
     }
     ? NotNull extends true
       ? {
           [K in PropertyName]: InnerType<Type>;
         }
-      : never
+      : {
+          [K in PropertyName]: InnerType<Type> | null;
+        }
     : never
   : never;
 
@@ -79,15 +111,9 @@ type InnerType<Type> = Type extends
       | 'real'
       | 'numeric'
   ? number
+  : Type extends 'bool' | 'boolean'
+  ? boolean
   : never;
-
-export type NewIndentifierValue<T extends object> = {
-  [K in keyof T]: T[K] extends never ? never : T[K];
-}[keyof T];
-
-export type NewIdentifierKey<T extends object> = {
-  [K in keyof T]: T[K] extends never ? never : K;
-}[keyof T];
 
 type NewEditableDataFields<T> = T extends Date
   ? string | Date

@@ -99,7 +99,7 @@ describe('record update', () => {
     expect(update1?.xata_id).toBe(team.xata_id);
     expect(update1?.name).toBe('Team boats');
 
-    const update2 = await xata.db.teams.update({ xata_id: team.xata_id, name: 'Team planes' });
+    const update2 = await xata.db.teams.update({ xata_id: team.xata_id }, { name: 'Team planes' });
 
     expect(update2?.xata_id).toBe(team.xata_id);
     expect(update2?.name).toBe('Team planes');
