@@ -2105,9 +2105,10 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
 
       if (sort) {
         buildSortStatement(Array.isArray(sort) ? sort : [sort]);
-      } else {
-        statement = statement.orderBy(`${this.#primaryKey}`, 'asc');
       }
+
+      // Always add primary key as last sort column to ensure deterministic ordering
+      statement = statement.orderBy(`${this.#primaryKey}`, 'asc');
 
       if (filter) {
         // @ts-ignore
@@ -2144,9 +2145,15 @@ export class KyselyRepository<Schema extends DatabaseSchema, TableName extends s
 
       const lastSeenId: string = response.length > 0 ? (response[response.length - 1][this.#primaryKey] as string) : '';
 
-      const nextItem: {
-        [key: string]: unknown;
-      }[] = (await this.#db.executeQuery(statement.clearLimit().clearOffset().offset(response.length).limit(1))).rows;
+      const nextItem = (
+        await this.#db.executeQuery(
+          statement
+            .clearLimit()
+            .clearOffset()
+            .offset(size + offset)
+            .limit(1)
+        )
+      ).rows;
 
       const records = response
         .filter((record) => Object.keys(record).length > 0)
