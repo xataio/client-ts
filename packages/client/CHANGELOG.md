@@ -1,5 +1,11 @@
 # @xata.io/client
 
+## 0.30.1
+
+### Patch Changes
+
+- [#1604](https://github.com/xataio/client-ts/pull/1604) [`8fe6fbf`](https://github.com/xataio/client-ts/commit/8fe6fbf3e6f0983723d770c942a5a202eee6fb8f) Thanks [@SferaDev](https://github.com/SferaDev)! - Update dependencies
+
 ## 0.30.0
 
 ### Minor Changes
