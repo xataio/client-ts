@@ -1,6 +1,6 @@
 import { PgRollMigration } from '@xata.io/pgroll';
 import { beforeEach, describe, expect, test } from 'vitest';
-import EditSchemaNew, {
+import EditSchema, {
   AddColumnPayload,
   AddTablePayload,
   ColumnAdditions,
@@ -108,7 +108,7 @@ const createEdit = (column: ColumnData) => {
 const runTest = (name: string, setup: () => void, expectation: any) => {
   test(name, () => {
     setup();
-    editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchemaNew);
+    editCommand.currentMigration.operations = editsToMigrations(editCommand as EditSchema);
     expect(editCommand.currentMigration.operations).toEqual(expectation);
   });
 };

@@ -21,9 +21,7 @@
   "bugs": {
     "url": "https://github.com/xataio/client-ts/issues"
   },
-  "dependencies": {
-    "@xata.io/client": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "kysely": "^0.27.4"
   },

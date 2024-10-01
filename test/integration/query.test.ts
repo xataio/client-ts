@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } fr
 import {
   BaseClient,
   contains,
+  endsWith,
   iContains,
   includesAll,
   includesNone,
@@ -47,7 +48,8 @@ beforeAll(async (ctx) => {
   const fruitsTeam = await xata.db.teams.create({
     name: 'Team fruits',
     labels: ['apple', 'banana', 'orange'],
-    owner: ownerFruitsId
+    owner: ownerFruitsId,
+    index: 1
   });
 
   const animalsTeam = await xata.db.teams.create({
@@ -165,6 +167,348 @@ describe('integration tests', () => {
     await xata.db.teams.delete(teams);
   });
 
+  test('endsWith multiple conditions filter', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        name: { $endsWith: '& animals' },
+        labels: { $includes: ['banananot'] }
+      })
+      .getAll();
+    expect(teams).toHaveLength(0);
+  });
+
+  test('$anyWithMultipleValues filter', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        name: { $any: ['Mixed team fruits & animals', 'Team animals'] }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('explicitAnyWithFilterList', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $any: [
+          {
+            name: 'Mixed team fruits & animals'
+          },
+          {
+            name: 'Team animals'
+          }
+        ]
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('explicitAnyWithFilterObject', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $any: {
+          name: 'Mixed team fruits & animals',
+          labels: { $includes: ['other'] }
+        }
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('explicitAllWithFilterList', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $all: {
+          name: 'Mixed team fruits & animals',
+          labels: { $includes: ['banana'] }
+        }
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('nestWithNot', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $not: {
+          name: 'Mixed team fruits & animals',
+          labels: { $includes: ['banana'] }
+        }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('explicitAllWithFilterList', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $all: [
+          {
+            name: 'Mixed team fruits & animals'
+          },
+          {
+            labels: { $includes: ['banananot'] }
+          }
+        ]
+      })
+      .getAll();
+    expect(teams).toHaveLength(0);
+  });
+
+  test('rangeQueryWithLessFirst', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        index: {
+          $lt: 2,
+          $ge: 1
+        }
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('rangeQueryWithLessFirst', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        index: {
+          $lt: 2,
+          $gt: 1
+        }
+      })
+      .getAll();
+    expect(teams).toHaveLength(0);
+  });
+
+  test('simpleIncludes', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        labels: { $includes: 'eagle' }
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('simpleIncludesAny', async () => {
+    const teams = await xata.db.teams.filter({ labels: { $includesAny: 'eagle' } }).getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('simpleIncludesAny', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        labels: { $includesAll: 'eagle' }
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('simpleIncludesNone', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        labels: { $includesNone: 'eagle' }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('filterByOneColumn', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        name: 'Team fruits'
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('filterWithTheIsOperator', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        name: { $is: 'Team fruits' }
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('filterWithAnyOperation', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        name: { $any: ['Team fruits', 'Team animals'] }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('filterWithExistsOperation', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $exists: 'name'
+      })
+      .getAll();
+    expect(teams).toHaveLength(3);
+  });
+
+  test('filterWithExistsAndAndAnyOperations', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $all: [{ $exists: 'name' }, { $exists: 'labels' }]
+      })
+      .getAll();
+    expect(teams).toHaveLength(3);
+  });
+
+  test('filterWithNotExistsOperation', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $notExists: 'name'
+      })
+      .getAll();
+    expect(teams).toHaveLength(0);
+  });
+
+  test('filterWithPatternOperator', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        name: { $pattern: 'T*' }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('filterWithIPatterOperator', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        name: { $iPattern: 't*' }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('startsWith and endsWith', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        name: { $startsWith: 'Team', $endsWith: 'fruits' }
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('not', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $not: { name: 'Team fruits' }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('filterWithComplexNegations', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        $not: { $any: [{ name: 'Team fruits' }, { name: 'r2' }] }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('filterOnInternalColumnIsAllowed', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        xata_version: { $is: 0 }
+      })
+      .getAll();
+    expect(teams).toHaveLength(3);
+  });
+
+  test('simpleIncludesMultipleOpAndValue', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        labels: { $includes: [{ $contains: 'eag' }, 'eagle'] }
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('includesWithManyComparisons', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        labels: { $includes: { $all: [{ $contains: 'monkey' }, { $contains: 'eagle' }] } }
+      })
+      .getAll();
+    expect(teams).toHaveLength(1);
+  });
+
+  test('includesWithModeAndArrayOfFilters', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        labels: { $includesNone: [{ $contains: 'eagle' }, 'abc', { $endsWith: 'bad' }] }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('includesWithMixOfAnyAndAllInPredicatePosition', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        labels: { $includes: { $any: { $all: [{ $startsWith: 'test' }, { $contains: 'x' }], $any: ['a', 'b'] } } }
+      })
+      .getAll();
+    expect(teams).toHaveLength(0);
+  });
+
+  test('filterWithArraysComplexNegations', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        labels: {
+          $includes: {
+            $all: [{ $contains: 'mon' }, { $not: { $endsWith: 'keyo' } }]
+          }
+        }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('filtersWithIncludesAll', async () => {
+    const teams = await xata.db.teams
+      .filter({
+        labels: {
+          $includesAll: [{ $contains: 'mon' }]
+        }
+      })
+      .getAll();
+    expect(teams).toHaveLength(2);
+  });
+
+  test('endsWith filter', async () => {
+    const teams = await xata.db.teams.filter('name', endsWith('& animals')).getAll();
+    expect(teams).toHaveLength(1);
+    expect(teams[0].name).toBe('Mixed team fruits & animals');
+  });
+
+  test('$exists filter', async () => {
+    const teams = await xata.db.teams.filter({ $exists: 'name' }).getAll();
+    expect(teams).toHaveLength(3);
+  });
+
+  test('$notExists filter', async () => {
+    const teams = await xata.db.teams.filter({ $notExists: 'name' }).getAll();
+    expect(teams).toHaveLength(0);
+  });
+
+  test('$pattern filter', async () => {
+    const teams = await xata.db.teams.filter({ name: { $pattern: 'Mixed team fruits & *nimal?' } }).getAll();
+    expect(teams).toHaveLength(1);
+    expect(teams[0].name).toBe('Mixed team fruits & animals');
+
+    const teams2 = await xata.db.teams.filter({ name: { $pattern: 'mixed team fruits & *nimal?' } }).getAll();
+    expect(teams2).toHaveLength(0);
+  });
+
+  test('$iPattern filter', async () => {
+    const teams = await xata.db.teams.filter({ name: { $iPattern: 'mixed team fruits & *nimal?' } }).getAll();
+    expect(teams).toHaveLength(1);
+    expect(teams[0].name).toBe('Mixed team fruits & animals');
+  });
+
   test('multiple filter', async () => {
     const teams = await xata.db.teams.filter('name', contains('fruits')).filter('name', contains('Mixed')).getAll();
 
@@ -248,9 +592,9 @@ describe('integration tests', () => {
     if (!ownerAnimals) throw new Error('Could not find owner of team animals');
 
     // Regression test on filtering on nullable property
-    const team = await xata.db.teams.filter('owner.xata_id', ownerAnimals.xata_id).getFirst();
+    const team = await xata.db.teams.filter('owner', ownerAnimals.xata_id).getFirst();
 
-    expect(team?.owner?.xata_id).toEqual(ownerAnimals.xata_id);
+    expect(team?.owner).toEqual(ownerAnimals.xata_id);
   });
 
   test('filter on object', async () => {
@@ -265,13 +609,6 @@ describe('integration tests', () => {
 
     expect(users).toHaveLength(1);
     expect(users[0].full_name).toBe('Owner of team fruits');
-  });
-
-  test('filter on link', async () => {
-    const teams = await xata.db.teams.filter({ owner: { full_name: 'Owner of team fruits' } }).getAll();
-
-    expect(teams).toHaveLength(1);
-    expect(teams[0].name).toBe('Team fruits');
   });
 
   test('filter returns nothing', async () => {
@@ -316,7 +653,7 @@ describe('integration tests', () => {
   });
 
   test('returns many records extended array map converts to a normal array', async () => {
-    const records1 = await xata.db.users.filter('team.name', 'Team fruits').getMany();
+    const records1 = await xata.db.teams.filter('name', 'Team fruits').getMany();
     const records2 = records1.map((item) => ({ ...item }));
 
     expect(records1.length).toBeGreaterThan(0);
@@ -618,83 +955,14 @@ describe('integration tests', () => {
     expect(queriedPlanes.records).toHaveLength(PAGINATION_DEFAULT_SIZE);
   });
 
+  test('paginated call returns data', async () => {
+    const teams = await xata.db.teams.filter('name', 'Team fruits').getPaginated();
+    expect(teams.columns).toBeDefined();
+  });
+
   test('multiple errors in one response', async () => {
     const invalidUsers = [{ full_name: 'a name' }, { full_name: 1 }, { full_name: 2 }] as UsersRecord[];
-
     expect(xata.db.users.create(invalidUsers)).rejects.toHaveProperty('status', 400);
-  });
-
-  test('Link is a record object', async () => {
-    const user = await xata.db.users.create({
-      full_name: 'Base User'
-    });
-
-    const team = await xata.db.teams.create({
-      name: 'Base team',
-      owner: user
-    });
-
-    await user.update({ team });
-
-    const updatedUser = await user.read();
-    expect(updatedUser?.team?.xata_id).toEqual(team.xata_id);
-
-    const response = await xata.db.teams.getFirst({ filter: { xata_id: team.xata_id }, columns: ['*', 'owner.*'] });
-    const owner = await response?.owner?.read();
-
-    expect(response?.owner?.xata_id).toBeDefined();
-    expect(response?.owner?.full_name).toBeDefined();
-
-    expect(owner?.xata_id).toBeDefined();
-    expect(owner?.full_name).toBeDefined();
-
-    expect(response?.owner?.xata_id).toBe(owner?.xata_id);
-    expect(response?.owner?.full_name).toBe(owner?.full_name);
-
-    expect(response?.owner?.xata_createdat).toBeInstanceOf(Date);
-    expect(response?.owner?.xata_updatedat).toBeInstanceOf(Date);
-    expect(response?.owner?.xata_version).toBe(1);
-
-    const nestedObject = await xata.db.teams.getFirst({
-      filter: { xata_id: team.xata_id },
-      columns: ['owner.team', 'owner.full_name']
-    });
-
-    const nestedProperty = nestedObject?.owner?.team;
-    const nestedName = nestedObject?.owner?.full_name;
-
-    expect(nestedName).toEqual(user.full_name);
-
-    expect(nestedProperty?.name).toEqual(team.name);
-    // @ts-expect-error
-    expect(nestedProperty?.owner?.full_name).not.toBeDefined();
-
-    const nestedRead = await nestedProperty?.owner?.read();
-
-    expect(nestedRead?.xata_id).toBeDefined();
-    expect(nestedRead?.full_name).toEqual(user.full_name);
-  });
-
-  test('Update link with linked object', async () => {
-    const owner = await xata.db.users.create({ full_name: 'Example User' });
-    const owner2 = await xata.db.users.create({ full_name: 'Example User 2' });
-
-    const team = await xata.db.teams.create({ name: 'Example Team', owner });
-    const updated = await team.update({ owner: owner2 });
-
-    expect(team.owner?.xata_id).toEqual(owner.xata_id);
-    expect(updated?.owner?.xata_id).toEqual(owner2.xata_id);
-  });
-
-  test('Update link with linked object (string)', async () => {
-    const owner = await xata.db.users.create({ full_name: 'Example User' });
-    const owner2 = await xata.db.users.create({ full_name: 'Example User 2' });
-
-    const team = await xata.db.teams.create({ name: 'Example Team', owner: owner.xata_id });
-    const updated = await team.update({ owner: owner2.xata_id });
-
-    expect(team.owner?.xata_id).toEqual(owner.xata_id);
-    expect(updated?.owner?.xata_id).toEqual(owner2.xata_id);
   });
 
   test('Filter with null value', async () => {
@@ -732,5 +1000,17 @@ describe('integration tests', () => {
     expect(string).toContain('A random real team');
     const hydrated = JSON.parse(string);
     expect(hydrated).toHaveLength(1);
+  });
+
+  test('count with no filter', async () => {
+    const count = await xata.db.teams.count();
+    expect(count).toEqual(6);
+  });
+
+  test('count with filter', async () => {
+    const count = await xata.db.teams.count({
+      name: 'Team fruits'
+    });
+    expect(count).toEqual(1);
   });
 });

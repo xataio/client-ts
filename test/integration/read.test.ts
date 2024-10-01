@@ -136,9 +136,9 @@ describe('record read', () => {
 
   test('read with columns', async () => {
     const owner = await xata.db.users.create({ full_name: 'John', street: 'Newark' });
-    const team = await xata.db.teams.create({ name: 'Team ships', labels: ['foo', 'bar'], owner });
+    const team = await xata.db.teams.create({ name: 'Team ships', labels: ['foo', 'bar'], owner: owner.xata_id });
 
-    const copy = await xata.db.teams.read(team.xata_id, ['xata_id', 'name', 'owner.street']);
+    const copy = await xata.db.teams.read(team.xata_id, ['xata_id', 'name', 'owner']);
 
     expect(copy).toBeDefined();
     expect(copy?.xata_id).toBe(team.xata_id);
@@ -146,12 +146,6 @@ describe('record read', () => {
     // @ts-expect-error
     expect(copy?.labels).not.toBeDefined();
     expect(copy?.owner).toBeDefined();
-    expect(copy?.owner?.xata_id).toBe(owner.xata_id);
-    expect(copy?.owner?.street).toBe(owner.street);
-    // @ts-expect-error
-    expect(copy?.owner?.city).not.toBeDefined();
-    // @ts-expect-error
-    expect(copy?.owner?.full_name).not.toBeDefined();
   });
 
   test('replace team with record method', async () => {

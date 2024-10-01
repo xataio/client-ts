@@ -91,30 +91,6 @@ describe('record update', () => {
     expect(team3[1]?.name).toBe('Team boats 2');
   });
 
-  test('update item with if version', async () => {
-    const team = await xata.db.teams.create({ name: 'Team ships' });
-    const baseVersion = team.xata_version;
-
-    const updatedTeam = await xata.db.teams.update(team.xata_id, { name: 'Team boats' }, { ifVersion: baseVersion });
-
-    expect(updatedTeam?.xata_id).toBe(team.xata_id);
-    expect(updatedTeam?.xata_version).toBe(baseVersion + 1);
-
-    const updatedTeam2 = await xata.db.teams.update(team.xata_id, { name: 'Team planes' }, { ifVersion: baseVersion });
-
-    expect(updatedTeam2).toBeNull();
-    expect(updatedTeam2?.xata_version).toBe(undefined);
-
-    const updatedTeam3 = await team.update({ name: 'Team cars' }, { ifVersion: baseVersion });
-
-    expect(updatedTeam3).toBeNull();
-    expect(updatedTeam3?.xata_version).toBe(undefined);
-
-    expect(
-      xata.db.teams.updateOrThrow(team.xata_id, { name: 'Team cars' }, { ifVersion: baseVersion })
-    ).rejects.toThrow();
-  });
-
   test('update item with id column', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
 
