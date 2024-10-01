@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { test } from 'vitest';
 import { XataFile } from './files';
 import { XataRecord } from './record';
