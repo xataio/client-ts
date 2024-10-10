@@ -24,3 +24,13 @@ describe('API Proxy types', () => {
     expect(xata.authentication.undefinedOperation).toBeUndefined();
   });
 });
+
+describe('XataApiClient', () => {
+  test('accepts and uses postgresConnectionString', () => {
+    const postgresConnectionString = 'postgres://user:password@localhost:5432/mydb';
+    const client = new XataApiClient({ apiKey: 'fake-api-key', postgresConnectionString });
+
+    // @ts-ignore
+    expect(client.postgresConnectionString).toBe(postgresConnectionString);
+  });
+});

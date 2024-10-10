@@ -11,7 +11,7 @@ export class KyselyPlugin<Schemas extends Record<string, XataRecord>> extends Xa
     const xata = { sql: new SQLPlugin().build(pluginOptions) };
 
     return new Kysely<Model<Schemas>>({
-      dialect: new XataDialect({ xata })
+      dialect: new XataDialect({ xata, postgresConnectionString: pluginOptions.postgresConnectionString })
     });
   }
 }

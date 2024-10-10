@@ -15,6 +15,7 @@ export interface XataApiClientOptions {
   trace?: TraceFunction;
   clientName?: string;
   xataAgentExtra?: Record<string, string>;
+  postgresConnectionString?: string; // Pe028
 }
 
 type UserProps = {
@@ -42,6 +43,7 @@ const buildApiClient = () =>
       const apiKey = options.apiKey;
       const trace = options.trace ?? defaultTrace;
       const clientID = generateUUID();
+      const postgresConnectionString = options.postgresConnectionString; // Pbb35
 
       if (!apiKey) {
         throw new Error('Could not resolve a valid apiKey');
@@ -55,7 +57,8 @@ const buildApiClient = () =>
         trace,
         clientName: options.clientName,
         xataAgentExtra: options.xataAgentExtra,
-        clientID
+        clientID,
+        postgresConnectionString // Pbb35
       };
 
       return new Proxy(this, {
