@@ -19,13 +19,17 @@ export type XataDialectConfig = {
    * @default 'strong'
    */
   consistency?: 'strong' | 'eventual';
+  postgresConnectionString?: string;
 };
 
 export class XataDialect implements Dialect {
   constructor(private config: XataDialectConfig) {}
 
   createAdapter() {
-    return new PostgresAdapter();
+    if (this.config.postgresConnectionString) {
+      return new PostgresAdapter();
+    }
+    return new XataAdapter();
   }
 
   createDriver(): Driver {
@@ -84,6 +88,21 @@ export class XataConnection implements DatabaseConnection {
     const { sql } = this.#config.xata;
     const { sql: statement, parameters } = compiledQuery;
 
+    if (this.#config.postgresConnectionString) {
+      const { Client } = require('pg');
+      const client = new Client({ connectionString: this.#config.postgresConnectionString });
+      await client.connect();
+      const res = await client.query(statement, parameters);
+      await client.end();
+
+      return {
+        rows: res.rows as O[],
+        columns: res.fields,
+        numAffectedRows: BigInt(res.rowCount),
+        numUpdatedOrDeletedRows: BigInt(res.rowCount)
+      };
+    }
+
     const { records, warning, columns } = await sql({
       statement,
       params: parameters as any[],
@@ -97,11 +116,8 @@ export class XataConnection implements DatabaseConnection {
 
     return {
       rows: records as O[],
-      // @ts-ignore
       columns,
-      // @ts-ignore replaces `QueryResult.numUpdatedOrDeletedRows` in kysely > 0.22
       numAffectedRows,
-      // deprecated in kysely > 0.22, keep for backward compatibility.
       numUpdatedOrDeletedRows: numAffectedRows
     };
   }

@@ -19,6 +19,7 @@ export type BaseClientOptions = {
   enableBrowser?: boolean;
   clientName?: string;
   xataAgentExtra?: Record<string, string>;
+  postgresConnectionString?: string;
 };
 
 type SafeOptions = AllRequired<Omit<BaseClientOptions, 'clientName' | 'xataAgentExtra'>> & {
@@ -95,6 +96,7 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       const clientName = options?.clientName;
       const host = options?.host ?? 'production';
       const xataAgentExtra = options?.xataAgentExtra;
+      const postgresConnectionString = options?.postgresConnectionString;
 
       if (!apiKey) {
         throw new Error('Option apiKey is required');
@@ -118,7 +120,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         clientID: generateUUID(),
         enableBrowser,
         clientName,
-        xataAgentExtra
+        xataAgentExtra,
+        postgresConnectionString
       };
     }
 
@@ -130,7 +133,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
       trace,
       clientID,
       clientName,
-      xataAgentExtra
+      xataAgentExtra,
+      postgresConnectionString
     }: SafeOptions): ApiExtraProps {
       return {
         fetch,
@@ -145,7 +149,8 @@ export const buildClient = <Plugins extends Record<string, XataPlugin> = {}>(plu
         trace,
         clientID,
         clientName,
-        xataAgentExtra
+        xataAgentExtra,
+        postgresConnectionString
       };
     }
   } as unknown as ClientConstructor<Plugins>;
