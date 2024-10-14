@@ -34,7 +34,7 @@
     "zod-to-json-schema": "^3.23.3"
   },
   "devDependencies": {
-    "ts-morph": "^23.0.0",
+    "ts-morph": "^24.0.0",
     "tsx": "^4.19.1"
   }
 }
