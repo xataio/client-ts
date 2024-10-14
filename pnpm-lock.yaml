@@ -22,6 +22,7 @@ overrides:
   elliptic@>=5.2.1 <=6.5.6: '>=6.5.7'
   micromatch@<4.0.8: '>=4.0.8'
   react-devtools-core@<4.28.4: '>=4.28.4'
+  cookie@<0.7.0: '>=0.7.0'
 
 importers:
   .:
@@ -2568,7 +2569,7 @@ packages:
     resolution:
       { integrity: sha512-Or6YHg/kamKHpxULAdSqhGqnWFneIXu1NKvvfBBzKGwpVsYuFIQ5aBPHDnnoR3ghW1nvSkALd+EF9iMtY7Vjxw== }
     dependencies:
-      cookie: 0.5.0
+      cookie: 1.0.1
     dev: true
 
   /@bundled-es-modules/statuses@1.0.1:
@@ -8714,10 +8715,10 @@ packages:
     engines: { node: ^12.20.0 || ^14.13.1 || >=16.0.0 }
     dev: false
 
-  /cookie@0.5.0:
+  /cookie@1.0.1:
     resolution:
-      { integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw== }
-    engines: { node: '>= 0.6' }
+      { integrity: sha512-Xd8lFX4LM9QEEwxQpF9J9NTUh8pmdJO0cyRJhFiDoLTk2eH8FXlRv2IFGYVadZpqI3j8fhNrSdKCeYPxiAhLXw== }
+    engines: { node: '>=18' }
     dev: true
 
   /core-js-compat@3.38.1:
