@@ -32,6 +32,7 @@ jobs:
 
       - name: Install new versions
         run: |
+          pnpm audit --fix
           pnpm install --no-frozen-lockfile
           git add .
 
