@@ -84,6 +84,11 @@ export async function setUpTestEnvironment(
     body: { region }
   });
 
+  await api.database.updateDatabaseSettings({
+    pathParams: { workspace, dbName: database, region },
+    body: { searchEnabled: true }
+  });
+
   const workspaceUrl = getHostUrl(host, 'workspaces').replace('{workspaceId}', workspace).replace('{region}', region);
 
   const clientOptions = {

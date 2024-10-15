@@ -87,26 +87,6 @@ describe('API Client Integration Tests', () => {
     expect(record.id).toBeDefined();
     expect(record.email).toEqual('example@foo.bar');
 
-    await waitForSearchIndexing(newApi, workspace, database);
-
-    const search = await newApi.searchAndFilter.searchTable({
-      pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },
-      body: { query: 'example' }
-    });
-
-    expect(search.totalCount).toEqual(1);
-    expect(search.records[0].id).toEqual(id);
-
-    const failedSearch = await newApi.searchAndFilter.searchTable({
-      pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },
-      body: { query: 'random' }
-    });
-
-    expect(failedSearch.totalCount).toEqual(0);
-    expect(failedSearch.records).toEqual([]);
-
-    console.log('Tested search successfully');
-
     await api.authentication.deleteUserAPIKey({ pathParams: { keyName: newApiKey.name } });
 
     await waitFailInReplication(newApi, workspace, database);
@@ -151,24 +131,4 @@ async function waitFailInReplication(api: XataApiClient, workspace: string, data
   } catch (error) {
     // Do nothing, we expect to fail
   }
-}
-
-async function waitForSearchIndexing(api: XataApiClient, workspace: string, database: string): Promise<void> {
-  try {
-    const { aggs } = await api.searchAndFilter.aggregateTable({
-      pathParams: { workspace, region, dbBranchName: `${database}:branch`, tableName: 'table' },
-      body: { aggs: { total: { count: '*' } } }
-    });
-
-    if (aggs?.total === 1) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      return;
-    }
-  } catch (error) {
-    // do nothing
-  }
-
-  console.log(`Waiting for search indexing to finish...`);
-  await new Promise((resolve) => setTimeout(resolve, 8000));
-  return waitForSearchIndexing(api, workspace, database);
 }
