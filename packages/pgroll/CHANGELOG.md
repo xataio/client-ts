@@ -1,5 +1,11 @@
 # @xata.io/pgroll
 
+## 0.6.1
+
+### Patch Changes
+
+- [#1612](https://github.com/xataio/client-ts/pull/1612) [`798b45a`](https://github.com/xataio/client-ts/commit/798b45ad8fc74af591f1c1d163a9f28d0bfc5c6d) Thanks [@xata-bot](https://github.com/xata-bot)! - Update pgroll spec
+
 ## 0.6.0
 
 ### Minor Changes

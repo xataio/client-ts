@@ -1,5 +1,12 @@
 # @xata.io/cli
 
+## 0.16.12
+
+### Patch Changes
+
+- Updated dependencies [[`798b45a`](https://github.com/xataio/client-ts/commit/798b45ad8fc74af591f1c1d163a9f28d0bfc5c6d)]:
+  - @xata.io/pgroll@0.6.1
+
 ## 0.16.11
 
 ### Patch Changes
