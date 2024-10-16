@@ -64,7 +64,8 @@ export type OpCreateIndex = z.infer<typeof OpCreateIndexDefinition>;
 export const OpCreateIndexDefinition = z.object({
   columns: z.array(z.string()),
   name: z.string(),
-  table: z.string()
+  table: z.string(),
+  predicate: z.string().optional()
 });
 
 export type OpCreateTable = z.infer<typeof OpCreateTableDefinition>;

@@ -259,6 +259,10 @@ export const schema = {
         table: {
           description: 'Name of table on which to define the index',
           type: 'string'
+        },
+        predicate: {
+          description: 'Conditional expression for defining a partial index',
+          type: 'string'
         }
       },
       required: ['columns', 'name', 'table'],
