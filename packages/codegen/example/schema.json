@@ -2,6 +2,7 @@
   "tables": [
     {
       "name": "teams",
+      "primaryKey": ["xata_id"],
       "columns": [
         {
           "name": "xata_id",
@@ -70,16 +71,11 @@
             "table": "users"
           }
         }
-      ],
-      "revLinks": [
-        {
-          "column": "team",
-          "table": "users"
-        }
       ]
     },
     {
       "name": "users",
+      "primaryKey": ["xata_id"],
       "columns": [
         {
           "name": "xata_id",
@@ -180,16 +176,11 @@
             "dimension": 4
           }
         }
-      ],
-      "revLinks": [
-        {
-          "column": "owner",
-          "table": "teams"
-        }
       ]
     },
     {
       "name": "pets",
+      "primaryKey": ["xata_id"],
       "columns": [
         {
           "name": "xata_id",
@@ -222,12 +213,6 @@
         {
           "name": "num_legs",
           "type": "int"
-        }
-      ],
-      "revLinks": [
-        {
-          "column": "pet",
-          "table": "users"
         }
       ]
     }

@@ -13,6 +13,7 @@ describe('generate', () => {
         tables: [
           {
             name: '1teams-case',
+            primaryKey: ['xata_id'],
             columns: [
               { name: '2nameCase', type: 'string' },
               { name: '3Labels', type: 'multiple' }
@@ -35,6 +36,7 @@ describe('generate', () => {
         tables: [
           {
             name: 'teams_Like',
+            primaryKey: ['xata_id'],
             columns: [
               { name: 'name-test', type: 'string' },
               { name: 'labels_Test', type: 'multiple' },
@@ -43,6 +45,7 @@ describe('generate', () => {
           },
           {
             name: 'users-foo',
+            primaryKey: ['xata_id'],
             columns: [
               { name: 'email-random', type: 'email' },
               { name: 'full_name', type: 'string' },
@@ -64,6 +67,7 @@ describe('generate', () => {
         tables: [
           {
             name: 'users',
+            primaryKey: ['xata_id'],
             columns: [{ name: 'name', type: 'string' }]
           }
         ]
@@ -82,6 +86,7 @@ describe('generate', () => {
         tables: [
           {
             name: 'users',
+            primaryKey: ['xata_id'],
             columns: [{ name: 'name', type: 'string' }]
           }
         ]
@@ -101,6 +106,7 @@ describe('generate', () => {
         tables: [
           {
             name: 'users',
+            primaryKey: ['xata_id'],
             columns: [{ name: 'name', type: 'string' }]
           }
         ]
@@ -120,6 +126,7 @@ describe('generate', () => {
         tables: [
           {
             name: 'users',
+            primaryKey: ['xata_id'],
             columns: [{ name: 'name', type: 'string' }]
           }
         ]

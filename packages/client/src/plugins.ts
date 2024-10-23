@@ -1,4 +1,5 @@
-import { ApiExtraProps, HostProvider, Schemas } from './api';
+import { ApiExtraProps, HostProvider } from './api';
+import { DatabaseSchema } from './schema';
 
 export abstract class XataPlugin {
   abstract build(options: XataPluginOptions): unknown;
@@ -6,6 +7,6 @@ export abstract class XataPlugin {
 
 export type XataPluginOptions = ApiExtraProps & {
   host: HostProvider;
-  tables: Schemas.Table[];
+  schema: DatabaseSchema;
   branch: string;
 };

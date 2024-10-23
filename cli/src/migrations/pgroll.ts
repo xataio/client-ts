@@ -346,12 +346,7 @@ export async function waitForMigrationToFinish(
   jobId: string
 ): Promise<void> {
   const { status, error } = await api.migrations.getMigrationJobStatus({
-    pathParams: {
-      workspace: workspace,
-      region: region,
-      dbBranchName: `${database}:${branch}`,
-      jobId
-    }
+    pathParams: { workspace, region, dbBranchName: `${database}:${branch}`, jobId }
   });
   if (status === 'failed') {
     throw new Error(`Migration failed, ${error}`);

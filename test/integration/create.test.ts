@@ -54,15 +54,13 @@ describe('record creation', () => {
 
   test('create user with team', async () => {
     const team = await xata.db.teams.create({ name: 'Team ships' });
-    const user = await xata.db.users.create({ name: 'User ships', team }, ['*', 'team.*']);
+    const user = await xata.db.users.create({ name: 'User ships', team }, ['*']);
 
     expect(user.xata_id).toBeDefined();
     expect(user.name).toBe('User ships');
     expect(user.read).toBeDefined();
     expect(user.team).toBeDefined();
-    expect(user.team?.xata_id).toBe(team.xata_id);
-    expect(user.team?.name).toBe('Team ships');
-    expect(user.team?.read).toBeDefined();
+    expect(user.team).toBe(team.xata_id);
 
     expect(user.xata_createdat).toBeInstanceOf(Date);
     expect(user.xata_updatedat).toBeInstanceOf(Date);
@@ -75,14 +73,11 @@ describe('record creation', () => {
     // @ts-expect-error
     expect(json.read).not.toBeDefined();
     expect(json.team).toBeDefined();
-    expect(json.team?.xata_id).toBe(team.xata_id);
-    expect(json.team?.name).toBe('Team ships');
-    // @ts-expect-error
-    expect(json.team.read).not.toBeDefined();
+    expect(json.team).toBe(team.xata_id);
   });
 
   test('create multiple teams without ids', async () => {
-    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }], ['*', 'owner.*']);
+    const teams = await xata.db.teams.create([{ name: 'Team cars' }, { name: 'Team planes' }], ['*']);
 
     expect(teams).toHaveLength(2);
     expect(teams[0].xata_id).toBeDefined();
@@ -97,8 +92,6 @@ describe('record creation', () => {
     expect(teams[1].labels).toBeNull();
 
     expect(teams[0].owner).toBeNull();
-    expect(teams[0].owner?.full_name).toBeUndefined();
-    expect(teams[1].owner?.full_name).toBeUndefined();
   });
 
   test('create user with id', async () => {
@@ -216,7 +209,7 @@ describe('record creation', () => {
     expect(team1?.xata_id).toBe(teams[0].xata_id);
     expect(team1?.name).toBe('Team cars');
 
-    const team2 = await teams[1].read(['labels']);
+    const team2 = await teams[1].read(['labels', 'xata_id']);
     expect(team2?.xata_id).toBe(teams[1].xata_id);
     // @ts-expect-error
     expect(team2?.name).not.toBeDefined();
@@ -354,14 +347,13 @@ describe('record creation', () => {
 
   test("create link and read it's value", async () => {
     const user = await xata.db.users.create({ name: 'John Doe 3' });
-    const team = await xata.db.teams.create({ name: 'Team cars', owner: user }, ['owner.name']);
+    const team = await xata.db.teams.create({ name: 'Team cars', owner: user.xata_id }, ['owner', 'xata_id']);
 
     expect(team).toBeDefined();
     expect(team.xata_id).toBeDefined();
     // @ts-expect-error
     expect(team.name).toBeUndefined();
     expect(team.owner).toBeDefined();
-    expect(team.owner?.xata_id).toBe(user.xata_id);
-    expect(team.owner?.name).toBe('John Doe 3');
+    expect(team.owner).toBe(user.xata_id);
   });
 });

@@ -1,7 +1,7 @@
 import { test } from 'vitest';
+import { XataFile } from './files';
 import { XataRecord } from './record';
 import { SelectableColumn, SelectedPick, ValueAtColumn } from './selection';
-import { XataFile } from './files';
 
 interface Team {
   xata_id: string;

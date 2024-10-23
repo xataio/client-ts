@@ -11,10 +11,9 @@ import {
   QueryCompiler,
   QueryResult
 } from 'kysely';
-import { SQLPluginResult } from '@xata.io/client';
 
 export type XataDialectConfig = {
-  xata: { sql: SQLPluginResult };
+  xata: { sql: any };
   /**
    * The consistency level to use when reading data.
    * @default 'strong'
@@ -85,7 +84,7 @@ export class XataConnection implements DatabaseConnection {
     const { sql } = this.#config.xata;
     const { sql: statement, parameters } = compiledQuery;
 
-    const { records, warning } = await sql({
+    const { records, warning, columns } = await sql({
       statement,
       params: parameters as any[],
       consistency: this.#config.consistency
@@ -98,6 +97,8 @@ export class XataConnection implements DatabaseConnection {
 
     return {
       rows: records as O[],
+      // @ts-ignore
+      columns,
       // @ts-ignore replaces `QueryResult.numUpdatedOrDeletedRows` in kysely > 0.22
       numAffectedRows,
       // deprecated in kysely > 0.22, keep for backward compatibility.

@@ -55,15 +55,10 @@ export const columnSchema: z.ZodSchema<Column> = z.lazy(() =>
   })
 );
 
-export const revlinkSchema = z.object({
-  table: z.string(),
-  column: z.string()
-});
-
 export const tableSchema = z.object({
   name: z.string(),
   columns: z.array(columnSchema),
-  revLinks: z.array(revlinkSchema).optional()
+  primaryKey: z.array(z.string()).optional()
 });
 
 export type Table = z.infer<typeof tableSchema>;

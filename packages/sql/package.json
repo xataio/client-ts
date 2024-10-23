@@ -1,0 +1,41 @@
+{
+  "name": "@xata.io/sql",
+  "version": "0.0.1",
+  "description": "Helpers for SQL connection to Xata",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "generate": "tsx scripts/build.ts",
+    "build": "rimraf dist && rollup -c",
+    "tsc": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xataio/client-ts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/xataio/client-ts/issues"
+  },
+  "homepage": "https://github.com/xataio/client-ts",
+  "dependencies": {
+    "json-stringify-deterministic": "^1.0.12",
+    "kysely": "^0.27.3",
+    "pako": "^2.1.0",
+    "rfc4648": "^1.5.3"
+  },
+  "devDependencies": {
+    "@types/pako": "^2.0.3"
+  }
+}

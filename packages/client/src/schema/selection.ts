@@ -1,5 +1,5 @@
 import { isObject, isString } from '../util/lang';
-import { If, IsArray, IsObject, StringKeys, UnionToIntersection, Values } from '../util/types';
+import { Dictionary, If, IsArray, IsObject, StringKeys, UnionToIntersection, Values } from '../util/types';
 import { XataArrayFile, XataFile, XataFileFields } from './files';
 import { Link, XataRecord } from './record';
 
@@ -75,7 +75,7 @@ export type ColumnsByValue<O, Value> = Values<{
 }>;
 
 // Public: Utility type to get the XataRecord built from a list of selected columns
-export type SelectedPick<O extends XataRecord, Key extends SelectableColumnWithObjectNotation<O>[]> = XataRecord<O> &
+export type SelectedPick<O, Key extends SelectableColumnWithObjectNotation<O>[]> = XataRecord<O> &
   // For each column, we get its nested value and join it as an intersection
   UnionToIntersection<
     Values<{
@@ -193,3 +193,8 @@ type NestedValueAtColumn<O, Key extends SelectableColumn<O>> =
     : unknown; //`Property ${Key} is invalid`;
 
 type ForwardNullable<T, R> = T extends NonNullable<T> ? R : R | null;
+
+export type ColumnSelectionObject = {
+  links: Dictionary<ColumnSelectionObject>;
+  regular: string[];
+};

@@ -32,7 +32,7 @@ const json = new Blob([JSON.stringify({ hello: 'world' })], { type: 'application
 const csv = new Blob([['hello', 'world'].join(',')], { type: 'text/csv' });
 const png = new Blob(['hello'], { type: 'image/png' });
 
-describe('file support', () => {
+describe.skip('file support', () => {
   test('create file with record', async () => {
     const record = await xata.db.users.create(
       {

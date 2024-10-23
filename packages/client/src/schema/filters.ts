@@ -1,8 +1,11 @@
 import { FilterExpression, FilterPredicate } from '../api/schemas';
-import { isDefined, isObject } from '../util/lang';
+import { isDefined, isNumber, isObject, isString } from '../util/lang';
 import { SingleOrArray, Values } from '../util/types';
 import { JSONValue } from './json';
 import { ColumnsByValue, ValueAtColumn } from './selection';
+import { ExpressionBuilder, ExpressionOrFactory, ReferenceExpression, sql } from 'kysely';
+import { ExpressionFactory } from 'kysely/dist/cjs/parser/expression-parser';
+import { Schemas } from '../api';
 
 export type JSONFilterColumns<Record> = Values<{
   [K in keyof Record]: NonNullable<Record[K]> extends JSONValue<any>
@@ -159,3 +162,239 @@ export function cleanFilter(filter?: FilterExpression | FilterPredicate): any {
 
   return Object.keys(values).length > 0 ? values : undefined;
 }
+
+const isJsonColumnFilter = (key?: string): boolean => (key && key?.includes('->') ? true : false);
+
+const parseJsonPath = (path: string) => {
+  const token = 'texttoremove';
+  const pathToUse = path.replace(/->/g, token).split(token);
+  return {
+    firstCol: pathToUse.shift(),
+    pathToUse: pathToUse.map((i) => `'${i}'`).join(',')
+  };
+};
+
+const buildStatement = ({
+  column,
+  value,
+  eb,
+  operator,
+  castToText = true
+}: {
+  column: ReferenceExpression<any, any>;
+  value: string | number | Date;
+  eb: ExpressionBuilder<any, any>;
+  operator?: FilterPredicate;
+  castToText?: boolean;
+}) => {
+  switch (operator) {
+    case '$contains': {
+      return sql`(position(${value} IN ${column}::text)>0)`;
+    }
+    case '$iContains': {
+      return sql`(position(lower(${value}) IN lower(${column}::text))>0)`;
+    }
+    case '$includes': {
+      return sql`(true = ANY(SELECT "tmp"=${value} FROM unnest(${column}) as tmp))`;
+    }
+    case '$includesNone': {
+      return sql`(false = ALL(SELECT "tmp"=${value} FROM unnest(${column}) as tmp))`;
+    }
+    case '$includesAll': {
+      return sql`(true = ANY(SELECT "tmp"=${value} FROM unnest(${column}) as tmp))`;
+    }
+    case '$includesAny': {
+      return sql`(true = ANY(SELECT "tmp"=${value} FROM unnest(${column}) as tmp))`;
+    }
+    case '$startsWith': {
+      return sql`(starts_with(${column}::text, ${value}))`;
+    }
+    case '$endsWith': {
+      return sql`(${column}::text LIKE ${eb.val('%' + buildPattern(value, false))})`;
+    }
+    case '$lt': {
+      return sql`${column} < ${value}`;
+    }
+    case '$lte': {
+      return sql`${column} <= ${value}`;
+    }
+    case '$gt': {
+      return sql`${column} > ${value}`;
+    }
+    case '$gte': {
+      return sql`${column} >= ${value}`;
+    }
+    case '$is': {
+      return sql`${column} = ${value}`;
+    }
+    case '$isNot': {
+      return sql`${column} != ${value}`;
+    }
+    case '$pattern': {
+      return sql`${column} LIKE ${buildPattern(value, true)}`;
+    }
+    case '$iPattern': {
+      return sql`${column} ILIKE ${buildPattern(value, true)}`;
+    }
+    case '$exists': {
+      return sql`(${eb.ref(value as string)} IS NOT NULL)`;
+    }
+    case '$notExists': {
+      return sql`(${eb.ref(value as string)} IS NULL)`;
+    }
+    default: {
+      if (castToText) {
+        return sql`CAST (${column} AS text) = ${value}`;
+      }
+      return eb(column, '=', value);
+    }
+  }
+};
+
+export const filterToKysely = ({
+  value,
+  columnName,
+  operation,
+  path = []
+}: {
+  value: Filter<any>;
+  columnName?: string;
+  operation?: FilterPredicate;
+  path: string[];
+}):
+  | ((eb: ExpressionBuilder<any, any>, columnData: Schemas.Column[]) => ExpressionOrFactory<any, any, any>)
+  | ExpressionFactory<any, any, any> => {
+  return (eb, columnData) => {
+    if (isString(value) || typeof value === 'number' || value instanceof Date) {
+      const operator = operation ?? '=';
+      const column = eb.ref(columnName ?? 'unknown');
+
+      const isJsonColumnType = columnData.find((c) => c.name === columnName)?.type === 'json';
+      const castToText = isJsonColumnType || value instanceof Date || isNumber(value) ? false : true;
+      if (isJsonColumnFilter(columnName)) {
+        const { firstCol, pathToUse } = parseJsonPath(columnName ?? '');
+        return buildStatement({
+          operator,
+          column: sql.raw(`jsonb_extract_path_text(${firstCol}::jsonb, ${pathToUse})::text`),
+          value,
+          eb,
+          castToText
+        });
+      }
+
+      const buildS = buildStatement({
+        operator,
+        column,
+        value,
+        eb,
+        castToText
+      });
+      return buildS;
+    }
+
+    if (Array.isArray(value)) {
+      return eb.and(
+        value.map((f) => {
+          return filterToKysely({ value: f, columnName, operation, path: columnName ? [...path, columnName] : path })(
+            eb,
+            columnData
+          );
+        })
+      );
+    }
+    if (isObject(value)) {
+      const entries = Object.entries(value);
+
+      const handleEntries = entries.map(([key, value]) => {
+        const valueToUse = Array.isArray(value) ? value : [value];
+
+        switch (key) {
+          case '$all': {
+            return eb.and(
+              valueToUse.map((v) => {
+                return filterToKysely({
+                  value: v,
+                  columnName: key.startsWith('$') ? columnName : key,
+                  operation: key.startsWith('$') ? key : operation,
+                  path: columnName ? [...path, columnName] : path
+                })(eb, columnData);
+              })
+            );
+          }
+          case '$any': {
+            return eb.or(
+              valueToUse.map((v) => {
+                return filterToKysely({
+                  value: v,
+                  columnName: key.startsWith('$') ? columnName : key,
+                  operation: key.startsWith('$') ? key : operation,
+                  path: columnName ? [...path, columnName] : path
+                })(eb, columnData);
+              })
+            );
+          }
+          case '$includesNone': {
+            return eb.and(
+              valueToUse.map((v) =>
+                eb.not(
+                  filterToKysely({
+                    value: v,
+                    columnName: key.startsWith('$') ? columnName : key,
+                    operation: '$includes',
+                    path: columnName ? [...path, columnName] : path
+                  })(eb, columnData)
+                )
+              )
+            );
+          }
+          case '$none':
+          case '$not': {
+            return eb.and(
+              valueToUse.map((v) =>
+                eb.not(
+                  filterToKysely({
+                    value: v,
+                    columnName: key.startsWith('$') ? columnName : key,
+                    operation: '$not',
+                    path: columnName ? [...path, columnName] : path
+                  })(eb, columnData)
+                )
+              )
+            );
+          }
+
+          default: {
+            return eb.and(
+              valueToUse.map((v) =>
+                filterToKysely({
+                  value: v,
+                  columnName: key.startsWith('$') ? columnName : key,
+                  operation: key.startsWith('$') ? key : operation,
+                  path: key ? [...path, key] : path
+                })(eb, columnData)
+              )
+            );
+          }
+        }
+      });
+      if (operation === '$any') {
+        return eb.or(handleEntries);
+      }
+      return eb.and(handleEntries);
+    }
+    throw new Error('Not implemented');
+  };
+};
+
+const buildPattern = (value: string | number | Date, translatePattern: boolean) => {
+  // if there are special chars like %,_,*, ?, \,  in the value, we should escape them with single slash
+  if (translatePattern) {
+    return `${String(value)
+      .replace(/\\/g, '\\\\')
+      .replace(/%/g, '\\%')
+      .replace(/_/g, '\\_')
+      .replace('*', '%')
+      .replace('?', '_')}`;
+  }
+  return `${String(value).replace('*', '%').replace('?', '_')}`;
+};

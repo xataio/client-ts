@@ -86,7 +86,8 @@ describe('JSON support', () => {
         bg: {
           path: 'a/b/c',
           alpha: 0.8
-        }
+        },
+        themes: ['dark']
       }
     });
 
@@ -101,7 +102,8 @@ describe('JSON support', () => {
         bg: {
           path: 'a/b/c',
           alpha: 0.2
-        }
+        },
+        themes: ['light']
       }
     });
 
@@ -112,7 +114,8 @@ describe('JSON support', () => {
           bg: {
             path: 'a/b/c',
             alpha: 0.2
-          }
+          },
+          themes: ['light']
         })
       })
       .getAll();
@@ -143,6 +146,15 @@ describe('JSON support', () => {
 
     const filterNodeIsNot = await xata.db.teams.filter({ 'config->bg->alpha': { $isNot: 0.8 } }).getAll();
     expect(filterNodeIsNot.length).toBe(1);
+
+    const filterWithArrayIndex = await xata.db.teams.filter({ 'config->themes->0': { $isNot: 'dark' } }).getAll();
+    expect(filterWithArrayIndex.length).toBe(1);
+
+    const filterWithArray = await xata.db.teams.filter({ 'config->themes': { $contains: 'dark' } }).getAll();
+    expect(filterWithArray.length).toBe(1);
+
+    const filterWithArray2 = await xata.db.teams.filter({ 'config->themes': { $is: '["dark"]' } }).getAll();
+    expect(filterWithArray2.length).toBe(1);
 
     const filterNodeContains = await xata.db.teams.filter({ 'config->bg->path': { $contains: 'a/b' } }).getAll();
     expect(filterNodeContains.length).toBe(2);

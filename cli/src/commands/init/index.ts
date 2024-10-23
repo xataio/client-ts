@@ -201,8 +201,12 @@ export default class Init extends BaseCommand<typeof Init> {
     this.log();
 
     if (this.projectConfig?.codegen?.output) {
-      const hasTables = this.branchDetails.schema?.tables && this.branchDetails.schema?.tables.length > 0;
-      const hasColumns = this.branchDetails.schema?.tables.some((t) => t.columns.length > 0);
+      const { schema: currentSchema } = await (
+        await this.getXataClient()
+      ).api.branch.getBranchDetails({ pathParams: { workspace, region, dbBranchName: `${database}:${branch}` } });
+
+      const hasTables = currentSchema?.tables && currentSchema?.tables.length > 0;
+      const hasColumns = currentSchema?.tables.some((t) => t.columns.length > 0);
       const isSchemaSetup = hasTables && hasColumns;
       if (shouldInstallPackage && !canInstallPackage) {
         this.warn(

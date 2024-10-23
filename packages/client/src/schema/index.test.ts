@@ -19,15 +19,22 @@ const buildClient = (options: Partial<BaseClientOptions> = {}) => {
 
   // @ts-expect-error - Fetch doesn't appear in globalThis yet
   const fetch = vi.fn(globalThis.realFetch);
-  const client = new BaseClient({ fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra }, [
+  const client = new BaseClient(
+    { fetch, apiKey, databaseURL, branch, clientName, xataAgentExtra },
     {
-      name: 'users',
-      columns: [
-        { name: 'name', type: 'string' },
-        { name: 'email', type: 'string' }
+      tables: [
+        {
+          name: 'users',
+          primaryKey: [],
+          columns: [
+            { name: 'xata_id', type: 'string', notNull: true },
+            { name: 'name', type: 'string' },
+            { name: 'email', type: 'string' }
+          ]
+        }
       ]
     }
-  ]);
+  );
 
   const users = client.db.users;
 
@@ -59,13 +66,15 @@ describe('client options', () => {
   test('provide branch as a string', async () => {
     const { fetch, users } = buildClient({ branch: 'branch' });
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
-        json: async () => ({
-          records: [],
-          meta: { page: { cursor: '', more: false } }
-        })
+        json: async () => {
+          return {
+            records: [],
+            meta: { page: { cursor: '', more: false } }
+          };
+        }
       } as Response;
     });
 
@@ -79,9 +88,9 @@ describe('client options', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{"page":{"size":1},"columns":["*"]}",
+        "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["1"]}",
         "method": "POST",
-        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:branch/tables/users/query",
+        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:branch/sql",
       }
     `);
   });
@@ -91,7 +100,7 @@ describe('request', () => {
   test('builds the right arguments for a GET request', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -111,9 +120,9 @@ describe('request', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{"page":{"size":1},"columns":["*"]}",
+        "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["1"]}",
         "method": "POST",
-        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
       }
     `);
   });
@@ -121,7 +130,7 @@ describe('request', () => {
   test('builds the right arguments for a POST request', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -141,9 +150,9 @@ describe('request', () => {
 
     expect(result).toMatchInlineSnapshot(`
       {
-        "body": "{"page":{"size":20},"columns":["*"]}",
+        "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["20"]}",
         "method": "POST",
-        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+        "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
       }
     `);
   });
@@ -159,14 +168,14 @@ describe('request', () => {
       } as Response;
     });
 
-    await expect(users.getFirst()).rejects.toMatchInlineSnapshot('[Error: Not Found]');
+    await expect(users.getFirst()).rejects.toMatchInlineSnapshot(`[Error: Not Found]`);
   });
 
   test('returns the json body if the response is ok', async () => {
     const { fetch, users } = buildClient();
 
     const json = { a: 1 };
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -185,7 +194,7 @@ describe('request', () => {
   test('sets X-Xata-Agent header', async () => {
     const { fetch, users } = buildClient();
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -205,7 +214,7 @@ describe('request', () => {
   test('sets X-Xata-Agent header with service', async () => {
     const { fetch, users } = buildClient({ clientName: 'myService' });
 
-    fetch.mockImplementationOnce(async () => {
+    fetch.mockImplementation(async () => {
       return {
         ok: true,
         json: async () => ({
@@ -227,7 +236,7 @@ describe('request', () => {
 test('sets X-Xata-Agent header with extras', async () => {
   const { fetch, users } = buildClient({ clientName: 'myService', xataAgentExtra: { hello: 'world' } });
 
-  fetch.mockImplementationOnce(async () => {
+  fetch.mockImplementation(async () => {
     return {
       ok: true,
       json: async () => ({
@@ -258,7 +267,7 @@ async function expectRequest(
   callback: () => void,
   response?: any
 ): Promise<any[]> {
-  fetch.mockImplementationOnce(() => {
+  fetch.mockImplementation(() => {
     return {
       ok: true,
       json: async () => response
@@ -289,9 +298,14 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"page":{"size":20},"columns":["*"]}",
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["20"]}",
             "method": "POST",
-            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
+          },
+          {
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1 offset $2","params":["1","0"]}",
+            "method": "POST",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
         ]
       `);
@@ -309,9 +323,14 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"filter":{"$all":[{"name":"foo"}]},"page":{"size":20},"columns":["*"]}",
+            "body": "{"statement":"select * from \\"users\\" where CAST (\\"name\\" AS text) = $1 order by \\"xata_id\\" asc limit $2","params":["foo","20"]}",
             "method": "POST",
-            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
+          },
+          {
+            "body": "{"statement":"select * from \\"users\\" where CAST (\\"name\\" AS text) = $1 order by \\"xata_id\\" asc limit $2 offset $3","params":["foo","1","0"]}",
+            "method": "POST",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
         ]
       `);
@@ -337,9 +356,14 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"page":{"size":1},"columns":["*"]}",
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["1"]}",
             "method": "POST",
-            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
+          },
+          {
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1 offset $2","params":["1","1"]}",
+            "method": "POST",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
         ]
       `);
@@ -362,9 +386,14 @@ describe('query', () => {
       expect(result).toMatchInlineSnapshot(`
         [
           {
-            "body": "{"page":{"size":1},"columns":["*"]}",
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1","params":["1"]}",
             "method": "POST",
-            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/query",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
+          },
+          {
+            "body": "{"statement":"select * from \\"users\\" order by \\"xata_id\\" asc limit $1 offset $2","params":["1","0"]}",
+            "method": "POST",
+            "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
           },
         ]
       `);
@@ -377,15 +406,17 @@ describe('read', () => {
     const { fetch, users } = buildClient();
 
     const id = 'rec_1234';
-    const expected = { method: 'GET', path: `/tables/users/data/${id}`, body: undefined };
-    const result = await expectRequest(fetch, expected, () => users.read(id));
+    const result = await expectRequest(fetch, [], () => users.read(id), {
+      records: [{ xata_id: id }],
+      meta: { page: { cursor: '', more: false } }
+    });
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=*",
+          "body": "{"statement":"select * from \\"users\\" where \\"xata_id\\" = $1","params":["rec_1234"]}",
+          "method": "POST",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
       ]
     `);
@@ -395,15 +426,17 @@ describe('read', () => {
     const { fetch, users } = buildClient();
 
     const id = 'rec_1234';
-    const expected = { method: 'GET', path: `/tables/users/data/${id}`, body: undefined };
-    const result = await expectRequest(fetch, expected, () => users.read(id, ['name', 'age']));
+    const result = await expectRequest(fetch, [], () => users.read(id, ['name', 'age']), {
+      records: [{ xata_id: id }],
+      meta: { page: { cursor: '', more: false } }
+    });
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": undefined,
-          "method": "GET",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=name%2Cage",
+          "body": "{"statement":"select \\"name\\", \\"age\\" from \\"users\\" where \\"xata_id\\" = $1","params":["rec_1234"]}",
+          "method": "POST",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
       ]
     `);
@@ -415,26 +448,25 @@ describe('Repository.update', () => {
     const { fetch, users } = buildClient();
 
     const object = { xata_id: 'rec_1234', xata_version: 1, name: 'Ada' };
-    const expected = [
-      { method: 'PUT', path: `/tables/users/data/${object.xata_id}`, body: object },
-      { method: 'GET', path: `/tables/users/data/${object.xata_id}` }
-    ];
     const result = await expectRequest(
       fetch,
-      expected,
+      [],
       async () => {
         const result = await users.update(object.xata_id, object);
         expect(result?.xata_id).toBe(object.xata_id);
       },
-      { xata_id: object.xata_id }
+      {
+        records: [{ xata_id: object.xata_id }],
+        meta: { page: { cursor: '', more: false } }
+      }
     );
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": "{"name":"Ada"}",
-          "method": "PATCH",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=*",
+          "body": "{"statement":"update \\"users\\" set \\"name\\" = $1 where \\"xata_id\\" = $2 returning *","params":["Ada","rec_1234"]}",
+          "method": "POST",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
       ]
     `);
@@ -446,17 +478,24 @@ describe('Repository.delete', () => {
     const { fetch, users } = buildClient();
 
     const id = 'rec_1234';
-    const expected = { method: 'DELETE', path: `/tables/users/data/${id}`, body: undefined };
-    const result = await expectRequest(fetch, expected, async () => {
-      await users.delete(id);
-    });
+    const result = await expectRequest(
+      fetch,
+      [],
+      async () => {
+        await users.delete(id);
+      },
+      {
+        records: [],
+        meta: { page: { cursor: '', more: false } }
+      }
+    );
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": undefined,
-          "method": "DELETE",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data/rec_1234?columns=*",
+          "body": "{"statement":"delete from \\"users\\" where \\"xata_id\\" = $1 returning *","params":["rec_1234"]}",
+          "method": "POST",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
       ]
     `);
@@ -469,31 +508,26 @@ describe('create', () => {
 
     const created = { xata_id: 'rec_1234', _version: 0 };
     const object = { name: 'Ada' } as User;
-    const expected = [
-      { method: 'POST', path: '/tables/users/data', body: object },
-      {
-        method: 'GET',
-        path: '/tables/users/data/rec_1234',
-        body: undefined
-      }
-    ];
 
     const result = await expectRequest(
       fetch,
-      expected,
+      [],
       async () => {
         const result = await users.create(object);
         expect(result.xata_id).toBe(created.xata_id);
       },
-      created
+      {
+        records: [created],
+        meta: { page: { cursor: '', more: false } }
+      }
     );
 
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "body": "{"name":"Ada"}",
+          "body": "{"statement":"insert into \\"users\\" (\\"name\\") values ($1) returning *","params":["Ada"]}",
           "method": "POST",
-          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/tables/users/data?columns=*",
+          "url": "https://my-workspace-v0fo9s.us-east-1.xata.sh/db/mydb:main/sql",
         },
       ]
     `);

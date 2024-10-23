@@ -99,7 +99,7 @@ export type SQLQueryResult<T, Mode extends SQLResponseType = 'json'> = Mode exte
   ? SQLQueryResultArray
   : never;
 
-type SQLPluginFunction = <T, Query extends SQLQuery = SQLQuery>(
+export type SQLPluginFunction = <T, Query extends SQLQuery = SQLQuery>(
   query: Query,
   ...parameters: any[]
 ) => Promise<
