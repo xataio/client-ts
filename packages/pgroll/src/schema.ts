@@ -263,6 +263,15 @@ export const schema = {
         predicate: {
           description: 'Conditional expression for defining a partial index',
           type: 'string'
+        },
+        method: {
+          description: 'Index method to use for the index: btree, hash, gist, spgist, gin, brin',
+          type: 'string',
+          enum: ['btree', 'hash', 'gist', 'spgist', 'gin', 'brin']
+        },
+        storage_parameters: {
+          description: 'Storage parameters for the index',
+          type: 'string'
         }
       },
       required: ['columns', 'name', 'table'],
