@@ -272,6 +272,10 @@ export const schema = {
         storage_parameters: {
           description: 'Storage parameters for the index',
           type: 'string'
+        },
+        unique: {
+          description: 'Indicates if the index is unique',
+          type: 'boolean'
         }
       },
       required: ['columns', 'name', 'table'],
