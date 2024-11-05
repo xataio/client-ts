@@ -441,7 +441,6 @@ const testCases: TestCase[] = [
           table: 'table2',
           down: '"col1"',
           up: '"col1"',
-          column: 'col1',
           name: 'table2_col1_unique'
         }
       }

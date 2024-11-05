@@ -329,10 +329,6 @@ export const schema = {
       additionalProperties: false,
       description: 'Drop constraint operation',
       properties: {
-        column: {
-          description: 'Name of the column',
-          type: 'string'
-        },
         down: {
           default: '',
           description: 'SQL expression for down migration',
@@ -351,7 +347,7 @@ export const schema = {
           type: 'string'
         }
       },
-      required: ['column', 'down', 'name', 'table', 'up'],
+      required: ['down', 'name', 'table', 'up'],
       type: 'object'
     },
     OpDropIndex: {

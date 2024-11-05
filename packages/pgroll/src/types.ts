@@ -90,7 +90,6 @@ export const OpDropColumnDefinition = z.object({
 export type OpDropConstraint = z.infer<typeof OpDropConstraintDefinition>;
 
 export const OpDropConstraintDefinition = z.object({
-  column: z.string(),
   down: z.string(),
   name: z.string(),
   table: z.string(),

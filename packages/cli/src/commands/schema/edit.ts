@@ -962,7 +962,6 @@ export const editsToMigrations = (command: EditSchema) => {
               ? {
                   drop_constraint: {
                     table: tableName,
-                    column: originalField.name,
                     name: uniqueConstraintName,
                     up: `"${originalField.name}"`,
                     down: `"${originalField.name}"`
