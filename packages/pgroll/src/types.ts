@@ -67,7 +67,8 @@ export const OpCreateIndexDefinition = z.object({
   table: z.string(),
   predicate: z.string().optional(),
   method: z.string().optional(),
-  storage_parameters: z.string().optional()
+  storage_parameters: z.string().optional(),
+  unique: z.boolean().optional()
 });
 
 export type OpCreateTable = z.infer<typeof OpCreateTableDefinition>;
