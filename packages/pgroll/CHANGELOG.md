@@ -1,5 +1,15 @@
 # @xata.io/pgroll
 
+## 0.7.0
+
+### Minor Changes
+
+- [#1619](https://github.com/xataio/client-ts/pull/1619) [`b990afb`](https://github.com/xataio/client-ts/commit/b990afb5ac1a86684a9dcc0952322f11b971eebe) Thanks [@SferaDev](https://github.com/SferaDev)! - [Breaking] Remove `column` from `drop_constraint`
+
+### Patch Changes
+
+- [#1612](https://github.com/xataio/client-ts/pull/1612) [`798b45a`](https://github.com/xataio/client-ts/commit/798b45ad8fc74af591f1c1d163a9f28d0bfc5c6d) Thanks [@xata-bot](https://github.com/xata-bot)! - Update pgroll spec
+
 ## 0.6.0
 
 ### Minor Changes
