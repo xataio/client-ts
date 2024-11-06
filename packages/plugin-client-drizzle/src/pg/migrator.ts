@@ -3,7 +3,7 @@ import type { XataDatabase } from './driver';
 
 export async function migrate<TSchema extends Record<string, unknown>>(
   db: XataDatabase<TSchema>,
-  config: string | MigrationConfig
+  config: MigrationConfig
 ) {
   const migrations = readMigrationFiles(config);
   // @ts-expect-error dialect and session are private

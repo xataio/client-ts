@@ -12,7 +12,7 @@ import { SQL, sql } from 'drizzle-orm';
  */
 export async function migrate<TSchema extends Record<string, unknown>>(
   db: XataHttpDatabase<TSchema>,
-  config: string | MigrationConfig
+  config: MigrationConfig
 ) {
   const migrations = readMigrationFiles(config);
   const migrationsTable =
