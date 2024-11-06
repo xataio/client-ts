@@ -166,7 +166,7 @@ class Buffer extends Uint8Array {
       Buffer._isInstance(value, ArrayBuffer) ||
       (value && Buffer._isInstance((value as any).buffer, ArrayBuffer))
     ) {
-      const array = value as Uint8Array;
+      const array = value as ArrayBufferLike;
       const byteOffset = encodingOrOffset as number;
 
       if (byteOffset < 0 || array.byteLength < byteOffset) {
@@ -416,7 +416,7 @@ class Buffer extends Uint8Array {
     sourceEnd?: number
   ): number {
     if (Buffer._isInstance(otherBuffer, Uint8Array)) {
-      otherBuffer = Buffer.from(otherBuffer, otherBuffer.byteOffset, otherBuffer.byteLength);
+      otherBuffer = Buffer.from(otherBuffer as unknown as ArrayBuffer, otherBuffer.byteOffset, otherBuffer.byteLength);
     }
 
     if (!Buffer.isBuffer(otherBuffer)) {
@@ -1707,11 +1707,11 @@ class Buffer extends Uint8Array {
    */
   public static compare(buf1: Uint8Array, buf2: Uint8Array): number {
     if (Buffer._isInstance(buf1, Uint8Array)) {
-      buf1 = Buffer.from(buf1, buf1.byteOffset, buf1.byteLength);
+      buf1 = Buffer.from(buf1 as unknown as ArrayBuffer, buf1.byteOffset, buf1.byteLength);
     }
 
     if (Buffer._isInstance(buf2, Uint8Array)) {
-      buf2 = Buffer.from(buf2, buf2.byteOffset, buf2.byteLength);
+      buf2 = Buffer.from(buf2 as unknown as ArrayBuffer, buf2.byteOffset, buf2.byteLength);
     }
 
     if (!Buffer.isBuffer(buf1) || !Buffer.isBuffer(buf2)) {
