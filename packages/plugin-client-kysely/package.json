@@ -25,7 +25,7 @@
     "@xata.io/client": "workspace:*"
   },
   "devDependencies": {
-    "kysely": "^0.27.4"
+    "kysely": "^0.27.5"
   },
   "peerDependencies": {
     "kysely": "*"
