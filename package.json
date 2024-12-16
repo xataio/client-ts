@@ -44,17 +44,17 @@
     "@opentelemetry/sdk-trace-base": "^1.29.0",
     "@opentelemetry/sdk-trace-node": "^1.29.0",
     "@opentelemetry/semantic-conventions": "^1.28.0",
-    "@types/node": "^22.10.1",
-    "@typescript-eslint/eslint-plugin": "^8.17.0",
-    "@typescript-eslint/parser": "^8.17.0",
+    "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
     "doctoc": "^2.2.1",
     "dotenv": "^16.4.7",
-    "eslint": "^9.16.0",
+    "eslint": "^9.17.0",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.2.10",
-    "msw": "^2.6.8",
+    "lint-staged": "^15.2.11",
+    "msw": "^2.6.9",
     "prettier": "=2.8.8",
     "rimraf": "^6.0.1",
     "rollup": "^4.28.1",
@@ -64,15 +64,15 @@
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-preserve-shebang": "^1.0.1",
-    "rollup-plugin-strip-code": "^0.2.7",
+    "rollup-plugin-strip-code": "^0.2.8",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "turbo": "^2.3.3",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.17.0",
+    "typescript-eslint": "^8.18.0",
     "vite": "^6.0.3",
     "vitest": "^2.1.8",
-    "zod": "^3.23.8"
+    "zod": "^3.24.1"
   },
   "lint-staged": {
     "codegen/src/*.{js,ts,tsx}": [
@@ -96,8 +96,8 @@
   },
   "dependencies": {
     "@octokit/core": "^6.1.2",
-    "@pnpm/exportable-manifest": "^1000.0.0",
-    "@pnpm/read-project-manifest": "^1000.0.0",
+    "@pnpm/exportable-manifest": "^1000.0.1",
+    "@pnpm/read-project-manifest": "^1000.0.1",
     "@pnpm/write-project-manifest": "^1000.0.0"
   },
   "packageManager": "pnpm@8.11.0",
@@ -124,7 +124,8 @@
       "elliptic@<6.6.0": ">=6.6.0",
       "cross-spawn@<6.0.6": ">=6.0.6",
       "cross-spawn@>=7.0.0 <7.0.5": ">=7.0.5",
-      "@eslint/plugin-kit@<0.2.3": ">=0.2.3"
+      "@eslint/plugin-kit@<0.2.3": ">=0.2.3",
+      "nanoid@<3.3.8": ">=3.3.8"
     }
   }
 }
