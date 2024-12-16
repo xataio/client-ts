@@ -22,11 +22,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@oclif/core": "^4.0.36",
+    "@oclif/core": "^4.0.37",
     "@oclif/plugin-help": "^6.2.19",
-    "@oclif/plugin-not-found": "^3.2.30",
+    "@oclif/plugin-not-found": "^3.2.31",
     "@oclif/plugin-plugins": "^5.4.22",
-    "@oclif/plugin-update": "^4.6.17",
+    "@oclif/plugin-update": "^4.6.18",
     "@types/ini": "^4.1.1",
     "@types/prompts": "^2.4.9",
     "@types/semver": "^7.5.8",
@@ -52,11 +52,11 @@
     "semver": "^7.6.3",
     "text-table": "^0.2.0",
     "tmp": "^0.2.3",
-    "ts-pattern": "^5.5.0",
+    "ts-pattern": "^5.6.0",
     "tslib": "^2.8.1",
-    "type-fest": "^4.30.0",
+    "type-fest": "^4.30.1",
     "which": "^5.0.0",
-    "zod": "^3.23.8"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@babel/types": "^7.26.3",
@@ -66,10 +66,10 @@
     "@types/text-table": "^0.2.5",
     "@types/tmp": "^0.2.6",
     "@types/which": "^3.0.4",
-    "eslint": "^9.16.0",
+    "eslint": "^9.17.0",
     "eslint-config-oclif": "^5.2.2",
     "eslint-config-oclif-typescript": "^3.1.13",
-    "oclif": "^4.16.0",
+    "oclif": "^4.16.5",
     "shx": "^0.3.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
