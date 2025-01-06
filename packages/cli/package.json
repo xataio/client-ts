@@ -69,7 +69,7 @@
     "eslint": "^9.17.0",
     "eslint-config-oclif": "^5.2.2",
     "eslint-config-oclif-typescript": "^3.1.13",
-    "oclif": "^4.17.7",
+    "oclif": "^4.17.10",
     "shx": "^0.3.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
