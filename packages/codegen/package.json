@@ -34,7 +34,7 @@
     "@xata.io/client": "workspace:*",
     "case": "^1.6.3",
     "prettier": "=2.8.8",
-    "ts-morph": "^24.0.0",
+    "ts-morph": "^25.0.0",
     "typescript": "^5.7.2",
     "zod": "^3.24.1"
   },
