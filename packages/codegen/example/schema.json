@@ -215,6 +215,48 @@
           "type": "int"
         }
       ]
+    },
+    {
+      "name": "accounts",
+      "primaryKey": ["username", "email"],
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "notNull": true,
+          "unique": true
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "notNull": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "notNull": true
+        },
+        {
+          "name": "password",
+          "type": "string",
+          "notNull": true
+        },
+        {
+          "name": "full_name",
+          "type": "string",
+          "notNull": true
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "notNull": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "notNull": true
+        }
+      ]
     }
   ]
 }

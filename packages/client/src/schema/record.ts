@@ -19,16 +19,16 @@ export const RecordColumnTypes = [
   'json'
 ] as const;
 
-export type Identifier = string;
+export type OldIdentifier = string;
 
 /**
  * Represents an identifiable record from the database.
  */
-export interface Identifiable {
+export interface OldIdentifiable {
   /**
    * Unique id of this record.
    */
-  xata_id: Identifier;
+  xata_id: OldIdentifier;
 }
 
 export interface BaseData {
@@ -38,7 +38,7 @@ export interface BaseData {
 /**
  * Represents a persisted record from the database.
  */
-export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiable {
+export interface XataRecord<OriginalRecord = XataRecord<any>> extends OldIdentifiable {
   /**
    * Get an object representation of this record.
    */
@@ -125,7 +125,7 @@ export interface XataRecord<OriginalRecord = XataRecord<any>> extends Identifiab
 
 export type Link<Record extends XataRecord> = XataRecord<Record>;
 
-export function isIdentifiable(x: any): x is Identifiable & Record<string, unknown> {
+export function isIdentifiable(x: any): x is OldIdentifiable & Record<string, unknown> {
   return isObject(x) && isString(x?.xata_id);
 }
 
@@ -137,9 +137,9 @@ export type NumericOperator = ExclusiveOr<
 export type InputXataFile = Partial<XataArrayFile> | Promise<Partial<XataArrayFile>>;
 
 type EditableDataFields<T> = T extends XataRecord
-  ? { xata_id: Identifier } | Identifier
+  ? { xata_id: OldIdentifier } | OldIdentifier
   : NonNullable<T> extends XataRecord
-  ? { xata_id: Identifier } | Identifier | null | undefined
+  ? { xata_id: OldIdentifier } | OldIdentifier | null | undefined
   : T extends Date
   ? string | Date
   : NonNullable<T> extends Date
@@ -152,7 +152,7 @@ type EditableDataFields<T> = T extends XataRecord
   ? number | NumericOperator
   : T;
 
-export type EditableData<O> = Identifiable &
+export type EditableData<O> = OldIdentifiable &
   Partial<
     Omit<
       {
@@ -182,7 +182,7 @@ type JSONDataFields<T> = T extends null | undefined | void
   ? string | null | undefined
   : T;
 
-type JSONDataBase = Identifiable & {
+type JSONDataBase = OldIdentifiable & {
   /**
    * Timestamp when the record was created.
    */

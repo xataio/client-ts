@@ -216,6 +216,48 @@ declare const schema: {
         }
       ];
       readonly primaryKey: readonly ['xata_id'];
+    },
+    {
+      readonly name: 'accounts';
+      readonly columns: readonly [
+        {
+          readonly name: 'id';
+          readonly type: 'int';
+          readonly unique: true;
+          readonly notNull: true;
+        },
+        {
+          readonly name: 'username';
+          readonly type: 'string';
+          readonly notNull: true;
+        },
+        {
+          readonly name: 'email';
+          readonly type: 'email';
+          readonly notNull: true;
+        },
+        {
+          readonly name: 'password';
+          readonly type: 'string';
+          readonly notNull: true;
+        },
+        {
+          readonly name: 'full_name';
+          readonly type: 'string';
+          readonly notNull: true;
+        },
+        {
+          readonly name: 'created_at';
+          readonly type: 'datetime';
+          readonly notNull: true;
+        },
+        {
+          readonly name: 'updated_at';
+          readonly type: 'datetime';
+          readonly notNull: true;
+        }
+      ];
+      readonly primaryKey: readonly ['username', 'email'];
     }
   ];
 };
@@ -227,10 +269,13 @@ export type Users = InferredTypes['users'];
 export type UsersRecord = Users & XataRecord;
 export type Pets = InferredTypes['pets'];
 export type PetsRecord = Pets & XataRecord;
+export type Accounts = InferredTypes['accounts'];
+export type AccountsRecord = Accounts & XataRecord;
 export type DatabaseSchema = {
   teams: TeamsRecord;
   users: UsersRecord;
   pets: PetsRecord;
+  accounts: AccountsRecord;
 };
 declare const DatabaseClient: any;
 export declare class XataClient extends DatabaseClient<typeof schema> {
