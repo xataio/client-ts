@@ -2071,7 +2071,7 @@ export const initObject = <T>(
             selectedLinkColumns as SelectableColumn<unknown>[]
           );
         } else {
-          data[column.name] = value;
+          data[column.name] = value ?? null;
         }
 
         break;
