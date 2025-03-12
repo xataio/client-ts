@@ -17,7 +17,7 @@ server.resource('json-schema', new ResourceTemplate('pgroll://schema', { list: u
   ]
 }));
 
-server.resource('examples', new ResourceTemplate('pgroll://examples', { list: undefined }), async () => {
+server.resource('examples', new ResourceTemplate('pgroll://examples', { list: undefined }), async (uri) => {
   const response = await fetch(`https://raw.githubusercontent.com/xataio/pgroll/refs/heads/main/examples/.ledger`);
   const text = await response.text();
 
@@ -27,11 +27,18 @@ server.resource('examples', new ResourceTemplate('pgroll://examples', { list: un
         `https://raw.githubusercontent.com/xataio/pgroll/refs/heads/main/examples/${exampleName}.json`
       );
       const text = await response.text();
-      return { uri: `pgroll://examples/${exampleName}`, text };
+      return text;
     })
   );
 
-  return { contents: examples };
+  return {
+    contents: [
+      {
+        uri: uri.href,
+        text: examples.join('\n')
+      }
+    ]
+  };
 });
 
 server.tool('validate-migration', { migration: PgRollMigrationDefinition }, async ({ migration }) => {
