@@ -28,7 +28,7 @@ export default [
   },
   {
     input: 'src/mcp.ts',
-    plugins: [esbuild()],
+    plugins: [esbuild({ target: "esnext" })],
     output: [
       {
         file: `dist/mcp.cjs`,
