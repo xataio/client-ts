@@ -6,6 +6,9 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "mcp-server-pgroll": "dist/mcp.mjs"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
@@ -30,6 +33,7 @@
   },
   "homepage": "https://github.com/xataio/client-ts/blob/main/importer/README.md",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
     "zod": "^3.24.2",
     "zod-to-json-schema": "^3.24.3"
   },

@@ -25,5 +25,16 @@ export default [
       file: `dist/index.d.ts`,
       format: 'es'
     }
+  },
+  {
+    input: 'src/mcp.ts',
+    plugins: [esbuild({ target: "esnext" })],
+    output: [
+      {
+        file: `dist/mcp.mjs`,
+        format: 'es',
+        sourcemap: true
+      }
+    ]
   }
 ];
