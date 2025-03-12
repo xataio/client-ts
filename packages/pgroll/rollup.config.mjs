@@ -31,11 +31,6 @@ export default [
     plugins: [esbuild({ target: "esnext" })],
     output: [
       {
-        file: `dist/mcp.cjs`,
-        format: 'cjs',
-        sourcemap: true
-      },
-      {
         file: `dist/mcp.mjs`,
         format: 'es',
         sourcemap: true
