@@ -17,23 +17,22 @@ server.resource('json-schema', new ResourceTemplate('pgroll://schema', { list: u
   ]
 }));
 
-server.resource('list-examples', new ResourceTemplate('pgroll://examples', { list: undefined }), async (uri) => {
+server.resource('examples', new ResourceTemplate('pgroll://examples', { list: undefined }), async () => {
   const response = await fetch(`https://raw.githubusercontent.com/xataio/pgroll/refs/heads/main/examples/.ledger`);
   const text = await response.text();
-  return { contents: [{ uri: uri.href, text }] };
-});
 
-server.resource(
-  'get-example',
-  new ResourceTemplate('pgroll://examples/{exampleName}', { list: undefined }),
-  async (uri, { exampleName }) => {
-    const response = await fetch(
-      `https://raw.githubusercontent.com/xataio/pgroll/refs/heads/main/examples/${exampleName}.json`
-    );
-    const text = await response.text();
-    return { contents: [{ uri: uri.href, text }] };
-  }
-);
+  const examples = await Promise.all(
+    text.split('\n').map(async (exampleName) => {
+      const response = await fetch(
+        `https://raw.githubusercontent.com/xataio/pgroll/refs/heads/main/examples/${exampleName}.json`
+      );
+      const text = await response.text();
+      return { uri: `pgroll://examples/${exampleName}`, text };
+    })
+  );
+
+  return { contents: examples };
+});
 
 server.tool('validate-migration', { migration: PgRollMigrationDefinition }, async ({ migration }) => {
   const result = PgRollMigrationDefinition.safeParse(migration);
