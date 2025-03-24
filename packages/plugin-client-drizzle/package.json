@@ -31,8 +31,8 @@
   },
   "devDependencies": {
     "@types/pg": "^8.11.11",
-    "drizzle-orm": "^0.40.0",
-    "pg": "^8.14.0"
+    "drizzle-orm": "^0.41.0",
+    "pg": "^8.14.1"
   },
   "peerDependencies": {
     "drizzle-orm": "*"
