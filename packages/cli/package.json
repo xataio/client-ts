@@ -24,7 +24,7 @@
   "dependencies": {
     "@oclif/core": "^4.2.10",
     "@oclif/plugin-help": "^6.2.27",
-    "@oclif/plugin-not-found": "^3.2.47",
+    "@oclif/plugin-not-found": "^3.2.48",
     "@oclif/plugin-plugins": "^5.4.36",
     "@oclif/plugin-update": "^4.6.35",
     "@types/ini": "^4.1.1",
@@ -66,10 +66,10 @@
     "@types/text-table": "^0.2.5",
     "@types/tmp": "^0.2.6",
     "@types/which": "^3.0.4",
-    "eslint": "^9.22.0",
-    "eslint-config-oclif": "^6.0.32",
+    "eslint": "^9.23.0",
+    "eslint-config-oclif": "^6.0.36",
     "eslint-config-oclif-typescript": "^3.1.14",
-    "oclif": "^4.17.37",
+    "oclif": "^4.17.41",
     "shx": "^0.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
