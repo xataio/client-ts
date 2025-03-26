@@ -69,8 +69,11 @@ export const importBatch = async (
 export const importFiles = async (
   location: ImportLocation,
   options: ImportFilesOptions,
-  pluginOptions: XataPluginOptions
-) => {
+  pluginOptions: XataPluginOptions,
+  errors?: ImportError[],
+  maxRetries = 3,
+  retries = 0
+): Promise<void> => {
   const { workspace, database, region, branch } = location;
   const { table, ids, files } = options;
 
@@ -97,8 +100,13 @@ export const importFiles = async (
             body: file.toBlob(),
             headers: { 'Content-Type': file.mediaType ?? 'application/octet-stream' }
           });
-        } catch (error) {
-          console.log(error);
+        } catch (error: any) {
+          if (retries < maxRetries) {
+            await delay(1000 * 2 ** retries);
+            return importFiles(location, { ...options, files: [row] }, pluginOptions, errors, maxRetries, retries + 1);
+          }
+
+          throw error;
         }
       }
     }
