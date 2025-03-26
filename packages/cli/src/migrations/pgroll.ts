@@ -121,42 +121,100 @@ export async function getBranchDetailsWithPgRoll(
 
     return {
       ...details,
-      branchName: branch,
-      createdAt: new Date().toISOString(),
-      databaseName: database,
-      id: pgroll.schema.name, // Not really
-      lastMigrationID: '', // Not really
-      version: 1,
-      metadata: {},
-      schema: {
-        tables: Object.entries(pgroll.schema.tables ?? []).map(([name, table]: any) => ({
-          name,
-          checkConstraints: table.checkConstraints,
-          foreignKeys: table.foreignKeys,
-          primaryKey: table.primaryKey,
-          uniqueConstraints: table.uniqueConstraints,
-          columns: Object.values(table.columns ?? {})
-            .filter((column: any) => !['_id', '_createdat', '_updatedat', '_version'].includes(column.name))
-            .map((column: any) => ({
-              name: column.name,
-              type: getPgRollLink(table, column) ? 'link' : pgRollToXataColumnType(column.type, column.comment),
-              link: getPgRollLink(table, column) ? { table: getPgRollLink(table, column).referencedTable } : undefined,
-              file:
-                pgRollToXataColumnType(column.type) === 'file' || pgRollToXataColumnType(column.type) === 'file[]'
-                  ? { defaultPublicAccess: false }
-                  : undefined,
-              notNull: column.nullable === false,
-              unique: column.unique === true,
-              defaultValue: column.default,
-              comment: column.comment
-            }))
-        }))
-      } as any
-    };
+      ...pgrollToXata({ schema: pgroll.schema, branchName: branch, databaseName: database })
+    } as any;
   }
 
   return details;
 }
+
+export const xataToPgroll = (branch: Schemas.DBBranch): Schemas.BranchSchema => {
+  const tables: Schemas.BranchSchema['tables'] = Object.fromEntries(
+    branch.schema.tables.map(
+      (table: any) =>
+        ({
+          name: table.name,
+          checkConstraints: table.checkConstraints,
+          foreignKeys: table.foreignKeys,
+          primaryKey: table.primaryKey,
+          xataCompatible: true,
+          indexes: {},
+          uniqueConstraints: table.uniqueConstraints,
+          comment: '',
+          columns: Object.fromEntries(
+            table.columns.map(
+              (column: Schemas.DBBranch['schema']['tables'][number]['columns'][number]) =>
+                ({
+                  name: column.name,
+                  type: xataColumnTypeToPgRoll(column.type),
+                  file:
+                    column.type === 'file'
+                      ? { defaultPublicAccess: column?.file?.defaultPublicAccess }
+                      : column.type === 'file[]'
+                      ? { defaultPublicAccess: column['file[]']?.defaultPublicAccess }
+                      : undefined,
+                  link: column.type === 'link' ? { referencedTable: column?.link?.table } : undefined,
+                  nullable: Boolean(column.notNull),
+                  unique: column.unique,
+                  default: column.defaultValue,
+                  comment: xataColumnTypeToPgRollComment(column),
+                  vector: column.type === 'vector' ? { dimension: column.vector?.dimension } : undefined
+                } as Schemas.BranchSchema['tables'][number]['columns'][number])
+            )
+          )
+        } as any)
+    )
+  );
+
+  return {
+    name: branch.branchName,
+    tables
+  };
+};
+
+const pgrollToXata = ({
+  schema,
+  branchName,
+  databaseName
+}: {
+  schema: Schemas.BranchSchema;
+  branchName: string;
+  databaseName: string;
+}) => {
+  return {
+    branchName,
+    createdAt: new Date().toISOString(),
+    databaseName,
+    id: schema.name, // Not really
+    lastMigrationID: '', // Not really
+    version: 1,
+    metadata: {},
+    schema: {
+      tables: Object.entries(schema.tables ?? []).map(([name, table]: any) => ({
+        name,
+        checkConstraints: table.checkConstraints,
+        foreignKeys: table.foreignKeys,
+        primaryKey: table.primaryKey,
+        uniqueConstraints: table.uniqueConstraints,
+        columns: Object.values(table.columns ?? {})
+          .filter((column: any) => !['_id', '_createdat', '_updatedat', '_version'].includes(column.name))
+          .map((column: any) => ({
+            name: column.name,
+            type: getPgRollLink(table, column) ? 'link' : pgRollToXataColumnType(column.type, column.comment),
+            link: getPgRollLink(table, column) ? { table: getPgRollLink(table, column).referencedTable } : undefined,
+            file:
+              pgRollToXataColumnType(column.type) === 'file' || pgRollToXataColumnType(column.type) === 'file[]'
+                ? { defaultPublicAccess: false }
+                : undefined,
+            notNull: column.nullable === false,
+            unique: column.unique === true,
+            defaultValue: column.default,
+            comment: column.comment
+          }))
+      }))
+    } as any
+  };
+};
 
 export const isColumnTypeUnsupported = (type: string) => {
   switch (type) {
