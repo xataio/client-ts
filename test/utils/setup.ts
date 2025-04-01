@@ -4,7 +4,7 @@ import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { detectResources, envDetector } from '@opentelemetry/resources';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import { File, Mock, Suite, TestContext, vi } from 'vitest';
@@ -144,15 +144,16 @@ async function setupTracing() {
   const url = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
   if (!url) return {};
 
-  const resource = await detectResources({ detectors: [envDetector] });
-  resource.attributes[SemanticResourceAttributes.SERVICE_NAME] = 'sdk_tests';
-
-  const tracerProvider = new NodeTracerProvider({ resource });
-  registerInstrumentations({ tracerProvider });
+  const resource = detectResources({ detectors: [envDetector] });
+  resource.attributes[ATTR_SERVICE_NAME] = 'sdk_tests';
 
   const exporter = new OTLPTraceExporter({ url });
-  tracerProvider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+  const tracerProvider = new NodeTracerProvider({
+    resource,
+    spanProcessors: [new SimpleSpanProcessor(exporter)]
+  });
 
+  registerInstrumentations({ tracerProvider });
   tracerProvider.register();
 
   const tracer = tracerProvider?.getTracer('Xata SDK');
