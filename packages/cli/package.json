@@ -24,7 +24,7 @@
   "dependencies": {
     "@oclif/core": "^4.2.10",
     "@oclif/plugin-help": "^6.2.27",
-    "@oclif/plugin-not-found": "^3.2.48",
+    "@oclif/plugin-not-found": "^3.2.49",
     "@oclif/plugin-plugins": "^5.4.36",
     "@oclif/plugin-update": "^4.6.36",
     "@types/ini": "^4.1.1",
@@ -54,7 +54,7 @@
     "tmp": "^0.2.3",
     "ts-pattern": "^5.7.0",
     "tslib": "^2.8.1",
-    "type-fest": "^4.38.0",
+    "type-fest": "^4.39.1",
     "which": "^5.0.0",
     "zod": "^3.24.2"
   },
@@ -66,13 +66,13 @@
     "@types/text-table": "^0.2.5",
     "@types/tmp": "^0.2.6",
     "@types/which": "^3.0.4",
-    "eslint": "^9.23.0",
-    "eslint-config-oclif": "^6.0.39",
+    "eslint": "^9.24.0",
+    "eslint-config-oclif": "^6.0.42",
     "eslint-config-oclif-typescript": "^3.1.14",
-    "oclif": "^4.17.42",
+    "oclif": "^4.17.43",
     "shx": "^0.4.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "oclif": {
     "bin": "xata",
