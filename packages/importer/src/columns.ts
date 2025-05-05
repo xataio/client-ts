@@ -244,11 +244,10 @@ export const coerceRows = async <T extends Record<string, unknown>>(
 ): Promise<Record<string, CoercedValue>[]> => {
   const mapped = [];
   for (const row of rows) {
-    const mappedRow: Record<string, CoercedValue> = {};
-    for (const column of columns) {
-      mappedRow[column.name] = await coerceValue(row[column.name], column, options);
-    }
-    mapped.push(mappedRow);
+    const entries = await Promise.all(
+      columns.map((column) => coerceValue(row[column.name], column, options).then((value) => [column.name, value]))
+    );
+    mapped.push(Object.fromEntries(entries));
   }
   return mapped;
 };
