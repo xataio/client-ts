@@ -54,7 +54,7 @@
     "tmp": "^0.2.3",
     "ts-pattern": "^5.7.0",
     "tslib": "^2.8.1",
-    "type-fest": "^4.40.1",
+    "type-fest": "^4.41.0",
     "which": "^5.0.0",
     "zod": "^3.24.4"
   },
@@ -67,7 +67,7 @@
     "@types/tmp": "^0.2.6",
     "@types/which": "^3.0.4",
     "eslint": "^9.26.0",
-    "eslint-config-oclif": "^6.0.54",
+    "eslint-config-oclif": "^6.0.56",
     "eslint-config-oclif-typescript": "^3.1.14",
     "oclif": "^4.17.46",
     "shx": "^0.4.0",
