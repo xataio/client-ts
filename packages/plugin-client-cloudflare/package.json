@@ -22,7 +22,7 @@
     "url": "https://github.com/xataio/client-ts/issues"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "^4.20250505.0",
+    "@cloudflare/workers-types": "^4.20250607.0",
     "@xata.io/client": "workspace:*"
   }
 }
